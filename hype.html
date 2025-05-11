@@ -481,432 +481,429 @@ span.zero-width-parent img.zero-width-emote {
 		<div id="hype"></div>
 		<div id="hypetitle">Active chatters in the last 5-minutes</div>
 	</div>
-	<script>
-	window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
-		console.error(errorMsg);
-		console.error(lineNumber);
-		console.error("Unhandled Error occured");
-		return false;
-	};
+<script>window.onerror = function backupErr(errorMsg, url = false, lineNumber = false) {
+    console.error(errorMsg);
+    console.error(lineNumber);
+    console.error("Unhandled Error occured");
+    return false;
+};
 
-	function getById(id) {
-		var el = document.getElementById(id);
-		if (!el) {
-			el = document.createElement("span");
-		}
-		return el;
-	}
+function getById(id) {
+    var el = document.getElementById(id);
+    if (!el) {
+        el = document.createElement("span");
+    }
+    return el;
+}
+(function(w) {
+    w.URLSearchParams = w.URLSearchParams || function(searchString) {
+        var self = this;
+        self.searchString = searchString;
+        self.get = function(name) {
+            var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+            if (results == null) {
+                return null;
+            } else {
+                return decodeURI(results[1]) || 0;
+            }
+        };
+    };
+})(window);
+var urlParams = new URLSearchParams(window.location.search);
+var iframe = null;
+var roomID = "test";
+var darkmode = null;
+var isOBSBrowserSource = false;
+var customNodeLimit = false;
+var body = document.body;
+var html = document.documentElement;
+var mainOutputWindow = document.getElementById("output");
+var showdupes = true;
+var hidereplies = false;
+var uniqueId = "";
+var sourceTypes = {};
+var computedStyle = getComputedStyle(document.documentElement);
+try {
+    if ((window.ninjafy || window.electronApi)) {
+        document.body.style.width = "95%";
+        setTimeout(function() {
+            document.body.style.width = "100%";
+        }, 1000);
+        setTimeout(function() {
+            document.body.style.width = "98%";
+        }, 2000);
+        setTimeout(function() {
+            document.body.style.width = "100%";
+        }, 5000);
+    }
+} catch (e) {}
+var timeoutDelay = 5000;
+if (urlParams.has("showtime")) {
+    timeoutDelay = parseInt(urlParams.get("showtime")) || 0;
+}
+if (urlParams.has("session")) {
+    roomID = urlParams.get("session");
+} else if (urlParams.has("s")) {
+    roomID = urlParams.get("s");
+} else if (urlParams.has("id")) {
+    roomID = urlParams.get("id");
+} else if (window.location.protocol == "file:") {
+    roomID = prompt("Enter your session ID here, or add it to the URL.");
+    if (roomID) {
+        var href = window.location.href;
+        var arr = href.split('?');
+        var newurl;
+        if (arr.length > 1 && arr[1] !== '') {
+            newurl = href + '&session=' + roomID;
+        } else {
+            newurl = href + '?session=' + roomID;
+        }
+        window.history.pushState({
+            path: newurl.toString()
+        }, '', newurl.toString());
+    } else {
+        alert("You need to provide your extension's session ID for this page to work");
+    }
+} else {
+    window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
+}
+var password = "false";
+if (urlParams.has("password")) {
+    password = urlParams.get("password") || "false";
+}
+if (urlParams.has("uniqueid")) {
+    uniqueId = urlParams.get("uniqueid");
+}
 
-	(function (w) {
-		w.URLSearchParams = w.URLSearchParams || function (searchString) {
-			var self = this;
-			self.searchString = searchString;
-			self.get = function (name) {
-				var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
-				if (results == null) {
-					return null;
-				} else {
-					return decodeURI(results[1]) || 0;
-				}
-			};
-		};
+function loadGoogleFont(fontName) {
+    const formattedFontName = fontName.replace(/\s/g, '+');
+    const link = document.createElement('link');
+    link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+    var currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+    document.documentElement.style.setProperty("--font-family", "'" + fontName.replaceAll("+", " ") + "', " + currentFont);
+}
+if (urlParams.get("font")) {
+    document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Sora, Roboto, Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif");
+}
+if (urlParams.get("googlefont")) {
+    loadGoogleFont(urlParams.get("googlefont"));
+}
+if (urlParams.has('css')) {
+    var cssURL = urlParams.get('css');
+    cssURL = decodeURI(cssURL);
+    var cssStylesheet = document.createElement('link');
+    cssStylesheet.rel = 'stylesheet';
+    cssStylesheet.type = 'text/css';
+    cssStylesheet.media = 'screen';
+    cssStylesheet.href = cssURL;
+    document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+}
+if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+    try {
+        var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+        var css = decodeURIComponent(atob(base64Css));
+        var cssStyleSheet = document.createElement("style");
+        cssStyleSheet.innerText = css;
+        document.querySelector("head").appendChild(cssStyleSheet);
+    } catch (e) {
+        console.error(e);
+    }
+}
+if (urlParams.has("fontsize")) {
+    const scaleValue = parseFloat(urlParams.get("fontsize")) || 1.0;
+    document.documentElement.style.setProperty("--scale", scaleValue);
+}
+if (urlParams.has("alignright")) {
+    document.getElementById("parentHolder").style.position = "absolute";
+    document.getElementById("parentHolder").style.right = "0";
+}
+if (urlParams.has("hidetitle")) {
+    document.getElementById("hypetitle").classList.add("hidden");
+}
+if (urlParams.has("opacity")) {
+    getById("output").style.opacity = urlParams.get("opacity") || 0.3
+}
+var conCon = 1;
+var socketserver = false;
+var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
 
-	})(window);
+function setupSocket() {
+    socketserver.onclose = function() {
+        setTimeout(function() {
+            conCon += 1;
+            socketserver = new WebSocket(serverURL);
+            setupSocket();
+        }, 100 * conCon);
+    };
+    socketserver.onopen = function() {
+        conCon = 1;
+        socketserver.send(JSON.stringify({
+            "join": roomID,
+            "out": 3,
+            "in": 4
+        }));
+    };
+    socketserver.addEventListener('message', function(event) {
+        var resp = false
+        if (event.data) {
+            var data = JSON.parse(event.data);
+            processInput(data);
+            if (data.get) {
+                var ret = {};
+                ret.callback = {};
+                ret.callback.get = data.get
+                ret.callback.result = true;
+                socketserver.send(JSON.stringify(ret));
+            }
+        }
+    });
+}
+if (urlParams.has("server") || urlParams.has("server2")) {
+    serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+    socketserver = new WebSocket(serverURL);
+    setupSocket();
+}
+if (urlParams.has("chroma")) {
+    var chroma = urlParams.get("chroma") || "0F0";
+    document.body.style.backgroundColor = "#" + chroma;
+}
+var speed = 1.0;
+if (urlParams.has("speed")) {
+    speed = parseFloat(urlParams.get("speed")) || 1;
+    speed = 1 / speed;
+    document.documentElement.style.setProperty("--x-speed", (13 * speed) + "%");
+    document.documentElement.style.setProperty("--y-speed", (7 * speed) + "%");
+}
+try {
+    if (window.obsstudio) {
+        window.obsstudio.getStatus(function(obsStatus) {
+            isOBSBrowserSource = true;
+        });
+    }
+} catch (e) {}
+if (urlParams.has("darkmode")) {
+    darkmode = true;
+} else if (urlParams.has("lightmode")) {
+    darkmode = false;
+} else if (darkmode === null) {
+    darkmode = true;
+} else {
+    document.body.classList.add("lightmode");
+    document.documentElement.style.setProperty("--font-color-title", "#000");
+    document.documentElement.style.setProperty("--font-color", "#000");
+    if (!urlParams.has("nooutline")) {
+        document.documentElement.style.setProperty("--outline", "-0.5px -0.5px 0 #FFF, 0.5px -0.5px 0 #FFF, -0.5px 0.5px 0 #FFF, 0.5px 0.5px 0 #FFF");
+    }
+}
+if (urlParams.has("transparent")) {
+    document.documentElement.style.setProperty("--background-color", "#0000", "important");
+}
+if (urlParams.has("nooutline")) {
+    document.documentElement.style.setProperty("--outline", "0px");
+}
+var showViewers = true;
+var showChatters = true;
+if (urlParams.has("viewersonly")) {
+    showViewers = true;
+    showChatters = false;
+    document.getElementById("hype").classList.add("short");
+}
+if (urlParams.has("chattersonly")) {
+    showViewers = false;
+    showChatters = true;
+    document.getElementById("hype").classList.add("short");
+}
+var titleText = "";
+if (showViewers && showChatters) {
+    titleText = "Active chatters and viewers in the last 5-minutes";
+} else if (showViewers) {
+    titleText = "Current viewer count";
+} else {
+    titleText = "Active chatters in the last 5-minutes";
+}
+document.getElementById("hypetitle").textContent = titleText;
+let style = "default";
+if (urlParams.has("style")) {
+    style = urlParams.get("style");
+    document.getElementById("parentHolder").classList.add("style-" + style);
+}
+let scale = 1;
+if (urlParams.has("scale")) {
+    scale = parseFloat(urlParams.get("scale")) || 3.0;
+}
+if (urlParams.has("style")) {
+    switch (urlParams.get("style")) {
+        case "compact":
+            document.documentElement.style.setProperty("--padding", "8px");
+            document.documentElement.style.setProperty("--width", "24px");
+            scale = scale * 2;
+            break;
+        case "modern":
+            document.documentElement.style.setProperty("--padding", "10px");
+            document.documentElement.style.setProperty("--width", "32px");
+            break;
+        case "minimal":
+            document.documentElement.style.setProperty("--padding", "6px");
+            document.documentElement.style.setProperty("--width", "20px");
+            document.getElementById("hypetitle").classList.add("hidden");
+            scale = scale * 3;
+            break;
+        case "topbar":
+            document.getElementById("parentHolder").style.position = "fixed";
+            document.getElementById("parentHolder").style.right = "0";
+            document.getElementById("parentHolder").style.top = "0";
+            document.getElementById("hypetitle").classList.add("hidden");
+            break;
+    }
+}
+document.body.style.transform = `scale(${scale})`;
+document.body.style.transformOrigin = '0 0';
+document.body.style.width = `${100/scale}%`;
+document.body.style.height = `${100/scale}%`;
 
-	var urlParams = new URLSearchParams(window.location.search);
-	var iframe = null;
-	var roomID = "test";
-	var darkmode = null;
-	var isOBSBrowserSource = false;
-	var customNodeLimit = false;
-	var body = document.body;
-	var html = document.documentElement;
-	var mainOutputWindow = document.getElementById("output");
-	var showdupes = true;
-	var hidereplies = false;
-	
-	var computedStyle = getComputedStyle(document.documentElement);
+function getSourceImage(type) {
+    if (type === "global") return "global";
+    if (type === "youtube-combined") return "youtube";
+    if (type.includes('-')) {
+        return type.split('-')[0];
+    }
+    return type;
+}
+var lastUpdated = {};
+var hasViewerCount = {};
+var activeChatters = {};
 
-	try {
-		if (window.electronApi){ // fix for electron dragging.
-			document.body.style.width = "95%";
-			setTimeout(function(){
-				document.body.style.width = "100%";
-			},1000);
+function handleClearAction(clearAction) {
+    if (!clearAction || !clearAction.action) return;
+    if (clearAction.action === "refreshSources") {
+        activeChatters = {};
+        hasViewerCount = {};
+        lastUpdated = {};
+        document.getElementById("parentHolder").classList.add("hidden");
+        console.log("Hype.html: Cleared local state due to refreshSources action.");
+    }
+}
 
-			setTimeout(function(){
-				document.body.style.width = "98%";
-			},2000);
+function processInput(data) {
 
-			setTimeout(function(){
-				document.body.style.width = "100%";
-			},5000);
-		}
-	} catch(e){
-	}
+    if (!data || !("hype" in data)) {
+        return;
+    }
+    if (uniqueId && data.hype.uniqueId && data.hype.uniqueId !== uniqueId) {
+        return;
+    }
+    if (data.hype.clear) {
+        handleClearAction(data.hype.clear);
+        return;
+    }
+    const hypeContainer = document.getElementById("hype");
+    if (!hypeContainer) {
+        console.error("hype.html: 'hype' container element not found!");
+        return;
+    }
+    hypeContainer.innerHTML = "";
+    const parentHolder = document.getElementById("parentHolder");
+    if (!parentHolder) {
+        console.error("hype.html: 'parentHolder' element not found!");
+        return;
+    }
+    const combinedData = data.hype.combined || {};
+    const sourceKeys = Object.keys(combinedData);
+	sourceKeys.sort();
+    let hasContentToDisplay = false;
+    const now = Date.now();
+    for (let i = 0; i < sourceKeys.length; i++) {
+        const sourceType = sourceKeys[i];
+        if (sourceType === "uniqueId" || typeof combinedData[sourceType] !== 'object') {
+            continue;
+        }
+        const sourceData = combinedData[sourceType];
+        const chatterCount = (sourceData && sourceData.chatters !== undefined) ? parseInt(sourceData.chatters) : 0;
+        const viewerCount = (sourceData && sourceData.viewers !== undefined) ? parseInt(sourceData.viewers) : 0;
+        lastUpdated[sourceType] = now;
+        if (viewerCount > 0) {
+            hasViewerCount[sourceType] = true;
+        }
+        if (chatterCount > 0) {
+            activeChatters[sourceType] = true;
+        }
+        let displayThisSpecificSourceItem = true;
+        if (hasViewerCount[sourceType] && (now - lastUpdated[sourceType] > 33000) && viewerCount === 0) {} else if (!hasViewerCount[sourceType] && activeChatters[sourceType] && (now - lastUpdated[sourceType] > 300000) && chatterCount === 0) {}
+        if (displayThisSpecificSourceItem && (showChatters || showViewers)) {
+            hasContentToDisplay = true;
+            const sourceImgName = getSourceImage(sourceType);
+            const sourceImgSrc = "./sources/images/" + sourceImgName + ".png";
+            let viewersHTML = "";
+            if (showViewers) {
+                viewersHTML = "<span data-viewers='true' data-type='" + sourceType + "'>" + viewerCount + "</span>";
+            }
+            let chattersHTML = "";
+            if (showChatters) {
+                chattersHTML = "<span data-chatters='true' data-type='" + sourceType + "'>" + chatterCount + "</span>";
+            }
+            if (viewersHTML || chattersHTML) {
+                hypeContainer.innerHTML += "<div class='sourceStatHolder'><img class='sourceicons' src='" +
+                    sourceImgSrc + "'>" + viewersHTML + chattersHTML + "</div>";
+            } else if (showViewers === false && showChatters === false) {}
+        }
+    }
+    if (hasContentToDisplay) {
+        parentHolder.classList.remove("hidden");
+    } else {
+        parentHolder.classList.add("hidden");
+    }
+}
 
-	var timeoutDelay = 5000;
-	if (urlParams.has("showtime")){
-		timeoutDelay = parseInt(urlParams.get("showtime")) || 0; // 0 disables.
-	}
-
-	if (urlParams.has("session")){
-		roomID = urlParams.get("session");
-	} else if (urlParams.has("s")){
-		roomID = urlParams.get("s");
-	} else if (urlParams.has("id")){
-		roomID = urlParams.get("id");
-	} else if (window.location.protocol=="file:"){
-		roomID = prompt("Enter your session ID here, or add it to the URL.");
-		if (roomID){
-			var href = window.location.href;
-			var arr = href.split('?');
-			var newurl;
-			if (arr.length > 1 && arr[1] !== '') {
-				newurl = href + '&session=' + roomID;
-			} else {
-				newurl = href + '?session=' + roomID;
-			}
-			window.history.pushState({path: newurl.toString()}, '', newurl.toString());
-		} else {
-			alert("You need to provide your extension's session ID for this page to work");
-		}
-	} else {
-		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
-	}
-
-	var password = "false";
-	if (urlParams.has("password")){
-		password = urlParams.get("password") || "false";
-	}
-	
-	function loadGoogleFont(fontName) {
-		const formattedFontName = fontName.replace(/\s/g, '+');
-
-		const link = document.createElement('link');
-		link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
-		link.rel = 'stylesheet';
-
-		document.head.appendChild(link);
-		var currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
-		document.documentElement.style.setProperty("--font-family", "'"+fontName.replaceAll("+"," ")+"', "+currentFont);
-	}
-	
-	if (urlParams.get("font")){
-		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Sora, Roboto, Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif");
-	}
-	
-	if (urlParams.get("googlefont")) {
-		loadGoogleFont(urlParams.get("googlefont"));
-	}
-
-	if (urlParams.has('css')){
-		var cssURL = urlParams.get('css');
-		cssURL = decodeURI(cssURL);
-
-		var cssStylesheet = document.createElement('link');
-		cssStylesheet.rel = 'stylesheet';
-		cssStylesheet.type = 'text/css';
-		cssStylesheet.media = 'screen';
-		cssStylesheet.href = cssURL;
-		document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
-	}
-
-	if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
-		try {
-			var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
-			var css = decodeURIComponent(atob(base64Css)); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
-			var cssStyleSheet = document.createElement("style");
-			cssStyleSheet.innerText = css;
-			document.querySelector("head").appendChild(cssStyleSheet);
-		} catch(e){console.error(e);}
-	}
-	
-	if (urlParams.has("fontsize")) {
-	  const scaleValue = parseFloat(urlParams.get("fontsize")) || 1.0;
-	  document.documentElement.style.setProperty("--scale", scaleValue);
-	}
-	
-	if (urlParams.has("alignright")){
-		document.getElementById("parentHolder").style.position="absolute";
-		document.getElementById("parentHolder").style.right="0";
-	}
-	
-	if (urlParams.has("hidetitle")){
-		document.getElementById("hypetitle").classList.add("hidden");
-	}
-
-	if (urlParams.has("opacity")) {
-		getById("output").style.opacity = urlParams.get("opacity") || 0.3
-	}
-	
-	var conCon = 1;
-	var socketserver = false;
-	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
-
-	function setupSocket(){
-		socketserver.onclose = function (){
-			setTimeout(function(){
-				conCon+=1;
-				socketserver = new WebSocket(serverURL);
-				setupSocket();
-			},100*conCon);
-		};
-		socketserver.onopen = function (){
-			conCon = 1;
-			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
-		};
-		socketserver.addEventListener('message', function (event) {
-			var resp = false
-			if (event.data){
-				var data = JSON.parse(event.data);
-				processInput(data);
-				if (data.get){
-					var ret = {};
-					ret.callback = {};
-					ret.callback.get = data.get
-					ret.callback.result = true;
-					socketserver.send(JSON.stringify(ret));
-				}
-			}
-		});
-	}
-	
-	if (urlParams.has("server") || urlParams.has("server2")){
-		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
-		socketserver = new WebSocket(serverURL);
-		setupSocket();
-	}
-
-	if (urlParams.has("chroma")){
-		var chroma = urlParams.get("chroma") || "0F0";
-		document.body.style.backgroundColor = "#"+chroma;
-	}
-	
-	var speed = 1.0;
-	if (urlParams.has("speed")){
-		speed = parseFloat(urlParams.get("speed")) || 1;
-		speed = 1 / speed;
-		document.documentElement.style.setProperty("--x-speed", (13*speedxy)+"%"); // not used
-		document.documentElement.style.setProperty("--y-speed",  (7*speedxy)+"%"); // not used
-	}
-	
-	
-	try {
-		if (window.obsstudio){
-			window.obsstudio.getStatus(function(obsStatus){
-				isOBSBrowserSource = true;
-			});
-		}
-	} catch(e){}
-	
-
-	if (urlParams.has("darkmode")){
-		darkmode=true;
-	} else if (urlParams.has("lightmode")){
-		darkmode=false;
-	}
-
-	if (darkmode){
-	
-	} else if (darkmode === null){ // defaultmode
-		darkmode = true;
-	} else {
-		document.body.classList.add("lightmode");
-		document.documentElement.style.setProperty("--font-color-title", "#000");
-		document.documentElement.style.setProperty("--font-color", "#000");
-		if (!urlParams.has("nooutline")){
-			document.documentElement.style.setProperty("--outline", "-0.5px -0.5px 0 #FFF, 0.5px -0.5px 0 #FFF, -0.5px 0.5px 0 #FFF, 0.5px 0.5px 0 #FFF");
-		}
-	}
-
-	if (urlParams.has("transparent")){
-		document.documentElement.style.setProperty("--background-color", "#0000", "important");
-	}
-	
-	if (urlParams.has("nooutline")){
-		document.documentElement.style.setProperty("--outline", "0px");
-	}
-	
-	var showViewers = true;
-	var showChatters = true;
-
-	if (urlParams.has("viewersonly")) {
-		showViewers = true;
-		showChatters = false;
-		document.getElementById("hype").classList.add("short");
-	}
-	if (urlParams.has("chattersonly")) {
-		showViewers = false;
-		showChatters = true;
-		document.getElementById("hype").classList.add("short");
-	}
-	
-	var titleText = "";
-	if (showViewers && showChatters) {
-		titleText = "Active chatters and viewers in the last 5-minutes";
-	} else if (showViewers) {
-		titleText = "Current viewer count";
-	} else {
-		titleText = "Active chatters in the last 5-minutes";
-	}
-	document.getElementById("hypetitle").textContent = titleText;
-	
-	let style = "default";
-	
-	if (urlParams.has("style")) {
-	  style = urlParams.get("style");
-	  document.getElementById("parentHolder").classList.add("style-" + style);
-	}
-	
-	let scale = 1;
-	if (urlParams.has("scale")) {
-       scale = parseFloat(urlParams.get("scale")) || 3.0;
-	}
-	
-	// Add this to the existing CSS variable settings section
-	if (urlParams.has("style")) {
-		switch(urlParams.get("style")) {
-			case "compact":
-				document.documentElement.style.setProperty("--padding", "8px");
-				document.documentElement.style.setProperty("--width", "24px");
-				scale = scale*2;
-				break;
-			case "modern":
-				document.documentElement.style.setProperty("--padding", "10px");
-				document.documentElement.style.setProperty("--width", "32px");
-				break;
-			case "minimal":
-				document.documentElement.style.setProperty("--padding", "6px");
-				document.documentElement.style.setProperty("--width", "20px");
-				document.getElementById("hypetitle").classList.add("hidden");
-				scale = scale*3;
-				break;
-			case "topbar":
-				document.getElementById("parentHolder").style.position = "fixed";
-				document.getElementById("parentHolder").style.right = "0";
-				document.getElementById("parentHolder").style.top = "0";
-				document.getElementById("hypetitle").classList.add("hidden");
-				break;
-		}
-	}
-	
-	document.body.style.transform = `scale(${scale})`;
-	document.body.style.transformOrigin = '0 0';
-	document.body.style.width = `${100/scale}%`;
-	document.body.style.height = `${100/scale}%`;
-	
-	var viewers = [];
-
-	function processInput(data){
-		if ("hype" in data){
-			var keys = Object.keys(data.hype);
-			document.getElementById("hype").innerHTML = "";
-			if (!keys.length){
-				document.getElementById("parentHolder").classList.add("hidden");
-			} else {
-				if (showChatters){
-					document.getElementById("parentHolder").classList.remove("hidden");
-					for (var i = 0; i<keys.length;i++){
-						if (keys[i]){
-							document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><img class='sourceicons' src='./sources/images/"+keys[i]+".png'><span data-viewers='true' data-type='"+keys[i]+"'></span><span data-chatters='true' data-type='"+keys[i]+"'>"+data.hype[keys[i]]+"</span></div>";
-						}
-					}
-				}
-			}
-			
-			if (showViewers){
-				document.getElementById("parentHolder").classList.remove("hidden");
-				for (var type in viewers){
-					var ele = document.querySelector("[data-viewers][data-type='"+type+"']");
-					if (ele){
-						ele.innerText = viewers[type];
-						if (["topbar", "minimal"].includes(style)){
-							var ele2 = document.querySelector("[data-chatters][data-type='"+type+"']")
-							if (ele2){
-								ele2.classList.add("hidden");
-							}
-							return;
-						}
-					} else {
-						document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><img class='sourceicons' src='./sources/images/"+type+".png'><span data-viewers='true' data-type='"+type+"'>"+viewers[type]+"</span><span data-chatters='true' data-type='"+type+"'></span></div>";
-						
-					}
-					
-				}
-			}
-
-		} else if (data && data.event && data.type && ("meta" in data)){
-			if (showViewers && data.event == "viewer_update"){
-				viewers[data.type] = parseInt(data.meta) || 0;
-				var ele = document.querySelector("[data-viewers][data-type='"+data.type+"']");
-				if (ele){
-					ele.innerText = viewers[data.type];
-					if (["topbar", "minimal"].includes(style)){
-						var ele2 = document.querySelector("[data-chatters][data-type='"+data.type+"']")
-						if (ele2){
-							ele2.classList.add("hidden");
-						}
-						return;
-					}
-				} else {
-					document.getElementById("hype").innerHTML += "<div class='sourceStatHolder'><img class='sourceicons' src='./sources/images/"+data.type+".png'><span data-viewers='true' data-type='"+data.type+"'>"+viewers[data.type]+"</span><span data-chatters='true' data-type='"+data.type+"'></span></div>";
-					
-				}
-			}
-		} 
-	}
-
-	iframe = document.createElement("iframe");
-	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&solo&view="+roomID+"&novideo&noaudio&label=hype&cleanoutput&room="+roomID; // view only connection (data two way of course)
-	iframe.style.width = "0px";
-	iframe.style.height = "0px";
-	iframe.style.position = "fixed";
-	iframe.style.left = "-100px";
-	iframe.style.top = "-100px";
-	iframe.id = "frame1"
-	document.body.appendChild(iframe);
-
-	var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-	var eventer = window[eventMethod];
-	var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-
-	eventer(messageEvent, function (e) {
-		if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
-		if ("dataReceived" in e.data){ // raw data
-			if ("overlayNinja" in e.data.dataReceived){
-				processInput(e.data.dataReceived.overlayNinja);
-			}
-		}
-	});
-	
-	function fadeOutNode(node){
-		if (node.timer){return;}
-		node.style.animation += ", fadeOut 1s normal forwards ease";
-		node.timer = setTimeout(function(node){
-			node.remove();
-		},1000,node);
-		
-	}
-
-	if (urlParams.has('js')){  // ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
-		console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
-		var jsURL = urlParams.get('js');
-		jsURL = decodeURI(jsURL);
-		console.log(jsURL);
-		var externalJavaascript = document.createElement('script');
-		externalJavaascript.type = 'text/javascript';
-		externalJavaascript.crossorigin = 'anonymous';
-		externalJavaascript.src = jsURL;
-		externalJavaascript.onerror = function() {
-			console.warn("Third-party Javascript failed to load");
-		};
-		externalJavaascript.onload = function() {
-			console.log("Third-party Javascript loaded");
-		};
-		document.head.appendChild(externalJavaascript);
-	}
-
+function fadeOutNode(node) {
+    if (node.timer) {
+        return;
+    }
+    node.style.animation += ", fadeOut 1s normal forwards ease";
+    node.timer = setTimeout(function(node) {
+        node.remove();
+    }, 1000, node);
+}
+iframe = document.createElement("iframe");
+iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&solo&view=" + roomID + "&novideo&noaudio&label=hype&cleanoutput&room=" + roomID;
+iframe.style.width = "0px";
+iframe.style.height = "0px";
+iframe.style.position = "fixed";
+iframe.style.left = "-100px";
+iframe.style.top = "-100px";
+iframe.id = "frame1"
+document.body.appendChild(iframe);
+var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+var eventer = window[eventMethod];
+var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+eventer(messageEvent, function(e) {
+    if (e.source != iframe.contentWindow) {
+        return;
+    }
+    if ("dataReceived" in e.data) {
+        if ("overlayNinja" in e.data.dataReceived) {
+            processInput(e.data.dataReceived.overlayNinja);
+        }
+    }
+});
+if (urlParams.has('js')) {
+    console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
+    var jsURL = urlParams.get('js');
+    jsURL = decodeURI(jsURL);
+    console.log(jsURL);
+    var externalJavaascript = document.createElement('script');
+    externalJavaascript.type = 'text/javascript';
+    externalJavaascript.crossorigin = 'anonymous';
+    externalJavaascript.src = jsURL;
+    externalJavaascript.onerror = function() {
+        console.warn("Third-party Javascript failed to load");
+    };
+    externalJavaascript.onload = function() {
+        console.log("Third-party Javascript loaded");
+    };
+    document.head.appendChild(externalJavaascript);
+}
 	</script>
 	</body>
 </html>

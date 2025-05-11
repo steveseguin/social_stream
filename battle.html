@@ -90,7 +90,7 @@ function getById(id) {
 var urlParams = new URLSearchParams(window.location.search);
 
 try {
-	if (window.electronApi){ // fix for electron dragging.
+	if ((window.ninjafy || window.electronApi)){ // fix for electron dragging.
 		document.body.style.width = "95%";
 		setTimeout(function(){
 			document.body.style.width = "100%";
@@ -274,7 +274,27 @@ function processData(data) {
             if (players.get(data.chatname)) {
                 handleChatMessage(data.chatname, data.chatmessage.split("!say ")[1]);
             }
-        }
+        } else if (data.chatmessage.toLowerCase().startsWith("!left") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = Math.PI;
+			}
+		} else if (data.chatmessage.toLowerCase().startsWith("!right") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = 0;
+			}
+		} else if (data.chatmessage.toLowerCase().startsWith("!up") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = -Math.PI/2;
+			}
+		} else if (data.chatmessage.toLowerCase().startsWith("!down") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = Math.PI/2;
+			}
+		}
     }
 }
 
@@ -670,6 +690,7 @@ class Player {
         this.avatarLoaded = false;
 		this.invincible = false;
         this.damageMultiplier = 1;
+		this.damageEffects = [];
     }
 	
 	setAvatar(imageUrl) {
@@ -704,7 +725,7 @@ class Player {
 		if (!this.inCombat && this.health < 100) {
             this.health = Math.min(100, this.health + this.healthRegenRate);
         }
-
+		
         if (!this.inCombat) {
             this.x += Math.cos(this.direction) * this.speed;
             this.y += Math.sin(this.direction) * this.speed;
@@ -730,6 +751,16 @@ class Player {
                 this.message = null;
             }
         }
+		
+		for (let i = this.damageEffects.length - 1; i >= 0; i--) {
+			const effect = this.damageEffects[i];
+			effect.age += 16; // ms per frame at 60fps
+			effect.y -= 0.5; // Float upward
+			
+			if (effect.age > 1000) { // Remove after 1 second
+				this.damageEffects.splice(i, 1);
+			}
+		}
 
         this.animationFrame = (this.animationFrame + 1) % 60;
     }
@@ -798,6 +829,14 @@ class Player {
         ctx.fillRect(x, y - 24, 32, 5);
         ctx.fillStyle = 'green';
         ctx.fillRect(x, y - 24, 32 * (this.health / 100), 5);
+		
+	    this.damageEffects.forEach(effect => {
+			const opacity = 1 - (effect.age / 1000);
+			ctx.fillStyle = `rgba(255, 50, 50, ${opacity})`;
+			ctx.font = 'bold 16px Arial';
+			ctx.textAlign = 'center';
+			ctx.fillText(`-${effect.value}`, effect.x, effect.y);
+		});
 		
 		if (this.message) {
             const x = this.x * TILE_SIZE;
@@ -930,6 +969,13 @@ class Player {
         target.health -= actualDamage;
 
         target.bloodSplatter += actualDamage * 2;
+		
+		target.damageEffects.push({
+			value: Math.round(actualDamage),
+			x: target.x * TILE_SIZE + Math.random() * TILE_SIZE,
+			y: target.y * TILE_SIZE,
+			age: 0
+		});
 
         if (target.health <= 0) {
             target.isAlive = false;

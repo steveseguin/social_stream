@@ -81,6 +81,7 @@
 		--ticker-color: #dd3334dd;
 		--poll-color: #a3ff3bdd;
         --download-link: lightblue;
+		--eventsdashboard-color: white;
     }
 }
 
@@ -682,6 +683,11 @@ h2.tipjar_title {
 h2.emotes_wall_title {
     color: var(--emotes-wall-color);
 }
+
+h2.events_dashboard_title {
+ color: var(--eventsdashboard-color);
+}
+
 h2.chatbot_wall_title {
     color: var(--chatbot-wall-color);
 }
@@ -1198,6 +1204,189 @@ input:checked + .slider:before {
   background-color: var(--color-accent);
   color: white;
   border: none;
+}
+
+//////////
+
+
+/* General body and container adjustments for wider screen */
+body.ssapp {
+    font-size: 14px; /* Slightly increase base font size for better readability */
+}
+
+body.ssapp .container {
+    max-width: 1100px; /* Allow the main container to expand */
+    margin: 0 auto; /* Center the container */
+    padding: 0 1em; /* Add some padding on the sides */
+}
+
+/* Adjustments for wrapper and collapsible sections */
+body.ssapp .wrapper {
+    display: flex;
+    flex-direction: column; /* Stack wrappers vertically */
+    align-items: center; /* Center content within wrappers */
+}
+
+body.ssapp .collapsible {
+    width: 100%; /* Allow collapsibles to use full width of their container */
+    max-width: none; /* Remove max-width if previously set for narrow view */
+}
+
+body.ssapp .collapsible-label {
+    font-size: 1.25em; /* Slightly larger labels */
+}
+
+body.ssapp .collapsible-text {
+    padding: 1em; /* Increase padding within collapsible content */
+}
+
+/* Optimize link and options group sections */
+body.ssapp .link,
+body.ssapp .generic_category_title {
+    margin-top: 2em; /* Increase top margin for better separation */
+}
+
+body.ssapp .link div,
+body.ssapp .options_group {
+    padding: 1.5em; /* Increase padding in these groups */
+    max-height: none; /* Allow link divs to expand if needed */
+}
+
+body.ssapp .link h2,
+body.ssapp .generic_category_title h2 {
+    font-size: 1.3rem; /* Slightly larger section titles */
+}
+
+/* Grid adjustments */
+body.ssapp .grid,
+body.ssapp .grid3 {
+    /* If you want to maintain multiple columns on wider screens,
+       you might not need to change these much, but you could adjust gaps.
+       Alternatively, you could allow more columns. */
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* More flexible grid columns */
+    gap: 1em; /* Increase gap between grid items */
+}
+
+
+/* Header button adjustments */
+body.ssapp #disableButton {
+    padding: 0.75em 0; /* Slightly more padding for the main toggle button */
+}
+
+body.ssapp .glowingButton span {
+    font-size: clamp(14px, 1.1em, 18px); /* Adjust glowing button text size */
+    padding: 6px 12px; /* Adjust padding for glowing buttons */
+}
+
+body.ssapp div[style*="flex-grow: 1"] .glowingButton span,
+body.ssapp div[style*="flex-basis: auto"] .glowingButton span {
+     /* Ensure buttons that are meant to grow can still do so effectively */
+}
+
+
+/* Text Input Adjustments */
+body.ssapp .textInputContainer {
+    width: auto; /* Allow text input containers to adjust to their content or parent */
+    max-width: 600px; /* Set a max-width for very wide inputs if desired */
+    margin-bottom: 1em; /* More space below inputs */
+}
+
+body.ssapp .textInput,
+body.ssapp .textInputContainer input[type="text"],
+body.ssapp .textInputContainer input[type="password"],
+body.ssapp .textInputContainer input[type="number"],
+body.ssapp .textInputContainer textarea,
+body.ssapp select.textInput {
+    font-size: 1em; /* Ensure consistent font size in inputs */
+    padding: 8px; /* More padding in text inputs */
+}
+
+body.ssapp .textInput + label {
+    font-size: 1.1em; /* Adjust label font size */
+}
+
+body.ssapp .textInput:focus + label,
+body.ssapp .textInput:not(:placeholder-shown) + label {
+    top: -10px; /* Adjust label position on focus/filled */
+    font-size: 0.9em;
+}
+
+/* Tab container adjustments */
+body.ssapp .tab-header {
+    max-height: none; /* Allow more space for tab headers if they wrap */
+}
+
+body.ssapp .tab-button {
+    padding: 0.5em 1em; /* Increase padding for tab buttons */
+}
+
+body.ssapp .tab-content {
+    padding: 1.5em; /* More padding for tab content */
+}
+
+/* Specific adjustments for better layout - you might need to add more based on content */
+body.ssapp .submenubuttons .glowingButton {
+    width: auto; /* Allow submenu buttons to size based on content */
+    flex-grow: 1; /* Allow them to share space if in a flex container */
+    margin: 5px;
+}
+
+body.ssapp #chatCommands,
+body.ssapp #timedMessages,
+body.ssapp #botReplyMessages {
+    max-height: 300px; /* Allow more height for these scrollable areas */
+}
+
+body.ssapp .source-list-container,
+body.ssapp .username-list-container {
+    max-height: 150px; /* Allow more height for source/username lists */
+}
+
+/* Example: if you want some sections to go side-by-side */
+body.ssapp .wrapper {
+    /* If you have multiple .wrapper elements that you want side-by-side
+       you'll need to wrap them in another container and apply flex display to it.
+       The current CSS makes .wrapper elements stack vertically.
+       If you want specific groups of .collapsible sections to be side-by-side:
+    */
+}
+/*
+   For instance, if you have a structure like:
+   <div class="ssapp-row">
+       <div class="wrapper">...</div>
+       <div class="wrapper">...</div>
+   </div>
+
+   Then you could add:
+   body.ssapp .ssapp-row {
+       display: flex;
+       gap: 1em;
+       align-items: flex-start;
+   }
+   body.ssapp .ssapp-row .wrapper {
+       flex: 1;
+   }
+*/
+
+/* Quick open chats section in ssapp mode */
+body.ssapp .wrapper.ssapp .collapsible-text .options_group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Arrange items in a responsive grid */
+    gap: 1em;
+}
+
+body.ssapp .wrapper.ssapp .textInputContainer {
+    width: 100%; /* Make input fields take full width of their grid cell */
+}
+
+body.ssapp .wrapper.ssapp center {
+    grid-column: 1 / -1; /* Make buttons span full width if needed or style them differently */
+    margin-bottom: 1em;
+}
+
+body.ssapp .wrapper.ssapp h3 {
+     grid-column: 1 / -1; /* Make headers span full width */
+     margin-bottom: 0.5em;
 }
         </style>
     </head>
@@ -1798,9 +1987,15 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param1="passtts" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="pass-tts">🔇 Next tts message control via chat </span><b><span data-translate="pass">!pass</span></b>
+									<span data-translate="pass-tts">🔇 Next TTS message control via chat </span><b><span data-translate="pass">!pass</span></b>
 								</div>
-								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="passttsmod" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="passmod-tts">🔇 Mod-only TTS message control via </span><b><span data-translate="passmod">!pass</span></b>
+								</div>
 								<div title="The volume has a max of 1.0 (100%)">
 									<label class="switch">
 										<input type="checkbox" data-param1="volume" />
@@ -2267,7 +2462,14 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="sequence">🌌 Hide name/icons if sequential from same user</span>
-                                </div>                                
+                                </div>         
+								<div title="If messages include 'user replied to:', this removes it on this dock page only">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="stripreplyto" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="stripreplyto">📩 Strips 'Replying to @user' if present</span>
+                                </div>    								
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="limit" />
@@ -4298,8 +4500,97 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
+			<div class="link" title="Monitor donation events and activity in real-time">
+				<h2 class="events_dashboard_title">
+					<span data-translate="eventsdashboard">Events Dashboard</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#eventsdashboard-options" title="Jump to the events dashboard options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<h3>
+					<span data-translate="when-enabled-donation-events">
+						A real-time dashboard displaying donations and stream events. Create a customized view for monitoring.
+					</span>
+				</h3>
+				<div id="eventsdashboard" data-raw="" class="eventsdashboard"><a href="" id="eventsdashboardlink"></a></div>
+			</div>
+			<a href="" id="eventsdashboard-options"></a>
 			
-			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-eventsdashboard-options" />
+					<label class="collapsible-label" for="wrapper-eventsdashboard-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group events_dashboard">
+								<h3><span data-translate="source-selection">Sources to Monitor</span></h3>
+								
+								<div class="source-selection-container">
+									<div class="textInputContainer" style="width: 95%;">
+										<span data-translate="select-sources">Defaults to monitoring all if no source(s) selected:</span>
+										<input type="text" id="eventsSources" class="textInput" autocomplete="off" placeholder="youtube,twitch,tiktok,etc" data-textparam17="sources" data-textsetting="eventsSources" />
+									</div>
+								</div>
+								
+								<h3><span data-translate="display-options">Display Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="donationsonly" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="only-show-donations">💰 Only show donations (hide other events)</span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="currency" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="show-usd-conversion">💵 Show USD conversion for all donations</span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="highlightvalue" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="highlight-high-value">✨ Highlight high-value donations</span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="lightmode" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="light-theme">☀️ Use light theme instead of dark</span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="maxevents" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="max-events">Maximum events to display:</span>
+									<input type="number" id="maxEvents" class="numberInput" min="10" max="500" value="100" data-numbersetting17="maxevents">
+								</div>
+								
+								<div>
+									<span data-translate="font-family">Font Family</span>
+									<select data-optionparam17="font">
+										<option value="Roboto" style="font-family: 'Roboto';">Roboto - abc123XYZ</option>
+										<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
+										<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
+									</select>
+								</div>
+								
+								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
+									<input type="text" id="googlefont17" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam17="googlefont" />
+									<label for="googlefont17"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			
 
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
@@ -4528,6 +4819,40 @@ input:checked + .slider:before {
                                     <input type="text" id="googlefont4" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam4="googlefont" />
                                     <label for="googlefont4"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
                                 </div>
+								
+								<h3><span data-translate="source-combination-options">Source Combination Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hypeCombineYouTube" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="combine-youtube-and-shorts">🔄 Combine YouTube and YouTube Shorts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hypeCombineSameType" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="combine-same-types">🔄 Combine all sources of the same type</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hypeCombineAll" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="combine-all-sources">🔄 Combine all sources into one global count</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="hypeAutoCleanup" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="auto-cleanup-inactive">🧹 Auto remove inactive sources (33 seconds)</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Assign a unique identifier for this hype meter">
+									<input type="text" id="hypeUniqueId" class="textInput instant" autocomplete="off" placeholder="empty = default" data-param4="uniqueid" />
+									<label for="hypeUniqueId"><span data-translate="hype-unique-id">&gt; Unique identifier for this hype meter</span></label>
+								</div>
                             </div>
                         </div>
                     </div>
@@ -4743,7 +5068,7 @@ input:checked + .slider:before {
                                     <input type="checkbox" data-setting="customwaitlistmessagetoggle" />
                                     <span class="slider round"></span>
                                 </label>
-                                
+								
                                 <div class="textInputContainer" style="display: inline-block; width: 215px;">
 									🪧
                                     <input type="text" id="customwaitlistmessage" class="textInput" autocomplete="off" placeholder="Enter {trigger} to enter!" data-textsetting="customwaitlistmessage" />
@@ -4763,6 +5088,8 @@ input:checked + .slider:before {
                                     <input type="text" id="googlefont5" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam5="googlefont" />
                                     <label for="googlefont5"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
                                 </div>
+								
+								
                             </div>
                         </div>
                     </div>
@@ -4777,7 +5104,7 @@ input:checked + .slider:before {
                 </h2>
 				<h3>
                     <span data-translate="giveaway-made">
-                       A giveaway made by a community member
+                       A giveaway made by a community member -- ⚠️ it's not yet considered "stable", so I may avoid this for now.
                     </span>
                 </h3>
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
@@ -5888,6 +6215,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="do-not-say-said">📛🔀 Do not include 'User Said:' with relays"</span>
                                 </div>
+								
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" id="relayhostonly" data-setting="relayhostonly" />
@@ -5895,6 +6223,15 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="relayhostonly">🫅🔀 Only relay if message is from a 'host'"</span>
                                 </div>
+								
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="nohostreflections" data-setting="nohostreflections" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="nohostreflections">🥷 Hide reflections of 'hosts'</span>
+                                </div>
+								
 								
 								<div>
                                     <label class="switch">

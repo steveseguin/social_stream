@@ -1551,7 +1551,7 @@
     } catch (e) {}
 
 	let pokeTimeout = 27;
-	if (window.electronApi){
+	if ((window.ninjafy || window.electronApi)){
 		pokeTimeout = 10; // we can be more annoying in this case.
 	}
     var pokeMe = setInterval(function() {

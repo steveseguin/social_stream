@@ -695,7 +695,7 @@
 			
 			function createReliableTimer(callback, delay, data) {
 			  // Check if we're in Electron or OBS Studio
-			  if (window.electronApi || window.obsstudio) {
+			  if ((window.ninjafy || window.electronApi) || window.obsstudio) {
 				// Use standard setTimeout for these environments
 				const timerId = setTimeout(callback, delay, data);
 				return {

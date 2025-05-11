@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - Event Flow Editor</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="EventFlowSystem.js"></script>
+    <script src="EventFlowEditor.js"></script>
+	<script src="lib.js"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        .editor-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor-title {
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .editor-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .editor-body {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        #editor-container {
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .btn-help {
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 5px 10px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        
+        .help-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .help-content {
+            background-color: var(--background-light);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .help-close {
+            float: right;
+            cursor: pointer;
+            font-size: 24px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <div class="editor-title">Event Flow Editor</div>
+            <div class="editor-actions">
+                <div class="btn-help">Help</div>
+                <a href="index.html" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+        
+        <div class="editor-body">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+    
+    <div class="help-modal">
+        <div class="help-content">
+            <div class="help-close">&times;</div>
+            <h2>Event Flow Editor Help</h2>
+            
+            <h3>Getting Started</h3>
+            <p>The Event Flow Editor allows you to create custom event-based workflows for handling messages in Social Stream Ninja. Here's how to use it:</p>
+            
+            <h4>Creating a Flow</h4>
+            <ol>
+                <li>Click "Create New Flow" on the left sidebar</li>
+                <li>Give your flow a name</li>
+                <li>Drag a Trigger from the left sidebar onto the canvas</li>
+                <li>Configure the trigger by selecting it and using the properties panel on the right</li>
+                <li>Drag an Action onto the canvas</li>
+                <li>Connect the trigger to the action by dragging from the output point to the input point</li>
+                <li>Configure the action in the properties panel</li>
+                <li>Add more actions if needed and connect them</li>
+                <li>Click "Save Flow" to save your flow</li>
+            </ol>
+            
+            <h4>Available Triggers</h4>
+            <ul>
+                <li><strong>Message Contains</strong> - Triggers when a message contains specific text</li>
+                <li><strong>Message Starts With</strong> - Triggers when a message starts with specific text</li>
+                <li><strong>Message Equals</strong> - Triggers when a message exactly matches specific text</li>
+                <li><strong>Message Regex</strong> - Triggers when a message matches a regular expression</li>
+                <li><strong>From Source</strong> - Triggers when a message comes from a specific platform</li>
+                <li><strong>From User</strong> - Triggers when a message comes from a specific user</li>
+                <li><strong>User Role</strong> - Triggers when a message comes from a user with a specific role</li>
+                <li><strong>Has Donation</strong> - Triggers when a message contains a donation</li>
+                <li><strong>Custom JavaScript</strong> - Triggers based on custom JavaScript code evaluation</li>
+            </ul>
+            
+            <h4>Available Actions</h4>
+            <ul>
+                <li><strong>Block Message</strong> - Prevents the message from being displayed or relayed</li>
+                <li><strong>Modify Message</strong> - Changes the message content</li>
+                <li><strong>Set Property</strong> - Sets a specific property on the message object</li>
+                <li><strong>Relay Message</strong> - Sends a message to one or all platforms</li>
+                <li><strong>Call Webhook</strong> - Sends an HTTP request to a webhook URL</li>
+                <li><strong>Spend Points</strong> - Deducts points from the user (requires points system)</li>
+                <li><strong>Custom JavaScript</strong> - Executes custom JavaScript code on the message</li>
+            </ul>
+            
+            <h4>Tips</h4>
+            <ul>
+                <li>You can chain multiple actions together by connecting them</li>
+                <li>Actions execute in the order they are connected</li>
+                <li>The "Block Message" action will prevent any further processing of the message</li>
+                <li>Use the "Custom JavaScript" trigger or action for complex scenarios</li>
+                <li>Test your flows with the Test Flow button before using in production</li>
+                <li>Export your flows to back them up or share them with others</li>
+            </ul>
+        </div>
+    </div>
+    
+    <script>
+        // Dark mode support
+        function applyTheme() {
+            const darkMode = localStorage.getItem('darkMode') === 'true';
+            document.body.classList.toggle('dark-mode', darkMode);
+        }
+        
+        applyTheme();
+        
+        // Define messageCounter variable needed by the system
+        var messageCounter = 0;
+        
+        // Initialize system when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create necessary functions if they don't exist
+            if (!window.sendMessageToTabs) {
+                window.sendMessageToTabs = function(message, toAll, tabId, respond, fromMain, timeout) {
+                    console.log('Send message to tabs:', message, toAll, tabId, respond, fromMain, timeout);
+                    // This is a mock function for testing
+                    return true;
+                };
+            }
+            
+            if (!window.sendToDestinations) {
+                window.sendToDestinations = function(data) {
+                    console.log('Send to destinations:', data);
+                    // This is a mock function for testing
+                    return true;
+                };
+            }
+            
+            if (!window.checkExactDuplicateAlreadyReceived) {
+                window.checkExactDuplicateAlreadyReceived = function(message, textonly, tid, type) {
+                    // This is a mock function for testing
+                    return false;
+                };
+            }
+            
+            // Initialize system
+            const eventFlowSystem = window.eventFlowSystem || initializeEventFlowSystem();
+            
+            // Initialize editor
+            const editor = new EventFlowEditor('editor-container', eventFlowSystem);
+            
+            // Help modal
+            const helpBtn = document.querySelector('.btn-help');
+            const helpModal = document.querySelector('.help-modal');
+            const helpClose = document.querySelector('.help-close');
+            
+            helpBtn.addEventListener('click', () => {
+                helpModal.style.display = 'flex';
+            });
+            
+            helpClose.addEventListener('click', () => {
+                helpModal.style.display = 'none';
+            });
+            
+            helpModal.addEventListener('click', (e) => {
+                if (e.target === helpModal) {
+                    helpModal.style.display = 'none';
+                }
+            });
+        });
+		
+		
+    </script>
+</body>
+</html>

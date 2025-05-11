@@ -389,6 +389,17 @@ async function populateFontDropdown() {
             select.appendChild(option);
         }
     });
+	
+	select = document.querySelector("[data-optionparam17='font']");
+    fonts.forEach(font => {
+        if (isFontAvailable(font)) {
+            let option = document.createElement("option");
+            option.value = font;
+			option.style="font-family:'"+font+"'";
+            option.innerText = font + " abc123XYZ";
+            select.appendChild(option);
+        }
+    });
 }
 
 function createUniqueVoiceIdentifiers(voices) {
@@ -973,7 +984,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 	  }
 }
 
-const sourceTypes = ['relaytargets'];
+const sourceTypes = ['relaytargets','eventsSources'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
@@ -987,6 +998,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	} else {
 		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
 	}
+	
+	if (ssapp && urlParams.get("ssapp")){
+		document.body.classList.add('ssapp');
+	}
+	if (ssapp){
+		const style = document.createElement('style');
+		style.textContent = 'body .ssapp { display: none !important; }';
+		style.id = 'hide-ssapp-style';
+		document.head.appendChild(style);
+	}
+
 	
 	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
 	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
@@ -1818,7 +1840,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "cohost", path: "cohost.html" },
 	{ id: "giveaway", path: "giveaway.html" },
 	{ id: "credits", path: "credits.html" },
-    { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" }
+    { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
+	{ id: "eventsdashboard", path: "events.html" }
   ];
   
   // Handle special case for custom-gif-commands
@@ -1904,966 +1927,559 @@ function removeTTSProviderParams(url, selectedProvider=null) {
   return cleanedUrl;
 }
 
-function update(response, sync=true){
-	log("update-> response: ",response);
-	if (response !== undefined){
-		
-		if (response.documents){
-			updateDocumentList(response.documents);
-		}
-		
-		if (response.streamID){ 
-		
-			lastResponse = response;
-			
-			streamID = true;
-			
-			var password = "";
-			if ('password' in response && response.password){
-				password = "&password="+response.password;
-			}
-			
-			var localServer = urlParams.has("localserver") ? "&localserver" : "";
-			
-			password += localServer;
-			
-			let hideLinks = false;
-			document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
-				if (x.checked){
-					hideLinks = true;
-				}
-			});
-			
-			if (hideLinks){
-				document.body.classList.add("hidelinks");
-			} else {
-				document.body.classList.remove("hidelinks");
-			}
-			
-			document.getElementById("sessionid").value = response.streamID;
-			document.getElementById("sessionpassword").value = response.password || "";
 
-			setupPageLinks(hideLinks, baseURL, response.streamID, password);
-			
-			document.getElementById("remote_control_url").href = baseURL+"sampleapi.html?session="+response.streamID+password;
-			
-			hideLinks = false;
-			
-			if ('settings' in response){
-				
-				if (!response.settings?.ttsProvider?.optionsetting){
-					let ttsService = "system";
-					if (response.settings?.ttskey?.textparam1){ttsService = "google";}
-					else if (response.settings?.googleAPIKey?.textparam1){ttsService = "google";}
-					else if (response.settings?.elevenlabskey?.textparam1){ttsService = "elevenlabs";}
-					else if (response.settings?.speechifykey?.textparam1){ttsService = "speechify";}
-					if (!response.settings.ttsProvider){
-						response.settings.ttsProvider = {}
-					}
-					response.settings.ttsProvider.optionsetting = ttsService;
-					//console.log("ttsService: "+ttsService);
-					//console.log(response);
-				}
-				
-				if (!response.settings?.ttsProvider?.optionsetting10){
-					let ttsService = "system";
-					if (response.settings?.ttskey?.textparam10){ttsService = "google";}
-					else if (response.settings?.googleAPIKey?.textparam10){ttsService = "google";}
-					else if (response.settings?.elevenlabskey?.textparam10){ttsService = "elevenlabs";}
-					else if (response.settings?.speechifykey?.textparam10){ttsService = "speechify";}
-					if (!response.settings.ttsProvider){
-						response.settings.ttsProvider = {}
-					}
-					response.settings.ttsProvider.optionsetting10 = ttsService;
-					//console.log("ttsService: "+ttsService);
-					//console.log(response);
-				}
-					
-					
-				for (var key in response.settings){
-					try {
-						if (key === "midiConfig"){
-							if (response.settings[key]){
-								document.getElementById("midiConfig").classList.add("pressed");
-								document.getElementById("midiConfig").innerText = " Config Loaded";
-							} else {
-								document.getElementById("midiConfig").classList.remove("pressed");
-								document.getElementById("midiConfig").innerText = " Load Config";
-							}
-						}
-						if (typeof response.settings[key] == "object"){ // newer method
-							if ("param1" in response.settings[key]){
-								var ele = document.querySelector("input[data-param1='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param1;
-									if (!key.includes("=")){
-										if ("numbersetting" in response.settings[key]){
-											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting));
-										} else if (document.querySelector("input[data-numbersetting='"+key+"']")){
-											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting='"+key+"']").value));
-										} else if ("optionparam1" in response.settings[key]){ 
-											updateSettings(ele, sync, response.settings[key].optionparam1);
-										} else if (document.querySelector("input[data-optionparam1='"+key+"']")){
-											updateSettings(ele, sync, document.querySelector("input[data-optionparam1='"+key+"']").value);
-										} else if ("textparam1" in response.settings[key]){ 
-											updateSettings(ele, sync, response.settings[key].textparam1);
-										} else if (document.querySelector("input[data-textparam1='"+key+"']")){
-											updateSettings(ele, sync, document.querySelector("input[data-textparam1='"+key+"']").value);
-										} else {
-											updateSettings(ele, sync); 
-										}
-									} else {
-										updateSettings(ele, sync);
-									}
-								} else if (key.includes("=")){
-									var keys = key.split('=');
-									ele = document.querySelector("input[data-param1='"+keys[0]+"']");
-									if (ele){
-										ele.checked = response.settings[key].param1;
-										if (keys[1]){
-											var ele2 = document.querySelector("input[data-numbersetting='"+keys[0]+"']");
-											if (ele2){
-												ele2.value = parseFloat(keys[1]);
-											} else {
-												ele2 = document.querySelector("input[data-optionparam1='"+keys[0]+"'], input[data-textparam1='"+keys[0]+"']");
-												if (ele2){
-													ele2.value = keys[1];
-												}
-											}
-											updateSettings(ele, sync, parseFloat(keys[1]));
-										} else{
-											updateSettings(ele, sync);
-										}
-									}
-								}
-							}
-							if ("param2" in response.settings[key]){
-								var ele = document.querySelector("input[data-param2='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param2;
-									if (!key.includes("=")){
-										if ("numbersetting2" in response.settings[key]){
-											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting2));
-										} else if (document.querySelector("input[data-numbersetting2='"+key+"']")){
-											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting2='"+key+"']").value));
-										} else if ("optionparam2" in response.settings[key]){
-											updateSettings(ele, sync, response.settings[key].optionparam2);
-										} else if (document.querySelector("input[data-optionparam2='"+key+"']")){
-											updateSettings(ele, sync, document.querySelector("input[data-optionparam2='"+key+"']").value);
-										} else if ("textparam2" in response.settings[key]){
-											updateSettings(ele, sync, response.settings[key].textparam2);
-										} else if (document.querySelector("input[data-textparam2='"+key+"']")){
-											updateSettings(ele, sync, document.querySelector("input[data-textparam2='"+key+"']").value);
-										} else {
-											updateSettings(ele, sync); 
-										}
-									} else {
-										updateSettings(ele, sync);
-									}
-								} else if (key.includes("=")){
-									var keys = key.split('=');
-									ele = document.querySelector("input[data-param2='"+keys[0]+"']");
-									log(keys);
-									log(response.settings);
-									if (ele){
-										ele.checked = response.settings[key].param2;
-										if (keys[1]){
-											var ele2 = document.querySelector("input[data-numbersetting2='"+keys[0]+"']");
-											if (ele2){
-												ele2.value = parseFloat(keys[1]);
-											} else {
-												var ele2 = document.querySelector("input[data-optionparam2='"+keys[0]+"'], input[data-textparam2='"+keys[0]+"']");
-												if (ele2){
-													ele2.value = keys[1];
-												}
-											}
-											updateSettings(ele, sync, parseFloat(keys[1]));
-										} else{
-											updateSettings(ele, sync);
-										}
-									}
-								}
-							}
-							if ("param3" in response.settings[key]){
-								var ele = document.querySelector("input[data-param3='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param3;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("param4" in response.settings[key]){
-								var ele = document.querySelector("input[data-param4='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param4;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("param5" in response.settings[key]){
-								var ele = document.querySelector("input[data-param5='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param5;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("param6" in response.settings[key]){
-								var ele = document.querySelector("input[data-param6='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param6;
-									if (!key.includes("=")){
-										if ("numbersetting6" in response.settings[key]){
-											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting6));
-										} else if (document.querySelector("input[data-numbersetting6='"+key+"']")){
-											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting6='"+key+"']").value));
-										} else {
-											updateSettings(ele, sync); 
-										}
-									} else {
-										updateSettings(ele, sync);
-									}
-								} else if (key.includes("=")){
-									var keys = key.split('=');
-									ele = document.querySelector("input[data-param6='"+keys[0]+"']");
-									log(keys);
-									log(response.settings);
-									if (ele){
-										ele.checked = response.settings[key].param6;
-										if (keys[1]){
-											var ele2 = document.querySelector("input[data-numbersetting6='"+keys[0]+"']");
-											if (ele2){
-												ele2.value = parseFloat(keys[1]);
-											}
-											updateSettings(ele, sync, parseFloat(keys[1]));
-										} else{
-											updateSettings(ele, sync);
-										}
-									}
-								}
-							}
-							if ("param7" in response.settings[key]){
-								var ele = document.querySelector("input[data-param7='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param7;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("param8" in response.settings[key]){
-								var ele = document.querySelector("input[data-param8='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param8;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("param9" in response.settings[key]){
-								var ele = document.querySelector("input[data-param9='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param9;
-									if (!key.includes("=")){
-										if ("numbersetting9" in response.settings[key]){
-											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting9));
-										} else if (document.querySelector("input[data-numbersetting9='"+key+"']")){
-											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting9='"+key+"']").value));
-										} else {
-											updateSettings(ele, sync); 
-										}
-									} else {
-										updateSettings(ele, sync);
-									}
-								} else if (key.includes("=")){
-									var keys = key.split('=');
-									ele = document.querySelector("input[data-param9='"+keys[0]+"']");
-									log(keys);
-									log(response.settings);
-									if (ele){
-										ele.checked = response.settings[key].param9;
-										if (keys[1]){
-											var ele2 = document.querySelector("input[data-numbersetting9='"+keys[0]+"']");
-											if (ele2){
-												ele2.value = parseFloat(keys[1]);
-											}
-											updateSettings(ele, sync, parseFloat(keys[1]));
-										} else{
-											updateSettings(ele, sync);
-										}
-									}
-								}
-							}
-							if ("param10" in response.settings[key]){
-								var ele = document.querySelector("input[data-param10='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param10;
-									if (!key.includes("=")){
-										
-										if ("numbersetting10" in response.settings[key]){
-											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting10));
-											
-										} else if (document.querySelector("input[data-numbersetting10='"+key+"']")){
-											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting10='"+key+"']").value));
-											
-										} else if ("optionparam10" in response.settings[key]){
-											updateSettings(ele, sync, response.settings[key].optionparam10);
-											
-										} else if ("textparam10" in response.settings[key]){
-											updateSettings(ele, sync, response.settings[key].textparam10);
-											
-										} else if (document.querySelector("input[data-optionparam10='"+key+"']")){
-											updateSettings(ele, sync, document.querySelector("input[data-optionparam10='"+key+"']").value);
-											
-										} else {
-											updateSettings(ele, sync); 
-										}
-									} else {
-										updateSettings(ele, sync);
-									}
-								} else if (key.includes("=")){
-									var keys = key.split('=');
-									ele = document.querySelector("input[data-param10='"+keys[0]+"']");
-									log(keys);
-									log(response.settings);
-									if (ele){
-										ele.checked = response.settings[key].param10;
-										if (keys[1]){
-											var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"']");
-											if (ele2){
-												ele2.value = parseFloat(keys[1]);
-											} else {
-												var ele2 = document.querySelector("input[data-numbersetting10='"+keys[0]+"'], input[data-textparam10='"+keys[0]+"']");
-												if (ele2){
-													ele2.value = keys[1];
-												}
-											}
-											updateSettings(ele, sync, parseFloat(keys[1]));
-										} else{
-											updateSettings(ele, sync);
-										}
-									}
-								}
-							}
-							
-							
-							if ("param11" in response.settings[key]){
-								var ele = document.querySelector("input[data-param11='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param11;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("param12" in response.settings[key]){
-								var ele = document.querySelector("input[data-param12='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param12;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("param13" in response.settings[key]){
-								var ele = document.querySelector("input[data-param13='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].param13;
-									if (!key.includes("=")){
-										if ("numbersetting13" in response.settings[key]){
-											updateSettings(ele, sync, parseFloat(response.settings[key].numbersetting13));
-										} else if (document.querySelector("input[data-numbersetting13='"+key+"']")){
-											updateSettings(ele, sync, parseFloat(document.querySelector("input[data-numbersetting13='"+key+"']").value));
-										} else if ("optionparam13" in response.settings[key]){
-											updateSettings(ele, sync, response.settings[key].optionparam13);
-										} else if ("textparam13" in response.settings[key]){
-											updateSettings(ele, sync, response.settings[key].textparam13);
-										} else if (document.querySelector("input[data-optionparam13='"+key+"']")){
-											updateSettings(ele, sync, document.querySelector("input[data-optionparam13='"+key+"']").value);
-										} else {
-											updateSettings(ele, sync); 
-										}
-									} else {
-										updateSettings(ele, sync);
-									}
-								} else if (key.includes("=")){
-									var keys = key.split('=');
-									ele = document.querySelector("input[data-param13='"+keys[0]+"']");
-									log(keys);
-									log(response.settings);
-									if (ele){
-										ele.checked = response.settings[key].param13;
-										if (keys[1]){
-											var ele2 = document.querySelector("input[data-numbersetting13='"+keys[0]+"']");
-											if (ele2){
-												ele2.value = parseFloat(keys[1]);
-											} else {
-												var ele2 = document.querySelector("input[data-numbersetting13='"+keys[0]+"'], input[data-textparam13='"+keys[0]+"']");
-												if (ele2){
-													ele2.value = keys[1];
-												}
-											}
-											updateSettings(ele, sync, parseFloat(keys[1]));
-										} else{
-											updateSettings(ele, sync);
-										}
-									}
-								}
-							}
-							if ("both" in response.settings[key]){
-								var ele = document.querySelector("input[data-both='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].both;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("setting" in response.settings[key]){
-								var ele = document.querySelector("input[data-setting='"+key+"']");
-								if (ele){
-									ele.checked = response.settings[key].setting;
-									updateSettings(ele, sync);
-								}
-								
-								if (key == "sentiment"){ // i'm deprecating sentiment
-									try{
-										var ele1 = document.querySelector("input[data-param1='badkarma']");
-										if (ele1 && !ele1.checked){
-											ele1.checked = true;
-											updateSettings(ele1, true);
-										}
-										chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {}); // delete sentiment
-									} catch(e){console.error(e);}
-								} else if (key == "hideyourlinks"){
-									document.body.classList.add("hidelinks");
-									hideLinks = true;
-								} else if (key == "ollamaRagEnabled"){
-									document.getElementById('ragFileManagement').style.display = 'block';
-								}
-								
-							}
-							if ("textsetting" in response.settings[key]){
-								
-								if (key == "mynameext"){
-									if (!response.settings["botnamesext"]){
-										response.settings["botnamesext"] = response.settings["mynameext"];
-										key == "botnamesext";
-									} else {
-										continue;
-									}
-								}
-								
-								var ele = document.querySelector("input[data-textsetting='"+key+"'],textarea[data-textsetting='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textsetting;
-									
-									if (ele.dataset.palette){
-										try {
-											document.getElementById(ele.dataset.palette).value = ele.value;
-										} catch(e){
-											log(e);
-										}
-									}
-									
-									updateSettings(ele, sync);
-									
-									updateUsernameList(key); 
-									updateSourceTypeList(key);
-								}
-								
-							} 
-							if ("optionsetting" in response.settings[key]){
-								
-								var ele = document.querySelector("select[data-optionsetting='"+key+"']");
-								
-								if (ele){
-									
-									if (key == "midiOutputDevice" || key.startsWith("mididevice")){
-										if (response.settings[key]?.optionsetting && (ele.value !== response.settings[key].optionsetting)){
-											const option = document.createElement("option");
-											option.textContent = response.settings[key].optionsetting;
-											option.value = response.settings[key].optionsetting;
-											ele.appendChild(option);
-											option.selected = true;
-										}
-									}
-									
-									ele.value = response.settings[key].optionsetting;
-									updateSettings(ele, sync); 
-								
-									if (key == "aiProvider"){
-										// First hide all elements
-										document.getElementById("ollamamodel").classList.add("hidden");
-										document.getElementById("ollamaendpoint").classList.add("hidden");
-										document.getElementById("chatgptApiKey").classList.add("hidden");
-										document.getElementById("ollamaKeepAlive").classList.add("hidden");
-										document.getElementById("geminiApiKey").classList.add("hidden");
-										document.getElementById("geminimodel").classList.add("hidden");
-										document.getElementById("xaiApiKey").classList.add("hidden");
-										document.getElementById("xaimodel").classList.add("hidden");
-										document.getElementById("chatgptmodel").classList.add("hidden");
-										document.getElementById("deepseekApiKey").classList.add("hidden");
-										document.getElementById("deepseekmodel").classList.add("hidden");
-										document.getElementById("customAIEndpoint").classList.add("hidden");
-										document.getElementById("customAIModel").classList.add("hidden");
-										document.getElementById("openrouterApiKey").classList.add("hidden");
-										document.getElementById("openroutermodel").classList.add("hidden");
-										
-										// Then show only the relevant ones based on selected provider
-										if (ele.value == "ollama"){
-											document.getElementById("ollamamodel").classList.remove("hidden");
-											document.getElementById("ollamaKeepAlive").classList.remove("hidden");
-											document.getElementById("ollamaendpoint").classList.remove("hidden");
-										} else if (ele.value == "chatgpt"){
-											document.getElementById("chatgptApiKey").classList.remove("hidden");
-											document.getElementById("chatgptmodel").classList.remove("hidden");
-										} else if (ele.value == "xai"){
-											document.getElementById("xaiApiKey").classList.remove("hidden");
-											document.getElementById("xaimodel").classList.remove("hidden");
-										} else if (ele.value == "gemini"){
-											document.getElementById("geminiApiKey").classList.remove("hidden");
-											document.getElementById("geminimodel").classList.remove("hidden");
-										} else if (ele.value == "deepseek"){
-											document.getElementById("deepseekApiKey").classList.remove("hidden");
-											document.getElementById("deepseekmodel").classList.remove("hidden");
-										} else if (ele.value == "bedrock"){
-											document.getElementById('bedrockAccessKey').classList.remove('hidden');
-											document.getElementById('bedrockSecretKey').classList.remove('hidden');
-											document.getElementById('bedrockRegion').classList.remove('hidden');
-											document.getElementById('bedrockmodel').classList.remove('hidden');
-										} else if (ele.value == "custom"){
-											document.getElementById("customAIEndpoint").classList.remove("hidden");
-											document.getElementById("customAIModel").classList.remove("hidden");
-										} else if (ele.value == "openrouter"){
-											document.getElementById("openrouterApiKey").classList.remove("hidden");
-											document.getElementById("openroutermodel").classList.remove("hidden");
-										}
-										
-									} else if (key == "ttsProvider") {
-										document.getElementById('systemTTS').classList.add('hidden');
-										document.getElementById('elevenlabsTTS').classList.add('hidden');
-										document.getElementById('googleTTS').classList.add('hidden');
-										document.getElementById('speechifyTTS').classList.add('hidden');
-										document.getElementById('kokoroTTS').classList.add('hidden');
-										
-										if (ele.value == "system") {
-											document.getElementById('systemTTS').classList.remove('hidden');
-										} else if (ele.value == "elevenlabs") {
-											document.getElementById('elevenlabsTTS').classList.remove('hidden');
-										} else if (ele.value == "google") {
-											document.getElementById('googleTTS').classList.remove('hidden');
-										} else if (ele.value == "speechify") {
-											document.getElementById('speechifyTTS').classList.remove('hidden');
-										} else if (ele.value == "kokoro") {
-											document.getElementById('kokoroTTS').classList.remove('hidden');
-										}
-									}
-								}
-							}
-							if ("optionsetting10" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionsetting10='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionsetting10;
-									updateSettings(ele, sync); 
-								}
-							}
-							if ("numbersetting" in response.settings[key]){
-								var ele = document.querySelector("input[data-numbersetting='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].numbersetting;
-									updateSettings(ele, sync);
-									
-									var ele = document.querySelector("input[data-param1='"+key+"']");
-									if (ele && ele.checked){
-										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting));
-									}
-								}
-							}
-							if ("numbersetting2" in response.settings[key]){
-								var ele = document.querySelector("input[data-numbersetting2='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].numbersetting2;
-									updateSettings(ele, sync);
-									
-									var ele = document.querySelector("input[data-param2='"+key+"']");
-									if (ele && ele.checked){
-										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting2));
-									}
-								}
-							}
-							if ("numbersetting9" in response.settings[key]){
-								var ele = document.querySelector("input[data-numbersetting9='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].numbersetting9;
-									updateSettings(ele, sync);
-									
-									var ele = document.querySelector("input[data-param9='"+key+"']");
-									if (ele && ele.checked){
-										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting9));
-									}
-								}
-							}
-							if ("numbersetting10" in response.settings[key]){
-								var ele = document.querySelector("input[data-numbersetting10='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].numbersetting10;
-									updateSettings(ele, sync);
-									
-									var ele = document.querySelector("input[data-param10='"+key+"']");
-									if (ele && ele.checked){
-										updateSettings(ele, false, parseFloat(response.settings[key].numbersetting10));
-									}
-								}
-							}
-							if ("textparam1" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam1='"+key+"'],textarea[data-textparam1='"+key+"']");
-								//console.log(ele);
-								if (ele){
-									ele.value = response.settings[key].textparam1;
-									updateSettings(ele, sync);
-									
-									var ele = document.querySelector("input[data-param1='"+key+"']");
-									if (ele){
-										if (ele.checked){
-											updateSettings(ele, false, response.settings[key].textparam1);
-										}
-									}
-								}
-							}
-							if ("textparam2" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam2='"+key+"'],textarea[data-textparam2='"+key+"']");
-								//console.log(ele);
-								if (ele){
-									ele.value = response.settings[key].textparam2;
-									updateSettings(ele, sync);
-									
-									var ele = document.querySelector("input[data-param2='"+key+"']");
-									if (ele){
-										if (ele.checked){
-											updateSettings(ele, false, response.settings[key].textparam2);
-										}
-									}
-								}
-							}
-							if ("textparam3" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam3='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam3;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam4" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam4='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam4;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam5" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam5='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam5;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam6" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam6='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam6;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam7" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam7='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam7;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam8" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam8='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam8;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam9" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam9='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam9;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam10" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam10='"+key+"'],textarea[data-textparam10='"+key+"']");
-								//console.log(ele);
-								if (ele){
-									ele.value = response.settings[key].textparam10;
-									updateSettings(ele, sync);
-									
-									var ele = document.querySelector("input[data-param10='"+key+"']");
-									if (ele){
-										if (ele.checked){
-											updateSettings(ele, false, response.settings[key].textparam10);
-										}
-									}
-								}
-							}
-							
-							if ("textparam11" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam11='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam11;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam12" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam12='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam12;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("textparam13" in response.settings[key]){
-								var ele = document.querySelector("input[data-textparam13='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].textparam13;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam1" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam1='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam1;
-									updateSettings(ele, sync);
-								}
-								
-								var ele = document.querySelector("input[data-param1='"+key+"']");
-								if (ele && ele.checked){
-									updateSettings(ele, false, response.settings[key].optionparam1);
-								}
-							}
-							if ("optionparam2" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam2='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam2;
-									updateSettings(ele, sync);
-								}
-								
-								var ele = document.querySelector("input[data-param2='"+key+"']");
-								if (ele && ele.checked){
-									updateSettings(ele, false, response.settings[key].optionparam2);
-								}
-							}
-							if ("optionparam3" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam3='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam3;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam4" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam4='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam4;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam5" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam5='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam5;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam6" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam6='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam6;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam7" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam7='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam7;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam8" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam8='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam8;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam9" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam9='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam9;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam10" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam10='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam10;
-									updateSettings(ele, sync);
-								}
-								
-								if (key == "ttsprovider") {
-									document.getElementById('systemTTS10').classList.add('hidden');
-									document.getElementById('elevenlabsTTS10').classList.add('hidden');
-									document.getElementById('googleTTS10').classList.add('hidden');
-									document.getElementById('speechifyTTS10').classList.add('hidden');
-									document.getElementById('kokoroTTS10').classList.add('hidden');
-									
-									if (ele.value == "system") {
-										document.getElementById('systemTTS10').classList.remove('hidden');
-									} else if (ele.value == "elevenlabs") {
-										document.getElementById('elevenlabsTTS10').classList.remove('hidden');
-									} else if (ele.value == "google") {
-										document.getElementById('googleTTS10').classList.remove('hidden');
-									} else if (ele.value == "speechify") {
-										document.getElementById('speechifyTTS10').classList.remove('hidden');
-									} else if (ele.value == "kokoro") {
-										document.getElementById('kokoroTTS10').classList.remove('hidden');
-									}
-								}
-								
-								var ele = document.querySelector("input[data-param10='"+key+"']");
-								if (ele && ele.checked){
-									updateSettings(ele, false, response.settings[key].optionparam10);
-								}
-							}
-							if ("optionparam11" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam11='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam11;
-									updateSettings(ele, sync);
-								}
-							}
-							if ("optionparam12" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam12='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam12;
-									updateSettings(ele, sync);
-								}
-								
-								var ele = document.querySelector("input[data-param12='"+key+"']");
-								if (ele && ele.checked){
-									updateSettings(ele, false, response.settings[key].optionparam12);
-								}
-							}
-							if ("optionparam13" in response.settings[key]){
-								var ele = document.querySelector("select[data-optionparam13='"+key+"']");
-								if (ele){
-									ele.value = response.settings[key].optionparam13;
-									updateSettings(ele, sync);
-								}
-								
-								var ele = document.querySelector("input[data-param13='"+key+"']");
-								if (ele && ele.checked){
-									updateSettings(ele, false, response.settings[key].optionparam13);
-								}
-							}
-							if (('customGifCommands' in response.settings) && response.settings.customGifCommands.json) {
-								const commands = JSON.parse(response.settings.customGifCommands.json || '[]');
-								const commandsList = document.getElementById('customGifCommandsList');
-								commandsList.innerHTML = '';
-								commands.forEach(cmd => {
-									commandsList.appendChild(createCommandEntry(cmd.command, cmd.url));
-								});
-							}
-							if (('savedPolls' in response.settings) && response.settings.savedPolls.json) {
-								PollManager.savedPolls = JSON.parse(response.settings.savedPolls.json || '[]');
-								PollManager.updatePollsList();
-							}
+function setupTtsProviders(response) {
+    // Handle main TTS provider
+    if (!response.settings?.ttsProvider?.optionsetting) {
+        let ttsService = "system";
+        if (response.settings?.ttskey?.textparam1) ttsService = "google";
+        else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
+        else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
+        else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
+        
+        if (!response.settings.ttsProvider) {
+            response.settings.ttsProvider = {};
+        }
+        response.settings.ttsProvider.optionsetting = ttsService;
+    }
+    
+    // Handle secondary TTS provider (for param10)
+    if (!response.settings?.ttsProvider?.optionsetting10) {
+        let ttsService = "system";
+        if (response.settings?.ttskey?.textparam10) ttsService = "google";
+        else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
+        else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
+        else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
+        
+        if (!response.settings.ttsProvider) {
+            response.settings.ttsProvider = {};
+        }
+        response.settings.ttsProvider.optionsetting10 = ttsService;
+    }
+}
 
-						} else { // obsolete method
-							var ele = document.querySelector("input[data-setting='"+key+"'], input[data-param1='"+key+"'], input[data-param2='"+key+"']");
-							if (ele){
-								ele.checked = response.settings[key];
-								updateSettings(ele, sync);
-							}
-							var ele = document.querySelector("input[data-textsetting='"+key+"'], input[data-textparam1='"+key+"'], textarea[data-textsetting='"+key+"'], textarea[data-textparam1='"+key+"']");
-							if (ele){
-								ele.value = response.settings[key];
-								updateSettings(ele, sync);
-							}
-						}
-					} catch(e){
-						console.error(e);
-					}
-				}
-				if ("translation" in response.settings){
-					translation = response.settings["translation"];
-					miniTranslate(document.body);
-				}
-			}
-			
-			createTabsFromSettings(response);
-			
-			if (hideLinks){
-				document.body.classList.add("hidelinks");
-			} else {
-				document.body.classList.remove("hidelinks");
-			}
-			
-			try {
-				const specialCases = {
-					'chatbotlink': 'bot',
-					'custom-gif-commands-link': 'custom-gif-commands'
-				  };
-				  
-				  // Get all link elements in the document
-				  const linkElements = [
-					'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink', 
-					'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink', 
-					'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 
-					'battlelink', 'custom-gif-commands-link', 'creditslink', 'giveawaylink'
-				  ];
-				  
-				  // Process each link element
-				  linkElements.forEach(linkId => {
-					const linkElement = document.getElementById(linkId);
-					if (!linkElement) return;
-					
-					// Get the corresponding source element ID
-					const sourceId = specialCases[linkId] || linkId.replace('link', '');
-					const sourceElement = document.getElementById(sourceId);
-					
-					if (sourceElement && sourceElement.raw) {
-						
-					  sourceElement.raw = removeTTSProviderParams(sourceElement.raw);
-						
-					  linkElement.innerText = hideLinks ? "Click to open link" : sourceElement.raw;
-					  linkElement.href = sourceElement.raw;
-					}
-					
-				  });
-			} catch(e){}
-		
-		}
-		
-		if (("state" in response) && streamID){
-			isExtensionOn = response.state;
-			if (isExtensionOn){
-				document.body.classList.add("extension-enabled");
-				document.body.classList.remove("extension-disabled");
-				
-				if (ssapp){
-					document.getElementById("disableButtonText").innerHTML = "⚡ Service Active";
-				} else {
-					document.getElementById("disableButtonText").innerHTML = "⚡ Extension active";
-				}
-				document.getElementById("disableButton").style.display = "";
-				document.getElementById("extensionState").checked = true;
-				chrome.browserAction.setIcon({path: "/icons/on.png"});
-			} else {
-				if (ssapp){
-					document.getElementById("disableButtonText").innerHTML = "🔌 Service Disabled";
-				} else {
-					document.getElementById("disableButtonText").innerHTML = "🔌 Extension Disabled";
-				}
-				document.body.classList.remove("extension-enabled");
-				document.body.classList.add("extension-disabled");
-				
-				document.getElementById("disableButton").style.display = "";
-				chrome.browserAction.setIcon({path: "/icons/off.png"});
-				document.getElementById("extensionState").checked = null;
-			}
-		}
-		
-	}
+// Process parameter settings from objects with a consistent approach
+function processObjectSetting(key, settingObj, sync, paramNums, response) { // Added 'response'
+    // Process all the different param types dynamically using the paramNums array
+    paramNums.forEach(paramNum => {
+        // Process basic param settings
+        const paramKey = `param${paramNum}`;
+        if (paramKey in settingObj) {
+            processParam(key, paramNum, settingObj, sync);
+        }
+
+        // Process number settings
+        const numSettingKey = `numbersetting${paramNum}`;
+        if (numSettingKey in settingObj) {
+            const ele = document.querySelector(`input[data-${numSettingKey}='${key}']`);
+            if (ele) {
+                ele.value = settingObj[numSettingKey];
+                updateSettings(ele, sync);
+
+                const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
+                if (paramEle && paramEle.checked) {
+                    updateSettings(paramEle, false, parseFloat(settingObj[numSettingKey]));
+                }
+            }
+        }
+
+        // Process text parameters
+        const textParamKey = `textparam${paramNum}`;
+        if (textParamKey in settingObj) {
+            const ele = document.querySelector(`input[data-${textParamKey}='${key}'],textarea[data-${textParamKey}='${key}']`);
+            if (ele) {
+                ele.value = settingObj[textParamKey];
+                updateSettings(ele, sync);
+
+                const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
+                if (paramEle && paramEle.checked) {
+                    updateSettings(paramEle, false, settingObj[textParamKey]);
+                }
+            }
+        }
+
+        // Process option parameters
+        const optionParamKey = `optionparam${paramNum}`;
+        if (optionParamKey in settingObj) {
+            const ele = document.querySelector(`select[data-${optionParamKey}='${key}']`);
+            if (ele) {
+                ele.value = settingObj[optionParamKey];
+                updateSettings(ele, sync);
+
+                if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
+                    handleTTSProvider10Visibility(ele.value);
+                }
+
+                const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
+                if (paramEle && paramEle.checked) {
+                    updateSettings(paramEle, false, settingObj[optionParamKey]);
+                }
+            }
+        }
+    });
+
+    if ("both" in settingObj) {
+        const ele = document.querySelector(`input[data-both='${key}']`);
+        if (ele) {
+            ele.checked = settingObj.both;
+            updateSettings(ele, sync);
+        }
+    }
+
+    if ("setting" in settingObj) {
+        const ele = document.querySelector(`input[data-setting='${key}']`);
+        if (ele) {
+            ele.checked = settingObj.setting;
+            updateSettings(ele, sync);
+
+            if (key == "sentiment") {
+                handleDeprecatedSentiment();
+            } else if (key == "hideyourlinks") {
+                // Class is added/removed based on checkbox state; refreshLinks should handle text
+                if (ele.checked) {
+                    document.body.classList.add("hidelinks");
+                } else {
+                    document.body.classList.remove("hidelinks");
+                }
+            } else if (key == "ollamaRagEnabled") {
+                document.getElementById('ragFileManagement').style.display = ele.checked ? 'block' : 'none'; // Show/hide based on check
+            }
+        }
+    }
+
+    if ("textsetting" in settingObj) {
+        let currentKey = key; // Use a local variable for the key to query with
+        let valueToSet = settingObj.textsetting;
+
+        if (key === "mynameext") {
+            if (response && response.settings && !response.settings["botnamesext"]) { // Check original response
+                // If botnamesext is not in the original response, we are migrating mynameext
+                if (response.settings["mynameext"]) { // Ensure mynameext exists
+                    if (!response.settings["botnamesext"]) response.settings["botnamesext"] = {}; // Create if not exists
+                    response.settings["botnamesext"].textsetting = response.settings["mynameext"].textsetting; // Migrate the value
+                }
+                currentKey = "botnamesext"; // Intend to query and update using botnamesext from now on if applicable
+                                          // This change of 'currentKey' will affect the querySelector below
+                                          // However, the element might still be data-textsetting='mynameext'
+                                          // If the data attribute is also changing, this is more complex.
+                                          // For now, let's assume the element is found by original 'key' but data is also put in 'botnamesext'
+                                          // The original code would have modified `key` and thus queried for `botnamesext`.
+                                          // To replicate:
+                if (!response.settings["botnamesext"]) { // if still no botnamesext in modified response
+                   // This logic means mynameext is processed as botnamesext
+                   // The value is from settingObj.textsetting which is response.settings.mynameext.textsetting
+                } else { // botnamesext was already present in the original response.settings
+                  return; // skip, as per original logic's `else { continue; }`
+                }
+                // If we are here, it means mynameext is active, and botnamesext was not in original response.
+                // The original 'key' was "mynameext"
+                // The element will be found by document.querySelector(`...[data-textsetting='mynameext']`)
+                // And its value set. The `response.settings.botnamesext` is also populated.
+            } else if (response && response.settings && response.settings["botnamesext"]) {
+                 // if original key is mynameext AND botnamesext is already in response, then we should skip mynameext
+                 return;
+            }
+        }
+        // If key was 'mynameext' and we fell through, we process 'mynameext' elements.
+        // If key was 'mynameext' and we returned, this part is skipped.
+        // If key was 'botnamesext' from the start, it's processed here.
+
+        const ele = document.querySelector(`input[data-textsetting='${key}'],textarea[data-textsetting='${key}']`);
+        if (ele) {
+            ele.value = valueToSet; // valueToSet is settingObj.textsetting
+
+            if (ele.dataset.palette) {
+                try {
+                    document.getElementById(ele.dataset.palette).value = ele.value;
+                } catch (e) {
+                    log(e);
+                }
+            }
+            updateSettings(ele, sync);
+            updateUsernameList(key);
+            updateSourceTypeList(key);
+        }
+    }
+
+    if ("optionsetting" in settingObj) {
+        const ele = document.querySelector(`select[data-optionsetting='${key}']`);
+        if (ele) {
+            if (key == "midiOutputDevice" || key.startsWith("mididevice")) {
+                if (settingObj.optionsetting && (ele.value !== settingObj.optionsetting)) {
+                    // Check if option already exists
+                    let optionExists = false;
+                    for (let i = 0; i < ele.options.length; i++) {
+                        if (ele.options[i].value === settingObj.optionsetting) {
+                            optionExists = true;
+                            break;
+                        }
+                    }
+                    if (!optionExists) {
+                        const option = document.createElement("option");
+                        option.textContent = settingObj.optionsetting;
+                        option.value = settingObj.optionsetting;
+                        ele.appendChild(option);
+                    }
+                    // ele.value will set it to selected below
+                }
+            }
+
+            ele.value = settingObj.optionsetting;
+            updateSettings(ele, sync);
+
+            if (key == "aiProvider") {
+                handleAIProviderVisibility(ele.value);
+            } else if (key == "ttsProvider") {
+                handleTTSProviderVisibility(ele.value);
+            }
+        }
+    }
+
+    if ("optionsetting10" in settingObj) {
+        const ele = document.querySelector(`select[data-optionsetting10='${key}']`);
+        if (ele) {
+            ele.value = settingObj.optionsetting10;
+            updateSettings(ele, sync);
+            // Note: handleTTSProvider10Visibility is called from processObjectSetting's main loop for optionparam10
+            // if key is "ttsprovider", which seems to be the case where optionsetting10 is used.
+        }
+    }
+
+    if (key === 'customGifCommands' && settingObj.json) {
+        try {
+            const commands = JSON.parse(settingObj.json || '[]');
+            const commandsList = document.getElementById('customGifCommandsList');
+            if (commandsList) {
+                commandsList.innerHTML = '';
+                commands.forEach(cmd => {
+                    commandsList.appendChild(createCommandEntry(cmd.command, cmd.url)); // Assuming createCommandEntry is defined
+                });
+            }
+        } catch(e) { console.error("Error parsing customGifCommands JSON:", e); }
+    } else if (key === 'savedPolls' && settingObj.json) {
+        try {
+            PollManager.savedPolls = JSON.parse(settingObj.json || '[]'); // Assuming PollManager is defined
+            PollManager.updatePollsList();
+        } catch(e) { console.error("Error parsing savedPolls JSON:", e); }
+    }
+}
+
+
+function update(response, sync = true) {
+    log("update-> response: ", response);
+    if (response !== undefined) {
+        if (response.documents) {
+            updateDocumentList(response.documents);
+        }
+
+        if (response.streamID) {
+            lastResponse = response;
+            streamID = true;
+
+            var password = "";
+            if ('password' in response && response.password) {
+                password = "&password=" + response.password;
+            }
+
+            var localServer = urlParams.has("localserver") ? "&localserver" : "";
+            password += localServer;
+
+            // Determine hideLinks status initially
+            let hideLinksInitial = false;
+            document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x => {
+                if (x.checked) {
+                    hideLinksInitial = true;
+                }
+            });
+
+            if (hideLinksInitial) {
+                document.body.classList.add("hidelinks");
+            } else {
+                document.body.classList.remove("hidelinks");
+            }
+
+            document.getElementById("sessionid").value = response.streamID;
+            document.getElementById("sessionpassword").value = response.password || "";
+
+            setupPageLinks(hideLinksInitial, baseURL, response.streamID, password); // Pass current hideLinks state
+
+            document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
+            // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
+
+            if ('settings' in response) {
+                setupTtsProviders(response); // Handle TTS provider setting initialization
+
+                const targetMap = getTargetMap(); // Assuming getTargetMap() is defined
+                const paramNums = Object.values(targetMap);
+
+                for (var key in response.settings) {
+                    try {
+                        if (key === "midiConfig") {
+                            if (response.settings[key]) {
+                                document.getElementById("midiConfig").classList.add("pressed");
+                                document.getElementById("midiConfig").innerText = " Config Loaded";
+                            } else {
+                                document.getElementById("midiConfig").classList.remove("pressed");
+                                document.getElementById("midiConfig").innerText = " Load Config";
+                            }
+                            continue; // Continue to next setting
+                        }
+
+                        if (typeof response.settings[key] == "object") {
+                            // Pass 'response' to handle 'mynameext' correctly within processObjectSetting
+                            processObjectSetting(key, response.settings[key], sync, paramNums, response);
+                        } else {
+                            processLegacySetting(key, response.settings[key], sync);
+                        }
+                    } catch (e) {
+                        console.error(`Error processing setting ${key}:`, e);
+                    }
+                }
+
+                if ("translation" in response.settings) {
+                    translation = response.settings["translation"];
+                    miniTranslate(document.body); // Assuming miniTranslate is defined
+                }
+            }
+
+            createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+
+            // Refresh all page links.
+            refreshLinks();
+
+            try {
+                // Define your link configurations: { linkId: 'idOfLinkElement', sourcePropertyProvider: () => document.getElementById('sourceElementId')?.raw || document.getElementById('idOfLinkElement').href }
+                // A more robust way is if refreshLinks stores the raw URLs on the elements or returns them.
+                // For now, let's assume link elements have an href that needs cleaning.
+                const linkIdsToClean = [
+                    'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
+                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
+                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink',
+                    'battlelink', 'custom-gif-commands-link', 'creditslink', 'giveawaylink'
+                    // Add other link IDs that are generated and need cleaning
+                ];
+
+                // Get current hideLinks status as it might have been changed by settings
+                const currentHideLinks = document.body.classList.contains("hidelinks");
+
+                linkIdsToClean.forEach(linkId => {
+                    const linkElement = document.getElementById(linkId);
+                    if (linkElement && typeof linkElement.href === 'string' && linkElement.href.startsWith('http')) {
+                        const originalHref = linkElement.href; // Or from a 'data-raw-url' attribute if refreshLinks sets one
+                        const cleanedUrl = removeTTSProviderParams(originalHref);
+                        linkElement.href = cleanedUrl;
+                        if (linkElement.innerText !== "Click to open link" || !currentHideLinks) { // Avoid overwriting "Click to open" if links are hidden
+                           linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+                        }
+                        // If your old `sourceElement.raw` was important, you might need to update a similar attribute
+                        // if (linkElement.raw) linkElement.raw = cleanedUrl;
+                    }
+                });
+
+                // Also clean the remote_control_url if it can have TTS params (usually not)
+                const remoteCtrlUrlElement = document.getElementById("remote_control_url");
+                if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
+                   remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
+                }
+
+            } catch (e) {
+                console.error("Error cleaning TTS params from links:", e);
+            }
+        }
+
+        if (("state" in response) && streamID) {
+            isExtensionOn = response.state;
+            if (isExtensionOn) {
+                document.body.classList.add("extension-enabled");
+                document.body.classList.remove("extension-disabled");
+                document.getElementById("disableButtonText").innerHTML = ssapp ? "⚡ Service Active" : "⚡ Extension active"; // Assuming ssapp is defined
+                document.getElementById("disableButton").style.display = "";
+                document.getElementById("extensionState").checked = true;
+                if (typeof chrome !== 'undefined' && chrome.browserAction) {
+                    chrome.browserAction.setIcon({ path: "/icons/on.png" });
+                }
+            } else {
+                document.getElementById("disableButtonText").innerHTML = ssapp ? "🔌 Service Disabled" : "🔌 Extension Disabled";
+                document.body.classList.remove("extension-enabled");
+                document.body.classList.add("extension-disabled");
+                document.getElementById("disableButton").style.display = "";
+                if (typeof chrome !== 'undefined' && chrome.browserAction) {
+                    chrome.browserAction.setIcon({ path: "/icons/off.png" });
+                }
+                document.getElementById("extensionState").checked = false; // Use false for unchecked state
+            }
+        }
+    }
+}
+
+// Process a single parameter
+function processParam(key, paramNum, settingObj, sync) {
+    const paramKey = `param${paramNum}`;
+    const ele = document.querySelector(`input[data-${paramKey}='${key}']`);
+    if (!ele) return;
+    
+    ele.checked = settingObj[paramKey];
+    
+    if (!key.includes("=")) {
+        // Check for additional parameter values
+        const hasNumberSetting = `numbersetting${paramNum}` in settingObj;
+        const hasOptionParam = `optionparam${paramNum}` in settingObj;
+        const hasTextParam = `textparam${paramNum}` in settingObj;
+        
+        // Use the appropriate setting value
+        if (hasNumberSetting) {
+            updateSettings(ele, sync, parseFloat(settingObj[`numbersetting${paramNum}`]));
+        } else if (document.querySelector(`input[data-numbersetting${paramNum}='${key}']`)) {
+            updateSettings(ele, sync, parseFloat(document.querySelector(`input[data-numbersetting${paramNum}='${key}']`).value));
+        } else if (hasOptionParam) {
+            updateSettings(ele, sync, settingObj[`optionparam${paramNum}`]);
+        } else if (hasTextParam) {
+            updateSettings(ele, sync, settingObj[`textparam${paramNum}`]);
+        } else if (document.querySelector(`input[data-optionparam${paramNum}='${key}']`)) {
+            updateSettings(ele, sync, document.querySelector(`input[data-optionparam${paramNum}='${key}']`).value);
+        } else {
+            updateSettings(ele, sync);
+        }
+    } else {
+        // Handle keys with equality operator
+        const keys = key.split('=');
+        ele = document.querySelector(`input[data-${paramKey}='${keys[0]}']`);
+        
+        if (ele) {
+            ele.checked = settingObj[paramKey];
+            if (keys[1]) {
+                var ele2 = document.querySelector(`input[data-numbersetting${paramNum}='${keys[0]}']`);
+                if (ele2) {
+                    ele2.value = parseFloat(keys[1]);
+                } else {
+                    ele2 = document.querySelector(`input[data-optionparam${paramNum}='${keys[0]}'], input[data-textparam${paramNum}='${keys[0]}']`);
+                    if (ele2) {
+                        ele2.value = keys[1];
+                    }
+                }
+                updateSettings(ele, sync, parseFloat(keys[1]));
+            } else {
+                updateSettings(ele, sync);
+            }
+        }
+    }
+}
+
+// Handle legacy settings format
+function processLegacySetting(key, value, sync) {
+    // Process simple settings
+    var ele = document.querySelector(`input[data-setting='${key}'], input[data-param1='${key}'], input[data-param2='${key}']`);
+    if (ele) {
+        ele.checked = value;
+        updateSettings(ele, sync);
+    }
+    
+    // Process text settings
+    var ele = document.querySelector(`input[data-textsetting='${key}'], input[data-textparam1='${key}'], textarea[data-textsetting='${key}'], textarea[data-textparam1='${key}']`);
+    if (ele) {
+        ele.value = value;
+        updateSettings(ele, sync);
+    }
+}
+
+// Handle AI provider visibility
+function handleAIProviderVisibility(provider) {
+    // Hide all provider-specific elements first
+    [
+        "ollamamodel", "ollamaendpoint", "chatgptApiKey", "ollamaKeepAlive",
+        "geminiApiKey", "geminimodel", "xaiApiKey", "xaimodel", "chatgptmodel",
+        "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
+        "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
+        "bedrockRegion", "bedrockmodel"
+    ].forEach(id => {
+        document.getElementById(id)?.classList.add("hidden");
+    });
+    
+    // Show elements based on selected provider
+    if (provider == "ollama") {
+        document.getElementById("ollamamodel").classList.remove("hidden");
+        document.getElementById("ollamaKeepAlive").classList.remove("hidden");
+        document.getElementById("ollamaendpoint").classList.remove("hidden");
+    } else if (provider == "chatgpt") {
+        document.getElementById("chatgptApiKey").classList.remove("hidden");
+        document.getElementById("chatgptmodel").classList.remove("hidden");
+    } else if (provider == "xai") {
+        document.getElementById("xaiApiKey").classList.remove("hidden");
+        document.getElementById("xaimodel").classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiApiKey").classList.remove("hidden");
+        document.getElementById("geminimodel").classList.remove("hidden");
+    } else if (provider == "deepseek") {
+        document.getElementById("deepseekApiKey").classList.remove("hidden");
+        document.getElementById("deepseekmodel").classList.remove("hidden");
+    } else if (provider == "bedrock") {
+        document.getElementById('bedrockAccessKey').classList.remove('hidden');
+        document.getElementById('bedrockSecretKey').classList.remove('hidden');
+        document.getElementById('bedrockRegion').classList.remove('hidden');
+        document.getElementById('bedrockmodel').classList.remove('hidden');
+    } else if (provider == "custom") {
+        document.getElementById("customAIEndpoint").classList.remove("hidden");
+        document.getElementById("customAIModel").classList.remove("hidden");
+    } else if (provider == "openrouter") {
+        document.getElementById("openrouterApiKey").classList.remove("hidden");
+        document.getElementById("openroutermodel").classList.remove("hidden");
+    }
+}
+
+// Handle TTS provider visibility
+function handleTTSProviderVisibility(provider) {
+    // Hide all TTS elements
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS"].forEach(id => {
+        document.getElementById(id)?.classList.add("hidden");
+    });
+    
+    // Show element based on selected provider
+    if (provider == "system") {
+        document.getElementById("systemTTS").classList.remove("hidden");
+    } else if (provider == "elevenlabs") {
+        document.getElementById("elevenlabsTTS").classList.remove("hidden");
+    } else if (provider == "google") {
+        document.getElementById("googleTTS").classList.remove("hidden");
+    } else if (provider == "speechify") {
+        document.getElementById("speechifyTTS").classList.remove("hidden");
+    } else if (provider == "kokoro") {
+        document.getElementById("kokoroTTS").classList.remove("hidden");
+    }
+}
+
+// Handle secondary TTS provider visibility
+function handleTTSProvider10Visibility(provider) {
+    // Hide all TTS10 elements
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10"].forEach(id => {
+        document.getElementById(id)?.classList.add("hidden");
+    });
+    
+    // Show element based on selected provider
+    if (provider == "system") {
+        document.getElementById("systemTTS10").classList.remove("hidden");
+    } else if (provider == "elevenlabs") {
+        document.getElementById("elevenlabsTTS10").classList.remove("hidden");
+    } else if (provider == "google") {
+        document.getElementById("googleTTS10").classList.remove("hidden");
+    } else if (provider == "speechify") {
+        document.getElementById("speechifyTTS10").classList.remove("hidden");
+    } else if (provider == "kokoro") {
+        document.getElementById("kokoroTTS10").classList.remove("hidden");
+    }
+}
+
+// Handle the deprecated sentiment setting
+function handleDeprecatedSentiment() {
+    try {
+        var ele1 = document.querySelector("input[data-param1='badkarma']");
+        if (ele1 && !ele1.checked) {
+            ele1.checked = true;
+            updateSettings(ele1, true);
+        }
+        chrome.runtime.sendMessage({cmd: "saveSetting", type: "setting", setting: "sentiment", "value": false}, function (response) {});
+    } catch(e) {
+        console.error(e);
+    }
 }
 
 function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
@@ -2978,6 +2594,7 @@ const devmode = urlParams.has("devmode");
 var sourcemode = urlParams.get("sourcemode") || false;
 ssapp = urlParams.has("ssapp") || ssapp;
 
+
 var baseURL = "https://socialstream.ninja/";
 
 if (sourcemode){
@@ -2997,12 +2614,7 @@ if (sourcemode){
 	}
 }
 
-if (ssapp){
-	const style = document.createElement('style');
-	style.textContent = '.ssapp { display: none !important; }';
-	style.id = 'hide-ssapp-style';
-	document.head.appendChild(style);
-} 
+
 
 function removeQueryParamWithValue(url, paramWithValue) {
     let [baseUrl, queryString] = url.split('?');
@@ -3069,7 +2681,8 @@ function getTargetMap() {
         'credits': 13,
         'giveaway': 14,
         'privatechatbot': 15,
-		'poll': 16
+		'poll': 16,
+		'eventsdashboard': 17
     };
 }
 
@@ -3836,7 +3449,8 @@ function refreshLinks(){
             'tipjar': 'tipjarlink',
 			'credits': 'creditslink',
 			'giveaway': 'giveawaylink',
-            'privatechatbot': 'privatechatbotlink'
+            'privatechatbot': 'privatechatbotlink',
+			'eventsdashboard': 'eventsdashboardlink'
         };
         
         // Determine if links should be hidden based on the setting

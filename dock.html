@@ -587,7 +587,7 @@
 			}
 			
 			.allowfat .hl-message{
-				max-width: 300px;
+				max-width: 400px;
 				word-break: keep-all;
 				line-break: loose;
 				overflow-wrap: break-word;
@@ -2217,7 +2217,7 @@
 				display: inline-block;
 			}
 			
-			.alignright  .hl-message .time-arrived {
+			.alignright .hl-message .time-arrived {
 				margin:auto 4px;
 			}
 			
@@ -2728,7 +2728,7 @@
 			
 
 			try {
-				if (window.electronApi) {
+				if ((window.ninjafy || window.electronApi)) {
 					// fix for electron dragging.
 					document.body.style.width = "95%";
 					setTimeout(function () {
@@ -2751,7 +2751,8 @@
 					};
 					  
 					document.addEventListener('DOMContentLoaded', () => {
-						window.electronApi.onCloseFileStream(writerCloseHandler);
+						let ninjafy = window.ninjafy || window.electronApi;
+						ninjafy.onCloseFileStream(writerCloseHandler);
 					});
 				}
 			} catch (e) {
@@ -3051,6 +3052,12 @@
 			if (urlParams.has("passtts")) {
 				passTTS = true;
 			}
+			
+			var passTTSMod = false;
+			if (urlParams.has("passttsmod")) {
+				passTTSMod = true;
+			}
+			
 			
 			if (urlParams.has("border")) {
 				if (urlParams.get("border")) {
@@ -3521,6 +3528,7 @@
 				
 				document.body.classList.remove("notcompactmode");
 				compactmode = true;
+				document.documentElement.style.setProperty("--padding-rows", "2px");
 				customNodeLimit = 15;
 			}
 
@@ -3905,7 +3913,7 @@
 				document.body.style.backgroundColor = "#" + chroma;
 			}
 
-			if (urlParams.has("compact") || urlParams.has("overlaymode")) {
+			if (!compactmode && urlParams.has("compact") || urlParams.has("overlaymode")) {
 				compactmode = true;
 				document.body.classList.remove("notcompactmode");
 				document.documentElement.style.setProperty("--padding-rows", "2px");
@@ -3946,6 +3954,11 @@
 				window.obsstudio = false;
 			}
 			
+			
+			var DoNotShowInitialReply = false;
+			if (urlParams.has("stripreplyto")) {
+				DoNotShowInitialReply = true;
+			}
 			
 			var stripDonationData = false;
 			if (urlParams.has("stripdonations")) {
@@ -4332,11 +4345,13 @@
 			var hideNotDonos = false;
 			
 			if (urlParams.has("showonlydonos")) {
+				hideNotDonos = true;
 				doubleLimit = true;
 				donos();
 			}
 
 			if (urlParams.has("showonlymembers")) {
+				hideNotMembers = true;
 				doubleLimit = true;
 				members();
 			}
@@ -4577,38 +4592,43 @@
 			}
 
 			function donos() {
-				var ele = getById("only_donos");
-				if (ele.dataset.state == "0") {
-					ele.dataset.state = "1";
-					//document.documentElement.style.setProperty("--show-donos-only", "none");
-					hideNotDonos = true;
-					ele.style["background-image"] = "url(./icons/filter_showpaidonly_on.png)";
-					ele.title = "Filter — 📄 Stop filtering for messages that have donations/cheer";
-				} else {
-					ele.dataset.state = "0";
-					//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
-					hideNotDonos = false;
-					ele.style["background-image"] = "url(./icons/filter_showpaidonly_off.png)";
-					ele.title = "Filter — 💲 Filter for messages that have donations/cheer";
-				}
+				try{
+					var ele = getById("only_donos");
+					if (ele.dataset.state == "0") {
+						hideNotDonos = true;
+						ele.dataset.state = "1";
+						//document.documentElement.style.setProperty("--show-donos-only", "none");
+						
+						ele.style["background-image"] = "url(./icons/filter_showpaidonly_on.png)";
+						ele.title = "Filter — 📄 Stop filtering for messages that have donations/cheer";
+					} else {
+						hideNotDonos = false;
+						ele.dataset.state = "0";
+						//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+						ele.style["background-image"] = "url(./icons/filter_showpaidonly_off.png)";
+						ele.title = "Filter — 💲 Filter for messages that have donations/cheer";
+					}
+				} catch(e){}
 				redoOdd();
 			}
 
 			function members() {
-				var ele = getById("only_members");
-				if (ele.dataset.state == "0") {
-					ele.dataset.state = "1";
-					//document.documentElement.style.setProperty("--show-donos-only", "none");
-					hideNotMembers = true;
-					ele.style["background-image"] = "url(./icons/filter_showmembers_on.png)";
-					ele.title = "Filter — 📄 Stop filtering for messages that are from members";
-				} else {
-					ele.dataset.state = "0";
-					//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
-					hideNotMembers = false;
-					ele.style["background-image"] = "url(./icons/filter_showmembers_off.png)";
-					ele.title = "Filter — 👑 Filter for messages that are from members";
-				}
+				try {
+					var ele = getById("only_members");
+					if (ele.dataset.state == "0") {
+						hideNotMembers = true;
+						ele.dataset.state = "1";
+						//document.documentElement.style.setProperty("--show-donos-only", "none");
+						ele.style["background-image"] = "url(./icons/filter_showmembers_on.png)";
+						ele.title = "Filter — 📄 Stop filtering for messages that are from members";
+					} else {
+						//document.documentElement.style.setProperty("--show-donos-only", flexOrNotToFlex);
+						hideNotMembers = false;
+						ele.dataset.state = "0";
+						ele.style["background-image"] = "url(./icons/filter_showmembers_off.png)";
+						ele.title = "Filter — 👑 Filter for messages that are from members";
+					}
+				} catch(e){}
 				redoOdd();
 			}
 
@@ -7294,6 +7314,10 @@
 					if (data.message && !data.chatmessage){
 						data.chatmessage = data.message;
 					}
+					
+					if (DoNotShowInitialReply && data.reply){ // I'll need to invert this in the future.
+						data.chatmessage = data.reply;
+					}
 
 					if (data.chatmessage && data.chatmessage.startsWith("!")) {
 						if (filtercommands){
@@ -7357,14 +7381,21 @@
 						return;
 					}
 					
-					if (hardFilter && hideNotDonos){
-						if (!data.donation && !data.hasDonation){
-							return;
+					if (hardFilter) {
+						// Check donation requirements
+						if (hideNotDonos && !data.donation && !data.hasDonation) {
+							// If members are allowed and this is a member, let it through
+							if (!(hideNotMembers && (data.membership || data.member || data.hasMembershp))) {
+								return;
+							}
 						}
-					}
-					if (hardFilter && hideNotMembers){
-						if (!data.membership && !data.member && !data.hasMembershp){
-							return;
+						
+						// Check membership requirements
+						if (hideNotMembers && !data.membership && !data.member && !data.hasMembershp) {
+							// If donations are allowed and this is a donation, let it through
+							if (!(hideNotDonos && (data.donation || data.hasDonation))) {
+								return;
+							}
 						}
 					}
 
@@ -7858,9 +7889,14 @@
 					} else if (compactmode) {
 						if (bubble){
 							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div></div>");
+						} else if (horizontal){
+							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + donationHTML + "</span>" + "</div>" + addImage + "</div>");
 						} else {
 							var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + '<div class="hl-message">' + showType + chatImg + timeArrived + chatname + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + "</div>" + addImage + donationHTML + "</div>");
 						}
+					} else if (horizontal){
+						console.log(".>");
+						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + donationHTML+ "</div>" + addImage + "</div>");
 					} else {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + larger + expand + '" data-source-type="' + data.type + '">' + "<div class='queueid'></div>" + showType + chatImg + timeArrived + chatname + '<div class="hl-message hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</div>" + addImage + donationHTML + "</div>");
 					}
@@ -7902,6 +7938,10 @@
 						} else {
 							node.dataset.event = data.event;
 						}
+					}
+					
+					if (data.userid){
+						node.dataset.userid = data.userid;
 					}
 					
 					if (data.hasDonation) {
@@ -8293,9 +8333,15 @@
 					getById("msg_" + data.id).classList.add("highlight"); // sample method of highlighting
 				}
 
-				if (passTTS && data.chatmessage.includes("!pass")) {
-					if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
-						window.speechSynthesis.cancel();
+				if ((passTTS || passTTSMod) && data.chatmessage.includes("!pass")) {
+					if (data.mod){
+						if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
+							window.speechSynthesis.cancel();
+						}
+					} else if (!passTTSMod){
+						if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
+							window.speechSynthesis.cancel();
+						}
 					}
 				}
 				
@@ -9125,7 +9171,7 @@
 
 			if (urlParams.has("js")) {
 				try {
-					if (window.obsstudio || window.electronApi || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var jsURL = urlParams.get("js");
 						try {
 							jsURL = decodeURI(jsURL);
@@ -9155,7 +9201,7 @@
 
 			if (urlParams.has("base64js") || urlParams.has("b64js") || urlParams.has("jsbase64") || urlParams.has("jsb64")) {
 				try {
-					if (window.obsstudio || window.electronApi || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var base64js = urlParams.get("base64js") || urlParams.get("b64js") || urlParams.get("jsbase64") || urlParams.get("jsb64");
 						base64js = decodeURIComponent(atob(base64js));
 						var externalJavaascript = document.createElement("script");

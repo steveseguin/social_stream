@@ -1,5 +1,5 @@
 (() => {
-  if (!window.electronApi) return;
+  if (!(window.ninjafy || window.electronApi)) return;
   
   console.log("Disable autogain code injected");
 

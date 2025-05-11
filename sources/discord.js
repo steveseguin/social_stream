@@ -95,7 +95,7 @@
 			return;;
 		}
 		
-		if (!settings.discord && !window.electronApi){
+		if (!settings.discord && !(window.ninjafy || window.electronApi)){
 			// discord isn't allowed via settings
 			return;
 		}
@@ -175,6 +175,10 @@
 				}
 				if (name){break;}
 			}
+		}
+		
+		if (name.includes(" @ ")){ // this is s relayed webhook that we can likely ignore.
+			return;
 		}
 		
 

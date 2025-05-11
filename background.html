@@ -64,6 +64,23 @@
             text-align: center;
             margin-bottom: 30px;
         }
+		
+		.ssapp .header, .ssapp .keep-open-alert, .ssapp .info-notice {
+			display: none;
+		}
+		
+		.action-flow-editor {
+			margin-left: 10px;
+			margin-top: 5px;
+			margin-right: auto;
+			background: #5c5c5c2b;
+			padding: 5px 10px;
+			border-radius: 10px;
+		}
+		
+		.ssapp .action-flow-editor {
+			display: hidden;
+		}
 
         .logo {
             font-size: 28px;
@@ -482,7 +499,11 @@
         </div>
 
         <div class="footer">
+		
             <div class="support-links">
+				<div class="action-flow-editor" title="Open the flow editor in a new tab to create custom actions and triggers">
+					<a href="./actions/index.html" target="_blank">📝 Open the Action Flow Editor</a>
+				</div>
                 <div class="community-links">
                     <span data-translate="visit-us-at">Visit us at</span> 
                     <a href="https://discord.socialstream.ninja" target="_blank">
@@ -509,6 +530,7 @@
 
     <!-- Scripts moved to external file instead of inline for CSP compliance -->
     <script type="text/javascript" src="./dashboard.js"></script>
+	<script type="text/javascript" src="./actions/EventFlowSystem.js?v=1"></script>
     <script type="text/javascript" src="./background.js?v=2"></script>
     <script type="text/javascript" src="./db.js?v=1"></script>
     <script type="text/javascript" src="./ai.js?v=2"></script>

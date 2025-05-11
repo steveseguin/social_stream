@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moderator Dashboard</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap">
+<style>
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
+
+:root {
+    --bg-color: #1a2a3d;
+    --text-color: #e4e6eb;
+    --card-bg: linear-gradient(145deg, #1a2a48, #162238);
+    --card-shadow: rgba(0, 0, 0, 0.3);
+}
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100vh;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+#chat-container {
+    padding: 15px;
+    height: calc(100vh - 70px);
+    overflow-y: auto;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+}
+
+#chat-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+}
+
+.message {
+    background: var(--card-bg);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    border-left: 5px solid;
+    box-shadow: 0 4px 8px var(--card-shadow);
+    color: var(--text-color);
+    opacity: 0;
+    transform: translateY(-20px);
+    animation: slideFadeIn 0.5s ease forwards;
+    position: relative;
+}
+
+.youtube-event {
+    border-left-color: #ff0000;
+}
+
+.twitch-event {
+    border-left-color: #9146ff;
+}
+
+.high-value {
+    border: 2px solid gold;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
+
+.medium-value {
+    border: 1px solid silver;
+}
+
+@keyframes slideFadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.name {
+    color: white;
+    font-size: 1.1em;
+    font-weight: 700;
+    display: inline-block;
+}
+
+.text {
+    font-size: 0.95em;
+    line-height: 1.4;
+    margin: 8px 0;
+}
+
+.text img {
+    max-width: 80px;
+    max-height: 20px;
+    vertical-align: bottom;
+}
+
+.event-type {
+    font-weight: 700;
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-right: 10px;
+    font-size: 0.8em;
+    text-transform: uppercase;
+}
+
+.event-donation {
+    background-color: #4cd137;
+    color: #fff;
+}
+
+.event-other {
+    background-color: #3498db;
+    color: #fff;
+}
+
+.donation {
+    color: #4cd137;
+    font-weight: 600;
+    font-size: 1.2em;
+    margin: 5px 0;
+}
+
+.usd-value {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: gold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+.timestamp {
+    font-size: 0.75em;
+    color: #aaa;
+    margin-top: 5px;
+}
+
+.source-icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin-left: 5px;
+}
+
+.badge {
+    display: inline-block;
+    height: 1em;
+    margin-left: 5px;
+    vertical-align: middle;
+}
+
+.no-events {
+    text-align: center;
+    color: #aaa;
+    margin-top: 40px;
+    font-style: italic;
+}
+
+#header {
+    background-color: #0f1824;
+    color: white;
+    padding: 10px 15px;
+    text-align: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+#header h1 {
+    margin: 0;
+    font-size: 1.4em;
+}
+
+.message-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.message-meta {
+    display: flex;
+    align-items: center;
+}
+
+.event-specific {
+    display: inline-block;
+    padding: 2px 6px;
+    margin-left: 5px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-size: 0.75em;
+    color: #ddd;
+}
+
+/* Custom classes for different platforms */
+/* Custom classes for different platforms */
+.youtube-event { border-left-color: #ff0000; }
+.twitch-event { border-left-color: #9146ff; }
+.kick-event { border-left-color: #53fc18; }
+.tiktok-event { border-left-color: #ff0050; }
+.facebook-event { border-left-color: #1877f2; }
+.x-event { border-left-color: #1DA1F2; }
+.rumble-event { border-left-color: #85c742; }
+.slack-event { border-left-color: #4A154B; }
+.discord-event { border-left-color: #5865F2; }
+.instagram-event { border-left-color: #E1306C; }
+.linkedin-event { border-left-color: #0077B5; }
+.telegram-event { border-left-color: #0088cc; }
+.telegramk-event { border-left-color: #0088cc; }
+.whatsapp-event { border-left-color: #25D366; }
+.zoom-event { border-left-color: #2D8CFF; }
+.teams-event { border-left-color: #6264A7; }
+.webex-event { border-left-color: #00bceb; }
+.amazon-event { border-left-color: #FF9900; }
+.bilibili-event { border-left-color: #00A1D6; }
+.bilibilicom-event { border-left-color: #00A1D6; }
+.odysee-event { border-left-color: #FF5500; }
+.trovo-event { border-left-color: #1EFF00; }
+.dlive-event { border-left-color: #FEA621; }
+.vimeo-event { border-left-color: #1AB7EA; }
+.meetme-event { border-left-color: #FF5D63; }
+.chime-event { border-left-color: #232F3E; }
+.bigo-event { border-left-color: #18BFFF; }
+.chaturbate-event { border-left-color: #F47321; }
+.fansly-event { border-left-color: #0091EA; }
+.cherrytv-event { border-left-color: #FF0062; }
+.cozy-event { border-left-color: #1DA1F2; }
+.reddit-event { border-left-color: #FF4500; }
+.openai-event { border-left-color: #10A37F; }
+.claude-event { border-left-color: #4B144B; }
+.threads-event { border-left-color: #000000; }
+.vklive-event { border-left-color: #4C75A3; }
+.vkvideo-event { border-left-color: #4C75A3; }
+
+
+/* Light mode styling */
+body.light-mode {
+    background-color: #f5f5f5;
+    color: #333;
+}
+
+body.light-mode #header {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+body.light-mode .message {
+    background: linear-gradient(145deg, #f5f5f5, #e0e0e0);
+    color: #333;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .name {
+    color: #333; /* Fix for white text on white background */
+}
+
+body.light-mode .timestamp {
+    color: #777;
+}
+
+body.light-mode .event-type {
+    color: #fff;
+}
+
+body.light-mode .no-events {
+    color: #777;
+}
+
+</style>
+</head>
+<body>
+<div id="header">
+    <h1>Stream Events & Donations Dashboard</h1>
+</div>
+<div id="chat-container">
+    <div class="no-events">Waiting for stream events and donations...</div>
+</div>
+<script src="currency.js"></script>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = false;
+    
+    if (urlParams.has("session")){
+        roomID = urlParams.get("session");
+    }
+	
+    var password = "false";
+    var featuredMode = false;
+    
+    const chatContainer = document.getElementById('chat-container');
+    let noEventsMessage = document.querySelector('.no-events');
+	
+	var sources = false; // Default sources
+	if (urlParams.get("sources")) {
+		sources = urlParams.get("sources").split(',').map(s => s.trim().toLowerCase());
+	}
+
+	// Add parameters for display options
+	var donationsOnly = urlParams.has("donationsonly");
+	var showUSD = urlParams.has("currency") ? true : false;
+	var highlightValue = urlParams.has("highlightvalue") ? true : false;
+	var lightMode = urlParams.has("lightmode");
+	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 100;
+	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
+	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
+
+	// Apply theme immediately
+	if (lightMode) {
+		document.body.classList.add("light-mode");
+		document.documentElement.style.setProperty('--bg-color', '#f5f5f5');
+		document.documentElement.style.setProperty('--text-color', '#333');
+		document.documentElement.style.setProperty('--card-bg', '#fff');
+		document.documentElement.style.setProperty('--card-shadow', 'rgba(0, 0, 0, 0.1)');
+	}
+
+	// Apply custom font if specified
+	if (googleFont) {
+		const fontLink = document.createElement("link");
+		fontLink.rel = "stylesheet";
+		fontLink.href = `https://fonts.googleapis.com/css?family=${encodeURIComponent(googleFont)}&display=swap`;
+		document.head.appendChild(fontLink);
+		document.body.style.fontFamily = `'${googleFont}', sans-serif`;
+	} else if (fontFamily && fontFamily !== "Roboto") {
+		document.body.style.fontFamily = fontFamily;
+	}
+    
+    function addMessageToOverlay(data) {
+		// Only display events from enabled sources
+		if (sources && !sources.includes(data.type)) {
+			return;
+		}
+		
+		// If donations-only mode is enabled, only show donations
+		if (donationsOnly && !data.hasDonation) {
+			return;
+		}
+		
+		// Rest of your existing function...
+		if (!(data.event || data.hasDonation)){
+			return;
+		}
+		
+		if (!data.chatname && !data.chatmessage && !data.hasDonation){return;}
+		
+		// Remove the "no events" message if it exists
+		if (noEventsMessage) {
+			noEventsMessage.remove();
+			noEventsMessage = null;
+		}
+		
+		const messageDiv = document.createElement('div');
+		messageDiv.classList.add('message');
+		
+		// Add platform-specific class
+		messageDiv.classList.add(`${data.type}-event`);
+		
+		if (data.mid) {
+			messageDiv.id = data.mid;
+		}
+		
+		data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
+		
+		// Get current time for timestamp
+		const now = new Date();
+		const timeString = now.toLocaleTimeString();
+		
+		// Determine event type
+		let eventTypeText = '';
+		let eventTypeClass = 'event-other';
+		let eventSpecificText = '';
+		
+		if (data.hasDonation) {
+			eventTypeText = 'DONATION';
+			eventTypeClass = 'event-donation';
+		} else if (data.event) {
+			if (typeof data.event === 'string') {
+				eventTypeText = 'EVENT';
+				eventSpecificText = data.event.toUpperCase();
+			} else {
+				eventTypeText = 'EVENT';
+			}
+		}
+		
+		// Calculate USD value if donation
+		let usdValue = 0;
+		if (data.hasDonation) {
+			usdValue = convertToUSD(data.hasDonation, data.type);
+			
+			// Add value-based class if highlighting is enabled
+			if (highlightValue) {
+				if (usdValue >= 50) {
+					messageDiv.classList.add('high-value');
+				} else if (usdValue >= 10) {
+					messageDiv.classList.add('medium-value');
+				}
+			}
+			if (!showUSD){
+				usdValue = 0;
+			}
+		}
+		
+		messageDiv.innerHTML = `
+			<div class="message-header">
+				<div class="message-meta">
+					${eventTypeText ? `<div class="event-type ${eventTypeClass}">${eventTypeText}</div>` : ''}
+					${eventSpecificText ? `<div class="event-specific">${eventSpecificText}</div>` : ''}
+					<div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname || 'Anonymous'}</div>
+					${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
+				</div>
+			</div>
+			
+			<div class="text">${data.chatmessage || ''}</div>
+			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
+			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
+			<div class="timestamp">${timeString}</div>
+		`;
+		
+		chatContainer.prepend(messageDiv);
+		
+		// Auto-scroll to the latest message
+		chatContainer.scrollTop = 0;
+		
+		// Keep max N events in the dashboard (from URL param or default 100)
+		while (chatContainer.children.length > maxEvents) {
+			chatContainer.removeChild(chatContainer.lastChild);
+		}
+	}
+    
+    // The IFrame allows for peer to peer mode; used by default
+    var iframe = document.createElement("iframe");
+	if (roomID){
+		if (featuredMode){
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+		} else {
+			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+		}
+		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+	
+		document.body.appendChild(iframe);
+		window.addEventListener("message", function (e) {
+			if (e.source != iframe.contentWindow) return;
+			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+				addMessageToOverlay(e.data.dataReceived.overlayNinja);
+			}
+		});
+	}
+    
+    // The Websocket mode as alternative
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+			
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            var resp = false
+            if (event.data){
+                var data = JSON.parse(event.data);
+                addMessageToOverlay(data);
+                if (data.get){
+                    var ret = {};
+                    ret.callback = {};
+                    ret.callback.get = data.get
+                    ret.callback.result = true;
+                    socketserver.send(JSON.stringify(ret));
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+		if (roomID){
+			socketserver = new WebSocket(serverURL);
+			setupSocket();
+		}
+    }
+</script>
+</body>
+</html>
