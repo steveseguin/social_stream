@@ -162,8 +162,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Toggle theme when button is clicked
     if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
+        themeToggle.addEventListener('click', function () {
             const isDarkMode = document.documentElement.classList.contains('dark-mode');
+            document.documentElement.style.setProperty('--transition-speed', '0.3s');
+            setTimeout(() => {
+                document.documentElement.style.setProperty('--transition-speed', '0');
+            }, 300);
             updateTheme(!isDarkMode);
         });
     }
