@@ -216,7 +216,6 @@
 				if ("getSource" == request){sendResponse("bitchute");	return;	}
 				if ("focusChat" == request){
 					document.querySelector('textarea[tabindex="0"], textarea').focus();
-					
 					sendResponse(true);
 					return;
 				}

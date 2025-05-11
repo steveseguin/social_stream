@@ -44,7 +44,7 @@
 	}
 
 
-	function getAllContentNodes(element) { // takes an element.
+	function getAllContentNodes(element, textonly=settings.textonlymode) { // takes an element.
 		var resp = "";
 
 		if (!element) {
@@ -61,11 +61,11 @@
 
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
-				resp += getAllContentNodes(node)
+				resp += getAllContentNodes(node, textonly)
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
 				resp += escapeHtml(node.textContent) + "";
 			} else if (node.nodeType === 1) {
-				if (!settings.textonlymode) {
+				if (!textonly) {
 					if (node && node.classList && node.classList.contains("zero-width-emote")) {
 						resp += "<span class='zero-width-parent'>" + node.outerHTML + "</span>";
 					} else if (node && node.tagName && (node.tagName == "IMG") && node.src) {
@@ -122,7 +122,7 @@
 		var bot = false;
 		var name="";
 		try {
-			name = getAllContentNodes(ele.querySelector("#message-username-"+mid+" [class^='username']")).trim();
+			name = getAllContentNodes(ele.querySelector("#message-username-"+mid+" [class^='username']"), true).trim();
 			
 			if (ele.querySelector("#message-username-"+mid+" [class^='botTag_']")){
 				bot = true;
