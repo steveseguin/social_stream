@@ -349,6 +349,7 @@
 		var chatbadges = [];
 		var subscriber = "";
 		var subtitle = "";
+		var eventtype = ""; 
 		try {
 			ele.querySelectorAll(SELECTORS.chatBadges).forEach(badge => {
 				if (badge.alt && badge.alt.includes("Subscriber")){
@@ -406,89 +407,107 @@
 				BTT[i].outerHTML = "";
 			}
 		} catch (e) {}
+		
 
-		try {
-			if (event){
-				var eleContent = ele.childNodes[0];
+		var contentimg = ele.querySelector("img[src].chat-line__message--emote-gigantified") || "";
+		
+		if (contentimg){
+			contentimg = contentimg.src;
+			
+			if (lastMessage === contentimg && lastUser === username && (!lastEle || !lastEle.isConnected)) {
+				lastMessage = "";
+				username = "";
+				return;
 			} else {
-				var eleContent = ele.querySelector(SELECTORS.messageBody);
+				lastMessage = contentimg;
+				lastUser = username;
+				lastEle = ele;
 			}
-
-			chatmessage = getAllContentNodes(eleContent);
-
-			if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")) {
-				highlightColor = "rgba(225, 20, 20, 0.3)";
-			}
-		} catch (e) {}
-
-		if (!chatmessage && !event) {
-			try {
-				var eleContent = ele.querySelector("span.message");
-				chatmessage = getAllContentNodes(eleContent);
-				if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")) {
-					highlightColor = "rgba(225, 20, 20, 0.3)";
-				}
-			} catch (e) {}
-		}
-
-		if (!chatmessage && !event) {
-			try {
-				var eleContent = ele.querySelector(".chat-line__message-container .chat-line__username-container").nextElementSibling.nextElementSibling;
-				chatmessage = getAllContentNodes(eleContent);
-				eleContent = eleContent.nextElementSibling;
-				var count = 0;
-				while (eleContent) {
-					count++;
-					chatmessage += getAllContentNodes(eleContent);
-					eleContent = eleContent.nextElementSibling;
-					if (count > 20) {
-						break;
-					}
-				}
-				if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")) {
-					highlightColor = "rgba(225, 20, 20, 0.3)";
-				}
-			} catch (e) {}
-		}
-
-		if (!chatmessage && !event) {
-			try {
-				var eleContent = ele.querySelector(".paid-pinned-chat-message-content-container").childNodes;
-
-				if (eleContent.length > 1) {
-					chatmessage = getAllContentNodes(eleContent[0]);
-					donations = escapeHtml(eleContent[1].textContent);
-				} else {
-					donations = escapeHtml(eleContent[0].textContent);
-				}
-			} catch (e) {}
-		}
-
-		if (chatmessage) {
-			chatmessage = chatmessage.trim();
-		}
-		if (lastMessage === chatmessage && lastUser === username && (!lastEle || !lastEle.isConnected)) {
-			lastMessage = "";
-			username = "";
-			return;
+			
 		} else {
-			lastMessage = chatmessage;
-			lastUser = username;
-			lastEle = ele;
-		}
+			try {
+				if (event){
+					var eleContent = ele.childNodes[0];
+				} else {
+					var eleContent = ele.querySelector(SELECTORS.messageBody);
+				}
 
-		if (chatmessage && chatmessage.includes(" (Deleted by ")) {
-			return; // I'm assuming this is a deleted message
-		}
+				chatmessage = getAllContentNodes(eleContent);
 
-		if (chatmessage && chatmessage.includes(" Timeout by ")) {
-			return; // I'm assuming this is a timed out message
-		}
+				if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")) {
+					highlightColor = "rgba(225, 20, 20, 0.3)";
+				}
+			} catch (e) {}
 
-		if (chatmessage && chatmessage.includes(" (Banned by ")) {
-			return; // I'm assuming this is a banning message
-		}
+			if (!chatmessage && !event) {
+				try {
+					var eleContent = ele.querySelector("span.message");
+					chatmessage = getAllContentNodes(eleContent);
+					if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")) {
+						highlightColor = "rgba(225, 20, 20, 0.3)";
+					}
+				} catch (e) {}
+			}
 
+			if (!chatmessage && !event) {
+				try {
+					var eleContent = ele.querySelector(".chat-line__message-container .chat-line__username-container").nextElementSibling.nextElementSibling;
+					chatmessage = getAllContentNodes(eleContent);
+					eleContent = eleContent.nextElementSibling;
+					var count = 0;
+					while (eleContent) {
+						count++;
+						chatmessage += getAllContentNodes(eleContent);
+						eleContent = eleContent.nextElementSibling;
+						if (count > 20) {
+							break;
+						}
+					}
+					if (!highlightColor && chatmessage && eleContent.querySelector(".chat-message-mention, .mention-fragment--recipient[data-a-target='chat-message-mention']")) {
+						highlightColor = "rgba(225, 20, 20, 0.3)";
+					}
+				} catch (e) {}
+			}
+
+			if (!chatmessage && !event) {
+				try {
+					var eleContent = ele.querySelector(".paid-pinned-chat-message-content-container").childNodes;
+
+					if (eleContent.length > 1) {
+						chatmessage = getAllContentNodes(eleContent[0]);
+						donations = escapeHtml(eleContent[1].textContent);
+					} else {
+						donations = escapeHtml(eleContent[0].textContent);
+					}
+				} catch (e) {}
+			}
+
+			if (chatmessage) {
+				chatmessage = chatmessage.trim();
+			}
+			
+			if (lastMessage === chatmessage && lastUser === username && (!lastEle || !lastEle.isConnected)) {
+				lastMessage = "";
+				username = "";
+				return;
+			} else {
+				lastMessage = chatmessage;
+				lastUser = username;
+				lastEle = ele;
+			}
+			if (chatmessage && chatmessage.includes(" (Deleted by ")) {
+				return; // I'm assuming this is a deleted message
+			}
+
+			if (chatmessage && chatmessage.includes(" Timeout by ")) {
+				return; // I'm assuming this is a timed out message
+			}
+
+			if (chatmessage && chatmessage.includes(" (Banned by ")) {
+				return; // I'm assuming this is a banning message
+			}
+		}
+		
 		if (channelName && settings.customtwitchstate) {
 			if (settings.customtwitchaccount && settings.customtwitchaccount.textsetting && settings.customtwitchaccount.textsetting.toLowerCase() !== channelName.toLowerCase()) {
 				return;
@@ -521,35 +540,14 @@
 			} catch (e) {}
 		}
 		
-		// if (!donations && displayName && (displayName==="Stream Stickers") && chatmessage && chatmessage.includes("Bits")) {
-			// donations = chatmessage.split(" Bits").pop()
-			// donations = donations.split(" ").pop();
-			// if (donations == parseInt(donations)){
-				// if (donations == "1"){
-					// donations = donations + " Bit";
-				//} else if (donations == "0"){
-				//	donations = false;
-				// } else {
-					// donations = donations + " Bits";
-				// }
-			// }
-		// }
 
 		var hasDonation = "";
 		if (donations) {
 			hasDonation = donations;
 		}
 
-		/* var eventtype = ele.querySelector("[data-highlight-label]");
-		if (eventtype){
-			try {
-				eventtype = escapeHtml(eventtype.dataset.highlightLabel) || "";
-			} catch(e){
-				eventtype = "";
-			}
-		} */
-		var eventtype = "";
-		if (!chatmessage) {
+		
+		if (!chatmessage && !contentimg) {
 			try {
 				chatmessage = getAllContentNodes(ele.querySelector(".seventv-reward-message-container")).trim();
 				eventtype = "reward";
@@ -558,7 +556,7 @@
 
 		if (eventtype && chatmessage) {
 			// pass
-		} else if (!chatmessage && !hasDonation && !username) {
+		} else if (!chatmessage && !hasDonation && !username && !contentimg) {
 			return;
 		}
 		
@@ -631,7 +629,7 @@
 		} catch (e) {}
 		
 		
-		if (ele.querySelector(".message-event-pill")){
+		if (!contentimg && ele.querySelector(".message-event-pill")){
 			if (!settings.textonlymode){
 				chatmessage = "<i class='event-pill'>"+getAllContentNodes(ele.querySelector(".message-event-pill")) + "</i> " + chatmessage;
 			} else {
@@ -648,6 +646,7 @@
 			data.reply = originalMessage;
 		}
 		
+		data.contentimg = contentimg;
 		data.chatname = displayName;
 		data.username = username;
 		data.chatbadges = chatbadges;
