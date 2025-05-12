@@ -2203,6 +2203,9 @@ function update(response, sync = true) {
 
             setupPageLinks(hideLinksInitial, baseURL, response.streamID, password); // Pass current hideLinks state
 
+			
+			document.getElementById("sampleoverlay").href = baseURL + "sampleoverlay.html?session=" + response.streamID + password;
+			
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
