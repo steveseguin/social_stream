@@ -236,6 +236,11 @@ body, html {
 	}, 1000); 
 	
     function addMessageToOverlay(data) {
+		
+		if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+			return;
+		}
+		
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
 		
