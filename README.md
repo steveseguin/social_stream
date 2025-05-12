@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🥷 Social Stream Ninja</h1>
+  <h1><img src="https://socialstream.ninja/media/logo.png" width="400"> Social Stream Ninja</h1>
   <p><strong>Consolidate, control, and customize your live social messaging streams - completely free</strong></p>
   
   [![GitHub stars](https://img.shields.io/github/stars/steveseguin/social_stream?style=social)](https://github.com/steveseguin/social_stream/stargazers)
