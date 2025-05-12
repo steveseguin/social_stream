@@ -1,5 +1,5 @@
 <div align="center">
-	<img src="https://socialstream.ninja/media/logo.png" width="200"> 
+	
   <h1>🥷 Social Stream Ninja</h1>
   <p><strong>Consolidate, control, and customize your live social messaging streams - completely free</strong></p>
   
@@ -8,7 +8,7 @@
   [![GitHub release](https://img.shields.io/github/v/release/steveseguin/social_stream?include_prereleases)](https://github.com/steveseguin/social_stream/releases)
   [![GitHub License](https://img.shields.io/github/license/steveseguin/social_stream)](https://github.com/steveseguin/social_stream/blob/main/LICENSE)
 </div>
-
+<img src="https://socialstream.ninja/media/logo.png" width="200"> 
 ## 👀 What is Social Stream Ninja?
 
 Much more than just an overlay - Social Stream Ninja is a complete chat ecosystem available as either a browser extension or standalone desktop application. It consolidates messaging from **120+ sites and growing**, with an open API for programmatic control, data access, and engagement. Built on VDO.Ninja's peer-to-peer data transport API for secure, low-latency, and free operation.
