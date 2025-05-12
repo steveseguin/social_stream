@@ -200,7 +200,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - mixlr (paywalled. cannot support going forward until that's fixed)
 - parti.com (pop out chat)
 - live.nicovideo.jp (no pop out chat)
-- bitchute.com (no pop out chat)
+- bitchute.com (pop out chat)
 - substack
 - online.church (no pop out)
 - fansly - pop out chat
