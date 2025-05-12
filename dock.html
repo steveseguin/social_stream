@@ -40,7 +40,7 @@
 				--cursor-type: pointer;
 				--pressed-color: #9c9c;
 				--blur-amount: 5px;
-
+				--content-images: 30px;
 				--pinned-queued-bg: #9d99cc;
 				--pinned-bg: #712a65;
 				--donation-amount-margin: 0 auto 0 0;
@@ -409,7 +409,7 @@
 			.hl-imgContent img, .hl-imgContent video {
 				max-width: 80px;
 				margin: 0 2px;
-				max-height: 30px;
+				max-height: var(--content-images);
 			}
 			
 
@@ -3480,6 +3480,7 @@
 				document.documentElement.style.setProperty("--stylized-emoji", `${100 * scale}%`);
 				document.documentElement.style.setProperty("--message-line-height", `${21 * scale}px`);
 				document.documentElement.style.setProperty("--stylized-img", `${scale * 21}px`);
+				document.documentElement.style.setProperty("--content-images", `${scale * 36}px`);
 			}
 
 			var flexOrNotToFlex = "flex";
