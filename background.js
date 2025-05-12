@@ -11764,6 +11764,7 @@ async function triggerFakeRandomMessage(){
 		data.membership = "";
 		data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
 		data.chatname = "Steve";
+		
 		data.vip = true;
 		var score = parseInt(Math.random() * 378);
 		data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
@@ -11791,17 +11792,17 @@ async function triggerFakeRandomMessage(){
 		data.nameColor = "";
 		data.private = true;
 		data.chatname = "Sir Drinks-a-lot";
-		data.type = "youtube";
+		data.type = "discord";
 		data.chatmessage = "☕☕☕ COFFEE!";
 		data.chatbadges = ["https://socialstream.ninja/icons/bot.png","https://socialstream.ninja/icons/announcement.png"];
 	} else if (Math.random() > 0.3) {
 		data.hasDonation = "";
 		data.membership = "";
 		data.chatmessage = "";
-		data.contentimg = "https://images-ext-1.discordapp.net/external/6FdtQ1kYY4futdm0dYQOld6yq-JbbtvNnQ_szqyW4sc/https/media.tenor.com/iVKEjb8t5fcAAAPo/cat-cat-kiss.mp4";
+		data.contentimg = "https://socialstream.ninja/media/logo.png";
 		data.chatname = "User123";
-		data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
-		data.type = "discord";
+		data.chatimg = "https://socialstream.ninja/media/user1.png";
+		data.type = "youtube";
 	} else if (Math.random() > 0.2) {
 		data.hasDonation = "";
 		data.membership = "";

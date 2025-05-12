@@ -1,76 +1,200 @@
-// quakenet.js
-(function() {
-  const scriptName = '[QuakeNet CS Using Ninjafy IPC]';
-  console.log(`${scriptName} Initializing.`);
-  let settings = {}; // Define settings in a scope accessible by later functions
+(function () {
+	 
+	function toDataURL(url, callback) {
+	  var xhr = new XMLHttpRequest();
+	  xhr.onload = function() {
+		  
+		var blob = xhr.response;
+    
+		if (blob.size > (55 * 1024)) {
+		  callback(url); // Image size is larger than 25kb.
+		  return;
+		}
 
-  function applySettingsAndObserve() {
-    // console.log(`${scriptName} Settings applied:`, settings);
-    // All your original logic that depends on settings (like processMessage, onElementInserted)
-    // would go here or be called from here.
-    // For example, to start observing after settings are fetched:
-    // if (document.querySelector('.ircwindow') && !document.querySelector('.ircwindow').marked) {
-    //   document.querySelector('.ircwindow').marked = true;
-    //   onElementInserted(document.querySelector('.ircwindow')); // Make sure onElementInserted is defined
-    // }
-  }
+		var reader = new FileReader();
+		
+		
+		reader.onloadend = function() {
+		  callback(reader.result);
+		}
+		reader.readAsDataURL(xhr.response);
+	  };
+	  xhr.open('GET', url);
+	  xhr.responseType = 'blob';
+	  xhr.send();
+	}
+	
+	function escapeHtml(unsafe){
+		try {
+			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
+				return unsafe;
+			}
+			return unsafe
+				 .replace(/&/g, "&amp;")
+				 .replace(/</g, "&lt;")
+				 .replace(/>/g, "&gt;")
+				 .replace(/"/g, "&quot;")
+				 .replace(/'/g, "&#039;") || "";
+		} catch(e){
+			return "";
+		}
+	}
 
-  if (typeof window.ninjafy !== 'undefined' && typeof window.ninjafy.invokeInMain === 'function') {
-    console.log(`${scriptName} Ninjafy bridge found. Using ninjafy.invokeInMain for getSettings.`);
-    alert(`${scriptName} Ninjafy bridge found. Using ninjafy.invokeInMain for getSettings.`); // For testing
+	function getAllContentNodes(element) { // takes an element.
+		var resp = "";
+		
+		if (!element){return resp;}
+		
+		if (!element.childNodes || !element.childNodes.length){
+			if (element.textContent){
+				return escapeHtml(element.textContent) || "";
+			} else {
+				return "";
+			}
+		}
+		
+		element.childNodes.forEach(node=>{
+			if (node.childNodes.length){
+				resp += getAllContentNodes(node)
+			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+				resp += escapeHtml(node.textContent);
+			} else if (node.nodeType === 1){
+				if (!settings.textonlymode){
+					if ((node.nodeName == "IMG") && node.src){
+						node.src = node.src+"";
+					}
+					resp += node.outerHTML;
+				}
+			}
+		});
+		return resp;
+	}
+	
+	function processMessage(ele){
+		try {
+			
+			var msgEle = ele.querySelector('.hyperlink-whois');
+			
+			if (!msgEle){return;}
+			console.log(msgEle);
+			var name = msgEle.innerText;
+			if (name){
+				name = name.trim();
+				name = escapeHtml(name);
+			} else {
+				return;
+			}
+			
+			console.log(msgEle.parentNode);
+			
+			if (msgEle.nextNode){
+				var msg = (msgEle.nextNode().textContent);
+			} else if (msgEle.nextSibling && msgEle.nextSibling.textContent){
+				var msg = escapeHtml(msgEle.nextSibling.textContent);
+			} else {
+				try{
+					var msg = escapeHtml(msgEle.parentNode.nextSibling.textContent);
+				} catch(e){
+					console.log(e);
+					return;
+				}
+			} 
+			console.log(msg);
+			msg = msg.replace("> ", "");
+			
+			msg = msg.trim();
+		} catch(e){
+			console.log(e);
+			return;
+		}
+		
+		if (!msg.length){return;}
+		
+		var data = {};
+		data.chatname = name;
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = msg;
+		data.chatimg = "";
+		data.hasDonation = "";
+		data.membership = "";;
+		data.contentimg = "";
+		data.textonly = settings.textonlymode || false;
+		data.type = "quakenet";
+		
+		pushMessage(data);
+	}
 
-    window.ninjafy.invokeInMain('ninjafy:getSettings', { forSite: "quakenet" })
-      .then(response => {
-        console.log(`${scriptName} ninjafy:getSettings response:`, response);
-        alert(`${scriptName} ninjafy:getSettings response: ${JSON.stringify(response)}`); // For testing
+	function pushMessage(data){
+		try{
+			chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
+		} catch(e){
+		}
+	}
+	
+	var settings = {};
+	// settings.textonlymode
+	// settings.captureevents
+	
+	
+	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if ("settings" in response){
+			settings = response.settings;
+		}
+	});
 
-        if (response && response.settings) {
-          settings = response.settings;
-          applySettingsAndObserve();
-        } else {
-          console.error(`${scriptName} Failed to get settings via ninjafy.invokeInMain or invalid response format.`);
-          alert(`${scriptName} Failed to get settings via ninjafy.invokeInMain or invalid response format.`);
-        }
-      })
-      .catch(err => {
-        console.error(`${scriptName} Error invoking ninjafy:getSettings:`, err);
-        alert(`${scriptName} Error invoking ninjafy:getSettings: ${err.message}`);
-      });
-  } else {
-    // Fallback or error if Ninjafy is not available - though it should be if preload ran.
-    console.error(`${scriptName} Ninjafy IPC bridge (window.ninjafy.invokeInMain) is not available! Cannot get settings.`);
-    alert(`${scriptName} Ninjafy IPC bridge not available!`);
-    // You might still try chrome.runtime.sendMessage here as a last resort if this script
-    // is used on other sites, but for QuakeNet it's the problem.
-  }
+	chrome.runtime.onMessage.addListener(
+		function (request, sender, sendResponse) {
+			try{
+				if ("getSource" == request){sendResponse("quakenet");	return;	}
+				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+					document.querySelector('.keyboard-input').focus();
+					sendResponse(true);
+					return;
+				}
+				if (typeof request === "object"){
+					if ("settings" in request){
+						settings = request.settings;
+						sendResponse(true);
+						return;
+					}
+				}
+			} catch(e){}
+			sendResponse(false);
+		}
+	);
 
-  // Your other functions (toDataURL, escapeHtml, getAllContentNodes, processMessage, pushMessage, onElementInserted)
-  // would remain here. processMessage would use the `settings` variable.
-  // Make sure `pushMessage` is also adapted if it used chrome.runtime.sendMessage.
-  // It could use `window.ninjafy.sendToMain('ninjafy:chatMessage', data);`
-  // and you'd have an `ipcMain.on('ninjafy:chatMessage', (event, data) => {...});`
+	function onElementInserted(target) {
+		var onMutationsObserved = function(mutations) {
+			mutations.forEach(function(mutation) {
+				if (mutation.addedNodes.length) {
+					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						try {
+							if (mutation.addedNodes[i].skip){return;}
+							mutation.addedNodes[i].skip = true;
+							processMessage(mutation.addedNodes[i]);
+						} catch(e){}
+					}
+				}
+			});
+		};
+		if (!target){return;}
+		var config = { childList: true, subtree: true };
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		var observer = new MutationObserver(onMutationsObserved);
+		observer.observe(target, config);
+	}
+	
+	console.log("social stream injected");
 
-  // Example:
-  // function pushMessage(data){
-  //   if (typeof window.ninjafy !== 'undefined' && typeof window.ninjafy.sendToMain === 'function') {
-  //     window.ninjafy.sendToMain('ninjafy:chatMessage', { "message": data });
-  //   } else {
-  //     // Fallback or error
-  //     try { // Original attempt
-  //       chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, function(e){});
-  //     } catch(e){}
-  //   }
-  // }
-
-  // The MutationObserver setup via setInterval would be called from applySettingsAndObserve
-  // or after settings are confirmed.
-  // setInterval(function(){
-  //   if (settings.captureevents && document.querySelector('.ircwindow')){ // Check settings
-  //     if (!document.querySelector('.ircwindow').marked){
-  //       document.querySelector('.ircwindow').marked=true;
-  //       onElementInserted(document.querySelector('.ircwindow'));
-  //     }
-  //   }
-  // },1000);
+	setInterval(function(){
+		if (document.querySelector('.ircwindow')){
+			if (!document.querySelector('.ircwindow').marked){
+				document.querySelector('.ircwindow').marked=true;
+				onElementInserted(document.querySelector('.ircwindow'));
+			}
+		}
+	},1000);
 
 })();

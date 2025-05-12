@@ -1,9 +1,3 @@
-<!--
-Development Notes:
-- It's important that the IFRAME logic stay intact, as it is how we receieve messages
-- This code is in vanilla Javascript designed for web browsers without compiling
-- Details of the incoming message structure can be found here: https://github.com/steveseguin/social_stream/blob/main/README.md#message-structure
- !-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,60 +13,87 @@ body, html {
     padding: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(10, 22, 40, 0.8); /* Dark, semi-transparent background */
     font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-	background-color: #0000;
-	overflow: hidden;
+    background-color: #0000; /* Transparent background for overlay */
+    overflow: hidden; /* Prevent body scrollbars */
+    box-sizing: border-box;
 }
 
+/* Container for the chat, positioned and sized */
 #chat-container {
-    padding: 25px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%); /* Center horizontally */
+    width: 100%;
     max-width: 350px;
-    margin: auto;
+    height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end; /* Aligns message-wrapper to the bottom */
+    overflow: hidden; /* Crucial: content exceeding this will be hidden */
+    padding: 0 25px; /* Horizontal padding only on the main container */
+    box-sizing: border-box;
+}
+
+/* Wrapper for all messages, this will be translated for smooth scrolling */
+#message-list-wrapper {
+    width: 100%;
+    /* transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smooth transition for movement */
+    /* Using a more linear easing for smoother continuous scroll feel */
+    transition: transform 0.5s ease-out;
 }
 
 .message {
     background: linear-gradient(145deg, #1a2a48, #162238);
-    padding: 20px;
-    margin-bottom: 20px;
+    padding: 15px;
+    margin-bottom: 15px;
     border-radius: 15px;
     border: 1px solid #2e3b55;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     color: #e4e6eb;
-    transition: transform 0.2s ease-in-out;
-	opacity: 0;
-    transform: translateY(-20px);
-    animation: slideFadeIn 0.5s ease forwards;
-    position: relative;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out,
+                max-height 0.5s ease-in-out, margin-bottom 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, border-width 0.5s ease-in-out;
+    flex-shrink: 0;
     overflow: hidden;
+    max-height: 500px; /* Start with a large enough max-height */
+    box-sizing: border-box;
 }
 
-@keyframes slideFadeIn {
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.message.visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-#chat-container .message + .message {
-    transition: transform 0.5s ease;
+.message.hidden {
+    opacity: 0;
+    transform: translateY(-30px); /* Optional: slide up a bit more dramatically */
+    max-height: 0px !important;
+    padding-top: 0px !important;
+    padding-bottom: 0px !important;
+    margin-bottom: 0px !important;
+    border-width: 0px !important; /* Collapse border as well */
 }
+
 
 .name {
-	color: white;
-    font-size: 1.2em;
+    color: white;
+    font-size: 1.1em;
     font-weight: 700;
 }
 
 .text {
-    font-size: 0.95em;
+    font-size: 0.9em;
     line-height: 1.4;
     margin: 8px 0;
+    word-wrap: break-word;
 }
 .text img {
-	max-width:100px;
-	max-height: 24px;
-	vertical-align: bottom;
+    max-width:100px;
+    max-height: 24px;
+    vertical-align: bottom;
 }
 
 .donation {
@@ -80,30 +101,19 @@ body, html {
     font-weight: 600;
 }
 
-.message:after {
-    content: "";
-    display: table;
-    clear: both;
-}
-
-.separator {
-    height: 2px;
-    background: linear-gradient(to right, #4ab8f9, #4cd137);
-    margin: 20px 0;
-}
-
 .name-bg {
     background-color: #4a6fa5;
-    padding: 5px 10px;
+    padding: 4px 8px;
     border-radius: 5px;
     display: inline-block;
     vertical-align: middle;
+    margin-right: 8px;
 }
 
 .membership-status {
     color: #ffd700;
     font-weight: 700;
-    font-size: 0.9em;
+    font-size: 0.85em;
     margin-bottom: 5px;
 }
 
@@ -112,180 +122,226 @@ body, html {
     height: auto;
     margin-top: 10px;
     border-radius: 10px;
+    display: block;
 }
 .avatar-wrapper {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
     display: inline-block;
-    margin-right: 15px;
+    margin-right: 10px;
     position: relative;
     overflow: hidden;
-	background: linear-gradient(45deg, #4ab8f9, #4cd137);
-	padding: 3px;
-	vertical-align: middle;
+    background: linear-gradient(45deg, #4ab8f9, #4cd137);
+    padding: 2px;
+    vertical-align: middle; /* Changed from top to middle */
+    flex-shrink: 0;
 }
 
 .avatar {
     width: 100%;
     height: 100%;
     border-radius: 50%;
-    background: url('https://somdomain.com/avatar.png') no-repeat center center;
     background-size: cover;
-    position: relative;
-	
-}
-
-.avatar-wrapper::after {
-    content: '';
-    position: absolute;
-    top: -5px; right: -5px; bottom: -5px; left: -5px;
-    background: linear-gradient(45deg, #4ab8f9, #4cd137);
-    border-radius: 50%;
-    z-index: -1;
+    background-position: center;
 }
 
 .source-icon {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     vertical-align: middle;
-    position: relative;
+    margin-left: 5px;
 }
 
 .badge {
     display: inline-block;
-    height: 1em;
-    margin-left: 5px;
-	vertical-align: middle;
+    height: 0.9em;
+    margin-left: 4px;
+    vertical-align: middle;
 }
+
+/* /* Add this here: Structure message content */ */
+.message-content-wrapper {
+    display: flex;
+    align-items: flex-start; /* Align avatar to the top of text block */
+}
+
+.message-text-meta {
+    flex-grow: 1;
+    min-width: 0; /* Fix for flex item not shrinking/wrapping */
+}
+/* /* End Add this here */ */
+
 </style>
 </head>
 <body>
-<div id="chat-container"></div>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        </div>
+</div>
 <script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false";
+    var featuredMode = false;
 
-	var urlParams = new URLSearchParams(window.location.search);
-	var roomID = "iWWnKL28tQ";
-	
-	if (urlParams.has("session")){
-		roomID = urlParams.get("session");
-	}
-	var password = "false";
-	var featuredMode = false; // featured == selected messages only.  not featured == all messages.
-	
-	const chatContainer = document.getElementById('chat-container');
-	
-	function addMessageToOverlay(data) {
-		
-		const messageDiv = document.createElement('div');
-		messageDiv.classList.add('message');
-		if (data.mid){messageDiv.id = data.mid;}
-		data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
-		console.log(data.chatbadges);
-		
-		var chatbadges = "";
-		if (data.chatbadges) {
-			data.chatbadges.forEach(badge => {
-				if (typeof badge === "object") {
-					if (badge.type === "img" && badge.src) {
-						chatbadges += `<img class='badge' src='${badge.src}' />`;
-					} else if (badge.type === "svg" && badge.html) {
-						chatbadges += `<span class='badge svg'>${badge.html}</span>`;
-					}
-				} else {
-					chatbadges += `<img class='badge' src='${badge}' />`;
-				}
-			});
-		}
-		
-		messageDiv.innerHTML = `
-			${data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : ''}
-			${data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : ''}
-			${data.sourceicon ? `<img src="${data.sourceicon}" alt="Channel Source" class="source-icon">` : ''}
-			${chatbadges}
-			${data.membership ? `<div class="membership-status">${data.membership}</div>` : ''}
-			<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>
-			${data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : ''}
-			${data.contentimg ? `<img src="${data.contentimg}" alt="Large Content" class="large-image" onerror="this.style.display='none';">` : ''}
-		`;
-		
-		Array.from(chatContainer.children).forEach(child => {
-			child.style.transform = 'translateY(' + messageDiv.offsetHeight + 'px)';
-		});
-		
-		chatContainer.prepend(messageDiv);
-		
-		// Auto-scroll to the latest message
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-		
-		while (chatContainer.children.length > 20) {
-			chatContainer.removeChild(chatContainer.lastChild);
-		}
-		
-		setTimeout(() => {
-			Array.from(chatContainer.children).forEach(child => {
-				child.style.transform = '';
-			});
-		}, 500); 
-	}
-	
-	// The IFrame allows for peer to peer mode; used by default.  It may have issues if self-hosting this page though while using OBS v31 due to same-origin strict policies in CEF
-	var iframe = document.createElement("iframe");
-	if (featuredMode){
-		iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
-	} else {
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
-	}
-	iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
-	document.body.appendChild(iframe);
-	window.addEventListener("message", function (e) {
-		if (e.source != iframe.contentWindow) return;
-		if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
-			addMessageToOverlay(e.data.dataReceived.overlayNinja);
-		}
-	});
-	
-	
-	// The Websocket mode is an alternative to using p2p mode; useful if your OBS or system refuses to use IFrames/P2P.
-	var conCon = 1;
-	var socketserver = false;
-	// localserver mode can be used via the stand-alone app; file-> enable local server, or use the publicly hosted one.
-	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = 10; // Adjust as needed
 
-	function setupSocket(){
-		socketserver.onclose = function (){
-			setTimeout(function(){
-				conCon+=1;
-				socketserver = new WebSocket(serverURL);
-				setupSocket();
-			},100*conCon);
-		};
-		socketserver.onopen = function (){
-			conCon = 1;
-			socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
-		};
-		socketserver.addEventListener('message', function (event) {
-			var resp = false
-			if (event.data){
-				var data = JSON.parse(event.data);
-				addMessageToOverlay(data);
-				if (data.get){
-					var ret = {};
-					ret.callback = {};
-					ret.callback.get = data.get
-					ret.callback.result = true;
-					socketserver.send(JSON.stringify(ret));
-				}
-			}
-		});
-	}
-	
-	if (urlParams.has("server") || urlParams.has("server2")){ // opt-in to use. Must also be enabled in the menu as well.
-		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
-		socketserver = new WebSocket(serverURL);
-		setupSocket();
-	}
-	
+    function adjustMessageWrapperScroll() {
+        // We want the bottom of the messageListWrapper to align with the bottom of chatContainer,
+        // unless messageListWrapper is shorter than chatContainer.
+        const wrapperScrollHeight = messageListWrapper.scrollHeight;
+        const containerClientHeight = chatContainer.clientHeight;
+
+        let translateY = 0;
+        if (wrapperScrollHeight > containerClientHeight) {
+            translateY = -(wrapperScrollHeight - containerClientHeight);
+        }
+        // No 'else' needed, if it's shorter, translateY remains 0, aligning top of wrapper with top of flex-end container.
+
+        if (parseFloat(messageListWrapper.style.transform.replace('translateY(', '').replace('px)', '')) !== translateY) {
+            messageListWrapper.style.transform = `translateY(${translateY}px)`;
+        }
+    }
+
+    function addMessageToOverlay(data) {
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        if (data.mid) { messageDiv.id = data.mid; }
+
+        var chatbadgesHtml = "";
+        if (data.chatbadges) {
+            data.chatbadges.forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else {
+                    // Assuming string is a URL
+                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
+                }
+            });
+        }
+        
+        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : ''; // Use data.type for source icon
+        const avatarHtml = data.chatimg ? `<div class="avatar-wrapper"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
+        const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
+        const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
+        const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+        const contentImgHtml = data.contentimg ? `<img src="${data.contentimg}" alt="Content Image" class="large-image" onerror="this.style.display='none';">` : '';
+
+        messageDiv.innerHTML = `
+            <div class="message-content-wrapper">
+                ${avatarHtml}
+                <div class="message-text-meta">
+                    <div>
+                        ${nameHtml}
+                        ${sourceIconHtml}
+                        ${chatbadgesHtml}
+                    </div>
+                    ${membershipHtml}
+                    ${messageTextHtml}
+                    ${donationHtml}
+                </div>
+            </div>
+            ${contentImgHtml}
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+
+        // Force reflow for animation
+        void messageDiv.offsetWidth; 
+        messageDiv.classList.add('visible');
+        
+        // Manage message limit
+        if (messageListWrapper.children.length > MAX_MESSAGES) {
+            const oldestMessage = messageListWrapper.firstChild;
+            if (oldestMessage) {
+                oldestMessage.classList.remove('visible'); // Ensure it's not interfering with 'visible' styles if re-added quickly
+                oldestMessage.classList.add('hidden');
+                oldestMessage.addEventListener('transitionend', function handleTransitionEnd() {
+                    // Check if the element is still a child before removing
+                    if (oldestMessage.parentNode === messageListWrapper) {
+                        messageListWrapper.removeChild(oldestMessage);
+                    }
+                    // Ensure this listener is removed to prevent multiple calls if transition is interrupted/restarted
+                    oldestMessage.removeEventListener('transitionend', handleTransitionEnd);
+                    adjustMessageWrapperScroll(); 
+                }, { once: true }); // { once: true } might not be enough if transitionend doesn't fire for all properties.
+                                    // A manual removal of listener as above is safer.
+            }
+        }
+        
+        // Adjust scroll for all messages
+        // Delay slightly to ensure the new message's dimensions are calculated
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => { // Double requestAnimationFrame for more robust timing
+                 adjustMessageWrapperScroll();
+            });
+        });
+    }
+    
+    var iframe = document.createElement("iframe");
+    if (featuredMode){
+        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+    
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) { 
+                        addMessageToOverlay(data); // Process valid data
+                    }
+                    // Note: The 'get' callback logic was removed as it wasn't part of the core chat display.
+                    // If it's needed for other functionality, it should be re-evaluated.
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+
 </script>
 </body>
 </html>
