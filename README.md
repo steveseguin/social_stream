@@ -12,6 +12,7 @@
 
 Much more than just an overlay - Social Stream Ninja is a complete chat ecosystem available as either a browser extension or standalone desktop application. It consolidates messaging from **120+ sites and growing**, with an open API for programmatic control, data access, and engagement. Built on VDO.Ninja's peer-to-peer data transport API for secure, low-latency, and free operation.
 
+
 <div align="center">
   <img src="https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png" width="400">
   <img src="https://user-images.githubusercontent.com/2575698/148505691-8a08e7b0-29e6-4eb5-9632-9dbcac50c204.png" width="400">
@@ -30,10 +31,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - **Zero authentication**: No logins, API keys, or permissions required for most platforms
 - **Highly customizable**: Themes, CSS editing, and scriptable plugin support
 - **Message relaying**: between Facebook, Youtube, Twitch, Zoom, and dozens more
-
-Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
-
-![image](https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png) ![image](https://user-images.githubusercontent.com/2575698/148505691-8a08e7b0-29e6-4eb5-9632-9dbcac50c204.png)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
