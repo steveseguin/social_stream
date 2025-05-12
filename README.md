@@ -3,7 +3,7 @@
   <p><strong>Consolidate, control, and customize your live social messaging streams - completely free</strong></p>
   
   [![GitHub stars](https://img.shields.io/github/stars/steveseguin/social_stream?style=social)](https://github.com/steveseguin/social_stream/stargazers)
-  [![Discord](https://img.shields.io/discord/742307073175978029?color=7289DA&label=community&logo=discord&logoColor=white)](https://discord.socialstream.ninja)
+  [![Discord](https://img.shields.io/discord/698324796546482177?color=7289DA&label=community&logo=discord&logoColor=white)](https://discord.socialstream.ninja)
   [![GitHub release](https://img.shields.io/github/v/release/steveseguin/social_stream?include_prereleases)](https://github.com/steveseguin/social_stream/releases)
   [![GitHub License](https://img.shields.io/github/license/steveseguin/social_stream)](https://github.com/steveseguin/social_stream/blob/main/LICENSE)
 </div>
