@@ -198,7 +198,7 @@ body, html {
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = 20; // Adjust as needed
     const topSpacer = document.getElementById('spacer');
-
+	const messageTimestamps = new Map();
     const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000; 
 
     function adjustMessageWrapperScroll() {
@@ -216,61 +216,34 @@ body, html {
         });
     }
     
-	function setupMessageAging() {
-		// Track messages with their creation timestamps
-		const messageTimestamps = new Map();
+	setInterval(() => {
+		const now = Date.now();
+		const messages = Array.from(messageListWrapper.children).filter(
+			child => child.id !== 'spacer' && child.classList.contains('message')
+		);
 		
-		// Function to add timestamp to a new message
-		function trackNewMessage(messageElement) {
-			if (!messageElement.id) {
-				messageElement.id = 'msg-' + Date.now();
-			}
-			messageTimestamps.set(messageElement.id, Date.now());
-		}
-		
-		// Check message ages periodically
-		setInterval(() => {
-			const now = Date.now();
-			const messages = Array.from(messageListWrapper.children).filter(
-				child => child.id !== 'spacer' && child.classList.contains('message')
-			);
-			
-			messages.forEach(message => {
-				const timestamp = messageTimestamps.get(message.id);
-				if (timestamp) {
-					const age = now - timestamp;
-					
-					// After 30 seconds, start fading
-					if (age > 30000 && !message.classList.contains('fading')) {
-						message.classList.add('fading');
-					}
+		messages.forEach(message => {
+			const timestamp = messageTimestamps.get(message.id);
+			if (timestamp) {
+				const age = now - timestamp;
+				
+				// After 30 seconds, start fading
+				if (age > 30000 && !message.classList.contains('fading')) {
+					message.classList.add('fading');
 				}
-			});
-		}, 1000); // Check every second
-		
-		// Intercept the original addMessageToOverlay function to add timestamps
-		const originalAddMessage = addMessageToOverlay;
-		addMessageToOverlay = function(data) {
-			originalAddMessage(data);
-			
-			// Get the last message (the one just added)
-			const messages = Array.from(messageListWrapper.children).filter(
-				child => child.id !== 'spacer' && child.classList.contains('message')
-			);
-			if (messages.length > 0) {
-				const lastMessage = messages[messages.length - 1];
-				trackNewMessage(lastMessage);
 			}
-		};
-	}
-
-	setupMessageAging();
+		});
+	}, 1000); 
 	
     function addMessageToOverlay(data) {
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
-		if (data.mid) { messageDiv.id = data.mid; }
-
+		
+		// Generate unique ID and track timestamp for aging
+		const messageId = data.mid || 'msg-' + Date.now();
+		messageDiv.id = messageId;
+		messageTimestamps.set(messageId, Date.now());
+		
 		var chatbadgesHtml = "";
 		if (data.chatbadges) {
 			data.chatbadges.forEach(badge => {
@@ -286,14 +259,11 @@ body, html {
 			});
 		}
 		
-		// Determine border color for avatar
 		let avatarBorderColor = "linear-gradient(45deg, #4ab8f9, #4cd137)"; // Default gradient
 		if (data.nameColor) {
-			// Use nameColor for avatar if available
 			avatarBorderColor = `linear-gradient(45deg, ${data.nameColor}, ${data.nameColor}88)`;
 		}
 		
-		// Determine left edge color for message
 		let leftEdgeColor = null;
 		if (typeof getColorFromType === 'function' && data.type) {
 			try {
@@ -303,10 +273,8 @@ body, html {
 			}
 		}
 		
-		// Apply left edge color to the message div itself
 		if (leftEdgeColor) {
 			messageDiv.style.borderLeft = `4px solid ${leftEdgeColor}`;
-			// Adjust padding to accommodate the border
 			messageDiv.style.paddingLeft = '12px';
 		}
 		
@@ -318,7 +286,6 @@ body, html {
 		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
 		const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
 		
-		// Apply avatar border color to large images too if they exist
 		const contentImgHtml = data.contentimg ? 
 			`<div style="padding: 3px; border-radius: 12px; background: ${avatarBorderColor}; display: inline-block; margin-top: 10px;">
 				<img src="${data.contentimg}" alt="Content Image" class="large-image" style="margin-top: 0; border-radius: 8px;" onerror="this.parentNode.style.display='none';">
@@ -367,6 +334,7 @@ body, html {
 				
 				topSpacer.style.height = newPotentialSpacerHeight + 'px';
 
+				messageTimestamps.delete(oldestMessage.id);
 				messageListWrapper.removeChild(oldestMessage);
 			}
 		}
