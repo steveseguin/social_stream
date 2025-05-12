@@ -11291,98 +11291,111 @@ function monitorFileChanges() {
 		}
 	}, 1000); // Check for changes every second
 }
+// Add this variable at the top of your script file, outside any functions
+let lastRandomTestMessageData = null;
 
 async function triggerFakeRandomMessage(){
 	var data = {};
-	data.chatname = "John Doe";
-	data.nameColor = "";
-	data.chatbadges = "";
-	data.backgroundColor = "";
-	data.textColor = "";
-	data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
-	data.chatimg = "";
-	data.type = "youtube";
-	if (Math.random() > 0.9) {
-		data.hasDonation = "2500 gold";
-		data.membership = "";
-		data.chatname = "Bob";
-		data.chatbadges = [];
-		var html = {};
-		html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		html.type = "svg";
-		data.chatbadges.push(html);
-	} else if (Math.random() > 0.83 ){
-		data.hasDonation = "3 hearts";
-		data.membership = "";
-		data.chatmessage = "";
-		data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
-		data.chatname = "Lucy";
-		data.type = "youtubeshorts";
-	} else if (Math.random() > 0.7) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
-		data.chatname = "vdoninja";
-		data.type = "twitch";
-		data.event = "test";
-		var score = parseInt(Math.random() * 378);
-		data.chatmessage = jokes[score]["setup"] + "..  " + jokes[score]["punchline"] + " 😊";
-	} else if (Math.random() > 0.6) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
-		data.chatname = "Steve";
-		
-		data.vip = true;
-		var score = parseInt(Math.random() * 378);
-		data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
-	} else if (Math.random() > 0.5) {
-		data.hasDonation = "";
-		data.nameColor = "#107516";
-		data.membership = "SPONSORSHIP";
-		data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
-		data.chatname = "Steve_" + randomDigits();
-		data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
-		data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
-	} else if (Math.random() > 0.45) {
-		data.hasDonation = "";
-		data.highlightColor = "pink";
-		data.nameColor = "lightblue";
-		data.chatname = "NewGuest";
-		data.type = "twitch";
-		data.chatmessage = "hi";
-		data.chatbadges = ["https://vdo.ninja/media/icon.png","https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj","https://socialstream.ninja/icons/announcement.png"];
-	} else if (Math.random() > 0.40) {
-		data.membership = "Coffee Addiction";
-		data.hasDonation = "";
-		data.subtitle = "32 Years";
-		data.highlightColor = "pink";
+	let attempts = 0;
+	const maxAttempts = 5;
+	
+	// Keep generating new messages until we get one that's different from the last one
+	// or until we've tried a reasonable number of times
+	do {
+		data = {};
+		data.chatname = "John Doe";
 		data.nameColor = "";
-		data.private = true;
-		data.chatname = "Sir Drinks-a-lot";
-		data.type = "discord";
-		data.chatmessage = "☕☕☕ COFFEE!";
-		data.chatbadges = ["https://socialstream.ninja/icons/bot.png","https://socialstream.ninja/icons/announcement.png"];
-	} else if (Math.random() > 0.3) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.chatmessage = "";
-		data.contentimg = "https://socialstream.ninja/media/logo.png";
-		data.chatname = "User123";
-		data.chatimg = "https://socialstream.ninja/media/user1.jpg";
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+		data.chatimg = "";
 		data.type = "youtube";
-	} else if (Math.random() > 0.2) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.question = true;
-		data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
-		data.chatname = "Nich Lass";
-		data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
-		data.type = "zoom";
-	} else {
-		data.hasDonation = "";
-		data.membership = "SPONSORSHIP";
-	}
+		
+		if (Math.random() > 0.9) {
+			data.hasDonation = "2500 gold";
+			data.membership = "";
+			data.chatname = "Bob";
+			data.chatbadges = [];
+			var html = {};
+			html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+			html.type = "svg";
+			data.chatbadges.push(html);
+		} else if (Math.random() > 0.8 ){
+			data.hasDonation = "3 hearts";
+			data.membership = "";
+			data.chatmessage = "";
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "Lucy";
+			data.type = "youtubeshorts";
+		} else if (Math.random() > 0.7) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "vdoninja";
+			data.type = "twitch";
+			data.event = "test";
+			var score = parseInt(Math.random() * 378);
+			data.chatmessage = jokes[score]["setup"] + "..  " + jokes[score]["punchline"] + " 😊";
+		} else if (Math.random() > 0.6) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve";
+			
+			data.vip = true;
+			var score = parseInt(Math.random() * 378);
+			data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
+		} else if (Math.random() > 0.5) {
+			data.hasDonation = "";
+			data.nameColor = "#107516";
+			data.membership = "SPONSORSHIP";
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve_" + randomDigits();
+			data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
+			data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
+		} else if (Math.random() > 0.4) {
+			data.hasDonation = "";
+			data.highlightColor = "pink";
+			data.nameColor = "lightblue";
+			data.chatname = "NewGuest";
+			data.type = "twitch";
+			data.chatmessage = "hi";
+			data.chatbadges = ["https://vdo.ninja/media/icon.png","https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj","https://socialstream.ninja/icons/announcement.png"];
+		} else if (Math.random() > 0.30) {
+			data.membership = "Coffee Addiction";
+			data.hasDonation = "";
+			data.subtitle = "32 Years";
+			data.highlightColor = "pink";
+			data.nameColor = "";
+			data.private = true;
+			data.chatname = "Sir Drinks-a-lot";
+			data.type = "discord";
+			data.chatmessage = "☕☕☕ COFFEE!";
+			data.chatbadges = ["https://socialstream.ninja/icons/bot.png","https://socialstream.ninja/icons/announcement.png"];
+		} else if (Math.random() > 0.2) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.chatmessage = "";
+			data.contentimg = "https://socialstream.ninja/media/logo.png";
+			data.chatname = "User123";
+			data.chatimg = "https://socialstream.ninja/media/user1.jpg";
+			data.type = "youtube";
+		} else if (Math.random() > 0.1) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.question = true;
+			data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
+			data.chatname = "Nich Lass";
+			data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
+			data.type = "zoom";
+		} else {
+			data.hasDonation = "";
+			data.membership = "SPONSORSHIP";
+		}
+		
+		attempts++;
+	} while (isEqualMessage(data, lastRandomTestMessageData) && attempts < maxAttempts);
 
 	data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 	if (!data) {
@@ -11398,7 +11411,21 @@ async function triggerFakeRandomMessage(){
 		return response;
 	}
 	
+	lastRandomTestMessageData = JSON.parse(JSON.stringify(data)); // Store a deep copy of the current message
 	sendToDestinations(data);
+}
+
+// Helper function to compare if two messages are effectively the same
+function isEqualMessage(message1, message2) {
+	if (!message1 || !message2) return false;
+	
+	// Compare the key properties that would make messages look the same
+	return message1.chatname === message2.chatname &&
+		   message1.chatmessage === message2.chatmessage &&
+		   message1.chatimg === message2.chatimg &&
+		   message1.type === message2.type &&
+		   message1.hasDonation === message2.hasDonation &&
+		   message1.membership === message2.membership;
 }
 
 function createTestMessage(options = {}) {
