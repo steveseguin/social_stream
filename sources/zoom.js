@@ -165,14 +165,27 @@
 		return resp;
 	}
 	
-	function processMessage(ele, id=false){
+	function processMessage(ele, skip=false){
 
+		var id = false
 		if (ele && ele.marked){
 		  return;
 		} else {
 		  ele.marked = true;
 		}
-		if (!id){
+		
+		if (ele.dataset.knownSize){
+			if (!parseInt(ele.dataset.knownSize)){
+				console.log("no knownSize");
+				return;
+			}
+		}
+		
+		if (!id && ele.dataset){
+			id = ele.dataset?.index;
+		}
+		
+		if (id===false){
 			var mid = ele.querySelector("div[id][class*='chat']");
 			if (!mid || !("id" in mid)){
 				return;
@@ -180,7 +193,7 @@
 			id = mid.id;
 		}
 		
-		if (id){
+		if (id!==false){
 			if (messageHistory.includes(id)){
 				return;
 			}
@@ -189,6 +202,9 @@
 			return;
 		}
 
+		if (skip){
+			return;
+		}
 		if (document.querySelector("chat-message__container")){
 			if (document.querySelector("chat-message__container").marked){
 				return;
@@ -430,6 +446,8 @@
 								processMessage(mutation.addedNodes[i]);
 							} else if (mutation.addedNodes[i].hasAttribute("id")){
 								processMessage(mutation.addedNodes[i]);
+							} else if (mutation.addedNodes[i].hasAttribute("data-index")){
+								processMessage(mutation.addedNodes[i]);
 							} 
 						} catch(e){
 							
@@ -452,7 +470,6 @@
 		
 		if (document.getElementById("chat-list-content")){
 			if (!document.getElementById("chat-list-content").marked){
-				console.log("NOT Makred!");
 				lastName = "";
 				lastImage = "";
 				document.getElementById("chat-list-content").marked=true;
@@ -461,41 +478,33 @@
 					try {
 						document.getElementById("chat-list-content").querySelectorAll("[id^='chat-item-container-']").forEach(x=>{
 							x.marked = true;
-							let id = x.querySelector("[id]");
-							if (id?.id){
-								id.marked = true;
-								messageHistory.push(id.id);
-							}
+							processMessage(x,true);
 						});
 					} catch(e){}
-					onElementInserted(document.querySelector("#chat-list-content"));
+					onElementInserted(document.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]'));
 				},2000);
 			}
 		} else if (document.querySelectorAll('iframe').length){
 			document.querySelectorAll('iframe').forEach( item =>{
 				try {
-					if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body.querySelector('#chat-list-content')){
-						if (!item.contentWindow.document.body.querySelector('#chat-list-content').marked){
+					if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]')){
+						if (!item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]').marked){
 							console.log("FOUND UNMARKED IFRAME ");
 							lastName = "";
 							lastImage = "";
-							item.contentWindow.document.body.querySelector('#chat-list-content').marked=true;
+							item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]').marked=true;
 							
 							setTimeout(function(){
 								try {
-									item.contentWindow.document.body.querySelector('#chat-list-content').querySelectorAll("[id^='chat-item-container-']").forEach(x=>{
+									item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]').querySelectorAll("[id^='chat-item-container-']").forEach(x=>{
 										x.marked = true;
-										let id = x.querySelector("[id]");
-										if (id?.id){
-											id.marked = true;
-											messageHistory.push(id.id);
-										}
+										processMessage(x,true);
 									});
 								} catch(e){}
-								onElementInserted(document.querySelector("#chat-list-content"));
+								onElementInserted(document.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]'));
 							},2000);
 							
-							onElementInserted(item.contentWindow.document.body.querySelector('#chat-list-content'));
+							onElementInserted(item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]'));
 						}
 					}
 				} catch(e){}

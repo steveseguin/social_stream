@@ -1821,9 +1821,36 @@ function createTabsFromSettings(response) {
 var streamID = false;
 var lastResponse = false;
 
-
-// Function to handle link generation
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
+  // Get any custom parameters from the current URL
+  let customParams = "";
+  try {
+    const currentUrl = new URL(window.location.href);
+    
+    // List of parameters to ignore (TTS-related and standard ones)
+    const ignoreParams = ['session', 'password', 'localserver'];
+    const ttsRelatedParams = [
+      'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
+      'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
+      'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
+      'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
+      'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
+      'kokorokey', 'voicekokoro', 'kokorospeed'
+    ];
+    
+    // Combine all params to ignore
+    const allIgnoreParams = [...ignoreParams, ...ttsRelatedParams];
+    
+    // Add all custom parameters that are not in the ignore list
+    currentUrl.searchParams.forEach((value, key) => {
+      if (!allIgnoreParams.includes(key)) {
+        customParams += `&${key}=${encodeURIComponent(value)}`;
+      }
+    });
+  } catch (e) {
+    console.error("Error getting custom params:", e);
+  }
+  
   // Configuration array with all page details
   const pages = [
     { id: "dock", path: "dock.html" },
@@ -1838,10 +1865,10 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "battle", path: "battle.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
     { id: "cohost", path: "cohost.html" },
-	{ id: "giveaway", path: "giveaway.html" },
-	{ id: "credits", path: "credits.html" },
+    { id: "giveaway", path: "giveaway.html" },
+    { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
-	{ id: "eventsdashboard", path: "events.html" }
+    { id: "eventsdashboard", path: "events.html" }
   ];
   
   // Handle special case for custom-gif-commands
@@ -1850,39 +1877,37 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   // Process all standard pages
   pages.forEach(page => {
     const linkPath = page.linkPath || page.path;
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}`;
+    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}`;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
       element.innerHTML = hideLinks 
         ? "Click to open link" 
-        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}</a>`;
+        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}${customParams}</a>`;
       element.raw = fullURL;
     }
   });
   
- /*   document.querySelectorAll("input[data-param10]").forEach(checkbox => {
-    if (checkbox.checked) {
-      const paramName = checkbox.getAttribute("data-param10");
-      const textInput = document.querySelector(`input[data-textparam10="${paramName}"]`);
-      
-      if (textInput && textInput.value.trim() !== "") {
-        password += `&${paramName}=${encodeURIComponent(textInput.value.trim())}`;
-      } else {
-        password += `&${paramName}`;
-      }
-    }
-  }); */
-  
   // Handle the custom gif commands separately
   const gifElement = document.getElementById(customGifConfig.id);
   if (gifElement) {
-    const fullURL = `${baseURL}${customGifConfig.path}?session=${streamID}${password}`;
+    const fullURL = `${baseURL}${customGifConfig.path}?session=${streamID}${password}${customParams}`;
     gifElement.innerHTML = hideLinks 
       ? "Click to open link" 
       : `<a target='_blank' id='${customGifConfig.id}-link' href='${fullURL}'>${fullURL}</a>`;
     gifElement.raw = fullURL;
+  }
+  
+  // Update sample overlay and remote control URLs too
+  const sampleOverlay = document.getElementById("sampleoverlay");
+  if (sampleOverlay) {
+    sampleOverlay.href = `${baseURL}sampleoverlay.html?session=${streamID}${password}${customParams}`;
+  }
+  
+  const remoteControlUrl = document.getElementById("remote_control_url");
+  if (remoteControlUrl) {
+    remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}`;
   }
 }
 
@@ -2317,8 +2342,8 @@ function update(response, sync = true) {
 
 // Process a single parameter
 function processParam(key, paramNum, settingObj, sync) {
-    const paramKey = `param${paramNum}`;
-    const ele = document.querySelector(`input[data-${paramKey}='${key}']`);
+    let paramKey = `param${paramNum}`;
+    let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
     if (!ele) return;
     
     ele.checked = settingObj[paramKey];
