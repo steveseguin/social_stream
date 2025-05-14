@@ -4,43 +4,259 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 	<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
 	<style>
-	body{
-		padding:0;
-		margin:0;
-		background-color: #0000;
-		display:none;
+	body {
+		padding: 0;
+		margin: 0;
+		font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+		background-color: rgba(25, 25, 35, 0.9);
+		color: white;
+		transition: background-color 0.5s ease;
+		display: none;
 	}
+	
+	body.setup {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		min-height: 100vh;
+	}
+	
+	body.started {
+		background-color: transparent !important;
+		display: block;
+		height: 100vh;
+		overflow: hidden;
+		position: relative;
+	}
+	
+	.container {
+		max-width: 800px;
+		width: 90%;
+		padding: 30px;
+		border-radius: 12px;
+		background-color: rgba(40, 40, 50, 0.8);
+		box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+	}
+	
+	h1 {
+		text-align: center;
+		margin-bottom: 25px;
+		color: #4fd1ff;
+	}
+	
+	.input-group {
+		margin-bottom: 15px;
+	}
+	
+	.input-group label {
+		display: block;
+		margin-bottom: 5px;
+		font-weight: 500;
+	}
+	
+	input {
+		width: 100%;
+		padding: 12px;
+		margin: 0;
+		border: none;
+		border-radius: 6px;
+		background-color: rgba(255, 255, 255, 0.1);
+		color: white;
+		font-size: 16px;
+		outline: none;
+		box-sizing: border-box;
+		transition: background-color 0.3s;
+	}
+	
+	input:focus {
+		background-color: rgba(255, 255, 255, 0.2);
+	}
+	
+	.button-group {
+		display: flex;
+		gap: 10px;
+		margin-top: 25px;
+	}
+	
+	button {
+		flex: 1;
+		padding: 12px;
+		border: none;
+		border-radius: 6px;
+		font-weight: 600;
+		cursor: pointer;
+		font-size: 16px;
+		transition: all 0.2s;
+	}
+	
+	#startButton {
+		background-color: #4fd1ff;
+		color: #222;
+	}
+	
+	#startButton:hover {
+		background-color: #7ae0ff;
+	}
+	
+	#getLinkButton {
+		background-color: rgba(255, 255, 255, 0.2);
+		color: white;
+	}
+	
+	#getLinkButton:hover {
+		background-color: rgba(255, 255, 255, 0.3);
+	}
+	
+	#linkOut {
+		display: block;
+		margin-top: 15px;
+		padding: 10px;
+		word-break: break-all;
+		background: rgba(0, 0, 0, 0.2);
+		border-radius: 6px;
+		color: #4fd1ff;
+		text-decoration: none;
+	}
+	
+	.info {
+		font-size: 14px;
+		margin-top: 10px;
+		color: rgba(255, 255, 255, 0.7);
+		text-align: center;
+	}
+	
 	iframe {
-		border:0;
-		margin:0;
-		padding:0;
-		display:block;
-		margin:0px;
-		width:100%;
+		border: 0;
+		margin: 0;
+		padding: 0;
+		display: block;
+		position: absolute;
 	}
 	
-	input{
-		width:400px;
-		padding:5px;
-		margin:5px;
-	}
-	button{
-		padding:5px;
-		margin:5px;
+	.vdo-frame {
+		height: 100%;
+		width: 100%;
+		left: 0;
+		top: 0;
+		z-index: 1;
 	}
 	
-	</style>
+	.chat-frame {
+		height: 0%;  /* Initially hidden, will be updated via message or layout */
+		width: 100%;
+		left: 0;
+		bottom: 0;
+		z-index: 2;
+	}
 	
-</head>
-<body id="body">
+	/* Split screen layouts */
+	.split-vertical .vdo-frame {
+		height: 70%;
+		width: 100%;
+	}
+	
+	.split-vertical .chat-frame {
+		height: 30%;
+		top: 70%;
+	}
+	
+	.split-horizontal .vdo-frame {
+		height: 100%;
+		width: 70%;
+	}
+	
+	.split-horizontal .chat-frame {
+		height: 100%;
+		width: 30%;
+		left: 70%;
+		top: 0;
+	}
+.info-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: left;
+}
 
-	<input placeholder="Enter an VDO.Ninja View URL here" id="viewlink" />
-	<input placeholder="Enter the chat overlay link here" id="chatlink" />
-	<button id="startButton" onclick="loadIframes();">Start</button>
-	<button id="getLinkButton" onclick="getLink();">Create Link for OBS</button><br />
-	<a id="linkOut"></a>
-	<script>
+.info-section h2 {
+    color: #4fd1ff;
+    font-size: 1.4em;
+    margin-bottom: 15px;
+}
+
+.info-section h3 {
+    color: #7ae0ff;
+    font-size: 1.1em;
+    margin: 15px 0 8px 0;
+}
+
+.info-section p {
+    margin-bottom: 15px;
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.info-section ul {
+    margin: 0 0 15px 20px;
+    padding: 0;
+}
+
+.info-section li {
+    margin-bottom: 8px;
+    line-height: 1.4;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.info-section strong {
+    color: #fff;
+}
+	</style>
+</head>
+<body id="body" class="setup">
+
+<div class="container">
+    <h1>Auto Mixer</h1>
+    <div class="input-group">
+        <label for="viewlink">VDO.Ninja View URL</label>
+        <input placeholder="Enter your VDO.Ninja View URL here" id="viewlink" />
+    </div>
+    <div class="input-group">
+        <label for="chatlink">Chat Overlay URL</label>
+        <input placeholder="Enter the chat overlay link here (YouTube, Twitch, or SocialStream)" id="chatlink" />
+    </div>
+    <div class="button-group">
+        <button id="startButton" onclick="loadIframes();">Start</button>
+        <button id="getLinkButton" onclick="getLink();">Create Link for OBS</button>
+    </div>
+    <a id="linkOut"></a>
+    <div class="info">For live streaming with transparent background when started</div>
+    
+    <div class="info-section">
+        <h2>How Auto Mixer Works</h2>
+        <p>Auto Mixer seamlessly combines your VDO.Ninja stream and chat overlay into one unified window. Perfect for streaming to platforms like Twitch, YouTube, and OBS.</p>
+        
+        <h3>Features:</h3>
+        <ul>
+            <li><strong>Automatic Detection:</strong> Waits for your VDO.Ninja stream to be ready before displaying chat</li>
+            <li><strong>Intelligent Layout:</strong> Adapts based on your chat source (YouTube, Twitch, SocialStream)</li>
+            <li><strong>OBS Compatible:</strong> Automatically enables transparency when used in OBS</li>
+            <li><strong>Shareable Links:</strong> Generate links to save your setup for future use</li>
+        </ul>
+        
+        <h3>Supported Chat Types:</h3>
+        <ul>
+            <li><strong>YouTube/Twitch:</strong> Displays in right third of screen</li>
+            <li><strong>SocialStream Index/Featured:</strong> Overlays at bottom with dynamic sizing</li>
+            <li><strong>SocialStream Dock:</strong> Full screen overlay</li>
+            <li><strong>Other SocialStream:</strong> Full screen overlay</li>
+        </ul>
+        
+        <p>Simply paste your VDO.Ninja view link and your chat overlay URL, then click Start!</p>
+    </div>
+</div>
 	
+	<script>
 	(function(w) {
 		w.URLSearchParams = w.URLSearchParams || function(searchString) {
 			var self = this;
@@ -55,127 +271,342 @@
 				}
 			};
 		};
-
 	})(window);
-
+	
 	var urlEdited = window.location.search.replace(/\?\?/g, "?");
 	urlEdited = urlEdited.replace(/\?/g, "&");
 	urlEdited = urlEdited.replace(/\&/, "?");
-
+	
 	if (urlEdited !== window.location.search){
 		window.history.pushState({path: urlEdited.toString()}, '', urlEdited.toString());
 	}
 	var urlParams = new URLSearchParams(urlEdited);
 	
 	var counter = 0;
+	var vdoNinjaReady = false;
 	
 	if (urlParams.has('vdo')) {
 		document.getElementById("viewlink").value = decodeURIComponent(urlParams.get('vdo'));
-		document.getElementById("viewlink").style.display = "none";
+		document.getElementById("viewlink").parentNode.style.display = "none";
 		counter+=1;
-	} else {
-		document.getElementById("body").style.display = "block";
 	}
 	
 	if (urlParams.has('chat')) {
 		document.getElementById("chatlink").value = decodeURIComponent(urlParams.get('chat'));
-		document.getElementById("chatlink").style.display = "none";
+		document.getElementById("chatlink").parentNode.style.display = "none";
 		counter+=1;
-	} else {
-		document.getElementById("body").style.display = "block";
 	}
 	
+	function createYoutubeLink(vidid) {
+		return "https://www.youtube.com/embed/" + vidid + "?modestbranding=1&playsinline=1&enablejsapi=1&autoplay=1";
+	}
 	
-
-	function loadIframes(){  // this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
-		var iframe = document.createElement("iframe");
-		var iframesrc = document.getElementById("viewlink").value;
-		
-		var iframe2 = document.createElement("iframe");
-		var iframesrc2 = document.getElementById("chatlink").value;
-		
-		document.getElementById("body").innerHTML = "";
-		document.getElementById("body").style.display = "block";
-		
-		iframe.allow = "autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
-
-		if (iframesrc==""){
-			iframesrc="https://vdo.ninja";
+	function parseURL4Iframe(iframeURL) {
+		if (iframeURL == "") {
+			iframeURL = "./";
 		}
 		
-		if (iframesrc.startsWith("http://")){
-			//
-		} else if (!iframesrc.startsWith("https://")){
-			iframesrc = "https://"+iframesrc;
+		if (!iframeURL.startsWith("https://") && !iframeURL.startsWith("http://")) {
+			if (iframeURL.includes(".") && !iframeURL.startsWith("./") && !iframeURL.startsWith("/")) {
+				iframeURL = "https://" + iframeURL;
+			}
 		}
 		
-		if (iframesrc.includes("?")){
-			iframesrc+='&';
-		} else {
-			iframesrc+='?';
-		}
-		iframesrc+="transparent";
-		iframe.src = iframesrc;
-		
-		iframe.style.width = "100%";
-		iframe.style.height = "100%";
-		iframe.style.transform = "height 2s linear";
-		
-		document.getElementById("body").appendChild(iframe);
-		
-		iframe2.allow = "autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
-
-		if (iframesrc2==""){
-			iframesrc2="./";
+		if (iframeURL.startsWith("http://")) {
+			try {
+				iframeURL = "https://" + iframeURL.split("http://")[1];
+			} catch (e) {
+				console.error(e);
+			}
 		}
 		
-		iframe2.style.width = "100%";
-		iframe2.style.height = "0%";
-		iframe2.style.transform = "height 2s linear";
-		
-		iframe2.src = iframesrc2;
-		document.getElementById("body").appendChild(iframe2);
-		
-		var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-		var eventer = window[eventMethod];
-		var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-		
-		eventer(messageEvent, function (e) {
-			if (e.source != iframe2.contentWindow){return} // reject messages send from other iframes
-			if ("resizeWindow" in e.data){
-				if ("width" in e.data.resizeWindow){
-					iframe2.style.width = e.data.resizeWindow.width;
-					iframe.style.width = "calc(100% - "+ e.data.resizeWindow.width+")";
+		if (iframeURL.startsWith("https://") || iframeURL.startsWith("http://")) {
+			var domain;
+			try {
+				domain = new URL(iframeURL);
+				domain = domain.hostname;
+			} catch (e) {
+				console.error(e);
+				return iframeURL;
+			}
+			
+			if (domain == "youtu.be") {
+				iframeURL = iframeURL.replace("youtu.be/", "youtube.com/watch?v=");
+			}
+			
+			if (domain == "youtu.be" || domain == "www.youtube.com" || domain == "youtube.com") {
+				if (iframeURL.includes("/v/")) {
+					var vidMatch = iframeURL.match(/\/v\/([^\/\?#]+)/);
+					if (vidMatch && vidMatch[1] && vidMatch[1].length == 11) {
+						return createYoutubeLink(vidMatch[1]);
+					}
 				}
-				if ("height" in e.data.resizeWindow){
-					iframe2.style.height = e.data.resizeWindow.height;
-					iframe.style.height = "calc(100% - "+ e.data.resizeWindow.height+")";
+				
+				var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+				var match = iframeURL.match(regExp);
+				var vidid = match && match[7] && match[7].length == 11 ? match[7] : false;
+				
+				if (iframeURL.includes("/live_chat")) {
+					if (!iframeURL.includes("&embed_domain=")) {
+						iframeURL += "&embed_domain=" + location.hostname;
+					}
+					return iframeURL;
+				}
+				
+				if (vidid) {
+					iframeURL = createYoutubeLink(vidid);
+				} else {
+					iframeURL = iframeURL.replace("playlist?list=", "embed/videoseries?list=");
+					var regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(videoseries\?))\??list?=?([^#&?]*).*/;
+					var match = iframeURL.match(regExp);
+					var plid = match && match[7] && match[7].length == 34 ? match[7] : false;
+					if (plid) {
+						iframeURL = "https://www.youtube.com/embed/videoseries?list=" + plid + "&autoplay=1&modestbranding=1&playsinline=1&enablejsapi=1";
+					}
+				}
+			} else if (domain == "twitch.tv" || domain == "www.twitch.tv") {
+				if (iframeURL.includes("twitch.tv/popout/")) {
+					iframeURL = iframeURL.replace("/popout/", "/embed/");
+					iframeURL = iframeURL.replace("?popout=", "?parent=" + location.hostname);
+					iframeURL = iframeURL.replace("?popout", "?parent=" + location.hostname);
+					iframeURL = iframeURL.replace("&popout=", "?parent=" + location.hostname);
+					iframeURL = iframeURL.replace("&popout", "?parent=" + location.hostname);
+					if (iframeURL.includes("darkpopout=")) {
+						iframeURL = iframeURL.replace("?darkpopout=", "?darkpopout=&parent=" + location.hostname);
+					} else {
+						iframeURL = iframeURL.replace("?darkpopout", "?darkpopout&parent=" + location.hostname);
+					}
+				} else {
+					var vidid = iframeURL.split("/").pop().split("#")[0].split("?")[0];
+					if (vidid) {
+						iframeURL = "https://player.twitch.tv/?channel=" + vidid + "&parent=" + location.hostname;
+					}
+				}
+			} else if (domain == "www.vimeo.com" || domain == "vimeo.com") {
+				iframeURL = iframeURL.replace("//vimeo.com/", "//player.vimeo.com/video/");
+				iframeURL = iframeURL.replace("//www.vimeo.com/", "//player.vimeo.com/video/");
+			} else if (domain.endsWith(".tiktok.com") || domain == "tiktok.com") {
+				var split = iframeURL.split("/video/");
+				if (split.length > 1) {
+					split = split[1].split("/")[0].split("?")[0].split("#")[0];
+					iframeURL = "https://www.tiktok.com/embed/v2/" + split;
 				}
 			}
-		});
+		}
 		
+		return iframeURL;
 	}
+	
+	function detectChatType(url) {
+		try {
+			var domain = new URL(url).hostname;
+			
+			if (domain.includes("youtube.com") || domain.includes("youtu.be")) {
+				return "youtube";
+			} else if (domain.includes("twitch.tv")) {
+				return "twitch";
+			} else if (domain.includes("socialstream.ninja")) {
+				return "socialstream";
+			} else if (domain.includes("vimeo.com")) {
+				return "vimeo";
+			}
+			return "other";
+		} catch (e) {
+			return "other";
+		}
+	}
+	
+	function processChatLink(chatUrl, chatType) {
+		// Add transparent param to SocialStream.ninja
+		if (chatType === "socialstream" && !chatUrl.includes("transparent")) {
+			if (chatUrl.includes("?")) {
+				chatUrl += "&transparent";
+			} else {
+				chatUrl += "?transparent";
+			}
+		}
+		return chatUrl;
+	}
+	
+	function setLayout(chatType) {
+		var body = document.getElementById("body");
+		
+		// For video platform chats, use split screen
+		if (chatType === "youtube" || chatType === "twitch" || chatType === "vimeo") {
+			body.classList.add("split-horizontal");
+		}
+		// SocialStream and others will use dynamic sizing via postMessage
+	}
+	
+	function loadIframes() {
+    var iframe = document.createElement("iframe");
+    var iframesrc = document.getElementById("viewlink").value;
+    
+    var iframe2 = document.createElement("iframe");
+    var iframesrc2 = document.getElementById("chatlink").value;
+    
+    // Detect chat type and process URL accordingly
+    var chatType = detectChatType(iframesrc2);
+    
+    // Determine if it's a SocialStream variant
+    var isSocialStreamIndex = iframesrc2.includes("socialstream.ninja/index.html");
+    var isSocialStreamFeatured = iframesrc2.includes("socialstream.ninja/featured.html");
+    var isSocialStreamDock = iframesrc2.includes("socialstream.ninja/dock");
+    var isSocialStreamVariant = iframesrc2.includes("socialstream.ninja/") && !isSocialStreamIndex && !isSocialStreamFeatured && !isSocialStreamDock;
+    
+    // Process the chat link
+    iframesrc2 = parseURL4Iframe(iframesrc2);
+    iframesrc2 = processChatLink(iframesrc2, chatType);
+    
+    document.getElementById("body").innerHTML = "";
+    document.getElementById("body").classList.remove("setup");
+    document.getElementById("body").classList.add("started");
+    
+    // Set the layout based on chat type
+    setLayout(chatType);
+    
+    iframe.allow = "autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
+    iframe.className = "vdo-frame";
+    
+    if (iframesrc==""){
+        iframesrc="https://vdo.ninja";
+    }
+    
+    if (iframesrc.startsWith("http://")){
+        //
+    } else if (!iframesrc.startsWith("https://")){
+        iframesrc = "https://"+iframesrc;
+    }
+    
+    if (iframesrc.includes("?")){
+        iframesrc+='&';
+    } else {
+        iframesrc+='?';
+    }
+    
+    // Only add transparent parameter for VDO.Ninja if in OBS
+    if (window.obsstudio) {
+        if (!iframesrc.includes("&transparent")) {
+            iframesrc += "&transparent";
+        }
+    }
+    
+    iframe.src = iframesrc;
+    document.getElementById("body").appendChild(iframe);
+    
+    iframe2.allow = "autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
+    iframe2.className = "chat-frame";
+    
+    if (iframesrc2==""){
+        iframesrc2="./";
+    }
+    
+    // Apply specific layouts based on the chat type
+    if (isSocialStreamIndex || isSocialStreamFeatured) {
+        // For index or featured, we'll overlay at bottom but wait for seeding
+        iframe2.style.height = "0";
+        iframe2.style.bottom = "0";
+        iframe2.style.zIndex = "2";
+    } else if (isSocialStreamDock) {
+        // For dock, full screen overlay
+        iframe2.style.height = "0";
+        iframe2.style.width = "100%";
+        iframe2.style.left = "0";
+        iframe2.style.top = "0";
+        iframe2.style.zIndex = "2";
+    } else if (chatType === "socialstream") {
+        // Other SocialStream variants
+        iframe2.style.height = "0";
+        iframe2.style.width = "100%";
+        iframe2.style.zIndex = "2";
+    } else {
+        // For non-socialstream (youtube, twitch, etc), right 1/3 of screen
+        iframe2.style.height = "100%";
+        iframe2.style.width = "33.33%";
+        iframe2.style.right = "0";
+        iframe2.style.top = "0";
+        iframe2.style.left = "auto";
+        iframe2.style.zIndex = "2";
+    }
+    
+    // Load the iframe immediately with height 0 if appropriate
+    iframe2.src = iframesrc2;
+    document.getElementById("body").appendChild(iframe2);
+    
+    // Set up VDO.Ninja event listener to show chat when ready
+    var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+    var eventer = window[eventMethod];
+    var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+    
+    eventer(messageEvent, function (e) {
+        if (e.source != iframe.contentWindow) return;
+        
+        if (e.data && typeof e.data === "object" && "action" in e.data) {
+            // Wait for either seeding or view-connection event
+            if (e.data.action === "seeding" || e.data.action === "view-connection") {
+                if (!vdoNinjaReady) {
+                    vdoNinjaReady = true;
+                    
+                    // Show the chat iframe that was already loaded
+                    setTimeout(function() {
+                        // Apply specific layouts based on the chat type
+                        if (isSocialStreamIndex || isSocialStreamFeatured) {
+                            iframe2.style.height = "30%";
+                        } else if (isSocialStreamDock || chatType === "socialstream") {
+                            iframe2.style.height = "100%";
+                        }
+                        // Non-socialstream chats already have proper height
+                    }, 1000);
+                }
+            }
+        }
+    });
+    
+    // For resizeWindow messages, only handle for specific SocialStream pages
+    eventer(messageEvent, function (e) {
+        if (iframe2.contentWindow && e.source === iframe2.contentWindow) {
+            if (e.data && typeof e.data === "object" && "resizeWindow" in e.data) {
+                // Only handle resizeWindow for index/featured
+                if (isSocialStreamIndex || isSocialStreamFeatured) {
+                    if ("height" in e.data.resizeWindow) {
+                        var height = e.data.resizeWindow.height;
+                        iframe2.style.height = height;
+                        // Don't resize the VDO frame, just overlay
+                    }
+                    
+                    // For width we'll still adjust but keep it at the bottom
+                    if ("width" in e.data.resizeWindow) {
+                        var width = e.data.resizeWindow.width;
+                        iframe2.style.width = width;
+                    }
+                }
+            }
+        }
+    });
+}
 	
 	if (counter==2){
 		loadIframes();
-	} 
+	}
 	
 	function getLink(){
 		var iframesrc = document.getElementById("viewlink").value;
-		
 		var iframesrc2 = document.getElementById("chatlink").value;
-		var outputLink = window.location+"";
+		var outputLink = window.location + "";
+		
 		if (outputLink.includes("?")){
 			outputLink+="&";
 		} else {
 			outputLink+="?";
 		}
-		outputLink += "vdo=" + encodeURIComponent(iframesrc)+"&chat="+ encodeURIComponent(iframesrc2);
-		document.getElementById("linkOut").innerHTML = outputLink;
-		document.getElementById("linkOut").href = outputLink;
+		
+		outputLink += "vdo=" + encodeURIComponent(iframesrc) + "&chat=" + encodeURIComponent(iframesrc2);
+		
+		var linkOutElement = document.getElementById("linkOut");
+		linkOutElement.innerHTML = outputLink;
+		linkOutElement.href = outputLink;
+		linkOutElement.style.display = "block";
 	}
-	
 	</script>
-
 </body>
 </html>
