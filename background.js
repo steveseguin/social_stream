@@ -7474,10 +7474,10 @@ try {
 
  */
  
- class HostMessageFilter {
+class HostMessageFilter {
   constructor() {
     this.messages = new Map();
-    this.expireTime = 5000; // 5 seconds in milliseconds
+    this.expireTime = 20000; // 20 seconds in milliseconds
   }
 
   sanitizeMessage(message) {
