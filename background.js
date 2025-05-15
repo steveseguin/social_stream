@@ -7473,6 +7473,66 @@ try {
 } catch(e){}
 
  */
+ 
+ class HostMessageFilter {
+  constructor() {
+    this.messages = new Map();
+    this.expireTime = 5000; // 5 seconds in milliseconds
+  }
+
+  sanitizeMessage(message) {
+    if (!message || typeof message !== 'string') return '';
+    
+    // Strip HTML tags and normalize whitespace
+    return message.replace(/<\/?[^>]+(>|$)/g, "")
+      .replace(/\s\s+/g, " ")
+      .trim();
+  }
+
+  isHostDuplicate(message) {
+    if (!message || !message.isHost) return false;
+    
+    const currentTime = Date.now();
+    
+    // Determine message content based on available fields
+    let messageContent = '';
+    if (message.textonly !== undefined) {
+      messageContent = message.textonly;
+    } else if (message.chatmessage !== undefined) {
+      messageContent = this.sanitizeMessage(message.chatmessage);
+    } else if (message.hasDonation || (message.membership && message.event)) {
+      // Handle empty messages with special events
+      messageContent = `${message.hasDonation ? 'donation' : ''}${message.membership && message.event ? 'membership' : ''}`;
+    }
+    
+    // Clean up expired messages
+    this.cleanUp(currentTime);
+    
+    // Check if this is a duplicate
+    for (const [existingContent, timestamp] of this.messages.entries()) {
+      if (messageContent === existingContent && (currentTime - timestamp < this.expireTime)) {
+        return true;
+      }
+    }
+    
+    // Not a duplicate, store this message
+    this.messages.set(messageContent, currentTime);
+    return false;
+  }
+
+  cleanUp(currentTime) {
+    for (const [content, timestamp] of this.messages.entries()) {
+      if (currentTime - timestamp > this.expireTime) {
+        this.messages.delete(content);
+      }
+    }
+  }
+}
+
+// Create an instance
+const hostMessageFilter = new HostMessageFilter();
+
+
 const patterns = {
 	botReply: {
 	  prefixes: ['botReplyMessageEvent', 'botReplyMessageCommand', 'botReplyMessageValue', 'botReplyMessageTimeout', 'botReplyMessageSource', 'botReplyAll'],
@@ -7657,15 +7717,17 @@ async function applyBotActions(data, tab = false) {
 			return false;
 		}
 		
-		if (data.host && data.reflection && data.nohostreflections){
+		if (data.host && data.reflection && settings.nohostreflections){
+			return false;
+		}
+		
+		if (settings.hostFirstSimilarOnly && data.host && hostMessageFilter.isHostDuplicate(data)) {
 			return false;
 		}
 		
 		if (data.host && data.chatname && settings.hidehostnamesext) {
 			data.chatname = "";
 		}
-		
-
 		
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
