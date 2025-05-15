@@ -7477,7 +7477,7 @@ try {
 class HostMessageFilter {
   constructor() {
     this.messages = new Map();
-    this.expireTime = 20000; // 20 seconds in milliseconds
+    this.expireTime = 60000; // 20 seconds in milliseconds
   }
 
   sanitizeMessage(message) {
@@ -7496,7 +7496,7 @@ class HostMessageFilter {
     
     // Determine message content based on available fields
     let messageContent = '';
-    if (message.textonly !== undefined) {
+    if (message.textonly) {
       messageContent = message.textonly;
     } else if (message.chatmessage !== undefined) {
       messageContent = this.sanitizeMessage(message.chatmessage);
