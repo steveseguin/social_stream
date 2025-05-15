@@ -71,10 +71,17 @@
 	// settings.captureevents
 	
 	var channelName = "";
+	var messageHistory = [];
 	
 	function processMessage(ele){
 		//console.log(ele);
+		if (!ele || !ele.isConnected){return;}
 		
+		if (ele && ele.marked){
+		  return;
+		} else {
+		  ele.marked = true;
+		}
 		
 		if (ele.dataset.knownSize){
 			if (!parseInt(ele.dataset.knownSize)){
@@ -82,6 +89,22 @@
 				return;
 			}
 		}
+		
+		var id = false
+		if (ele.dataset){
+			id = ele.dataset?.index ;
+		}
+		
+		if (id!==false){
+			if (messageHistory.includes(id)){
+				return;
+			}
+			messageHistory = messageHistory.slice(-5000);
+			messageHistory.push(id);
+		} else {
+			return;
+		}
+		
 		
 		var chatimg = ""
 		try {
@@ -230,7 +253,7 @@
 
 							setTimeout(function(ee){
 									processMessage(ee); // maybe here
-							},200, mutation.addedNodes[i]);
+							}, 300, mutation.addedNodes[i]);
 							
 						} catch(e){}
 					}
