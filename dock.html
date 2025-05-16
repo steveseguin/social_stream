@@ -3963,6 +3963,10 @@
 				window.obsstudio = false;
 			}
 			
+			var isMELD = false;
+			if (typeof navigator!== 'undefined' && navigator.userAgent && navigator.userAgent.includes("Meld/")) {
+				isMELD = true;
+			}
 			
 			var DoNotShowInitialReply = false;
 			if (urlParams.has("stripreplyto")) {
@@ -4191,6 +4195,7 @@
 								jumptoBottom2();
 							});
 						}
+						
 
 						window.obsstudio.getStatus(function (obsStatus) {
 							getById("menu").style.display = "none";
@@ -4216,6 +4221,31 @@
 								document.documentElement.style.setProperty("--pressed-color", "unset", "");
 							}
 						});
+					}
+					
+					if (isMELD){
+						getById("menu").style.display = "none";
+						hardFilter=true;
+						getById("output").style.marginBottom = "0";
+						document.body.style.overflow = "hidden";
+						mainOutputWindow.style.overflow = "hidden";
+						triggerState = false;
+
+						if (!reversed) {
+							forceAutoscroll = true;
+						}
+						//compactmode=true;
+						//mainOutputWindow.classList.remove("notcompactmode");
+						scale = scale * 2.0;
+
+						document.body.classList.add("OBS");
+						document.documentElement.style.setProperty("--scale-output", scale);
+						isOBSBrowserSource = true;
+
+						if (!urlParams.has("pressedcolor")) {
+							// hide the pressed color if not set otherwise, but in OBS.
+							document.documentElement.style.setProperty("--pressed-color", "unset", "");
+						}
 					}
 				} catch (e) {}
 			}
@@ -4260,6 +4290,8 @@
 			if (window.obsstudio) {
 				document.documentElement.style.setProperty("--background-color", "#2B2E38");
 				document.documentElement.style.setProperty("--menu-background-color", "#191B26");
+			} else if (isMELD){
+				document.documentElement.style.setProperty("--background-color", "#0000");
 			}
 
 			if (darkmode) {
@@ -4326,7 +4358,7 @@
 				document.documentElement.style.setProperty("--menu-background-color", "linear-gradient(to right, #0000, #0008, #0000)", "important");
 				mainOutputWindow.style.overflow = "hidden";
 				
-				if (window.obsstudio){
+				if (window.obsstudio || isMELD){
 					getById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
 				} else {
 					try {
@@ -9188,7 +9220,7 @@
 
 			if (urlParams.has("js")) {
 				try {
-					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var jsURL = urlParams.get("js");
 						try {
 							jsURL = decodeURI(jsURL);
@@ -9218,7 +9250,7 @@
 
 			if (urlParams.has("base64js") || urlParams.has("b64js") || urlParams.has("jsbase64") || urlParams.has("jsb64")) {
 				try {
-					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var base64js = urlParams.get("base64js") || urlParams.get("b64js") || urlParams.get("jsbase64") || urlParams.get("jsb64");
 						base64js = decodeURIComponent(atob(base64js));
 						var externalJavaascript = document.createElement("script");

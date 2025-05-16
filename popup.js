@@ -1850,11 +1850,11 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     const allIgnoreParams = [...ignoreParams, ...ttsRelatedParams];
     
     // Add all custom parameters that are not in the ignore list
-    currentUrl.searchParams.forEach((value, key) => {
-      if (!allIgnoreParams.includes(key)) {
-        customParams += `&${key}=${encodeURIComponent(value)}`;
-      }
-    });
+    //currentUrl.searchParams.forEach((value, key) => {
+   //   if (!allIgnoreParams.includes(key)) {
+   //     customParams += `&${key}=${encodeURIComponent(value)}`;
+    //  }
+   // });
   } catch (e) {
     console.error("Error getting custom params:", e);
   }
