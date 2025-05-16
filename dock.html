@@ -8043,11 +8043,7 @@
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
 
-					var textContentLength =
-						node
-							.querySelector("#content_" + data.id)
-							.innerText.trim()
-							.replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
+					var textContentLength =  node.querySelector("#content_" + data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
 					node.dataset.contentLength = textContentLength;
 					if (!textContentLength) {
 						node.classList.add("noText");
@@ -8060,7 +8056,7 @@
 					});
 					
 					if (beep) { 
-						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event) && !(data.command && doNotTTSBeep)){
+						if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
 							playtone();
 						}
 					}
@@ -8275,7 +8271,7 @@
 
 					node.onmousedown = selectedMessage;
 					node.title = "Click to feature message instantly. CTRL + Click to add to the queue. Alt + Click to Pin.";
-
+					
 					var imageElements = node.getElementsByTagName("img");
 					for (i = 0; i < imageElements.length; i++) {
 						if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("zero-width-parent")) {
@@ -8284,8 +8280,15 @@
 						if (imageElements[i].onerror) {
 							continue;
 						}
-						if (!imageElements[i].title && imageElements[i].alt) {
-							imageElements[i].title = imageElements[i].alt;
+						if (imageElements[i].alt){
+							if (!imageElements[i].title) {
+								imageElements[i].title = imageElements[i].alt;
+							}
+							if (imageElements[i].alt.startsWith("!")){
+								if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("hl-content") && imageElements[i].parentNode.firstChild === element){
+									data.command = true;
+								}
+							}
 						}
 						if (darkmode && node.rawContents.type == "twitch" && imageElements[i].src.includes("/light/")) {
 							imageElements[i].srcBackup = imageElements[i].src;
@@ -8307,6 +8310,7 @@
 							}
 						};
 					}
+					
 
 					cleanUpOldNodes();
 
