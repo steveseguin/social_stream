@@ -7721,9 +7721,7 @@ async function applyBotActions(data, tab = false) {
 			return false;
 		}
 		
-		console.log(JSON.stringify(data));
 		if (settings.hostFirstSimilarOnly && data.host && hostMessageFilter.isHostDuplicate(data)) {
-			console.log("true");
 			return false;
 		}
 		
