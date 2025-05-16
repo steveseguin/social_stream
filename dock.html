@@ -8087,13 +8087,6 @@
 						node.classList.add(classtype);
 					});
 					
-					if (beep) { 
-						if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
-							playtone();
-						}
-					}
-					
-					
 					if (waitToReveal){
 						node.classList.add("hidden");
 						setTimeout(function(node){
@@ -8317,8 +8310,21 @@
 								imageElements[i].title = imageElements[i].alt;
 							}
 							if (imageElements[i].alt.startsWith("!")){
-								if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("hl-content") && imageElements[i].parentNode.firstChild === element){
-									data.command = true;
+								if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("hl-content")) {
+									// Check if this image is the first non-text element or is within the first non-text element
+									let firstNode = imageElements[i].parentNode.firstChild;
+									
+									// Skip any text nodes that might be whitespace -- nah, too much CPU for no reason.
+									//while (firstNode && firstNode.nodeType === Node.TEXT_NODE && firstNode.textContent.trim() === "") {
+									//	firstNode = firstNode.nextSibling;
+									//}
+									
+									// Check if the image is the first element or contained within it
+									if (firstNode === imageElements[i] || 
+										(firstNode && firstNode.contains && firstNode.contains(imageElements[i]))) {
+										data.command = true;
+										node.rawContents.command = true;
+									}
 								}
 							}
 						}
@@ -8343,7 +8349,12 @@
 						};
 					}
 					
-
+					if (beep) { 
+						if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
+							playtone();
+						}
+					}
+					
 					cleanUpOldNodes();
 
 					applyBotActions(data); // Official actions
@@ -8357,7 +8368,7 @@
 						selectedQueue.push(node);
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
-						updateQueueButton();
+						updateQueueButton(); 
 					}
 					
 					if (data.command && doNotTTSBeep){

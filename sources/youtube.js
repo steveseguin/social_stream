@@ -239,6 +239,10 @@
 					}
 				}
 				
+				if (emoteNode.alt) {
+					newImgAttributes += ` alt="${emoteNode.alt}" title="${emoteNode.alt}"`;
+				}
+				
 				pendingRegularEmote = `<img ${newImgAttributes}>`;
 			} else {
 				if (pendingSpace){
