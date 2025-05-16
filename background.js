@@ -7490,7 +7490,7 @@ class HostMessageFilter {
   }
 
   isHostDuplicate(message) {
-    if (!message || !message.isHost) return false;
+    if (!message || !message.host) return false;
     
     const currentTime = Date.now();
     
@@ -7721,7 +7721,9 @@ async function applyBotActions(data, tab = false) {
 			return false;
 		}
 		
+		console.log(JSON.stringify(data));
 		if (settings.hostFirstSimilarOnly && data.host && hostMessageFilter.isHostDuplicate(data)) {
+			console.log("true");
 			return false;
 		}
 		

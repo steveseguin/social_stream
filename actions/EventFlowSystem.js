@@ -321,65 +321,65 @@ class EventFlowSystem {
     }
     
 	async processMessage(message) {
-        console.log("[ProcessMessage] Received message:", JSON.stringify(message)); // Log: Start of processing
+      //console.log("[ProcessMessage] Received message:", JSON.stringify(message)); // Log: Start of processing
         if (!message) {
-            console.log("[ProcessMessage] Message is null/undefined at start.");
+          //console.log("[ProcessMessage] Message is null/undefined at start.");
             return message;
         }
         
         let processed = { ...message };
         let blocked = false;
         
-        console.log(`[ProcessMessage] Processing ${this.flows.filter(f => f.active).length} active flows.`);
+      //console.log(`[ProcessMessage] Processing ${this.flows.filter(f => f.active).length} active flows.`);
         for (const flow of this.flows) {
             if (!flow.active) {
                 // console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
                 continue;
             }
-            console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
+          //console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
             
             const result = await this.evaluateFlow(flow, processed);
-            console.log(`[ProcessMessage] Result for flow "${flow.name}":`, JSON.stringify(result));
+          //console.log(`[ProcessMessage] Result for flow "${flow.name}":`, JSON.stringify(result));
 
             if (result) {
                 if (result.blocked) {
-                    console.log(`[ProcessMessage] Flow "${flow.name}" BLOCKED the message. No further flows will be processed.`);
+                  //console.log(`[ProcessMessage] Flow "${flow.name}" BLOCKED the message. No further flows will be processed.`);
                     blocked = true;
                     break; 
                 }
                 
                 if (result.modified) {
-                    console.log(`[ProcessMessage] Flow "${flow.name}" MODIFIED the message.`);
+                  //console.log(`[ProcessMessage] Flow "${flow.name}" MODIFIED the message.`);
                     processed = result.message;
                 }
             }
         }
         
-        console.log(`[ProcessMessage] Final result: ${blocked ? 'BLOCKED (returning null)' : 'NOT BLOCKED (returning message)'}`);
+      //console.log(`[ProcessMessage] Final result: ${blocked ? 'BLOCKED (returning null)' : 'NOT BLOCKED (returning message)'}`);
         return blocked ? null : processed;
     }
     
     async evaluateFlow(flow, message) {
-        console.log(`[EvaluateFlow "${flow.name}"] Starting evaluation with message:`, JSON.stringify(message));
+      //console.log(`[EvaluateFlow "${flow.name}"] Starting evaluation with message:`, JSON.stringify(message));
         if (!flow.nodes || !flow.connections) {
-            console.log(`[EvaluateFlow "${flow.name}"] Flow has no nodes or connections.`);
+          //console.log(`[EvaluateFlow "${flow.name}"] Flow has no nodes or connections.`);
             return { modified: false, message, blocked: false };
         }
 
         const nodeActivationStates = {}; 
 
         // --- Pass 1: Evaluate all base triggers ---
-        console.log(`[EvaluateFlow "${flow.name}"] Pass 1: Evaluating Triggers`);
+      //console.log(`[EvaluateFlow "${flow.name}"] Pass 1: Evaluating Triggers`);
         for (const node of flow.nodes) {
             if (node.type === 'trigger') {
-                console.log(`[EvaluateFlow "${flow.name}"] Evaluating Trigger Node ID: ${node.id}, Type: ${node.triggerType}`);
+              //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Trigger Node ID: ${node.id}, Type: ${node.triggerType}`);
                 nodeActivationStates[node.id] = await this.evaluateTrigger(node, message);
-                console.log(`[EvaluateFlow "${flow.name}"] Trigger Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
+              //console.log(`[EvaluateFlow "${flow.name}"] Trigger Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
             }
         }
 
         // --- Pass 2: Iteratively evaluate logic nodes ---
-        console.log(`[EvaluateFlow "${flow.name}"] Pass 2: Evaluating Logic Nodes`);
+      //console.log(`[EvaluateFlow "${flow.name}"] Pass 2: Evaluating Logic Nodes`);
         let madeChangeInLoop = true;
         const maxIterations = flow.nodes.length + 5; 
         let iterations = 0;
@@ -398,9 +398,9 @@ class EventFlowSystem {
 
                     if (allInputsEvaluated) {
                         const inputValues = inputNodeIds.map(inputId => nodeActivationStates[inputId]);
-                        console.log(`[EvaluateFlow "${flow.name}"] Evaluating Logic Node ID: ${node.id} (${node.logicType}) with inputs: ${JSON.stringify(inputValues)} from nodes: ${JSON.stringify(inputNodeIds)}`);
+                      //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Logic Node ID: ${node.id} (${node.logicType}) with inputs: ${JSON.stringify(inputValues)} from nodes: ${JSON.stringify(inputNodeIds)}`);
                         nodeActivationStates[node.id] = await this.evaluateSpecificLogicNode(node.logicType, inputValues);
-                        console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
+                      //console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
                         madeChangeInLoop = true;
                     }
                 }
@@ -411,14 +411,14 @@ class EventFlowSystem {
         }
 
         // --- Pass 3: Execute actions ---
-        console.log(`[EvaluateFlow "${flow.name}"] Pass 3: Executing Actions. Current node states:`, JSON.stringify(nodeActivationStates));
+      //console.log(`[EvaluateFlow "${flow.name}"] Pass 3: Executing Actions. Current node states:`, JSON.stringify(nodeActivationStates));
         let overallResult = { modified: false, message: { ...message }, blocked: false }; 
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
 
         for (const node of flow.nodes) {
             if (node.type === 'action') {
                 if (overallResult.blocked) {
-                    console.log(`[EvaluateFlow "${flow.name}"] Message already blocked by a previous action in this flow. Skipping action node ${node.id} (${node.actionType}).`);
+                  //console.log(`[EvaluateFlow "${flow.name}"] Message already blocked by a previous action in this flow. Skipping action node ${node.id} (${node.actionType}).`);
                     break; 
                 }
 
@@ -432,28 +432,28 @@ class EventFlowSystem {
                     return activation;
                 });
 
-                console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
+              //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
 
                 if (shouldExecute) {
-                    console.log(`[EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
+                  //console.log(`[EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
                     const actionResult = await this.executeAction(node, overallResult.message);
-                    console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} Result:`, JSON.stringify(actionResult));
+                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} Result:`, JSON.stringify(actionResult));
                     if (actionResult) { 
                         if (actionResult.blocked) {
                             overallResult.blocked = true;
-                            console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
+                          //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
                             break; 
                         }
                         if (actionResult.modified && actionResult.message) {
                             overallResult.message = { ...actionResult.message }; 
                             overallResult.modified = true;
-                            console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
+                          //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
                         }
                     }
                 }
             }
         }
-        console.log(`[EvaluateFlow "${flow.name}"] Finished. Overall Result:`, JSON.stringify(overallResult));
+      //console.log(`[EvaluateFlow "${flow.name}"] Finished. Overall Result:`, JSON.stringify(overallResult));
         return overallResult;
     }
     
@@ -467,28 +467,28 @@ class EventFlowSystem {
                 match = message && message.chatmessage && typeof message.chatmessage === 'string' &&
                            config && typeof config.text === 'string' &&
                            message.chatmessage.includes(config.text);
-                console.log(`[EvaluateTrigger - messageContains] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+              //console.log(`[EvaluateTrigger - messageContains] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
                 return match;
                 
             case 'messageStartsWith':
                 match = message && message.chatmessage && typeof message.chatmessage === 'string' &&
                            config && typeof config.text === 'string' &&
                            message.chatmessage.startsWith(config.text);
-                console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+              //console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
                 return match;
                 
             case 'messageEquals':
                 match = message && typeof message.chatmessage === 'string' &&
                            config && typeof config.text === 'string' &&
                            message.chatmessage === config.text;
-                console.log(`[EvaluateTrigger - messageEquals] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+              //console.log(`[EvaluateTrigger - messageEquals] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
                 return match;
                 
             case 'messageRegex':
                 try {
                     const regex = new RegExp(config.pattern, config.flags || '');
                     match = regex.test(message.chatmessage);
-                    console.log(`[EvaluateTrigger - messageRegex] Pattern: "${config.pattern}", Flags: "${config.flags}", Message: "${message.chatmessage}", Match: ${match}`);
+                  //console.log(`[EvaluateTrigger - messageRegex] Pattern: "${config.pattern}", Flags: "${config.flags}", Message: "${message.chatmessage}", Match: ${match}`);
                     return match;
                 } catch (e) {
                     console.error('[EvaluateTrigger - messageRegex] Invalid regex:', e);
@@ -497,30 +497,30 @@ class EventFlowSystem {
                 
             case 'fromSource':
                 match = message && message.type === config.source;
-                console.log(`[EvaluateTrigger - fromSource] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
+              //console.log(`[EvaluateTrigger - fromSource] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
                 return match;
                 
             case 'fromUser':
                 const identifier = (message.userid || message.chatname || '').toLowerCase();
                 match = config && typeof config.username === 'string' && identifier === config.username.toLowerCase();
-                console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
+              //console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
                 return match;
                 
             case 'userRole':
                 match = message && config && message[config.role] === true; 
-                console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
+              //console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
                 return match;
                 
             case 'hasDonation':
                 match = !!message.hasDonation; // Assuming hasDonation is a truthy value if donation exists
-                console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
+              //console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
                 return match;
                 
             case 'customJs':
                 try {
                     const evalFunction = new Function('message', config.code);
                     match = evalFunction(message);
-                    console.log(`[EvaluateTrigger - customJs] Code executed. Result: ${match}`);
+                  //console.log(`[EvaluateTrigger - customJs] Code executed. Result: ${match}`);
                     return match;
                 } catch (e) {
                     console.error('[EvaluateTrigger - customJs] Error in custom JS trigger:', e);
@@ -528,7 +528,7 @@ class EventFlowSystem {
                 }
                 
             default:
-                console.log(`[EvaluateTrigger] Unknown triggerType: ${triggerType}`);
+              //console.log(`[EvaluateTrigger] Unknown triggerType: ${triggerType}`);
                 return false;
         }
     }
@@ -586,13 +586,13 @@ class EventFlowSystem {
     
     async executeAction(actionNode, message) {
         const { actionType, config } = actionNode;
-        console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
+      //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
         
         switch (actionType) {
             case 'blockMessage':
                 result.blocked = true;
-                console.log(`[ExecuteAction - blockMessage] Set result.blocked to true.`);
+              //console.log(`[ExecuteAction - blockMessage] Set result.blocked to true.`);
                 break;
                 
 		case 'modifyMessage':
