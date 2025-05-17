@@ -521,17 +521,34 @@ function passGoodWords(sentence) {
 	}
 	return sentence;
 }
+
 try {
-	// use a custom file named goodwords.txt to replace the badWords that are hard-coded. one per line.
-	fetch("./goodwords.txt")
-		.then(response => response.text())
-		.then(text => {
-			let customGoodWords = text.split(/\r?\n|\r|\n/g);
-			goodWordsHashTable = createProfanityHashTable(customGoodWords);
-		})
-		.catch(error => {
-			// no file found or error
-		});
+  if (isSSAPP) {
+    // Use Node.js file system in Electron environment
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      // Read from local file system using Node.js fs
+      const filePath = path.join(__dirname, 'goodwords.txt');
+      const text = fs.readFileSync(filePath, 'utf8');
+      let customGoodWords = text.split(/\r?\n|\r|\n/g);
+      goodWordsHashTable = createProfanityHashTable(customGoodWords);
+    } catch (fileError) {
+      // no file found or error
+    }
+  } else {
+    // Original web browser approach using fetch
+    fetch("./goodwords.txt")
+      .then(response => response.text())
+      .then(text => {
+        let customGoodWords = text.split(/\r?\n|\r|\n/g);
+        goodWordsHashTable = createProfanityHashTable(customGoodWords);
+      })
+      .catch(error => {
+        // no file found or error
+      });
+  }
 } catch (e) {}
 
 ///////////////////
@@ -8820,23 +8837,40 @@ if (chrome.action && chrome.action.setIcon){
 	chrome.action.setIcon({ path: "/icons/off.png" });
 }
 
-async function fetchData(url) {
-	try {
-		const response = await fetch(url);
-		if (!response.ok) {
-			return false;
-		}
-		return await response.json();
-	} catch (error) {
-		return false;
-	}
+async function fetchData(url, useLocalFs = false) {
+  try {
+    // Use local file system if explicitly requested or if in Electron and path is local
+    if ((useLocalFs || (isSSAPP && !url.startsWith('http'))) && isSSAPP) {
+      const fs = require('fs');
+      const path = require('path');
+      
+      try {
+        const filePath = path.join(__dirname, url);
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
+      } catch (fsError) {
+        return false;
+      }
+    } else {
+      // Use standard fetch for remote resources or when local access not requested
+      const response = await fetch(url);
+      if (!response.ok) {
+        return false;
+      }
+      return await response.json();
+    }
+  } catch (error) {
+    return false;
+  }
 }
 
+// Example usage in window.onload:
 window.onload = async function () {
-    let programmedSettings = await fetchData("settings.json");
-    if (programmedSettings && typeof programmedSettings === "object") {
-        log("Loading override settings via settongs.json");
-        loadSettings(programmedSettings, true);
+	// Pass true as second parameter to force local file system in Electron
+	let programmedSettings = await fetchData("settings.json", true);
+	if (programmedSettings && typeof programmedSettings === "object") {
+		log("Loading override settings via settings.json");
+		loadSettings(programmedSettings, true);
     } else {
         log("Loading settings from the main file into the background.js");
         chrome.storage.sync.get(properties, function (item) {
