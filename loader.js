@@ -1,13 +1,28 @@
 function loadScript(src) {
     return new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = src;
-        script.onload = resolve;
-        script.onerror = (error) => {
-            console.error(`Failed to load script: ${src}`, error);
+        try {
+            const script = document.createElement('script');
+            const policy = window.trustedTypes && window.trustedTypes.createPolicy('loader-policy', {
+                createScriptURL: (url) => {
+                    // Only allow relative URLs or specific domains you trust
+                    if (url.startsWith('./') || url.startsWith('/') || url.startsWith('https://socialstream.ninja/') || url.startsWith('https://beta.socialstream.ninja/')) {
+                        return url;
+                    }
+                    throw new Error('URL rejected by policy');
+                }
+            });
+            
+            script.src = policy ? policy.createScriptURL(src) : src;
+            script.onload = resolve;
+            script.onerror = (error) => {
+                console.error(`Failed to load script: ${src}`, error);
+                reject(error);
+            };
+            document.body.appendChild(script);
+        } catch (error) {
+            console.error(`Error creating script element for ${src}:`, error);
             reject(error);
-        };
-        document.body.appendChild(script);
+        }
     });
 }
 

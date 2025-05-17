@@ -2511,61 +2511,130 @@ function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
     // Otherwise they are the same.
     return 0;
 }
-var Beta = false
-async function checkVersion(){
-	
-	const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
-	
-	if (chrome.runtime.id === WEBSTORE_ID) { // don't show version info if the webstore version
-		document.getElementById("newVersion").classList.remove('show');
-		document.getElementById("newVersion").innerHTML = "";
-		return;
-	}
-	
-	try { 
-		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
-			var manifestData = chrome.runtime.getManifest();
-			if ("version" in data){
-				if (manifestData && (compareVersions(manifestData.version, data.version)==-1)){
-					document.getElementById("newVersion").classList.add('show')
-					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
-				} else if (manifestData && (compareVersions(manifestData.version, data.version)==1)){ // beta
-					document.getElementById("newVersion").classList.add('show')
-					document.getElementById("newVersion").innerHTML = `You're using a BETA version. Thank you!<small><br><br>ℹ️ Note: The below overlay links point to their newest beta versions</small>`;
-					Beta = true;
-					if (Beta){
-						if (baseURL == "https://socialstream.ninja/"){
-							baseURL = "https://beta.socialstream.ninja/"
-							if (lastResponse){
-								update(lastResponse, false);
-							}
-						}
-					}
-				} else {
-					document.getElementById("newVersion").classList.remove('show')
-					document.getElementById("newVersion").innerHTML = "";
-				}
-				
-				
-				if (manifestData && manifestData.content_scripts) {
-				  // Extract source filenames from content_scripts
-				  manifestData.content_scripts.forEach(script => {
-					if (script.js && script.js.length > 0) {
-					  script.js.forEach(jsFile => {
-						if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-						  // Extract just the filename without path and extension
-						  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-						  sourcesList.add(sourceName);
-						}
-					  });
-					}
-				  });
-				}
-			}
-		});
-	} catch(e){}
+
+var Beta = false;
+var cachedManifestData = null; // Store the last successful manifest data
+
+async function checkVersion() {
+    const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
+    
+    if (chrome.runtime.id === WEBSTORE_ID) { // don't show version info if the webstore version
+        document.getElementById("newVersion").classList.remove('show');
+        document.getElementById("newVersion").innerHTML = "";
+        return;
+    }
+    
+    try {
+        const manifestData = chrome.runtime.getManifest();
+        
+        // Try to load cached manifest from localStorage on startup
+        if (!cachedManifestData) {
+            try {
+                const storedManifest = localStorage.getItem('cachedManifestData');
+                if (storedManifest) {
+                    cachedManifestData = JSON.parse(storedManifest);
+                    console.log("Loaded cached manifest data from localStorage");
+                }
+            } catch (e) {
+                console.error("Error loading cached manifest:", e);
+                localStorage.removeItem('cachedManifestData'); // Clear invalid cache
+            }
+        }
+        
+        // Try to fetch the latest manifest
+        fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Cache the successfully fetched manifest
+            cachedManifestData = data;
+            localStorage.setItem('cachedManifestData', JSON.stringify(data));
+            processManifestData(data, manifestData);
+        })
+        .catch(error => {
+            console.warn("Error fetching manifest:", error.message);
+            
+            // Use the cached data if fetch failed
+            if (cachedManifestData) {
+                console.log("Using cached manifest data");
+                processManifestData(cachedManifestData, manifestData);
+                
+                // Add a note that we're using cached data
+                const versionElement = document.getElementById("newVersion");
+                if (versionElement.classList.contains('show')) {
+                    versionElement.innerHTML += `<small class="cache-note" style="display:block;opacity:0.7"><br>⚠️ Using cached version info - couldn't connect to GitHub</small>`;
+                } else {
+                    versionElement.classList.add('show');
+                    versionElement.innerHTML = `<small class="cache-note" style="display:block;opacity:0.7">⚠️ Couldn't check for new versions - using cached data</small>`;
+                }
+            } else {
+                // No cache available - show error
+                document.getElementById("newVersion").classList.add('show');
+                document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Couldn't check for updates: ${error.message}</small>`;
+                console.warn("No cached manifest data available");
+            }
+        });
+    } catch(e) {
+        console.error("Version check error:", e);
+        document.getElementById("newVersion").classList.add('show');
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error checking version: ${e.message}</small>`;
+    }
 }
 
+// Function to process the manifest data (extracted to avoid code duplication)
+function processManifestData(data, manifestData) {
+    if (!data || !("version" in data)) {
+        console.error("Invalid manifest data:", data);
+        document.getElementById("newVersion").classList.add('show');
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Invalid manifest data received</small>`;
+        return;
+    }
+    
+    try {
+        if (manifestData && (compareVersions(manifestData.version, data.version) == -1)) {
+            document.getElementById("newVersion").classList.add('show');
+            document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
+        } else if (manifestData && (compareVersions(manifestData.version, data.version) == 1)) { // beta
+            document.getElementById("newVersion").classList.add('show');
+            document.getElementById("newVersion").innerHTML = `You're using a BETA version. Thank you!<small><br><br>ℹ️ Note: The below overlay links point to their newest beta versions</small>`;
+            Beta = true;
+            if (Beta) {
+                if (baseURL == "https://socialstream.ninja/") {
+                    baseURL = "https://beta.socialstream.ninja/";
+                    if (lastResponse) {
+                        update(lastResponse, false);
+                    }
+                }
+            }
+        } else {
+            document.getElementById("newVersion").classList.remove('show');
+            document.getElementById("newVersion").innerHTML = "";
+        }
+        
+        if (manifestData && manifestData.content_scripts) {
+            // Extract source filenames from content_scripts
+            manifestData.content_scripts.forEach(script => {
+                if (script.js && script.js.length > 0) {
+                    script.js.forEach(jsFile => {
+                        if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
+                            // Extract just the filename without path and extension
+                            const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
+                            sourcesList.add(sourceName);
+                        }
+                    });
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error processing manifest data:", e);
+        document.getElementById("newVersion").classList.add('show');
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error processing version info: ${e.message}</small>`;
+    }
+}
 
 (function (w) {
 	w.URLSearchParams = w.URLSearchParams || function (searchString) {
