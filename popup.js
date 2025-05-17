@@ -2347,6 +2347,7 @@ function update(response, sync = true) {
         }
     }
 }
+
 function processParam(key, paramNum, settingObj, sync) {
     let paramKey = `param${paramNum}`;
     let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
@@ -2357,6 +2358,7 @@ function processParam(key, paramNum, settingObj, sync) {
     // Call updateSettings with the element. handleElementParam will figure out the value.
     updateSettings(ele, sync);
 }
+
 // Handle legacy settings format
 function processLegacySetting(key, value, sync) {
     // Process simple settings
