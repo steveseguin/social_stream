@@ -427,39 +427,75 @@ function filterProfanity(sentence) {
 
 var profanityHashTable = false;
 
-function initialLoadBadWords(){
-	try {
-		// use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
-		fetch("./badwords.txt")
-			.then(response => response.text())
-			.then(text => {
-				let customBadWords = text.split(/\r?\n|\r|\n/g);
-				customBadWords = generateVariationsList(customBadWords);
-				profanityHashTable = createProfanityHashTable(customBadWords);
-			})
-			.catch(error => {
-				try {
-					  const customBadwords = localStorage.getItem('customBadwords');
-					  if (customBadwords) {
-						let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
-						customBadWordsList = generateVariationsList(customBadWordsList);
-						profanityHashTable = createProfanityHashTable(customBadWordsList);
-					  } else {
-						// Use default badwords if no custom file is present
-						badWords = generateVariationsList(badWords);
-						profanityHashTable = createProfanityHashTable(badWords);
-					  }
-				} catch (e) {
-				  badWords = generateVariationsList(badWords);
-				  profanityHashTable = createProfanityHashTable(badWords);
-				}
-
-			});
-	} catch (e) {
-		badWords = generateVariationsList(badWords);
-		profanityHashTable = createProfanityHashTable(badWords);
-	}
+function initialLoadBadWords() {
+  try {
+    if (isSSAPP) {
+      // Use Node.js file system in Electron environment
+	  log("checking for badwords.txt on local disk");
+      const fs = require('fs');
+      const path = require('path');
+      
+      try {
+		
+        // Read from local file system using Node.js fs
+        const filePath = path.join(__dirname, 'badwords.txt');
+        const text = fs.readFileSync(filePath, 'utf8');
+        let customBadWords = text.split(/\r?\n|\r|\n/g);
+        customBadWords = generateVariationsList(customBadWords);
+        profanityHashTable = createProfanityHashTable(customBadWords);
+		log("badwords Worked");
+      } catch (fileError) {
+        // Fallback if file read fails
+        try {
+          const customBadwords = localStorage.getItem('customBadwords');
+          if (customBadwords) {
+			log("badwords from local storage instead");
+            let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
+            customBadWordsList = generateVariationsList(customBadWordsList);
+            profanityHashTable = createProfanityHashTable(customBadWordsList);
+          } else {
+			log("using default badwords list");
+            badWords = generateVariationsList(badWords);
+            profanityHashTable = createProfanityHashTable(badWords);
+          }
+        } catch (e) {
+		  log("failed to load badwords; loading backups");
+          badWords = generateVariationsList(badWords);
+          profanityHashTable = createProfanityHashTable(badWords);
+        }
+      }
+    } else {
+      // Original web browser approach using fetch
+      fetch("./badwords.txt")
+        .then(response => response.text())
+        .then(text => {
+          let customBadWords = text.split(/\r?\n|\r|\n/g);
+          customBadWords = generateVariationsList(customBadWords);
+          profanityHashTable = createProfanityHashTable(customBadWords);
+        })
+        .catch(error => {
+          try {
+            const customBadwords = localStorage.getItem('customBadwords');
+            if (customBadwords) {
+              let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
+              customBadWordsList = generateVariationsList(customBadWordsList);
+              profanityHashTable = createProfanityHashTable(customBadWordsList);
+            } else {
+              badWords = generateVariationsList(badWords);
+              profanityHashTable = createProfanityHashTable(badWords);
+            }
+          } catch (e) {
+            badWords = generateVariationsList(badWords);
+            profanityHashTable = createProfanityHashTable(badWords);
+          }
+        });
+    }
+  } catch (e) {
+    badWords = generateVariationsList(badWords);
+    profanityHashTable = createProfanityHashTable(badWords);
+  }
 }
+
 initialLoadBadWords();
 
 /////// end of bad word filter
