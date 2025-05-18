@@ -672,6 +672,25 @@
 	});
 	
 	var videosMuted = false;
+	
+	
+	function simulateFocus(element) {
+		// Create and dispatch focusin event
+		const focusInEvent = new FocusEvent('focusin', {
+			view: window,
+			bubbles: true,
+			cancelable: true
+		});
+		element.dispatchEvent(focusInEvent);
+
+		// Create and dispatch focus event
+		const focusEvent = new FocusEvent('focus', {
+			view: window,
+			bubbles: false,
+			cancelable: true
+		});
+		element.dispatchEvent(focusEvent);
+	}
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
@@ -683,6 +702,7 @@
 						return;
 					}
 					document.querySelector("textarea[class]").focus();
+					simulateFocus(document.querySelector('textarea[class]'));
 					sendResponse(true);
 					return;
 				}
