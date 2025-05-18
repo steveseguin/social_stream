@@ -2741,7 +2741,7 @@ const ChatContextManager = { // summary and chat context
 			})
 			.filter(Boolean)
 			.join('');
-	}
+	},
 
 	getExactTime(timestamp) {
 		const date = new Date(timestamp);
