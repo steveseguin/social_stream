@@ -3913,9 +3913,10 @@ body.ssapp .wrapper.ssapp h3 {
 									🚫🗄️ <span data-translate="nollmcontext">Do not include past message context</span>
 								</div>
 								
+								
 								<div title="There's 10 included by default; this is user, not entire, chat history." style="margin:5px 0">
 									📃 <span data-translate="chatbotHistoryTotal"> Number of past user messages to include:</span>
-										<input type="number" style="max-width: 5ch;" step="1" max="100" min="0" value="10" size="6" data-numbersetting="chatbotHistoryTotal" />
+										<input type="number" style="max-width: 5ch;" step="1" max="500" min="0" value="10" size="6" data-numbersetting="chatbotHistoryTotal" />
 								</div>
 								
 								<div style="display: inline-block;" title="Include timestamp in chat history (toLocaleString).">
@@ -3924,6 +3925,14 @@ body.ssapp .wrapper.ssapp h3 {
 										<span class="slider round"></span>
 									</label>
 									📔 <span data-translate="chatbotTimestamps">Include detailed timestamps in the chat history</span>
+								</div>
+								
+								<div style="display: inline-block;" title="Include the bot's own replies to user in chat history. This can confuse an LLM, so avoid it.">
+									<label class="switch">
+										<input type="checkbox" id="includeBotResponses" data-setting="includeBotResponses" />
+										<span class="slider round"></span>
+									</label>
+									🥨 <span data-translate="includeBotResponses">Include bot's replies with user's chat history</span>
 								</div>
 								
 								<div style="display: inline-block;" title="Include chat summaries with past context">
@@ -5911,6 +5920,13 @@ body.ssapp .wrapper.ssapp h3 {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="first-time-chatters"> 🌿 Use the DB to mark new-ish chatters</span>
+                                </div>
+								<div title="Override's the database 30-day storage limits">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="unlimitedDB" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    🤯 <span data-translate="unlimitedDB">Override the DB's 30-day storage limit</span>
                                 </div>
                                 <div>
                                     <label class="switch">

@@ -59,39 +59,40 @@ class MessageStoreDB {
     }
 
 	async addMessage(message) {
-		const db = await this.ensureDB();
-		const now = Date.now();
-		
-		const cloned = {...message};
-		
-		if (cloned.id){
-			cloned.mid = cloned.id;
-			delete cloned.id;   // Remove id as it will be auto-generated
-		}
-		
-		const messageData = { 
-			...cloned,
-			timestamp: now,
-			expiresAt: now + (this.daysToKeep * MS_PER_DAY)
-		};
+        const db = await this.ensureDB();
+        const now = Date.now();
+        
+        const cloned = {...message};
+        
+        if (cloned.id){
+            cloned.mid = cloned.id;
+            delete cloned.id;   // Remove id as it will be auto-generated
+        }
+        
+        // Set expiration only if unlimiteDB is not enabled
+        const messageData = { 
+            ...cloned,
+            timestamp: now,
+            expiresAt: settings?.unlimiteDB ? null : now + (this.daysToKeep * MS_PER_DAY)
+        };
 
-		return new Promise((resolve, reject) => {
-			const tx = db.transaction(this.storeName, 'readwrite');
-			const store = tx.objectStore(this.storeName);
-			
-			const request = store.add(messageData);
-			
-			request.onsuccess = () => {
-				// Get the auto-generated ID from the request
-				messageData.id = request.result;
-				message.idx = request.result;;
-				this.updateCache(messageData);
-				resolve(request.result); 
-			};
-			
-			request.onerror = () => reject(request.error);
-		});
-	}
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            
+            const request = store.add(messageData);
+            
+            request.onsuccess = () => {
+                // Get the auto-generated ID from the request
+                messageData.id = request.result;
+                message.idx = request.result;
+                this.updateCache(messageData);
+                resolve(request.result); 
+            };
+            
+            request.onerror = () => reject(request.error);
+        });
+    }
 
 	async updateMessage(idx, updatedResponse) {
 		if (!idx || !updatedResponse) return null;
@@ -233,21 +234,6 @@ class MessageStoreDB {
 		const db = await this.ensureDB();
 		const now = Date.now();
 		
-		// Get the user's preferred history limit
-		const userLimit = settings.chatbotHistoryTotal?.numbersetting;
-		
-		// Only apply user limit to the first page
-		if (page === 0 && this.cache.userMessages.has(chatname)) {
-			const cached = this.cache.userMessages.get(chatname);
-			if (cached.length >= pageSize && (now - this.cache.lastUpdate) < this.cacheDuration) {
-				// If we have a user limit and this is page 0, apply it
-				if (userLimit && page === 0) {
-					return cached.slice(0, userLimit);
-				}
-				return cached.slice(0, pageSize);
-			}
-		}
-		
 		if (settings?.disableDB) return [];
 		
 		return new Promise((resolve) => {
@@ -287,6 +273,12 @@ class MessageStoreDB {
 
     scheduleCleanup() {
         const cleanup = async () => {
+            // Skip cleanup if unlimiteDB is enabled
+            if (settings?.unlimiteDB) {
+                console.log('Unlimited DB mode enabled, skipping cleanup');
+                return;
+            }
+            
             const db = await this.ensureDB();
             const now = Date.now();
             
@@ -642,7 +634,7 @@ class MessageStoreMigration {
             membership: oldMessage.membership || oldMessage.hasMembership || '',
             type: oldMessage.type || 'user',
             timestamp: timestamp,
-            expiresAt: now + thirtyDays,
+            expiresAt: settings?.unlimiteDB ? null : now + thirtyDays,
             backgroundColor: oldMessage.backgroundColor || '',
             chatbadges: oldMessage.chatbadges || '',
             event: oldMessage.event || '',

@@ -1,3 +1,4 @@
+// filename: ai.js
 // this file depends on background.js
 // this file contains the LLM / RAG component
 
@@ -2641,11 +2642,17 @@ const ChatContextManager = { // summary and chat context
     },
 
     async getContext(data) {
+		
+		const maxMessages = settings.chatbotHistoryTotal?.numbersetting || 10;
+		
         const [recentMessages, userHistory] = await Promise.all([
-            messageStoreDB.getRecentMessages(10),
-            data.chatname && data.type ? messageStoreDB.getUserMessages(data.chatname, data.type, 0, 10) : []
+            messageStoreDB.getRecentMessages(10), // recentMessages
+            data.chatname && data.type ? messageStoreDB.getUserMessages(data.chatname, data.type, 0, maxMessages) : [] // userHistory
         ]);
 
+		// messageToLLMString
+		
+		
         let summary = null;
         if (settings?.llmsummary && this.needsSummary()) {
             summary = await this.getSummary();
@@ -2708,15 +2715,9 @@ const ChatContextManager = { // summary and chat context
 		  botname = settings.ollamabotname.textsetting.trim();
 		}
 		
-		// Get the maximum number of messages to include
-		const maxMessages = settings.chatbotHistoryTotal?.numbersetting || 10;
-		
-		// Slice the messages array to include only the most recent messages up to maxMessages
-		const relevantMessages = messages.slice(-maxMessages);
-		
-		return relevantMessages
+		return messages
 			.map((msg, index) => {
-				if (!msg || msg.bot || (msg.event && !msg.hasDonation)) return '';
+				if (!msg || (msg.event && !msg.hasDonation)) return '';
 				
 				// Better time handling
 				const timeAgo = this.getTimeAgo(msg.timestamp);
@@ -2734,10 +2735,26 @@ const ChatContextManager = { // summary and chat context
 				
 				if (!message && !donation) return '';
 				
+				let output = '';
 				if (shorten) {
-					return `\n${message}${donation} - ${timeInfo}`;
+					output = `\n${message}${donation} - ${timeInfo}`;
+				} else {
+					output = `\n${msg.chatname} of ${msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}${donation} said ${timeInfo}: ${message}`;
 				}
-				return `\n${msg.chatname} of ${msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}${donation} said ${timeInfo}: ${message}`;
+				
+				// Add bot response if it exists and the setting is enabled
+				if (settings.includeBotResponses && msg.botResponse) {
+					const botResponse = this.sanitizeMessage({chatmessage: msg.botResponse}, index > 20);
+					if (botResponse) {
+						if (shorten) {
+							output += `\n${botname}: ${botResponse} - ${timeAgo}`;
+						} else {
+							output += `\n${botname} responded ${timeAgo}: ${botResponse}`;
+						}
+					}
+				}
+				
+				return output;
 			})
 			.filter(Boolean)
 			.join('');
