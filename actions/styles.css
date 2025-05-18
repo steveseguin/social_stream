@@ -972,6 +972,56 @@ select.property-input {
     box-shadow: 0 2px 5px -2px #2196F3 inset; /* Inner shadow for effect */
 }
 
+.test-panel {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 650px;
+    background-color: var(--background-dialog);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    display: none; /* Hidden by default */
+    padding: 0; /* Remove padding here */
+    color: var(--text-primary);
+    max-height: 90vh; /* Limit height to 90% of viewport */
+    flex-direction: column;
+    overflow: hidden; /* Hide overflow */
+}
+
+.test-panel-header {
+    padding: 25px 25px 15px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.test-panel h3 {
+    margin-top: 0;
+    padding-bottom: 15px;
+    font-size: 1.3rem;
+    color: var(--text-primary);
+    border-bottom: none;
+}
+
+.test-panel-content {
+    flex-grow: 1;
+    overflow-y: auto; /* Make content area scrollable */
+    padding: 0 25px;
+}
+
+.test-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 0;
+    padding: 15px 25px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--background-dialog);
+    flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
 /* Ensure the flow list container allows for scrolling if many flows */
 .flow-list-container {
     /* ... existing styles ... */

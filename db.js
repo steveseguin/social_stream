@@ -161,73 +161,96 @@ class MessageStoreDB {
     }
 	
 	async checkUserTypeExists(chatname, type) {
-        if (settings?.disableDB) return false;
-        
-        const cacheKey = `${chatname}:${type}`;
-        const now = Date.now();
-        
-        // Check cache first
-        if (this.existenceCache.entries.has(cacheKey)) {
-            const entry = this.existenceCache.entries.get(cacheKey);
-            if (now - entry.timestamp < this.existenceCache.ttl) {
-                return entry.exists;
-            }
-            // Expired entry, remove from cache
-            this.existenceCache.entries.delete(cacheKey);
-        }
-        
-        // Not in cache, check database
-        const db = await this.ensureDB();
-        
-        return new Promise((resolve) => {
-            const tx = db.transaction(this.storeName, 'readonly');
-            const index = tx.objectStore(this.storeName).index('user_type_timestamp');
-            
-            const range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
-            const countRequest = index.count(range);
-            
-            countRequest.onsuccess = () => {
-                const exists = countRequest.result > 0;
-                
-                // Update cache
-                this.existenceCache.entries.set(cacheKey, {
-                    exists,
-                    timestamp: now
-                });
-                
-                // Trim cache if needed
-                if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
-                    const oldestKey = Array.from(this.existenceCache.entries.keys())[0];
-                    this.existenceCache.entries.delete(oldestKey);
-                }
-                
-                resolve(exists);
-            };
-            
-            countRequest.onerror = () => {
-                console.error('Error counting user type records:', countRequest.error);
-                resolve(false);
-            };
-        });
-    }
+		const cacheKey = `${chatname}:${type}`;
+		const now = Date.now();
+		
+		// Check cache first
+		if (this.existenceCache.entries.has(cacheKey)) {
+			const entry = this.existenceCache.entries.get(cacheKey);
+			if (now - entry.timestamp < this.existenceCache.ttl) {
+				return entry.exists;
+			}
+			// Expired entry, remove from cache
+			this.existenceCache.entries.delete(cacheKey);
+		}
+		
+		// If database is disabled, update cache as not existing and return false
+		if (settings?.disableDB) {
+			// Update cache to indicate this user doesn't exist (since we can't check)
+			this.existenceCache.entries.set(cacheKey, {
+				exists: false,
+				timestamp: now
+			});
+			
+			// Trim cache if needed
+			if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
+				const oldestKey = Array.from(this.existenceCache.entries.keys())[0];
+				this.existenceCache.entries.delete(oldestKey);
+			}
+			
+			return false;
+		}
+		
+		// Not in cache and database enabled, check database
+		const db = await this.ensureDB();
+		
+		return new Promise((resolve) => {
+			const tx = db.transaction(this.storeName, 'readonly');
+			const index = tx.objectStore(this.storeName).index('user_type_timestamp');
+			
+			const range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
+			const countRequest = index.count(range);
+			
+			countRequest.onsuccess = () => {
+				const exists = countRequest.result > 0;
+				
+				// Update cache
+				this.existenceCache.entries.set(cacheKey, {
+					exists,
+					timestamp: now
+				});
+				
+				// Trim cache if needed
+				if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
+					const oldestKey = Array.from(this.existenceCache.entries.keys())[0];
+					this.existenceCache.entries.delete(oldestKey);
+				}
+				
+				resolve(exists);
+			};
+			
+			countRequest.onerror = () => {
+				console.error('Error counting user type records:', countRequest.error);
+				resolve(false);
+			};
+		});
+	}
     clearExistenceCache() {
         this.existenceCache.entries.clear();
     }
 	
-    async getUserMessages(chatname, type, page = 0, pageSize = 100) {
-        const db = await this.ensureDB();
-        const now = Date.now();
-        
-        if (page === 0 && this.cache.userMessages.has(chatname)) {
-            const cached = this.cache.userMessages.get(chatname);
-            if (cached.length >= pageSize && (now - this.cache.lastUpdate) < this.cacheDuration) {
-                return cached.slice(0, pageSize);
-            }
-        }
+	async getUserMessages(chatname, type, page = 0, pageSize = 100) {
+		const db = await this.ensureDB();
+		const now = Date.now();
+		
+		// Get the user's preferred history limit
+		const userLimit = settings.chatbotHistoryTotal?.numbersetting;
+		
+		// Only apply user limit to the first page
+		if (page === 0 && this.cache.userMessages.has(chatname)) {
+			const cached = this.cache.userMessages.get(chatname);
+			if (cached.length >= pageSize && (now - this.cache.lastUpdate) < this.cacheDuration) {
+				// If we have a user limit and this is page 0, apply it
+				if (userLimit && page === 0) {
+					return cached.slice(0, userLimit);
+				}
+				return cached.slice(0, pageSize);
+			}
+		}
 		
 		if (settings?.disableDB) return [];
-
-        return new Promise((resolve) => {
+		
+		return new Promise((resolve) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const index = tx.objectStore(this.storeName).index(
                 type ? 'user_type_timestamp' : 'user_timestamp'

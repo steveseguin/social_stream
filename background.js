@@ -7882,7 +7882,7 @@ async function applyBotActions(data, tab = false) {
 			data.chatmessage = normalizeText(data.chatmessage, data.textonly || false)
 		}
 		
-		if (settings.firsttimers && data.chatname && data.type && !settings?.disableDB){
+		if (settings.firsttimers && data.chatname && data.type){
 			let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
 			if (!exists){
 				data.firsttime = true;

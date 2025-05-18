@@ -12,7 +12,9 @@
     <script type="text/javascript" src="./thirdparty/sentiment.js"></script>
     <script type="text/javascript" src="./thirdparty/lunr.js"></script>
     <script type="text/javascript" src="./thirdparty/xlsx.full.min.js"></script>
-    
+	
+    <link  id="editorstyle" rel="stylesheet" type="text/css" href="./actions/styles.css" />
+	
     <style>
         :root {
             --primary-color: #2a9d8f;
@@ -52,7 +54,145 @@
                 color: var(--text-light);
             }
         }
+		
+				
+		@keyframes fadeIn {
+			0% { opacity: 0; }
+			50% { opacity: 0.2; }
+			70% { opacity: 0.9; }
+			100% { opacity: 1; }
+		}
 
+		#editor {
+			animation: fadeIn 0.5s ease-in-out;
+		}
+		
+		#editor .node {
+			position: absolute;
+			width: var(--node-width, 220px);
+			min-height: var(--node-min-height, 90px);
+			background-color: var(--background-surface, #1F1F23);
+			border-radius: 8px;
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+			user-select: none;
+			z-index: 10;
+			border: 1px solid var(--border-color, #3E3E42);
+			display: flex;
+			flex-direction: column;
+			transition: box-shadow 0.15s ease, border-color 0.15s ease;
+		}
+
+		#editor .node-header {
+			padding: 10px 12px;
+			border-top-left-radius: 8px;
+			border-top-right-radius: 8px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid var(--border-color, #3E3E42);
+			color: #FFFFFF;
+		}
+
+		#editor .flow-editor-container {
+			display: flex;
+			height: 100%;
+			color: var(--text-primary, #EAEAEA);
+		}
+
+		#editor .flow-sidebar {
+			width: 260px;
+			background-color: var(--background-surface, #1F1F23);
+			border-right: 1px solid var(--border-color, #3E3E42);
+			display: flex;
+			flex-direction: column;
+			padding: 15px;
+			height: 100%;
+		}
+
+		#editor .flow-editor {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+			background-color: var(--background-base, #18181B);
+		}
+
+		#editor .flow-canvas-container {
+			flex: 1;
+			overflow: auto;
+			position: relative;
+			background-color: var(--background-base, #18181B);
+			background-image: radial-gradient(var(--border-color, #3E3E42) 1px, transparent 1px);
+			background-size: 20px 20px;
+		}
+
+		#editor .flow-canvas {
+			position: relative;
+			min-height: 100%;
+			min-width: 100%;
+			height: max(100%, 1000px);
+			width: max(100%, 1400px);
+		}
+
+		#editor .connection-point {
+			position: absolute;
+			width: 16px;
+			height: 16px;
+			background-color: var(--background-base, #18181B);
+			border: 2px solid var(--primary-dark, #6A1E9E);
+			border-radius: 50%;
+			cursor: crosshair;
+			z-index: 12;
+			transition: transform 0.15s ease, background-color 0.15s ease;
+		}
+
+		#editor .node-properties {
+			width: 320px;
+			background-color: var(--background-surface, #1F1F23);
+			border-left: 1px solid var(--border-color, #3E3E42);
+			padding: 20px;
+			overflow-y: auto;
+		}
+
+		#editor .node.trigger .node-header { background-color: var(--trigger-color, #0A84FF); }
+		#editor .node.action .node-header { background-color: var(--action-color, #1A7D3A); }
+		#editor .node.logic .node-header { background-color: var(--logic-color, #B45309); }
+		#editor .node.unknown .node-header { background-color: var(--text-secondary, #B0B0B8); }
+
+		/* Node item styles */
+		#editor .node-item {
+			padding: 10px 12px;
+			border-radius: 6px;
+			cursor: grab;
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: #FFFFFF;
+			transition: transform 0.15s ease, box-shadow 0.15s ease;
+			border: 1px solid transparent;
+			user-select: none;
+		}
+
+		#editor .node-item.trigger { background-color: var(--trigger-color, #0A84FF); }
+		#editor .node-item.action { background-color: var(--action-color, #1A7D3A); }
+		#editor .node-item.logic { background-color: var(--logic-color, #B45309); }
+
+		/* Connection styles */
+		#editor .connection {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 1;
+		}
+
+		#editor .connection path {
+			stroke-width: 2.5px;
+			transition: stroke 0.15s ease, stroke-width 0.15s ease;
+		}
+	</style>
+	<style id="dashstyle">
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -394,9 +534,11 @@
             border: none;
             position: absolute;
         }
+
     </style>
 </head>
 <body>
+<div id="dash">
     <div class="container">
         <div class="header">
             <div class="logo">Social Stream Ninja</div>
@@ -501,7 +643,7 @@
         <div class="footer">
 		
             <div class="support-links">
-				<div class="action-flow-editor" title="Open the flow editor in a new tab to create custom actions and triggers">
+				<div class="action-flow-editor ssapp" title="Open the flow editor in a new tab to create custom actions and triggers">
 					<a href="./actions/index.html" target="_blank">📝 Open the Action Flow Editor</a>
 				</div>
                 <div class="community-links">
@@ -527,7 +669,94 @@
             </div>
         </div>
     </div>
+</div>
+	
+	
+<div id="editor" style="display:none;">
+	<div class="editor-container">
+        <div class="editor-header">
+            <div class="editor-title">Event Flow Editor</div>
+			<div style="font-size:77%;max-width:60%;">The Flow Editor lets you create custom and complex triggers and action workflows. Have fun with your stream!</div>
+            <div class="editor-actions">
+                <button id="open-test-panel" class="btn">Test Flow</button>
+            </div>
+        </div>
+        
+        <div class="editor-body">
+            <div id="editor-container"></div>
+        </div>
+    </div>
 
-    <script type="text/javascript" src="./loader.js"></script>
+    <!-- Test Panel -->
+    <div class="test-overlay" id="test-overlay"></div>
+    <div class="test-panel" id="test-panel">
+		<div class="test-panel-header">
+			<h3>Test Flow</h3>
+		</div>
+		<div class="test-panel-content">
+			<div class="test-group">
+				<label for="test-source">Source Platform:</label>
+				<select id="test-source">
+					<option value="twitch">Twitch</option>
+					<option value="youtube">YouTube</option>
+					<option value="facebook">Facebook</option>
+					<option value="kick">Kick</option>
+					<option value="tiktok">TikTok</option>
+					<option value="instagram">Instagram</option>
+					<option value="discord">Discord</option>
+					<option value="slack">Slack</option>
+				</select>
+			</div>
+			
+			<div class="test-group">
+				<label for="test-username">Username:</label>
+				<input type="text" id="test-username" value="TestUser">
+			</div>
+			
+			<div class="test-group">
+				<label for="test-message">Message:</label>
+				<textarea id="test-message" rows="3">Hello, world!</textarea>
+			</div>
+			
+			<div class="test-options">
+				<label class="test-checkbox">
+					<input type="checkbox" id="test-mod">
+					Moderator
+				</label>
+				
+				<label class="test-checkbox">
+					<input type="checkbox" id="test-vip">
+					VIP
+				</label>
+				
+				<label class="test-checkbox">
+					<input type="checkbox" id="test-admin">
+					Admin
+				</label>
+				
+				<label class="test-checkbox">
+					<input type="checkbox" id="test-donation">
+					Has Donation
+				</label>
+			</div>
+			
+			<div id="donation-amount" class="test-group" style="display: none;">
+				<label for="test-donation-amount">Donation Amount:</label>
+				<input type="text" id="test-donation-amount" value="$5.00">
+			</div>
+			
+			<div class="test-results" id="test-results">
+				<p>Test results will appear here after running a test.</p>
+			</div>
+		</div>
+		
+		<div class="test-buttons">
+			<button id="close-test-btn" class="btn">Close</button>
+			<button id="run-test-btn" class="btn btn-primary">Run Test</button>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="./loader.js"></script>
 </body>
 </html>

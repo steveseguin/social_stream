@@ -586,7 +586,7 @@ class EventFlowSystem {
     
     async executeAction(actionNode, message) {
         const { actionType, config } = actionNode;
-      //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
+        console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
         
         switch (actionType) {

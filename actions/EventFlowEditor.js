@@ -493,7 +493,7 @@ class EventFlowEditor {
             document.getElementById('flow-name').value = this.currentFlow.name; // Update input field without asterisk AFTER save
             this.markUnsavedChanges(false); // Reset flag AFTER successful save
 
-            alert('Flow saved successfully!');
+           // alert('Flow saved successfully!');
             await this.loadFlowList(); // Refresh list
             
             // Re-select the current flow in the list
@@ -520,7 +520,7 @@ class EventFlowEditor {
             if (duplicatedFlow) {
                 await this.loadFlowList();
                 this.loadFlow(duplicatedFlow.id); // This will reset unsavedChanges flag
-                alert('Flow duplicated successfully!');
+               // alert('Flow duplicated successfully!');
             } else {
                 alert('Error duplicating flow.');
             }
@@ -538,7 +538,7 @@ class EventFlowEditor {
                 this.createNewFlow(); // Will ask for confirmation if current flow has unsaved changes
             }
             this.loadFlowList();
-            alert('Flow deleted successfully.');
+           // alert('Flow deleted successfully.');
         } catch (error) {
             console.error('Error deleting flow:', error);
             alert('Failed to delete flow. Check console for details.');

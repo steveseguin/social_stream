@@ -1,16 +1,16 @@
-// Initialize system when DOM is loaded
-document.addEventListener('DOMContentLoaded', async function() {
+async function startFlowSystem() {
+
 	// Create necessary mock functions if they don't exist in this context
 	if (!window.sendMessageToTabs) {
 		window.sendMessageToTabs = function(message, toAll, tabId, respond, fromMain, timeout) {
-			console.log('Mock: Send message to tabs:', message, toAll, tabId, respond, fromMain, timeout);
+			console.warn('Mock: Send message to tabs:', message, toAll, tabId, respond, fromMain, timeout);
 			return true;
 		};
 	}
 	
 	if (!window.sendToDestinations) {
 		window.sendToDestinations = function(data) {
-			console.log('Mock: Send to destinations:', data);
+			console.warn('Mock: Send to destinations:', data);
 			return true;
 		};
 	}
@@ -142,4 +142,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 			`;
 		}
 	});
-});
+}
+// DOM already triggered, so manually start.
+startFlowSystem();
