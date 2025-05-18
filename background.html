@@ -205,7 +205,7 @@
             margin-bottom: 30px;
         }
 		
-		.ssapp .header, .ssapp .keep-open-alert, .ssapp .info-notice {
+		.ssapp #return-to-dashboard, .ssapp .header, .ssapp .keep-open-alert, .ssapp .info-notice {
 			display: none;
 		}
 		
@@ -222,7 +222,7 @@
 			display:none;
 		}
 		
-		.ssapp.action-flow-editor {
+		.ssapp. action-flow-editor {
 			display: none;
 		}
 
@@ -580,10 +580,6 @@
         <div class="header">
             <div class="logo">Social Stream Ninja</div>
             <p><strong>Background Service Dashboard</strong> <span class="badge">Not the main app</span></p>
-			<div class="view-toggle-buttons">
-				<button id="dashboard-btn" class="view-btn active" onclick="showDashboardView()">Dashboard</button>
-				<button id="editor-btn" class="view-btn" onclick="showEditorView()">Flow Editor</button>
-			</div>
         </div>
 
         <div class="keep-open-alert">
@@ -684,8 +680,8 @@
         <div class="footer">
 		
             <div class="support-links">
-				<div class="action-flow-editor ssapp" title="Open the flow editor in a new tab to create custom actions and triggers">
-					<a href="./actions/index.html" target="_blank">📝 Open the Action Flow Editor</a>
+				<div class="action-flow-editor" title="Open the flow editor in a new tab to create custom actions and triggers">
+					<button class="view-btn" id="showEditorViewButton">📝 Open the Action Flow Editor</button>
 				</div>
                 <div class="community-links">
                     <span data-translate="visit-us-at">Visit us at</span> 
@@ -719,8 +715,9 @@
             <div class="editor-title">Event Flow Editor</div>
 			<div style="font-size:77%;max-width:60%;">The Flow Editor lets you create custom and complex triggers and action workflows. Have fun with your stream!</div>
             <div class="editor-actions">
-                <button id="open-test-panel" class="btn">🧪 Test Flow</button>
-            </div>
+				<button id="return-to-dashboard" class="btn">← Return to Dashboard</button>
+				<button id="open-test-panel" class="btn">🧪 Test Flow</button>
+			</div>
         </div>
         
         <div class="editor-body">

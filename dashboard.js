@@ -221,10 +221,7 @@ function showEditorView() {
     
     document.body.style.padding = '0';
     document.body.style.overflow = 'hidden';
-    
-    // Update active button
-    document.getElementById('dashboard-btn').classList.remove('active');
-    document.getElementById('editor-btn').classList.add('active');
+   
 }
 
 function showDashboardView() {
@@ -242,19 +239,49 @@ function showDashboardView() {
         window.testPanel.style.display = 'none';
     }
     
-    // Update active button
-    document.getElementById('dashboard-btn').classList.add('active');
-    document.getElementById('editor-btn').classList.remove('active');
 }
 
+function showEditorView() {
+    document.getElementById("dash").style.display = 'none';
+    document.getElementById("editorstyle").removeAttribute("disabled");
+    
+    document.getElementById("editor").style.opacity = '0';
+    document.getElementById("editor").style.display = 'block';
+    
+    void document.getElementById("editor").offsetWidth;
+    document.getElementById("editor").style.opacity = '1';
+    
+    document.getElementById("dashstyle").setAttribute("disabled", "true");
+    
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden';
+	
+}
+
+function setupReturnButton() {
+    const returnButton = document.getElementById('return-to-dashboard');
+    if (returnButton) {
+        returnButton.addEventListener('click', function() {
+            showDashboardView();
+        });
+    }
+	
+	const showEditorViewButton = document.getElementById('showEditorViewButton');
+    if (showEditorViewButton) {
+        showEditorViewButton.addEventListener('click', function() {
+            showEditorView();
+        });
+    }
+}
 // Main initialization function
 function initDashboard() {
-	if (new URLSearchParams(window.location.search).has('ssapp')) {
-		document.body.classList.add('ssapp');
-	}
-	document.getElementById("editorstyle").setAttribute("disabled", "true");
+    if (new URLSearchParams(window.location.search).has('ssapp')) {
+        document.body.classList.add('ssapp');
+    }
+    document.getElementById("editorstyle").setAttribute("disabled", "true");
     setupConsoleHook();
     setupPeriodicUpdates();
+	setupReturnButton();
 }
 
 if (document.readyState === "complete" || document.readyState === "interactive") {
