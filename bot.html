@@ -2452,22 +2452,22 @@
 						
 						try {
 							base64js = decodeURIComponent(atob(base64js));
+							var externalJavaascript = document.createElement("script");
+							externalJavaascript.type = "text/javascript";
+							externalJavaascript.crossorigin = "anonymous";
+							externalJavaascript.innerHTML = base64js;
+							externalJavaascript.onerror = function() {
+								errorlog("Third-party Javascript failed to load");
+							};
+							externalJavaascript.onload = function() {
+								log("Third-party Javascript loaded via base64");
+							};
+							document.head.appendChild(externalJavaascript);
 						} catch(e) {
 							errorlog("Failed to decode base64 JavaScript:", e);
-							return;
 						}
 						
-						var externalJavaascript = document.createElement("script");
-						externalJavaascript.type = "text/javascript";
-						externalJavaascript.crossorigin = "anonymous";
-						externalJavaascript.innerHTML = base64js;
-						externalJavaascript.onerror = function() {
-							errorlog("Third-party Javascript failed to load");
-						};
-						externalJavaascript.onload = function() {
-							log("Third-party Javascript loaded via base64");
-						};
-						document.head.appendChild(externalJavaascript);
+						
 					} else {
 						console.error("For security/privacy purposes, Javascript B64 injection is only allowed if hosted on file://, github.io, github.com, or if using OBS Studio or Electron.");
 					}
