@@ -208,33 +208,43 @@ function setupConsoleHook() {
 }
 
 function showEditorView() {
-	document.getElementById("dash").style.display = 'none';
-	document.getElementById("editorstyle").removeAttribute("disabled");
-	
-	document.getElementById("editor").style.opacity = '0';
-	document.getElementById("editor").style.display = 'block';
-	
-	void document.getElementById("editor").offsetWidth;
+    document.getElementById("dash").style.display = 'none';
+    document.getElementById("editorstyle").removeAttribute("disabled");
+    
+    document.getElementById("editor").style.opacity = '0';
+    document.getElementById("editor").style.display = 'block';
+    
+    void document.getElementById("editor").offsetWidth;
     document.getElementById("editor").style.opacity = '1';
-	
-	document.getElementById("dashstyle").setAttribute("disabled", "true");
-	
-	document.body.style.padding = '0';
-	document.body.style.overflow = 'hidden';
+    
+    document.getElementById("dashstyle").setAttribute("disabled", "true");
+    
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden';
+    
+    // Update active button
+    document.getElementById('dashboard-btn').classList.remove('active');
+    document.getElementById('editor-btn').classList.add('active');
 }
 
 function showDashboardView() {
-	document.getElementById("editor").style.display = 'none';
-	
-	document.getElementById("dashstyle").removeAttribute("disabled");
-	document.getElementById("dash").style.display = 'block';
-	
-	document.body.style.padding = '20px';
-	document.body.style.overflow = 'auto';
-	
-	// Close test panel if open
-	testOverlay.style.display = 'none';
-	testPanel.style.display = 'none';
+    document.getElementById("editor").style.display = 'none';
+    
+    document.getElementById("dashstyle").removeAttribute("disabled");
+    document.getElementById("dash").style.display = 'block';
+    
+    document.body.style.padding = '20px';
+    document.body.style.overflow = 'auto';
+    
+    // Close test panel if open
+    if (window.testOverlay && window.testPanel) {
+        window.testOverlay.style.display = 'none';
+        window.testPanel.style.display = 'none';
+    }
+    
+    // Update active button
+    document.getElementById('dashboard-btn').classList.add('active');
+    document.getElementById('editor-btn').classList.remove('active');
 }
 
 // Main initialization function

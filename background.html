@@ -218,8 +218,12 @@
 			border-radius: 10px;
 		}
 		
-		.ssapp .action-flow-editor {
-			display: hidden;
+		.ssapp .support-links {
+			display:none;
+		}
+		
+		.ssapp.action-flow-editor {
+			display: none;
 		}
 
         .logo {
@@ -535,6 +539,39 @@
             position: absolute;
         }
 
+		.view-toggle-buttons {
+			display: flex;
+			justify-content: center;
+			margin-top: 15px;
+		}
+
+		.view-btn {
+			padding: 8px 15px;
+			border: 1px solid var(--primary-color);
+			background-color: transparent;
+			color: var(--primary-color);
+			cursor: pointer;
+			font-weight: bold;
+			transition: all 0.3s ease;
+			border-radius: 0;
+		}
+
+		.view-btn:first-child {
+			border-radius: 5px 0 0 5px;
+		}
+
+		.view-btn:last-child {
+			border-radius: 0 5px 5px 0;
+		}
+
+		.view-btn.active {
+			background-color: var(--primary-color);
+			color: white;
+		}
+
+		.view-btn:hover:not(.active) {
+			background-color: rgba(42, 157, 143, 0.1);
+		}
     </style>
 </head>
 <body>
@@ -543,6 +580,10 @@
         <div class="header">
             <div class="logo">Social Stream Ninja</div>
             <p><strong>Background Service Dashboard</strong> <span class="badge">Not the main app</span></p>
+			<div class="view-toggle-buttons">
+				<button id="dashboard-btn" class="view-btn active" onclick="showDashboardView()">Dashboard</button>
+				<button id="editor-btn" class="view-btn" onclick="showEditorView()">Flow Editor</button>
+			</div>
         </div>
 
         <div class="keep-open-alert">
@@ -678,7 +719,7 @@
             <div class="editor-title">Event Flow Editor</div>
 			<div style="font-size:77%;max-width:60%;">The Flow Editor lets you create custom and complex triggers and action workflows. Have fun with your stream!</div>
             <div class="editor-actions">
-                <button id="open-test-panel" class="btn">Test Flow</button>
+                <button id="open-test-panel" class="btn">🧪 Test Flow</button>
             </div>
         </div>
         
@@ -688,8 +729,8 @@
     </div>
 
     <!-- Test Panel -->
-    <div class="test-overlay" id="test-overlay"></div>
-    <div class="test-panel" id="test-panel">
+    <div class="test-overlay" style="display:none;" id="test-overlay"></div>
+    <div class="test-panel" style="display:none;" id="test-panel">
 		<div class="test-panel-header">
 			<h3>Test Flow</h3>
 		</div>
@@ -743,6 +784,17 @@
 			<div id="donation-amount" class="test-group" style="display: none;">
 				<label for="test-donation-amount">Donation Amount:</label>
 				<input type="text" id="test-donation-amount" value="$5.00">
+			</div>
+			
+			<div class="test-options">
+				<label class="test-checkbox">
+					<input type="checkbox" id="test-all-active-flows">
+					Test against all active flows (not just current flow)
+				</label>
+			</div>
+
+			<div class="test-warning" id="unsaved-flow-warning" style="display: none; color: #e76f51; margin: 10px 0;">
+				<strong>Warning:</strong> The current flow has unsaved changes. Test results may not reflect the latest changes.
 			</div>
 			
 			<div class="test-results" id="test-results">

@@ -1022,6 +1022,30 @@ select.property-input {
     flex-shrink: 0; /* Prevent footer from shrinking */
 }
 
+#test-panel {
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Optional: Improve the scrollbar appearance */
+#test-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+#test-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#test-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#test-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 /* Ensure the flow list container allows for scrolling if many flows */
 .flow-list-container {
     /* ... existing styles ... */

@@ -2755,8 +2755,22 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
             // If the value is embedded in the data attribute (like 'scale=0.77'), use the full paramValue
             targetElement.raw = updateURL(paramValue, targetElement.raw);
         } else {
-             // If no value in attribute, check for an associated input.
-             const associatedInput = document.querySelector(`[data-numbersetting${paramNum}='${keyOnly}'], [data-optionparam${paramNum}='${keyOnly}'], [data-textparam${paramNum}='${keyOnly}']`);
+			 // Determine the correct suffix for associated input attributes.
+			// If paramNum is '1', no suffix is used (e.g., "data-numbersetting").
+			// Otherwise, the paramNum itself is the suffix (e.g., "data-numbersetting2").
+			const numSuffix = paramNum === '1' ? '' : paramNum;
+
+			const numberSettingSelector = `[data-numbersetting${numSuffix}='${keyOnly}']`;
+			const optionSettingSelector = `[data-optionparam${numSuffix}='${keyOnly}']`;
+			const textSettingSelector = `[data-textparam${numSuffix}='${keyOnly}']`;
+
+			// Query for each type and take the first one found.
+			const associatedNumberInput = document.querySelector(numberSettingSelector);
+			const associatedOptionInput = document.querySelector(optionSettingSelector);
+			const associatedTextInput = document.querySelector(textSettingSelector);
+
+			const associatedInput = associatedNumberInput || associatedOptionInput || associatedTextInput;
+
 
              if (associatedInput && associatedInput.value !== undefined && associatedInput.value !== '') {
                   targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
