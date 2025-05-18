@@ -73,7 +73,7 @@ class MessageStoreDB {
         const messageData = { 
             ...cloned,
             timestamp: now,
-            expiresAt: settings?.unlimiteDB ? null : now + (this.daysToKeep * MS_PER_DAY)
+            expiresAt: now + (this.daysToKeep * MS_PER_DAY)
         };
 
         return new Promise((resolve, reject) => {
@@ -634,7 +634,7 @@ class MessageStoreMigration {
             membership: oldMessage.membership || oldMessage.hasMembership || '',
             type: oldMessage.type || 'user',
             timestamp: timestamp,
-            expiresAt: settings?.unlimiteDB ? null : now + thirtyDays,
+            expiresAt: now + thirtyDays,
             backgroundColor: oldMessage.backgroundColor || '',
             chatbadges: oldMessage.chatbadges || '',
             event: oldMessage.event || '',
