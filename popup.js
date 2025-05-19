@@ -2545,7 +2545,7 @@ async function checkVersion() {
         }
         
         // Try to fetch the latest manifest
-        fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json')
+        fetch('https://socialstream.ninja/manifest.json')
         .then(response => {
             if (!response.ok) {
                 throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
