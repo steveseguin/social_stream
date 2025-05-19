@@ -221,33 +221,55 @@
 			overflow-y: auto;
 			margin-bottom: 10px;
 		}
+		.header-avatar {
+			width: 32px;
+			height: 32px;
+			border-radius: 50%;
+			margin-right: 8px;
+		}
+		.user-info {
+			display: flex;
+			align-items: center;
+		}
+		.user-info-text {
+			margin-right: 12px;
+		}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="main-content">
             <div class="auth text-center">
-                <a id="auth-link" class="auth-button">Sign in to YouTube</a>
-            </div>
+				<a id="auth-link" class="auth-button">Sign in to YouTube</a>
+				<div style="margin-top: 15px; font-size: 13px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+					<p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
+					<p>Please note: Events related to subscriptions, memberships, and followers are only available for your own channel. Chat functionality will still work across most public channels.</p>
+				</div>
+			</div>
             
             <div class="hidden socket">
                 <div class="channel-header">
-                    <div class="header-info">
-                        <div class="header-item">
-                            <span>User:</span>
-                            <span id="current-user">Not signed in</span>
-                        </div>
-                        <div class="header-item">
-                            <span>Target:</span> <span id="current-channel">No target</span>
-                        </div>
-                        <div class="channel-input-container">
+					<div class="header-info">
+						<div class="user-info">
+							<div id="user-avatar"></div>
+							<div class="user-info-text">
+								<div class="header-item">
+									<span>User:</span>
+									<span id="current-user">Not signed in</span>
+								</div>
+							</div>
+						</div>
+						<div class="header-item">
+							<span>Target:</span> <span id="current-channel">No target</span>
+						</div>
+						<div class="channel-input-container">
 							<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
 							<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
 							<button id="connect-button" class="connect-button">Connect</button>
 						</div>
-                    </div>
-                    <button id="sign-out-button" class="sign-out-button">Sign Out</button>
-                </div>
+					</div>
+					<button id="sign-out-button" class="sign-out-button">Sign Out</button>
+				</div>
 
                 <div class="stats-container">
                     <h3>Channel Statistics</h3>
@@ -435,51 +457,90 @@ try {
 			showAuthButton();
 		}
 	}
-	async function verifyAndUseToken(token) {
+	function verifyAndUseToken(token) {
 		try {
-			const userInfo = await getUserInfo(token);
-			if (userInfo && userInfo.items && userInfo.items.length > 0) {
-				username = userInfo.items[0].snippet.title;
-				
-				// Check for post-auth redirect parameters
-				const redirectVideoId = sessionStorage.getItem("youtubeRedirectVideoId");
-				const redirectChannel = sessionStorage.getItem("youtubeRedirectChannel");
-				
-				if (redirectVideoId) {
-					videoId = redirectVideoId;
-					channel = '';
-					connect(videoId);
-					sessionStorage.removeItem("youtubeRedirectVideoId");
-					sessionStorage.removeItem("youtubeRedirectChannel");
-				} else if (redirectChannel) {
-					channel = redirectChannel;
-					videoId = '';
-					document.getElementById('channel-input').value = channel;
-					connect();
-					sessionStorage.removeItem("youtubeRedirectVideoId");
-					sessionStorage.removeItem("youtubeRedirectChannel");
-				} else if (videoId) {
-					connect(videoId);
-				} else if (channel) {
-					document.getElementById('channel-input').value = channel;
-					connect();
+			getUserInfo(token).then(userInfo => {
+				if (userInfo && userInfo.items && userInfo.items.length > 0) {
+					const userItem = userInfo.items[0];
+					username = userItem.snippet.title;
+					
+					// Add user avatar to the header
+					if (userItem.snippet.thumbnails && userItem.snippet.thumbnails.default) {
+						const avatarContainer = document.getElementById('user-avatar');
+						if (avatarContainer) {
+							avatarContainer.innerHTML = '';
+							const userImage = document.createElement('img');
+							userImage.src = userItem.snippet.thumbnails.default.url;
+							userImage.className = 'header-avatar';
+							avatarContainer.appendChild(userImage);
+						}
+					}
+					
+					// Add profile image to header
+					if (userItem.snippet.thumbnails && userItem.snippet.thumbnails.default) {
+						const userImage = document.createElement('img');
+						userImage.src = userItem.snippet.thumbnails.default.url;
+						userImage.style.width = '32px';
+						userImage.style.height = '32px';
+						userImage.style.borderRadius = '50%';
+						userImage.style.marginRight = '8px';
+						
+						const signOutButton = document.getElementById('sign-out-button');
+						signOutButton.parentNode.insertBefore(userImage, signOutButton);
+					}
+					
+					// Check for post-auth redirect parameters
+					const redirectVideoId = sessionStorage.getItem("youtubeRedirectVideoId");
+					const redirectChannel = sessionStorage.getItem("youtubeRedirectChannel");
+					
+					if (redirectVideoId) {
+						videoId = redirectVideoId;
+						channel = '';
+						connect(videoId);
+						sessionStorage.removeItem("youtubeRedirectVideoId");
+						sessionStorage.removeItem("youtubeRedirectChannel");
+					} else if (redirectChannel) {
+						channel = redirectChannel;
+						videoId = '';
+						document.getElementById('channel-input').value = channel;
+						connect();
+						sessionStorage.removeItem("youtubeRedirectVideoId");
+						sessionStorage.removeItem("youtubeRedirectChannel");
+					} else if (videoId) {
+						connect(videoId);
+					} else if (channel) {
+						document.getElementById('channel-input').value = channel;
+						connect();
+					} else {
+						updateHeaderInfo(username, 'No target specified');
+						const channelInputContainer = document.querySelector('.channel-input-container');
+						if (channelInputContainer) channelInputContainer.classList.remove('hidden');
+						
+						// Show welcome message instead of error when no target is specified
+						document.getElementById('textarea').innerHTML = '<div>Welcome! Please enter a YouTube channel name or video ID to connect.</div>';
+						
+						// Clear any previous error stats
+						document.getElementById('viewer-count').textContent = '-';
+						document.getElementById('subscriber-count').textContent = '-';
+						document.getElementById('likes-count').textContent = '-';
+					}
+					showSocketInterface();
 				} else {
-					updateHeaderInfo(username, 'No target specified');
-					const channelInputContainer = document.querySelector('.channel-input-container');
-					if (channelInputContainer) channelInputContainer.classList.remove('hidden');
+					refreshToken();
 				}
-				showSocketInterface();
-			} else {
-				await refreshToken();
-			}
+			}).catch(error => {
+				if (error.message && error.message.includes('401')) {
+					refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+				} else {
+					console.error('Error validating token:', error);
+					clearStoredToken();
+					showAuthButton();
+				}
+			});
 		} catch (error) {
-			if (error.message && error.message.includes('401')) {
-				await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
-			} else {
-				console.error('Error validating token:', error);
-				clearStoredToken();
-				showAuthButton();
-			}
+			console.error('Error in verifyAndUseToken:', error);
+			clearStoredToken();
+			showAuthButton();
 		}
 	}
 	function parseFragment(hash) {
@@ -948,62 +1009,98 @@ try {
 		}
 	}
     async function connect(directVideoIdParam = null) {
-        clearPolling();
-        const channelInputContainer = document.querySelector('.channel-input-container');
-        const token = getStoredToken();
-        if (!token) {
-            console.error('No token available for connect');
-            showAuthButton();
-            return;
-        }
-        const videoIdToUse = directVideoIdParam || videoId;
-        const channelToUse = channel;
-        if (!videoIdToUse && !channelToUse) {
-            updateHeaderInfo(username, 'No target specified');
-            if (channelInputContainer) channelInputContainer.classList.remove('hidden');
-            document.getElementById('viewer-count').textContent = '-';
-            document.getElementById('subscriber-count').textContent = '-';
-            document.getElementById('likes-count').textContent = '-';
-            return;
-        }
-        if (channelInputContainer) channelInputContainer.classList.add('hidden');
-        document.getElementById('textarea').innerHTML = '<div>Attempting to connect...</div>';
-        try {
-            let streamInfoToUse;
-            let channelInfoForHeaderAndStats;
-            let effectiveChannelIdToUse;
-            let streamTitleToUse;
-            let channelDisplayNameToUse;
-            if (videoIdToUse) {
-                const videoDetailsResponse = await fetchWithTimeout(
-                    `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdToUse}`,
-                    5000, { 'Authorization': `Bearer ${token}` }
-                );
-                if (!videoDetailsResponse.ok) throw new Error(`Failed to fetch video details for ${videoIdToUse}: ${videoDetailsResponse.status}`);
-                const videoDetailsData = await videoDetailsResponse.json();
-                if (!videoDetailsData.items || videoDetailsData.items.length === 0) {
-                    throw new Error(`Video not found or not accessible: ${videoIdToUse}`);
-                }
-                streamInfoToUse = videoDetailsData.items[0];
-                if (streamInfoToUse.snippet.liveBroadcastContent === 'none' || (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.actualEndTime)) {
-                    throw new Error(`Video is not live or has ended: ${streamInfoToUse.snippet.title}`);
-                }
-                if (streamInfoToUse.snippet.liveBroadcastContent === 'upcoming' && (!streamInfoToUse.liveStreamingDetails || !streamInfoToUse.liveStreamingDetails.activeLiveChatId)) {
-                    liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
-                    if (!liveChatId) {
-                        console.log(`Stream "${streamInfoToUse.snippet.title}" is upcoming. Chat may not be available yet.`);
-                    }
-                } else if (!streamInfoToUse.liveStreamingDetails || !streamInfoToUse.liveStreamingDetails.activeLiveChatId) {
-                    throw new Error(`Video is not live or chat is not enabled: ${streamInfoToUse.snippet.title}`);
-                }
-                liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
-                effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
-                streamTitleToUse = streamInfoToUse.snippet.title;
-                channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
-                channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
-                updateHeaderInfo(username, channelDisplayNameToUse + (liveChatId ? ` (Video: ${streamTitleToUse.substring(0,20)}...)` : ` (Upcoming: ${streamTitleToUse.substring(0,20)}...)`));
-                currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
-            } else if (channelToUse) {
+		clearPolling();
+		const channelInputContainer = document.querySelector('.channel-input-container');
+		const token = getStoredToken();
+		if (!token) {
+			console.error('No token available for connect');
+			showAuthButton();
+			return;
+		}
+		const videoIdToUse = directVideoIdParam || videoId;
+		const channelToUse = channel;
+		if (!videoIdToUse && !channelToUse) {
+			updateHeaderInfo(username, 'No target specified');
+			if (channelInputContainer) channelInputContainer.classList.remove('hidden');
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			// Add a helpful message instead of an error
+			document.getElementById('textarea').innerHTML = '<div>Please enter a YouTube channel name or video ID to connect.</div>';
+			return;
+		}
+		if (channelInputContainer) channelInputContainer.classList.add('hidden');
+		document.getElementById('textarea').innerHTML = '<div>Attempting to connect...</div>';
+		try {
+			let streamInfoToUse;
+			let channelInfoForHeaderAndStats;
+			let effectiveChannelIdToUse;
+			let streamTitleToUse;
+			let channelDisplayNameToUse;
+			if (videoIdToUse) {
+				const videoDetailsResponse = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdToUse}`,
+					5000, { 'Authorization': `Bearer ${token}` }
+				);
+				if (!videoDetailsResponse.ok) throw new Error(`Failed to fetch video details for ${videoIdToUse}: ${videoDetailsResponse.status}`);
+				const videoDetailsData = await videoDetailsResponse.json();
+				if (!videoDetailsData.items || videoDetailsData.items.length === 0) {
+					throw new Error(`Video not found or not accessible: ${videoIdToUse}`);
+				}
+				streamInfoToUse = videoDetailsData.items[0];
+				// For non-live videos, show stats but make it clear it's not live
+				const isVideoLive = streamInfoToUse.snippet.liveBroadcastContent === 'live';
+				const isVideoUpcoming = streamInfoToUse.snippet.liveBroadcastContent === 'upcoming';
+				const isVideoEnded = (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.actualEndTime) || 
+									 streamInfoToUse.snippet.liveBroadcastContent === 'none';
+				
+				if (isVideoEnded) {
+					liveChatId = null;
+					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
+					streamTitleToUse = streamInfoToUse.snippet.title;
+					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
+					updateHeaderInfo(username, `${channelDisplayNameToUse} (Video: ${streamTitleToUse.substring(0,20)}...)`);
+					document.getElementById('textarea').innerHTML = `<div>This video is not currently live. Showing stats for: ${streamTitleToUse}</div>`;
+					if (streamInfoToUse.statistics) {
+						document.getElementById('viewer-count').textContent = streamInfoToUse.statistics.viewCount || '-';
+						document.getElementById('likes-count').textContent = streamInfoToUse.statistics.likeCount || '-';
+					}
+					
+					// Get subscriber count for the channel
+					if (channelInfoForHeaderAndStats && channelInfoForHeaderAndStats.statistics) {
+						updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
+					} else if (effectiveChannelIdToUse) {
+						await getSubscriberCount(effectiveChannelIdToUse);
+					}
+					
+					currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+					return; // Return early as we can't connect to chat for a non-live video
+				} else if (isVideoUpcoming) {
+					liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
+					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
+					streamTitleToUse = streamInfoToUse.snippet.title;
+					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
+					updateHeaderInfo(username, `${channelDisplayNameToUse} (Upcoming: ${streamTitleToUse.substring(0,20)}...)`);
+					
+					if (!liveChatId) {
+						document.getElementById('textarea').innerHTML = `<div>This is an upcoming stream. Chat may not be available yet.</div>`;
+						document.getElementById('viewer-count').textContent = 'N/A';
+						document.getElementById('likes-count').textContent = streamInfoToUse.statistics?.likeCount || '-';
+					}
+				} else if (!streamInfoToUse.liveStreamingDetails || !streamInfoToUse.liveStreamingDetails.activeLiveChatId) {
+					throw new Error(`Video is not live or chat is not enabled: ${streamInfoToUse.snippet.title}`);
+				} else {
+					liveChatId = streamInfoToUse.liveStreamingDetails.activeLiveChatId;
+					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
+					streamTitleToUse = streamInfoToUse.snippet.title;
+					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
+					updateHeaderInfo(username, `${channelDisplayNameToUse} (Live: ${streamTitleToUse.substring(0,20)}...)`);
+				}
+				currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+			} else if (channelToUse) {
                 channelInfoForHeaderAndStats = await getChannelInfo(channelToUse);
                 if (!channelInfoForHeaderAndStats) {
                     throw new Error(`Channel not found: ${channelToUse}`);
