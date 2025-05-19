@@ -5082,6 +5082,8 @@ function setupSocket() {
 			if (data.target && (data.target==='null')){
 				data.target = "";
 			}
+			
+			console.log(data.kofi);
 
 			if (data.action && data.action === "sendChat" && data.value) {
 				var msg = {};
@@ -5178,6 +5180,329 @@ function setupSocket() {
 				} catch (e) {
 					console.error(e);
 				}
+			} else if ("stripe" in data) {
+				try {
+					if (data.stripe.type !== "checkout.session.completed") {
+						return false;
+					}
+					
+					console.log(data.stripe);
+
+					var message = {};
+					message.chatname = "";
+					message.chatmessage = "";
+					
+					var foundCustomField = false;
+
+					data.stripe.data.object.custom_fields.forEach(xx => {
+						if (xx.key == "displayname") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (typeof xx.key === 'string' && xx.key.toLowerCase() == "pseudo") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (xx.key == "tonpseudo") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (xx.key == "username") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (xx.key == "message") {
+							message.chatmessage = xx.text.value;
+							
+						} else if (xx.key == "messagetchat") {
+							message.chatmessage = xx.text.value;
+							
+						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "display name") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "name") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (!message.chatmessage && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "message") {
+							message.chatmessage = xx.text.value;
+							
+						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "pseudo") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (!message.chatname && xx.key && typeof xx.key === 'string' && xx.key.toLowerCase() == "name") {
+							foundCustomField = true;
+							if (xx.text && xx.text.value && typeof xx.text.value === 'string' ){
+								message.chatname = xx.text.value;
+							}
+						}
+					});
+					
+					if (!foundCustomField){
+						console.warn("No custom name / custom display-name field found. We will skip this incoming stripe api webhook");
+						return;
+					}
+
+					var currency = "";
+
+					try {
+						currency = data.stripe.data.object.currency.toLowerCase() || "";
+					} catch (e) {
+						console.error(e);
+					}
+
+					var symbol = {};
+					if (currency && currency in Currencies) {
+						symbol = Currencies[currency];
+						if (symbol.d) {
+							data.stripe.data.object.amount_total = parseFloat(data.stripe.data.object.amount_total) / Math.pow(10, parseInt(symbol.d));
+						}
+					}
+
+					if (data.stripe.data.object.amount_total) {
+						try {
+							if (symbol.s && (data.stripe.data.object.currency.toUpperCase() == "EUR")){
+								message.hasDonation = (symbol.s || "") + (data.stripe.data.object.amount_total || "");
+							} else {
+								message.hasDonation = (symbol.s || "") + (data.stripe.data.object.amount_total || "") + " " + (data.stripe.data.object.currency.toUpperCase() || "");
+							}
+							message.hasDonation = message.hasDonation.trim();
+						} catch (e) {
+							console.error(e);
+						}
+					}
+					message.id = parseInt(Math.random() * 100000 + 1000000);
+					message.chatbadges = "";
+					message.backgroundColor = "";
+					message.textColor = "";
+					message.nameColor = "";
+					message.chatimg = "";
+					message.membership = "";
+					message.contentimg = "";
+					message.type = "stripe";
+
+					data = message; // replace inbound stripe message with new message
+					
+					try {
+						data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+						
+						if (data){
+							try {
+								data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+							} catch (e) {
+								console.warn(e);
+							}
+							
+							if (data) {
+								resp = await sendToDestinations(data);
+							}
+						}
+					} catch (e) {
+						console.error(e);
+					}
+					
+				} catch (e) {
+					console.error(e);
+					return;
+				}
+			} else if ("kofi" in data) {
+				try {
+					
+					if (!data.kofi.data) {
+						return false;
+					}
+					try {
+						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
+					} catch (e) {
+						console.error(e);
+						return;
+					}
+
+					if (kofi.type !== "Donation") {
+						return false;
+					} else if (!kofi.is_public) {
+						return false;
+					}
+
+					var message = {};
+					message.chatname = decodeURIComponent(kofi.from_name) || "Anonymous";
+					message.chatmessage = decodeURIComponent(kofi.message);
+
+					var currency = "";
+
+					try {
+						currency = kofi.currency.toLowerCase() || "";
+					} catch (e) {}
+
+					var symbol = {};
+					if (currency && currency in Currencies) {
+						symbol = Currencies[currency];
+					}
+
+					if (kofi.amount) {
+						message.hasDonation = (symbol.s || "") + (kofi.amount || "") + " " + (kofi.currency.toUpperCase() || "");
+						message.hasDonation = message.hasDonation.trim();
+					}
+					message.id = parseInt(Math.random() * 100000 + 1000000);
+					message.chatbadges = "";
+					message.backgroundColor = "";
+					message.textColor = "";
+					message.nameColor = "";
+					message.chatimg = "";
+					message.membership = "";
+					message.contentimg = "";
+					message.type = "kofi";
+
+					data = message; // replace inbound stripe message with new message
+					
+					try {
+						data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+						
+						if (data){
+							try {
+								data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+							} catch (e) {
+								console.warn(e);
+							}
+							
+							if (data) {
+								resp = await sendToDestinations(data);
+							}
+						}
+					} catch (e) {
+						console.error(e);
+					}
+				} catch (e) {
+					console.error(e);
+					return;
+				}
+
+			
+			} else if ("bmac" in data) { // Buy Me a Coffe New Membership and Donation detection 
+				try {
+					if (!data.bmac) {
+						return false;
+					}
+					else {
+						var bmac = data.bmac; 
+						var message = {};
+						if (bmac.type === "membership.started") {
+							message.chatname = bmac.data.supporter_name || "Anonymous"; 
+							message.chatmessage = bmac.data.support_note.trim(); 
+							//We use the donation badge from Kofi to feature the membership level name
+							message.hasDonation = bmac.data.membership_level_name; 
+					
+						}
+						if (bmac.type === "donation.created") {
+							var currency = "";
+							try {
+								currency = kofi.currency.toLowerCase() || "";
+							} catch (e) {}
+
+							var symbol = {};
+							if (currency && currency in Currencies) {
+								symbol = Currencies[currency];
+							}		
+							message.chatmessage = (bmac.data.message + " - " + "<em>" + bmac.data.support_note + "</em>").trim();
+							message.hasDonation = (symbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
+							message.hasDonation = message.hasDonation.trim();			
+						}
+						message.contentimg = "";
+						message.id = parseInt(Math.random() * 100000 + 1000000);
+						message.chatbadges = "";
+						message.backgroundColor = "";
+						message.textColor = "";
+						message.nameColor = "";
+						message.chatimg = "";
+						message.membership = "";
+						message.type = "bmac";
+						data = message; // replace inbound stripe message with new message
+					
+						try {
+							data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+							
+							if (data){
+								try {
+									data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+								} catch (e) {
+									console.warn(e);
+								}
+								
+								if (data) {
+									resp = await sendToDestinations(data);
+								}
+							}
+						} catch (e) {
+							console.error(e);
+						}
+
+					} 
+				} catch (e) {
+					return;
+				}	
+			} else if ("fourthwall" in data) { // Dorthwall
+			  try {
+				if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
+				  return false;
+				}
+				
+				const fourthwallData = data.fourthwall.data;
+				
+				var message = {};
+				message.chatname = fourthwallData.username || 
+								   (fourthwallData.billing?.address?.name || "Anonymous");
+				message.chatmessage = fourthwallData.message || "";
+				
+				var currency = "";
+				try {
+				  currency = fourthwallData.amounts.total.currency.toLowerCase() || "";
+				} catch (e) {
+				  console.error(e);
+				}
+				
+				var symbol = {};
+				if (currency && currency in Currencies) {
+				  symbol = Currencies[currency];
+				}
+				
+				if (fourthwallData.amounts && fourthwallData.amounts.total) {
+				  message.hasDonation = (symbol.s || "") + 
+									   (fourthwallData.amounts.total.value || "") + 
+									   " " + (fourthwallData.amounts.total.currency || "");
+				  message.hasDonation = message.hasDonation.trim();
+				}
+				
+				// Add product info to the subtitle
+				if (fourthwallData.offers && fourthwallData.offers.length) {
+				  let productInfo = [];
+				  fourthwallData.offers.forEach(offer => {
+					if (offer.name && offer.variant && offer.variant.quantity) {
+					  productInfo.push(`${offer.variant.quantity}× ${offer.name}`);
+					}
+				  });
+				  
+				  if (productInfo.length) {
+					message.subtitle = productInfo.join(", ");
+				  }
+				}
+				
+				message.id = parseInt(Math.random() * 100000 + 1000000);
+				message.chatbadges = "";
+				message.backgroundColor = "";
+				message.textColor = "";
+				message.nameColor = "";
+				message.chatimg = "";
+				message.membership = "";
+				message.contentimg = "";
+				message.type = "fourthwall";
+				
+				data = message; // replace inbound fourthwall message with new message
+			  } catch (e) {
+				console.error(e);
+				return;
+			  }
 			}
 
 			if (typeof resp == "object") {

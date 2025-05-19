@@ -8,8 +8,8 @@
 		<link rel="icon" href="./favicon.ico" />
 		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
 		<meta name="robots" content="noindex">
-		<script src="currency.js"></script>
-		<script src="./libs/objects.js"></script>
+		<script type="text/javascript" src="currency.js"></script>
+		<script type="text/javascript" src="./libs/objects.js"></script>
 
 		<style>
 			:root {
@@ -3754,7 +3754,9 @@
 			if (urlParams.has("showvipbadge")) {
 				giveVIPBadge = true;
 			}
-
+			
+			const urlVersion = urlParams.get('v') || false;
+			
 			var openChatAutomatically = false;
 			if (urlParams.has("openchat")) {
 				openChatAutomatically = true;
@@ -5200,7 +5202,7 @@
 
 			var activeChatDestinations = new Set();
 
-			var Currencies = { usd: { d: 2, s: "$" }, cad: { d: 2, s: "$" }, eur: { d: 2, s: "€" }, aed: { d: 2, s: "د.إ.‏" }, afn: { d: 0, s: "؋" }, all: { d: 0, s: "Lek" }, amd: { d: 0, s: "դր." }, ars: { d: 2, s: "$" }, aud: { d: 2, s: "$" }, azn: { d: 2, s: "ман." }, bam: { d: 2, s: "KM" }, bdt: { d: 2, s: "৳" }, bgn: { d: 2, s: "лв." }, bhd: { d: 3, s: "د.ب.‏" }, bif: { d: 0, s: "FBu" }, bnd: { d: 2, s: "$" }, bob: { d: 2, s: "Bs" }, brl: { d: 2, s: "R$" }, bwp: { d: 2, s: "P" }, byn: { d: 2, s: "руб." }, bzd: { d: 2, s: "$" }, cdf: { d: 2, s: "FrCD" }, chf: { d: 2, s: "CHF" }, clp: { d: 0, s: "$" }, cny: { d: 2, s: "CN¥" }, cop: { d: 0, s: "$" }, crc: { d: 0, s: "₡" }, cve: { d: 2, s: "CV$" }, czk: { d: 2, s: "Kč" }, djf: { d: 0, s: "Fdj" }, dkk: { d: 2, s: "kr" }, dop: { d: 2, s: "RD$" }, dzd: { d: 2, s: "د.ج.‏" }, eek: { d: 2, s: "kr" }, egp: { d: 2, s: "ج.م.‏" }, ern: { d: 2, s: "Nfk" }, etb: { d: 2, s: "Br" }, gbp: { d: 2, s: "£" }, gel: { d: 2, s: "GEL" }, ghs: { d: 2, s: "GH₵" }, gnf: { d: 0, s: "FG" }, gtq: { d: 2, s: "Q" }, hkd: { d: 2, s: "$" }, hnl: { d: 2, s: "L" }, hrk: { d: 2, s: "kn" }, huf: { d: 0, s: "Ft" }, idr: { d: 0, s: "Rp" }, ils: { d: 2, s: "₪" }, inr: { d: 2, s: "টকা" }, iqd: { d: 0, s: "د.ع.‏" }, irr: { d: 0, s: "﷼" }, isk: { d: 0, s: "kr" }, jmd: { d: 2, s: "$" }, jod: { d: 3, s: "د.أ.‏" }, jpy: { d: 0, s: "￥" }, kes: { d: 2, s: "Ksh" }, khr: { d: 2, s: "៛" }, kmf: { d: 0, s: "FC" }, krw: { d: 0, s: "₩" }, kwd: { d: 3, s: "د.ك.‏" }, kzt: { d: 2, s: "тңг." }, lbp: { d: 0, s: "ل.ل.‏" }, lkr: { d: 2, s: "SL Re" }, ltl: { d: 2, s: "Lt" }, lvl: { d: 2, s: "Ls" }, lyd: { d: 3, s: "د.ل.‏" }, mad: { d: 2, s: "د.م.‏" }, mdl: { d: 2, s: "MDL" }, mga: { d: 0, s: "MGA" }, mkd: { d: 2, s: "MKD" }, mmk: { d: 0, s: "K" }, mop: { d: 2, s: "MOP$" }, mur: { d: 0, s: "MURs" }, mxn: { d: 2, s: "$" }, myr: { d: 2, s: "RM" }, mzn: { d: 2, s: "MTn" }, nad: { d: 2, s: "N$" }, ngn: { d: 2, s: "₦" }, nio: { d: 2, s: "C$" }, nok: { d: 2, s: "kr" }, npr: { d: 2, s: "नेरू" }, nzd: { d: 2, s: "$" }, omr: { d: 3, s: "ر.ع.‏" }, pab: { d: 2, s: "B/." }, pen: { d: 2, s: "S/." }, php: { d: 2, s: "₱" }, pkr: { d: 0, s: "₨" }, pln: { d: 2, s: "zł" }, pyg: { d: 0, s: "₲" }, qar: { d: 2, s: "ر.ق.‏" }, ron: { d: 2, s: "RON" }, rsd: { d: 0, s: "дин." }, rub: { d: 2, s: "₽." }, rwf: { d: 0, s: "FR" }, sar: { d: 2, s: "ر.س.‏" }, sdg: { d: 2, s: "SDG" }, sek: { d: 2, s: "kr" }, sgd: { d: 2, s: "$" }, sos: { d: 0, s: "Ssh" }, syp: { d: 0, s: "ل.س.‏" }, thb: { d: 2, s: "฿" }, tnd: { d: 3, s: "د.ت.‏" }, top: { d: 2, s: "T$" }, try: { d: 2, s: "TL" }, ttd: { d: 2, s: "$" }, twd: { d: 2, s: "NT$" }, tzs: { d: 0, s: "TSh" }, uah: { d: 2, s: "₴" }, ugx: { d: 0, s: "USh" }, uyu: { d: 2, s: "$" }, uzs: { d: 0, s: "UZS" }, vef: { d: 2, s: "Bs.F." }, vnd: { d: 0, s: "₫" }, xaf: { d: 0, s: "FCFA" }, xof: { d: 0, s: "CFA" }, yer: { d: 0, s: "ر.ي.‏" }, zar: { d: 2, s: "R" }, zmk: { d: 0, s: "ZK" }, zwl: { d: 0, s: "ZWL$" } };
+			
 
 			function processInput(data, force=false) {
 				if ("mid" in data) {
@@ -5724,6 +5726,11 @@
 							return false;
 						}
 						
+						if (comparison < 0) {
+							console.log(`URL version ${urlVersion} is older than app version ${urlVersion}`);
+							return false;
+						}
+						
 						console.log(data.stripe);
 
 						var message = {};
@@ -5831,6 +5838,13 @@
 						if (!data.kofi.data) {
 							return false;
 						}
+						
+						const comparison = compareVersions(urlVersion, "3.21.9");
+						if (comparison < 0) {
+							console.log(`URL version ${urlVersion} is older than app version ${urlVersion}`);
+							return false;
+						}
+						
 						try {
 							var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
 						} catch (e) {
@@ -5875,10 +5889,9 @@
 
 						data = message; // replace inbound stripe message with new message
 					} catch (e) {
+						errorlog(e);
 						return;
 					}
-
-				
 				}
 				// Buy Me a Coffe New Membership and Donation detection 
 				else if ("bmac" in data) {
@@ -5887,6 +5900,13 @@
 							return false;
 						}
 						else {
+							
+							const comparison = compareVersions(urlVersion, "3.21.9");
+							if (comparison < 0) {
+								console.log(`URL version ${urlVersion} is older than app version ${urlVersion}`);
+								return false;
+							}
+							
 							var bmac = data.bmac; 
 							var message = {};
 							if (bmac.type === "membership.started") {
@@ -5923,6 +5943,7 @@
 
 					} 
 					} catch (e) {
+						errorlog(e);
 						return;
 					}	
 				}
@@ -5985,7 +6006,7 @@
 					
 					data = message; // replace inbound fourthwall message with new message
 				  } catch (e) {
-					console.error(e);
+					errorlog(e);
 					return;
 				  }
 				}

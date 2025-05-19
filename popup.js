@@ -1859,6 +1859,16 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     console.error("Error getting custom params:", e);
   }
   
+  let versionParam = "";
+  try {
+    const manifestData = chrome.runtime.getManifest();
+    if (manifestData && manifestData.version) {
+      versionParam = `&v=${manifestData.version}`;
+    }
+  } catch (e) {
+    console.error("Error getting version from manifest:", e);
+  }
+  
   // Configuration array with all page details
   const pages = [
     { id: "dock", path: "dock.html" },
@@ -1877,46 +1887,34 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "eventsdashboard", path: "events.html" },
-	{ id: "flowactions", path: "actions.html" }
+	{ id: "flowactions", path: "actions.html" },
+	{ id: "custom-gif-commands", path: "gif.html" }
   ];
-  
-  // Handle special case for custom-gif-commands
-  const customGifConfig = { id: "custom-gif-commands", path: "gif.html" };
   
   // Process all standard pages
   pages.forEach(page => {
     const linkPath = page.linkPath || page.path;
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}`;
+    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${versionParam}`;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
       element.innerHTML = hideLinks 
         ? "Click to open link" 
-        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}${customParams}</a>`;
+        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}${customParams}${versionParam}</a>`;
       element.raw = fullURL;
     }
   });
   
-  // Handle the custom gif commands separately
-  const gifElement = document.getElementById(customGifConfig.id);
-  if (gifElement) {
-    const fullURL = `${baseURL}${customGifConfig.path}?session=${streamID}${password}${customParams}`;
-    gifElement.innerHTML = hideLinks 
-      ? "Click to open link" 
-      : `<a target='_blank' id='${customGifConfig.id}-link' href='${fullURL}'>${fullURL}</a>`;
-    gifElement.raw = fullURL;
-  }
-  
   // Update sample overlay and remote control URLs too
   const sampleOverlay = document.getElementById("sampleoverlay");
   if (sampleOverlay) {
-    sampleOverlay.href = `${baseURL}sampleoverlay.html?session=${streamID}${password}${customParams}`;
+    sampleOverlay.href = `${baseURL}sampleoverlay.html?session=${streamID}${password}${customParams}${versionParam}`;
   }
   
   const remoteControlUrl = document.getElementById("remote_control_url");
   if (remoteControlUrl) {
-    remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}`;
+    remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
   }
 }
 
@@ -2294,7 +2292,7 @@ function update(response, sync = true) {
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
-                    'battlelink', 'custom-gif-commands-link', 'creditslink', 'giveawaylink'
+                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink'
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -3466,74 +3464,67 @@ function validateRoomId(roomId) {
 }
 
 function refreshLinks(){
-	
-	let hideLinks = false;
-	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
-		if (x.checked){
-			hideLinks = true;
-		}
-	});
-	
-	if (hideLinks){
-		document.body.classList.add("hidelinks");
-	} else {
-		document.body.classList.remove("hidelinks");
-	}
-	try {
-	    const linkIdToDivIdMap = {
-			'docklink': 'dock',
-			'overlaylink': 'overlay',
-			'emoteswalllink': 'emoteswall',
-			'hypemeterlink': 'hypemeter',
-			'waitlistlink': 'waitlist',
-			'tipjarlink': 'tipjar',
-			'tickerlink': 'ticker',
-			'wordcloudlink': 'wordcloud',
-			'polllink': 'poll',
-			'flowactionslink': 'flowactions',
-			'battlelink': 'battle',
-			'chatbotlink': 'chatbot',
-			'cohostlink': 'cohost',
-			'giveawaylink': 'giveaway',
-			'creditslink': 'credits',
-			'privatechatbotlink': 'privatechatbot',
-			'eventsdashboardlink': 'eventsdashboard',
-			'custom-gif-commands-link': 'custom-gif-commands'
-	    };
-	    const linkIdsToClean = Object.keys(linkIdToDivIdMap);
+  let hideLinks = false;
+  document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+    if (x.checked){
+      hideLinks = true;
+    }
+  });
+  
+  if (hideLinks){
+    document.body.classList.add("hidelinks");
+  } else {
+    document.body.classList.remove("hidelinks");
+  }
+  try {
+    const linkIdToDivIdMap = {
+      'docklink': 'dock',
+      'overlaylink': 'overlay',
+      'emoteswalllink': 'emoteswall',
+      'hypemeterlink': 'hypemeter',
+      'waitlistlink': 'waitlist',
+      'tipjarlink': 'tipjar',
+      'tickerlink': 'ticker',
+      'wordcloudlink': 'wordcloud',
+      'polllink': 'poll',
+      'flowactionslink': 'flowactions',
+      'battlelink': 'battle',
+      'chatbotlink': 'chatbot',
+      'cohostlink': 'cohost',
+      'giveawaylink': 'giveaway',
+      'creditslink': 'credits',
+      'privatechatbotlink': 'privatechatbot',
+      'eventsdashboardlink': 'eventsdashboard',
+      'custom-gif-commandslink': 'custom-gif-commands'
+    };
+    const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
-	    const currentHideLinks = document.body.classList.contains("hidelinks");
+    const currentHideLinks = document.body.classList.contains("hidelinks");
 
-	    linkIdsToClean.forEach(linkId => {
-			const linkElement = document.getElementById(linkId);
-			const divId = linkIdToDivIdMap[linkId];
-			const divElement = document.getElementById(divId);
+    linkIdsToClean.forEach(linkId => {
+      const linkElement = document.getElementById(linkId);
+      const divId = linkIdToDivIdMap[linkId];
+      const divElement = document.getElementById(divId);
 
-			if (linkElement && divElement && typeof divElement.raw === 'string' && divElement.raw.startsWith('http')) {
-				const urlToClean = divElement.raw; // Use .raw as the source of truth
-				const cleanedUrl = removeTTSProviderParams(urlToClean);
+      if (linkElement && divElement && typeof divElement.raw === 'string' && divElement.raw.startsWith('http')) {
+        const urlToClean = divElement.raw; // Use .raw as the source of truth
+        const cleanedUrl = removeTTSProviderParams(urlToClean);
 
-				divElement.raw = cleanedUrl; // Update the .raw property
-				linkElement.href = cleanedUrl; // Update the link's href
+        divElement.raw = cleanedUrl; // Update the .raw property
+        linkElement.href = cleanedUrl; // Update the link's href
 
-				// Update link's text based on hideLinks status
-				linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
-			}
-	    });
+        // Update link's text based on hideLinks status
+        linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+      }
+    });
 
-	    const remoteCtrlUrlElement = document.getElementById("remote_control_url");
-	    if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
-	       remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
-	    }
-// Optionally, clean sampleoverlay if it might also contain TTS parameters unintendedly
-// const sampleOverlayElement = document.getElementById("sampleoverlay");
-// if (sampleOverlayElement && sampleOverlayElement.href) {
-//    sampleOverlayElement.href = removeTTSProviderParams(sampleOverlayElement.href);
-// }
-
-	} catch (e) {
-	    console.error("Error cleaning TTS params from links:", e);
-	}
+    const remoteCtrlUrlElement = document.getElementById("remote_control_url");
+    if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
+      remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
+    }
+  } catch (e) {
+    console.error("Error cleaning TTS params from links:", e);
+  }
 }
 
 if (!chrome.browserAction){

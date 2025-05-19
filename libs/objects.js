@@ -116,6 +116,27 @@ function filterXSS(unsafe) {
 	}
 }
 
+// Compare version numbers (returns -1 if v1 < v2, 0 if equal, 1 if v1 > v2)
+function compareVersions(v1, v2) {
+  if (!v1){
+	  return -1;
+  }
+  if (!v2){
+	  return 1;
+  }
+  const v1Parts = v1.split('.').map(Number);
+  const v2Parts = v2.split('.').map(Number);
+  
+  for (let i = 0; i < Math.max(v1Parts.length, v2Parts.length); i++) {
+    const v1Part = v1Parts[i] || 0;
+    const v2Part = v2Parts[i] || 0;
+    
+    if (v1Part > v2Part) return 1;
+    if (v1Part < v2Part) return -1;
+  }
+  
+  return 0;
+}
 
 /////////////// bad word filter
 // I welcome updates/additions. The raw list can be found here: https://gist.github.com/steveseguin/da09a700e4fccd7ff82e68f32e384c9d
