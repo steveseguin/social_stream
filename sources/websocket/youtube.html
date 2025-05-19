@@ -817,11 +817,12 @@ try {
 		if (!liveChatId || isPolling) return;
 		isPolling = true;
 		const token = getStoredToken();
-        if (!token) { isPolling = false; refreshToken(); return; }
+		if (!token) { isPolling = false; refreshToken(); return; }
+		let response;
 		try {
 			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
 			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
-			const response = await fetchWithTimeout(url, 5000, { 'Authorization': `Bearer ${token}` });
+			response = await fetchWithTimeout(url, 5000, { 'Authorization': `Bearer ${token}` });
 			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 			const data = await response.json();
 			if (data.items && data.items.length > 0) {
@@ -878,15 +879,20 @@ try {
 			}
 		} catch (error) {
 			console.error('Error fetching chat messages:', error);
-            if (error.message && error.message.includes('401')) {
-                isPolling = false;
-                await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
-                return;
-            }
+			if (error.message && error.message.includes('401')) {
+				isPolling = false;
+				await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+				return;
+			}
 			setTimeout(fetchChatMessages, 10000);
 		} finally {
-			if (response && response.ok) isPolling = false;
-            else if (!error.message.includes('401')) isPolling = false;
+			if (response && response.ok) {
+				isPolling = false;
+			} else if (response && !response.ok) {
+				isPolling = false;
+			} else {
+				isPolling = false;
+			}
 		}
 	}
     async function sendChatMessage(message) {
