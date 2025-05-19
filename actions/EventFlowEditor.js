@@ -949,7 +949,7 @@ class EventFlowEditor {
                 case 'customJs': 
 					node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
 				case 'playTenorGiphy':
-					node.config = { mediaUrl: 'https://media.giphy.com/media/KEYEpIngcmXlNH2h4m/giphy.gif', mediaType: 'iframe', duration: 10000 };
+					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000 };
 					break;
 				case 'triggerOBSScene':
 					node.config = { sceneName: 'Your Scene Name' };

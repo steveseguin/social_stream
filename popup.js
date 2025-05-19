@@ -1876,7 +1876,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
-    { id: "eventsdashboard", path: "events.html" }
+    { id: "eventsdashboard", path: "events.html" },
+	{ id: "flowactions", path: "actions.html" }
   ];
   
   // Handle special case for custom-gif-commands
@@ -2237,7 +2238,9 @@ function update(response, sync = true) {
             setupPageLinks(hideLinksInitial, baseURL, response.streamID, password); // Pass current hideLinks state
 
 			
-			document.getElementById("sampleoverlay").href = baseURL + "sampleoverlay.html?session=" + response.streamID + password;
+			if (document.getElementById("sampleoverlay")){
+				document.getElementById("sampleoverlay").href = baseURL + "sampleoverlay.html?session=" + response.streamID + password;
+			}
 			
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
@@ -2290,7 +2293,7 @@ function update(response, sync = true) {
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
-                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink',
+                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commands-link', 'creditslink', 'giveawaylink'
                     // Add other link IDs that are generated and need cleaning
                 ];
@@ -2731,7 +2734,8 @@ function getTargetMap() {
         'giveaway': 14,
         'privatechatbot': 15,
 		'poll': 16,
-		'eventsdashboard': 17
+		'eventsdashboard': 17,
+		'flowactions': 18,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -3486,6 +3490,7 @@ function refreshLinks(){
 			'tickerlink': 'ticker',
 			'wordcloudlink': 'wordcloud',
 			'polllink': 'poll',
+			'flowactionslink': 'flowactions',
 			'battlelink': 'battle',
 			'chatbotlink': 'chatbot',
 			'cohostlink': 'cohost',

@@ -809,17 +809,6 @@ select.property-input {
     line-height: 1.5;
 }
 
-/* --- Test Panel (Modal) --- */
-.test-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
-    z-index: 999;
-    display: none; /* Controlled by JS */
-}
 
 .test-panel {
     position: fixed;
@@ -835,7 +824,69 @@ select.property-input {
     display: none; /* Controlled by JS */
     padding: 25px;
     color: var(--text-primary);
+	max-height: 90vh;
+	flex-direction: column;
 }
+
+.test-panel-header {
+    padding: 25px 25px 15px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.test-panel-content {
+    flex-grow: 1;
+    overflow-y: auto; /* Make content area scrollable */
+    padding: 0 25px;
+}
+
+.test-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 0;
+    padding: 15px 25px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--background-dialog);
+    flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
+#test-panel {
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Optional: Improve the scrollbar appearance */
+#test-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+#test-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#test-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#test-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.test-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
+    z-index: 999;
+    display: none; /* Controlled by JS */
+}
+
 
 .test-panel h3 {
     margin-top: 0;
@@ -972,80 +1023,6 @@ select.property-input {
     box-shadow: 0 2px 5px -2px #2196F3 inset; /* Inner shadow for effect */
 }
 
-.test-panel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 90%;
-    max-width: 650px;
-    background-color: var(--background-dialog);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
-    display: none; /* Hidden by default */
-    padding: 0; /* Remove padding here */
-    color: var(--text-primary);
-    max-height: 90vh; /* Limit height to 90% of viewport */
-    flex-direction: column;
-    overflow: hidden; /* Hide overflow */
-}
-
-.test-panel-header {
-    padding: 25px 25px 15px;
-    border-bottom: 1px solid var(--border-color);
-    flex-shrink: 0; /* Prevent header from shrinking */
-}
-
-.test-panel h3 {
-    margin-top: 0;
-    padding-bottom: 15px;
-    font-size: 1.3rem;
-    color: var(--text-primary);
-    border-bottom: none;
-}
-
-.test-panel-content {
-    flex-grow: 1;
-    overflow-y: auto; /* Make content area scrollable */
-    padding: 0 25px;
-}
-
-.test-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 0;
-    padding: 15px 25px;
-    border-top: 1px solid var(--border-color);
-    background-color: var(--background-dialog);
-    flex-shrink: 0; /* Prevent footer from shrinking */
-}
-
-#test-panel {
-  max-height: 90vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Optional: Improve the scrollbar appearance */
-#test-panel::-webkit-scrollbar {
-  width: 8px;
-}
-
-#test-panel::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-#test-panel::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-#test-panel::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
 /* Ensure the flow list container allows for scrolling if many flows */
 .flow-list-container {
     /* ... existing styles ... */
