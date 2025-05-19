@@ -9139,17 +9139,6 @@ async function triggerFakeRandomMessage(){
 		attempts++;
 	} while (isEqualMessage(data, lastRandomTestMessageData) && attempts < maxAttempts);
 
-	data =  {
-		"chatname":"Filipe TESTE",
-		"chatmessage":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam eget ligula eu lectus lobortis condimentum. Aliquam nonummy auctor massa. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. ",
-		"hasDonation":"3 USD",
-		"chatimg": "https://cdn.s1live.com/photo-client/02-07-2023-02-50-18-photo-user.jpg",
-		"backgroundColor": "#b90504",
-		"textColor": "#FFFFFF",
-		"type":"twitch",
-		"membership": ""
-		};
-
 	data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 	if (!data) {
 		return response;
