@@ -9121,7 +9121,7 @@ async function triggerFakeRandomMessage(){
 			data.chatmessage = "";
 			data.contentimg = "https://socialstream.ninja/media/logo.png";
 			data.chatname = "User123";
-			data.chatimg = "https://cdn.s1live.com/photo-client/02-07-2023-02-50-18-photo-user.jpg";
+			data.chatimg = "https://socialstream.ninja/media/user1.jpg";
 			data.type = "youtube";
 		} else if (Math.random() > 0.1) {
 			data.hasDonation = "";
