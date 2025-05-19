@@ -476,19 +476,6 @@ try {
 						}
 					}
 					
-					// Add profile image to header
-					if (userItem.snippet.thumbnails && userItem.snippet.thumbnails.default) {
-						const userImage = document.createElement('img');
-						userImage.src = userItem.snippet.thumbnails.default.url;
-						userImage.style.width = '32px';
-						userImage.style.height = '32px';
-						userImage.style.borderRadius = '50%';
-						userImage.style.marginRight = '8px';
-						
-						const signOutButton = document.getElementById('sign-out-button');
-						signOutButton.parentNode.insertBefore(userImage, signOutButton);
-					}
-					
 					// Check for post-auth redirect parameters
 					const redirectVideoId = sessionStorage.getItem("youtubeRedirectVideoId");
 					const redirectChannel = sessionStorage.getItem("youtubeRedirectChannel");
