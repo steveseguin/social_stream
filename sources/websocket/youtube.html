@@ -201,6 +201,26 @@
         #textarea div {
             padding-bottom: 4px;
         }
+		.chat-container {
+			background: white;
+			border-radius: 4px;
+			padding: 12px;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+			flex-grow: 1;
+			display: flex;
+			flex-direction: column;
+		}
+		.chat-container h3 {
+			margin: 0 0 10px 0;
+			font-size: 16px;
+		}
+		#textarea {
+			flex-grow: 1;
+			height: 300px;
+			max-height: 300px;
+			overflow-y: auto;
+			margin-bottom: 10px;
+		}
     </style>
 </head>
 <body>
@@ -221,9 +241,10 @@
                             <span>Target:</span> <span id="current-channel">No target</span>
                         </div>
                         <div class="channel-input-container">
-                            <input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
-                            <button id="connect-button" class="connect-button">Connect</button>
-                        </div>
+							<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
+							<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
+							<button id="connect-button" class="connect-button">Connect</button>
+						</div>
                     </div>
                     <button id="sign-out-button" class="sign-out-button">Sign Out</button>
                 </div>
@@ -266,46 +287,42 @@
         </div>
     </div>
 <script>
+
+
 try {
-    var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com'; // Replace with your YouTube client ID
+    var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
     var scope = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl';
     var username = "";
-    var channel = ''; // Stores channel name/ID
-    var videoId = ''; // Stores video ID
+    var channel = '';
+    var videoId = '';
     let pollInterval;
     var lastMessageTime = null;
     var liveChatId = null;
     var nextPageToken = null;
     var isPolling = false;
-    var userDetails = {}; // Cache for channel details
-    var currentStream = null; // Info about the currently connected stream
-	
+    var userDetails = {};
+    var currentStream = null;
 	var messageQueue = [];
 	var displayInterval;
 	var isDisplaying = false;
 	var quickPollCount = 0
-
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
-    // channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("youtubeChannel") || ""; // Will be set in initializePage
-
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
 		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
 		const refreshToken = localStorage.getItem('youtubeRefreshToken');
-		
 		if (storedToken && tokenExpiry && new Date().getTime() < parseInt(tokenExpiry)) {
 			return storedToken;
 		} else if (refreshToken) {
 			refreshAccessToken(refreshToken);
-			return null; 
+			return null;
 		} else {
 			clearStoredToken();
 			return null;
 		}
 	}
-	
 	function setStoredToken(token, expiresIn = 3600, refresh = null) {
 		const expiryTime = new Date().getTime() + (expiresIn * 1000);
 		localStorage.setItem('youtubeOAuthToken', token);
@@ -314,61 +331,58 @@ try {
 			localStorage.setItem('youtubeRefreshToken', refresh);
 		}
 	}
-	
 	function clearStoredToken() {
 		localStorage.removeItem('youtubeOAuthToken');
 		localStorage.removeItem('youtubeOAuthExpiry');
 		localStorage.removeItem('youtubeRefreshToken');
 		localStorage.removeItem('youtubeChannel');
-        localStorage.removeItem('youtubeVideoId'); // /* Add this here */
+        localStorage.removeItem('youtubeVideoId');
 	}
-    
     function showAuthButton() {
         const authElement = document.querySelector('.auth');
         if (authElement) authElement.classList.remove("hidden");
-        document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden')); // /* Add this here */ Ensure UI is hidden
+        document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
     }
-    
     function showSocketInterface() {
         const authElement = document.querySelector('.auth');
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'));
         if (authElement) authElement.classList.add("hidden");
     }
-    
 	function initializePage() {
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
-
-        // /* Replace this */
-        // channel = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel") || localStorage.getItem("youtubeChannel") || channel;
-        const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || hashParams.get("videoId");
-        const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel");
-
-        if (urlVideoIdParam) {
-            videoId = urlVideoIdParam;
-            channel = ''; // Clear channel if videoId is from URL
-            localStorage.setItem("youtubeVideoId", videoId);
-            localStorage.removeItem("youtubeChannel");
-        } else if (urlChannelParam) {
-            channel = urlChannelParam;
-            videoId = ''; // Clear videoId if channel is from URL
-            localStorage.setItem("youtubeChannel", channel);
-            localStorage.removeItem("youtubeVideoId");
-        } else {
-            // Neither in URL, try localStorage
-            videoId = localStorage.getItem("youtubeVideoId") || "";
-            if (videoId) { // If videoId from storage, prioritize it
-                channel = '';
-                localStorage.removeItem("youtubeChannel"); // Ensure channel is not also stored if videoId is primary
-            } else { // Else, try channel from storage
-                channel = localStorage.getItem("youtubeChannel") || "";
-            }
-        }
-        // /* End Replace this */
+		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || hashParams.get("videoId");
+		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel");
+		
+		// Store URL parameters in sessionStorage for post-auth redirect
+		if (urlVideoIdParam || urlChannelParam) {
+			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
+			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
+		}
+		
+		if (urlVideoIdParam) {
+			videoId = urlVideoIdParam;
+			channel = '';
+			localStorage.setItem("youtubeVideoId", videoId);
+			localStorage.removeItem("youtubeChannel");
+		} else if (urlChannelParam) {
+			channel = urlChannelParam;
+			videoId = '';
+			localStorage.setItem("youtubeChannel", channel);
+			localStorage.removeItem("youtubeVideoId");
+		} else {
+			videoId = localStorage.getItem("youtubeVideoId") || "";
+			if (videoId) {
+				channel = '';
+				localStorage.removeItem("youtubeChannel");
+			} else {
+				channel = localStorage.getItem("youtubeChannel") || "";
+			}
+		}
 		
 		const signOutButton = document.getElementById('sign-out-button');
 		if (signOutButton) signOutButton.addEventListener('click', signOut);
-
+		
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
 			authLink.addEventListener('click', function(e) {
@@ -376,23 +390,37 @@ try {
 				window.location.href = authUrl();
 			});
 		}
-
-        const sendButton = document.querySelector('#sendmessage');
-        if (sendButton) sendButton.onclick = handleSendMessage;
-
-        const inputText = document.querySelector('#input-text');
-        if (inputText) inputText.addEventListener('keypress', handleEnterKey);
-
-        const connectButton = document.getElementById('connect-button');
-        if (connectButton) connectButton.addEventListener('click', handleConnect);
-
-        const channelInput = document.getElementById('channel-input');
-        if (channelInput) {
-            channelInput.addEventListener('keypress', function(event) {
-                if (event.key === 'Enter') handleConnect();
-            });
-        }
-
+		
+		const sendButton = document.querySelector('#sendmessage');
+		if (sendButton) sendButton.onclick = handleSendMessage;
+		
+		const inputText = document.querySelector('#input-text');
+		if (inputText) inputText.addEventListener('keypress', handleEnterKey);
+		
+		const connectButton = document.getElementById('connect-button');
+		if (connectButton) connectButton.addEventListener('click', handleConnect);
+		
+		const channelInput = document.getElementById('channel-input');
+		const videoInput = document.getElementById('video-input');
+		
+		if (channelInput) {
+			channelInput.addEventListener('keypress', function(event) {
+				if (event.key === 'Enter') handleConnect();
+			});
+		}
+		
+		if (videoInput) {
+			videoInput.addEventListener('keypress', function(event) {
+				if (event.key === 'Enter') handleConnect();
+			});
+		}
+		
+		// If URL parameters are present, hide the inputs
+		if (urlVideoIdParam || urlChannelParam) {
+			const channelInputContainer = document.querySelector('.channel-input-container');
+			if (channelInputContainer) channelInputContainer.classList.add('hidden');
+		}
+		
 		if (urlParams.has('code')) {
 			handleAuthCallback();
 			return;
@@ -401,44 +429,52 @@ try {
 		const storedToken = getStoredToken();
 		if (storedToken) {
 			verifyAndUseToken(storedToken);
-		} else if (window.location.hash && window.location.hash.includes('access_token')) { // /* Modify this */ Check specifically for access_token
+		} else if (window.location.hash && window.location.hash.includes('access_token')) {
 			parseFragment(window.location.hash);
 		} else {
 			showAuthButton();
 		}
 	}
-
 	async function verifyAndUseToken(token) {
 		try {
 			const userInfo = await getUserInfo(token);
 			if (userInfo && userInfo.items && userInfo.items.length > 0) {
 				username = userInfo.items[0].snippet.title;
-                // /* Replace this */
-				// updateHeaderInfo(username, channel); // Old way
-				// if (channel) {
-				// 	localStorage.setItem("youtubeChannel", channel);
-				// 	connect();
-				// }
-                // showSocketInterface();
-                if (videoId) { // Global videoId has been prioritized (from URL or storage)
-                    connect(videoId); // Pass videoId to connect function
-                } else if (channel) { // Else, use global channel
-                    document.getElementById('channel-input').value = channel; // Pre-fill input if using channel
-                    connect(); // connect() will use the global 'channel' variable
-                } else {
-                    // Neither videoId nor channel is set, user needs to input channel.
-                    updateHeaderInfo(username, 'No target specified');
-                    const channelInputContainer = document.querySelector('.channel-input-container');
-                    if (channelInputContainer) channelInputContainer.classList.remove('hidden');
-                }
-                showSocketInterface();
-                // /* End Replace this */
+				
+				// Check for post-auth redirect parameters
+				const redirectVideoId = sessionStorage.getItem("youtubeRedirectVideoId");
+				const redirectChannel = sessionStorage.getItem("youtubeRedirectChannel");
+				
+				if (redirectVideoId) {
+					videoId = redirectVideoId;
+					channel = '';
+					connect(videoId);
+					sessionStorage.removeItem("youtubeRedirectVideoId");
+					sessionStorage.removeItem("youtubeRedirectChannel");
+				} else if (redirectChannel) {
+					channel = redirectChannel;
+					videoId = '';
+					document.getElementById('channel-input').value = channel;
+					connect();
+					sessionStorage.removeItem("youtubeRedirectVideoId");
+					sessionStorage.removeItem("youtubeRedirectChannel");
+				} else if (videoId) {
+					connect(videoId);
+				} else if (channel) {
+					document.getElementById('channel-input').value = channel;
+					connect();
+				} else {
+					updateHeaderInfo(username, 'No target specified');
+					const channelInputContainer = document.querySelector('.channel-input-container');
+					if (channelInputContainer) channelInputContainer.classList.remove('hidden');
+				}
+				showSocketInterface();
 			} else {
-				await refreshToken(); // Changed from refreshToken to a more robust refresh or clear
+				await refreshToken();
 			}
 		} catch (error) {
-			if (error.message && error.message.includes('401')) { // /* Modify this */ Check error.message
-				await refreshAccessToken(localStorage.getItem('youtubeRefreshToken')); // Try to refresh if 401
+			if (error.message && error.message.includes('401')) {
+				await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
 			} else {
 				console.error('Error validating token:', error);
 				clearStoredToken();
@@ -446,49 +482,42 @@ try {
 			}
 		}
 	}
-
 	function parseFragment(hash) {
 		const tokens = {};
 		hash.replace('#', '').split('&').forEach(param => {
 			const [key, value] = param.split('=');
 			tokens[key] = value;
 		});
-		
 		if (tokens.access_token) {
 			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
 			setStoredToken(tokens.access_token, expiresIn);
-            window.history.replaceState({}, document.title, redirectURI); // /* Add this here */ Clean URL
+            window.history.replaceState({}, document.title, redirectURI);
 			verifyAndUseToken(tokens.access_token);
 		} else {
 			console.error('No access token found in URL fragment');
 			showAuthButton();
 		}
 	}
-	
-	async function refreshToken() { // This function seems to be a placeholder.
+	async function refreshToken() {
 		console.log('Attempting to refresh token or re-authenticate.');
-        // Try using the more specific refreshAccessToken if a refresh token exists
         const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
         if (storedRefreshToken) {
             const refreshed = await refreshAccessToken(storedRefreshToken);
-            if (refreshed) return; // If refresh was successful and verifyAndUseToken was called, exit.
+            if (refreshed) return;
         }
-		// If no refresh token or refresh failed, clear and show auth.
 		clearStoredToken();
 		showAuthButton();
 	}
-
 	function authUrl() {
 		const state = nonce(15);
 		sessionStorage.youtubeOAuthState = state;
 		return 'https://ytauth.socialstream.ninja/auth' +
-			'?client_id=' + clientId + 
+			'?client_id=' + clientId +
 			'&redirect_uri=' + encodeURIComponent(redirectURI) +
 			'&state=' + state;
 	}
-	
-	async function refreshAccessToken(refreshTokenValue) { // Changed param name
-		if (!refreshTokenValue) { // /* Add this here */ Guard clause
+	async function refreshAccessToken(refreshTokenValue) {
+		if (!refreshTokenValue) {
             console.log('No refresh token available for refreshAccessToken.');
             clearStoredToken();
             showAuthButton();
@@ -500,11 +529,9 @@ try {
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ refresh_token: refreshTokenValue })
 			});
-			
 			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 			const data = await response.json();
 			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue);
-			
 			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
 			return true;
 		} catch (error) {
@@ -514,17 +541,14 @@ try {
 			return false;
 		}
 	}
-	
 	async function handleAuthCallback() {
 		const urlParams = new URLSearchParams(window.location.search);
 		const code = urlParams.get('code');
 		const state = urlParams.get('state');
-		
 		if (state !== sessionStorage.youtubeOAuthState) {
 			console.error('State mismatch - possible CSRF attack');
 			showAuthButton(); return;
 		}
-		
 		if (code) {
 			try {
 				const response = await fetch('https://ytauth.socialstream.ninja/token', {
@@ -532,7 +556,6 @@ try {
 					headers: { 'Content-Type': 'application/json' },
 					body: JSON.stringify({ code: code, redirect_uri: redirectURI })
 				});
-				
 				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 				const data = await response.json();
 				setStoredToken(data.access_token, data.expires_in, data.refresh_token);
@@ -544,7 +567,6 @@ try {
 			}
 		}
 	}
-
     function nonce(length) {
         var text = "";
         var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -553,37 +575,29 @@ try {
         }
         return text;
     }
-
     function signOut() {
         clearPolling();
-        clearStoredToken(); // This now also clears youtubeVideoId
-        
-        username = ""; // /* Add this here */
-        channel = '';  // /* Add this here */
-        videoId = '';  // /* Add this here */
-
+        clearStoredToken();
+        username = "";
+        channel = '';
+        videoId = '';
         updateHeaderInfo(null, null);
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
         document.querySelector('.auth').classList.remove('hidden');
         document.querySelector('#textarea').innerHTML = '';
-        
         document.getElementById('viewer-count').textContent = '-';
         document.getElementById('subscriber-count').textContent = '-';
         document.getElementById('likes-count').textContent = '-';
         document.getElementById('events-list').innerHTML = '';
-        document.getElementById('permissions-info').innerHTML = ''; // /* Add this here */
-
-        const channelInputContainer = document.querySelector('.channel-input-container'); // /* Add this here */
-        if (channelInputContainer) channelInputContainer.classList.remove('hidden'); // /* Add this here */
-        document.getElementById('channel-input').value = ''; // /* Add this here */
-
+        document.getElementById('permissions-info').innerHTML = '';
+        const channelInputContainer = document.querySelector('.channel-input-container');
+        if (channelInputContainer) channelInputContainer.classList.remove('hidden');
+        document.getElementById('channel-input').value = '';
         console.log('Signed out successfully');
     }
-
     function handleEnterKey(event) {
         if (event.key === 'Enter') handleSendMessage(event);
     }
-
     function handleSendMessage(event) {
         event.preventDefault();
         const inputElement = document.querySelector('#input-text');
@@ -594,7 +608,7 @@ try {
                     if (response && response.success) {
                         inputElement.value = "";
                         processMessage({
-                            authorName: username, // Assumes 'username' global is correctly set to self-display name
+                            authorName: username,
                             message: msg,
                             profileImageUrl: response.authorDetails?.profileImageUrl || '',
                             isChatOwner: response.authorDetails?.isChatOwner || false,
@@ -606,77 +620,78 @@ try {
             }
         }
     }
-
     function handleConnect() {
-        const channelInput = document.getElementById('channel-input');
-        const channelNameFromInput = channelInput.value.trim();
-        if (channelNameFromInput) {
-            localStorage.setItem('youtubeChannel', channelNameFromInput);
-            localStorage.removeItem('youtubeVideoId'); // Clear video ID if using channel input
-
-            channel = channelNameFromInput; // Set global channel
-            videoId = '';                   // Clear global videoId
-
-            // channelInput.value = ''; // Don't clear here, connect() might need to show it if error
-            updateHeaderInfo(username, "Channel: " + channel); // Update header tentatively
-            connect(); // Connect using the global 'channel'
-        }
-    }
-
+		const channelInput = document.getElementById('channel-input');
+		const videoInput = document.getElementById('video-input');
+		const channelNameFromInput = channelInput.value.trim();
+		const videoIdFromInput = videoInput.value.trim();
+		
+		if (videoIdFromInput) {
+			localStorage.setItem('youtubeVideoId', videoIdFromInput);
+			localStorage.removeItem('youtubeChannel');
+			videoId = videoIdFromInput;
+			channel = '';
+			updateHeaderInfo(username, "Loading video: " + videoId);
+			connect(videoId);
+			videoInput.value = '';
+		} else if (channelNameFromInput) {
+			localStorage.setItem('youtubeChannel', channelNameFromInput);
+			localStorage.removeItem('youtubeVideoId');
+			channel = channelNameFromInput;
+			videoId = '';
+			updateHeaderInfo(username, "Channel: " + channel);
+			connect();
+			channelInput.value = '';
+		}
+	}
     async function getUserInfo(token) {
         try {
-            const response = await fetchWithTimeout('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', 5000, 
+            const response = await fetchWithTimeout('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', 5000,
                 { 'Authorization': `Bearer ${token}` }
             );
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             return await response.json();
         } catch (error) {
             console.error('Error fetching user info:', error);
-            if (error.message && error.message.includes('401')) throw error; // Re-throw for verifyAndUseToken to handle
+            if (error.message && error.message.includes('401')) throw error;
             return null;
         }
     }
-
-    async function getChannelInfo(channelIdentifier) { // Renamed param for clarity
+    async function getChannelInfo(channelIdentifier) {
         const token = getStoredToken();
         if (!token) return null;
-        
         if (userDetails[channelIdentifier]) return userDetails[channelIdentifier];
-        
         try {
             let response = await fetchWithTimeout(
-                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdentifier}`, 5000, 
+                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdentifier}`, 5000,
                 { 'Authorization': `Bearer ${token}` }
             );
             let data = await response.json();
-            
-            if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) { // Only try by username if not already an ID
+            if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
                 response = await fetchWithTimeout(
-                    `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdentifier}`, 5000, 
+                    `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdentifier}`, 5000,
                     { 'Authorization': `Bearer ${token}` }
                 );
                 data = await response.json();
             }
-            
-            if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) { // Search if still no result and wasn't an ID
+            if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
                 response = await fetchWithTimeout(
-                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channelIdentifier}&type=channel&maxResults=1`, 5000, 
+                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channelIdentifier}&type=channel&maxResults=1`, 5000,
                     { 'Authorization': `Bearer ${token}` }
                 );
                 const searchData = await response.json();
                 if (searchData.items && searchData.items.length > 0) {
                     const channelIdFromResult = searchData.items[0].id.channelId;
                     response = await fetchWithTimeout(
-                        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdFromResult}`, 5000, 
+                        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdFromResult}`, 5000,
                         { 'Authorization': `Bearer ${token}` }
                     );
                     data = await response.json();
                 }
             }
-            
             if (data.items && data.items.length > 0) {
-                userDetails[channelIdentifier] = data.items[0]; // Cache by original identifier
-                userDetails[data.items[0].id] = data.items[0]; // Also cache by actual ID
+                userDetails[channelIdentifier] = data.items[0];
+                userDetails[data.items[0].id] = data.items[0];
                 return data.items[0];
             }
             return null;
@@ -685,20 +700,19 @@ try {
             return null;
         }
     }
-
     async function getLiveStreamInfo(channelId) {
         const token = getStoredToken();
         if (!token) return null;
         try {
             const response = await fetchWithTimeout(
-                `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=1`, 5000, 
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=1`, 5000,
                 { 'Authorization': `Bearer ${token}` }
             );
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 const videoIdFromResult = data.items[0].id.videoId;
                 const detailsResponse = await fetchWithTimeout(
-                    `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdFromResult}`, 5000, 
+                    `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdFromResult}`, 5000,
                     { 'Authorization': `Bearer ${token}` }
                 );
                 const detailsData = await detailsResponse.json();
@@ -712,17 +726,12 @@ try {
             return null;
         }
     }
-
-    async function getLiveChatId(videoIdForChat) { // Renamed param
+    async function getLiveChatId(videoIdForChat) {
         const token = getStoredToken();
         if (!token) return null;
         try {
-            // This function is often called with video details already fetched.
-            // However, to be safe, or if called standalone, it fetches.
-            // For an active live stream, liveStreamingDetails.activeLiveChatId should be present.
-            // If called for a video that *just* went live, it might need a moment.
             const response = await fetchWithTimeout(
-                `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoIdForChat}`, 5000, 
+                `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoIdForChat}`, 5000,
                 { 'Authorization': `Bearer ${token}` }
             );
             const data = await response.json();
@@ -735,46 +744,38 @@ try {
             return null;
         }
     }
-	
 	function queueMessage(messageData) {
 		messageQueue.push(messageData);
 		if (!isDisplaying) startDisplayQueue();
 	}
-
 	function startDisplayQueue() {
 		if (isDisplaying || messageQueue.length === 0) return;
 		isDisplaying = true;
 		displayNextMessage();
 	}
-
 	function displayNextMessage() {
 		if (messageQueue.length === 0) {
 			isDisplaying = false; return;
 		}
 		const message = messageQueue.shift();
 		processMessage(message);
-		
-		let delay = 100; 
+		let delay = 100;
 		if (messageQueue.length > 50) delay = 20;
 		else if (messageQueue.length > 20) delay = 50;
 		else if (messageQueue.length > 5) delay = 75;
 		setTimeout(displayNextMessage, delay);
 	}
-
     async function fetchChatMessages() {
 		if (!liveChatId || isPolling) return;
 		isPolling = true;
 		const token = getStoredToken();
-        if (!token) { isPolling = false; refreshToken(); return; } // /* Add this here */ Handle missing token
-
+        if (!token) { isPolling = false; refreshToken(); return; }
 		try {
 			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
 			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
-			
 			const response = await fetchWithTimeout(url, 5000, { 'Authorization': `Bearer ${token}` });
 			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 			const data = await response.json();
-			
 			if (data.items && data.items.length > 0) {
 				data.items.forEach(item => {
 					const publishedAt = new Date(item.snippet.publishedAt);
@@ -791,7 +792,6 @@ try {
 						if (!lastMessageTime || publishedAt > lastMessageTime) lastMessageTime = publishedAt;
 					}
 				});
-				
 				const isMaxedOut = data.items.length === 200;
 				if (isMaxedOut && quickPollCount < 10) {
 					quickPollCount++; nextPageToken = data.nextPageToken;
@@ -808,7 +808,6 @@ try {
 				const pollingInterval = data.pollingIntervalMillis || 5000;
 				setTimeout(fetchChatMessages, pollingInterval);
 			}
-			
 			if (data.items) {
 				data.items.forEach(item => {
 					if (item.snippet.superChatDetails) {
@@ -831,19 +830,17 @@ try {
 			}
 		} catch (error) {
 			console.error('Error fetching chat messages:', error);
-            if (error.message && error.message.includes('401')) { // /* Add this here */ Handle 401 during polling
-                isPolling = false; // Reset polling flag
-                await refreshAccessToken(localStorage.getItem('youtubeRefreshToken')); // Attempt refresh
-                // verifyAndUseToken will re-initiate connect if refresh is successful
-                return; // Exit to avoid immediate retry with old token
+            if (error.message && error.message.includes('401')) {
+                isPolling = false;
+                await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+                return;
             }
 			setTimeout(fetchChatMessages, 10000);
 		} finally {
-			if (response && response.ok) isPolling = false; // /* Modify this */ Only reset if not handled by 401 above or other critical error
-            else if (!error.message.includes('401')) isPolling = false; // Reset if not a 401 that's being handled by refresh
+			if (response && response.ok) isPolling = false;
+            else if (!error.message.includes('401')) isPolling = false;
 		}
 	}
-
     async function sendChatMessage(message) {
         const token = getStoredToken();
         if (!token || !liveChatId) return { success: false };
@@ -863,8 +860,8 @@ try {
                 return { success: false };
             }
             const data = await response.json();
-            return { 
-                success: true, 
+            return {
+                success: true,
                 authorDetails: {
                     profileImageUrl: data.authorDetails?.profileImageUrl,
                     isChatOwner: data.authorDetails?.isChatOwner,
@@ -877,14 +874,13 @@ try {
             return { success: false };
         }
     }
-
     async function getStreamStats() {
         if (!currentStream || !currentStream.id) return;
         const token = getStoredToken();
         if (!token) return;
         try {
             const response = await fetchWithTimeout(
-                `https://www.googleapis.com/youtube/v3/videos?part=statistics,liveStreamingDetails&id=${currentStream.id}`, 5000, 
+                `https://www.googleapis.com/youtube/v3/videos?part=statistics,liveStreamingDetails&id=${currentStream.id}`, 5000,
                 { 'Authorization': `Bearer ${token}` }
             );
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -902,13 +898,12 @@ try {
             console.error('Error fetching stream stats:', error);
         }
     }
-
-    async function getSubscriberCount(channelIdForSubs) { // Renamed param
+    async function getSubscriberCount(channelIdForSubs) {
         const token = getStoredToken();
         if (!token) return;
         try {
             const response = await fetchWithTimeout(
-                `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIdForSubs}`, 5000, 
+                `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIdForSubs}`, 5000,
                 { 'Authorization': `Bearer ${token}` }
             );
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -920,22 +915,20 @@ try {
             console.error('Error fetching subscriber count:', error);
         }
     }
-
 	function clearPolling() {
 		if (pollInterval) clearInterval(pollInterval);
 		pollInterval = null; liveChatId = null; nextPageToken = null;
 		lastMessageTime = null; isPolling = false; currentStream = null;
 		messageQueue = []; isDisplaying = false; quickPollCount = 0;
-        document.getElementById('textarea').innerHTML = ''; // /* Add this here */ Clear chat on disconnect/new connect
-        document.getElementById('events-list').innerHTML = ''; // /* Add this here */ Clear events
+        document.getElementById('textarea').innerHTML = '';
+        document.getElementById('events-list').innerHTML = '';
 	}
-	
-	async function getChannelStats(channelIdForStats) { // Renamed param
+	async function getChannelStats(channelIdForStats) {
 		const token = getStoredToken();
 		if (!token) return;
 		try {
 			const response = await fetchWithTimeout(
-				`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIdForStats}`, 5000, 
+				`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIdForStats}`, 5000,
 				{ 'Authorization': `Bearer ${token}` }
 			);
 			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -954,236 +947,186 @@ try {
 			console.error('Error fetching channel stats:', error);
 		}
 	}
-
-    // /* Replace function connect */
     async function connect(directVideoIdParam = null) {
-        clearPolling(); // Clear previous state, including chat text area
-        
+        clearPolling();
         const channelInputContainer = document.querySelector('.channel-input-container');
         const token = getStoredToken();
-
         if (!token) {
             console.error('No token available for connect');
-            showAuthButton(); // This should hide the socket interface and show auth
+            showAuthButton();
             return;
         }
-
-        // Determine what to connect to: passed videoId, global videoId, or global channel
-        const videoIdToUse = directVideoIdParam || videoId; // videoId is the global one
-        const channelToUse = channel; // channel is the global one
-
+        const videoIdToUse = directVideoIdParam || videoId;
+        const channelToUse = channel;
         if (!videoIdToUse && !channelToUse) {
             updateHeaderInfo(username, 'No target specified');
             if (channelInputContainer) channelInputContainer.classList.remove('hidden');
-            // Clear stats if nothing to connect to
             document.getElementById('viewer-count').textContent = '-';
             document.getElementById('subscriber-count').textContent = '-';
             document.getElementById('likes-count').textContent = '-';
             return;
         }
-
-        // Tentatively hide input if we are trying to connect
         if (channelInputContainer) channelInputContainer.classList.add('hidden');
         document.getElementById('textarea').innerHTML = '<div>Attempting to connect...</div>';
-
-
         try {
             let streamInfoToUse;
             let channelInfoForHeaderAndStats;
             let effectiveChannelIdToUse;
             let streamTitleToUse;
             let channelDisplayNameToUse;
-
             if (videoIdToUse) {
-                // Connecting with a video ID
                 const videoDetailsResponse = await fetchWithTimeout(
                     `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdToUse}`,
                     5000, { 'Authorization': `Bearer ${token}` }
                 );
                 if (!videoDetailsResponse.ok) throw new Error(`Failed to fetch video details for ${videoIdToUse}: ${videoDetailsResponse.status}`);
                 const videoDetailsData = await videoDetailsResponse.json();
-
                 if (!videoDetailsData.items || videoDetailsData.items.length === 0) {
                     throw new Error(`Video not found or not accessible: ${videoIdToUse}`);
                 }
                 streamInfoToUse = videoDetailsData.items[0];
-
                 if (streamInfoToUse.snippet.liveBroadcastContent === 'none' || (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.actualEndTime)) {
                     throw new Error(`Video is not live or has ended: ${streamInfoToUse.snippet.title}`);
                 }
                 if (streamInfoToUse.snippet.liveBroadcastContent === 'upcoming' && (!streamInfoToUse.liveStreamingDetails || !streamInfoToUse.liveStreamingDetails.activeLiveChatId)) {
-                     // For upcoming streams, activeLiveChatId might not be available yet.
-                     // If it's a premiere and liveStreamingDetails.activeLiveChatId is null, this means chat isn't active.
-                     // We might also lack liveStreamingDetails if it's very far in the future.
-                    liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId; // May be null
+                    liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
                     if (!liveChatId) {
-                         // Display a message that it's upcoming, and chat isn't ready.
                         console.log(`Stream "${streamInfoToUse.snippet.title}" is upcoming. Chat may not be available yet.`);
-                        // We can still show video title and channel.
                     }
                 } else if (!streamInfoToUse.liveStreamingDetails || !streamInfoToUse.liveStreamingDetails.activeLiveChatId) {
-                    // This covers cases where it might be live but chat is disabled, or other edge cases.
                     throw new Error(`Video is not live or chat is not enabled: ${streamInfoToUse.snippet.title}`);
                 }
-                
-                liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId; // Re-assign, could be null for upcoming
+                liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
                 effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
                 streamTitleToUse = streamInfoToUse.snippet.title;
-                
-                // Fetch channel details for display name and subscriber count
                 channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
                 channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
                 updateHeaderInfo(username, channelDisplayNameToUse + (liveChatId ? ` (Video: ${streamTitleToUse.substring(0,20)}...)` : ` (Upcoming: ${streamTitleToUse.substring(0,20)}...)`));
-
                 currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
-
             } else if (channelToUse) {
-                // Connecting with a channel name/ID (existing logic path)
-                channelInfoForHeaderAndStats = await getChannelInfo(channelToUse); // channelToUse is from global 'channel'
+                channelInfoForHeaderAndStats = await getChannelInfo(channelToUse);
                 if (!channelInfoForHeaderAndStats) {
                     throw new Error(`Channel not found: ${channelToUse}`);
                 }
                 channelDisplayNameToUse = channelInfoForHeaderAndStats.snippet.title;
                 effectiveChannelIdToUse = channelInfoForHeaderAndStats.id;
                 updateHeaderInfo(username, channelDisplayNameToUse);
-
                 streamInfoToUse = await getLiveStreamInfo(effectiveChannelIdToUse);
                 if (!streamInfoToUse) {
-                    // No active live stream, but we have channel info. Update subs and stop.
                     if (channelInfoForHeaderAndStats.statistics && channelInfoForHeaderAndStats.statistics.subscriberCount) {
                         updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
                     }
                     throw new Error(`No active live stream found for channel: ${channelDisplayNameToUse}`);
                 }
                 streamTitleToUse = streamInfoToUse.snippet.title;
-                liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId || await getLiveChatId(streamInfoToUse.id); // Ensure liveChatId is fetched if not in initial streamInfo
+                liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId || await getLiveChatId(streamInfoToUse.id);
                  if (!liveChatId && streamInfoToUse.snippet.liveBroadcastContent === 'upcoming') {
                     console.log(`Stream "${streamTitleToUse}" is upcoming. Chat may not be available yet.`);
-                    // Continue to display some info, but don't start chat polling.
                 } else if (!liveChatId) {
                     throw new Error(`No live chat available for stream: ${streamTitleToUse}`);
                 }
-
-
                 currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
                 updateHeaderInfo(username, channelDisplayNameToUse + (liveChatId ? ` (Live: ${streamTitleToUse.substring(0,20)}...)` : ` (Upcoming Stream)`));
             }
-
-            // Common logic post stream/channel identification
-            document.getElementById('textarea').innerHTML = ''; // Clear "Attempting to connect"
+            document.getElementById('textarea').innerHTML = '';
             const connectMessageDiv = document.createElement("div");
             connectMessageDiv.innerText = `Target: ${channelDisplayNameToUse} - Stream: ${streamTitleToUse || 'N/A'}`;
             document.getElementById('textarea').appendChild(connectMessageDiv);
-
-
-            // Update stats from streamInfoToUse (if available)
             if (streamInfoToUse) {
                 if (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.concurrentViewers) {
                     updateStats('viewer_update', { meta: streamInfoToUse.liveStreamingDetails.concurrentViewers });
                 } else {
-                     document.getElementById('viewer-count').textContent = 'N/A'; // For upcoming
+                     document.getElementById('viewer-count').textContent = 'N/A';
                 }
                 if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount) {
                     updateStats('likes_update', { meta: streamInfoToUse.statistics.likeCount });
                 } else {
-                     document.getElementById('likes-count').textContent = 'N/A'; // For upcoming
+                     document.getElementById('likes-count').textContent = 'N/A';
                 }
             }
-
-            // Update subscriber count using channelInfoForHeaderAndStats (if available) or fetch
             if (channelInfoForHeaderAndStats && channelInfoForHeaderAndStats.statistics && channelInfoForHeaderAndStats.statistics.subscriberCount) {
                 updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
             } else if (effectiveChannelIdToUse) {
-                await getSubscriberCount(effectiveChannelIdToUse); // Fallback fetch
+                await getSubscriberCount(effectiveChannelIdToUse);
             }
-
             if (liveChatId) {
                 const chatAvailableMessage = document.createElement("div");
                 chatAvailableMessage.innerText = "Connected to live chat.";
                 document.getElementById('textarea').appendChild(chatAvailableMessage);
-                fetchChatMessages(); // Start polling for chat messages
+                fetchChatMessages();
             } else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
                  noChatMessage.innerText = "Live chat is not currently active for this stream.";
                  document.getElementById('textarea').appendChild(noChatMessage);
-                 // Do not start fetchChatMessages if no liveChatId
             }
-            
-            // Set up periodic stats updates (even for upcoming, channel stats can update)
             if (pollInterval) clearInterval(pollInterval);
             pollInterval = setInterval(() => {
-                if (currentStream && currentStream.id && liveChatId) getStreamStats(); // Stream specific stats if chat is live
-                if (effectiveChannelIdToUse) getChannelStats(effectiveChannelIdToUse); // Channel specific stats
+                if (currentStream && currentStream.id && liveChatId) getStreamStats();
+                if (effectiveChannelIdToUse) getChannelStats(effectiveChannelIdToUse);
             }, 30000);
-
             console.log('Connection process complete for target:', channelDisplayNameToUse);
-            if (channelInput.value && channelToUse) channelInput.value = ''; // Clear input on successful channel connect
-
+            if (channelInput.value && channelToUse) channelInput.value = '';
         } catch (error) {
             console.error('Error connecting to YouTube:', error);
             updateHeaderInfo(username, 'Connection failed');
             const textarea = document.querySelector("#textarea");
             if (textarea) {
-                textarea.innerHTML = ''; // Clear previous messages
+                textarea.innerHTML = '';
                 var span = document.createElement("div");
                 span.style.color = "red";
                 span.innerText = `Error: ${error.message}`;
                 textarea.appendChild(span);
             }
-            if (channelInputContainer) channelInputContainer.classList.remove('hidden'); // Show input on error
-            // Reset stats on error
+            if (channelInputContainer) channelInputContainer.classList.remove('hidden');
             document.getElementById('viewer-count').textContent = '-';
             document.getElementById('subscriber-count').textContent = '-';
             document.getElementById('likes-count').textContent = '-';
         }
     }
-    // /* End Replace function connect */
-	
 	function pushMessage(data) {
 		window.dispatchEvent(new CustomEvent('youtubeMessage', { detail: data, bubbles: true }));
 	}
-
     function processMessage(messageData) {
-        try {
-            const textarea = document.querySelector("#textarea");
-            var span = document.createElement("div");
-            let badgeHtml = '';
-            if (messageData.isChatOwner) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/owner.svg" class="chat-badge" title="Channel Owner">';
-            if (messageData.isChatModerator) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/moderator.svg" class="chat-badge" title="Moderator">';
-            if (messageData.isChatSponsor) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">';
-			
+		try {
+			const textarea = document.querySelector("#textarea");
+			var span = document.createElement("div");
+			let badgeHtml = '';
+			if (messageData.isChatOwner) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/owner.svg" class="chat-badge" title="Channel Owner">';
+			if (messageData.isChatModerator) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/moderator.svg" class="chat-badge" title="Moderator">';
+			if (messageData.isChatSponsor) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">';
 			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageData.message}`;
-            textarea.appendChild(span);
-            if (textarea.childNodes.length > 100) textarea.childNodes[0].remove(); // Keep chat reasonably sized
-            textarea.scrollTop = textarea.scrollHeight; // /* Add this here */ Auto-scroll
-
-            pushMessage({
-                chatname: messageData.authorName, chatbadges: badgeHtml, backgroundColor: "", textColor: "",
-                chatmessage: messageData.message, chatimg: messageData.profileImageUrl || "", hasDonation: "",
-                membership: messageData.isChatSponsor ? "member" : "", type: "youtube"
-            });
-        } catch (e) { console.error('Error processing message:', e); }
-    }
-
+			textarea.appendChild(span);
+			
+			// Limit to 20 messages
+			while (textarea.childNodes.length > 20) {
+				textarea.removeChild(textarea.firstChild);
+			}
+			
+			textarea.scrollTop = textarea.scrollHeight;
+			pushMessage({
+				chatname: messageData.authorName, chatbadges: badgeHtml, backgroundColor: "", textColor: "",
+				chatmessage: messageData.message, chatimg: messageData.profileImageUrl || "", hasDonation: "",
+				membership: messageData.isChatSponsor ? "member" : "", type: "youtube"
+			});
+		} catch (e) { console.error('Error processing message:', e); }
+	}
     function processSuperChat(superChatData) {
         try {
             addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
             const textarea = document.querySelector("#textarea");
             var span = document.createElement("div");
-            span.innerHTML = `<strong>${superChatData.authorName}</strong> <span style="color:#00c851">${superChatData.amount}</span>: ${superChatData.message || ''}`; // /* Modify this */ ensure message is not null
+            span.innerHTML = `<strong>${superChatData.authorName}</strong> <span style="color:#00c851">${superChatData.amount}</span>: ${superChatData.message || ''}`;
             textarea.appendChild(span);
             if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
-            textarea.scrollTop = textarea.scrollHeight; // /* Add this here */ Auto-scroll
-            
+            textarea.scrollTop = textarea.scrollHeight;
             pushMessage({
                 chatname: superChatData.authorName, chatbadges: "", backgroundColor: "", textColor: "#00c851",
-                chatmessage: superChatData.message || '', chatimg: superChatData.profileImageUrl || "", // /* Modify this */
+                chatmessage: superChatData.message || '', chatimg: superChatData.profileImageUrl || "",
                 hasDonation: superChatData.amount, membership: "", type: "youtube", event: "donation"
             });
         } catch (e) { console.error('Error processing super chat:', e); }
     }
-
     function processMembership(membershipData) {
         try {
             addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
@@ -1192,8 +1135,7 @@ try {
             span.innerHTML = `<strong>${membershipData.authorName}</strong> <span style="color:#2196f3">joined as a member (${membershipData.level})</span>`;
             textarea.appendChild(span);
             if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
-            textarea.scrollTop = textarea.scrollHeight; // /* Add this here */ Auto-scroll
-
+            textarea.scrollTop = textarea.scrollHeight;
             pushMessage({
                 chatname: membershipData.authorName,
                 chatbadges: '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">',
@@ -1203,7 +1145,6 @@ try {
             });
         } catch (e) { console.error('Error processing membership:', e); }
     }
-
 	function updateStats(type, data) {
 		switch(type) {
 			case 'viewer_update':
@@ -1212,7 +1153,6 @@ try {
 				break;
 			case 'subscriber_update':
 				document.getElementById('subscriber-count').textContent = data.meta;
-                // Push for subscriber_update is now in getChannelStats to avoid duplicate pushes from connect()
 				break;
 			case 'likes_update':
 				document.getElementById('likes-count').textContent = data.meta;
@@ -1220,7 +1160,6 @@ try {
 				break;
 		}
 	}
-
     function addEvent(text) {
         const eventslist = document.getElementById('events-list');
         const event = document.createElement('div');
@@ -1228,51 +1167,41 @@ try {
         eventslist.insertBefore(event, eventslist.firstChild);
         while (eventslist.children.length > 10) eventslist.removeChild(eventslist.lastChild);
     }
-
-    function updateHeaderInfo(currentUsername, targetName) { // Renamed params for clarity
+    function updateHeaderInfo(currentUsername, targetName) {
         const currentUserElement = document.getElementById('current-user');
-        const currentChannelElement = document.getElementById('current-channel'); // This ID refers to the "Target" field now
-        
+        const currentChannelElement = document.getElementById('current-channel');
         if (currentUserElement) currentUserElement.textContent = currentUsername || 'Not signed in';
         if (currentChannelElement) currentChannelElement.textContent = targetName || 'No target';
     }
-
     async function fetchWithTimeout(URL, timeout = 8000, headers=false) {
         const controller = new AbortController();
         const timeout_id = setTimeout(() => controller.abort(), timeout);
         try {
             const options = { signal: controller.signal };
             if (headers) options.headers = headers;
-            if (headers && headers.method) options.method = headers.method; // Ensure method is passed if set in headers object
-            if (headers && headers.body) options.body = headers.body; // Ensure body is passed
-
+            if (headers && headers.method) options.method = headers.method;
+            if (headers && headers.body) options.body = headers.body;
             const response = await fetch(URL, options);
             clearTimeout(timeout_id);
             return response;
         } catch (e) {
-            clearTimeout(timeout_id); // /* Add this here */ Clear timeout on error too
+            clearTimeout(timeout_id);
             console.error('Fetch error or timeout:', e, URL);
-            // Fallback for iOS 11.x/12.0 if AbortController is the issue, though unlikely for modern browsers
-            // For a timeout error specifically, re-throwing might be better or returning a custom error response
             if (e.name === 'AbortError') {
                  throw new Error(`Request timed out: ${URL}`);
             }
-            throw e; // Re-throw other errors
+            throw e;
         }
     }
-	
     document.addEventListener('DOMContentLoaded', initializePage);
-    
 } catch(e) {
     console.error('YouTube integration error:', e);
-    // Display a user-friendly message on the page itself if catastrophic script error
     const body = document.querySelector('body');
     if (body) {
         const errorDiv = document.createElement('div');
         errorDiv.style.color = 'red';
         errorDiv.style.padding = '20px';
         errorDiv.textContent = 'A critical error occurred with the YouTube integration. Please check the console for details.';
-        // body.insertBefore(errorDiv, body.firstChild); // Or append, depending on desired visibility
     }
 }
 </script>
