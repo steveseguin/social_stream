@@ -120,6 +120,10 @@ class EventFlowEditor {
                 </div>
             </div>
         `;
+		const saveButton = document.getElementById('save-flow-btn');
+		if (saveButton) {
+			saveButton.classList.add('disabled'); // Start with disabled state
+		}
     }
 
     initEventListeners() {
@@ -187,7 +191,9 @@ class EventFlowEditor {
 	markUnsavedChanges(hasChanges) {
 		this.unsavedChanges = hasChanges;
 		const flowNameInput = document.getElementById('flow-name');
-		if (!flowNameInput || !this.currentFlow) return;
+		const saveButton = document.getElementById('save-flow-btn');
+		
+		if (!flowNameInput || !saveButton || !this.currentFlow) return;
 
 		// Get the base name without any asterisks
 		let baseName = flowNameInput.value;
@@ -197,6 +203,13 @@ class EventFlowEditor {
 		
 		// Set the input value with or without asterisk
 		flowNameInput.value = hasChanges ? baseName + '*' : baseName;
+		
+		// Update save button appearance
+		if (hasChanges) {
+			saveButton.classList.remove('disabled');
+		} else {
+			saveButton.classList.add('disabled');
+		}
 	}
 
     async loadFlowList() {
@@ -389,6 +402,7 @@ class EventFlowEditor {
         };
         this.markUnsavedChanges(false); 
 		this.originalFlowName = 'New Flow';
+		this.markUnsavedChanges(false); 
 
         document.getElementById('flow-name').value = this.currentFlow.name;
         document.getElementById('flow-active').checked = this.currentFlow.active;
