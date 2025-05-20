@@ -418,6 +418,7 @@
 								<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
 								<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
 								<button id="connect-button" class="connect-button">Connect</button>
+								<button id="change-button" class="connect-button" style="background-color: #ff7700;">Change</button>
 							</div>
 						</div>
 					</div>
@@ -575,6 +576,34 @@ try {
 		
 		const connectButton = document.getElementById('connect-button');
 		if (connectButton) connectButton.addEventListener('click', handleConnect);
+		
+		const changeButton = document.getElementById('change-button');
+	if (changeButton) {
+		changeButton.addEventListener('click', function() {
+			// Clear current connection
+			clearPolling();
+			
+			// Clear the header target info
+			updateHeaderInfo(username, 'No target (Ready to connect)');
+			
+			// Display instruction message
+			document.getElementById('textarea').innerHTML = '<div>Connection cleared. Enter new channel name or video ID and click Connect.</div>';
+			
+			// Reset stats
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			
+			// Clear events
+			document.getElementById('events-list').innerHTML = '';
+			
+			// Clear channel/video info
+			channel = '';
+			videoId = '';
+			localStorage.removeItem('youtubeChannel');
+			localStorage.removeItem('youtubeVideoId');
+		});
+	}
 		
 		const channelInput = document.getElementById('channel-input');
 		const videoInput = document.getElementById('video-input');
