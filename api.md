@@ -346,7 +346,7 @@ The featured page offers several filtering options that can be controlled via th
 4. `onlyTwitch`: Only show messages from Twitch
 5. `onlyFrom`: Only show messages from a specific source
 6. `hideFrom`: Hide messages from specific sources
-7. `filterfeaturedusers`: Only show messages from whitelisted users
+7. `filterfeaturedusers`: Only show messages from approved listed users
 
 ### API Actions
 

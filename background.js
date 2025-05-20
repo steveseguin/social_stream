@@ -3797,98 +3797,117 @@ function escapeHtml(unsafe) {
 }
 
 function sendToH2R(data) {
-	if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting) {
-		try {
-			var postServer = "http://127.0.0.1:4001/data/";
-
-			if (settings.h2rserver.textsetting.startsWith("http")) {
-				// full URL provided
-				postServer = settings.h2rserver.textsetting;
-			} else if (settings.h2rserver.textsetting.startsWith("127.0.0.1")) {
-				// missing the HTTP, so assume what they mean
-				postServer = "http://" + settings.h2rserver.textsetting;
-			} else {
-				postServer += settings.h2rserver.textsetting; // Just going to assume they gave the token
-			}
-
-			var msg = {};
-
-			if ("id" in data) {
-				msg.id = data.id;
-			}
-
-			if (data.timestamp) {
-				msg.timestamp = data.timestamp;
-			}
-
-			if (!data.textonly) {
-				data.chatmessage = unescapeHtml(data.chatmessage);
-			}
-
-			msg.snippet = {};
-			msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || "";
-
-			if (!msg.snippet.displayMessage) {
-				return;
-			}
-
-			msg.authorDetails = {};
-			msg.authorDetails.displayName = data.chatname || "";
-
-			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
-				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
-				let chatimg = data.chatimg.replace("=s32-", "=s256-");
-				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
-			} else {
-				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
-			}
-
-			if (data.type && data.sourceImg && data.type == "restream") {
-				msg.platform = {};
-				msg.platform.name = data.type || "";
-				if (data.sourceImg === "restream.png") {
-					msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.sourceImg;
-				} else {
-					msg.platform.logoUrl = data.sourceImg;
-				}
-			} else if (data.type) {
-				msg.platform = {};
-				msg.platform.name = data.type || "";
-				msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
-			}
-
-			var h2r = {};
-			h2r.messages = [];
-			h2r.messages.push(msg);
-			ajax(h2r, postServer, "POST");
-		} catch (e) {
-			console.warn(e);
-		}
-	}
+    if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting) {
+        try {
+            var postServer = "http://127.0.0.1:4001/data/";
+            if (settings.h2rserver.textsetting.startsWith("http")) {
+                // full URL provided
+                postServer = settings.h2rserver.textsetting;
+            } else if (settings.h2rserver.textsetting.startsWith("127.0.0.1")) {
+                // missing the HTTP, so assume what they mean
+                postServer = "http://" + settings.h2rserver.textsetting;
+            } else {
+                postServer += settings.h2rserver.textsetting; // Just going to assume they gave the token
+            }
+            var msg = {};
+            if ("id" in data) {
+                msg.id = data.id;
+            }
+            if (data.timestamp) {
+                msg.timestamp = data.timestamp;
+            }
+            if (!data.textonly) {
+                data.chatmessage = unescapeHtml(data.chatmessage);
+            }
+            msg.snippet = {};
+            msg.snippet.displayMessage = sanitizeRelay(data.chatmessage, data.textonly) || "";
+            if (!msg.snippet.displayMessage) {
+                return;
+            }
+            msg.authorDetails = {};
+            msg.authorDetails.displayName = data.chatname || "";
+            if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
+                msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+            } else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
+                let chatimg = data.chatimg.replace("=s32-", "=s256-");
+                msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
+            } else {
+                msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
+            }
+            if (data.type && data.sourceImg && data.type == "restream") {
+                msg.platform = {};
+                msg.platform.name = data.type || "";
+                if (data.sourceImg === "restream.png") {
+                    msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.sourceImg;
+                } else {
+                    msg.platform.logoUrl = data.sourceImg;
+                }
+            } else if (data.type) {
+                msg.platform = {};
+                msg.platform.name = data.type || "";
+                msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
+            }
+            var h2r = {};
+            h2r.messages = [];
+            h2r.messages.push(msg);
+            ajax(h2r, postServer, "POST");
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+}
+function sanitizeRelay(text, textonly=false, alt = false) {
+    if (!text || !text.trim()) {
+        return alt || text;
+    }
+    
+    // Extract all emojis from image alt attributes before stripping HTML
+    const emojiMap = new Map();
+    if (!textonly) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = text;
+        
+        // Collect all image elements with alt text that appears to be an emoji
+        const imgElements = tempDiv.querySelectorAll('img');
+        imgElements.forEach((img, index) => {
+            const altText = img.getAttribute('alt');
+            if (altText && isEmoji(altText)) {
+                const placeholder = `__EMOJI_PLACEHOLDER_${index}__`;
+                emojiMap.set(placeholder, altText);
+                img.outerHTML = placeholder;
+            }
+        });
+        
+        // Get the potentially modified HTML
+        text = tempDiv.innerHTML;
+        
+        // Convert to text from html
+        var textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        text = textArea.value;
+    }
+    
+    // Strip HTML and other unwanted characters
+    text = text.replace(/(<([^>]+)>)/gi, "");
+    text = text.replace(/[!#@]/g, "");
+    text = text.replace(/cheer\d+/gi, " ");
+    text = text.replace(/\.(?=\S(?!$))/g, " ");
+    
+    // Replace all emoji placeholders with their actual emojis
+    emojiMap.forEach((emoji, placeholder) => {
+        text = text.replace(placeholder, emoji);
+    });
+    
+    if (!text.trim() && alt) {
+        return alt;
+    }
+    return text.trim();
 }
 
-
-function sanitizeRelay(text, textonly=false, alt = false) {
-	if (!text.trim()) {
-		return text;
-	}
-	if (!textonly){
-		// convert to text from html if not text only mode
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = text;
-		text = textArea.value;
-	}
-	
-	text = text.replace(/(<([^>]+)>)/gi, "");
-	text = text.replace(/[!#@]/g, "");
-	text = text.replace(/cheer\d+/gi, " ");
-	text = text.replace(/\.(?=\S(?!$))/g, " ");
-	
-	if (!text.trim() && alt) {
-		return alt;
-	}
-	return text;
+// Add the isEmoji function from your original code
+function isEmoji(char) {
+    const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+    return emojiRegex.test(char);
 }
 
 const messageStore = {};
@@ -7829,27 +7848,7 @@ function createTab(url) {
 }
 
 
-function sanitizeRelay(text, textonly=false, alt = false) {
-	if (!text.trim()) {
-		return text;
-	}
-	if (!textonly){
-		// convert to text from html if not text only mode
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = text;
-		text = textArea.value;
-	}
-	
-	text = text.replace(/(<([^>]+)>)/gi, "");
-	text = text.replace(/[!#@]/g, "");
-	text = text.replace(/cheer\d+/gi, " ");
-	text = text.replace(/\.(?=\S(?!$))/g, " ");
-	
-	if (!text.trim() && alt) {
-		return alt;
-	}
-	return text;
-}
+
 
 const commandLastExecuted = {};
 /* 

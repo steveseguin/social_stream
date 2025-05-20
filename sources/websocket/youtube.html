@@ -401,24 +401,24 @@
 								<div class="header-item">
 									<span>User:</span>
 									<span id="current-user">Not signed in</span>
+									<div class="header-target">
+										<span>Target:</span>
+										<span id="current-channel" class="target-text">No target</span>
+									</div>
 								</div>
 							</div>
 						</div>
-						<button id="sign-out-button" class="sign-out-button">Sign Out</button>
+						
 					</div>
 					
 					<div class="header-bottom">
 						<div class="header-info">
-							<div class="header-target">
-								<span>Target:</span>
-								<span id="current-channel" class="target-text">No target</span>
-							</div>
-							
 							<div class="channel-input-container">
 								<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
 								<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
-								<button id="connect-button" class="connect-button">Connect</button>
-								<button id="change-button" class="connect-button" style="background-color: #ff7700;">Change</button>
+								<button id="connect-button" class="connect-button" style="background-color: #2255dd;">Connect</button>
+								<button id="change-button" class="connect-button" style="background-color: #882244;">Reset</button>
+								<button id="sign-out-button" class="sign-out-button">Sign Out</button>
 							</div>
 						</div>
 					</div>
@@ -486,6 +486,9 @@ try {
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
 	var initialBacklogProcessing = true;
 	var initialBacklogTimestamp = null;
+	var useProxyForChat = false;
+	var proxyUrl = 'https://youtube-publish-message-proxy.vdo.workers.dev/';
+
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
 		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
@@ -968,41 +971,46 @@ try {
             return null;
         }
     }
+	
 	function updatePollSpinner(interval) {
-		const spinner = document.getElementById('poll-spinner');
-		if (spinner) {
-			// Convert to seconds with one decimal place
-			const seconds = (interval / 1000).toFixed(1);
-			
-			// Reset animation to ensure it restarts with new duration
-			spinner.style.animation = 'none';
-			// Force reflow to ensure animation reset takes effect
-			spinner.offsetHeight;
-			
-			// Apply new animation duration and restart it
-			spinner.style.animation = `spinner-rotation ${interval}ms ease-in-out 1`;
-			document.getElementById('poll-time').textContent = `${seconds}s`;
-		}
+	  const spinner = document.getElementById('poll-spinner');
+	  if (spinner) {
+		// Convert to seconds with one decimal place
+		const seconds = (interval / 1000).toFixed(1);
+		
+		// Force animation restart
+		spinner.style.animation = 'none';
+		
+		// Trigger reflow
+		void spinner.offsetWidth;
+		
+		// Set new animation duration
+		spinner.style.animation = `spinner-rotation ${interval}ms ease-in-out 1`;
+		
+		// Update the timer text
+		document.getElementById('poll-time').textContent = `${seconds}s`;
+	  }
 	}
-
+	
 	function initializeSpinner() {
-		// Find the chat container h3 element
-		const chatHeader = document.querySelector('.chat-container h3');
-		if (!chatHeader) return;
-		
-		// Convert h3 to a flex container
-		chatHeader.className = 'chat-header';
-		chatHeader.innerHTML = `
-			<span>Chat Messages</span>
-			<div class="poll-spinner-container">
-				<div id="poll-spinner" class="poll-spinner"></div>
-				<span id="poll-time">5.0s</span>
-			</div>
-		`;
-		
-		// Set initial animation duration
-		updatePollSpinner(5000);
+	  // Find the chat container h3 element
+	  const chatHeader = document.querySelector('.chat-container h3');
+	  if (!chatHeader) return;
+	  
+	  // Convert h3 to a flex container
+	  chatHeader.className = 'chat-header';
+	  chatHeader.innerHTML = `
+		<span>Chat Messages</span>
+		<div class="poll-spinner-container">
+		  <div id="poll-spinner" class="poll-spinner"></div>
+		  <span id="poll-time">5.0s</span>
+		</div>
+	  `;
+	  
+	  // Set initial animation duration
+	  updatePollSpinner(5000);
 	}
+	
 	function queueMessage(messageData) {
 		messageQueue.push(messageData);
 		if (!isDisplaying) startDisplayQueue();
@@ -1130,17 +1138,17 @@ try {
 					
 					// Adaptive polling interval based on chat activity
 					const baseInterval = data.pollingIntervalMillis || 5000;
-					let adjustedInterval = baseInterval;
+					// let adjustedInterval = baseInterval;
 					
-					if (messageQueue.length > 200) {
-						adjustedInterval = Math.max(1000, baseInterval * 0.3);
-					} else if (messageQueue.length > 100) {
-						adjustedInterval = Math.max(1000, baseInterval * 0.5);
-					} else if (messageQueue.length > 50) {
-						adjustedInterval = Math.max(2000, baseInterval * 0.75);
-					}
-					updatePollSpinner(adjustedInterval);
-					setTimeout(fetchChatMessages, adjustedInterval);
+					// if (messageQueue.length > 200) {
+						// adjustedInterval = Math.max(1000, baseInterval * 0.3);
+					// } else if (messageQueue.length > 100) {
+						// adjustedInterval = Math.max(1000, baseInterval * 0.5);
+					// } else if (messageQueue.length > 50) {
+						// adjustedInterval = Math.max(2000, baseInterval * 0.75);
+					// }
+					updatePollSpinner(baseInterval-300);
+					setTimeout(fetchChatMessages, baseInterval);
 				}
 				
 				// Process special events (always dispatch events for these regardless of backlog)
@@ -1171,7 +1179,7 @@ try {
 					initialBacklogProcessing = false;
 					console.log('Initial backlog processing complete (no more messages)');
 				}
-				
+				updatePollSpinner(pollingInterval-300);
 				setTimeout(fetchChatMessages, pollingInterval);
 			}
 		} catch (error) {
@@ -1188,38 +1196,61 @@ try {
 		}
 	}
     async function sendChatMessage(message) {
-        const token = getStoredToken();
-        if (!token || !liveChatId) return { success: false };
-        try {
-            const response = await fetchWithTimeout('https://www.googleapis.com/youtube/v3/liveChat/messages?part=snippet,authorDetails', 5000, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    snippet: {
-                        liveChatId: liveChatId, type: 'textMessageEvent',
-                        textMessageDetails: { messageText: message }
-                    }
-                })
-            });
-            if (!response.ok) {
-                const errorText = await response.text(); console.error('Error sending chat message:', errorText);
-                return { success: false };
-            }
-            const data = await response.json();
-            return {
-                success: true,
-                authorDetails: {
-                    profileImageUrl: data.authorDetails?.profileImageUrl,
-                    isChatOwner: data.authorDetails?.isChatOwner,
-                    isChatSponsor: data.authorDetails?.isChatSponsor,
-                    isChatModerator: data.authorDetails?.isChatModerator
-                }
-            };
-        } catch (error) {
-            console.error('Error sending chat message:', error);
-            return { success: false };
-        }
-    }
+		const token = getStoredToken();
+		if (!token || !liveChatId) return { success: false };
+		
+		try {
+			// Determine whether to use direct API or proxy based on past experience
+			const baseUrl = useProxyForChat 
+				? proxyUrl 
+				: 'https://www.googleapis.com/youtube/v3/liveChat/messages';
+			
+			// Use the same parameters regardless of endpoint
+			const url = `${baseUrl}?part=snippet,authorDetails`;
+			
+			const response = await fetchWithTimeout(url, 5000, {
+				method: 'POST',
+				headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					snippet: {
+						liveChatId: liveChatId,
+						type: 'textMessageEvent',
+						textMessageDetails: { messageText: message }
+					}
+				})
+			});
+			
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('Error sending chat message:', errorText);
+				return { success: false };
+			}
+			
+			const data = await response.json();
+			return {
+				success: true,
+				authorDetails: {
+					profileImageUrl: data.authorDetails?.profileImageUrl,
+					isChatOwner: data.authorDetails?.isChatOwner,
+					isChatSponsor: data.authorDetails?.isChatSponsor,
+					isChatModerator: data.authorDetails?.isChatModerator
+				}
+			};
+		} catch (error) {
+			console.error('Error sending chat message:', error);
+			
+			// Check if this was a CORS error and we weren't already using the proxy
+			if (!useProxyForChat && (error.message.includes('CORS') || error.name === 'TypeError')) {
+				console.log('Detected CORS issue, switching to proxy for future requests');
+				useProxyForChat = true;
+				
+				// Retry the same message using the proxy
+				return sendChatMessage(message);
+			}
+			
+			return { success: false };
+		}
+	}
     async function getStreamStats() {
         if (!currentStream || !currentStream.id) return;
         const token = getStoredToken();

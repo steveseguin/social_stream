@@ -1,5 +1,7 @@
 (function() {
 	
+	let observedDomElementForObserver1 = null;
+	let observedDomElementForObserver2 = null;
 	
 	var bigDUPE = false;
 	
@@ -50,96 +52,98 @@
 	};
 
 	const messageLog = {
-		_log: [],
-		_mode: 'count', // 'count' or 'time'
-		_maxMessages: 400,
-		_timeWindow: 10000, // 10 seconds in ms
-		_cleanupInterval: null,
+	  _log: [],
+	  _mode: 'count', // 'count' or 'time'
+	  _maxMessages: 400,
+	  _timeWindow: 10000, // 10 seconds in ms
+	  _cleanupInterval: null,
+	  
+	  init(options = {}) {
+		// Set configuration
+		this._mode = options.mode || 'count';
+		this._maxMessages = options.maxMessages || 400;
+		this._timeWindow = options.timeWindow || 10000;
 		
-		init(options = {}) {
-			// Set configuration
-			this._mode = options.mode || 'count';
-			this._maxMessages = options.maxMessages || 400;
-			this._timeWindow = options.timeWindow || 10000;
-			
-			// Clear any existing interval
-			if (this._cleanupInterval) {
-				clearInterval(this._cleanupInterval);
-			}
-			
-			// Set up periodic cleanup
-			this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
-		},
+		// Clear any existing interval to prevent leaks
+		this.destroy();
 		
-		cleanup() {
-			const currentTime = Date.now();
-			
-			if (this._mode === 'time') {
-				// Time-based: Only remove entries older than the time window
-				this._log = this._log.filter(entry => 
-					(currentTime - entry.time) <= this._timeWindow
-				);
-			} else {
-				// Count-based: Just limit size
-				if (this._log.length > this._maxMessages) {
-					this._log = this._log.slice(-this._maxMessages);
-				}
-			}
-		},
+		// Set up periodic cleanup
+		this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
+	  },
+	  
+	  cleanup() {
+		const currentTime = Date.now();
 		
-		isDuplicate(name, message) {
-			const currentTime = Date.now();
-			const messageKey = `${name}:${message}`;
-			
-			// Check if message exists in log based on mode
-			let duplicate = false;
-			
-			if (this._mode === 'time') {
-				// For time mode, check if message was seen within time window
-				duplicate = this._log.some(entry => 
-					entry.key === messageKey && 
-					(currentTime - entry.time) <= this._timeWindow
-				);
-			} else {
-				// For count mode, just check if message exists in current log
-				duplicate = this._log.some(entry => 
-					entry.key === messageKey
-				);
-			}
-			
-			if (duplicate) {
-				return true;
-			}
-			
-			// Add new message to log
-			this._log.push({
-				key: messageKey,
-				time: currentTime
-			});
-			
-			// Cleanup immediately if needed
-			if (this._mode === 'count' && this._log.length > this._maxMessages) {
-				this._log.shift();
-			}
-			
-			return false;
-		},
-		
-		destroy() {
-			if (this._cleanupInterval) {
-				clearInterval(this._cleanupInterval);
-				this._cleanupInterval = null;
-			}
-			this._log = [];
-		},
-		
-		configure(options = {}) {
-			if (options.mode !== undefined) this._mode = options.mode;
-			if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
-			if (options.timeWindow !== undefined) this._timeWindow = options.timeWindow;
-			this.cleanup();
+		if (this._mode === 'time') {
+		  // Time-based: Only remove entries older than the time window
+		  this._log = this._log.filter(entry => 
+			(currentTime - entry.time) <= this._timeWindow
+		  );
+		} else {
+		  // Count-based: Just limit size
+		  if (this._log.length > this._maxMessages) {
+			// More efficient to slice from the end than shift from the beginning
+			this._log = this._log.slice(-this._maxMessages);
+		  }
 		}
+	  },
+	  
+	  isDuplicate(name, message) {
+		if (!name && !message) return true; // Prevent empty messages
+		
+		const currentTime = Date.now();
+		const messageKey = `${name}:${message}`;
+		
+		// Check if message exists in log based on mode
+		let duplicate = false;
+		
+		if (this._mode === 'time') {
+		  // For time mode, check if message was seen within time window
+		  duplicate = this._log.some(entry => 
+			entry.key === messageKey && 
+			(currentTime - entry.time) <= this._timeWindow
+		  );
+		} else {
+		  // For count mode, just check if message exists in current log
+		  duplicate = this._log.some(entry => 
+			entry.key === messageKey
+		  );
+		}
+		
+		if (duplicate) {
+		  return true;
+		}
+		
+		// Add new message to log
+		this._log.push({
+		  key: messageKey,
+		  time: currentTime
+		});
+		
+		// Cleanup immediately if needed
+		if (this._mode === 'count' && this._log.length > this._maxMessages) {
+		  this._log = this._log.slice(-this._maxMessages);
+		}
+		
+		return false;
+	  },
+	  
+	  destroy() {
+		if (this._cleanupInterval) {
+		  clearInterval(this._cleanupInterval);
+		  this._cleanupInterval = null;
+		}
+		this._log = [];
+	  },
+	  
+	  configure(options = {}) {
+		if (options.mode !== undefined) this._mode = options.mode;
+		if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
+		if (options.timeWindow !== undefined) this._timeWindow = options.timeWindow;
+		this.cleanup();
+	  }
 	};
+
 	// Initialize when script starts
 	messageLog.init({ mode: 'count', maxMessages: 421 });
 
@@ -1276,259 +1280,374 @@
     }
 	
 	var observer = false;
+	
+	
+	function periodicHealthCheck() {
+	  // First, check for complete DOM resets
+	  detectDOMResets();
+	  
+	  // Then check observer health as before
+	  ensureObserversActive();
+	  
+	  // Handle the TikTok view count if needed
+	  if (settings.showviewercount || settings.hypemode) {
+		try {
+		  if (StreamState.isValid() || !StreamState.getCurrentChannel()) {
+			var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+			
+			if (viewerCount && viewerCount.textContent) {
+			  let views = viewerCount.textContent;
+			  let multiplier = 1;
+			  if (views.includes("K")) {
+				multiplier = 1000;
+				views = views.replace("K", "");
+			  } else if (views.includes("M")) {
+				multiplier = 1000000;
+				views = views.replace("M", "");
+			  }
+			  if (views == parseFloat(views)) {
+				views = parseFloat(views) * multiplier;
+				chrome.runtime.sendMessage(
+				  chrome.runtime.id,
+				  ({
+					message: {
+					  type: 'tiktok',
+					  event: 'viewer_update',
+					  meta: views
+					}
+				  }),
+				  function(e) {}
+				);
+			  }
+			}
+		  }
+		} catch(e) {
+		  // Silent error handling
+		}
+	  }
+	}
+	
+	window.addEventListener('beforeunload', function() {
+	  if (observer) {
+		observer.disconnect();
+		observer = null;
+		/* Add this line */
+		observedDomElementForObserver1 = null;
+	  }
+	  
+	  if (observer2) {
+		observer2.disconnect();
+		observer2 = null;
+		/* Add this line */
+		observedDomElementForObserver2 = null;
+	  }
+	  
+	  if (messageLog._cleanupInterval) {
+		clearInterval(messageLog._cleanupInterval);
+		messageLog._cleanupInterval = null;
+	  }
+	  
+	  if (videosMuted) {
+		clearInterval(videosMuted);
+		videosMuted = null;
+	  }
+	  
+	  if (pokeMe) {
+		clearInterval(pokeMe);
+		pokeMe = null;
+	  }
+	});
 
 
 	function start() {
-		if (!isExtensionOn) {
-			return;
+	  if (!isExtensionOn) {
+		return;
+	  }
+	  
+	  if (observer && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected) { // More reliable check
+		return;
+	  }
+	  
+	  let target = null;
+	  let subtree = false;
+	  
+	  if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
+		target = document.querySelector('[data-e2e]');
+		if (target) {
+		  target = target.parentNode;
 		}
-		
-		
-		
-		if (settings.showviewercount || settings.hypemode){
-			try {
-				
-				if (!StreamState.isValid() && StreamState.getCurrentChannel()){
-					// not active
-				} else {
-					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
-					
-					if (viewerCount && viewerCount.textContent){
-						let views = viewerCount.textContent;
-						let multiplier = 1;
-						if (views.includes("K")){
-							multiplier = 1000;
-							views = views.replace("K","");
-						} else if (views.includes("M")){
-							multiplier = 1000000;
-							views = views.replace("M","");
-						}
-						if (views == parseFloat(views)){
-							views = parseFloat(views) * multiplier;
-							chrome.runtime.sendMessage(
-								chrome.runtime.id,
-								({message:{
-										type: 'tiktok',
-										event: 'viewer_update',
-										meta: views
-									}
-								}),
-								function (e) {}
-							);
-						}
-					}
-				}
-			} catch(e){
-				//console.error(e);
-			}
-		}
-		
-		let target = null;
-		let subtree = false;
-		
-		// First try for chat room
-		if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
-			target = document.querySelector('[data-e2e]');
-			if (target) {
-				target = target.parentNode;
-			}
-		} else {
-			// Try main selectors for chat container
-			target = document.querySelector('[data-item="list-message-list"], [class*="DivChatMessageList"]');
-			
-			if (!target){
-				target = document.querySelector('[data-e2e="chat-room"], [data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
-				if (target){
-					subtree = true;
-				}
-			}
-		}
-		
-		if (!target){
-			target = document.querySelectorAll('[data-index].w-full');
-			if (target && target.length>3){
-				target = target[target.length-1].parentNode;
-				subtree = false;
-			} else{
-				return;
-			}
-		}
-		
+	  } else {
+		target = document.querySelector('[data-item="list-message-list"], [class*="DivChatMessageList"]');
 		if (!target) {
-			target = document.querySelector('[role="heading"][tabindex]');
-			if (target && window.location.href.includes("/live") && target.nodeType==1){
-				// we will see.
-			} else {
-				return;
-			}
+		  target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
+		  if (target) { subtree = true; }
 		}
-		
-		
-		if (!window.location.href.includes("livecenter") && 
-			!(window.location.pathname.includes("@") && 
-			  window.location.pathname.includes("live"))) {
-			return;
+	  }
+	  
+	  if (!target) {
+		let potentialTargets = document.querySelectorAll('[data-index].w-full');
+		if (potentialTargets && potentialTargets.length > 3) {
+		  target = potentialTargets[potentialTargets.length-1].parentNode;
+		  subtree = false;
 		}
-		
-		// Prevent multiple observers on the same target
-		if (!target || observer) {
-			return;
+	  }
+	  
+	  if (!target) {
+		target = document.querySelector('[role="heading"][tabindex]');
+		if (!(target && window.location.href.includes("/live") && target.nodeType == 1)) {
+		  target = null; // Ensure target is null if conditions not met
 		}
-		
-		
-		if (!subtree){
-			start2(target);
-		} 
-		
-		console.log("Starting social stream");
-		
-		// Create mutation observer with original configuration
-		observer = new MutationObserver((mutations) => {
-			
-			mutations.forEach((mutation) => {
-				if (mutation.addedNodes.length) {
-					//console.log(mutation.addedNodes);
-					for (let i = 0; i < mutation.addedNodes.length; i++) {
-						try {
-							const node = mutation.addedNodes[i];
-							if (!subtree){
+	  }
 
-								if (node.dataset && node.dataset.e2e === "chat-message") {
-									setTimeout((node) => {
-										if (node.isConnected) {
-											processMessage(node);
-										}
-									}, 10, node);
-								} else if (node.querySelector("[data-e2e='chat-message']")){
-									setTimeout((node) => {
-										if (node.isConnected) {
-											processMessage(node);
-										}
-									}, 10, node);
-								} else if (settings.captureevents) {
-									setTimeout((node) => {
-										if (node.isConnected) {
-											processEvent(node);
-										}
-									}, 10, node);
-								}
-							} else if (subtree){
-								
-								let msg = node.querySelector('[data-e2e="chat-message"]');
-								if (msg || (node.dataset && node.dataset.e2e === "chat-message")){
-									setTimeout((node) => {
-									if (node.isConnected) {
-											processMessage(node);
-										}
-									}, 10, (msg || node));
-								} else if (settings.captureevents) {
-									setTimeout((node) => {
-										if (node.isConnected) {
-											processEvent(node);
-										}
-									}, 10, node);
-								}
-							} else if (settings.captureevents) {
-								setTimeout((node) => {
-									if (node.isConnected) {
-										processEvent(node);
-									}
-								}, 10, node);
-							}
-						} catch (e) {
-							//console.error("Error processing node:", e);
-						}
+	  if (!target) { // Moved this check earlier, after all target finding attempts
+		console.log("Start: No target found for main observer.");
+		return;
+	  }
+	  
+	  if (!window.location.href.includes("livecenter") && 
+		  !(window.location.pathname.includes("@") && window.location.pathname.includes("live"))) {
+		return;
+	  }
+	  
+	  if (observer) {
+		observer.disconnect();
+		observedDomElementForObserver1 = null;
+	  }
+	  observer = false; // Ensure it's false before creating a new one
+	  
+	  if (!subtree) {
+		start2(target);
+	  }
+	  
+	  console.log("Starting social stream on target:", target);
+	  
+	  observer = new MutationObserver((mutations) => {
+		if (!isExtensionOn) return;
+		mutations.forEach((mutation) => {
+		  if (mutation.addedNodes.length) {
+			for (let i = 0; i < mutation.addedNodes.length; i++) {
+			  try {
+				const node = mutation.addedNodes[i];
+				if (!node.isConnected) continue; // Skip nodes not connected
+
+				if (!subtree) {
+				  if (node.dataset && node.dataset.e2e === "chat-message") {
+					setTimeout(processMessage, 10, node);
+				  } else {
+					const chatMessageChild = node.querySelector && node.querySelector("[data-e2e='chat-message']");
+					if (chatMessageChild) {
+						setTimeout(processMessage, 10, chatMessageChild); // Pass the actual message element
+					} else if (settings.captureevents) {
+						setTimeout(processEvent, 10, node);
 					}
+				  }
+				} else { // subtree is true
+				  let msg = (node.dataset && node.dataset.e2e === "chat-message") ? node : (node.querySelector && node.querySelector('[data-e2e="chat-message"]'));
+				  if (msg) {
+					setTimeout(processMessage, 10, msg);
+				  } else if (settings.captureevents) {
+					setTimeout(processEvent, 10, node);
+				  }
 				}
-			});
+			  } catch (e) { /* Silent error handling */ }
+			}
+		  }
+		});
+	  });
+	  
+	  const currentTarget = target; // Use a stable reference for the timeout
+	  
+	  setTimeout(function() {
+		if (!currentTarget || !isExtensionOn || !currentTarget.isConnected) {
+		  if (observer) observer.disconnect();
+		  observer = false;
+		  observedDomElementForObserver1 = null;
+		  console.log("Main observer not started: target gone, extension off, or target not connected.");
+		  return;
+		}
+		
+		if (currentTarget.children) {
+		  Array.from(currentTarget.children).forEach(ele => {
+			if (ele && ele.dataset && ele.isConnected) {
+			  ele.dataset.skip = ++msgCount;
+			}
+		  });
+		}
+		
+		document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele => {
+		  ele.dataset.skip = ++msgCount;
 		});
 		
-		setTimeout(function(observer, subtree, target){
-			if (!target){
-				observer = false;
-				return;
-			}
-			[target.children].forEach(ele=>{
-				if (ele && ele.dataset && ele.isConnected){
-					ele.dataset.skip = ++msgCount;
-				}
-			})
-			document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele=>{
-				ele.dataset.skip = ++msgCount;
-			});
-			observer.observe(target, {
-				childList: true,
-				subtree: subtree
-			});
-		},2000, observer, subtree, target);
+		observer.observe(currentTarget, { childList: true, subtree: subtree });
+		observedDomElementForObserver1 = currentTarget; // Store the successfully observed target
+		console.log("Main observer is now observing.", currentTarget);
+
+	  }, 2000);
 	}
 
 	var observer2 = false;
 	
-	function start2(other=false) {
-		
-		if (!isExtensionOn || !settings.captureevents) {
-			return;
+	function ensureObserversActive() {
+	  // This function's original check `!observer.takeRecords` was not effective for disconnected MutationObservers.
+	  // The improved detectDOMResets should handle most cases.
+	  // We can keep a simplified check or rely entirely on detectDOMResets.
+	  // For now, let's ensure `start` is called if observer is somehow false when it should be active.
+	  if (!observer && isExtensionOn && 
+	  	(window.location.href.includes("livecenter") || (window.location.pathname.includes("@") && window.location.pathname.includes("live")))) {
+		const chatContainerExists = document.querySelector('[data-e2e="chat-room"], [class*="DivChatMessageList"], [data-item="list-message-list"]');
+		if (chatContainerExists) {
+			console.log("EnsureObserversActive: Main observer is unexpectedly missing, attempting to restart.");
+			start();
 		}
-		
-		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
-		
-		if (!target2 && other) {
-			target2 = other.nextElementSibling;
+	  }
+	  
+	  if (settings.captureevents && !observer2 && isExtensionOn &&
+	  	(window.location.href.includes("livecenter") || (window.location.pathname.includes("@") && window.location.pathname.includes("live")))) {
+		const bottomStickyContainerExists = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+		if (bottomStickyContainerExists) {
+			console.log("EnsureObserversActive: Secondary observer is unexpectedly missing, attempting to restart.");
+			start2();
 		}
-		
-		if (!target2) {
-			return;
+	  }
+	}
+	
+	function detectDOMResets() {
+	  // Check if our tracked elements are still in the document
+	  const mainObserverTargetStillInDOM = observer && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected && document.body.contains(observedDomElementForObserver1);
+	  const secondaryObserverTargetStillInDOM = observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected && document.body.contains(observedDomElementForObserver2);
+	  
+	  const chatContainerExists = document.querySelector('[data-e2e="chat-room"], [class*="DivChatMessageList"], [data-item="list-message-list"]');
+	  const bottomStickyContainerExists = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+
+	  let needsReset = false;
+
+	  if (observer && !mainObserverTargetStillInDOM) {
+		console.log("Main observer target lost or no longer connected.");
+		needsReset = true;
+	  } else if (!observer && chatContainerExists) {
+		console.log("Chat container exists but main observer is not active.");
+		needsReset = true;
+	  }
+
+	  if (settings.captureevents) {
+		if (observer2 && !secondaryObserverTargetStillInDOM) {
+			console.log("Secondary observer target lost or no longer connected.");
+			// We might only want to restart observer2 here, but for simplicity if main is also problematic, a full reset is fine.
+			// If not already needing a full reset, just handle observer2.
+			if (!needsReset) {
+				console.log("Resetting only secondary observer...");
+				if (observer2) {
+					observer2.disconnect();
+					observer2 = null;
+					observedDomElementForObserver2 = null;
+				}
+				start2(); // Attempt to restart only observer2
+				// If start2 relies on elements found by start, this might need more coordination
+			} else {
+                 // Full reset will handle observer2 as well
+            }
+		} else if (!observer2 && bottomStickyContainerExists) {
+			console.log("Bottom sticky container exists but secondary observer is not active.");
+			if (!needsReset) { // If main observer is fine, just start observer2
+				console.log("Starting only secondary observer...");
+				start2();
+			} else {
+                // Full reset will handle observer2 as well
+            }
 		}
+	  }
+	  
+	  if (needsReset) {
+		console.log("DOM structure may have been replaced or observer target lost, resetting observers...");
 		
-		if (!window.location.href.includes("livecenter") && 
-			!(window.location.pathname.includes("@") && 
-			  window.location.pathname.includes("live"))) {
-			return;
+		if (observer) {
+		  observer.disconnect();
+		  observer = null;
+		  observedDomElementForObserver1 = null;
 		}
 		
 		if (observer2) {
-			return;
+		  observer2.disconnect();
+		  observer2 = null;
+		  observedDomElementForObserver2 = null;
 		}
 		
-		observer2 = new MutationObserver((mutations) => {
-			if (!settings.captureevents) return;
-			
-			mutations.forEach((mutation) => {
-				if (mutation.addedNodes.length) {
-					for (let i = 0; i < mutation.addedNodes.length; i++) {
-						try {
-							const node = mutation.addedNodes[i];
-							
-							if (node.nodeName === "DIV") {
-								if (!node.isConnected) return;
-								
-								const typeOfEvent = node.dataset.e2e || node.querySelector("[data-e2e]")?.dataset.e2e;
-								if (typeOfEvent) {
-									if (!settings.capturejoinedevent && typeOfEvent === "enter-message") {
-										return;
-									}
-									processEvent(node.cloneNode(true), typeOfEvent || true);
-								} else {
-									processEvent(node.cloneNode(true), true);
-								}
-							}
-						} catch (e) {
-							console.error("Error processing event:", e);
-						}
+		msgCount = 0;
+		setTimeout(start, 500);
+	  }
+	}
+	
+	function start2(other = false) {
+	  if (!isExtensionOn || !settings.captureevents) {
+		return;
+	  }
+	  
+	  if (observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected) { // More reliable check
+		return;
+	  }
+	  
+	  var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+	  if (!target2 && other && other.nextElementSibling) { // Check if 'other' has a next sibling
+		target2 = other.nextElementSibling;
+	  }
+	  
+	  if (!target2) {
+		console.log("Start2: No target found for secondary observer.");
+		return;
+	  }
+	  
+	  if (!window.location.href.includes("livecenter") && 
+		!(window.location.pathname.includes("@") && window.location.pathname.includes("live"))) {
+		return;
+	  }
+	  
+	  if (observer2) {
+		observer2.disconnect();
+		observedDomElementForObserver2 = null;
+	  }
+	  observer2 = false; // Ensure it's false
+	  
+	  console.log("Starting secondary event stream on target:", target2);
+	  observer2 = new MutationObserver((mutations) => {
+		if (!settings.captureevents || !isExtensionOn) return;
+		mutations.forEach((mutation) => {
+		  if (mutation.addedNodes.length) {
+			for (let i = 0; i < mutation.addedNodes.length; i++) {
+			  try {
+				const node = mutation.addedNodes[i];
+				if (!node.isConnected) continue;
+				
+				if (node.nodeName === "DIV") {
+				  const typeOfEvent = node.dataset?.e2e || node.querySelector?.("[data-e2e]")?.dataset.e2e;
+				  if (typeOfEvent) {
+					if (!settings.capturejoinedevent && typeOfEvent === "enter-message") {
+					  // return; // This return was for the loop, not the function. Should be continue.
+					  continue;
 					}
+					processEvent(node); // typeOfEvent is not used by processEvent
+				  } else {
+					processEvent(node);
+				  }
 				}
-			});
+			  } catch (e) { /* Silent error handling */ }
+			}
+		  }
 		});
-		
-		observer2.observe(target2, {
-			childList: true,
-			subtree: true
-		});
+	  });
+	  
+	  if (target2.isConnected) {
+		observer2.observe(target2, { childList: true, subtree: true });
+		observedDomElementForObserver2 = target2; // Store the successfully observed target
+		console.log("Secondary observer is now observing.", target2);
+	  } else {
+		observer2 = false;
+		observedDomElementForObserver2 = null;
+		console.log("Secondary observer not started: target not connected.");
+	  }
 	}
 
 	// Initialize observers
-	setInterval(start, 2000);
+	setInterval(periodicHealthCheck, 2000);
 
     var settings = {};
     var isExtensionOn = false;
