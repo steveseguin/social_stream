@@ -1987,10 +1987,23 @@ async function getBTTVEmotes(url = false, type=null, channel=null) {
 	return bttv;
 }
 
-
-async function getSEVENTVEmotes(url = false, type=null, channel=null) {
+async function getKickUserIdByUsername(kickUsername) {
+  try {
+	const response = await fetch(`https://kick.com/api/v2/channels/${kickUsername}`);
+	if (!response.ok) {
+	  throw new Error(`Failed to fetch user data: ${response.status}`);
+	}
+	const data = await response.json();
+	return data.user_id ;
+  } catch (error) {
+	console.error(`Error fetching Kick user ID: ${error.message}`);
+	return null;
+  }
+}
+  
+  
+async function getSEVENTVEmotes(url = false, type=null, channel=null, userID=false) {
 	var seventv = {};
-	var userID = false;
 
 	try {
 		if (type){
@@ -1999,6 +2012,8 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 			type = "youtube";
 		} else if (url && url.includes("twitch.tv/")) {
 			type = "twitch";
+		} else if (url && url.includes("kick.com/")) {
+			type = "kick";
 		}
 
 		if (type == "youtube") {
@@ -2044,7 +2059,7 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 						if (seventv) {
 							if (seventv.emote_set && seventv.emote_set.emotes) {
 								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
 									if ((emote.data && emote.data.flags) || emote.flags) {
 										acc[emote.name] = { url: imageUrl, zw: true };
 									} else {
@@ -2090,7 +2105,6 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 						}
 						const data = await response.json();
 
-						//log(data);
 						if (data && data.data && data.data[0] && data.data[0].id) {
 							userID = data.data[0].id;
 
@@ -2115,7 +2129,7 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 						if (seventv) {
 							if (seventv.emote_set && seventv.emote_set.emotes) {
 								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
 									if ((emote.data && emote.data.flags) || emote.flags) {
 										acc[emote.name] = { url: imageUrl, zw: true };
 									} else {
@@ -2133,6 +2147,64 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 					}
 				} else {
 					log("seventv recovererd from storage");
+				}
+			}
+		} else if (type == "kick") {
+			var username = "";
+			if (channel) {
+				username = channel;
+			} else if (url) {
+				username = url.replace("https://kick.com/", "").split("/")[0].split("?")[0];
+				if (username == "popout"){
+					username = url.replace("https://kick.com/popout/", "").split("/")[0].split("?")[0];
+				}
+			}
+			
+			log("kick username: " + username);
+			if (username) {
+				seventv = getItemWithExpiry("uid2seventv.kick:" + username.toLowerCase());
+				if (!seventv || seventv.message) {
+					seventv = {};
+					userID = userID || localStorage.getItem("kick2uid." + username.toLowerCase());
+					if (!userID) {
+						userID = await getKickUserIdByUsername(username) || false;
+
+						if (userID) {
+							localStorage.setItem("kick2uid." + username.toLowerCase(), userID);
+						}
+					}
+					if (userID) {
+						seventv = await fetch("https://7tv.io/v3/users/kick/" + userID)
+							.then(result => {
+								return result.json();
+							})
+							.then(result => {
+								return result;
+							})
+							.catch(err => {
+								console.error(err);
+							});
+						if (seventv) {
+							if (seventv.emote_set && seventv.emote_set.emotes) {
+								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+									if ((emote.data && emote.data.flags) || emote.flags) {
+										acc[emote.name] = { url: imageUrl, zw: true };
+									} else {
+										acc[emote.name] = imageUrl;
+									}
+									return acc;
+								}, {});
+							}
+
+							setItemWithExpiry("uid2seventv.kick:" + username.toLowerCase(), seventv);
+						} else {
+							seventv = {};
+						}
+						log("KICK SEVENTV", seventv);
+					}
+				} else {
+					log("kick seventv recovered from storage");
 				}
 			}
 		}
@@ -2153,7 +2225,7 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 					});
 				if (Globalseventv && Globalseventv.emotes) {
 					Globalseventv = Globalseventv.emotes.reduce((acc, emote) => {
-						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
 						if (emote.flags) {
 							acc[emote.name] = { url: imageUrl, zw: true };
 						} else {
@@ -2176,7 +2248,6 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 		seventv.url = url;
 		seventv.type = type;
 		seventv.user = userID;
-		//log(Globalseventv);
 	} catch (e) {
 		console.error(e);
 	}
@@ -2940,6 +3011,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.seventv) {
 					clearAllWithPrefix("uid2seventv.twitch:");
 					clearAllWithPrefix("uid2seventv.youtube:");
+					clearAllWithPrefix("uid2seventv.kick:");
 					await getSEVENTVEmotes();
 				}
 				pushSettingChange();
@@ -3101,7 +3173,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			//console.log("getSEVENTV");
 			sendResponse({ state: isExtensionOn });
 			if (sender.tab.url) {
-				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
 					//	//console.logsender);
 					//	//console.logSEVENTV2);
