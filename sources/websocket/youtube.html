@@ -234,6 +234,151 @@
 		.user-info-text {
 			margin-right: 12px;
 		}
+		
+		
+		/* Header styles - updated */
+		.channel-header {
+			background: white;
+			padding: 12px;
+			border-radius: 4px;
+			box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		/* Separate top row with user info and sign-out button */
+		.header-top {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			width: 100%;
+		}
+
+		/* User info styling */
+		.user-info {
+			display: flex;
+			align-items: center;
+		}
+
+		.header-info {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 15px;
+			width: 100%;
+		}
+
+		/* Style for the header items to handle overflow */
+		.header-item {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			min-width: 0;
+		}
+
+		/* Target section with overflow handling */
+		.header-target {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			overflow: hidden;
+			max-width: 100%;
+		}
+
+		.header-target span:first-child {
+			font-weight: bold;
+			color: #FF0000;
+			white-space: nowrap;
+		}
+
+		.target-text {
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.header-item span:first-child {
+			font-weight: bold;
+			color: #FF0000;
+			white-space: nowrap;
+		}
+
+		/* Bottom row with channel input */
+		.header-bottom {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			width: 100%;
+		}
+
+		/* Channel input container */
+		.channel-input-container {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: center;
+			gap: 8px;
+			flex: 1;
+		}
+
+		.channel-input {
+			padding: 8px;
+			font-size: 14px;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			flex: 1;
+			min-width: 120px;
+		}
+
+		/* Responsive adjustments */
+		@media (max-width: 768px) {
+			.header-info {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+			
+			.channel-input-container {
+				margin-top: 10px;
+				width: 100%;
+			}
+		}
+		
+		.poll-spinner-container {
+			display: inline-flex;
+			align-items: center;
+			margin-left: 10px;
+			font-size: 12px;
+			color: #666;
+		}
+
+		.poll-spinner {
+			width: 16px;
+			height: 16px;
+			border-radius: 50%;
+			border: 2px solid rgba(255, 0, 0, 0.1);
+			border-top-color: #FF0000;
+			margin-right: 5px;
+			transform-origin: center;
+			animation-name: spinner-rotation;
+			animation-timing-function: ease-in-out;
+			animation-iteration-count: infinite;
+		}
+
+		@keyframes spinner-rotation {
+			0% {
+				transform: rotate(0deg);
+			}
+			100% {
+				transform: rotate(360deg);
+			}
+		}
+
+		.chat-header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin: 0 0 10px 0;
+		}
     </style>
 </head>
 <body>
@@ -248,8 +393,8 @@
 			</div>
             
             <div class="hidden socket">
-                <div class="channel-header">
-					<div class="header-info">
+               <div class="channel-header">
+					<div class="header-top">
 						<div class="user-info">
 							<div id="user-avatar"></div>
 							<div class="user-info-text">
@@ -259,16 +404,23 @@
 								</div>
 							</div>
 						</div>
-						<div class="header-item">
-							<span>Target:</span> <span id="current-channel">No target</span>
-						</div>
-						<div class="channel-input-container">
-							<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
-							<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
-							<button id="connect-button" class="connect-button">Connect</button>
+						<button id="sign-out-button" class="sign-out-button">Sign Out</button>
+					</div>
+					
+					<div class="header-bottom">
+						<div class="header-info">
+							<div class="header-target">
+								<span>Target:</span>
+								<span id="current-channel" class="target-text">No target</span>
+							</div>
+							
+							<div class="channel-input-container">
+								<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
+								<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
+								<button id="connect-button" class="connect-button">Connect</button>
+							</div>
 						</div>
 					</div>
-					<button id="sign-out-button" class="sign-out-button">Sign Out</button>
 				</div>
 
                 <div class="stats-container">
@@ -331,6 +483,8 @@ try {
 	var quickPollCount = 0
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
+	var initialBacklogProcessing = true;
+	var initialBacklogTimestamp = null;
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
 		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
@@ -437,12 +591,6 @@ try {
 			});
 		}
 		
-		// If URL parameters are present, hide the inputs
-		if (urlVideoIdParam || urlChannelParam) {
-			const channelInputContainer = document.querySelector('.channel-input-container');
-			if (channelInputContainer) channelInputContainer.classList.add('hidden');
-		}
-		
 		if (urlParams.has('code')) {
 			handleAuthCallback();
 			return;
@@ -459,7 +607,7 @@ try {
 	}
 	function verifyAndUseToken(token) {
 		try {
-			getUserInfo(token).then(userInfo => {
+			getUserInfo(token).then(async userInfo => {
 				if (userInfo && userInfo.items && userInfo.items.length > 0) {
 					const userItem = userInfo.items[0];
 					username = userItem.snippet.title;
@@ -483,25 +631,23 @@ try {
 					if (redirectVideoId) {
 						videoId = redirectVideoId;
 						channel = '';
-						connect(videoId);
+						await connect(videoId);
 						sessionStorage.removeItem("youtubeRedirectVideoId");
 						sessionStorage.removeItem("youtubeRedirectChannel");
 					} else if (redirectChannel) {
 						channel = redirectChannel;
 						videoId = '';
 						document.getElementById('channel-input').value = channel;
-						connect();
+						await connect();
 						sessionStorage.removeItem("youtubeRedirectVideoId");
 						sessionStorage.removeItem("youtubeRedirectChannel");
 					} else if (videoId) {
 						connect(videoId);
 					} else if (channel) {
 						document.getElementById('channel-input').value = channel;
-						connect();
+						await connect();
 					} else {
 						updateHeaderInfo(username, 'No target specified');
-						const channelInputContainer = document.querySelector('.channel-input-container');
-						if (channelInputContainer) channelInputContainer.classList.remove('hidden');
 						
 						// Show welcome message instead of error when no target is specified
 						document.getElementById('textarea').innerHTML = '<div>Welcome! Please enter a YouTube channel name or video ID to connect.</div>';
@@ -638,8 +784,6 @@ try {
         document.getElementById('likes-count').textContent = '-';
         document.getElementById('events-list').innerHTML = '';
         document.getElementById('permissions-info').innerHTML = '';
-        const channelInputContainer = document.querySelector('.channel-input-container');
-        if (channelInputContainer) channelInputContainer.classList.remove('hidden');
         document.getElementById('channel-input').value = '';
         console.log('Signed out successfully');
     }
@@ -668,11 +812,14 @@ try {
             }
         }
     }
-    function handleConnect() {
+    async function handleConnect() {
 		const channelInput = document.getElementById('channel-input');
 		const videoInput = document.getElementById('video-input');
 		const channelNameFromInput = channelInput.value.trim();
 		const videoIdFromInput = videoInput.value.trim();
+		
+		// Clear current connection first
+		clearPolling();
 		
 		if (videoIdFromInput) {
 			localStorage.setItem('youtubeVideoId', videoIdFromInput);
@@ -680,7 +827,7 @@ try {
 			videoId = videoIdFromInput;
 			channel = '';
 			updateHeaderInfo(username, "Loading video: " + videoId);
-			connect(videoId);
+			await connect(videoId);
 			videoInput.value = '';
 		} else if (channelNameFromInput) {
 			localStorage.setItem('youtubeChannel', channelNameFromInput);
@@ -688,7 +835,7 @@ try {
 			channel = channelNameFromInput;
 			videoId = '';
 			updateHeaderInfo(username, "Channel: " + channel);
-			connect();
+			await connect();
 			channelInput.value = '';
 		}
 	}
@@ -792,6 +939,41 @@ try {
             return null;
         }
     }
+	function updatePollSpinner(interval) {
+		const spinner = document.getElementById('poll-spinner');
+		if (spinner) {
+			// Convert to seconds with one decimal place
+			const seconds = (interval / 1000).toFixed(1);
+			
+			// Reset animation to ensure it restarts with new duration
+			spinner.style.animation = 'none';
+			// Force reflow to ensure animation reset takes effect
+			spinner.offsetHeight;
+			
+			// Apply new animation duration and restart it
+			spinner.style.animation = `spinner-rotation ${interval}ms ease-in-out 1`;
+			document.getElementById('poll-time').textContent = `${seconds}s`;
+		}
+	}
+
+	function initializeSpinner() {
+		// Find the chat container h3 element
+		const chatHeader = document.querySelector('.chat-container h3');
+		if (!chatHeader) return;
+		
+		// Convert h3 to a flex container
+		chatHeader.className = 'chat-header';
+		chatHeader.innerHTML = `
+			<span>Chat Messages</span>
+			<div class="poll-spinner-container">
+				<div id="poll-spinner" class="poll-spinner"></div>
+				<span id="poll-time">5.0s</span>
+			</div>
+		`;
+		
+		// Set initial animation duration
+		updatePollSpinner(5000);
+	}
 	function queueMessage(messageData) {
 		messageQueue.push(messageData);
 		if (!isDisplaying) startDisplayQueue();
@@ -813,22 +995,69 @@ try {
 		else if (messageQueue.length > 5) delay = 75;
 		setTimeout(displayNextMessage, delay);
 	}
-    async function fetchChatMessages() {
+	async function fetchChatMessages() {
 		if (!liveChatId || isPolling) return;
 		isPolling = true;
 		const token = getStoredToken();
-		if (!token) { isPolling = false; refreshToken(); return; }
+		if (!token) { 
+			isPolling = false; 
+			refreshToken(); 
+			return; 
+		}
+		
 		let response;
 		try {
 			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
 			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
-			response = await fetchWithTimeout(url, 5000, { 'Authorization': `Bearer ${token}` });
-			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+			
+			// Make sure we're correctly passing the Authorization header with the Bearer token
+			response = await fetchWithTimeout(url, 5000, { 
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'  // Add Content-Type header
+			});
+			
+			// Handle specific HTTP error codes
+			if (!response.ok) {
+				const status = response.status;
+				if (status === 401) {
+					isPolling = false;
+					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+					return;
+				} else if (status === 403) {
+					console.warn('Access forbidden - chat may be disabled or restricted');
+					isPolling = false;
+					setTimeout(fetchChatMessages, 30000); // Longer retry for forbidden
+					return;
+				} else if (status === 429) {
+					console.warn('Rate limited by YouTube API');
+					isPolling = false;
+					setTimeout(fetchChatMessages, 60000); // Much longer retry for rate limiting
+					return;
+				}
+				throw new Error(`HTTP error! status: ${status}`);
+			}
+			
 			const data = await response.json();
+			
 			if (data.items && data.items.length > 0) {
+				// If this is the first batch of messages, store the latest timestamp for reference
+				if (initialBacklogProcessing && !initialBacklogTimestamp && data.items.length > 0) {
+					// Get the latest message timestamp from the batch
+					const timestamps = data.items.map(item => new Date(item.snippet.publishedAt).getTime());
+					initialBacklogTimestamp = Math.max(...timestamps);
+					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
+				}
+				
+				// Process messages
 				data.items.forEach(item => {
 					const publishedAt = new Date(item.snippet.publishedAt);
+					const messageTime = publishedAt.getTime();
+					
 					if (!lastMessageTime || publishedAt > lastMessageTime) {
+						// Determine if this is a backlog message or a new message
+						const isBacklogMessage = initialBacklogProcessing && 
+											   (messageTime <= initialBacklogTimestamp);
+						
 						queueMessage({
 							authorName: item.authorDetails.displayName,
 							message: item.snippet.displayMessage,
@@ -836,28 +1065,56 @@ try {
 							isChatOwner: item.authorDetails.isChatOwner,
 							isChatSponsor: item.authorDetails.isChatSponsor,
 							isChatModerator: item.authorDetails.isChatModerator,
-							publishedAt
+							publishedAt,
+							skipEvent: isBacklogMessage // Flag to skip event dispatch for backlog
 						});
-						if (!lastMessageTime || publishedAt > lastMessageTime) lastMessageTime = publishedAt;
+						
+						if (!lastMessageTime || publishedAt > lastMessageTime) {
+							lastMessageTime = publishedAt;
+						}
 					}
 				});
-				const isMaxedOut = data.items.length === 200;
-				if (isMaxedOut && quickPollCount < 10) {
-					quickPollCount++; nextPageToken = data.nextPageToken;
-					setTimeout(fetchChatMessages, 100);
+				
+				// Dynamic backlog processing based on message volume
+				const isMaxedOut = data.items.length >= 200;
+				const highActivity = messageQueue.length > 100;
+				
+				if (isMaxedOut) {
+					// Continue fetching backlog with dynamic limit based on volume
+					if (highActivity) {
+						quickPollCount = 0; // Reset to get more messages when high activity
+					} else if (quickPollCount < 20) {
+						quickPollCount++;
+					}
+					nextPageToken = data.nextPageToken;
+					setTimeout(fetchChatMessages, highActivity ? 50 : 200);
 				} else {
-					quickPollCount = 0; nextPageToken = data.nextPageToken;
-					const pollingInterval = data.pollingIntervalMillis || 5000;
-					let adjustedInterval = pollingInterval;
-					if (messageQueue.length > 100) adjustedInterval = Math.max(1000, pollingInterval * 0.5);
-					else if (messageQueue.length > 50) adjustedInterval = Math.max(2000, pollingInterval * 0.75);
+					// Normal polling with interval from API response
+					quickPollCount = 0;
+					nextPageToken = data.nextPageToken;
+					
+					// End of initial backlog processing
+					if (initialBacklogProcessing) {
+						initialBacklogProcessing = false;
+						console.log('Initial backlog processing complete');
+					}
+					
+					// Adaptive polling interval based on chat activity
+					const baseInterval = data.pollingIntervalMillis || 5000;
+					let adjustedInterval = baseInterval;
+					
+					if (messageQueue.length > 200) {
+						adjustedInterval = Math.max(1000, baseInterval * 0.3);
+					} else if (messageQueue.length > 100) {
+						adjustedInterval = Math.max(1000, baseInterval * 0.5);
+					} else if (messageQueue.length > 50) {
+						adjustedInterval = Math.max(2000, baseInterval * 0.75);
+					}
+					updatePollSpinner(adjustedInterval);
 					setTimeout(fetchChatMessages, adjustedInterval);
 				}
-			} else {
-				const pollingInterval = data.pollingIntervalMillis || 5000;
-				setTimeout(fetchChatMessages, pollingInterval);
-			}
-			if (data.items) {
+				
+				// Process special events (always dispatch events for these regardless of backlog)
 				data.items.forEach(item => {
 					if (item.snippet.superChatDetails) {
 						processSuperChat({
@@ -876,23 +1133,29 @@ try {
 						});
 					}
 				});
+			} else {
+				// No messages, use standard polling interval
+				const pollingInterval = data.pollingIntervalMillis || 5000;
+				
+				// If we get to a point with no messages, assume initial backlog is complete
+				if (initialBacklogProcessing) {
+					initialBacklogProcessing = false;
+					console.log('Initial backlog processing complete (no more messages)');
+				}
+				
+				setTimeout(fetchChatMessages, pollingInterval);
 			}
 		} catch (error) {
 			console.error('Error fetching chat messages:', error);
-			if (error.message && error.message.includes('401')) {
-				isPolling = false;
-				await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
-				return;
-			}
-			setTimeout(fetchChatMessages, 10000);
+			
+			// Smart backoff for general errors
+			const backoffTime = quickPollCount > 5 ? 30000 : 10000;
+			setTimeout(fetchChatMessages, backoffTime);
+			
+			// Reset polling state
+			quickPollCount = 0;
 		} finally {
-			if (response && response.ok) {
-				isPolling = false;
-			} else if (response && !response.ok) {
-				isPolling = false;
-			} else {
-				isPolling = false;
-			}
+			isPolling = false;
 		}
 	}
     async function sendChatMessage(message) {
@@ -974,8 +1237,14 @@ try {
 		pollInterval = null; liveChatId = null; nextPageToken = null;
 		lastMessageTime = null; isPolling = false; currentStream = null;
 		messageQueue = []; isDisplaying = false; quickPollCount = 0;
-        document.getElementById('textarea').innerHTML = '';
-        document.getElementById('events-list').innerHTML = '';
+		document.getElementById('textarea').innerHTML = '';
+		document.getElementById('events-list').innerHTML = '';
+		
+		const chatHeader = document.querySelector('.chat-container h3');
+		if (chatHeader) {
+			chatHeader.className = '';
+			chatHeader.textContent = 'Chat Messages';
+		}
 	}
 	async function getChannelStats(channelIdForStats) {
 		const token = getStoredToken();
@@ -1001,20 +1270,21 @@ try {
 			console.error('Error fetching channel stats:', error);
 		}
 	}
-    async function connect(directVideoIdParam = null) {
+	
+	async function connect(directVideoIdParam = null) {
 		clearPolling();
-		const channelInputContainer = document.querySelector('.channel-input-container');
+		initialBacklogProcessing = true;
+		initialBacklogTimestamp = null;
 		const token = getStoredToken();
 		if (!token) {
 			console.error('No token available for connect');
 			showAuthButton();
 			return;
 		}
-		const videoIdToUse = directVideoIdParam || videoId;
 		const channelToUse = channel;
+		const videoIdToUse = directVideoIdParam || videoId;
 		if (!videoIdToUse && !channelToUse) {
 			updateHeaderInfo(username, 'No target specified');
-			if (channelInputContainer) channelInputContainer.classList.remove('hidden');
 			document.getElementById('viewer-count').textContent = '-';
 			document.getElementById('subscriber-count').textContent = '-';
 			document.getElementById('likes-count').textContent = '-';
@@ -1022,7 +1292,6 @@ try {
 			document.getElementById('textarea').innerHTML = '<div>Please enter a YouTube channel name or video ID to connect.</div>';
 			return;
 		}
-		if (channelInputContainer) channelInputContainer.classList.add('hidden');
 		document.getElementById('textarea').innerHTML = '<div>Attempting to connect...</div>';
 		try {
 			let streamInfoToUse;
@@ -1139,12 +1408,15 @@ try {
             } else if (effectiveChannelIdToUse) {
                 await getSubscriberCount(effectiveChannelIdToUse);
             }
-            if (liveChatId) {
-                const chatAvailableMessage = document.createElement("div");
-                chatAvailableMessage.innerText = "Connected to live chat.";
-                document.getElementById('textarea').appendChild(chatAvailableMessage);
-                fetchChatMessages();
-            } else {
+           if (liveChatId) {
+				const chatAvailableMessage = document.createElement("div");
+				chatAvailableMessage.innerText = "Connected to live chat.";
+				document.getElementById('textarea').appendChild(chatAvailableMessage);
+				
+				initializeSpinner();
+				
+				fetchChatMessages();
+			} else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
                  noChatMessage.innerText = "Live chat is not currently active for this stream.";
@@ -1156,6 +1428,7 @@ try {
                 if (effectiveChannelIdToUse) getChannelStats(effectiveChannelIdToUse);
             }, 30000);
             console.log('Connection process complete for target:', channelDisplayNameToUse);
+			const channelInput = document.getElementById('channel-input');
             if (channelInput.value && channelToUse) channelInput.value = '';
         } catch (error) {
             console.error('Error connecting to YouTube:', error);
@@ -1168,7 +1441,6 @@ try {
                 span.innerText = `Error: ${error.message}`;
                 textarea.appendChild(span);
             }
-            if (channelInputContainer) channelInputContainer.classList.remove('hidden');
             document.getElementById('viewer-count').textContent = '-';
             document.getElementById('subscriber-count').textContent = '-';
             document.getElementById('likes-count').textContent = '-';
@@ -1182,9 +1454,9 @@ try {
 			const textarea = document.querySelector("#textarea");
 			var span = document.createElement("div");
 			let badgeHtml = '';
-			if (messageData.isChatOwner) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/owner.svg" class="chat-badge" title="Channel Owner">';
-			if (messageData.isChatModerator) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/moderator.svg" class="chat-badge" title="Moderator">';
-			if (messageData.isChatSponsor) badgeHtml += '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">';
+			if (messageData.isChatOwner) badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>';
+			if (messageData.isChatModerator) badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>';
+			if (messageData.isChatSponsor) badgeHtml += '<span class="chat-badge" title="Member">⭐</span>';
 			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageData.message}`;
 			textarea.appendChild(span);
 			
@@ -1194,13 +1466,26 @@ try {
 			}
 			
 			textarea.scrollTop = textarea.scrollHeight;
-			pushMessage({
-				chatname: messageData.authorName, chatbadges: badgeHtml, backgroundColor: "", textColor: "",
-				chatmessage: messageData.message, chatimg: messageData.profileImageUrl || "", hasDonation: "",
-				membership: messageData.isChatSponsor ? "member" : "", type: "youtube"
-			});
-		} catch (e) { console.error('Error processing message:', e); }
+			
+			// Only dispatch event if not marked as skipEvent
+			if (!messageData.skipEvent) {
+				pushMessage({
+					chatname: messageData.authorName, 
+					chatbadges: badgeHtml, 
+					backgroundColor: "", 
+					textColor: "",
+					chatmessage: messageData.message, 
+					chatimg: messageData.profileImageUrl || "", 
+					hasDonation: "",
+					membership: messageData.isChatSponsor ? "member" : "", 
+					type: "youtube"
+				});
+			}
+		} catch (e) { 
+			console.error('Error processing message:', e); 
+		}
 	}
+
     function processSuperChat(superChatData) {
         try {
             addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
@@ -1213,7 +1498,8 @@ try {
             pushMessage({
                 chatname: superChatData.authorName, chatbadges: "", backgroundColor: "", textColor: "#00c851",
                 chatmessage: superChatData.message || '', chatimg: superChatData.profileImageUrl || "",
-                hasDonation: superChatData.amount, membership: "", type: "youtube", event: "donation"
+                hasDonation: superChatData.amount, membership: "", type: "youtube", event: "donation",
+				type: "youtube"
             });
         } catch (e) { console.error('Error processing super chat:', e); }
     }
@@ -1228,10 +1514,11 @@ try {
             textarea.scrollTop = textarea.scrollHeight;
             pushMessage({
                 chatname: membershipData.authorName,
-                chatbadges: '<img src="https://www.gstatic.com/youtube/img/creator/studio/channel_elements/badges/sponsor.svg" class="chat-badge" title="Member">',
+                chatbadges: '<span class="chat-badge" title="Member">⭐</span>',
                 backgroundColor: "", textColor: "#2196f3", chatmessage: `joined as a member (${membershipData.level})`,
                 chatimg: membershipData.profileImageUrl || "", hasDonation: "", membership: "new_member",
-                membershipLevel: membershipData.level, type: "youtube", event: "new_member"
+                membershipLevel: membershipData.level, type: "youtube", event: "new_member",
+				type: "youtube"
             });
         } catch (e) { console.error('Error processing membership:', e); }
     }
@@ -1263,26 +1550,43 @@ try {
         if (currentUserElement) currentUserElement.textContent = currentUsername || 'Not signed in';
         if (currentChannelElement) currentChannelElement.textContent = targetName || 'No target';
     }
-    async function fetchWithTimeout(URL, timeout = 8000, headers=false) {
-        const controller = new AbortController();
-        const timeout_id = setTimeout(() => controller.abort(), timeout);
-        try {
-            const options = { signal: controller.signal };
-            if (headers) options.headers = headers;
-            if (headers && headers.method) options.method = headers.method;
-            if (headers && headers.body) options.body = headers.body;
-            const response = await fetch(URL, options);
-            clearTimeout(timeout_id);
-            return response;
-        } catch (e) {
-            clearTimeout(timeout_id);
-            console.error('Fetch error or timeout:', e, URL);
-            if (e.name === 'AbortError') {
-                 throw new Error(`Request timed out: ${URL}`);
-            }
-            throw e;
-        }
-    }
+	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
+		const controller = new AbortController();
+		const timeout_id = setTimeout(() => controller.abort(), timeout);
+		try {
+			const options = { signal: controller.signal };
+			
+			// Better handling of headers
+			if (headers) {
+				options.headers = {};
+				// If headers is an object with potential method/body properties
+				if (headers.method) {
+					options.method = headers.method;
+					delete headers.method;
+				}
+				if (headers.body) {
+					options.body = headers.body;
+					delete headers.body;
+				}
+				
+				// Add all remaining properties as headers
+				Object.keys(headers).forEach(key => {
+					options.headers[key] = headers[key];
+				});
+			}
+			
+			const response = await fetch(URL, options);
+			clearTimeout(timeout_id);
+			return response;
+		} catch (e) {
+			clearTimeout(timeout_id);
+			console.error('Fetch error or timeout:', e, URL);
+			if (e.name === 'AbortError') {
+				throw new Error(`Request timed out: ${URL}`);
+			}
+			throw e;
+		}
+	}
     document.addEventListener('DOMContentLoaded', initializePage);
 } catch(e) {
     console.error('YouTube integration error:', e);

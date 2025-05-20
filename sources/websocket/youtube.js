@@ -30,7 +30,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			return;
 		}
 		if ("focusChat" == request) {
-			document.querySelector('#sendmessage').focus();
+			document.querySelector('#input-text').focus();
 			sendResponse(true);
 			return;
 		}
