@@ -112,7 +112,7 @@ SSN offers multiple ways for external applications or AI to interact with it.
 5.  **Dock Actions:** Dock sends commands back to the Extension (via P2P or server) to feature messages, block users, send replies, etc..
 6.  **Overlay Display:** Overlays (`featured.html`, etc.) receive featured content or specific data (like waitlist updates) and display it.
 7.  **API Interaction:** External applications/AI can send commands via WebSocket/HTTP to control the system or ingest messages.
-
+ 
 ## 5. Relay Messages
 
 -   Allows messages from one platform to be automatically re-posted to others.
