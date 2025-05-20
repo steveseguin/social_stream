@@ -1,47 +1,31 @@
 (function() {
-	
-	let observedDomElementForObserver1 = null;
-	let observedDomElementForObserver2 = null;
-	
-	var bigDUPE = false;
-	
+	console.log("Social stream injected");
 	const avatarCache = {
 		_cache: {},
 		MAX_SIZE: 500,
 		CLEANUP_COUNT: 50,
-		
 		add(chatname, chatimg, badges = null, membership = null, nameColor = null) {
 			if (!chatname) return;
-			
-			// Update or create entry
 			if (!this._cache[chatname]) {
 				this._cache[chatname] = {
 					timestamp: Date.now()
 				};
 			} else {
-				// Update timestamp on existing cache entries
 				this._cache[chatname].timestamp = Date.now();
 			}
-			
-			// Only update fields that are provided
 			if (chatimg) this._cache[chatname].url = chatimg;
 			if (badges) this._cache[chatname].badges = badges;
 			if (membership) this._cache[chatname].membership = membership;
 			if (nameColor) this._cache[chatname].nameColor = nameColor;
-			
 			this.cleanup();
 		},
-		
 		get(chatname) {
 			return this._cache[chatname] || {};
 		},
-		
 		cleanup() {
 			const cacheSize = Object.keys(this._cache).length;
 			if (cacheSize > this.MAX_SIZE) {
-				// Sort by timestamp and remove oldest entries
 				const sorted = Object.entries(this._cache).sort(([,a], [,b]) => a.timestamp - b.timestamp);
-					
 				for (let i = 0; i < this.CLEANUP_COUNT; i++) {
 					if (sorted[i]) {
 						delete this._cache[sorted[i][0]];
@@ -50,84 +34,58 @@
 			}
 		}
 	};
-
 	const messageLog = {
 	  _log: [],
-	  _mode: 'count', // 'count' or 'time'
+	  _mode: 'count',
 	  _maxMessages: 400,
-	  _timeWindow: 10000, // 10 seconds in ms
+	  _timeWindow: 10000,
 	  _cleanupInterval: null,
-	  
 	  init(options = {}) {
-		// Set configuration
 		this._mode = options.mode || 'count';
 		this._maxMessages = options.maxMessages || 400;
 		this._timeWindow = options.timeWindow || 10000;
-		
-		// Clear any existing interval to prevent leaks
 		this.destroy();
-		
-		// Set up periodic cleanup
 		this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
 	  },
-	  
 	  cleanup() {
 		const currentTime = Date.now();
-		
 		if (this._mode === 'time') {
-		  // Time-based: Only remove entries older than the time window
-		  this._log = this._log.filter(entry => 
+		  this._log = this._log.filter(entry =>
 			(currentTime - entry.time) <= this._timeWindow
 		  );
 		} else {
-		  // Count-based: Just limit size
 		  if (this._log.length > this._maxMessages) {
-			// More efficient to slice from the end than shift from the beginning
 			this._log = this._log.slice(-this._maxMessages);
 		  }
 		}
 	  },
-	  
 	  isDuplicate(name, message) {
-		if (!name && !message) return true; // Prevent empty messages
-		
+		if (!name && !message) return true;
 		const currentTime = Date.now();
 		const messageKey = `${name}:${message}`;
-		
-		// Check if message exists in log based on mode
 		let duplicate = false;
-		
 		if (this._mode === 'time') {
-		  // For time mode, check if message was seen within time window
-		  duplicate = this._log.some(entry => 
-			entry.key === messageKey && 
+		  duplicate = this._log.some(entry =>
+			entry.key === messageKey &&
 			(currentTime - entry.time) <= this._timeWindow
 		  );
 		} else {
-		  // For count mode, just check if message exists in current log
-		  duplicate = this._log.some(entry => 
+		  duplicate = this._log.some(entry =>
 			entry.key === messageKey
 		  );
 		}
-		
 		if (duplicate) {
 		  return true;
 		}
-		
-		// Add new message to log
 		this._log.push({
 		  key: messageKey,
 		  time: currentTime
 		});
-		
-		// Cleanup immediately if needed
 		if (this._mode === 'count' && this._log.length > this._maxMessages) {
 		  this._log = this._log.slice(-this._maxMessages);
 		}
-		
 		return false;
 	  },
-	  
 	  destroy() {
 		if (this._cleanupInterval) {
 		  clearInterval(this._cleanupInterval);
@@ -135,7 +93,6 @@
 		}
 		this._log = [];
 	  },
-	  
 	  configure(options = {}) {
 		if (options.mode !== undefined) this._mode = options.mode;
 		if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
@@ -143,11 +100,7 @@
 		this.cleanup();
 	  }
 	};
-
-	// Initialize when script starts
 	messageLog.init({ mode: 'count', maxMessages: 421 });
-
-
     function pushMessage(data) {
         try {
             chrome.runtime.sendMessage(chrome.runtime.id, {
@@ -155,33 +108,26 @@
             }, function(e) {});
         } catch (e) {}
     }
-
     function getTranslation(key, value = false) {
-        if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)) { // these are the proper translations
+        if (settings.translation && settings.translation.innerHTML && (key in settings.translation.innerHTML)) {
             return settings.translation.innerHTML[key];
         } else if (settings.translation && settings.translation.miscellaneous && settings.translation.miscellaneous && (key in settings.translation.miscellaneous)) {
             return settings.translation.miscellaneous[key];
         } else if (value !== false) {
             return value;
         } else {
-            return key.replaceAll("-", " "); //
+            return key.replaceAll("-", " ");
         }
     }
-
     function toDataURL(url, callback) {
         var xhr = new XMLHttpRequest();
         xhr.onload = function() {
-
             var blob = xhr.response;
-
             if (blob.size > (55 * 1024)) {
-                callback(url); // Image size is larger than 25kb.
+                callback(url);
                 return;
             }
-
             var reader = new FileReader();
-
-
             reader.onloadend = function() {
                 callback(reader.result);
             }
@@ -191,10 +137,9 @@
         xhr.responseType = 'blob';
         xhr.send();
     }
-
     function escapeHtml(unsafe) {
         try {
-            if (settings.textonlymode) { // we can escape things later, as needed instead I guess.
+            if (settings.textonlymode) {
                 return unsafe;
             }
             return unsafe
@@ -207,8 +152,7 @@
             return "";
         }
     }
-
-    function getAllContentNodes(element) { // takes an element.
+    function getAllContentNodes(element) {
         var resp = "";
         if (!element) {
             return resp;
@@ -220,9 +164,7 @@
                 return "";
             }
         }
-		
 		let isBadge = false;
-		
         element.childNodes.forEach(node => {
             if (node.childNodes.length) {
                 resp += getAllContentNodes(node).trim() + " ";
@@ -243,34 +185,29 @@
                 }
             }
         });
-		
 		if (isBadge){
 			return "";
 		}
         return resp;
     }
-
     function rankToColor(rank, maxRank = 40) {
         const startColor = {
             r: 197,
             g: 204,
             b: 218
-        }; // #4F6692
+        };
         const midColor = {
             r: 100,
             g: 115,
             b: 225
-        }; // #2026B0
+        };
         const endColor = {
             r: 81,
             g: 85,
             b: 255
-        }; // #0000FF
-
+        };
         const midRank = parseInt(maxRank / 2);
         let colorStop;
-
-
         if (rank <= midRank) {
             const ratio = (rank - 1) / (midRank - 1);
             colorStop = {
@@ -286,7 +223,6 @@
                 b: midColor.b + ratio * (endColor.b - midColor.b),
             };
         }
-
         const hexColor = `#${Math.round(colorStop.r).toString(16).padStart(2, '0')}` +
             `${Math.round(colorStop.g).toString(16).padStart(2, '0')}` +
             `${Math.round(colorStop.b).toString(16).padStart(2, '0')}`;
@@ -296,22 +232,17 @@
     for (var i = 1; i <= 40; i++) {
         lut.push(rankToColor(i, 40));
     }
-
     var savedavatars = {};
     var channelName = false;
     var msgCount = 0;
-	
 	function parseDonationMessage(message) {
 		if (!validateTikTokDonationMessage(message)) return null;
-		
 		const tempDiv = document.createElement('div');
 		tempDiv.innerHTML = message.trim();
-		
 		const nodes = Array.from(tempDiv.childNodes);
 		const word = nodes[0].textContent.trim();
 		const imageSrc = nodes[1].getAttribute('src');
 		const quantity = parseInt(nodes[2].textContent.slice(1), 10);
-		
 		return {
 			word,
 			imageSrc,
@@ -319,37 +250,21 @@
 			isValid: true
 		};
 	}
-	
 	function validateTikTokDonationMessage(message) {
-		// Create a temporary div to parse the HTML
 		const tempDiv = document.createElement('div');
 		tempDiv.innerHTML = message.trim();
-		
-		// Get all nodes in the message
 		const nodes = Array.from(tempDiv.childNodes);
-		
-		// Message should have exactly 3 parts: text, img, text
 		if (nodes.length !== 3) return false;
-		
-		// First node should be text
 		if (nodes[0].nodeType !== Node.TEXT_NODE) return false;
-		
-		// Second node should be an img
 		const imgElement = nodes[1];
 		if (!(imgElement instanceof HTMLImageElement)) return false;
-		
-		// Validate image source - must be from tiktokcdn
 		const imgSrc = imgElement.getAttribute('src');
 		if (!imgSrc || !imgSrc.includes('tiktokcdn.com')) return false;
-		
-		// Last node should be text in format "xN" where N is a number
 		const lastText = nodes[2].textContent.trim();
 		const xNumberPattern = /^x\d+$/;
 		if (!xNumberPattern.test(lastText)) return false;
-		
 		return true;
 	}
-	
 	let giftMapping = {
 		"485175fda92f4d2f862e915cbcf8f5c4": {
 			"name": "Star",
@@ -671,51 +586,21 @@
 			"name": "upgraded gift"
 		}
 	}
-	
 	function getIdFromUrl(url) {
-		// Try to find a resource ID first
 		let resourceMatch = url.match(/resource\/([^.]+)(?:\.png|\.webp)/);
 		if (resourceMatch) return resourceMatch[1];
-		
 		resourceMatch = url.match(/webcast-sg\/([^.]+)(?:\.png|\.webp)/);
 		if (resourceMatch) return resourceMatch[1];
-		
-		// If no resource ID, get the ID from the main part of the URL
 		const directMatch = url.match(/webcast-va\/([^~.]+)/);
 		return directMatch ? directMatch[1] : url;
 	}
-
-/* 
-	<div class="css-2yexzo-DivGiftMessage edkxpga0" data-skip="351">
-	 		<div class="css-1p9durm-DivLeadIcon e14w8t9p0">
-	 			<img src="https://p16-sign-sg.tiktokcdn.com/tos-alisg-avt-0068/64ceb81c9a0656329f9ff1b2b616d83a~tplv-tiktokx-cropcenter:100:100.webp?dr=14579&amp;refresh_token=c70df6bc&amp;x-expires=1742756400&amp;x-signature=mA4m4jJGtRzXbaNRrGCb0DBcGSo%3D&amp;t=4d5b0474&amp;ps=13740610&amp;shp=a5d48078&amp;shcp=fdd36af4&amp;idc=my2" style="display: block;">
-			</div>
-			<div class="css-qfhyf7-DivContent edkxpga1">
-				<span data-e2e="message-owner-name" title="💜koori-connection💎" class="css-6ujdqp-SpanNickName e1u0q3bo0" data-skip="true">
-					<span class="css-1ymr58b-SpanEllipsisName e1u0q3bo1">
-						💜koori-connection💎
-					</span>
-				</span>
-				<div class="css-1hbqad0-DivDesc edkxpga2">
-					sent
-					<img src="https://p16-webcast.tiktokcdn.com/img/maliva/webcast-va/d56945782445b0b8c8658ed44f894c7b~tplv-obj.png" style="display: block; border-radius: 0px; width: 26px; height: 26px;">
-					<span class="css-eo4zha-SpanGiftCount edkxpga3">
-						x1
-					</span>
-				</div>
-			</div>
-		</div>
- */
- 
 	function checkNextSiblingsForAttribute(newElement, attributeName) {
 		let nextSibling = newElement.nextElementSibling
-		
 		let dig = false;
 		if (!nextSibling){
 			dig = true;
 			nextSibling = newElement?.parentNode?.nextElementSibling;
 		}
-
 		while (nextSibling) {
 			if (nextSibling.hasAttribute(attributeName)) {
 			  return true;
@@ -724,39 +609,28 @@
 			}
 			nextSibling = nextSibling.nextElementSibling;
 		}
-
 		return false;
 	}
- 
-	
     function processMessage(ele) {
-		
         if (!ele || ele.dataset.skip) {
             return;
         }
-		
 		if (ele?.parentNode?.dataset.skip) {
             return;
         }
-		
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
             return;
         }
-
 		if (checkNextSiblingsForAttribute(ele, "data-skip")){
 			ele.dataset.skip = ++msgCount;
 			return;
 		}
-		
 		ele.dataset.skip = ++msgCount;
-		
 		var ital = false;
-		
 		if (ele.dataset.e2e && (ele.dataset.e2e=="social-message")){
 			if (!settings.captureevents){return;}
 			ital = true;
 		}
-
         var chatimg = "";
         try {
             chatimg = ele.children[0].querySelector("img");
@@ -767,18 +641,12 @@
             }
         } catch (e) {
 		}
-		
 		updateLastInputTime();
-
         var membership = "";
         var chatbadges = "";
         var rank = 0;
-
-
-		// chat name
         var nameColor = "";
         var chatname = "";
-
 		try {
 			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
 			if (chatNameEle){
@@ -789,7 +657,6 @@
 			}
 		} catch (e) {
 		}
-		
 		try {
 			if (!chatname) {
 				if (ele.childNodes[1].childNodes[0].children.length) {
@@ -800,11 +667,8 @@
 			}
 		} catch (e) {
 		}
-		
-		// chat badges
 		try {
 			var cb = ele.querySelectorAll("img[class*='ImgBadgeChatMessage'], img[class*='ImgCombineBadgeIcon'], img[src*='_badge_']");
-			
 			if (!cb.length && chatBadgeAlt) {
 				try{
 					if (ele.childNodes[1].childNodes.length==2){
@@ -812,7 +676,6 @@
 					}
 				} catch(e){}
 			}
-			
 			if (cb.length) {
 				chatbadges = [];
 				cb.forEach(cbimg => {
@@ -854,12 +717,8 @@
 				});
 			}
 		} catch (e) {}
-		
-		
         var chatmessage = "";
-		
         try {
-			
 			let chatEle = ele.querySelector("[class*='-DivComment']");
 			if (chatEle){
 				chatmessage = getAllContentNodes(chatEle);
@@ -873,9 +732,7 @@
 			}
 		} catch (e) {
 		}
-			
         try {
-            //live-shared-ui-chat-list-chat-message-comment
             if (!chatmessage) {
                 try {
                     chatmessage = getAllContentNodes(ele.querySelector(".live-shared-ui-chat-list-chat-message-comment"));
@@ -885,16 +742,12 @@
             }
         } catch (e) {
         }
-		
 		try {
 			if (!chatmessage){
 				chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='chat-message'] .break-words.align-middle"));
 			}
 		} catch (e) {
-			//console.warn(e);
 		}
-		
-				
         try {
             if (!chatmessage) {
                 var eles = ele.childNodes[1].childNodes;
@@ -921,17 +774,13 @@
 				}
             }
         } catch (e) {}
-		
-
         if (chatmessage == "Moderator") {
             chatmessage = "";
         }
-		
 		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.nextElementSibling){
 			ital = "gift";
 			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").nextElementSibling);
 		}
-		
 		var hasdonation = "";
 		try {
 			if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
@@ -951,10 +800,8 @@
 										var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
 										if (parseInt(valuea) == valuea){
 											giftMapping[giftid] = {coins: parseInt(valuea)};
-											//console.log(giftMapping);
 										}
 									} catch(e){
-										//console.log("Unknown item", donation);
 										if (donation.quantity>1){
 											var valuea = "gifts";
 										} else {
@@ -973,7 +820,6 @@
 									hasdonation = donation.quantity + " "+valuea;
 								}
 							}
-							
 						}
 					}
 				}
@@ -981,31 +827,22 @@
 				return;
 			}
 		} catch(e){
-			//console.log(e);
 		}
-
         if (!chatmessage && !chatbadges) {
             return;
         } else if (chatmessage) {
             chatmessage = chatmessage.trim();
         }
-
         if (chatmessage == "Moderator") {
-            //console.log(ele);
-            return;
-            //alert("!!");
-        }
-
-
-		if (chatmessage && (chatmessage === "----")) { // no chat name
             return;
         }
-		
+		if (chatmessage && (chatmessage === "----")) {
+            return;
+        }
 		if (chatname && (chatimg || chatbadges || membership)) {
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
 		}
-
-        if ((ital===true) && chatmessage && (chatmessage === "joined")) { // no chat name
+        if ((ital===true) && chatmessage && (chatmessage === "joined")) {
             if (!settings.capturejoinedevent) {
                 return;
             }
@@ -1013,21 +850,19 @@
 			if (!chatname){
 				 return;
 			}
-        } else if ((ital===true) && chatmessage && chatmessage.includes("shared")) { // no sharing events
+        } else if ((ital===true) && chatmessage && chatmessage.includes("shared")) {
              return;
-        } else if ((ital===true) && chatmessage && chatmessage.includes("followed")) { // no sharing events
+        } else if ((ital===true) && chatmessage && chatmessage.includes("followed")) {
              ital = "followed";
 			 if (!chatname){
 				 return;
 			 }
-        } else if ((ital===true) && chatmessage && chatmessage.includes("liked")) { // no sharing events
+        } else if ((ital===true) && chatmessage && chatmessage.includes("liked")) {
              ital = "liked";
 			 if (!chatname){
 				 return;
 			 }
         }
-		
-
         if (settings.customtiktokstate) {
             var channel = window.location.pathname.split("/@");
             if (channel.length > 1) {
@@ -1042,18 +877,14 @@
                 return;
             }
         }
-		
 		if (!chatname){
 			chatmessage = chatmessage.replace("----","");
 		}
-		
 		if (!chatname && !chatmessage.trim()){
 			return;
 		}
-		
 		if (ital && (ital===true) && !chatname){
-			return; // block em all.
-			
+			return;
 			if (chatmessage.includes("New Welcome")){
 				return;
 			}
@@ -1061,12 +892,10 @@
 				return;
 			}
 		}
-		
         if (messageLog?.isDuplicate(chatname, chatmessage)) {
             console.log("duplicate message; skipping",chatname, chatmessage);
             return;
         }
-
         var data = {};
         data.chatname = chatname;
         data.chatbadges = chatbadges;
@@ -1078,49 +907,26 @@
         data.hasDonation = hasdonation;
         data.membership = membership;
         data.contentimg = "";
-        // data.metaClass = "";
         data.textonly = settings.textonlymode || false;
         data.type = "tiktok";
-        data.event = ital; // if an event or actual message
-
-        //console.log(data);
-		
+        data.event = ital;
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 			avatarCache.cleanup();
 			console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
-
         pushMessage(data);
     }
-	
 	function processEvent(ele) {
-		
-		
 		if (ele.querySelector("[class*='DivTopGiverContainer']")) {
             return;
         }
-		
-	//	if (ele.querySelector("[class*='DivTopGiverContainer'], [data-e2e='top-givers-header'] , [data-e2e='top-givers']")) {
-     //       return;
-     //   }
-	//	if (ele.dataset.e2e=='top-givers-header' ||  ele.dataset.e2e=='top-givers'){
-      //      return;
-     //   }
-		
 		if (ele.dataset.skip){return;}
-		
-		
 		if (checkNextSiblingsForAttribute(ele, "data-skip")){
 			ele.dataset.skip = ++msgCount;
 			return;
 		}
-		
-		//console.log(ele);
-		
-		// chat name
         var chatname = "";
-
 		try {
 			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
 			if (chatNameEle){
@@ -1131,44 +937,33 @@
 			}
 		} catch (e) {
 		}
-		
 		ele.dataset.skip = ++msgCount;
-		
-		// chat messages
         var chatmessage = "";
-		
 		let try1 = ele.querySelector("[data-e2e='message-owner-name']");
-		
 		if (try1){
 			try1 = try1?.nextElementSibling || try1.nextSibling;
 			if (try1){
 				chatmessage = getAllContentNodes(try1);
 			}
 		}
-		
         try {
 			if (!chatmessage){
 				chatmessage = getAllContentNodes(ele);
 			}
 		} catch (e) {
 		}
-	
 		var hasdonation = "";
 		var ital = true;
-		
 		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']"))){
 			ital = "gift";
-			
 			try {
 				if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")){
 					chatmessage = chatmessage.replace("<img src="," <img src=");
 					chatmessage = chatmessage.replace('.png">x','.png"> x');
 					chatmessage = chatmessage.replace(".png'>x",".png'> x");
 					if (settings.tiktokdonations || !settings.notiktokdonations){
-						//console.log(chatmessage);
 						if (validateTikTokDonationMessage(chatmessage)){
 							var donation = parseDonationMessage(chatmessage);
-							//console.log(donation);
 							if (donation.isValid && donation.imageSrc){
 								var giftid = getIdFromUrl(donation.imageSrc);
 								if (giftid){
@@ -1179,10 +974,8 @@
 											var valuea = document.querySelector("img[src*='"+giftid+"']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
 											if (parseInt(valuea) == valuea){
 												giftMapping[giftid] = {coins: parseInt(valuea)};
-												//console.log(giftMapping);
 											}
 										} catch(e){
-											//console.log("Unknown item", donation);
 											if (donation.quantity>1){
 												var valuea = "gifts";
 											} else {
@@ -1201,7 +994,6 @@
 										hasdonation = donation.quantity + " "+valuea;
 									}
 								}
-								
 							}
 						}
 					}
@@ -1209,16 +1001,13 @@
 			} catch(e){
 			}
 		}
-
         if (chatmessage) {
             chatmessage = chatmessage.trim();
         }
-		
-		if (!chatmessage || (chatmessage === "----")) { // no chat name
+		if (!chatmessage || (chatmessage === "----")) {
             return;
         }
-
-        if ((ital===true) && !settings.capturejoinedevent && (chatmessage.includes("joined"))) { // no chat name
+        if ((ital===true) && !settings.capturejoinedevent && (chatmessage.includes("joined"))) {
             if (!settings.capturejoinedevent) {
                 return;
             }
@@ -1226,25 +1015,23 @@
 			if (!chatname){
 				 return;
 			 }
-        } else if ((ital===true) && chatmessage.includes("shared")) { // no sharing events
+        } else if ((ital===true) && chatmessage.includes("shared")) {
              return;
-        } else if ((ital===true) && chatmessage.includes("followed")) { // no sharing events
+        } else if ((ital===true) && chatmessage.includes("followed")) {
              ital = "followed";
 			 if (!chatname){
 				 return;
 			 }
-        }  else if ((ital===true) && chatmessage && chatmessage.includes("liked")) { // no sharing events
+        }  else if ((ital===true) && chatmessage && chatmessage.includes("liked")) {
              ital = "liked";
 			 if (!chatname){
 				 return;
 			 }
         }
-		
 		let chatimg = "";
 		let cachedBadges = "";
 		let cachedMembership = "";
 		let cachedNameColor = "";
-
 		if (chatname) {
 			const cached = avatarCache.get(chatname);
 			chatimg = cached.url || "";
@@ -1252,7 +1039,6 @@
 			cachedMembership = cached.membership || "";
 			cachedNameColor = cached.nameColor || "";
 		}
-
 		var data = {};
 		data.chatname = chatname;
 		data.chatbadges = cachedBadges;
@@ -1264,440 +1050,250 @@
 		data.hasDonation = hasdonation;
 		data.membership = cachedMembership;
 		data.contentimg = "";
-		// data.metaClass = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "tiktok";
 		data.event = ital;
-
-        //console.log(data);
-		
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 			console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
-
         pushMessage(data);
     }
-	
+	var bigDUPE = false;
+	let observedDomElementForObserver1 = null;
+	let observedDomElementForObserver2 = null;
 	var observer = false;
-	
-	
-	function periodicHealthCheck() {
-	  // First, check for complete DOM resets
-	  detectDOMResets();
-	  
-	  // Then check observer health as before
-	  ensureObserversActive();
-	  
-	  // Handle the TikTok view count if needed
-	  if (settings.showviewercount || settings.hypemode) {
-		try {
-		  if (StreamState.isValid() || !StreamState.getCurrentChannel()) {
-			var viewerCount = document.querySelector("[data-e2e='live-people-count']");
-			
-			if (viewerCount && viewerCount.textContent) {
-			  let views = viewerCount.textContent;
-			  let multiplier = 1;
-			  if (views.includes("K")) {
-				multiplier = 1000;
-				views = views.replace("K", "");
-			  } else if (views.includes("M")) {
-				multiplier = 1000000;
-				views = views.replace("M", "");
-			  }
-			  if (views == parseFloat(views)) {
-				views = parseFloat(views) * multiplier;
-				chrome.runtime.sendMessage(
-				  chrome.runtime.id,
-				  ({
-					message: {
-					  type: 'tiktok',
-					  event: 'viewer_update',
-					  meta: views
-					}
-				  }),
-				  function(e) {}
-				);
-			  }
-			}
+	var observer2 = false;
+	function start() {
+	  if (!isExtensionOn) {
+		return;
+	  }
+	  if (observer && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected) {
+		return;
+	  }
+	  let target = null;
+	  let subtree = false;
+	  if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
+		target = document.querySelector('[data-e2e]');
+		if (target) {
+		  target = target.parentNode;
+		}
+	  } else {
+		target = document.querySelector('[data-item="list-message-list"], [class*="DivChatMessageList"]');
+		if (!target) {
+		  target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
+		  if (target) { subtree = true; }
+		}
+		if (!target) {
+		  let potentialTargets = document.querySelectorAll('[data-index].w-full');
+		  if (potentialTargets && potentialTargets.length > 3) {
+			target = potentialTargets[potentialTargets.length-1].parentNode;
+			subtree = false;
 		  }
-		} catch(e) {
-		  // Silent error handling
 		}
 	  }
-	}
-	
-	window.addEventListener('beforeunload', function() {
-	  if (observer) {
+	  if (!target) {
+		console.log("Start: No target found for main observer.");
+		return;
+	  }
+	  if (!window.location.href.includes("livecenter") &&
+		  !(window.location.pathname.includes("@") && window.location.pathname.includes("live"))) {
+		return;
+	  }
+	  if (observer) {
 		observer.disconnect();
-		observer = null;
-		/* Add this line */
+		observer = false;
 		observedDomElementForObserver1 = null;
-	  }
-	  
-	  if (observer2) {
+	  }
+	  if (!subtree) {
+		start2(target);
+	  }
+	  console.log("Attempting to start social stream on target:", target);
+	  observer = new MutationObserver((mutations) => {
+		if (!isExtensionOn) return;
+		mutations.forEach((mutation) => {
+		  if (mutation.addedNodes.length) {
+			for (let i = 0; i < mutation.addedNodes.length; i++) {
+			  try {
+				const node = mutation.addedNodes[i];
+				if (!node.isConnected) continue;
+				if (!subtree) {
+				  if (node.dataset && node.dataset.e2e === "chat-message") {
+					setTimeout(processMessage, 10, node);
+				  } else {
+					const chatMessageChild = node.querySelector && node.querySelector("[data-e2e='chat-message']");
+					if (chatMessageChild) {
+					  setTimeout(processMessage, 10, chatMessageChild);
+					} else if (settings.captureevents) {
+					  setTimeout(processEvent, 10, node);
+					}
+				  }
+				} else {
+				  let msg = (node.dataset && node.dataset.e2e === "chat-message") ? node :
+						  (node.querySelector && node.querySelector('[data-e2e="chat-message"]'));
+				  if (msg) {
+					setTimeout(processMessage, 10, msg);
+				  } else if (settings.captureevents) {
+					setTimeout(processEvent, 10, node);
+				  }
+				}
+			  } catch (e) {  }
+			}
+		  }
+		});
+	  });
+	  const currentTargetForTimeout = target;
+	  setTimeout(function() {
+		if (observer && observer instanceof MutationObserver && currentTargetForTimeout && currentTargetForTimeout.isConnected && isExtensionOn) {
+		  if (currentTargetForTimeout.children) {
+			Array.from(currentTargetForTimeout.children).forEach(ele => {
+			  if (ele && ele.dataset && ele.isConnected) {
+				ele.dataset.skip = ++msgCount;
+			  }
+			});
+		  }
+		  document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele => {
+			ele.dataset.skip = ++msgCount;
+		  });
+		  observer.observe(currentTargetForTimeout, {
+			childList: true,
+			subtree: subtree
+		  });
+		  observedDomElementForObserver1 = currentTargetForTimeout;
+		  console.log("Main observer is now observing.", currentTargetForTimeout);
+		} else {
+		  if (observer instanceof MutationObserver) {
+			observer.disconnect();
+		  }
+		  observer = false;
+		  observedDomElementForObserver1 = null;
+		  console.log("Main observer NOT started or target/state became invalid before observe.", currentTargetForTimeout);
+		}
+	  }, 2000);
+	}
+	function start2(other = false) {
+	  if (!isExtensionOn || !settings.captureevents) {
+		return;
+	  }
+	  if (observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected) {
+		return;
+	  }
+	  var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+	  if (!target2 && other && other.isConnected && other.nextElementSibling) {
+		target2 = other.nextElementSibling;
+	  }
+	  if (!target2) {
+		console.log("Start2: No target found for secondary observer.");
+		return;
+	  }
+	  if (!window.location.href.includes("livecenter") &&
+		!(window.location.pathname.includes("@") && window.location.pathname.includes("live"))) {
+		return;
+	  }
+	  if (observer2) {
 		observer2.disconnect();
-		observer2 = null;
-		/* Add this line */
+		observer2 = false;
 		observedDomElementForObserver2 = null;
-	  }
-	  
+	  }
+	  console.log("Attempting to start secondary event stream on target:", target2);
+	  observer2 = new MutationObserver((mutations) => {
+		if (!settings.captureevents || !isExtensionOn) return;
+		mutations.forEach((mutation) => {
+		  if (mutation.addedNodes.length) {
+			for (let i = 0; i < mutation.addedNodes.length; i++) {
+			  try {
+				const node = mutation.addedNodes[i];
+				if (!node.isConnected) continue;
+				if (node.nodeName === "DIV") {
+				  const typeOfEvent = node.dataset?.e2e || node.querySelector?.("[data-e2e]")?.dataset.e2e;
+				  if (typeOfEvent) {
+					if (!settings.capturejoinedevent && typeOfEvent === "enter-message") {
+					  continue;
+					}
+					processEvent(node);
+				  } else {
+					processEvent(node);
+				  }
+				}
+			  } catch (e) {  }
+			}
+		  }
+		});
+	  });
+	  if (target2.isConnected) {
+		observer2.observe(target2, {
+		  childList: true,
+		  subtree: true
+		});
+		observedDomElementForObserver2 = target2;
+		console.log("Secondary observer is now observing.", target2);
+	  } else {
+		observer2 = false;
+		observedDomElementForObserver2 = null;
+		console.log("Secondary observer NOT started, target not connected.", target2);
+	  }
+	}
+	window.addEventListener('beforeunload', function() {
+	  if (observer) {
+		observer.disconnect();
+		observer = false;
+		observedDomElementForObserver1 = null;
+	  }
+	  if (observer2) {
+		observer2.disconnect();
+		observer2 = false;
+		observedDomElementForObserver2 = null;
+	  }
 	  if (messageLog._cleanupInterval) {
 		clearInterval(messageLog._cleanupInterval);
 		messageLog._cleanupInterval = null;
 	  }
-	  
 	  if (videosMuted) {
 		clearInterval(videosMuted);
 		videosMuted = null;
 	  }
-	  
 	  if (pokeMe) {
 		clearInterval(pokeMe);
 		pokeMe = null;
 	  }
 	});
-
-
-	function start() {
-	  if (!isExtensionOn) {
-		return;
-	  }
-	  
-	  if (observer && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected) { // More reliable check
-		return;
-	  }
-	  
-	  let target = null;
-	  let subtree = false;
-	  
-	  if (window.location.href.startsWith("https://livecenter.tiktok.com/common_live_chat")) {
-		target = document.querySelector('[data-e2e]');
-		if (target) {
-		  target = target.parentNode;
-		}
-	  } else {
-		target = document.querySelector('[data-item="list-message-list"], [class*="DivChatMessageList"]');
-		if (!target) {
-		  target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
-		  if (target) { subtree = true; }
-		}
-	  }
-	  
-	  if (!target) {
-		let potentialTargets = document.querySelectorAll('[data-index].w-full');
-		if (potentialTargets && potentialTargets.length > 3) {
-		  target = potentialTargets[potentialTargets.length-1].parentNode;
-		  subtree = false;
-		}
-	  }
-	  
-	  if (!target) {
-		target = document.querySelector('[role="heading"][tabindex]');
-		if (!(target && window.location.href.includes("/live") && target.nodeType == 1)) {
-		  target = null; // Ensure target is null if conditions not met
-		}
-	  }
-
-	  if (!target) { // Moved this check earlier, after all target finding attempts
-		console.log("Start: No target found for main observer.");
-		return;
-	  }
-	  
-	  if (!window.location.href.includes("livecenter") && 
-		  !(window.location.pathname.includes("@") && window.location.pathname.includes("live"))) {
-		return;
-	  }
-	  
-	  if (observer) {
-		observer.disconnect();
-		observedDomElementForObserver1 = null;
-	  }
-	  observer = false; // Ensure it's false before creating a new one
-	  
-	  if (!subtree) {
-		start2(target);
-	  }
-	  
-	  console.log("Starting social stream on target:", target);
-	  
-	  observer = new MutationObserver((mutations) => {
-		if (!isExtensionOn) return;
-		mutations.forEach((mutation) => {
-		  if (mutation.addedNodes.length) {
-			for (let i = 0; i < mutation.addedNodes.length; i++) {
-			  try {
-				const node = mutation.addedNodes[i];
-				if (!node.isConnected) continue; // Skip nodes not connected
-
-				if (!subtree) {
-				  if (node.dataset && node.dataset.e2e === "chat-message") {
-					setTimeout(processMessage, 10, node);
-				  } else {
-					const chatMessageChild = node.querySelector && node.querySelector("[data-e2e='chat-message']");
-					if (chatMessageChild) {
-						setTimeout(processMessage, 10, chatMessageChild); // Pass the actual message element
-					} else if (settings.captureevents) {
-						setTimeout(processEvent, 10, node);
-					}
-				  }
-				} else { // subtree is true
-				  let msg = (node.dataset && node.dataset.e2e === "chat-message") ? node : (node.querySelector && node.querySelector('[data-e2e="chat-message"]'));
-				  if (msg) {
-					setTimeout(processMessage, 10, msg);
-				  } else if (settings.captureevents) {
-					setTimeout(processEvent, 10, node);
-				  }
-				}
-			  } catch (e) { /* Silent error handling */ }
-			}
-		  }
-		});
-	  });
-	  
-	  const currentTarget = target; // Use a stable reference for the timeout
-	  
-	  setTimeout(function() {
-		if (!currentTarget || !isExtensionOn || !currentTarget.isConnected) {
-		  if (observer) observer.disconnect();
-		  observer = false;
-		  observedDomElementForObserver1 = null;
-		  console.log("Main observer not started: target gone, extension off, or target not connected.");
-		  return;
-		}
-		
-		if (currentTarget.children) {
-		  Array.from(currentTarget.children).forEach(ele => {
-			if (ele && ele.dataset && ele.isConnected) {
-			  ele.dataset.skip = ++msgCount;
-			}
-		  });
-		}
-		
-		document.querySelectorAll('[data-e2e="chat-message"]').forEach(ele => {
-		  ele.dataset.skip = ++msgCount;
-		});
-		
-		observer.observe(currentTarget, { childList: true, subtree: subtree });
-		observedDomElementForObserver1 = currentTarget; // Store the successfully observed target
-		console.log("Main observer is now observing.", currentTarget);
-
-	  }, 2000);
-	}
-
-	var observer2 = false;
-	
-	function ensureObserversActive() {
-	  // This function's original check `!observer.takeRecords` was not effective for disconnected MutationObservers.
-	  // The improved detectDOMResets should handle most cases.
-	  // We can keep a simplified check or rely entirely on detectDOMResets.
-	  // For now, let's ensure `start` is called if observer is somehow false when it should be active.
-	  if (!observer && isExtensionOn && 
-	  	(window.location.href.includes("livecenter") || (window.location.pathname.includes("@") && window.location.pathname.includes("live")))) {
-		const chatContainerExists = document.querySelector('[data-e2e="chat-room"], [class*="DivChatMessageList"], [data-item="list-message-list"]');
-		if (chatContainerExists) {
-			console.log("EnsureObserversActive: Main observer is unexpectedly missing, attempting to restart.");
-			start();
-		}
-	  }
-	  
-	  if (settings.captureevents && !observer2 && isExtensionOn &&
-	  	(window.location.href.includes("livecenter") || (window.location.pathname.includes("@") && window.location.pathname.includes("live")))) {
-		const bottomStickyContainerExists = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
-		if (bottomStickyContainerExists) {
-			console.log("EnsureObserversActive: Secondary observer is unexpectedly missing, attempting to restart.");
-			start2();
-		}
-	  }
-	}
-	
-	function detectDOMResets() {
-	  // Check if our tracked elements are still in the document
-	  const mainObserverTargetStillInDOM = observer && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected && document.body.contains(observedDomElementForObserver1);
-	  const secondaryObserverTargetStillInDOM = observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected && document.body.contains(observedDomElementForObserver2);
-	  
-	  const chatContainerExists = document.querySelector('[data-e2e="chat-room"], [class*="DivChatMessageList"], [data-item="list-message-list"]');
-	  const bottomStickyContainerExists = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
-
-	  let needsReset = false;
-
-	  if (observer && !mainObserverTargetStillInDOM) {
-		console.log("Main observer target lost or no longer connected.");
-		needsReset = true;
-	  } else if (!observer && chatContainerExists) {
-		console.log("Chat container exists but main observer is not active.");
-		needsReset = true;
-	  }
-
-	  if (settings.captureevents) {
-		if (observer2 && !secondaryObserverTargetStillInDOM) {
-			console.log("Secondary observer target lost or no longer connected.");
-			// We might only want to restart observer2 here, but for simplicity if main is also problematic, a full reset is fine.
-			// If not already needing a full reset, just handle observer2.
-			if (!needsReset) {
-				console.log("Resetting only secondary observer...");
-				if (observer2) {
-					observer2.disconnect();
-					observer2 = null;
-					observedDomElementForObserver2 = null;
-				}
-				start2(); // Attempt to restart only observer2
-				// If start2 relies on elements found by start, this might need more coordination
-			} else {
-                 // Full reset will handle observer2 as well
-            }
-		} else if (!observer2 && bottomStickyContainerExists) {
-			console.log("Bottom sticky container exists but secondary observer is not active.");
-			if (!needsReset) { // If main observer is fine, just start observer2
-				console.log("Starting only secondary observer...");
-				start2();
-			} else {
-                // Full reset will handle observer2 as well
-            }
-		}
-	  }
-	  
-	  if (needsReset) {
-		console.log("DOM structure may have been replaced or observer target lost, resetting observers...");
-		
-		if (observer) {
-		  observer.disconnect();
-		  observer = null;
-		  observedDomElementForObserver1 = null;
-		}
-		
-		if (observer2) {
-		  observer2.disconnect();
-		  observer2 = null;
-		  observedDomElementForObserver2 = null;
-		}
-		
-		msgCount = 0;
-		setTimeout(start, 500);
-	  }
-	}
-	
-	function start2(other = false) {
-	  if (!isExtensionOn || !settings.captureevents) {
-		return;
-	  }
-	  
-	  if (observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected) { // More reliable check
-		return;
-	  }
-	  
-	  var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
-	  if (!target2 && other && other.nextElementSibling) { // Check if 'other' has a next sibling
-		target2 = other.nextElementSibling;
-	  }
-	  
-	  if (!target2) {
-		console.log("Start2: No target found for secondary observer.");
-		return;
-	  }
-	  
-	  if (!window.location.href.includes("livecenter") && 
-		!(window.location.pathname.includes("@") && window.location.pathname.includes("live"))) {
-		return;
-	  }
-	  
-	  if (observer2) {
-		observer2.disconnect();
-		observedDomElementForObserver2 = null;
-	  }
-	  observer2 = false; // Ensure it's false
-	  
-	  console.log("Starting secondary event stream on target:", target2);
-	  observer2 = new MutationObserver((mutations) => {
-		if (!settings.captureevents || !isExtensionOn) return;
-		mutations.forEach((mutation) => {
-		  if (mutation.addedNodes.length) {
-			for (let i = 0; i < mutation.addedNodes.length; i++) {
-			  try {
-				const node = mutation.addedNodes[i];
-				if (!node.isConnected) continue;
-				
-				if (node.nodeName === "DIV") {
-				  const typeOfEvent = node.dataset?.e2e || node.querySelector?.("[data-e2e]")?.dataset.e2e;
-				  if (typeOfEvent) {
-					if (!settings.capturejoinedevent && typeOfEvent === "enter-message") {
-					  // return; // This return was for the loop, not the function. Should be continue.
-					  continue;
-					}
-					processEvent(node); // typeOfEvent is not used by processEvent
-				  } else {
-					processEvent(node);
-				  }
-				}
-			  } catch (e) { /* Silent error handling */ }
-			}
-		  }
-		});
-	  });
-	  
-	  if (target2.isConnected) {
-		observer2.observe(target2, { childList: true, subtree: true });
-		observedDomElementForObserver2 = target2; // Store the successfully observed target
-		console.log("Secondary observer is now observing.", target2);
-	  } else {
-		observer2 = false;
-		observedDomElementForObserver2 = null;
-		console.log("Secondary observer not started: target not connected.");
-	  }
-	}
-
-	// Initialize observers
-	setInterval(periodicHealthCheck, 2000);
-
-    var settings = {};
-    var isExtensionOn = false;
-
-
-    try {
-        chrome.runtime.sendMessage(chrome.runtime.id, {
-            "getSettings": true,
+	setInterval(start, 2000);
+	var settings = {};
+	var isExtensionOn = false;
+	try {
+	    chrome.runtime.sendMessage(chrome.runtime.id, {
+	        "getSettings": true,
 			"tabId": chrome.runtime.id
-        }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-            if (response) {
-                if ("settings" in response) {
-                    settings = response.settings;
-                }
-                if ("state" in response) {
-                    isExtensionOn = response.state;
-                }
-            }
-        });
-    } catch (e) {}
-
+	    }, function(response) { 
+	        if (response) {
+	            if ("settings" in response) settings = response.settings;
+	            if ("state" in response) isExtensionOn = response.state;
+	        }
+	    });
+	} catch (e) {}
 	let pokeTimeout = 27;
 	if ((window.ninjafy || window.electronApi)){
-		pokeTimeout = 10; // we can be more annoying in this case.
+		pokeTimeout = 10;
 	}
     var pokeMe = setInterval(function() {
         try {
-            //if (chrome.runtime.id !== 1){
             chrome.runtime.sendMessage(chrome.runtime.id, {
                 "pokeMe": true
-            }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+            }, function(response) {
                 console.log("POKED");
             });
-            //}
         } catch (e) {}
     }, 1000 * 60 * pokeTimeout);
-
     var videosMuted = false;
-
     try {
         chrome.runtime.onMessage.addListener(
             function(request, sender, sendResponse) {
                 try {
                     if ("getSource" == request){sendResponse("tiktok");	return;	}
 					if ("focusChat" == request) {
-						
 						if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 							return;
 						}
-						
 						if (settings.customtiktokstate) {
 							var channel = window.location.pathname.split("/@");
 							if (channel.length > 1) {
@@ -1712,7 +1308,6 @@
 								return;
 							}
 						}
-						
                         if (document.querySelector('.public-DraftEditorPlaceholder-inner')) {
                             document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
                             sendResponse(true);
@@ -1720,12 +1315,10 @@
                             pokeMe = setInterval(function() {
                                 chrome.runtime.sendMessage(chrome.runtime.id, {
                                     "pokeMe": true
-                                }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-
+                                }, function(response) {
                                 });
                             }, 1000 * 60 * pokeTimeout);
                         } else if (document.querySelector("[contenteditable][placeholder]")) {
-
                             document.querySelector("[contenteditable][placeholder]").focus();
                             sendResponse(true);
                             setTimeout(function() {
@@ -1737,8 +1330,7 @@
                             pokeMe = setInterval(function() {
                                 chrome.runtime.sendMessage(chrome.runtime.id, {
                                     "pokeMe": true
-                                }, function(response) { // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-
+                                }, function(response) {
                                 });
                             }, 1000 * 60 * pokeTimeout);
                         } else {
@@ -1756,10 +1348,8 @@
                             return;
                         }
                         if ("muteWindow" in request) {
-
                             if (request.muteWindow) {
                                 clearInterval(videosMuted);
-
                                 videosMuted = setInterval(function() {
                                     document.querySelectorAll("video").forEach(v => {
                                         v.muted = true;
@@ -1789,30 +1379,22 @@
                         }
                     }
                 } catch (e) {}
-
                 sendResponse(false);
             }
         );
     } catch (e) {}
-	
-	
 	const StreamState = {
 		initialUrl: null,
 		lastUserInteraction: 0,
 		navigationTimeout: 10000,
-
 		init() {
 			this.initialUrl = location.href;
 			this.lastUserInteraction = Date.now();
-			
-			// Add stronger click handler that resets everything
 			document.addEventListener('click', () => {
-				this.initialUrl = location.href; // Reset the initial URL to current URL
+				this.initialUrl = location.href;
 				this.lastUserInteraction = Date.now();
 				console.log("Stream state reset by click");
 			});
-			
-			// Keep other handlers simple
 			document.addEventListener('keydown', () => {
 				this.lastUserInteraction = Date.now();
 			});
@@ -1820,59 +1402,34 @@
 				this.lastUserInteraction = Date.now();
 			});
 		},
-
 		isValid() {
 			const currentUrl = location.href;
-			
-			// Initial page load is always valid
 			if (currentUrl === this.initialUrl) {
 				return true;
 			}
-
-			// Check if recent navigation was user-initiated
 			const timeSinceInteraction = Date.now() - this.lastUserInteraction;
 			return timeSinceInteraction <= this.navigationTimeout;
 		},
-
 		getCurrentChannel() {
 			const match = location.href.match(/@([^/]+)/);
 			return match ? match[1] : null;
 		}
 	};
-
-	// Usage
 	StreamState.init();
-	
-	
 	let lastUserInputTime = Date.now();
-
-	// Function to update the last input time
 	function updateLastInputTime() {
 	  lastUserInputTime = Date.now();
 	}
-
-	
-	// Function to check for inactivity and click the element if needed
 	function checkInactivityAndClick() {
 	  const currentTime = Date.now();
 	  const timeElapsed = currentTime - lastUserInputTime;
-	  
-	  if (timeElapsed >= 10000) { // 10 seconds in milliseconds
+	  if (timeElapsed >= 10000) {
 		const unreadTipsElement = document.querySelector("[class*='DivUnreadTipsContent']");
 		if (unreadTipsElement) {
 		  unreadTipsElement.click();
-		  // Reset the timer after clicking
 		  lastUserInputTime = currentTime;
 		}
 	  }
 	}
-
-	// Add event listener for mouse wheel
 	window.addEventListener('wheel', updateLastInputTime);
-
-	// Set up interval to check for inactivity (checks every second)
-	// setInterval(checkInactivityAndClick, 5000);
-
 })();
-
-// try reloading the page if no activitiy for a while?
