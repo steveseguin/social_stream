@@ -4,7 +4,6 @@
         <title>Menu</title>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
         <meta content="utf-8" http-equiv="encoding" />
-        <script src="popup.js?v=2"></script>
         <style>
 :root {
     --body-background-enabled: #e7e7e7;
@@ -7178,6 +7177,30 @@ body.ssapp .wrapper.ssapp h3 {
                 </div>
             </div>
 
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-profiles-options" />
+					<label class="collapsible-label" for="wrapper-profiles-options"><span data-translate="profiles">⚙️ Profiles</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<h3><span data-translate="save-current-settings-profile">Save current settings as profile</span></h3>
+								<span data-translate="save-all-your-current-settings-as-a-profile">Save all your current settings as a profile for easy switching</span>
+								<div class="grid">
+									<button class="glowingButton" data-action="saveProfile">
+										<span style="font-size: 0.8em;"><span data-translate="save-profile">💾 Save profile</span></span>
+									</button>
+								</div>
+
+								<h3><span data-translate="manage-profiles">Manage profiles</span></h3>
+								<span data-translate="switch-between-profiles">Switch between your saved profiles</span>
+								<div id="profilesList" class="profiles-list" style="max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-export-options" />
@@ -7214,13 +7237,13 @@ body.ssapp .wrapper.ssapp h3 {
                                     Just a unique list of names seen in chat; no messages
                                 </span>
                                 <div class="grid3">
-                                    <button class="glowingButton" style="width: 138px;" data-action="savenames">
+                                    <button class="glowingButton" style="min-width: 143px;" data-action="savenames">
                                         <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
                                     </button>
-                                    <button class="glowingButton" style="width: 95px;" data-action="savenamesStop">
+                                    <button class="glowingButton" data-action="savenamesStop">
                                         <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
                                     </button>
-									<button class="glowingButton" style="width: 85px;" data-action="savenamesClear">
+									<button class="glowingButton"  data-action="savenamesClear">
                                         <span style="font-size: 0.8em;"><span data-translate="reset-user-list">Reset list</span></span>
                                     </button>
                                 </div>
@@ -7230,7 +7253,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     Make sure to export your settings first or lose them
                                 </span>
                                 <div class="grid">
-                                    <button class="glowingButton" style="width: 140px;" data-action="bigwipe">
+                                    <button class="glowingButton" style="min-width: 140px;" data-action="bigwipe">
                                         <span style="font-size: 0.8em;"><span data-translate="reset-settings">Reset all settings</span></span>
                                     </button>
                                 </div>
@@ -7240,10 +7263,10 @@ body.ssapp .wrapper.ssapp h3 {
                                     Backup and load your extension settings.
                                 </span>
                                 <div class="grid">
-                                    <button class="glowingButton" style="width: 140px;" data-action="export">
+                                    <button class="glowingButton" style="min-width: 140px;" data-action="export">
                                         <span style="font-size: 0.8em;"><span data-translate="export-to-disk">💾 Export to disk</span></span>
                                     </button>
-                                    <button class="glowingButton" style="width: 140px;" data-action="import">
+                                    <button class="glowingButton" style="min-width: 140px;" data-action="import">
                                         <span style="font-size: 0.8em;"><span data-translate="import-settings">Import settings</span></span>
                                     </button>
                                 </div>
@@ -7311,5 +7334,7 @@ body.ssapp .wrapper.ssapp h3 {
             </p>
 			</span>
         </div>
+		<script type="text/javascript" src="./libs/profiles.js"></script>
+        <script type="text/javascript" src="popup.js?v=2"></script>
     </body>
 </html>

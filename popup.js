@@ -4571,3 +4571,10 @@ const PollManager = {
         });
     }
 };
+
+
+ProfileManager.init();
+
+document.querySelector('button[data-action="saveProfile"]').addEventListener('click', function() {
+  ProfileManager.saveCurrentProfile();
+});

@@ -1,9 +1,10 @@
+# /* Replace this entire file with the content below */
 name: Deploy Main and Beta to GitHub Pages
 on:
   push:
     branches:
-      - main 
-      - beta 
+      - main # /* Updated from master */
+      - beta # /* Updated from steveseguin-patch-1 */
   workflow_dispatch:
 
 permissions:
@@ -14,19 +15,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create deployment structure
-        run: mkdir -p gh-pages-content/beta
+        run: mkdir -p gh-pages-content/beta # /* Updated subdirectory to 'beta' */
 
       - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: main 
-          path: main-content 
+          ref: main # /* Updated ref to 'main' */
+          path: main-content # Using 'main-content' for clarity
 
       - name: Checkout beta branch
         uses: actions/checkout@v4
         with:
-          ref: beta 
-          path: beta-content 
+          ref: beta # /* Updated ref to 'beta' */
+          path: beta-content # Using 'beta-content' for clarity
 
       - name: Prepare content
         run: |
@@ -34,10 +35,10 @@ jobs:
           rsync -av --exclude='.git/' main-content/ gh-pages-content/
           
           # Copy beta content to beta directory (excluding .git)
-          rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/ 
+          rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/ # /* Updated target subdirectory to 'beta' */
           
           # Create .nojekyll file to prevent Jekyll processing
-          touch gh-pages-content/.nojekyll
+          # touch gh-pages-content/.nojekyll
           
           # Debug: list content recursively
           echo "Deployment content (recursive):"
@@ -50,7 +51,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add .
-          git commit -m "Deploy main and beta to GitHub Pages" 
+          git commit -m "Deploy main and beta to GitHub Pages" # /* Updated commit message */
           git branch -M gh-pages
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git push -f origin gh-pages

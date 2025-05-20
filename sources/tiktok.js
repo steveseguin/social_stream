@@ -1,3 +1,4 @@
+// new code
 (function() {
 	console.log("Social stream injected");
 	const avatarCache = {
@@ -893,7 +894,7 @@
 			}
 		}
         if (messageLog?.isDuplicate(chatname, chatmessage)) {
-            console.log("duplicate message; skipping",chatname, chatmessage);
+            //console.log("duplicate message; skipping",chatname, chatmessage);
             return;
         }
         var data = {};
@@ -912,7 +913,7 @@
         data.event = ital;
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
 			avatarCache.cleanup();
-			console.log("Has the channel changed? If so, click the page to validate it");
+			//console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
         pushMessage(data);
@@ -1054,7 +1055,7 @@
 		data.type = "tiktok";
 		data.event = ital;
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()){
-			console.log("Has the channel changed? If so, click the page to validate it");
+			//console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
         pushMessage(data);
@@ -1093,7 +1094,7 @@
 		}
 	  }
 	  if (!target) {
-		console.log("Start: No target found for main observer.");
+		//console.log("Start: No target found for main observer.");
 		return;
 	  }
 	  if (!window.location.href.includes("livecenter") &&
@@ -1108,7 +1109,7 @@
 	  if (!subtree) {
 		start2(target);
 	  }
-	  console.log("Attempting to start social stream on target:", target);
+	  //console.log("Attempting to start social stream on target:", target);
 	  observer = new MutationObserver((mutations) => {
 		if (!isExtensionOn) return;
 		mutations.forEach((mutation) => {
@@ -1160,14 +1161,14 @@
 			subtree: subtree
 		  });
 		  observedDomElementForObserver1 = currentTargetForTimeout;
-		  console.log("Main observer is now observing.", currentTargetForTimeout);
+		  //console.log("Main observer is now observing.", currentTargetForTimeout);
 		} else {
 		  if (observer instanceof MutationObserver) {
 			observer.disconnect();
 		  }
 		  observer = false;
 		  observedDomElementForObserver1 = null;
-		  console.log("Main observer NOT started or target/state became invalid before observe.", currentTargetForTimeout);
+		  //console.log("Main observer NOT started or target/state became invalid before observe.", currentTargetForTimeout);
 		}
 	  }, 2000);
 	}
@@ -1183,7 +1184,7 @@
 		target2 = other.nextElementSibling;
 	  }
 	  if (!target2) {
-		console.log("Start2: No target found for secondary observer.");
+		//console.log("Start2: No target found for secondary observer.");
 		return;
 	  }
 	  if (!window.location.href.includes("livecenter") &&
@@ -1195,7 +1196,7 @@
 		observer2 = false;
 		observedDomElementForObserver2 = null;
 	  }
-	  console.log("Attempting to start secondary event stream on target:", target2);
+	  //console.log("Attempting to start secondary event stream on target:", target2);
 	  observer2 = new MutationObserver((mutations) => {
 		if (!settings.captureevents || !isExtensionOn) return;
 		mutations.forEach((mutation) => {
@@ -1226,11 +1227,11 @@
 		  subtree: true
 		});
 		observedDomElementForObserver2 = target2;
-		console.log("Secondary observer is now observing.", target2);
+		//console.log("Secondary observer is now observing.", target2);
 	  } else {
 		observer2 = false;
 		observedDomElementForObserver2 = null;
-		console.log("Secondary observer NOT started, target not connected.", target2);
+		//console.log("Secondary observer NOT started, target not connected.", target2);
 	  }
 	}
 	window.addEventListener('beforeunload', function() {
@@ -1280,7 +1281,7 @@
             chrome.runtime.sendMessage(chrome.runtime.id, {
                 "pokeMe": true
             }, function(response) {
-                console.log("POKED");
+                //console.log("POKED");
             });
         } catch (e) {}
     }, 1000 * 60 * pokeTimeout);
@@ -1393,7 +1394,7 @@
 			document.addEventListener('click', () => {
 				this.initialUrl = location.href;
 				this.lastUserInteraction = Date.now();
-				console.log("Stream state reset by click");
+				//console.log("Stream state reset by click");
 			});
 			document.addEventListener('keydown', () => {
 				this.lastUserInteraction = Date.now();
