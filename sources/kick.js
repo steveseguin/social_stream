@@ -1,5 +1,86 @@
 (function () {
 	
+	var EMOTELIST = false;
+	var BTTV = false;
+	var SEVENTV = false;
+	var FFZ = false;
+
+	function mergeEmotes() { // BTTV takes priority over 7TV in this all.
+		EMOTELIST = {};
+		if (BTTV) {
+			if (settings.bttv) {
+				try {
+					if (BTTV.channelEmotes) {
+						EMOTELIST = BTTV.channelEmotes;
+					}
+					if (BTTV.sharedEmotes) {
+						EMOTELIST = deepMerge(BTTV.sharedEmotes, EMOTELIST);
+					}
+					if (BTTV.globalEmotes) {
+						EMOTELIST = deepMerge(BTTV.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+		if (SEVENTV) {
+			if (settings.seventv) {
+				try {
+					if (SEVENTV.channelEmotes) {
+						EMOTELIST = deepMerge(SEVENTV.channelEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+				try {
+					if (SEVENTV.globalEmotes) {
+						EMOTELIST = deepMerge(SEVENTV.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+		if (FFZ) {
+			if (settings.ffz) {
+				try {
+					if (FFZ.channelEmotes) {
+						EMOTELIST = deepMerge(FFZ.channelEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+				try {
+					if (FFZ.globalEmotes) {
+						EMOTELIST = deepMerge(FFZ.globalEmotes, EMOTELIST);
+					}
+				} catch (e) {}
+			}
+		}
+	}
+
+	function deepMerge(target, source) {
+		for (let key in source) {
+			if (source.hasOwnProperty(key)) {
+				if (typeof source[key] === 'object' && source[key] !== null) {
+					target[key] = target[key] || {};
+					deepMerge(target[key], source[key]);
+				} else {
+					target[key] = source[key];
+				}
+			}
+		}
+		return target;
+	}
+
+	function replaceEmotesWithImages(text) {
+		if (!EMOTELIST) {
+			return text;
+		}
+		
+		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (!emote) return match;
+			
+			const escapedMatch = escapeHtml(emoteMatch);
+			const isZeroWidth = typeof emote !== "string" && emote.zw;
+			return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote' : 'regular-emote'}"/>`;
+		});
+	}
+	
 	var cachedUserProfiles = {};
 	
 	function escapeHtml(unsafe){
@@ -93,18 +174,49 @@
 			}
 		}
 		
+		if (settings.textonlymode) {
+			element.childNodes.forEach(node=>{
+				if (node.childNodes.length){
+					resp += getAllContentNodes(node);
+				} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
+					resp += escapeHtml(node.textContent);
+				} else if (node.nodeType === 1){
+					resp += node.textContent || "";
+				}
+			});
+			return resp;
+		}
+		
+		// Handle emotes if they exist
+		if (EMOTELIST) {
+			let textContent = "";
+			element.childNodes.forEach(node => {
+				if (node.nodeType === 3 && node.textContent && node.textContent.trim().length > 0) {
+					textContent += escapeHtml(node.textContent);
+				}
+			});
+			
+			if (textContent) {
+				return replaceEmotesWithImages(textContent);
+			}
+		}
+		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
 				if (node.classList && node.classList.contains("seventv-painted-content")){
 					resp += node.outerHTML;
+				} else if (node && (node.tagName == "A")){
+					resp += " " + getAllContentNodes(node).trim() + " ";
 				} else {
-					resp += getAllContentNodes(node)
+					resp += getAllContentNodes(node);
 				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
 				if (node && node.classList && node.classList.contains("zero-width-emote")){
 					resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
+				} else if (node && (node.tagName == "A")){
+					resp += " " + node.outerHTML.trim() + " ";
 				} else {
 					resp += node.outerHTML;
 				}
@@ -338,9 +450,39 @@
 					return;
 				}
 				if (typeof request === "object"){
+					if ("state" in request){
+						isExtensionOn = request.state;
+					}
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
+						if (settings.bttv) {
+							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+						}
+						if (settings.seventv) {
+							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+						}
+						if (settings.ffz) {
+							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+						}
+						return;
+					}
+					if ("SEVENTV" in request) {
+						SEVENTV = request.SEVENTV;
+						sendResponse(true);
+						mergeEmotes();
+						return;
+					}
+					if ("BTTV" in request) {
+						BTTV = request.BTTV;
+						sendResponse(true);
+						mergeEmotes();
+						return;
+					}
+					if ("FFZ" in request) {
+						FFZ = request.FFZ;
+						sendResponse(true);
+						mergeEmotes();
 						return;
 					}
 				}
@@ -355,8 +497,23 @@
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
-			settings = response.settings;
+		if (response){
+			if ("state" in response){
+				isExtensionOn = response.state;
+			}
+			if ("settings" in response){
+				settings = response.settings;
+				
+				if (settings.bttv && !BTTV) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+				}
+				if (settings.seventv && !SEVENTV) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+				}
+				if (settings.ffz && !FFZ) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+				}
+			}
 		}
 	});
 
