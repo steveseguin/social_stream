@@ -1,161 +1,592 @@
-# Understanding Social Stream Ninja for AI Integration
+# Building Custom Overlays for Social Stream Ninja
 
-This document provides an overview of the Social Stream Ninja (SSN) application, focusing on aspects relevant for AI integration, custom development, and API interaction.
+## 1\. Introduction
 
-## 1. Introduction
+Social Stream Ninja (SSN) is a versatile application for consolidating and managing live social media streams. While it offers several built-in overlay pages (like `dock.html`, `featured.html`, `events.html`, etc.), users and developers can create their own custom HTML/CSS/JavaScript-based overlays to tailor the visual experience and functionality to specific needs.
 
-Social Stream Ninja is an application designed to consolidate live social media messaging streams and provide various tools for streamers. It supports numerous platforms like Twitch, YouTube, Facebook, TikTok, and more, capturing chat messages, events, and donations. The system consists of a browser extension (or standalone app), a dock/dashboard page (`dock.html`), and various overlay pages (`featured.html`, `actions.html`, etc.). Communication between these components primarily uses WebSockets via VDO.Ninja's infrastructure, but also supports direct HTTP/POST/SSE interactions.
+This guide explains how to build such custom pages, focusing on connecting to the SSN backend, receiving and processing messages, and displaying them, all *without* modifying the core `background.js` application.
 
-## 2. Core Concepts
+## 2\. Prerequisites
 
-### Session ID & Password
+  - Basic understanding of HTML, CSS, and JavaScript.
+  - Familiarity with JSON data structures.
+  - A running instance of the Social Stream Ninja extension or standalone application.
 
--   **`streamID`**: A unique identifier for a user's session. It's crucial for connecting different components (dock, overlays, API clients) to the correct session. It's typically auto-generated if not set.
--   **`password`**: An optional password to secure the session connection.
+## 3\. Core Concepts Recap
 
-### Message Structure
+Before diving into custom page creation, let's revisit some core SSN concepts from the "Understanding Social Stream Ninja for AI Integration" document:
 
-Messages within the SSN system generally follow a JSON object structure. Key fields often include:
+  - **`streamID` (Session ID):** Your unique session identifier. This is crucial and will be needed to connect your custom page. It's typically found in the SSN extension's settings.
+  - **`password` (Optional):** If your SSN session is password-protected, you'll need this.
+  - **Message Structure:** Incoming data will be JSON objects. Refer to the "Message Structure" section in the AI integration document for a detailed list of common fields (e.g., `id`, `type`, `chatname`, `chatmessage`, `hasDonation`, `event`).
 
--   `id`: Unique identifier for the message (often timestamp-based or incremental).
--   `type`: Source platform (e.g., `twitch`, `youtube`, `facebook`).
--   `chatname`: Display name of the user sending the message.
--   `chatmessage`: The actual message content (can contain HTML or plain text).
--   `chatimg`: URL of the user's avatar.
--   `timestamp`: Time the message was received or generated.
--   `hasDonation`: String describing a donation amount/type (e.g., "$5.00", "100 bits").
--   `membership`: Information about user membership/subscription status.
--   `event`: Indicates if the message represents a stream event (e.g., "follow", "viewer_update").
--   `userid`: Platform-specific user identifier.
--   `nameColor`: User's name color (if available/enabled).
--   `chatbadges`: Array of badge URLs or objects representing user badges.
--   `contentimg`: URL for attached images or videos in the message.
--   `karma`: Sentiment score (if enabled).
--   `bot`: Boolean indicating if the user is identified as a bot.
--   `mod`: Boolean indicating if the user is identified as a moderator.
--   `host`: Boolean indicating if the user is identified as the host.
--   `vip`: Boolean indicating if the user is identified as a VIP.
--   `private`: Boolean indicating if the message is private/direct.
--   `tid`: Tab ID from which the message originated in the browser extension.
+## 4\. Connection Methods for Custom Overlays
 
-### Event Types
+Custom overlay pages primarily connect to the Social Stream Ninja backend to receive messages. There are two main ways:
 
-The system captures various events beyond simple chat messages, such as follows, subscriptions, viewer count updates, donations, etc.. These often have an `event` field in the message structure.
+### 4.1. VDO.Ninja Iframe (Recommended for Overlays)
 
-## 3. Overlays and Customization
+This is the most common and straightforward method for overlay pages. Your custom HTML page will embed a VDO.Ninja iframe. This iframe acts as a bridge, receiving data from the SSN `background.js` (via VDO.Ninja's WebRTC or WebSocket infrastructure) and then passing it to your parent HTML page (your custom overlay) using `window.postMessage()`.
 
-SSN provides several HTML-based overlays:
+**How it works:**
 
--   **`dock.html`**: The main dashboard for viewing all incoming messages, managing queues, pinning messages, and controlling features.
--   **`featured.html`**: An overlay designed to show *one* featured message at a time, often selected from the dock.
--   **`actions.html`**: An overlay for handling specific actions triggered by points or commands (e.g., showing media).
--   **Other Overlays**: Emotes wall, hype meter, waitlist, ticker, word cloud, poll, credits roll, etc. are also available (`README.md`).
+1.  The SSN `background.js` sends messages to a VDO.Ninja room associated with your `streamID`.
+2.  Your custom overlay page includes an iframe whose `src` is a VDO.Ninja URL pointing to the *same* `streamID`. This iframe is configured typically as a "view-only" or specific-label client.
+3.  When the iframe receives data from SSN, it uses `parent.postMessage()` to send the data to your custom HTML page.
+4.  Your custom page listens for these messages using `window.addEventListener('message', callbackFunction)`.
 
-**Customization:**
+**Example Iframe Setup:**
 
--   **URL Parameters:** Most overlay pages support extensive customization via URL parameters (e.g., `&scale=`, `&compact`, `&font=`, `&speech=`, `&hidesource`, `&showtime=`). Refer to `popup.html` code and `README.md` for examples.
--   **CSS:** Custom styling can be applied directly using OBS browser source CSS injection or via the `&css` or `&b64css` URL parameters.
+```html
+<iframe id="ssn_bridge" style="display:none;"></iframe>
 
-## 4. API Interaction
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomID = urlParams.get("session") || "test"; // Get streamID from URL param
+    const password = urlParams.get("password") || "false"; // Get password from URL param
+    const label = urlParams.get("label") || "custom_overlay"; // Unique label for this overlay
 
-SSN offers multiple ways for external applications or AI to interact with it.
+    const iframe = document.getElementById('ssn_bridge');
+    // &view=roomID ensures it only receives data. &label is important for targeted messages.
+    // &noaudio &novideo &cleanoutput are typical for data-only VDO.Ninja clients.
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
 
-### Connection Methods
+    // Listen for messages from the iframe
+    window.addEventListener('message', function(event) {
+        // IMPORTANT: Check event.source to ensure the message is from your iframe
+        if (event.source !== iframe.contentWindow) {
+            return;
+        }
 
--   **WebSocket (WSS):** Recommended for real-time, bidirectional communication.
-    -   Endpoint: `wss://io.socialstream.ninja`
-    -   Join via URL path: `wss://io.socialstream.ninja/join/SESSION_ID/IN_CHANNEL/OUT_CHANNEL`
-    -   Join via message: Connect to the base URL and send `{"join": "SESSION_ID", "in": IN_CHANNEL, "out": OUT_CHANNEL}`.
--   **HTTP (GET/POST/PUT):** For sending commands.
-    -   GET: `https://io.socialstream.ninja/SESSION_ID/ACTION/TARGET/VALUE`
-    -   POST/PUT: `https://io.socialstream.ninja/SESSION_ID` (with JSON body)
--   **Server-Sent Events (SSE):** For receiving real-time updates from the server.
-    -   Endpoint: `https://io.socialstream.ninja/sse/SESSION_ID`
+        if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+            const ssnMessage = event.data.dataReceived.overlayNinja;
+            // Now, ssnMessage contains the data from Social Stream Ninja
+            processIncomingSSNMessage(ssnMessage);
+        } else if (event.data && event.data.actionType) { // For specific action payloads
+             processIncomingSSNMessage(event.data);
+        }
+    });
 
-### Channel System
+    function processIncomingSSNMessage(data) {
+        console.log("Received SSN Data:", data);
+        // Your custom logic to display/filter/process the message
+        // Example: displayMessage(data);
+    }
+</script>
+```
 
--   Allows routing messages between specific components using numeric channels (1-9).
--   Default channel is 1.
--   `IN_CHANNEL`: Specifies which channel(s) to listen to.
--   `OUT_CHANNEL`: Specifies which channel to send messages to.
--   Example channels:
-    -   1: Main/Default
-    -   2: Dock Input
-    -   3: Dock Output / Extension Input
-    -   4: Featured Overlay Input / Extension Output
-    -   5: Waitlist Output / Extension Input
+**Key Iframe URL Parameters for VDO.Ninja:**
 
-### Common API Commands
+  - `&room=STREAM_ID`: Specifies the main VDO.Ninja room to connect to.
+  - `&view=STREAM_ID`: Makes this client a viewer in the specified room, receiving data sent to that room.
+  - `&label=YOUR_LABEL`: Assigns a unique label to this iframe instance. This is crucial if you want `background.js` or `dock.html` to send targeted messages specifically to this overlay.
+  - `&password=PASSWORD`: If your SSN session is password protected.
+  - `&novideo`, `&noaudio`: Ensures no accidental camera/mic activation.
+  - `&cleanoutput`: Simplifies the VDO.Ninja interface within the iframe.
+  - `&ln`: (Light Ninja) a more performant version of VDO.Ninja, for viewing.
 
--   **Sending Messages:**
-    -   `sendChat`: Sends a plain text message. `{"action": "sendChat", "value": "message text", "target": "twitch"}`
-    -   `sendEncodedChat`: Sends a URL-encoded message.
-    -   `extContent`: Ingests a fully formed message object (useful for external sources). `{"action": "extContent", "value": "{JSON message object}"}`
--   **Control Commands:**
-    -   `clear`, `clearAll`, `clearOverlay`: Clears messages from dock/overlay.
-    -   `nextInQueue`: Advances the message queue.
-    -   `autoShow`: Toggles auto-featuring messages.
-    -   `toggleTTS`: Toggles text-to-speech.
--   **User Management:**
-    -   `blockUser`: Blocks a user. `{"action": "blockUser", "value": {"chatname": "spammer", "type": "youtube"}}`
-    -   `toggleVIPUser`: Toggles VIP status for a user.
-    -   `getUserHistory`: Requests message history for a user.
--   **Targeting:** Use the `target` field in the JSON payload (or URL for GET) to specify a `label` assigned to a specific dock/overlay instance. `{"action": "...", "target": "overlay1", "value": "..."}`
--   **Channel-Specific Send:** Use actions like `content2`, `content3`, etc., to send directly to specific channels.
+See `dock.html`, `featured.html`, `events.html` etc. for more examples of iframe setups. They often use `label=dock`, `label=overlay`, `label=actions` respectively.
 
-### Message Flow
+### 4.2. WebSocket API (Advanced)
 
-1.  **Capture:** Extension captures messages/events from social platforms.
-2.  **Processing (Extension):** `background.js` processes messages, applies bot actions (`applyBotActions`), filters, adds metadata.
-3.  **Distribution (Extension):** `sendToDestinations` sends messages via P2P (`sendDataP2P`) or WebSocket server (if configured) to docks, overlays, and potentially external APIs (POST/PUT/H2R/Singular).
-4.  **Dock Interaction:** Dock (`dock.html`) receives messages, displays them, allows user interaction (clicking, queuing, pinning).
-5.  **Dock Actions:** Dock sends commands back to the Extension (via P2P or server) to feature messages, block users, send replies, etc..
-6.  **Overlay Display:** Overlays (`featured.html`, etc.) receive featured content or specific data (like waitlist updates) and display it.
-7.  **API Interaction:** External applications/AI can send commands via WebSocket/HTTP to control the system or ingest messages.
- 
-## 5. Relay Messages
+For more direct control or server-side integrations, you can connect to the SSN WebSocket server (`wss://io.socialstream.ninja`). This bypasses the need for an iframe but requires handling the WebSocket connection and message parsing directly in your JavaScript.
 
--   Allows messages from one platform to be automatically re-posted to others.
--   Enabled via settings like `relayall` (relays all messages - **NOT RECOMMENDED** due to spam potential) or `relaydonos` (relays only donation messages).
--   The `relaytargets` setting allows specifying which source types (e.g., `twitch,youtube`) should receive relayed messages.
--   Messages identified as "reflections" (echos of relayed messages) are typically filtered out by the receiving end to prevent loops.
+**Connection:**
 
-## 6. Text-to-Speech (TTS)
+```javascript
+const urlParams = new URLSearchParams(window.location.search);
+const roomID = urlParams.get("session") || "test";
+// Choose appropriate IN_CHANNEL and OUT_CHANNEL based on your needs.
+// For a simple overlay listening to general messages, IN_CHANNEL 3 or 4 might be suitable.
+const inChannel = urlParams.get("in_channel") || "4"; // Channel to listen on
+const outChannel = urlParams.get("out_channel") || "3"; // Channel to send to (if needed)
 
--   SSN supports TTS for incoming messages or featured messages.
--   **Providers:**
-    -   System TTS (Free, browser/OS dependent).
-    -   Kokoro (Premium FREE, local processing, requires powerful computer).
-    -   ElevenLabs (Premium, requires API key).
-    -   Google Cloud (Premium, requires API key).
-    -   Speechify (Premium, requires API key).
--   **Configuration:** Language, voice, rate, pitch, volume can often be customized via URL parameters or settings.
-    -   Examples: `&speech=en-GB`, `&voice=google`, `&rate=1.2`, `&ttsprovider=elevenlabs`, `&elevenlabskey=API_KEY`.
--   **Control:** TTS can be toggled on/off via the dock menu or API (`toggleTTS` action).
--   **Filtering:** Options exist to only TTS donations, members, specific user types, or messages containing a command (e.g., `!say`).
+const socketServerURL = urlParams.get("server") || "wss://io.socialstream.ninja";
+const socket = new WebSocket(socketServerURL);
 
-## 7. Other Features
+socket.onopen = function() {
+    console.log("WebSocket Connected!");
+    const joinMessage = {
+        join: roomID,
+        in: parseInt(inChannel),  // Channel(s) this client wants to receive messages from
+        out: parseInt(outChannel) // Default channel this client will send messages to
+    };
+    socket.send(JSON.stringify(joinMessage));
+};
 
-SSN includes many other features, such as:
+socket.onmessage = function(event) {
+    try {
+        const data = JSON.parse(event.data);
+        // Messages from SSN are often wrapped.
+        if (data.overlayNinja) {
+            processIncomingSSNMessage(data.overlayNinja);
+        } else if (data.action && data.value) { // Simple command format
+            // Less common for overlays to receive this directly unless targeted
+            console.log("Received command:", data);
+        } else {
+            // Potentially direct message data if not wrapped
+            processIncomingSSNMessage(data);
+        }
+    } catch (e) {
+        console.error("Error parsing WebSocket message:", e);
+    }
+};
 
--   **Points System:** Award points for engagement, track streaks, allow spending points on actions (`points.js`, `pointsactions.js`).
--   **AI Integration:** LLM support (Ollama, ChatGPT, etc.) for chat responses, message censoring, RAG knowledge base (`ai.js`).
--   **Custom Actions:** Scriptable actions via `custom.js`.
--   **MIDI Hotkeys:** Trigger actions via MIDI devices.
--   **Webhooks:** Integrate with external services via webhooks.
--   **Game Overlays:** Battle Royale game, Polls, Word Clouds, etc. (`README.md`).
+socket.onerror = function(error) {
+    console.error("WebSocket Error:", error);
+};
 
-## 8. Conclusion for AI Integration
+socket.onclose = function() {
+    console.log("WebSocket Disconnected. Attempting to reconnect...");
+    // Implement reconnection logic if needed
+};
 
-Social Stream Ninja offers a robust system for managing multi-platform chat and events. For AI integration:
+function processIncomingSSNMessage(data) {
+    console.log("Received SSN Data via WebSocket:", data);
+    // Your custom logic
+}
+```
 
--   **Connect via WebSocket API:** Use `wss://io.socialstream.ninja` with your `SESSION_ID` to send and receive messages/commands in real-time.
--   **Understand Message Structure:** Parse incoming JSON messages to extract user info, content, and event types.
--   **Ingest Messages:** Use the `extContent` action to push messages from external AI sources into the SSN ecosystem.
--   **Send Replies:** Use `sendChat` to send AI-generated responses back to specific chat platforms.
--   **Control Overlays:** Use `content`, `clear`, and other actions to control what's displayed on featured overlays.
--   **Utilize TTS:** Leverage the TTS system (especially premium providers via API keys) for voice output.
--   **Leverage LLM Features:** Integrate with the built-in LLM capabilities for context-aware responses, moderation, or RAG-based knowledge retrieval.
--   **Targeting:** Use labels and the `target` parameter for precise control in multi-instance setups.
+This method is more common for tools that interact with SSN rather than purely visual overlays, but it's an option. The `dock.html` uses a similar WebSocket connection for its primary communication.
 
-By understanding these components and APIs, an AI can effectively interact with and enhance the Social Stream Ninja experience.
+## 5\. Receiving and Processing Messages
+
+Once connected, your custom page will receive message objects.
+
+### Message Structure (Recap)
+
+A typical message object might look like this (fields vary based on source and event):
+
+```json
+{
+    "id": 1678886400000,
+    "type": "twitch",
+    "chatname": "StreamFan123",
+    "chatmessage": "Great stream! 🎉",
+    "chatimg": "url_to_avatar.png",
+    "timestamp": 1678886400000,
+    "hasDonation": null, // Or "$5.00"
+    "membership": null, // Or "Tier 1 Subscriber"
+    "event": null, // Or "follow"
+    "userid": "123456789",
+    "nameColor": "#FF00FF",
+    "chatbadges": ["url_to_badge.png"],
+    "contentimg": null, // Or "url_to_image_in_chat.gif"
+    "karma": 0.85,
+    "bot": false,
+    "mod": false,
+    "host": false,
+    "vip": true,
+    "tid": 101 // Browser tab ID
+}
+```
+
+Refer to `about.md` for more details on these fields.
+
+### Client-Side Filtering and Logic
+
+Your JavaScript code will be responsible for deciding what to do with each incoming message.
+
+```javascript
+function processIncomingSSNMessage(data) {
+    // --- Basic Filtering Examples ---
+
+    // 1. Filter by message type (source platform)
+    if (data.type === 'youtube') {
+        // console.log("This is a YouTube message:", data.chatname, data.chatmessage);
+        // displayYouTubeMessage(data);
+    } else if (data.type === 'twitch') {
+        // console.log("This is a Twitch message:", data.chatname, data.chatmessage);
+        // displayTwitchMessage(data);
+    }
+
+    // 2. Filter by event type
+    if (data.event === 'follow') {
+        // console.log("New Follower:", data.chatname, "on", data.type);
+        // displayFollowAlert(data);
+    } else if (data.event === 'subscriber') {
+        // console.log("New Subscriber:", data.chatname, "on", data.type);
+        // displaySubscriberAlert(data);
+    }
+
+    // 3. Filter for donations
+    if (data.hasDonation) {
+        // console.log("Donation Received:", data.chatname, "donated", data.hasDonation, "on", data.type);
+        // displayDonation(data);
+    }
+
+    // 4. Filter for messages from VIPs
+    if (data.vip) {
+        // console.log("VIP Message from", data.chatname, ":", data.chatmessage);
+        // highlightVIPMessage(data);
+    }
+
+    // 5. Filter out messages from bots (if identified)
+    if (data.bot) {
+        // console.log("Ignoring bot message from", data.chatname);
+        return; // Don't process further
+    }
+
+    // --- More Complex Filtering ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const onlyShowType = urlParams.get('onlytype'); // e.g., &onlytype=twitch
+    const hideType = urlParams.get('hidetype');     // e.g., &hidetype=youtube
+    const showEventsOnly = urlParams.has('eventsonly'); // &eventsonly
+    const donationsOnly = urlParams.has('donationsonly'); // &donationsonly
+
+    if (onlyShowType && data.type !== onlyShowType) {
+        return;
+    }
+    if (hideType && data.type === hideType) {
+        return;
+    }
+    if (showEventsOnly && !data.event) {
+        return;
+    }
+    if (donationsOnly && !data.hasDonation) {
+        return;
+    }
+
+    // --- Fallback: Display all other messages or specific content ---
+    displayGenericMessage(data);
+}
+
+function displayGenericMessage(data) {
+    const messageList = document.getElementById('message-list'); // Assuming you have this element
+    if (!messageList) return;
+
+    const messageElement = document.createElement('div');
+    messageElement.className = `message-item message-type-${data.type || 'unknown'}`;
+    if (data.event) {
+        messageElement.classList.add(`event-${data.event}`);
+    }
+
+    let content = '';
+    if (data.chatimg) {
+        content += `<img src="${data.chatimg}" alt="${data.chatname || 'User'}" class="avatar"> `;
+    }
+    content += `<strong style="color:${data.nameColor || '#FFF'};">${data.chatname || 'Anonymous'}</strong>: `;
+    content += `<span>${data.chatmessage || ''}</span>`;
+
+    if (data.hasDonation) {
+        content += `<span class="donation-info"> ❤️ ${data.hasDonation}</span>`;
+    }
+    if (data.membership) {
+        content += `<span class="membership-info"> ⭐ ${data.membership}</span>`;
+    }
+    if (data.contentimg) {
+        content += `<div><img src="${data.contentimg}" class="content-image"></div>`;
+    }
+
+    messageElement.innerHTML = content;
+    messageList.appendChild(messageElement);
+
+    // Optional: Auto-scroll
+    messageList.scrollTop = messageList.scrollHeight;
+
+    // Optional: Limit number of messages displayed
+    const maxMessages = parseInt(urlParams.get('limit')) || 50;
+    while (messageList.children.length > maxMessages) {
+        messageList.removeChild(messageList.firstChild);
+    }
+}
+```
+
+## 6\. Displaying Messages
+
+How you display messages is entirely up to your HTML and CSS design.
+
+**Basic HTML Structure:**
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Custom SSN Overlay</title>
+    <style>
+        body { background-color: transparent; color: white; font-family: sans-serif; }
+        .message-list { list-style: none; padding: 10px; }
+        .message-item { margin-bottom: 8px; padding: 5px; background-color: rgba(0,0,0,0.5); border-radius: 4px; }
+        .avatar { width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 5px; }
+        .donation-info { color: #FFD700; font-weight: bold; }
+        .membership-info { color: #ADFF2F; font-weight: bold; }
+        .content-image { max-width: 100px; max-height: 100px; display: block; margin-top: 5px;}
+    </style>
+</head>
+<body>
+    <ul id="message-list">
+        </ul>
+
+    <iframe id="ssn_bridge" style="display:none;"></iframe>
+    <script>
+        // JavaScript from Section 4.1 and 5 (processIncomingSSNMessage, displayGenericMessage)
+        // would go here.
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get("session") || "test";
+        const password = urlParams.get("password") || "false";
+        const label = urlParams.get("label") || "custom_overlay_" + Date.now(); // Ensure unique label
+
+        const iframe = document.getElementById('ssn_bridge');
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+
+        window.addEventListener('message', function(event) {
+            if (event.source !== iframe.contentWindow) { return; }
+            if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                processIncomingSSNMessage(event.data.dataReceived.overlayNinja);
+            } else if (event.data && event.data.actionType) {
+                 processIncomingSSNMessage(event.data);
+            }
+        });
+
+        function processIncomingSSNMessage(data) {
+            // Add any filtering specific to this overlay
+            // For example, if this overlay should only show donations from YouTube:
+            // if (data.type !== 'youtube' || !data.hasDonation) {
+            //    return;
+            // }
+            displayGenericMessage(data); // Use the display function from above
+        }
+
+        // Definition of displayGenericMessage from previous section
+        function displayGenericMessage(data) {
+            const messageList = document.getElementById('message-list');
+            if (!messageList) return;
+
+            const messageElement = document.createElement('li'); // Changed to <li> for <ul>
+            messageElement.className = `message-item message-type-${data.type || 'unknown'}`;
+            if (data.event) {
+                messageElement.classList.add(`event-${data.event}`);
+            }
+
+            let content = '';
+            if (data.chatimg) {
+                content += `<img src="${data.chatimg}" alt="${data.chatname || 'User'}" class="avatar"> `;
+            }
+            content += `<strong style="color:${data.nameColor || '#FFF'};">${data.chatname || 'Anonymous'}</strong>: `;
+            
+            // Sanitize chatmessage before inserting as HTML if it's not pre-sanitized
+            // For simplicity, assuming data.chatmessage is safe or using textContent assignment later
+            let chatMessageContent = data.chatmessage || '';
+
+            // Basic XSS prevention if inserting as HTML (better to use a library or careful construction)
+            // const tempDiv = document.createElement('div');
+            // tempDiv.textContent = data.chatmessage || '';
+            // chatMessageContent = tempDiv.innerHTML;
+            
+            content += `<span>${chatMessageContent}</span>`;
+
+
+            if (data.hasDonation) {
+                content += `<span class="donation-info"> ❤️ ${data.hasDonation}</span>`;
+            }
+            if (data.membership) {
+                content += `<span class="membership-info"> ⭐ ${data.membership}</span>`;
+            }
+             if (data.contentimg) {
+                content += `<div><img src="${data.contentimg}" class="content-image" alt="User content"></div>`;
+            }
+
+
+            messageElement.innerHTML = content;
+            
+            // If you want to process URLs in the message content:
+            // processURLs(messageElement.querySelector('span'), { makeClickable: true, shortenURLs: true });
+
+
+            messageList.appendChild(messageElement);
+            messageList.scrollTop = messageList.scrollHeight;
+
+            const maxMessages = parseInt(urlParams.get('limit')) || 50;
+            while (messageList.children.length > maxMessages) {
+                messageList.removeChild(messageList.firstChild);
+            }
+        }
+         // Placeholder for processURLs and isValidTLD if you use them
+        function isValidTLD(tld) { /* ... implementation ... */ return true; }
+        function processURLs(element, options) { /* ... implementation ... */ }
+
+
+    </script>
+</body>
+</html>
+```
+
+## 7\. Sending Commands (Optional)
+
+If your custom page needs to send commands back to SSN (e.g., to feature a message, clear the overlay, similar to what `dock.html` does), you can use `iframe.contentWindow.postMessage()`.
+
+```javascript
+// In your custom_overlay.html, assuming 'iframe' is your VDO.Ninja bridge iframe
+function sendCommandToSSN(commandObject) {
+    if (iframe && iframe.contentWindow) {
+        // The command needs to be wrapped for the VDO.Ninja iframe to relay it as a "data send"
+        // The target for these commands is usually the SSN background script itself,
+        // or other components listening on the main room feed.
+        iframe.contentWindow.postMessage({
+            sendData: { overlayNinja: commandObject },
+            type: "pcs" // "pcs" is often used for sending data to all peers in the room
+            // Optionally add a UUID if targeting a specific peer, though less common for overlay->background commands
+        }, "*"); // Target origin should be restricted in production
+    }
+}
+
+// Example: Command to feature a message (if your custom page were a dock replacement)
+function featureMessageOnOverlay(messageData) {
+    // 'messageData' should be the full SSN message object you want to feature
+    sendCommandToSSN(messageData); // SSN background.js's sendToDestinations will pick this up
+                                   // if it's sent to the main room or a specific label it listens to.
+                                   // featured.html listens for any message.
+}
+
+// Example: Command to clear the featured overlay
+function clearFeaturedOverlay() {
+    // Sending 'false' or an object with a 'clear' action can work.
+    // The exact payload depends on what featured.html (or your custom featured display) expects.
+    // A common pattern is that `featured.html` clears its display when it receives `false`.
+    sendCommandToSSN(false);
+    // OR, more explicitly if your featured overlay handles it:
+    // sendCommandToSSN({ action: "clearOverlay" });
+}
+```
+
+The `background.js` listens for messages from the VDO.Ninja iframe. When it receives a message structured like `{ sendData: { overlayNinja: actualPayload } }`, it processes `actualPayload` via its `processIncomingRequest` function, which can then trigger `sendToDestinations`. If `actualPayload` is a message object, it gets sent to other overlays like `featured.html`.
+
+## 8\. URL Parameters for Customization
+
+Remember that SSN overlays are highly customizable via URL parameters. Your custom page can also implement its own URL parameters for styling and behavior.
+
+\*\*Common SSN URL Parameters your custom page might want to *respect* or *replicate*: \*\*
+
+  - `&session=STREAM_ID`: **Required** for connection.
+  - `&password=PASSWORD`: Optional.
+  - `&label=YOUR_LABEL`: For targeted messaging.
+  - `&css=URL_TO_CSS_FILE` or `&b64css=BASE64_ENCODED_CSS`: For custom styling.
+  - `&font=FONT_NAME`: Specify a font.
+  - `&googlefont=FONT_NAME`: Specify a Google Font.
+  - `&scale=FLOAT`: Scale the entire overlay.
+  - `&limit=NUMBER`: Limit the number of messages displayed.
+  - `&hidesource=1`: To hide the source platform icon/name.
+  - `&showtime=MILLISECONDS`: How long to display a message before auto-hiding (if implemented).
+  - `&fadeout=1`: To enable fade-out animations.
+  - Filtering params: `&onlytype=`, `&hidetype=`, `&donationsonly=1`, `&eventsonly=1`, `&hidebots=1`, etc.
+
+Your JavaScript can parse these using `URLSearchParams` and adjust behavior accordingly.
+
+## 9\. Example: Minimalist Event Notification Overlay
+
+This example shows an overlay that only displays new follower and subscriber events.
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Event Notifications</title>
+    <style>
+        body { background-color: transparent; color: white; font-family: Arial, sans-serif; overflow: hidden; }
+        .event-notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+        }
+        .event-alert {
+            background-color: rgba(30, 144, 255, 0.8); /* DodgerBlue */
+            color: white;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            opacity: 0;
+            transform: translateX(100%);
+            animation: slideInAndFadeOut 5s forwards; /* Show for 5 seconds */
+        }
+        .event-alert.follow { background-color: rgba(50, 205, 50, 0.8); } /* LimeGreen */
+        .event-alert.subscriber { background-color: rgba(138, 43, 226, 0.8); } /* BlueViolet */
+
+        @keyframes slideInAndFadeOut {
+            0% { opacity: 0; transform: translateX(100%); }
+            10% { opacity: 1; transform: translateX(0); }
+            90% { opacity: 1; transform: translateX(0); }
+            100% { opacity: 0; transform: translateX(100%); }
+        }
+    </style>
+</head>
+<body>
+    <div id="event-notification-container"></div>
+    <iframe id="ssn_bridge" style="display:none;"></iframe>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get("session") || "test_events";
+        const password = urlParams.get("password") || "false";
+        const label = "event_notifier_" + Date.now();
+
+        const iframe = document.getElementById('ssn_bridge');
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&view=${roomID}&label=${label}&noaudio&novideo&cleanoutput&room=${roomID}`;
+
+        const notificationContainer = document.getElementById('event-notification-container');
+
+        window.addEventListener('message', function(event) {
+            if (event.source !== iframe.contentWindow) { return; }
+            if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+                processEvent(event.data.dataReceived.overlayNinja);
+            }
+        });
+
+        function processEvent(data) {
+            if (!data.event) return; // Only process actual events
+
+            let messageText = '';
+            let eventClass = '';
+
+            switch(data.event) {
+                case 'follow':
+                    messageText = `${data.chatname || 'Someone'} just followed on ${data.type}!`;
+                    eventClass = 'follow';
+                    break;
+                case 'subscriber': // Assuming 'subscriber' is the event name for new subs
+                    messageText = `${data.chatname || 'Someone'} just subscribed on ${data.type}!`;
+                    if (data.membership) { // If tier info is available
+                        messageText += ` (${data.membership})`;
+                    }
+                    eventClass = 'subscriber';
+                    break;
+                // Add more cases for other events you want to display
+                // case 'raid':
+                //    messageText = `${data.chatname} is raiding with ${data.viewers || 'viewers'}!`;
+                //    eventClass = 'raid';
+                //    break;
+                default:
+                    return; // Ignore other events
+            }
+
+            displayNotification(messageText, eventClass);
+        }
+
+        function displayNotification(text, typeClass) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `event-alert ${typeClass}`;
+            alertDiv.textContent = text;
+            notificationContainer.appendChild(alertDiv);
+
+            // Automatically remove the element after the animation (plus a small buffer)
+            setTimeout(() => {
+                alertDiv.remove();
+            }, 5100); // Animation is 5s
+        }
+    </script>
+</body>
+</html>
+```
+
+## 10\. Best Practices
+
+  - **Unique Labels:** If using multiple custom overlays, ensure each has a unique `&label=` in its VDO.Ninja iframe URL. This allows for targeted messaging if needed.
+  - **Security:** Always validate `event.source` when listening to `postMessage` events to ensure messages are coming from your trusted iframe.
+  - **Performance:** Keep client-side processing efficient, especially if displaying many messages. Minimize complex DOM manipulations.
+  - **Styling:** Leverage CSS for styling. Use URL parameters for dynamic style changes where appropriate.
+  - **Error Handling:** Implement basic error handling in your JavaScript.
+  - **No `background.js` Modification:** Design your custom page to work with the existing SSN message structure and API. Avoid solutions that would require changing the core extension code.
+  - **Consult Examples:** The existing `dock.html`, `featured.html`, `events.html`, `hype.html`, `waitlist.html`, `confetti.html`, and `credits.html` files in the Social Stream Ninja project are excellent resources for seeing how these principles are applied.
+
+By following this guide, you can create powerful and customized overlay experiences for Social Stream Ninja.

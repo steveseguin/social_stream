@@ -4,8 +4,6 @@ on:
     branches:
       - main
       - beta
-    paths-ignore:
-      - '.github/workflows/**'  # Ignore workflow file changes
   workflow_dispatch:
 
 permissions:
@@ -13,8 +11,7 @@ permissions:
 
 jobs:
   build-and-deploy:
-    # Skip this job if the commit message contains '[skip pages]' or was triggered by github-pages
-    if: "!contains(github.event.head_commit.message, '[skip pages]') && github.actor != 'github-pages[bot]'"
+    if: "!contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
     runs-on: ubuntu-latest
     steps:
       - name: Create deployment structure
@@ -46,6 +43,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add .
+          # /* Ensure this commit message contains '[skip pages]' */
           git commit -m "Deploy main and beta to GitHub Pages [skip pages]"
           git branch -M gh-pages
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
