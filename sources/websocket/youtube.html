@@ -8,12 +8,17 @@
     <link rel="icon" href="https://www.youtube.com/favicon.ico" type="image/x-icon">
     <style>
         .hidden { display: none!important; }
-        body {
-            background-color: #ddd;
-            font-size: 14px;
-            margin: 0;
-            padding: 20px;
-        }
+		html {
+			height: 100%;
+		}
+		body {
+			background-color: #ddd;
+			font-size: 14px;
+			margin: 0;
+			padding: 0;
+			height: 100vh;
+			overflow: hidden;
+		}
         .auth-button, .sign-out-button, .connect-button {
             background-color: #FF0000;
             color: white;
@@ -39,13 +44,17 @@
             margin: 0 auto;
             display: grid;
             grid-template-columns: 1fr 300px;
-            gap: 20px;
         }
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+		.socket > div {
+			margin: 5px;
+		}
+		.main-content {
+			display: flex;
+			flex-direction: column;
+			gap: 15px;
+			height: 100%;
+			overflow-y: auto;
+		}
         .chat-badge {
             margin-right: 2px;
             vertical-align: middle;
@@ -131,28 +140,25 @@
             color: #666;
             margin-top: 2px;
         }
-        
-        /* Chat container */
-        .chat-container {
-            background: white;
-            border-radius: 4px;
-            padding: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-			
-        }
-        .chat-container h3 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-        }
-        #textarea {
-            flex-grow: 1;
-            min-height: 400px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-        }
+		.container {
+			max-width: 1200px;
+			margin: 0 auto;
+			display: grid;
+			grid-template-columns: 1fr 300px;
+			height: calc(100vh - 20px);
+			padding: 10px;
+		}
+		.chat-container h3 {
+			margin: 0 0 10px 0;
+			font-size: 16px;
+		}
+		#textarea {
+			flex-grow: 1;
+			min-height: 100px;
+			height: calc(100% - 80px);
+			overflow-y: auto;
+			margin-bottom: 10px;
+		}
         .chat-input {
             display: flex;
             gap: 8px;
@@ -488,6 +494,14 @@ try {
 	var initialBacklogTimestamp = null;
 	var useProxyForChat = false;
 	var proxyUrl = 'https://youtube-publish-message-proxy.vdo.workers.dev/';
+	var lastPollingTime = Date.now();
+
+	var isPageVisible = true;
+	var lastVisibilityChange = Date.now();
+	var keepAliveInterval;
+	var backgroundPollingInterval = 10000; // 10 seconds when in background
+	var foregroundPollingInterval; 
+
 
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
@@ -510,8 +524,7 @@ try {
 		if (refresh) {
 			localStorage.setItem('youtubeRefreshToken', refresh);
 		}
-	}
-	function clearStoredToken() {
+	}function clearStoredToken() {
 		localStorage.removeItem('youtubeOAuthToken');
 		localStorage.removeItem('youtubeOAuthExpiry');
 		localStorage.removeItem('youtubeRefreshToken');
@@ -528,18 +541,87 @@ try {
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'));
         if (authElement) authElement.classList.add("hidden");
     }
+	function handleVisibilityChange() {
+		isPageVisible = document.visibilityState === 'visible';
+		lastVisibilityChange = Date.now();
+		if (isPageVisible) {
+			console.log('Page is now visible - resuming normal polling');
+			if (keepAliveInterval) {
+				clearInterval(keepAliveInterval);
+				keepAliveInterval = null;
+			}
+			if (foregroundPollingInterval && liveChatId) {
+				const timeSinceLastPoll = Date.now() - lastPollingTime;
+				if (timeSinceLastPoll > foregroundPollingInterval) {
+					console.log('Sufficient time has passed since last poll, resuming polling');
+					isPolling = false;
+				} else {
+					console.log('Recent poll detected, respecting interval to avoid rate limiting');
+				}
+			}
+		} else {
+			console.log('Page is now hidden - switching to background mode');
+			if (!foregroundPollingInterval && pollInterval) {
+				foregroundPollingInterval = pollInterval;
+			}
+			if (!keepAliveInterval) {
+				keepAliveInterval = modifiedSetTimeout(backgroundKeepAlive, backgroundPollingInterval);
+				keepAliveInterval.intervalId = setInterval(() => {
+					keepAliveInterval = modifiedSetTimeout(backgroundKeepAlive, backgroundPollingInterval);
+				}, backgroundPollingInterval);
+			}
+		}
+	}
+	function backgroundKeepAlive() {
+		if (!isPageVisible && liveChatId) {
+			console.log('Background keep-alive ping:', new Date().toISOString());
+			if (!isPolling) {
+				const timeSinceLastPoll = Date.now() - lastPollingTime;
+				if (timeSinceLastPoll > backgroundPollingInterval) {
+					console.log('Sufficient time since last poll, fetching in background');
+					fetchChatMessages();
+				} else {
+					console.log('Too soon to poll again in background, skipping to avoid rate limiting');
+				}
+			}
+			if (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined') {
+				if (!window.keepAliveAudioContext) {
+					const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+					window.keepAliveAudioContext = new AudioContextClass();
+					const oscillator = window.keepAliveAudioContext.createOscillator();
+					oscillator.type = 'sine';
+					oscillator.frequency.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
+					const gainNode = window.keepAliveAudioContext.createGain();
+					gainNode.gain.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
+					oscillator.connect(gainNode);
+					gainNode.connect(window.keepAliveAudioContext.destination);
+					oscillator.start();
+				}
+				if (window.keepAliveAudioContext.state === 'suspended') {
+					window.keepAliveAudioContext.resume();
+				}
+			}
+			if (document.getElementById('textarea')) {
+				const timestamp = document.createElement('div');
+				timestamp.style.display = 'none';
+				timestamp.setAttribute('data-keepalive', Date.now());
+				document.getElementById('textarea').appendChild(timestamp);
+				const oldTimestamps = document.querySelectorAll('[data-keepalive]');
+				if (oldTimestamps.length > 10) {
+					oldTimestamps[0].remove();
+				}
+			}
+		}
+	}
 	function initializePage() {
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
 		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || hashParams.get("videoId");
 		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel");
-		
-		// Store URL parameters in sessionStorage for post-auth redirect
 		if (urlVideoIdParam || urlChannelParam) {
 			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
 			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
 		}
-		
 		if (urlVideoIdParam) {
 			videoId = urlVideoIdParam;
 			channel = '';
@@ -559,10 +641,8 @@ try {
 				channel = localStorage.getItem("youtubeChannel") || "";
 			}
 		}
-		
 		const signOutButton = document.getElementById('sign-out-button');
 		if (signOutButton) signOutButton.addEventListener('click', signOut);
-		
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
 			authLink.addEventListener('click', function(e) {
@@ -570,64 +650,46 @@ try {
 				window.location.href = authUrl();
 			});
 		}
-		
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		isPageVisible = document.visibilityState === 'visible';
 		const sendButton = document.querySelector('#sendmessage');
 		if (sendButton) sendButton.onclick = handleSendMessage;
-		
 		const inputText = document.querySelector('#input-text');
 		if (inputText) inputText.addEventListener('keypress', handleEnterKey);
-		
 		const connectButton = document.getElementById('connect-button');
 		if (connectButton) connectButton.addEventListener('click', handleConnect);
-		
 		const changeButton = document.getElementById('change-button');
-	if (changeButton) {
-		changeButton.addEventListener('click', function() {
-			// Clear current connection
-			clearPolling();
-			
-			// Clear the header target info
-			updateHeaderInfo(username, 'No target (Ready to connect)');
-			
-			// Display instruction message
-			document.getElementById('textarea').innerHTML = '<div>Connection cleared. Enter new channel name or video ID and click Connect.</div>';
-			
-			// Reset stats
-			document.getElementById('viewer-count').textContent = '-';
-			document.getElementById('subscriber-count').textContent = '-';
-			document.getElementById('likes-count').textContent = '-';
-			
-			// Clear events
-			document.getElementById('events-list').innerHTML = '';
-			
-			// Clear channel/video info
-			channel = '';
-			videoId = '';
-			localStorage.removeItem('youtubeChannel');
-			localStorage.removeItem('youtubeVideoId');
-		});
-	}
-		
+		if (changeButton) {
+			changeButton.addEventListener('click', function() {
+				clearPolling();
+				updateHeaderInfo(username, 'No target (Ready to connect)');
+				document.getElementById('textarea').innerHTML = '<div>Connection cleared. Enter new channel name or video ID and click Connect.</div>';
+				document.getElementById('viewer-count').textContent = '-';
+				document.getElementById('subscriber-count').textContent = '-';
+				document.getElementById('likes-count').textContent = '-';
+				document.getElementById('events-list').innerHTML = '';
+				channel = '';
+				videoId = '';
+				localStorage.removeItem('youtubeChannel');
+				localStorage.removeItem('youtubeVideoId');
+			});
+		}
 		const channelInput = document.getElementById('channel-input');
 		const videoInput = document.getElementById('video-input');
-		
 		if (channelInput) {
 			channelInput.addEventListener('keypress', function(event) {
 				if (event.key === 'Enter') handleConnect();
 			});
 		}
-		
 		if (videoInput) {
 			videoInput.addEventListener('keypress', function(event) {
 				if (event.key === 'Enter') handleConnect();
 			});
 		}
-		
 		if (urlParams.has('code')) {
 			handleAuthCallback();
 			return;
 		}
-		
 		const storedToken = getStoredToken();
 		if (storedToken) {
 			verifyAndUseToken(storedToken);
@@ -643,8 +705,6 @@ try {
 				if (userInfo && userInfo.items && userInfo.items.length > 0) {
 					const userItem = userInfo.items[0];
 					username = userItem.snippet.title;
-					
-					// Add user avatar to the header
 					if (userItem.snippet.thumbnails && userItem.snippet.thumbnails.default) {
 						const avatarContainer = document.getElementById('user-avatar');
 						if (avatarContainer) {
@@ -655,11 +715,8 @@ try {
 							avatarContainer.appendChild(userImage);
 						}
 					}
-					
-					// Check for post-auth redirect parameters
 					const redirectVideoId = sessionStorage.getItem("youtubeRedirectVideoId");
 					const redirectChannel = sessionStorage.getItem("youtubeRedirectChannel");
-					
 					if (redirectVideoId) {
 						videoId = redirectVideoId;
 						channel = '';
@@ -680,11 +737,7 @@ try {
 						await connect();
 					} else {
 						updateHeaderInfo(username, 'No target specified');
-						
-						// Show welcome message instead of error when no target is specified
 						document.getElementById('textarea').innerHTML = '<div>Welcome! Please enter a YouTube channel name or video ID to connect.</div>';
-						
-						// Clear any previous error stats
 						document.getElementById('viewer-count').textContent = '-';
 						document.getElementById('subscriber-count').textContent = '-';
 						document.getElementById('likes-count').textContent = '-';
@@ -822,37 +875,40 @@ try {
     function handleEnterKey(event) {
         if (event.key === 'Enter') handleSendMessage(event);
     }
-    function handleSendMessage(event) {
-        event.preventDefault();
-        const inputElement = document.querySelector('#input-text');
-        if (inputElement) {
-            var msg = inputElement.value.trim();
-            if (msg && liveChatId) {
-                sendChatMessage(msg).then(response => {
-                    if (response && response.success) {
-                        inputElement.value = "";
-                        processMessage({
-                            authorName: username,
-                            message: msg,
-                            profileImageUrl: response.authorDetails?.profileImageUrl || '',
-                            isChatOwner: response.authorDetails?.isChatOwner || false,
-                            isChatSponsor: response.authorDetails?.isChatSponsor || false,
-                            isChatModerator: response.authorDetails?.isChatModerator || false
-                        });
-                    }
-                });
-            }
-        }
-    }
+	function handleSendMessage(event) {
+		event.preventDefault();
+		if (handleSendMessage.isSending) return;
+		const inputElement = document.querySelector('#input-text');
+		if (!inputElement) return;
+		var msg = inputElement.value.trim();
+		if (!msg || !liveChatId) {
+			return;
+		}
+		handleSendMessage.isSending = true;
+		const originalMsg = msg;
+		inputElement.value = "";
+		sendChatMessage(originalMsg).then(response => {
+			if (response && response.success) {
+				processMessage({
+					authorName: username,
+					message: originalMsg,
+					profileImageUrl: response.authorDetails?.profileImageUrl || '',
+					isChatOwner: response.authorDetails?.isChatOwner || false,
+					isChatSponsor: response.authorDetails?.isChatSponsor || false,
+					isChatModerator: response.authorDetails?.isChatModerator || false
+				});
+			}
+			setTimeout(() => { handleSendMessage.isSending = false; }, 500);
+		}).catch(() => {
+			setTimeout(() => { handleSendMessage.isSending = false; }, 500);
+		});
+	}
     async function handleConnect() {
 		const channelInput = document.getElementById('channel-input');
 		const videoInput = document.getElementById('video-input');
 		const channelNameFromInput = channelInput.value.trim();
 		const videoIdFromInput = videoInput.value.trim();
-		
-		// Clear current connection first
 		clearPolling();
-		
 		if (videoIdFromInput) {
 			localStorage.setItem('youtubeVideoId', videoIdFromInput);
 			localStorage.removeItem('youtubeChannel');
@@ -971,33 +1027,19 @@ try {
             return null;
         }
     }
-	
 	function updatePollSpinner(interval) {
 	  const spinner = document.getElementById('poll-spinner');
 	  if (spinner) {
-		// Convert to seconds with one decimal place
 		const seconds = (interval / 1000).toFixed(1);
-		
-		// Force animation restart
 		spinner.style.animation = 'none';
-		
-		// Trigger reflow
 		void spinner.offsetWidth;
-		
-		// Set new animation duration
 		spinner.style.animation = `spinner-rotation ${interval}ms ease-in-out 1`;
-		
-		// Update the timer text
 		document.getElementById('poll-time').textContent = `${seconds}s`;
 	  }
 	}
-	
 	function initializeSpinner() {
-	  // Find the chat container h3 element
 	  const chatHeader = document.querySelector('.chat-container h3');
 	  if (!chatHeader) return;
-	  
-	  // Convert h3 to a flex container
 	  chatHeader.className = 'chat-header';
 	  chatHeader.innerHTML = `
 		<span>Chat Messages</span>
@@ -1006,11 +1048,8 @@ try {
 		  <span id="poll-time">5.0s</span>
 		</div>
 	  `;
-	  
-	  // Set initial animation duration
 	  updatePollSpinner(5000);
 	}
-	
 	function queueMessage(messageData) {
 		messageQueue.push(messageData);
 		if (!isDisplaying) startDisplayQueue();
@@ -1026,34 +1065,36 @@ try {
 		}
 		const message = messageQueue.shift();
 		processMessage(message);
-		let delay = 100;
-		if (messageQueue.length > 50) delay = 20;
-		else if (messageQueue.length > 20) delay = 50;
-		else if (messageQueue.length > 5) delay = 75;
-		setTimeout(displayNextMessage, delay);
-	}
+		
+		if (isPageVisible){
+			let delay = 100;
+			if (messageQueue.length > 50) delay = 20;
+			else if (messageQueue.length > 20) delay = 50;
+			else if (messageQueue.length > 5) delay = 75;
+			setTimeout(displayNextMessage, delay);
+		} else {
+			displayNextMessage();
+		}
+	} 
 	async function fetchChatMessages() {
 		if (!liveChatId || isPolling) return;
 		isPolling = true;
+		lastPollingTime = Date.now();
+		let adaptivePollingInterval;
 		const token = getStoredToken();
-		if (!token) { 
-			isPolling = false; 
-			refreshToken(); 
-			return; 
+		if (!token) {
+			isPolling = false;
+			refreshToken();
+			return;
 		}
-		
 		let response;
 		try {
 			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
 			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
-			
-			// Make sure we're correctly passing the Authorization header with the Bearer token
-			response = await fetchWithTimeout(url, 5000, { 
+			response = await fetchWithTimeout(url, 5000, {
 				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'  // Add Content-Type header
+				'Content-Type': 'application/json'
 			});
-			
-			// Handle specific HTTP error codes
 			if (!response.ok) {
 				const status = response.status;
 				if (status === 401) {
@@ -1063,38 +1104,28 @@ try {
 				} else if (status === 403) {
 					console.warn('Access forbidden - chat may be disabled or restricted');
 					isPolling = false;
-					setTimeout(fetchChatMessages, 30000); // Longer retry for forbidden
+					setTimeout(fetchChatMessages, 30000);
 					return;
 				} else if (status === 429) {
 					console.warn('Rate limited by YouTube API');
 					isPolling = false;
-					setTimeout(fetchChatMessages, 60000); // Much longer retry for rate limiting
+					setTimeout(fetchChatMessages, 60000);
 					return;
 				}
 				throw new Error(`HTTP error! status: ${status}`);
 			}
-			
 			const data = await response.json();
-			
 			if (data.items && data.items.length > 0) {
-				// If this is the first batch of messages, store the latest timestamp for reference
 				if (initialBacklogProcessing && !initialBacklogTimestamp && data.items.length > 0) {
-					// Get the latest message timestamp from the batch
 					const timestamps = data.items.map(item => new Date(item.snippet.publishedAt).getTime());
 					initialBacklogTimestamp = Math.max(...timestamps);
 					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
 				}
-				
-				// Process messages
 				data.items.forEach(item => {
 					const publishedAt = new Date(item.snippet.publishedAt);
 					const messageTime = publishedAt.getTime();
-					
 					if (!lastMessageTime || publishedAt > lastMessageTime) {
-						// Determine if this is a backlog message or a new message
-						const isBacklogMessage = initialBacklogProcessing && 
-											   (messageTime <= initialBacklogTimestamp);
-						
+						const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
 						queueMessage({
 							authorName: item.authorDetails.displayName,
 							message: item.snippet.displayMessage,
@@ -1103,55 +1134,42 @@ try {
 							isChatSponsor: item.authorDetails.isChatSponsor,
 							isChatModerator: item.authorDetails.isChatModerator,
 							publishedAt,
-							skipEvent: isBacklogMessage // Flag to skip event dispatch for backlog
+							skipEvent: isBacklogMessage
 						});
-						
 						if (!lastMessageTime || publishedAt > lastMessageTime) {
 							lastMessageTime = publishedAt;
 						}
 					}
 				});
-				
-				// Dynamic backlog processing based on message volume
 				const isMaxedOut = data.items.length >= 200;
 				const highActivity = messageQueue.length > 100;
-				
 				if (isMaxedOut) {
-					// Continue fetching backlog with dynamic limit based on volume
 					if (highActivity) {
-						quickPollCount = 0; // Reset to get more messages when high activity
+						quickPollCount = 0;
 					} else if (quickPollCount < 20) {
 						quickPollCount++;
 					}
 					nextPageToken = data.nextPageToken;
-					setTimeout(fetchChatMessages, highActivity ? 50 : 200);
+					if (!isPageVisible) {
+						modifiedSetTimeout(fetchChatMessages, highActivity ? 50 : 200);
+					} else {
+						setTimeout(fetchChatMessages, highActivity ? 50 : 200);
+					}
 				} else {
-					// Normal polling with interval from API response
 					quickPollCount = 0;
 					nextPageToken = data.nextPageToken;
-					
-					// End of initial backlog processing
 					if (initialBacklogProcessing) {
 						initialBacklogProcessing = false;
 						console.log('Initial backlog processing complete');
 					}
-					
-					// Adaptive polling interval based on chat activity
 					const baseInterval = data.pollingIntervalMillis || 5000;
-					// let adjustedInterval = baseInterval;
-					
-					// if (messageQueue.length > 200) {
-						// adjustedInterval = Math.max(1000, baseInterval * 0.3);
-					// } else if (messageQueue.length > 100) {
-						// adjustedInterval = Math.max(1000, baseInterval * 0.5);
-					// } else if (messageQueue.length > 50) {
-						// adjustedInterval = Math.max(2000, baseInterval * 0.75);
-					// }
 					updatePollSpinner(baseInterval-300);
-					setTimeout(fetchChatMessages, baseInterval);
+					if (!isPageVisible) {
+						modifiedSetTimeout(fetchChatMessages, baseInterval);
+					} else {
+						setTimeout(fetchChatMessages, baseInterval);
+					}
 				}
-				
-				// Process special events (always dispatch events for these regardless of backlog)
 				data.items.forEach(item => {
 					if (item.snippet.superChatDetails) {
 						processSuperChat({
@@ -1171,25 +1189,25 @@ try {
 					}
 				});
 			} else {
-				// No messages, use standard polling interval
-				const pollingInterval = data.pollingIntervalMillis || 5000;
-				
-				// If we get to a point with no messages, assume initial backlog is complete
-				if (initialBacklogProcessing) {
-					initialBacklogProcessing = false;
-					console.log('Initial backlog processing complete (no more messages)');
+				const baseInterval = data.pollingIntervalMillis || 5000;
+				if (!isPageVisible) {
+					adaptivePollingInterval = Math.max(backgroundPollingInterval, baseInterval);
+					console.log('Background polling interval:', adaptivePollingInterval);
+					modifiedSetTimeout(fetchChatMessages, adaptivePollingInterval);
+				} else {
+					adaptivePollingInterval = baseInterval;
+					updatePollSpinner(adaptivePollingInterval - 300);
+					setTimeout(fetchChatMessages, adaptivePollingInterval);
 				}
-				updatePollSpinner(pollingInterval-300);
-				setTimeout(fetchChatMessages, pollingInterval);
 			}
 		} catch (error) {
 			console.error('Error fetching chat messages:', error);
-			
-			// Smart backoff for general errors
 			const backoffTime = quickPollCount > 5 ? 30000 : 10000;
-			setTimeout(fetchChatMessages, backoffTime);
-			
-			// Reset polling state
+			if (!isPageVisible) {
+				modifiedSetTimeout(fetchChatMessages, backoffTime);
+			} else {
+				setTimeout(fetchChatMessages, backoffTime);
+			}
 			quickPollCount = 0;
 		} finally {
 			isPolling = false;
@@ -1198,19 +1216,13 @@ try {
     async function sendChatMessage(message) {
 		const token = getStoredToken();
 		if (!token || !liveChatId) return { success: false };
-		
 		try {
-			// Determine whether to use direct API or proxy based on past experience
-			const baseUrl = useProxyForChat 
-				? proxyUrl 
-				: 'https://www.googleapis.com/youtube/v3/liveChat/messages';
-			
-			// Use the same parameters regardless of endpoint
+			const baseUrl = 'https://www.googleapis.com/youtube/v3/liveChat/messages';
 			const url = `${baseUrl}?part=snippet,authorDetails`;
-			
-			const response = await fetchWithTimeout(url, 5000, {
+			const response = await fetchWithTimeout(url, 10000, {
 				method: 'POST',
-				headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${token}`,
 				body: JSON.stringify({
 					snippet: {
 						liveChatId: liveChatId,
@@ -1219,36 +1231,74 @@ try {
 					}
 				})
 			});
-			
-			if (!response.ok) {
-				const errorText = await response.text();
-				console.error('Error sending chat message:', errorText);
-				return { success: false };
-			}
-			
 			const data = await response.json();
-			return {
-				success: true,
-				authorDetails: {
-					profileImageUrl: data.authorDetails?.profileImageUrl,
-					isChatOwner: data.authorDetails?.isChatOwner,
-					isChatSponsor: data.authorDetails?.isChatSponsor,
-					isChatModerator: data.authorDetails?.isChatModerator
-				}
-			};
+			console.log('Chat message sent successfully:', data);
+			return data;
 		} catch (error) {
 			console.error('Error sending chat message:', error);
-			
-			// Check if this was a CORS error and we weren't already using the proxy
-			if (!useProxyForChat && (error.message.includes('CORS') || error.name === 'TypeError')) {
-				console.log('Detected CORS issue, switching to proxy for future requests');
-				useProxyForChat = true;
-				
-				// Retry the same message using the proxy
-				return sendChatMessage(message);
-			}
-			
 			return { success: false };
+		}
+	}
+	function oscillatorTimeout(callback, delay) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioContext();
+
+        const oscillator = ctx.createOscillator();
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        oscillator.connect(gain);
+        gain.connect(ctx.destination);
+
+        let rafId;
+        let startTime = performance.now();
+        let isDone = false;
+        const checkTime = (timestamp) => {
+            if (isDone) return;
+
+            if ((timestamp - startTime) >= delay) {
+                isDone = true;
+                oscillator.onended = () => {};
+                oscillator.disconnect();
+                gain.disconnect();
+                ctx.close();
+                cancelAnimationFrame(rafId);
+                callback();
+                return;
+            }
+            rafId = requestAnimationFrame(checkTime);
+        };
+        oscillator.onended = () => {
+            if (isDone) return;
+            isDone = true;
+            cancelAnimationFrame(rafId);
+            oscillator.disconnect();
+            gain.disconnect();
+            ctx.close();
+            callback();
+        };
+
+        oscillator.start();
+        oscillator.stop(ctx.currentTime + delay/1000);
+        rafId = requestAnimationFrame(checkTime);
+
+        return {
+            clear: () => {
+                isDone = true;
+                cancelAnimationFrame(rafId);
+                oscillator.onended = () => {};
+                oscillator.disconnect();
+                gain.disconnect();
+                ctx.close();
+            }
+        };
+    }
+	function modifiedSetTimeout(callback, delay) {
+		if (!isPageVisible && delay > 100) {
+			return oscillatorTimeout(callback, delay);
+		} else {
+			return {
+				clear: () => clearTimeout(setTimeout(callback, delay))
+			};
 		}
 	}
     async function getStreamStats() {
@@ -1294,12 +1344,18 @@ try {
     }
 	function clearPolling() {
 		if (pollInterval) clearInterval(pollInterval);
-		pollInterval = null; liveChatId = null; nextPageToken = null;
-		lastMessageTime = null; isPolling = false; currentStream = null;
-		messageQueue = []; isDisplaying = false; quickPollCount = 0;
-		document.getElementById('textarea').innerHTML = '';
-		document.getElementById('events-list').innerHTML = '';
-		
+		if (keepAliveInterval) clearInterval(keepAliveInterval);
+		keepAliveInterval = null;
+		foregroundPollingInterval = null;
+		pollInterval = null;
+		liveChatId = null;
+		nextPageToken = null;
+		lastMessageTime = null;
+		isPolling = false;
+		currentStream = null;
+		messageQueue = [];
+		isDisplaying = false;
+		quickPollCount = 0;
 		const chatHeader = document.querySelector('.chat-container h3');
 		if (chatHeader) {
 			chatHeader.className = '';
@@ -1330,7 +1386,6 @@ try {
 			console.error('Error fetching channel stats:', error);
 		}
 	}
-	
 	async function connect(directVideoIdParam = null) {
 		clearPolling();
 		initialBacklogProcessing = true;
@@ -1348,7 +1403,6 @@ try {
 			document.getElementById('viewer-count').textContent = '-';
 			document.getElementById('subscriber-count').textContent = '-';
 			document.getElementById('likes-count').textContent = '-';
-			// Add a helpful message instead of an error
 			document.getElementById('textarea').innerHTML = '<div>Please enter a YouTube channel name or video ID to connect.</div>';
 			return;
 		}
@@ -1370,12 +1424,10 @@ try {
 					throw new Error(`Video not found or not accessible: ${videoIdToUse}`);
 				}
 				streamInfoToUse = videoDetailsData.items[0];
-				// For non-live videos, show stats but make it clear it's not live
 				const isVideoLive = streamInfoToUse.snippet.liveBroadcastContent === 'live';
 				const isVideoUpcoming = streamInfoToUse.snippet.liveBroadcastContent === 'upcoming';
-				const isVideoEnded = (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.actualEndTime) || 
+				const isVideoEnded = (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.actualEndTime) ||
 									 streamInfoToUse.snippet.liveBroadcastContent === 'none';
-				
 				if (isVideoEnded) {
 					liveChatId = null;
 					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
@@ -1388,16 +1440,13 @@ try {
 						document.getElementById('viewer-count').textContent = streamInfoToUse.statistics.viewCount || '-';
 						document.getElementById('likes-count').textContent = streamInfoToUse.statistics.likeCount || '-';
 					}
-					
-					// Get subscriber count for the channel
 					if (channelInfoForHeaderAndStats && channelInfoForHeaderAndStats.statistics) {
 						updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
 					} else if (effectiveChannelIdToUse) {
 						await getSubscriberCount(effectiveChannelIdToUse);
 					}
-					
 					currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
-					return; // Return early as we can't connect to chat for a non-live video
+					return;
 				} else if (isVideoUpcoming) {
 					liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
 					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
@@ -1405,7 +1454,6 @@ try {
 					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
 					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
 					updateHeaderInfo(username, `${channelDisplayNameToUse} (Upcoming: ${streamTitleToUse.substring(0,20)}...)`);
-					
 					if (!liveChatId) {
 						document.getElementById('textarea').innerHTML = `<div>This is an upcoming stream. Chat may not be available yet.</div>`;
 						document.getElementById('viewer-count').textContent = 'N/A';
@@ -1472,9 +1520,7 @@ try {
 				const chatAvailableMessage = document.createElement("div");
 				chatAvailableMessage.innerText = "Connected to live chat.";
 				document.getElementById('textarea').appendChild(chatAvailableMessage);
-				
 				initializeSpinner();
-				
 				fetchChatMessages();
 			} else {
                  const noChatMessage = document.createElement("div");
@@ -1519,33 +1565,27 @@ try {
 			if (messageData.isChatSponsor) badgeHtml += '<span class="chat-badge" title="Member">⭐</span>';
 			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageData.message}`;
 			textarea.appendChild(span);
-			
-			// Limit to 20 messages
 			while (textarea.childNodes.length > 20) {
 				textarea.removeChild(textarea.firstChild);
 			}
-			
 			textarea.scrollTop = textarea.scrollHeight;
-			
-			// Only dispatch event if not marked as skipEvent
 			if (!messageData.skipEvent) {
 				pushMessage({
-					chatname: messageData.authorName, 
-					chatbadges: badgeHtml, 
-					backgroundColor: "", 
+					chatname: messageData.authorName,
+					chatbadges: badgeHtml,
+					backgroundColor: "",
 					textColor: "",
-					chatmessage: messageData.message, 
-					chatimg: messageData.profileImageUrl || "", 
+					chatmessage: messageData.message,
+					chatimg: messageData.profileImageUrl || "",
 					hasDonation: "",
-					membership: messageData.isChatSponsor ? "member" : "", 
+					membership: messageData.isChatSponsor ? "member" : "",
 					type: "youtube"
 				});
 			}
-		} catch (e) { 
-			console.error('Error processing message:', e); 
+		} catch (e) {
+			console.error('Error processing message:', e);
 		}
 	}
-
     function processSuperChat(superChatData) {
         try {
             addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
@@ -1615,36 +1655,43 @@ try {
 		const timeout_id = setTimeout(() => controller.abort(), timeout);
 		try {
 			const options = { signal: controller.signal };
-			
-			// Better handling of headers
 			if (headers) {
-				options.headers = {};
-				// If headers is an object with potential method/body properties
-				if (headers.method) {
-					options.method = headers.method;
-					delete headers.method;
+				options.headers = new Headers();
+				if (typeof headers === 'object') {
+					if (headers.method) {
+						options.method = headers.method;
+						delete headers.method;
+					}
+					if (headers.body !== undefined) {
+						options.body = headers.body;
+						delete headers.body;
+					}
+					Object.entries(headers).forEach(([key, value]) => {
+						if (value !== undefined) options.headers.set(key, value);
+					});
 				}
-				if (headers.body) {
-					options.body = headers.body;
-					delete headers.body;
-				}
-				
-				// Add all remaining properties as headers
-				Object.keys(headers).forEach(key => {
-					options.headers[key] = headers[key];
-				});
 			}
-			
+			console.log('Fetching:', URL, options);
 			const response = await fetch(URL, options);
 			clearTimeout(timeout_id);
+			console.log('Response status:', response.status, response.statusText);
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('API error response:', errorText);
+				throw new Error(`API error: ${response.status} ${response.statusText}`);
+			}
 			return response;
 		} catch (e) {
 			clearTimeout(timeout_id);
-			console.error('Fetch error or timeout:', e, URL);
 			if (e.name === 'AbortError') {
-				throw new Error(`Request timed out: ${URL}`);
+				console.error('Request timed out after', timeout, 'ms:', URL);
+				throw new Error(`Request timed out after ${timeout}ms: ${URL}`);
+			} else {
+				console.error('Fetch error:', e.name, e.message, URL);
+				throw e;
 			}
-			throw e;
+		} finally {
+			clearTimeout(timeout_id);
 		}
 	}
     document.addEventListener('DOMContentLoaded', initializePage);
