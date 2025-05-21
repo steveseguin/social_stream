@@ -165,167 +165,6 @@
 		return resp;
 	}
 	
-	function processMessage(ele, skip=false){
-
-		var id = false
-		if (ele && ele.marked){
-		  return;
-		} else {
-		  ele.marked = true;
-		}
-		
-		if (ele.dataset.knownSize){
-			if (!parseInt(ele.dataset.knownSize)){
-				console.log("no knownSize");
-				return;
-			}
-		}
-		
-		if (!id && ele.dataset){
-			id = ele.dataset?.index;
-		}
-		
-		if (id===false){
-			var mid = ele.querySelector("div[id][class*='chat']");
-			if (!mid || !("id" in mid)){
-				return;
-			}
-			id = mid.id;
-		}
-		
-		if (id!==false){
-			if (messageHistory.includes(id)){
-				return;
-			}
-			messageHistory.push(id);
-		} else {
-			return;
-		}
-
-		if (skip){
-			return;
-		}
-		if (document.querySelector("chat-message__container")){
-			if (document.querySelector("chat-message__container").marked){
-				return;
-			} else {
-				document.querySelector("chat-message__container").marked = true;
-			}
-		}
-
-
-		var img = false;
-		var chatimg = "";
-		try{
-		   chatimg = ele.querySelector(".chat-item__user-avatar").src;
-		   img = true;
-		} catch(e){
-			//
-		}
-		
-		var name = "";
-		if (ele.querySelector(".chat-item__sender")){
-		  name = ele.querySelector(".chat-item__sender").innerText;
-		  if (name){
-			  name = name.trim();
-			  name = escapeHtml(name);
-		  }
-		}
-
-		if (!name){
-
-			try {
-				var prev = ele.previousElementSibling;
-				for (var i=0; i<50;i++){
-					if (prev.querySelector('.chat-item__sender')){
-						break;
-					} else {
-						prev = prev.previousElementSibling;
-					}
-				}
-				try{
-
-
-				    if (prev.querySelector(".chat-item__sender")){
-					    name = prev.querySelector(".chat-item__sender").innerText;
-					    if (name){
-						    name = name.trim();
-							name = escapeHtml(name);
-					    }
-					    
-						chatimg = prev.querySelector(".chat-item__user-avatar") || "";
-						if (chatimg){
-							chatimg = chatimg.src;
-						}
-					  }
-
-
-				} catch(e){}
-
-			} catch(e){}
-		}
-
-		var msg = "";
-		try {
-			msg = getAllContentNodes(ele.querySelector('.chat-rtf-box__display, .new-chat-message__text-box, .new-chat-message__text-content, .chat-message__text-content, .new-chat-message__content'));
-		} catch(e){
-
-		}
-		if (msg){
-			msg = msg.trim();
-			if (name){
-				if (msg.startsWith(name)){
-					msg = msg.replace(name, '');
-					msg = msg.trim();
-				}
-			}
-		}
-		
-		if (name){
-			lastName = name;
-			lastImage = chatimg;
-		} else if (lastName){
-			name = lastName;
-			chatimg = lastImage;
-		}
-		
-		var ctt = ele.querySelector(".chat-image-preview-wrapper img[src]") || "";
-		if (ctt){
-			ctt = ctt.src;
-		}
-		
-		var data = {};
-		data.chatname = name;
-		data.chatbadges = "";
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.chatmessage = msg;
-		data.chatimg = chatimg;
-		data.hasDonation = "";
-		data.membership = "";;
-		data.contentimg = ""; // ctt;
-		data.textonly = settings.textonlymode || false;
-		data.type = "zoom";
-
-		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
-			return;
-		}
-		lastMessage = JSON.stringify(data);
-		
-		if (data.contentimg){
-			try {
-				toDataURL(data.contentimg, function(dataUrl) {
-					data.contentimg = dataUrl;
-					pushMessage(data);
-					return;
-				});
-			} catch(e){
-			}
-		} else {
-			pushMessage(data);
-		}
-		
-	}
 
 	function pushMessage(data){
 		try{
@@ -435,84 +274,439 @@
 		pushMessage(data);
 	}
 	
+	function processMessage(ele, skip=false) {
+	  // Check if element is already processed
+	  if (ele && ele.marked) {
+		return;
+	  } else {
+		ele.marked = true;
+	  }
+	  
+	  // Check for valid message size
+	  if (ele.dataset.knownSize) {
+		if (!parseInt(ele.dataset.knownSize)) {
+		  console.log("no knownSize");
+		  return;
+		}
+	  }
+	  
+	  // Get message ID from dataset or container
+	  let id = false;
+	  if (!id && ele.dataset) {
+		id = ele.dataset?.index;
+	  }
+	  
+	  if (id === false) {
+		// Check for message container with ID
+		const mid = ele.querySelector("div[id][class*='chat']");
+		if (!mid || !("id" in mid)) {
+		  return;
+		}
+		id = mid.id;
+	  }
+	  
+	  // Skip if message is already processed
+	  if (id !== false) {
+		if (messageHistory.includes(id)) {
+		  return;
+		}
+		messageHistory.push(id);
+	  } else {
+		return;
+	  }
+	  
+	  if (skip) {
+		return;
+	  }
+	  
+	  // Additional check for chat container - supports both old and new layouts
+	  if (document.querySelector("chat-message__container")) {
+		if (document.querySelector("chat-message__container").marked) {
+		  return;
+		} else {
+		  document.querySelector("chat-message__container").marked = true;
+		}
+	  }
 
-	function onElementInserted(target) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							if (mutation.addedNodes[i].hasAttribute("role")){
-								processMessage(mutation.addedNodes[i]);
-							} else if (mutation.addedNodes[i].hasAttribute("id")){
-								processMessage(mutation.addedNodes[i]);
-							} else if (mutation.addedNodes[i].hasAttribute("data-index")){
-								processMessage(mutation.addedNodes[i]);
-							} 
-						} catch(e){
-							
-						}
-					}
-				}
-			});
-		};
-		if (!target){return;}
-		var config = { childList: true, subtree: true };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		var observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
-
+	  // Get the avatar image - works with both layouts
+	  let img = false;
+	  let chatimg = "";
+	  try {
+		chatimg = ele.querySelector(".chat-item__user-avatar").src;
+		img = true;
+	  } catch(e) {
+		// Silent fail
+	  }
+	  
+	  // Get sender name - works with both layouts
+	  let name = "";
+	  if (ele.querySelector(".chat-item__sender")) {
+		name = ele.querySelector(".chat-item__sender").innerText;
+		if (name) {
+		  name = name.trim();
+		  name = escapeHtml(name);
+		}
+	  }
+	  
+	  // Try to get name from previous messages if not found
+	  if (!name) {
+		try {
+		  let prev = ele.previousElementSibling;
+		  for (var i = 0; i < 50; i++) {
+			if (prev.querySelector('.chat-item__sender')) {
+			  break;
+			} else {
+			  prev = prev.previousElementSibling;
+			}
+		  }
+		  
+		  try {
+			if (prev.querySelector(".chat-item__sender")) {
+			  name = prev.querySelector(".chat-item__sender").innerText;
+			  if (name) {
+				name = name.trim();
+				name = escapeHtml(name);
+			  }
+			  
+			  chatimg = prev.querySelector(".chat-item__user-avatar") || "";
+			  if (chatimg) {
+				chatimg = chatimg.src;
+			  }
+			}
+		  } catch(e) {}
+		} catch(e) {}
+	  }
+	  
+	  // Get message content - supports both old and new layouts
+	  let msg = "";
+	  try {
+		// Try multiple selectors to cover both old and new layouts
+		const possibleSelectors = [
+		  // New UI selectors
+		  '.chat-rtf-box__display ._rtfEditor_1n3rs_1',
+		  '._rtfEditor_1n3rs_1',
+		  '.new-chat-message__text-box ._rtfEditor_1n3rs_1',
+		  // Original selectors
+		  '.chat-rtf-box__display',
+		  '.new-chat-message__text-box',
+		  '.new-chat-message__text-content',
+		  '.chat-message__text-content',
+		  '.new-chat-message__content'
+		];
+		
+		// Try each selector until we find content
+		for (const selector of possibleSelectors) {
+		  const element = ele.querySelector(selector);
+		  if (element) {
+			msg = getAllContentNodes(element);
+			if (msg && msg.trim().length > 0) {
+			  break;
+			}
+		  }
+		}
+		
+		// If still no content, try the original method as fallback
+		if (!msg || msg.trim().length === 0) {
+		  msg = getAllContentNodes(ele.querySelector('.chat-rtf-box__display, .new-chat-message__text-box, .new-chat-message__text-content, .chat-message__text-content, .new-chat-message__content'));
+		}
+	  } catch(e) {
+		console.log("Error extracting message content:", e);
+	  }
+	  
+	  if (msg) {
+		msg = msg.trim();
+		if (name) {
+		  if (msg.startsWith(name)) {
+			msg = msg.replace(name, '');
+			msg = msg.trim();
+		  }
+		}
+	  }
+	  
+	  // Store last sender name and image
+	  if (name) {
+		lastName = name;
+		lastImage = chatimg;
+	  } else if (lastName) {
+		name = lastName;
+		chatimg = lastImage;
+	  }
+	  
+	  // Get content image if any
+	  let ctt = ele.querySelector(".chat-image-preview-wrapper img[src]") || "";
+	  if (ctt) {
+		ctt = ctt.src;
+	  }
+	  
+	  // Prepare message data
+	  const data = {
+		chatname: name,
+		chatbadges: "",
+		backgroundColor: "",
+		textColor: "",
+		chatmessage: msg,
+		chatimg: chatimg,
+		hasDonation: "",
+		membership: "",
+		contentimg: "", // ctt
+		textonly: settings.textonlymode || false,
+		type: "zoom"
+	  };
+	  
+	  // Avoid duplicate messages
+	  if (lastMessage === JSON.stringify(data)) {
+		return;
+	  }
+	  lastMessage = JSON.stringify(data);
+	  
+	  // Handle content images
+	  if (data.contentimg) {
+		try {
+		  toDataURL(data.contentimg, function(dataUrl) {
+			data.contentimg = dataUrl;
+			pushMessage(data);
+			return;
+		  });
+		} catch(e) {}
+	  } else {
+		pushMessage(data);
+	  }
 	}
+
+	// Updated getAllContentNodes to handle both old and new DOM structures
+	function getAllContentNodes(element) {
+	  let resp = "";
+	  
+	  if (!element) {
+		return resp;
+	  }
+	  
+	  if (!element.childNodes || !element.childNodes.length) {
+		if (element.textContent) {
+		  return escapeHtml(element.textContent) || "";
+		} else {
+		  return "";
+		}
+	  }
+	  
+	  // Special handling for rtfEditor elements
+	  if (element.className && typeof element.className === 'string' && element.className.includes('_rtfEditor_')) {
+		// Extract all paragraphs from rtfEditor
+		const paragraphs = element.querySelectorAll('p');
+		if (paragraphs && paragraphs.length > 0) {
+		  paragraphs.forEach(p => {
+			resp += escapeHtml(p.textContent.trim()) + " ";
+		  });
+		  return resp.trim();
+		}
+	  }
+	  
+	  element.childNodes.forEach(node => {
+		if (node.nodeName == "BUTTON") {
+		  return;
+		}
+		
+		// Special handling for rtfEditor components
+		if (node.className && typeof node.className === 'string' && node.className.includes('_rtfEditor_')) {
+		  resp += getAllContentNodes(node);
+		  return;
+		}
+		
+		if (node.childNodes.length) {
+		  resp += getAllContentNodes(node);
+		} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
+		  resp += escapeHtml(node.textContent.trim()) + " ";
+		} else if (node.nodeType === 1) {
+		  if (!settings.textonlymode) {
+			if ((node.nodeName == "IMG") && node.src) {
+			  node.src = node.src + "";
+			}
+			resp += node.outerHTML;
+			if (node.nodeName == "IMG") {
+			  resp += " ";
+			}
+		  }
+		}
+	  });
+	  return resp;
+	}
+
+	// Update the element insertion observer for better compatibility
+	function onElementInserted(target) {
+	  if (!target) return;
+	  
+	  const onMutationsObserved = function(mutations) {
+		mutations.forEach(function(mutation) {
+		  if (mutation.addedNodes.length) {
+			for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+			  try {
+				const node = mutation.addedNodes[i];
+				
+				// Check for shadow root
+				if (node.nodeType === 1 && node.shadowRoot) {
+				  // Observe the shadow root
+				  observer.observe(node.shadowRoot, config);
+				  
+				  // Process any existing messages in shadow DOM
+				  const shadowMessages = querySelectorAllIncludingShadow('.chat-item-container, .new-chat-message__container', node.shadowRoot);
+				  shadowMessages.forEach(msg => processMessage(msg));
+				}
+				
+				// Handle regular elements
+				if (node.hasAttribute && node.hasAttribute("role")) {
+				  processMessage(node);
+				} else if (node.hasAttribute && node.hasAttribute("id")) {
+				  processMessage(node);
+				} else if (node.hasAttribute && node.hasAttribute("data-index")) {
+				  processMessage(node);
+				} else if (node.classList && 
+						  (node.classList.contains("chat-item-container") || 
+						   node.classList.contains("new-chat-message__container"))) {
+				  processMessage(node);
+				}
+			  } catch(e) {
+				console.log("Error processing mutation:", e);
+			  }
+			}
+		  }
+		  
+		  // Check for added shadow roots
+		  if (mutation.type === 'childList' && mutation.target.shadowRoot && !mutation.target.shadowRoot.observed) {
+			mutation.target.shadowRoot.observed = true;
+			observer.observe(mutation.target.shadowRoot, config);
+			
+			// Process any existing messages in shadow DOM
+			const shadowMessages = querySelectorAllIncludingShadow('.chat-item-container, .new-chat-message__container', mutation.target.shadowRoot);
+			shadowMessages.forEach(msg => processMessage(msg));
+		  }
+		});
+	  };
+	  
+	  const config = { childList: true, subtree: true };
+	  const MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+	  const observer = new MutationObserver(onMutationsObserved);
+	  observer.observe(target, config);
+	}
+
+
 	console.log("social stream injected");
 
-	setInterval(function(){
-		messageHistory = messageHistory.slice(-5000);
-		
-		if (document.getElementById("chat-list-content")){
-			if (!document.getElementById("chat-list-content").marked){
-				lastName = "";
-				lastImage = "";
-				document.getElementById("chat-list-content").marked=true;
-					// id="chat-item-container-1"
-				setTimeout(function(){
-					try {
-						document.getElementById("chat-list-content").querySelectorAll("[id^='chat-item-container-']").forEach(x=>{
-							x.marked = true;
-							processMessage(x,true);
-						});
-					} catch(e){}
-					onElementInserted(document.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]'));
-				},2000);
+	setInterval(function() {
+	  messageHistory = messageHistory.slice(-5000);
+	  
+	  // Helper function to process a chat container
+	  const processChatContainer = (container, isInShadowDOM = false) => {
+		if (!container.marked) {
+		  lastName = "";
+		  lastImage = "";
+		  container.marked = true;
+		  
+		  setTimeout(function() {
+			try {
+			  const selector = isInShadowDOM ? 
+				querySelectorAllIncludingShadow("[id^='chat-item-container-']", container) :
+				container.querySelectorAll("[id^='chat-item-container-']");
+				
+			  selector.forEach(x => {
+				x.marked = true;
+				processMessage(x, true);
+			  });
+			} catch(e) {
+			  console.log("Error processing chat items:", e);
 			}
-		} else if (document.querySelectorAll('iframe').length){
-			document.querySelectorAll('iframe').forEach( item =>{
-				try {
-					if (item && item.contentWindow && item.contentWindow.document && item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]')){
-						if (!item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]').marked){
-							console.log("FOUND UNMARKED IFRAME ");
-							lastName = "";
-							lastImage = "";
-							item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]').marked=true;
-							
-							setTimeout(function(){
-								try {
-									item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]').querySelectorAll("[id^='chat-item-container-']").forEach(x=>{
-										x.marked = true;
-										processMessage(x,true);
-									});
-								} catch(e){}
-								onElementInserted(document.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]'));
-							},2000);
-							
-							onElementInserted(item.contentWindow.document.body.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"]'));
-						}
-					}
-				} catch(e){}
-			});
+			
+			onElementInserted(container);
+		  }, 2000);
 		}
-		if (document.getElementById("poll__body")){
-			streamPollRAW(document.getElementById("poll__body"));
+	  };
+	  
+	  // Scan for chat containers in main DOM
+	  if (document.getElementById("chat-list-content")) {
+		processChatContainer(document.getElementById("chat-list-content"));
+	  } else if (document.querySelector('[data-testid="virtuoso-item-list"]')) {
+		processChatContainer(document.querySelector('[data-testid="virtuoso-item-list"]'));
+	  }  else if (document.querySelector('[data-testid="virtuoso-item-list"]')) {
+		processChatContainer(document.querySelector('.chat-container__chat-list,  .chat-container'));
+	  }
+	  
+	  // Scan for shadow DOM elements
+	  document.querySelectorAll('*').forEach(element => {
+		if (element.shadowRoot) {
+		  // Look for chat containers in shadow DOM
+		  const shadowChatContainer = element.shadowRoot.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"], .chat-container__chat-list,  .chat-container');
+		  if (shadowChatContainer) {
+			processChatContainer(shadowChatContainer, true);
+		  }
 		}
+	  });
+	  
+	  // Continue with iframe checking (existing code)
+	  if (document.querySelectorAll('iframe').length) {
+		document.querySelectorAll('iframe').forEach(item => {
+		  try {
+			if (item && item.contentWindow && item.contentWindow.document && 
+				(item.contentWindow.document.body.querySelector('#chat-list-content') || 
+				 item.contentWindow.document.body.querySelector('[data-testid="virtuoso-item-list"]') || 
+				 item.contentWindow.document.body.querySelector('.chat-container__chat-list .chat-container') 
+				)) {
+			  
+			  const chatContainer = item.contentWindow.document.body.querySelector('#chat-list-content') || 
+							   item.contentWindow.document.body.querySelector('[data-testid="virtuoso-item-list"]') ||
+							   item.contentWindow.document.body.querySelector('.chat-container__chat-list, .chat-container');
+			  
+			  //
+			  processChatContainer(chatContainer);
+			}
+			
+			// Additionally check for shadow DOM within iframes
+			if (item && item.contentWindow && item.contentWindow.document) {
+			  item.contentWindow.document.querySelectorAll('*').forEach(frameElement => {
+				if (frameElement.shadowRoot) {
+				  const shadowChatContainer = frameElement.shadowRoot.querySelector('#chat-list-content, [data-testid="virtuoso-item-list"], .chat-container__chat-list .chat-container');
+				  if (shadowChatContainer) {
+					processChatContainer(shadowChatContainer, true);
+				  }
+				}
+			  });
+			}
+		  } catch(e) {
+			// Silent fail for iframes
+		  }
+		});
+	  }
+	  
+	  // Rest of your existing interval code
+	  if (document.getElementById("poll__body")){
+		streamPollRAW(document.getElementById("poll__body"));
+	  }
+	  
+	  // Process reactions in regular DOM
+	  querySelectorAllIncludingShadow('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction => {
+		reaction.dataset.skip = true;
+		
+		var data = {};
+		data.chatname = "";
+		data.chatmessage = reaction.querySelector("svg,img")?.outerHTML;
+		if (!data.chatmessage) return;
+		data.event = "reaction";
+		data.type = "zoom";
+		data.textonlymode = false;
+		pushMessage(data);
+	  });
+	  
+	  	  // Process reactions in regular DOM
+	  document.querySelectorAll('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction=>{
+
+		
+		var data = {};
+		data.chatname = "";
+		data.chatmessage = reaction.querySelector("svg,img")?.outerHTML;
+		if (!data.chatmessage) return;
+		data.event = "reaction";
+		data.type = "zoom";
+		data.textonlymode = false;
+		pushMessage(data);
+	  });
 		
 		document.querySelectorAll('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction=>{
 			reaction.dataset.skip = true;
@@ -579,7 +773,31 @@
 	
 	
 	/////
-	
+	// Helper function to query elements inside shadow DOM and regular DOM
+	function querySelectorAllIncludingShadow(selector, root = document) {
+	  // Start with regular DOM query
+	  let elements = Array.from(root.querySelectorAll(selector));
+	  
+	  // Query shadow DOM if present
+	  const shadowRoots = [];
+	  
+	  // Get all elements that might have shadowRoot
+	  const allElements = root.querySelectorAll('*');
+	  allElements.forEach(el => {
+		if (el.shadowRoot) {
+		  shadowRoots.push(el.shadowRoot);
+		  // Recursive search in shadow DOM
+		  elements = elements.concat(Array.from(el.shadowRoot.querySelectorAll(selector)));
+		}
+	  });
+	  
+	  // Do the same recursively for any nested shadow roots
+	  shadowRoots.forEach(shadowRoot => {
+		elements = elements.concat(querySelectorAllIncludingShadow(selector, shadowRoot));
+	  });
+	  
+	  return elements;
+	}
 	
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
