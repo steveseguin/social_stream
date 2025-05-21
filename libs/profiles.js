@@ -173,8 +173,8 @@ const ProfileManager = {
           <div class="profile-date" style="font-size: 0.8em; opacity: 0.7;">${dateStr}</div>
         </div>
         <div class="profile-actions">
-          ${!isActive ? `<button class="activate-profile glowingButton" style="margin-right: 5px;">Load</button>` : ''}
-          <button class="delete-profile glowingButton" style="background: #ff4444;">Delete</button>
+          ${!isActive ? `<button class="activate-profile glowingButton" style="margin-right: 5px;"><span data-translate="load-profiles">Load</span></button>` : ''}
+          <button class="delete-profile glowingButton" style="background: #ff4444;"><span data-translate="delete-profiles">Delete</button>
         </div>
       `;
       container.appendChild(profileElement);

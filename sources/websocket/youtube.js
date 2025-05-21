@@ -1,7 +1,6 @@
 var settings = {};
 var textonlymode = false;
 
-// Listen for IRC messages from the page
 window.addEventListener('youtubeMessage', function(e) {
     console.log(e);
     if (e.detail) {
@@ -11,7 +10,7 @@ window.addEventListener('youtubeMessage', function(e) {
 
 function pushMessage(data) {
     try {
-        // Send message to Chrome extension
+        // Send message to SSN
         chrome.runtime.sendMessage(chrome.runtime.id, {
             "message": data 
         }, function(response) {

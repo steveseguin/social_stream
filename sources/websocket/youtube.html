@@ -222,8 +222,8 @@
 		}
 		#textarea {
 			flex-grow: 1;
-			height: 300px;
-			max-height: 300px;
+			height: 400px;
+			max-height: 400px;
 			overflow-y: auto;
 			margin-bottom: 10px;
 		}
@@ -355,6 +355,26 @@
 				width: 100%;
 			}
 		}
+		
+		@media (max-height: 800px) {
+			#textarea {
+				max-height: calc(100vh - 370px);
+			}
+		
+		}
+		@media (max-height: 600px) {
+			#textarea {
+				max-height: calc(100vh - 200px);
+			}
+		
+		}
+		@media (max-height: 600px) {
+			.chat-header, .stats-container {
+				display:none!important;
+			}
+
+		}
+		stats-container
 		
 		.poll-spinner-container {
 			display: inline-flex;
@@ -506,26 +526,31 @@ try {
 	var keepAliveInterval;
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
+
+	var emojiData = [];
+	var customEmoteData = [];
+	var shortcutMap = new Map(); // For :word: patterns
+	var unicodeMap = new Map();  // For Unicode emoji characters
 	
-	// Fetch emojis data
-	let emojiData = [];
-	let emojiMap = new Map();
-	
+	var usetextonlymode = false;
+
 	function processEmojiData(data) {
 	  emojiData = data;
-	  // Create map for quick lookup
-	  emojiMap.clear(); // Clear existing data if any
+	  // Clear existing data if any
+	  shortcutMap.clear();
+	  unicodeMap.clear();
+	  
 	  data.forEach(emoji => {
-		// Map the emoji ID with its data
-		emojiMap.set(emoji.emojiId, {
+		// Map the Unicode emoji with its data
+		unicodeMap.set(emoji.emojiId, {
 		  url: emoji.image.thumbnails[0].url,
 		  id: emoji.emojiId
 		});
 		
-		// Also map all shortcuts
+		// Map all shortcuts to a separate map
 		if (emoji.shortcuts && emoji.shortcuts.length) {
 		  emoji.shortcuts.forEach(shortcut => {
-			emojiMap.set(shortcut, {
+			shortcutMap.set(shortcut, {
 			  url: emoji.image.thumbnails[0].url,
 			  id: emoji.emojiId
 			});
@@ -534,73 +559,169 @@ try {
 	  });
 	}
 
+	function processCustomEmoteData(data) {
+	  customEmoteData = data;
+	  // Map custom emotes by their name (only in shortcut map)
+	  data.forEach(emote => {
+		const emoteName = `:${emote[0]}:`;
+		shortcutMap.set(emoteName, {
+		  url: emote[1],
+		  id: "", // Empty alt for custom emotes
+		  isCustom: true
+		});
+	  });
+	}
+
+
 	function loadEmojiData() {
 	  // Try to get cached data first
 	  const cachedData = localStorage.getItem('emojiData');
-	  const cachedTimestamp = localStorage.getItem('emojiDataTimestamp');
-	  const now = Date.now();
-	  const cacheAge = cachedTimestamp ? now - parseInt(cachedTimestamp) : Infinity;
-	  const cacheValid = cachedData && cacheAge < (7 * 24 * 60 * 60 * 1000); // 1 week cache validity
+	  const cachedCustomData = localStorage.getItem('customEmoteData');
 	  
-	  // If we have valid cached data, use it
-	  if (cacheValid) {
-		try {
-		  const data = JSON.parse(cachedData);
-		  processEmojiData(data);
-		  console.log('Using cached emoji data');
-		  return Promise.resolve(data);
-		} catch (error) {
-		  console.warn('Error parsing cached emoji data, fetching fresh data');
-		  // Continue to fetch if parsing fails
-		}
-	  }
+	  const promises = [];
 	  
-	  // Otherwise fetch fresh data
-	  return fetch('emotes.json', {
-		mode: 'cors',  // Explicitly request CORS mode
-		headers: {
-		  'Accept': 'application/json'
-		}
+	  // Handle standard emojis
+	  const standardEmojiPromise = 
+		fetch('emotes.json', {
+		  mode: 'cors',
+		  headers: { 'Accept': 'application/json' }
+		})
+		.then(response => {
+		  if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+		  return response.json();
+		})
+		.then(data => {
+		  try {
+			localStorage.setItem('emojiData', JSON.stringify(data));
+		  } catch (error) {
+			console.warn('Failed to cache emoji data:', error);
+		  }
+		  return data;
+		})
+		.catch(error => {
+		  console.error('Error loading standard emoji data:', error);
+		  if (cachedData) {
+			try {
+			  return JSON.parse(cachedData);
+			} catch (parseError) {
+			  console.error('Failed to parse cached emoji data:', parseError);
+			  return [];
+			}
+		  }
+		  return [];
+		});
+	  
+	  promises.push(standardEmojiPromise.then(data => {
+		processEmojiData(data);
+		return data;
+	  }));
+
+	  // Handle custom emotes
+	  const customEmotePromise = fetch('custom_emotes.json', {
+		mode: 'cors',
+		headers: { 'Accept': 'application/json' }
 	  })
 	  .then(response => {
 		if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 		return response.json();
 	  })
 	  .then(data => {
-		// Cache the data
 		try {
-		  localStorage.setItem('emojiData', JSON.stringify(data));
-		  localStorage.setItem('emojiDataTimestamp', now.toString());
+		  localStorage.setItem('customEmoteData', JSON.stringify(data));
 		} catch (error) {
-		  console.warn('Failed to cache emoji data:', error);
+		  console.warn('Failed to cache custom emote data:', error);
 		}
-		
-		// Process the data
-		processEmojiData(data);
 		return data;
 	  })
 	  .catch(error => {
-		console.error('Error loading emoji data:', error);
-		
-		// If fetch fails but we have cached data (even if expired), use it as fallback
-		if (cachedData) {
+		console.error('Error loading custom emote data:', error);
+		if (cachedCustomData) {
 		  try {
-			const data = JSON.parse(cachedData);
-			processEmojiData(data);
-			console.log('Fetch failed, using cached emoji data as fallback');
-			return data;
+			return JSON.parse(cachedCustomData);
 		  } catch (parseError) {
-			console.error('Failed to parse cached emoji data:', parseError);
+			console.error('Failed to parse cached custom emote data:', parseError);
+			return [];
 		  }
 		}
-		
-		// If we have no valid data, propagate the error
-		throw error;
+		return [];
 	  });
+	  
+	  promises.push(customEmotePromise.then(data => {
+		processCustomEmoteData(data);
+		return data;
+	  }));
+
+	  return Promise.all(promises);
 	}
 
-
-
+	function replaceEmojis(message) {
+	  if (!shortcutMap.size && !unicodeMap.size) return message; // If emoji data not loaded yet
+	  
+	  // Create a copy of the original message
+	  let result = message;
+	  
+	  // Process all shortcut emotes including custom ones using the format :name:
+	  const shortcutRegex = /:([\w_-]+):/g;
+	  result = result.replace(shortcutRegex, (match) => {
+		const emojiInfo = shortcutMap.get(match);
+		if (!emojiInfo) return match; // If not found, return original
+		
+		if (usetextonlymode) {
+		  if (emojiInfo.isCustom) return '';
+		  return emojiInfo.id;
+		} else {
+		  const altText = emojiInfo.isCustom ? "" : emojiInfo.id;
+		  return `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
+		}
+	  });
+	  
+	  if (!usetextonlymode) {
+		// Helper function to convert emoji sequences to their combined URLs
+		function processEmojiSequence(text) {
+		  // Match emoji followed by skin tone modifier
+		  const emojiWithSkinToneRegex = /([\u{1F000}-\u{1FFFF}])([\u{1F3FB}-\u{1F3FF}])/gu;
+		  
+		  return text.replace(emojiWithSkinToneRegex, (match, baseEmoji, skinTone) => {
+			// Check if base emoji exists in our map
+			if (unicodeMap.has(baseEmoji)) {
+			  // Generate the combined emoji URL
+			  const baseUrl = unicodeMap.get(baseEmoji).url;
+			  
+			  // Format: baseUrl is in format like "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f/72.png"
+			  // Combined URL would be "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f_1f3ff/72.png"
+			  
+			  // Extract the emoji code from the URL
+			  const emojiCodeMatch = baseUrl.match(/\/([^\/]+)\/\d+\.png$/);
+			  if (emojiCodeMatch) {
+				const baseCode = emojiCodeMatch[1];
+				const skinToneCode = skinTone.codePointAt(0).toString(16);
+				const combinedUrl = baseUrl.replace(
+				  `/${baseCode}/`,
+				  `/${baseCode}_${skinToneCode}/`
+				);
+				
+				return `<img class="regular-emote" src="${combinedUrl}" alt="${match}" title="${match}" />`;
+			  }
+			}
+			
+			return match; // Return original if not found
+		  });
+		}
+		
+		// Process emoji sequences first
+		result = processEmojiSequence(result);
+		
+		// Then handle remaining standalone Unicode emoji characters
+		for (const [unicodeChar, emojiInfo] of unicodeMap.entries()) {
+		  if (result.includes(unicodeChar)) {
+			const imgTag = `<img src="${emojiInfo.url}" alt="${unicodeChar}" class="chat-emoji" title="${unicodeChar}" />`;
+			result = result.replace(new RegExp(unicodeChar, 'g'), imgTag);
+		  }
+		}
+	  }
+	  
+	  return result;
+	}
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
 		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
@@ -1748,7 +1869,7 @@ try {
 		window.dispatchEvent(new CustomEvent('youtubeMessage', { detail: data, bubbles: true }));
 	}
 	
-	var usetextonlymode = false;
+	
 	
 	function setupSettingsListener() {
 		window.addEventListener('settingsChanged', function(e) {
@@ -1757,45 +1878,6 @@ try {
 				console.log('Text-only mode updated:', usetextonlymode);
 			}
 		});
-	}
-
-	function replaceEmojis(message) {
-	  if (!emojiMap.size) return message; // If emoji data not loaded yet
-	  
-	  // Create a copy of the original message
-	  let result = message;
-	  
-	  // First process emoji shortcuts like :smile:
-	  const shortcutRegex = /:([\w_]+):/g;
-	  result = result.replace(shortcutRegex, (match) => {
-		const emojiInfo = emojiMap.get(match);
-		if (!emojiInfo) return match; // If not found, return original
-		
-		if (usetextonlymode) {
-		  // In text-only mode, convert shortcuts to their Unicode representation
-		  return emojiInfo.id; // The Unicode character
-		} else {
-		  // In image mode, create img tag with Unicode character as alt
-		  return `<img src="${emojiInfo.url}" alt="${emojiInfo.id}" class="chat-emoji" />`;
-		}
-	  });
-	  
-	  // Then handle Unicode emoji characters
-	  if (!usetextonlymode) {
-		for (const [emojiKey, emojiInfo] of emojiMap.entries()) {
-		  // Skip shortcut entries (they start with :)
-		  if (emojiKey.startsWith(':')) continue;
-		  
-		  // Only replace Unicode emojis with images in non-text mode
-		  if (result.includes(emojiKey)) {
-			const imgTag = `<img src="${emojiInfo.url}" alt="${emojiKey}" class="chat-emoji" />`;
-			// Use a regex to replace all occurrences
-			result = result.replace(new RegExp(emojiKey, 'g'), imgTag);
-		  }
-		}
-	  }
-	  
-	  return result;
 	}
 
 	function processMessage(messageData) {
@@ -1816,7 +1898,7 @@ try {
 				textarea.removeChild(textarea.firstChild);
 			}
 			textarea.scrollTop = textarea.scrollHeight;
-			if (!messageData.skipEvent) {
+			if (!messageData.skipEvent && messageWithEmojis) {
 				pushMessage({
 					chatname: messageData.authorName,
 					chatbadges: badgeHtml,
