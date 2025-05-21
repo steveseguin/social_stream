@@ -559,7 +559,7 @@
 		console.log("LOADED SocialStream EXTENSION");
 		
 		try {
-			if (window.location.pathname.includes("/live/")  || (window.location.pathname==="/")){
+			if (window.location.pathname.includes("/live/") || window.location.pathname.includes("%2Flive%2F") || (window.location.pathname==="/")){
 				var main =  document.querySelectorAll("div>div>section>div");
 				
 				for (var j =0;j<main.length;j++){
@@ -580,7 +580,7 @@
 			}
 		
 			try {
-				if (window.location.pathname.includes("/live") || (window.location.pathname.endsWith("/") || document.querySelector("video") || document.querySelector("textarea")) || (window.location.pathname==="/")){
+				if (window.location.pathname.includes("/live") || window.location.pathname.includes("%2Flive") || (window.location.pathname.endsWith("/") || document.querySelector("video") || document.querySelector("textarea")) || (window.location.pathname==="/")){
 					try {
 						var main = document.querySelectorAll("div>div>section>div");
 						for (var j =0;j<main.length;j++){
@@ -595,7 +595,7 @@
 				}
 			} catch(e){}
 			
-			if (!window.location.pathname.includes("/live")){ // not live video
+			if (!(window.location.pathname.includes("/live") || window.location.pathname.includes("%2Flive"))){ // not live video
 				try {
 					var main = document.querySelectorAll("article");
 					if (main){
