@@ -260,6 +260,13 @@
 			align-items: center;
 			width: 100%;
 		}
+		
+		.chat-emoji {
+		  height: 1.2em;
+		  width: auto;
+		  vertical-align: middle;
+		  margin: 0 0.05em;
+		}
 
 		/* User info styling */
 		.user-info {
@@ -492,15 +499,106 @@ try {
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
 	var initialBacklogProcessing = true;
 	var initialBacklogTimestamp = null;
-	var useProxyForChat = false;
-	var proxyUrl = 'https://youtube-publish-message-proxy.vdo.workers.dev/';
 	var lastPollingTime = Date.now();
 
 	var isPageVisible = true;
 	var lastVisibilityChange = Date.now();
 	var keepAliveInterval;
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
-	var foregroundPollingInterval; 
+	var foregroundPollingInterval;
+	
+	// Fetch emojis data
+	let emojiData = [];
+	let emojiMap = new Map();
+	
+	function processEmojiData(data) {
+	  emojiData = data;
+	  // Create map for quick lookup
+	  emojiMap.clear(); // Clear existing data if any
+	  data.forEach(emoji => {
+		// Map the emoji ID with its data
+		emojiMap.set(emoji.emojiId, {
+		  url: emoji.image.thumbnails[0].url,
+		  id: emoji.emojiId
+		});
+		
+		// Also map all shortcuts
+		if (emoji.shortcuts && emoji.shortcuts.length) {
+		  emoji.shortcuts.forEach(shortcut => {
+			emojiMap.set(shortcut, {
+			  url: emoji.image.thumbnails[0].url,
+			  id: emoji.emojiId
+			});
+		  });
+		}
+	  });
+	}
+
+	function loadEmojiData() {
+	  // Try to get cached data first
+	  const cachedData = localStorage.getItem('emojiData');
+	  const cachedTimestamp = localStorage.getItem('emojiDataTimestamp');
+	  const now = Date.now();
+	  const cacheAge = cachedTimestamp ? now - parseInt(cachedTimestamp) : Infinity;
+	  const cacheValid = cachedData && cacheAge < (7 * 24 * 60 * 60 * 1000); // 1 week cache validity
+	  
+	  // If we have valid cached data, use it
+	  if (cacheValid) {
+		try {
+		  const data = JSON.parse(cachedData);
+		  processEmojiData(data);
+		  console.log('Using cached emoji data');
+		  return Promise.resolve(data);
+		} catch (error) {
+		  console.warn('Error parsing cached emoji data, fetching fresh data');
+		  // Continue to fetch if parsing fails
+		}
+	  }
+	  
+	  // Otherwise fetch fresh data
+	  return fetch('emotes.json', {
+		mode: 'cors',  // Explicitly request CORS mode
+		headers: {
+		  'Accept': 'application/json'
+		}
+	  })
+	  .then(response => {
+		if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+		return response.json();
+	  })
+	  .then(data => {
+		// Cache the data
+		try {
+		  localStorage.setItem('emojiData', JSON.stringify(data));
+		  localStorage.setItem('emojiDataTimestamp', now.toString());
+		} catch (error) {
+		  console.warn('Failed to cache emoji data:', error);
+		}
+		
+		// Process the data
+		processEmojiData(data);
+		return data;
+	  })
+	  .catch(error => {
+		console.error('Error loading emoji data:', error);
+		
+		// If fetch fails but we have cached data (even if expired), use it as fallback
+		if (cachedData) {
+		  try {
+			const data = JSON.parse(cachedData);
+			processEmojiData(data);
+			console.log('Fetch failed, using cached emoji data as fallback');
+			return data;
+		  } catch (parseError) {
+			console.error('Failed to parse cached emoji data:', parseError);
+		  }
+		}
+		
+		// If we have no valid data, propagate the error
+		throw error;
+	  });
+	}
+
 
 
 	function getStoredToken() {
@@ -613,92 +711,7 @@ try {
 			}
 		}
 	}
-	function initializePage() {
-		urlParams = new URLSearchParams(window.location.search);
-		hashParams = new URLSearchParams(window.location.hash.slice(1));
-		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || hashParams.get("videoId");
-		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || hashParams.get("channel");
-		if (urlVideoIdParam || urlChannelParam) {
-			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
-			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
-		}
-		if (urlVideoIdParam) {
-			videoId = urlVideoIdParam;
-			channel = '';
-			localStorage.setItem("youtubeVideoId", videoId);
-			localStorage.removeItem("youtubeChannel");
-		} else if (urlChannelParam) {
-			channel = urlChannelParam;
-			videoId = '';
-			localStorage.setItem("youtubeChannel", channel);
-			localStorage.removeItem("youtubeVideoId");
-		} else {
-			videoId = localStorage.getItem("youtubeVideoId") || "";
-			if (videoId) {
-				channel = '';
-				localStorage.removeItem("youtubeChannel");
-			} else {
-				channel = localStorage.getItem("youtubeChannel") || "";
-			}
-		}
-		const signOutButton = document.getElementById('sign-out-button');
-		if (signOutButton) signOutButton.addEventListener('click', signOut);
-		const authLink = document.getElementById('auth-link');
-		if (authLink) {
-			authLink.addEventListener('click', function(e) {
-				e.preventDefault();
-				window.location.href = authUrl();
-			});
-		}
-		document.addEventListener('visibilitychange', handleVisibilityChange);
-		isPageVisible = document.visibilityState === 'visible';
-		const sendButton = document.querySelector('#sendmessage');
-		if (sendButton) sendButton.onclick = handleSendMessage;
-		const inputText = document.querySelector('#input-text');
-		if (inputText) inputText.addEventListener('keypress', handleEnterKey);
-		const connectButton = document.getElementById('connect-button');
-		if (connectButton) connectButton.addEventListener('click', handleConnect);
-		const changeButton = document.getElementById('change-button');
-		if (changeButton) {
-			changeButton.addEventListener('click', function() {
-				clearPolling();
-				updateHeaderInfo(username, 'No target (Ready to connect)');
-				document.getElementById('textarea').innerHTML = '<div>Connection cleared. Enter new channel name or video ID and click Connect.</div>';
-				document.getElementById('viewer-count').textContent = '-';
-				document.getElementById('subscriber-count').textContent = '-';
-				document.getElementById('likes-count').textContent = '-';
-				document.getElementById('events-list').innerHTML = '';
-				channel = '';
-				videoId = '';
-				localStorage.removeItem('youtubeChannel');
-				localStorage.removeItem('youtubeVideoId');
-			});
-		}
-		const channelInput = document.getElementById('channel-input');
-		const videoInput = document.getElementById('video-input');
-		if (channelInput) {
-			channelInput.addEventListener('keypress', function(event) {
-				if (event.key === 'Enter') handleConnect();
-			});
-		}
-		if (videoInput) {
-			videoInput.addEventListener('keypress', function(event) {
-				if (event.key === 'Enter') handleConnect();
-			});
-		}
-		if (urlParams.has('code')) {
-			handleAuthCallback();
-			return;
-		}
-		const storedToken = getStoredToken();
-		if (storedToken) {
-			verifyAndUseToken(storedToken);
-		} else if (window.location.hash && window.location.hash.includes('access_token')) {
-			parseFragment(window.location.hash);
-		} else {
-			showAuthButton();
-		}
-	}
+
 	function verifyAndUseToken(token) {
 		try {
 			getUserInfo(token).then(async userInfo => {
@@ -903,7 +916,7 @@ try {
 			setTimeout(() => { handleSendMessage.isSending = false; }, 500);
 		});
 	}
-    async function handleConnect() {
+	async function handleConnect() {
 		const channelInput = document.getElementById('channel-input');
 		const videoInput = document.getElementById('video-input');
 		const channelNameFromInput = channelInput.value.trim();
@@ -941,48 +954,58 @@ try {
         }
     }
     async function getChannelInfo(channelIdentifier) {
-        const token = getStoredToken();
-        if (!token) return null;
-        if (userDetails[channelIdentifier]) return userDetails[channelIdentifier];
-        try {
-            let response = await fetchWithTimeout(
-                `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdentifier}`, 5000,
-                { 'Authorization': `Bearer ${token}` }
-            );
-            let data = await response.json();
-            if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
-                response = await fetchWithTimeout(
-                    `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdentifier}`, 5000,
-                    { 'Authorization': `Bearer ${token}` }
-                );
-                data = await response.json();
-            }
-            if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
-                response = await fetchWithTimeout(
-                    `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${channelIdentifier}&type=channel&maxResults=1`, 5000,
-                    { 'Authorization': `Bearer ${token}` }
-                );
-                const searchData = await response.json();
-                if (searchData.items && searchData.items.length > 0) {
-                    const channelIdFromResult = searchData.items[0].id.channelId;
-                    response = await fetchWithTimeout(
-                        `https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdFromResult}`, 5000,
-                        { 'Authorization': `Bearer ${token}` }
-                    );
-                    data = await response.json();
-                }
-            }
-            if (data.items && data.items.length > 0) {
-                userDetails[channelIdentifier] = data.items[0];
-                userDetails[data.items[0].id] = data.items[0];
-                return data.items[0];
-            }
-            return null;
-        } catch (error) {
-            console.error('Error fetching channel info:', error);
-            return null;
-        }
-    }
+		const token = getStoredToken();
+		if (!token) return null;
+		if (userDetails[channelIdentifier]) return userDetails[channelIdentifier];
+		try {
+			// First try: direct channel ID lookup
+			let response = await fetchWithTimeout(
+				`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdentifier}`, 5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			let data = await response.json();
+			
+			// Second try: username lookup if first try failed and not a channel ID
+			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+				response = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdentifier}`, 5000,
+					{ 'Authorization': `Bearer ${token}` }
+				);
+				data = await response.json();
+			}
+			
+			// Third try: search query if previous attempts failed
+			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+				// Handle @username format by removing @ if present
+				const searchQuery = channelIdentifier.startsWith('@') ? 
+					channelIdentifier.substring(1) : channelIdentifier;
+					
+				response = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=channel&maxResults=1`, 5000,
+					{ 'Authorization': `Bearer ${token}` }
+				);
+				const searchData = await response.json();
+				if (searchData.items && searchData.items.length > 0) {
+					const channelIdFromResult = searchData.items[0].id.channelId;
+					response = await fetchWithTimeout(
+						`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdFromResult}`, 5000,
+						{ 'Authorization': `Bearer ${token}` }
+					);
+					data = await response.json();
+				}
+			}
+			
+			if (data.items && data.items.length > 0) {
+				userDetails[channelIdentifier] = data.items[0];
+				userDetails[data.items[0].id] = data.items[0];
+				return data.items[0];
+			}
+			return null;
+		} catch (error) {
+			console.error('Error fetching channel info:', error);
+			return null;
+		}
+	}
     async function getLiveStreamInfo(channelId) {
         const token = getStoredToken();
         if (!token) return null;
@@ -1061,21 +1084,40 @@ try {
 	}
 	function displayNextMessage() {
 		if (messageQueue.length === 0) {
-			isDisplaying = false; return;
+			isDisplaying = false;
+			return;
 		}
-		const message = messageQueue.shift();
-		processMessage(message);
 		
-		if (isPageVisible){
-			let delay = 100;
-			if (messageQueue.length > 50) delay = 20;
-			else if (messageQueue.length > 20) delay = 50;
-			else if (messageQueue.length > 5) delay = 75;
-			setTimeout(displayNextMessage, delay);
-		} else {
-			displayNextMessage();
+		isDisplaying = true;
+		
+		// Determine batch size based on queue length
+		let batchSize = 1;
+		if (messageQueue.length > 100) batchSize = 10;
+		else if (messageQueue.length > 50) batchSize = 5;
+		else if (messageQueue.length > 30) batchSize = 4;
+		else if (messageQueue.length > 20) batchSize = 3;
+		else if (messageQueue.length > 10) batchSize = 2;
+		
+		// Process a batch of messages
+		const batchToProcess = messageQueue.splice(0, Math.min(batchSize, messageQueue.length));
+		for (const message of batchToProcess) {
+			processMessage(message);
 		}
-	} 
+		
+		// Calculate delay for next batch (more messages = shorter delay)
+		let delay = 500; // Base delay between batches
+		if (messageQueue.length > 50) delay = 80;
+		else if (messageQueue.length > 20) delay = 100;
+		else if (messageQueue.length > 10) delay = 200;
+		else if (messageQueue.length > 4) delay = 300;
+		
+		// Schedule next batch processing with appropriate delay and method
+		if (isPageVisible) {
+			setTimeout(() => displayNextMessage(), delay);
+		} else {
+			modifiedSetTimeout(() => displayNextMessage(), delay);
+		}
+	}
 	async function fetchChatMessages() {
 		if (!liveChatId || isPolling) return;
 		isPolling = true;
@@ -1292,15 +1334,165 @@ try {
             }
         };
     }
+	
+	// Global queue for managing timeouts when page isn't visible
+	const timeoutQueue = {
+		items: [],
+		activeOscillator: null,
+		nextId: 1,
+		
+		// Add a new timeout to the queue
+		add: function(callback, delay) {
+			const id = this.nextId++;
+			const executeTime = performance.now() + delay;
+			
+			this.items.push({
+				id,
+				callback,
+				executeTime
+			});
+			
+			// Sort the queue by execution time
+			this.items.sort((a, b) => a.executeTime - b.executeTime);
+			
+			// If we have an active oscillator, check if we need to update its timing
+			if (this.activeOscillator && this.items[0].id === id) {
+				// This new item is now the first in the queue, so we need to update the oscillator
+				this.activeOscillator.clear();
+				this.activeOscillator = null;
+				this.processQueue();
+			} else if (!this.activeOscillator) {
+				// Start the queue processing if no active oscillator
+				this.processQueue();
+			}
+			
+			// Return an object with clear method
+			return {
+				clear: () => this.remove(id)
+			};
+		},
+		
+		// Remove a timeout from the queue
+		remove: function(id) {
+			const index = this.items.findIndex(item => item.id === id);
+			if (index !== -1) {
+				this.items.splice(index, 1);
+				
+				// If we removed the first item and we have an active oscillator,
+				// we need to clear it and start a new one for the next item
+				if (index === 0 && this.activeOscillator) {
+					this.activeOscillator.clear();
+					this.activeOscillator = null;
+					this.processQueue();
+				}
+			}
+		},
+		
+		// Process the queue, executing due callbacks and setting up next oscillator
+		processQueue: function() {
+			if (this.items.length === 0) return;
+			
+			const now = performance.now();
+			
+			// Execute all items that are due
+			while (this.items.length > 0 && this.items[0].executeTime <= now) {
+				const item = this.items.shift();
+				try {
+					item.callback();
+				} catch (e) {
+					console.error('Error executing timeout callback:', e);
+				}
+			}
+			
+			// If there are more items, set up the next oscillator
+			if (this.items.length > 0) {
+				const nextItem = this.items[0];
+				const nextDelay = Math.max(100, nextItem.executeTime - now);
+				
+				this.activeOscillator = this.createOscillator(() => {
+					this.activeOscillator = null;
+					this.processQueue();
+				}, nextDelay);
+			}
+		},
+		
+		// Create an oscillator with the given callback and delay
+		createOscillator: function(callback, delay) {
+			const AudioContext = window.AudioContext || window.webkitAudioContext;
+			const ctx = new AudioContext();
+
+			const oscillator = ctx.createOscillator();
+			const gain = ctx.createGain();
+			gain.gain.value = 0;
+			oscillator.connect(gain);
+			gain.connect(ctx.destination);
+
+			let rafId;
+			let startTime = performance.now();
+			let isDone = false;
+			const checkTime = (timestamp) => {
+				if (isDone) return;
+
+				if ((timestamp - startTime) >= delay) {
+					isDone = true;
+					oscillator.onended = () => {};
+					oscillator.disconnect();
+					gain.disconnect();
+					ctx.close();
+					cancelAnimationFrame(rafId);
+					callback();
+					return;
+				}
+				rafId = requestAnimationFrame(checkTime);
+			};
+			oscillator.onended = () => {
+				if (isDone) return;
+				isDone = true;
+				cancelAnimationFrame(rafId);
+				oscillator.disconnect();
+				gain.disconnect();
+				ctx.close();
+				callback();
+			};
+
+			oscillator.start();
+			oscillator.stop(ctx.currentTime + delay/1000);
+			rafId = requestAnimationFrame(checkTime);
+
+			return {
+				clear: () => {
+					isDone = true;
+					cancelAnimationFrame(rafId);
+					oscillator.onended = () => {};
+					oscillator.disconnect();
+					gain.disconnect();
+					ctx.close();
+				}
+			};
+		}
+	};
+
+	// function modifiedSetTimeout(callback, delay) {
+		// if (!isPageVisible && delay > 100) {
+			// return oscillatorTimeout(callback, delay);
+		// } else {
+			// return {
+				// clear: () => clearTimeout(setTimeout(callback, delay))
+			// };
+		// }
+	// }
+	
 	function modifiedSetTimeout(callback, delay) {
 		if (!isPageVisible && delay > 100) {
-			return oscillatorTimeout(callback, delay);
+			return timeoutQueue.add(callback, delay);
 		} else {
+			const timeoutId = setTimeout(callback, delay);
 			return {
-				clear: () => clearTimeout(setTimeout(callback, delay))
+				clear: () => clearTimeout(timeoutId)
 			};
 		}
 	}
+
     async function getStreamStats() {
         if (!currentStream || !currentStream.id) return;
         const token = getStoredToken();
@@ -1555,7 +1747,58 @@ try {
 	function pushMessage(data) {
 		window.dispatchEvent(new CustomEvent('youtubeMessage', { detail: data, bubbles: true }));
 	}
-    function processMessage(messageData) {
+	
+	var usetextonlymode = false;
+	
+	function setupSettingsListener() {
+		window.addEventListener('settingsChanged', function(e) {
+			if (e.detail && e.detail.hasOwnProperty('textonlymode')) {
+				usetextonlymode = e.detail.textonlymode;
+				console.log('Text-only mode updated:', usetextonlymode);
+			}
+		});
+	}
+
+	function replaceEmojis(message) {
+	  if (!emojiMap.size) return message; // If emoji data not loaded yet
+	  
+	  // Create a copy of the original message
+	  let result = message;
+	  
+	  // First process emoji shortcuts like :smile:
+	  const shortcutRegex = /:([\w_]+):/g;
+	  result = result.replace(shortcutRegex, (match) => {
+		const emojiInfo = emojiMap.get(match);
+		if (!emojiInfo) return match; // If not found, return original
+		
+		if (usetextonlymode) {
+		  // In text-only mode, convert shortcuts to their Unicode representation
+		  return emojiInfo.id; // The Unicode character
+		} else {
+		  // In image mode, create img tag with Unicode character as alt
+		  return `<img src="${emojiInfo.url}" alt="${emojiInfo.id}" class="chat-emoji" />`;
+		}
+	  });
+	  
+	  // Then handle Unicode emoji characters
+	  if (!usetextonlymode) {
+		for (const [emojiKey, emojiInfo] of emojiMap.entries()) {
+		  // Skip shortcut entries (they start with :)
+		  if (emojiKey.startsWith(':')) continue;
+		  
+		  // Only replace Unicode emojis with images in non-text mode
+		  if (result.includes(emojiKey)) {
+			const imgTag = `<img src="${emojiInfo.url}" alt="${emojiKey}" class="chat-emoji" />`;
+			// Use a regex to replace all occurrences
+			result = result.replace(new RegExp(emojiKey, 'g'), imgTag);
+		  }
+		}
+	  }
+	  
+	  return result;
+	}
+
+	function processMessage(messageData) {
 		try {
 			const textarea = document.querySelector("#textarea");
 			var span = document.createElement("div");
@@ -1563,7 +1806,11 @@ try {
 			if (messageData.isChatOwner) badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>';
 			if (messageData.isChatModerator) badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>';
 			if (messageData.isChatSponsor) badgeHtml += '<span class="chat-badge" title="Member">⭐</span>';
-			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageData.message}`;
+			
+			// Apply emoji replacement to the message
+			const messageWithEmojis = replaceEmojis(messageData.message);
+			
+			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
 			textarea.appendChild(span);
 			while (textarea.childNodes.length > 20) {
 				textarea.removeChild(textarea.firstChild);
@@ -1575,17 +1822,19 @@ try {
 					chatbadges: badgeHtml,
 					backgroundColor: "",
 					textColor: "",
-					chatmessage: messageData.message,
+					chatmessage: messageWithEmojis, // Use the version with emojis replaced
 					chatimg: messageData.profileImageUrl || "",
 					hasDonation: "",
 					membership: messageData.isChatSponsor ? "member" : "",
-					type: "youtube"
+					type: "youtube",
+					textonly: usetextonlymode // Pass the setting to the extension
 				});
 			}
 		} catch (e) {
 			console.error('Error processing message:', e);
 		}
 	}
+	
     function processSuperChat(superChatData) {
         try {
             addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
@@ -1650,6 +1899,97 @@ try {
         if (currentUserElement) currentUserElement.textContent = currentUsername || 'Not signed in';
         if (currentChannelElement) currentChannelElement.textContent = targetName || 'No target';
     }
+	function initializePage() {
+		urlParams = new URLSearchParams(window.location.search);
+		hashParams = new URLSearchParams(window.location.hash.slice(1));
+		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || urlParams.get("v") || hashParams.get("videoId");
+		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || urlParams.get("c") || hashParams.get("channel");
+		if (urlVideoIdParam || urlChannelParam) {
+			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
+			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
+		}
+		if (urlVideoIdParam) {
+			videoId = urlVideoIdParam;
+			channel = '';
+			localStorage.setItem("youtubeVideoId", videoId);
+			localStorage.removeItem("youtubeChannel");
+		} else if (urlChannelParam) {
+			channel = urlChannelParam;
+			videoId = '';
+			localStorage.setItem("youtubeChannel", channel);
+			localStorage.removeItem("youtubeVideoId");
+		} else {
+			videoId = localStorage.getItem("youtubeVideoId") || "";
+			if (videoId) {
+				channel = '';
+				localStorage.removeItem("youtubeChannel");
+			} else {
+				channel = localStorage.getItem("youtubeChannel") || "";
+			}
+		}
+		const signOutButton = document.getElementById('sign-out-button');
+		if (signOutButton) signOutButton.addEventListener('click', signOut);
+		const authLink = document.getElementById('auth-link');
+		if (authLink) {
+			authLink.addEventListener('click', function(e) {
+				e.preventDefault();
+				window.location.href = authUrl();
+			});
+		}
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		isPageVisible = document.visibilityState === 'visible';
+		const sendButton = document.querySelector('#sendmessage');
+		if (sendButton) sendButton.onclick = handleSendMessage;
+		const inputText = document.querySelector('#input-text');
+		if (inputText) inputText.addEventListener('keypress', handleEnterKey);
+		const connectButton = document.getElementById('connect-button');
+		if (connectButton) connectButton.addEventListener('click', handleConnect);
+		const changeButton = document.getElementById('change-button');
+		if (changeButton) {
+			changeButton.addEventListener('click', function() {
+				clearPolling();
+				updateHeaderInfo(username, 'No target (Ready to connect)');
+				document.getElementById('textarea').innerHTML = '<div>Connection cleared. Enter new channel name or video ID and click Connect.</div>';
+				document.getElementById('viewer-count').textContent = '-';
+				document.getElementById('subscriber-count').textContent = '-';
+				document.getElementById('likes-count').textContent = '-';
+				document.getElementById('events-list').innerHTML = '';
+				channel = '';
+				videoId = '';
+				localStorage.removeItem('youtubeChannel');
+				localStorage.removeItem('youtubeVideoId');
+			});
+		}
+		const channelInput = document.getElementById('channel-input');
+		const videoInput = document.getElementById('video-input');
+		if (channelInput) {
+			channelInput.addEventListener('keypress', function(event) {
+				if (event.key === 'Enter') handleConnect();
+			});
+		}
+		if (videoInput) {
+			videoInput.addEventListener('keypress', function(event) {
+				if (event.key === 'Enter') handleConnect();
+			});
+		}
+		if (urlParams.has('code')) {
+			handleAuthCallback();
+			return;
+		}
+		setupSettingsListener();
+		const storedToken = getStoredToken();
+		if (storedToken) {
+			verifyAndUseToken(storedToken);
+		} else if (window.location.hash && window.location.hash.includes('access_token')) {
+			parseFragment(window.location.hash);
+		} else {
+			showAuthButton();
+		}
+		
+		loadEmojiData().catch(error => {
+		  console.error('Failed to load emoji data:', error);
+		});
+	}
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
 		const controller = new AbortController();
 		const timeout_id = setTimeout(() => controller.abort(), timeout);
