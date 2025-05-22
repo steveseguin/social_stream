@@ -268,7 +268,18 @@ body.light-mode .event-type {
 body.light-mode .no-events {
     color: #777;
 }
+.clickable-message {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
 
+.clickable-message:hover {
+    background-color: rgba(255, 255, 255, 0.07); /* Adjust for light/dark mode if needed */
+}
+
+body.light-mode .clickable-message:hover {
+    background-color: rgba(0, 0, 0, 0.07);
+}
 </style>
 </head>
 <body>
@@ -303,7 +314,7 @@ body.light-mode .no-events {
 	var showUSD = urlParams.has("currency") ? true : false;
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
 	var lightMode = urlParams.has("lightmode");
-	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 100;
+	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 
@@ -353,9 +364,10 @@ body.light-mode .no-events {
 		
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
-		
-		// Add platform-specific class
 		messageDiv.classList.add(`${data.type}-event`);
+		
+        messageDiv.rawContents = data; // Store the original data object
+        messageDiv.classList.add('clickable-message');
 		
 		if (data.mid) {
 			messageDiv.id = data.mid;
@@ -423,60 +435,169 @@ body.light-mode .no-events {
 		// Auto-scroll to the latest message
 		chatContainer.scrollTop = 0;
 		
-		// Keep max N events in the dashboard (from URL param or default 100)
+		// Keep max N events in the dashboard (from URL param or default 200)
 		while (chatContainer.children.length > maxEvents) {
 			chatContainer.removeChild(chatContainer.lastChild);
 		}
 	}
-    
-    // The IFrame allows for peer to peer mode; used by default
-    var iframe = document.createElement("iframe");
+	
+	chatContainer.addEventListener('click', function(event) {
+        const messageDiv = event.target.closest('.message.clickable-message');
+        if (messageDiv && messageDiv.rawContents) {
+            featureEventMessage(messageDiv.rawContents);
+        }
+    });
+
+    function featureEventMessage(dataToFeature) {
+        const messageToSend = { ...dataToFeature, clicked: true, timestamp: Date.now() };
+        if (messageToSend.id) {
+             delete messageToSend.id;
+        }
+
+        const payload = { overlayNinja: messageToSend };
+
+        if (iframe && iframe.contentWindow && iframe.connectedPeers) {
+            let sentViaIframe = false;
+            const keys = Object.keys(iframe.connectedPeers);
+            for (let i = 0; i < keys.length; i++) {
+                const uuid = keys[i];
+                const label = iframe.connectedPeers[uuid];
+                // Send to "overlay" (like featured.html) or generic peers (label: false or undefined)
+                // These are typical labels for non-dock, viewing peers.
+                if (label === "overlay" || label === false || typeof label === 'undefined') {
+                    try {
+                        iframe.contentWindow.postMessage({ sendData: payload, type: "pcs", UUID: uuid }, "*");
+                        sentViaIframe = true;
+                    } catch (e) {
+                        console.error("Error sending message via iframe to peer:", uuid, e);
+                    }
+                }
+            }
+            if (sentViaIframe) {
+                 console.log("Featured message sent via iframe.");
+            } else {
+                console.warn('No suitable "overlay" peer found to send featured message to via iframe. Attempting WebSocket.');
+                // Fallback to WebSocket if no iframe peer was found or if sending failed
+                sendViaWebSocketFallback(messageToSend);
+            }
+        } else {
+            console.warn('iframe or connectedPeers not ready. Attempting WebSocket to feature message.');
+            sendViaWebSocketFallback(messageToSend);
+        }
+    }
+
+    function sendViaWebSocketFallback(messageToSend) {
+        if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+            socketserver.send(JSON.stringify({ content: messageToSend }));
+            console.log("Featured message sent via WebSocket as fallback.");
+        } else {
+            console.error('Neither iframe nor WebSocket available to feature message.');
+        }
+    }
+
+    var iframe = document.createElement("iframe"); // Keep iframe global
 	if (roomID){
-		if (featuredMode){
+		if (featuredMode){ // featuredMode is false by default in events.html
 			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
-		} else {
+		} else { // This is the path typically taken by events.html
 			iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
 		}
 		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
 	
+        /* Add this here */
+        iframe.connectedPeers = {}; // Initialize connectedPeers for this iframe instance
+        /* End Add this here */
+
 		document.body.appendChild(iframe);
+
 		window.addEventListener("message", function (e) {
 			if (e.source != iframe.contentWindow) return;
+
+            /* Add this here */
+            // Logic to populate iframe.connectedPeers, similar to dock.html
+            if ("action" in e.data && e.data.UUID && "value" in e.data) {
+                const peerUUID = e.data.UUID;
+                const peerValue = e.data.value;
+
+                if (e.data.action === "push-connection-info" || e.data.action === "view-connection-info") {
+                    if (peerValue && "label" in peerValue) {
+                        iframe.connectedPeers[peerUUID] = peerValue.label;
+                         console.log("Peer connected/info: ", peerUUID, peerValue.label);
+                    } else if (peerValue === false) { 
+                         delete iframe.connectedPeers[peerUUID];
+                         console.log("Peer disconnected (info explicit false): ", peerUUID);
+                    }
+                } else if (e.data.action === "push-connection" || e.data.action === "view-connection") {
+                    if (peerValue === false) { // Peer disconnected
+                        delete iframe.connectedPeers[peerUUID];
+                        console.log("Peer disconnected: ", peerUUID);
+                    } else if (typeof peerValue === 'object' && peerValue && "label" in peerValue) {
+                        // This handles cases where a new connection directly sends its info
+                        iframe.connectedPeers[peerUUID] = peerValue.label;
+                        console.log("Peer connected (direct info): ", peerUUID, peerValue.label);
+                    }
+                }
+            }
+            /* End Add this here */
+
 			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
 				addMessageToOverlay(e.data.dataReceived.overlayNinja);
 			}
 		});
 	}
     
-    // The Websocket mode as alternative
     var conCon = 1;
     var socketserver = false;
     var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+    var reconnectionTimeout = null;
+
 
     function setupSocket(){
+        if (reconnectionTimeout) {
+            clearTimeout(reconnectionTimeout);
+            reconnectionTimeout = null;
+        }
+        if (socketserver) {
+            socketserver.onclose = null;
+            socketserver.close();
+            socketserver = null;
+        }
+        socketserver = new WebSocket(serverURL);
+
         socketserver.onclose = function (){
-            setTimeout(function(){
+            reconnectionTimeout = setTimeout(function(){
                 conCon+=1;
-                socketserver = new WebSocket(serverURL);
                 setupSocket();
             },100*conCon);
         };
+        socketserver.onerror = function(error) {
+            console.error("WebSocket error:", error);
+            if (socketserver) socketserver.close(); // Ensure it's closed on error
+        };
         socketserver.onopen = function (){
             conCon = 1;
-			
-            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4})); // Standard channel for events/dashboard
         };
         socketserver.addEventListener('message', function (event) {
             var resp = false
             if (event.data){
-                var data = JSON.parse(event.data);
-                addMessageToOverlay(data);
-                if (data.get){
-                    var ret = {};
-                    ret.callback = {};
-                    ret.callback.get = data.get
-                    ret.callback.result = true;
-                    socketserver.send(JSON.stringify(ret));
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data && data.overlayNinja) { // Check if data is wrapped
+                        addMessageToOverlay(data.overlayNinja);
+                    } else {
+                        addMessageToOverlay(data); // Assume data is the direct payload
+                    }
+
+                    if (data.get){ // Handle callbacks if any
+                        var ret = {};
+                        ret.callback = {};
+                        ret.callback.get = data.get
+                        ret.callback.result = true;
+                        socketserver.send(JSON.stringify(ret));
+                    }
+                } catch (parseError) {
+                    console.error("Error parsing WebSocket message:", parseError, event.data);
                 }
             }
         });
@@ -485,7 +606,6 @@ body.light-mode .no-events {
     if (urlParams.has("server") || urlParams.has("server2")){
         serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
 		if (roomID){
-			socketserver = new WebSocket(serverURL);
 			setupSocket();
 		}
     }
