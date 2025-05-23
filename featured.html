@@ -434,12 +434,16 @@
 			
 			.largeImage {
 				padding:0;
-				left:100px;
+				left:120px;
+				background-color:unset;
+				box-shadow: unset;
 			}
 			
 			.largeImage>img, .largeImage>video {
 				max-width: calc(100vw - 200px);
 				max-height: 240px;
+				max-height: 240px;
+				min-height: 160px;
 			}
 
 			.hl-imgContent > img  , .hl-imgContent > video {
@@ -1819,13 +1823,14 @@
 					if (window.innerWidth < width * 2.5) {
 						width = window.innerWidth / 2.5;
 					}
-					document.getElementById("imgContent").style.width = width + "px";
+					let imgContent = document.getElementById("imgContent") || document.createElement("span");
+					imgContent.style.width = width + "px";
 					//img.style.transform = "scale("+ar+")";
 
 					if (message.innerText.length) {
 						message.style.maxWidth = "calc(100vw - " + (width + 35) + "px)";
 						message.style.width = "fit-content";
-						document.getElementById("imgContent").style.right = "unset";
+						imgContent.style.right = "unset";
 
 						var offset = 0;
 						if (document.getElementById("nameDIV")) {
@@ -1838,11 +1843,11 @@
 							offset = document.getElementById("message").clientWidth + 19;
 						}
 
-						document.getElementById("imgContent").style.left = offset + "px";
+						imgContent.style.left = offset + "px";
 					} else {
 						message.style.maxWidth = "300px";
 						img.style.transformOrigin = "bottom";
-						document.getElementById("imgContent").style.right = 0;
+						imgContent.style.right = 0;
 						var offset = 0;
 						if (document.getElementById("nameDIV")) {
 							offset = document.getElementById("nameDIV").clientWidth + 110;
@@ -1857,7 +1862,7 @@
 								offset = 500;
 							}
 						}
-						document.getElementById("imgContent").style.left = offset + "px";
+						imgContent.style.left = offset + "px";
 					}
 				} catch (e) {
 					errorlog(e);

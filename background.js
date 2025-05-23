@@ -305,137 +305,6 @@ if (typeof chrome.runtime == "undefined") {
 
 log("isSSAPP: " + isSSAPP);
 
-String.prototype.replaceAllCase = function (strReplace, strWith) {
-	// See http://stackoverflow.com/a/3561711/556609
-	var esc = strReplace.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
-	var reg = new RegExp(esc, "ig");
-	return this.replace(reg, strWith);
-};
-
-const validTLDs = new Set(["a","aaa","aarp","abb","abbott","abbvie","abc","able","abogado","abudhabi","ac","academy","accenture","accountant","accountants","aco","actor","ad","ads","adult","ae","aeg","aero","aetna","af","afl","africa","ag","agakhan","agency","ai","aig","airbus","airforce","airtel","akdn","al","alibaba","alipay","allfinanz","allstate","ally","alsace","alstom","am","amazon","americanexpress","americanfamily","amex","amfam","amica","amsterdam","analytics","android","anquan","anz","ao","aol","apartments","app","apple","aq","aquarelle","ar","arab","aramco","archi","army","arpa","art","arte","as","asda","asia","associates","at","athleta","attorney","au","auction","audi","audible","audio","auspost","author","auto","autos","aw","aws","ax","axa","az","azure","b","ba","baby","baidu","banamex","band","bank","bar","barcelona","barclaycard","barclays","barefoot","bargains","baseball","basketball","bauhaus","bayern","bb","bbc","bbt","bbva","bcg","bcn","bd","be","beats","beauty","beer","bentley","berlin","best","bestbuy","bet","bf","bg","bh","bharti","bi","bible","bid","bike","bing","bingo","bio","biz","bj","black","blackfriday","blockbuster","blog","bloomberg","blue","bm","bms","bmw","bn","bnpparibas","bo","boats","boehringer","bofa","bom","bond","boo","book","booking","bosch","bostik","boston","bot","boutique","box","br","bradesco","bridgestone","broadway","broker","brother","brussels","bs","bt","build","builders","business","buy","buzz","bv","bw","by","bz","bzh","c","ca","cab","cafe","cal","call","calvinklein","cam","camera","camp","canon","capetown","capital","capitalone","car","caravan","cards","care","career","careers","cars","casa","case","cash","casino","cat","catering","catholic","cba","cbn","cbre","cc","cd","center","ceo","cern","cf","cfa","cfd","cg","ch","chanel","channel","charity","chase","chat","cheap","chintai","christmas","chrome","church","ci","cipriani","circle","cisco","citadel","citi","citic","city","ck","cl","claims","cleaning","click","clinic","clinique","clothing","cloud","club","clubmed","cm","cn","co","coach","codes","coffee","college","cologne","com","commbank","community","company","compare","computer","comsec","condos","construction","consulting","contact","contractors","cooking","cool","coop","corsica","country","coupon","coupons","courses","cpa","cr","credit","creditcard","creditunion","cricket","crown","crs","cruise","cruises","cu","cuisinella","cv","cw","cx","cy","cymru","cyou","cz","d","dabur","dad","dance","data","date","dating","datsun","day","dclk","dds","de","deal","dealer","deals","degree","delivery","dell","deloitte","delta","democrat","dental","dentist","desi","design","dev","dhl","diamonds","diet","digital","direct","directory","discount","discover","dish","diy","dj","dk","dm","dnp","do","docs","doctor","dog","domains","dot","download","drive","dtv","dubai","dunlop","dupont","durban","dvag","dvr","dz","e","earth","eat","ec","eco","edeka","edu","education","ee","eg","email","emerck","energy","engineer","engineering","enterprises","epson","equipment","er","ericsson","erni","es","esq","estate","et","eu","eurovision","eus","events","exchange","expert","exposed","express","extraspace","f","fage","fail","fairwinds","faith","family","fan","fans","farm","farmers","fashion","fast","fedex","feedback","ferrari","ferrero","fi","fidelity","fido","film","final","finance","financial","fire","firestone","firmdale","fish","fishing","fit","fitness","fj","fk","flickr","flights","flir","florist","flowers","fly","fm","fo","foo","food","football","ford","forex","forsale","forum","foundation","fox","fr","free","fresenius","frl","frogans","frontier","ftr","fujitsu","fun","fund","furniture","futbol","fyi","g","ga","gal","gallery","gallo","gallup","game","games","gap","garden","gay","gb","gbiz","gd","gdn","ge","gea","gent","genting","george","gf","gg","ggee","gh","gi","gift","gifts","gives","giving","gl","glass","gle","global","globo","gm","gmail","gmbh","gmo","gmx","gn","godaddy","gold","goldpoint","golf","goo","goodyear","goog","google","gop","got","gov","gp","gq","gr","grainger","graphics","gratis","green","gripe","grocery","group","gs","gt","gu","gucci","guge","guide","guitars","guru","gw","gy","h","hair","hamburg","hangout","haus","hbo","hdfc","hdfcbank","health","healthcare","help","helsinki","here","hermes","hiphop","hisamitsu","hitachi","hiv","hk","hkt","hm","hn","hockey","holdings","holiday","homedepot","homegoods","homes","homesense","honda","horse","hospital","host","hosting","hot","hotels","hotmail","house","how","hr","hsbc","ht","hu","hughes","hyatt","hyundai","i","ibm","icbc","ice","icu","id","ie","ieee","ifm","ikano","il","im","imamat","imdb","immo","immobilien","in","inc","industries","infiniti","info","ing","ink","institute","insurance","insure","int","international","intuit","investments","io","ipiranga","iq","ir","irish","is","ismaili","ist","istanbul","it","itau","itv","j","jaguar","java","jcb","je","jeep","jetzt","jewelry","jio","jll","jm","jmp","jnj","jo","jobs","joburg","jot","joy","jp","jpmorgan","jprs","juegos","juniper","k","kaufen","kddi","ke","kerryhotels","kerrylogistics","kerryproperties","kfh","kg","kh","ki","kia","kids","kim","kindle","kitchen","kiwi","km","kn","koeln","komatsu","kosher","kp","kpmg","kpn","kr","krd","kred","kuokgroup","kw","ky","kyoto","kz","l","la","lacaixa","lamborghini","lamer","lancaster","land","landrover","lanxess","lasalle","lat","latino","latrobe","law","lawyer","lb","lc","lds","lease","leclerc","lefrak","legal","lego","lexus","lgbt","li","lidl","life","lifeinsurance","lifestyle","lighting","like","lilly","limited","limo","lincoln","link","lipsy","live","living","lk","llc","llp","loan","loans","locker","locus","lol","london","lotte","lotto","love","lpl","lplfinancial","lr","ls","lt","ltd","ltda","lu","lundbeck","luxe","luxury","lv","ly","m","ma","madrid","maif","maison","makeup","man","management","mango","map","market","marketing","markets","marriott","marshalls","mattel","mba","mc","mckinsey","md","me","med","media","meet","melbourne","meme","memorial","men","menu","merckmsd","mg","mh","miami","microsoft","mil","mini","mint","mit","mitsubishi","mk","ml","mlb","mls","mm","mma","mn","mo","mobi","mobile","moda","moe","moi","mom","monash","money","monster","mormon","mortgage","moscow","moto","motorcycles","mov","movie","mp","mq","mr","ms","msd","mt","mtn","mtr","mu","museum","music","mv","mw","mx","my","mz","n","na","nab","nagoya","name","navy","nba","nc","ne","nec","net","netbank","netflix","network","neustar","new","news","next","nextdirect","nexus","nf","nfl","ng","ngo","nhk","ni","nico","nike","nikon","ninja","nissan","nissay","nl","no","nokia","norton","now","nowruz","nowtv","np","nr","nra","nrw","ntt","nu","nyc","nz","o","obi","observer","office","okinawa","olayan","olayangroup","ollo","om","omega","one","ong","onl","online","ooo","open","oracle","orange","org","organic","origins","osaka","otsuka","ott","ovh","p","pa","page","panasonic","paris","pars","partners","parts","party","pay","pccw","pe","pet","pf","pfizer","pg","ph","pharmacy","phd","philips","phone","photo","photography","photos","physio","pics","pictet","pictures","pid","pin","ping","pink","pioneer","pizza","pk","pl","place","play","playstation","plumbing","plus","pm","pn","pnc","pohl","poker","politie","porn","post","pr","pramerica","praxi","press","prime","pro","prod","productions","prof","progressive","promo","properties","property","protection","pru","prudential","ps","pt","pub","pw","pwc","py","q","qa","qpon","quebec","quest","r","racing","radio","re","read","realestate","realtor","realty","recipes","red","redstone","redumbrella","rehab","reise","reisen","reit","reliance","ren","rent","rentals","repair","report","republican","rest","restaurant","review","reviews","rexroth","rich","richardli","ricoh","ril","rio","rip","ro","rocks","rodeo","rogers","room","rs","rsvp","ru","rugby","ruhr","run","rw","rwe","ryukyu","s","sa","saarland","safe","safety","sakura","sale","salon","samsclub","samsung","sandvik","sandvikcoromant","sanofi","sap","sarl","sas","save","saxo","sb","sbi","sbs","sc","scb","schaeffler","schmidt","scholarships","school","schule","schwarz","science","scot","sd","se","search","seat","secure","security","seek","select","sener","services","seven","sew","sex","sexy","sfr","sg","sh","shangrila","sharp","shell","shia","shiksha","shoes","shop","shopping","shouji","show","si","silk","sina","singles","site","sj","sk","ski","skin","sky","skype","sl","sling","sm","smart","smile","sn","sncf","so","soccer","social","softbank","software","sohu","solar","solutions","song","sony","soy","spa","space","sport","spot","sr","srl","ss","st","stada","staples","star","statebank","statefarm","stc","stcgroup","stockholm","storage","store","stream","studio","study","style","su","sucks","supplies","supply","support","surf","surgery","suzuki","sv","swatch","swiss","sx","sy","sydney","systems","sz","t","tab","taipei","talk","taobao","target","tatamotors","tatar","tattoo","tax","taxi","tc","tci","td","tdk","team","tech","technology","tel","temasek","tennis","teva","tf","tg","th","thd","theater","theatre","tiaa","tickets","tienda","tips","tires","tirol","tj","tjmaxx","tjx","tk","tkmaxx","tl","tm","tmall","tn","to","today","tokyo","tools","top","toray","toshiba","total","tours","town","toyota","toys","tr","trade","trading","training","travel","travelers","travelersinsurance","trust","trv","tt","tube","tui","tunes","tushu","tv","tvs","tw","tz","u","ua","ubank","ubs","ug","uk","unicom","university","uno","uol","ups","us","uy","uz","v","va","vacations","vana","vanguard","vc","ve","vegas","ventures","verisign","vermögensberater","vermögensberatung","versicherung","vet","vg","vi","viajes","video","vig","viking","villas","vin","vip","virgin","visa","vision","viva","vivo","vlaanderen","vn","vodka","volvo","vote","voting","voto","voyage","vu","w","wales","walmart","walter","wang","wanggou","watch","watches","weather","weatherchannel","webcam","weber","website","wed","wedding","weibo","weir","wf","whoswho","wien","wiki","williamhill","win","windows","wine","winners","wme","wolterskluwer","woodside","work","works","world","wow","ws","wtc","wtf","x","xbox","xerox","xihuan","xin","xxx","xyz","y","yachts","yahoo","yamaxun","yandex","ye","yodobashi","yoga","yokohama","you","youtube","yt","yun","z","za","zappos","zara","zero","zip","zm","zone","zuerich","zw","IDNs","ελ","ευ","бг","бел","дети","ею","католик","ком","мкд","мон","москва","онлайн","орг","рус","рф","сайт","срб","укр","қаз","հայ","ישראל","קום","ابوظبي","ارامكو","الاردن","البحرين","الجزائر","السعودية","العليان","المغرب","امارات","ایران","بارت","بازار","بيتك","بھارت","تونس","سودان","سورية","شبكة","عراق","عرب","عمان","فلسطين","قطر","كاثوليك","كوم","مصر","مليسيا","موريتانيا","موقع","همراه","پاكستان","پاکستان","ڀارت","कॉम","नेट","भारत","भारतम्","भारोत","संगठन","বাংলা","ভারত","ভাৰত","ਭਾਰਤ","ભારત","ଭାରତ","இந்தியா","இலங்கை","சிங்கப்பூர்","భారత్","ಭಾರತ","ഭാരതം","ලංකා","คอม","ไทย","ລາວ","გე","みんな","アマゾン","クラウド","グーグル","コム","ストア","セール","ファッション","ポイント","世界","中信","中国","中國","中文网","亚马逊","企业","佛山","信息","健康","八卦","公司","公益","台湾","台灣","商城","商店","商标","嘉里","嘉里大酒店","在线","大拿","天主教","娱乐","家電","广东","微博","慈善","我爱你","手机","招聘","政务","政府","新加坡","新闻","时尚","書籍","机构","淡马锡","游戏","澳門","点看","移动","组织机构","网址","网店","网站","网络","联通","谷歌","购物","通販","集团","電訊盈科","飞利浦","食品","餐厅","香格里拉","香港","닷넷","닷컴","삼성","한국"]);
-			
-function isValidTLD(tld) {
-  return validTLDs.has(tld.toLowerCase());
-}
-
-function filterXSS(unsafe) {
-	// this is not foolproof, but it might catch some basic probe attacks that sneak in
-	try {
-		return unsafe
-			.replaceAll("prompt(", "**")
-			.replaceAll("eval(", "**")
-			.replaceAll("onclick(", "**")
-			.replaceAll("alert(", "**")
-			.replaceAll("onload=", "**")
-			.replaceAll("onerror=", "**")
-			.replaceAll(" onmouse", "**") // onmousedown, onmouseup, etc
-			.replaceAll("onfocusin=", "**")
-			.replaceAll("onfocusout=", "**")
-			.replaceAll("onfocus=", "**")
-			.replaceAll("onblur=", "**")
-			.replaceAll("oninput=", "**")
-			.replaceAll("onkeydown=", "**")
-			.replaceAll("onkeyup=", "**")
-			.replaceAll("onkeypress=", "**")
-			.replaceAll("onkeyup", "**")
-			.replaceAll("=alert", "**")
-			.replaceAll("=prompt", "**")
-			.replaceAll("=confirm", "**")
-			.replaceAll("confirm(", "**")
-			.replaceAll("=eval", "**")
-			.replaceAll("ondblclick=", "**")
-			.replaceAll("javascript:", "**")
-			.replaceAll("srcdoc=", "**")
-			.replaceAll("xlink:href=", "**")
-			.replaceAll("xmlns:xlink=", "**")
-			.replaceAll("ontouchstart=", "**")
-			.replaceAll("ontouchend=", "**")
-			.replaceAll("ontouchmove=", "**")
-			.replaceAll("ontouchcancel=", "**")
-			.replaceAll("onchange=", "**")
-			.replaceAll("src=data:", "*,*")
-			.replaceAll("data:text/html", "*,*")
-			.replaceAll("onpageshow=", "**")
-			.replaceAll("href=//0", "**")
-			.replaceAll("onhashchange=", "**")
-			.replaceAll("onscroll=", "**")
-			.replaceAll("onresize=", "**")
-			.replaceAll("onhelp=", "**")
-			.replaceAll("onstart=", "**")
-			.replaceAll("onfinish=", "**")
-			.replaceAll("onloadstart=", "**")
-			.replaceAll("onend=", "**")
-			.replaceAll("onsubmit=", "**")
-			.replaceAll("onshow=", "**")
-			.replaceAll("alert`", "**")
-			.replaceAll("alert&", "**")
-			.replaceAll("(alert)(", "**")
-			.replaceAll("innerHTML", "**")
-			.replaceAll(" ondrag", "**")
-			.replaceAll("activate=", "**")
-			.replaceAll(" onbefore", "**")
-			.replaceAll("oncopy=", "**")
-			.replaceAll("oncut=", "**")
-			.replaceAll("onpaste=", "**")
-			.replaceAll("onpopstate=", "**")
-			.replaceAll("onunhandledrejection=", "**")
-			.replaceAll("onwheel=", "**")
-			.replaceAll("oncontextmenu=", "**")
-			.replaceAll("XMLHttpRequest(", "**")
-			.replaceAll("Object.defineProperty", "**")
-			.replaceAll("document.createElement(", "**")
-			.replaceAll("MouseEvent(", "**")
-			.replaceAll("unescape(", "**")
-			.replaceAll("onreadystatechange", "**")
-			.replaceAll("document.write(", "**")
-			.replaceAll("write(", "**")
-			.replaceAllCase("<textarea", "**")
-			.replaceAllCase("<embed", "**")
-			.replaceAllCase("<iframe", "**")
-			.replaceAllCase("<input", "**")
-			.replaceAllCase("<link", "**")
-			.replaceAllCase("<meta", "**")
-			.replaceAllCase("<style", "**")
-			.replaceAllCase("<table", "**")
-			.replaceAllCase("<layer", "**")
-			.replaceAllCase("<body", "**")
-			.replaceAllCase("<object", "**")
-			.replaceAllCase("<html", "**")
-			.replaceAllCase("<animation", "**")
-			.replaceAllCase("<listener", "**")
-			.replaceAllCase("<handler", "**")
-			.replaceAllCase("<form", "**")
-			.replaceAllCase("<?xml", "**")
-			.replaceAllCase("<stylesheet", "**")
-			.replaceAllCase("<eval", "**")
-			.replaceAll("=javascript", "**")
-			.replaceAll(" formaction=", "**")
-			.replaceAll("'';!--", "**")
-			.replaceAllCase("<script", "**")
-			.replaceAllCase("<audio", "**")
-			.replaceAllCase("<bgsound", "**")
-			.replaceAllCase("<blink", "**")
-			.replaceAllCase("<br><br><br>", "")
-			.replaceAllCase("<video", "**");
-	} catch (e) {
-		return unsafe;
-	}
-}
-
-
-/////////////// bad word filter
-// I welcome updates/additions. The raw list can be found here: https://gist.github.com/steveseguin/da09a700e4fccd7ff82e68f32e384c9d
-var badWords = ["fuck","shit","cunt","bitch","nigger","fag","retard","rape","pussy","cock","asshole","whore","slut","gay","lesbian","transgender","transsexual","tranny","chink","spic","kike","jap","wop","redneck","hillbilly","white trash","douche","dick","bastard","fucker","motherfucker","ass","anus","vagina","penis","testicles","masturbate","orgasm","ejaculate","clitoris","pubic","genital","erect","erotic","porn","xxx","dildo","butt plug","anal","sodomy","pedophile","bestiality","necrophilia","incest","suicide","murder","terrorism","drugs","alcohol","smoking","weed","meth","crack","heroin","cocaine","opiate","opium","benzodiazepine","xanax","adderall","ritalin","steroids","viagra","cialis","prostitution","escort"];
-
-const alternativeChars = {
-	a: ["@", "4"],
-	e: ["3"],
-	i: ["1", "!"],
-	o: ["0"],
-	s: ["$", "5"],
-	t: ["7"],
-	c: ["<"]
-};
 function generateVariations(word) {
   // Skip empty words
   if (!word || !word.trim()) return [word];
@@ -558,39 +427,75 @@ function filterProfanity(sentence) {
 
 var profanityHashTable = false;
 
-function initialLoadBadWords(){
-	try {
-		// use a custom file named badwords.txt to replace the badWords that are hard-coded. one per line.
-		fetch("./badwords.txt")
-			.then(response => response.text())
-			.then(text => {
-				let customBadWords = text.split(/\r?\n|\r|\n/g);
-				customBadWords = generateVariationsList(customBadWords);
-				profanityHashTable = createProfanityHashTable(customBadWords);
-			})
-			.catch(error => {
-				try {
-					  const customBadwords = localStorage.getItem('customBadwords');
-					  if (customBadwords) {
-						let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
-						customBadWordsList = generateVariationsList(customBadWordsList);
-						profanityHashTable = createProfanityHashTable(customBadWordsList);
-					  } else {
-						// Use default badwords if no custom file is present
-						badWords = generateVariationsList(badWords);
-						profanityHashTable = createProfanityHashTable(badWords);
-					  }
-				} catch (e) {
-				  badWords = generateVariationsList(badWords);
-				  profanityHashTable = createProfanityHashTable(badWords);
-				}
-
-			});
-	} catch (e) {
-		badWords = generateVariationsList(badWords);
-		profanityHashTable = createProfanityHashTable(badWords);
-	}
+function initialLoadBadWords() {
+  try {
+    if (isSSAPP) {
+      // Use Node.js file system in Electron environment
+	  log("checking for badwords.txt on local disk");
+      const fs = require('fs');
+      const path = require('path');
+      
+      try {
+		
+        // Read from local file system using Node.js fs
+        const filePath = path.join(__dirname, 'badwords.txt');
+        const text = fs.readFileSync(filePath, 'utf8');
+        let customBadWords = text.split(/\r?\n|\r|\n/g);
+        customBadWords = generateVariationsList(customBadWords);
+        profanityHashTable = createProfanityHashTable(customBadWords);
+		log("badwords Worked");
+      } catch (fileError) {
+        // Fallback if file read fails
+        try {
+          const customBadwords = localStorage.getItem('customBadwords');
+          if (customBadwords) {
+			log("badwords from local storage instead");
+            let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
+            customBadWordsList = generateVariationsList(customBadWordsList);
+            profanityHashTable = createProfanityHashTable(customBadWordsList);
+          } else {
+			log("using default badwords list");
+            badWords = generateVariationsList(badWords);
+            profanityHashTable = createProfanityHashTable(badWords);
+          }
+        } catch (e) {
+		  log("failed to load badwords; loading backups");
+          badWords = generateVariationsList(badWords);
+          profanityHashTable = createProfanityHashTable(badWords);
+        }
+      }
+    } else {
+      // Original web browser approach using fetch
+      fetch("./badwords.txt")
+        .then(response => response.text())
+        .then(text => {
+          let customBadWords = text.split(/\r?\n|\r|\n/g);
+          customBadWords = generateVariationsList(customBadWords);
+          profanityHashTable = createProfanityHashTable(customBadWords);
+        })
+        .catch(error => {
+          try {
+            const customBadwords = localStorage.getItem('customBadwords');
+            if (customBadwords) {
+              let customBadWordsList = customBadwords.split(/\r?\n|\r|\n/g);
+              customBadWordsList = generateVariationsList(customBadWordsList);
+              profanityHashTable = createProfanityHashTable(customBadWordsList);
+            } else {
+              badWords = generateVariationsList(badWords);
+              profanityHashTable = createProfanityHashTable(badWords);
+            }
+          } catch (e) {
+            badWords = generateVariationsList(badWords);
+            profanityHashTable = createProfanityHashTable(badWords);
+          }
+        });
+    }
+  } catch (e) {
+    badWords = generateVariationsList(badWords);
+    profanityHashTable = createProfanityHashTable(badWords);
+  }
 }
+
 initialLoadBadWords();
 
 /////// end of bad word filter
@@ -616,17 +521,34 @@ function passGoodWords(sentence) {
 	}
 	return sentence;
 }
+
 try {
-	// use a custom file named goodwords.txt to replace the badWords that are hard-coded. one per line.
-	fetch("./goodwords.txt")
-		.then(response => response.text())
-		.then(text => {
-			let customGoodWords = text.split(/\r?\n|\r|\n/g);
-			goodWordsHashTable = createProfanityHashTable(customGoodWords);
-		})
-		.catch(error => {
-			// no file found or error
-		});
+  if (isSSAPP) {
+    // Use Node.js file system in Electron environment
+    const fs = require('fs');
+    const path = require('path');
+    
+    try {
+      // Read from local file system using Node.js fs
+      const filePath = path.join(__dirname, 'goodwords.txt');
+      const text = fs.readFileSync(filePath, 'utf8');
+      let customGoodWords = text.split(/\r?\n|\r|\n/g);
+      goodWordsHashTable = createProfanityHashTable(customGoodWords);
+    } catch (fileError) {
+      // no file found or error
+    }
+  } else {
+    // Original web browser approach using fetch
+    fetch("./goodwords.txt")
+      .then(response => response.text())
+      .then(text => {
+        let customGoodWords = text.split(/\r?\n|\r|\n/g);
+        goodWordsHashTable = createProfanityHashTable(customGoodWords);
+      })
+      .catch(error => {
+        // no file found or error
+      });
+  }
 } catch (e) {}
 
 ///////////////////
@@ -1655,443 +1577,11 @@ function YouTubeGetID(url) {
 	return ID;
 }
 
-var colours = 167772;
-function rainbow(step) {
-	var r, g, b;
-	var h = 1 - step / colours;
-	var i = ~~(h * 6);
-	var f = h * 6 - i;
-	var q = 1 - f;
-	switch (i % 6) {
-		case 0:
-			(r = 1), (g = f), (b = 0);
-			break;
-		case 1:
-			(r = q), (g = 1), (b = 0);
-			break;
-		case 2:
-			(r = 0), (g = 1), (b = f);
-			break;
-		case 3:
-			(r = 0), (g = q), (b = 1);
-			break;
-		case 4:
-			(r = f), (g = 0), (b = 1);
-			break;
-		case 5:
-			(r = 1), (g = 0), (b = q);
-			break;
-	}
-	var c = "#" + ("00" + (~~(r * 200 + 35)).toString(16)).slice(-2) + ("00" + (~~(g * 200 + 35)).toString(16)).slice(-2) + ("00" + (~~(b * 200 + 35)).toString(16)).slice(-2);
-	return c;
-}
-
-function getColorFromType(source) {
-    switch (source.toLowerCase()) {
-        // Well-known, established brand colors
-        case "youtube":
-        case "youtubeshorts":
-            return "#FF0000"; // YouTube Red
-        case "twitch":
-            return "#9147FF"; // Official Twitch Purple
-        case "facebook":
-            return "#1877F2"; // Official Facebook Blue
-        case "twitter":
-            return "#1DA1F2"; // Official Twitter Blue
-        case "instagram":
-        case "instagramlive":
-            return "#E1306C"; // Instagram primary color
-        case "linkedin":
-            return "#0077B5"; // LinkedIn Blue
-        case "telegram":
-        case "telegramk":
-            return "#229ED9"; // Telegram Blue
-        case "whatsapp":
-            return "#25D366"; // WhatsApp Green
-        case "tiktok":
-            return "#000000"; // TikTok often uses black + accent colors
-        case "discord":
-            return "#5865F2"; // Discord Blurple
-        case "reddit": 
-            return "#FF5700"; // If added in future
-        
-        // Some other well-known streaming or content platforms
-        case "amazon":
-            return "#FF9900";
-        case "steam":
-            return "#00AEEF"; // Steam Blue
-        case "stripe":
-            return "#635BFF"; // Stripe brand color
-        case "teams":
-            return "#6264A7"; // Microsoft Teams Purple
-        case "chaturbate":
-            return "#2A8BEE"; // Approx from their logo
-        case "vimeo":
-            return "#1AB7EA"; // Vimeo Blue
-        case "kick":
-        case "kick_new":
-            return "#00AB00"; // Kick’s bright green
-        case "trovo":
-            return "#1FBF4E"; // Trovo Green
-        case "dlive":
-            return "#FDF300"; // DLive Yellow
-        case "odyssey":
-        case "odysee": 
-            return "#E95796"; // Odysee Pink
-        case "restream":
-            return "#FF5E54"; // Restream Orange-Red
-        case "tiktok":
-            return "#000000"; 
-        case "twitchcasting":
-        case "twitcasting":
-            return "#00B7FF"; // TwitCasting Blue
-        case "tradingview":
-            return "#2962FF"; 
-        case "zoom":
-            return "#2D8CFF"; // Zoom Blue
-        case "cozy":
-            return "#FF8989"; 
-        case "facebookgaming":
-        case "fb.gg":
-            return "#1877F2"; // same as Facebook
-        case "openai":
-            return "#00A67E"; // OpenAI’s older primary green (or #8B5CF6 from new branding)
-        
-        // Lesser-known platforms: best guesses from logos or branding
-        case "afreecatv":
-            return "#0055C9"; 
-        case "arena":
-            return "#A200FF";
-        case "bandlab":
-            return "#FF0000";
-        case "beamstream":
-            return "#00A4C6";
-        case "bigo":
-            return "#2EC1D3";
-        case "bilibili":
-            return "#00A1D6";
-        case "bmac": // Buy Me A Coffee?
-            return "#FFDD00";
-        case "boltplus":
-            return "#FFCC00";
-        case "buzzit":
-            return "#FFC300";
-        case "castr":
-            return "#0C0D6A";
-        case "cbox":
-            return "#D9763E";
-        case "chatroll":
-            return "#2196F3";
-        case "cherrytv":
-            return "#FF6C6C";
-        case "chime":
-            return "#2F3C5C";
-        case "chzzk":
-            return "#00CCEE";
-        case "cloudhub":
-            return "#1A82D2";
-        case "crowdcast":
-            return "#F15E59";
-        case "estrim":
-            return "#00A8E6";
-        case "fc2":
-            return "#FF0000";
-        case "floatplane":
-            return "#1E90FF";
-        case "gala":
-            return "#FF3700";
-        case "generic":
-            return "#CCCCCC";
-        case "jaco":
-            return "#F7701D";
-        case "kiwiirc":
-            return "#1AB7EA";
-        case "kofi":
-            return "#29ABE0";
-        case "livepush":
-            return "#00B2FF";
-        case "livestorm":
-            return "#7C4DFF";
-        case "livestream":
-            return "#E41B13";
-        case "locals":
-            return "#999999";
-        case "loco":
-            return "#2C2D2E";
-        case "meet":
-            return "#00897B";
-        case "meetme":
-            return "#65398F";
-        case "megaphonetv":
-            return "#000000";
-        case "minnit":
-            return "#3AA757";
-        case "mixcloud":
-            return "#273A5C";
-        case "mixlr":
-            return "#ED5553";
-        case "nicovideo":
-            return "#000000";
-        case "nimo":
-            return "#F34C4C";
-        case "noice":
-            return "#F3F3F3";
-        case "nonolive":
-            return "#FF3E53";
-        case "on24":
-            return "#0072C6";
-        case "openstreamingplatform":
-            return "#444444";
-        case "owncast":
-            return "#9147FF"; // Similar to Twitch purple
-        case "parti":
-            return "#FFD700";
-        case "peertube":
-            return "#FF9900";
-        case "picarto":
-            return "#00B0FF";
-        case "piczel":
-            return "#FF5555";
-        case "pilled":
-            return "#A80000";
-        case "quickchannel":
-            return "#1E73BE";
-        case "riverside":
-            return "#181EDD";
-        case "rokfin":
-            return "#1997F0";
-        case "roll20":
-            return "#A4478E";
-        case "rooter":
-            return "#FF5500";
-        case "rumble":
-            return "#19A463";
-        case "rutube":
-            return "#000000";
-        case "sessions":
-            return "#4D9F0C";
-        case "shareplay":
-            return "#0FACF3";
-        case "slack":
-            return "#611F69";
-        case "slido":
-            return "#4A8C64";
-        case "socialstream":
-            return "#BADA55";
-        case "sooplive":
-        case "soopliveco":
-            return "#FF66CC";
-        case "stageten":
-            return "#FF9800";
-        case "threads":
-            return "#000000";
-        case "vdoninja":
-            return "#000000";
-        case "vk":
-        case "vkvideo":
-            return "#4A76A8";
-        case "vkplay":
-            return "#0077EE";
-        case "wavevideo":
-            return "#41B6E6";
-        case "webex":
-            return "#00A478";
-        case "webinargeek":
-            return "#FA6400";
-        case "whatnot":
-            return "#FFD300";
-        case "wix":
-            return "#0C6EFA";
-        case "x": // formerly Twitter as "X"
-            return "#000000";
-        case "younow":
-            return "#2DC100";
-        case "zapstream":
-            return "#663399";
-		case "":
-		case undefined:
-		case null:
-			"#CCCCCC";
-        default:
-            // Fallback for unknown sources
-            return getColorFromName(source)
-    }
-}
 
 
-// Utility function: Hex to RGB
-function hexToRgb(hex) {
-    // Remove leading '#'
-    hex = hex.replace(/^#/, '');
-    let bigint = parseInt(hex, 16);
-    let r = (bigint >> 16) & 255;
-    let g = (bigint >> 8) & 255;
-    let b = bigint & 255;
-    return {r, g, b};
-}
 
-// Utility function: RGB to Hex
-function rgbToHex(r, g, b) {
-    return "#" + [r, g, b].map(x => {
-        const hexVal = x.toString(16);
-        return hexVal.length === 1 ? '0' + hexVal : hexVal;
-    }).join('');
-}
 
-// Utility function: RGB to HSL
-function rgbToHsl(r, g, b) {
-    r /= 255; g /= 255; b /= 255;
-    let max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
 
-    if (max === min) {
-        h = s = 0; // achromatic
-    } else {
-        let d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-            case g: h = (b - r) / d + 2; break;
-            case b: h = (r - g) / d + 4; break;
-        }
-        h /= 6;
-    }
-
-    return {h, s, l};
-}
-
-// Utility function: HSL to RGB
-function hslToRgb(h, s, l) {
-    let r, g, b;
-
-    function hue2rgb(p, q, t) {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1/6) return p + (q - p) * 6 * t;
-        if (t < 1/2) return q;
-        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-        return p;
-    }
-
-    if (s === 0) {
-        // achromatic
-        r = g = b = l;
-    } else {
-        let q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        let p = 2 * l - q;
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-    }
-
-    return {
-        r: Math.round(r * 255),
-        g: Math.round(g * 255),
-        b: Math.round(b * 255)
-    };
-}
-
-const colorCache = new Map();
-const MAX_CACHE_SIZE = 1000;
-// This function brightens and slightly desaturates the given hex color
-function adjustColorForOverlay(hexColor) {
-    if (colorCache.has(hexColor)) return colorCache.get(hexColor);
-    
-    const {r, g, b} = hexToRgb(hexColor);
-    let {h, s, l} = rgbToHsl(r, g, b);
-    const lightnessAdjust = 0.2;
-    const saturationAdjust = -0.2;
-    l = Math.min(1, l + lightnessAdjust);
-    s = Math.max(0, s + saturationAdjust);
-    const {r: nr, g: ng, b: nb} = hslToRgb(h, s, l);
-    const result = rgbToHex(nr, ng, nb);
-    
-    if (colorCache.size >= MAX_CACHE_SIZE) {
-        const firstKey = colorCache.keys().next().value;
-        colorCache.delete(firstKey);
-    }
-    
-    colorCache.set(hexColor, result);
-    return result;
-}
-
-function getColorFromName(str) {
-	var out = 0,
-		len = str.length;
-	if (len > 6) {
-		len = 6;
-	}
-
-	if (settings.colorseed) {
-		var seed = parseInt(settings.colorseed.numbersetting) || 1;
-	} else {
-		var seed = 26;
-	}
-
-	for (var pos = 0; pos < len; pos++) {
-		out += (str.charCodeAt(pos) - 64) * Math.pow(seed, len - pos - 1);
-	}
-
-	if (settings.totalcolors) {
-		colours = parseInt(settings.totalcolors.numbersetting);
-		if (colours > 167772) {
-			colours = 167772;
-		} else if (colours < 1) {
-			colours = 1;
-		}
-	} else {
-		colours = 167772;
-	}
-
-	out = parseInt(out % colours); // get modulus
-
-	if (colours === 1) {
-		return "#F00";
-	} else if (colours === 2) {
-		switch (out) {
-			case 0:
-				return "#F00";
-			case 1:
-				return "#00ABFA";
-		}
-	} else if (colours === 3) {
-		switch (out) {
-			case 0:
-				return "#F00";
-			case 1:
-				return "#00A800";
-			case 2:
-				return "#00ABFA";
-		}
-	} else if (colours === 4) {
-		switch (out) {
-			case 0:
-				return "#F00";
-			case 1:
-				return "#FFA500";
-			case 2:
-				return "#00A800";
-			case 3:
-				return "#00ABFA";
-		}
-	} else if (colours === 5) {
-		switch (out) {
-			case 0:
-				return "#F00";
-			case 1:
-				return "#FFA500";
-			case 2:
-				return "#00A800";
-			case 3:
-				return "#00ABFA";
-			case 4:
-				return "#FF39C5";
-		}
-	} else {
-		out = rainbow(out);
-	}
-	return out;
-}
 
 var intervalMessages = {};
 
@@ -2497,10 +1987,23 @@ async function getBTTVEmotes(url = false, type=null, channel=null) {
 	return bttv;
 }
 
-
-async function getSEVENTVEmotes(url = false, type=null, channel=null) {
+async function getKickUserIdByUsername(kickUsername) {
+  try {
+	const response = await fetch(`https://kick.com/api/v2/channels/${kickUsername}`);
+	if (!response.ok) {
+	  throw new Error(`Failed to fetch user data: ${response.status}`);
+	}
+	const data = await response.json();
+	return data.user_id ;
+  } catch (error) {
+	console.error(`Error fetching Kick user ID: ${error.message}`);
+	return null;
+  }
+}
+  
+  
+async function getSEVENTVEmotes(url = false, type=null, channel=null, userID=false) {
 	var seventv = {};
-	var userID = false;
 
 	try {
 		if (type){
@@ -2509,6 +2012,8 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 			type = "youtube";
 		} else if (url && url.includes("twitch.tv/")) {
 			type = "twitch";
+		} else if (url && url.includes("kick.com/")) {
+			type = "kick";
 		}
 
 		if (type == "youtube") {
@@ -2554,7 +2059,7 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 						if (seventv) {
 							if (seventv.emote_set && seventv.emote_set.emotes) {
 								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
 									if ((emote.data && emote.data.flags) || emote.flags) {
 										acc[emote.name] = { url: imageUrl, zw: true };
 									} else {
@@ -2600,7 +2105,6 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 						}
 						const data = await response.json();
 
-						//log(data);
 						if (data && data.data && data.data[0] && data.data[0].id) {
 							userID = data.data[0].id;
 
@@ -2625,7 +2129,7 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 						if (seventv) {
 							if (seventv.emote_set && seventv.emote_set.emotes) {
 								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
 									if ((emote.data && emote.data.flags) || emote.flags) {
 										acc[emote.name] = { url: imageUrl, zw: true };
 									} else {
@@ -2643,6 +2147,64 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 					}
 				} else {
 					log("seventv recovererd from storage");
+				}
+			}
+		} else if (type == "kick") {
+			var username = "";
+			if (channel) {
+				username = channel;
+			} else if (url) {
+				username = url.replace("https://kick.com/", "").split("/")[0].split("?")[0];
+				if (username == "popout"){
+					username = url.replace("https://kick.com/popout/", "").split("/")[0].split("?")[0];
+				}
+			}
+			
+			log("kick username: " + username);
+			if (username) {
+				seventv = getItemWithExpiry("uid2seventv.kick:" + username.toLowerCase());
+				if (!seventv || seventv.message) {
+					seventv = {};
+					userID = userID || localStorage.getItem("kick2uid." + username.toLowerCase());
+					if (!userID) {
+						userID = await getKickUserIdByUsername(username) || false;
+
+						if (userID) {
+							localStorage.setItem("kick2uid." + username.toLowerCase(), userID);
+						}
+					}
+					if (userID) {
+						seventv = await fetch("https://7tv.io/v3/users/kick/" + userID)
+							.then(result => {
+								return result.json();
+							})
+							.then(result => {
+								return result;
+							})
+							.catch(err => {
+								console.error(err);
+							});
+						if (seventv) {
+							if (seventv.emote_set && seventv.emote_set.emotes) {
+								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+									if ((emote.data && emote.data.flags) || emote.flags) {
+										acc[emote.name] = { url: imageUrl, zw: true };
+									} else {
+										acc[emote.name] = imageUrl;
+									}
+									return acc;
+								}, {});
+							}
+
+							setItemWithExpiry("uid2seventv.kick:" + username.toLowerCase(), seventv);
+						} else {
+							seventv = {};
+						}
+						log("KICK SEVENTV", seventv);
+					}
+				} else {
+					log("kick seventv recovered from storage");
 				}
 			}
 		}
@@ -2663,7 +2225,7 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 					});
 				if (Globalseventv && Globalseventv.emotes) {
 					Globalseventv = Globalseventv.emotes.reduce((acc, emote) => {
-						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`; // https://cdn.7tv.app/emote/63f11c0d5dccf65d6e8d13ff/4x.webp
+						const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
 						if (emote.flags) {
 							acc[emote.name] = { url: imageUrl, zw: true };
 						} else {
@@ -2686,7 +2248,6 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null) {
 		seventv.url = url;
 		seventv.type = type;
 		seventv.user = userID;
-		//log(Globalseventv);
 	} catch (e) {
 		console.error(e);
 	}
@@ -3450,6 +3011,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.seventv) {
 					clearAllWithPrefix("uid2seventv.twitch:");
 					clearAllWithPrefix("uid2seventv.youtube:");
+					clearAllWithPrefix("uid2seventv.kick:");
 					await getSEVENTVEmotes();
 				}
 				pushSettingChange();
@@ -3611,7 +3173,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			//console.log("getSEVENTV");
 			sendResponse({ state: isExtensionOn });
 			if (sender.tab.url) {
-				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
 					//	//console.logsender);
 					//	//console.logSEVENTV2);
@@ -4042,9 +3604,9 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.randomcolor && message && !message.nameColor && message.chatname) {
-			message.nameColor = getColorFromName(message.chatname);
+			message.nameColor = getColorFromName(message.chatname, settings);
 		} else if (settings.randomcolorall && message && message.chatname) {
-			message.nameColor = getColorFromName(message.chatname);
+			message.nameColor = getColorFromName(message.chatname, settings);
 		} else if (settings.colorofsource && message && message.chatname) {
 			message.nameColor = getColorFromType(message.type);
 		}
@@ -4235,98 +3797,117 @@ function escapeHtml(unsafe) {
 }
 
 function sendToH2R(data) {
-	if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting) {
-		try {
-			var postServer = "http://127.0.0.1:4001/data/";
-
-			if (settings.h2rserver.textsetting.startsWith("http")) {
-				// full URL provided
-				postServer = settings.h2rserver.textsetting;
-			} else if (settings.h2rserver.textsetting.startsWith("127.0.0.1")) {
-				// missing the HTTP, so assume what they mean
-				postServer = "http://" + settings.h2rserver.textsetting;
-			} else {
-				postServer += settings.h2rserver.textsetting; // Just going to assume they gave the token
-			}
-
-			var msg = {};
-
-			if ("id" in data) {
-				msg.id = data.id;
-			}
-
-			if (data.timestamp) {
-				msg.timestamp = data.timestamp;
-			}
-
-			if (!data.textonly) {
-				data.chatmessage = unescapeHtml(data.chatmessage);
-			}
-
-			msg.snippet = {};
-			msg.snippet.displayMessage = data.chatmessage.replace(/(<([^>]+)>)/gi, "") || "";
-
-			if (!msg.snippet.displayMessage) {
-				return;
-			}
-
-			msg.authorDetails = {};
-			msg.authorDetails.displayName = data.chatname || "";
-
-			if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
-				msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
-			} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
-				let chatimg = data.chatimg.replace("=s32-", "=s256-");
-				msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
-			} else {
-				msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
-			}
-
-			if (data.type && data.sourceImg && data.type == "restream") {
-				msg.platform = {};
-				msg.platform.name = data.type || "";
-				if (data.sourceImg === "restream.png") {
-					msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.sourceImg;
-				} else {
-					msg.platform.logoUrl = data.sourceImg;
-				}
-			} else if (data.type) {
-				msg.platform = {};
-				msg.platform.name = data.type || "";
-				msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
-			}
-
-			var h2r = {};
-			h2r.messages = [];
-			h2r.messages.push(msg);
-			ajax(h2r, postServer, "POST");
-		} catch (e) {
-			console.warn(e);
-		}
-	}
+    if (settings.h2r && settings.h2rserver && settings.h2rserver.textsetting) {
+        try {
+            var postServer = "http://127.0.0.1:4001/data/";
+            if (settings.h2rserver.textsetting.startsWith("http")) {
+                // full URL provided
+                postServer = settings.h2rserver.textsetting;
+            } else if (settings.h2rserver.textsetting.startsWith("127.0.0.1")) {
+                // missing the HTTP, so assume what they mean
+                postServer = "http://" + settings.h2rserver.textsetting;
+            } else {
+                postServer += settings.h2rserver.textsetting; // Just going to assume they gave the token
+            }
+            var msg = {};
+            if ("id" in data) {
+                msg.id = data.id;
+            }
+            if (data.timestamp) {
+                msg.timestamp = data.timestamp;
+            }
+            if (!data.textonly) {
+                data.chatmessage = unescapeHtml(data.chatmessage);
+            }
+            msg.snippet = {};
+            msg.snippet.displayMessage = sanitizeRelay(data.chatmessage, data.textonly) || "";
+            if (!msg.snippet.displayMessage) {
+                return;
+            }
+            msg.authorDetails = {};
+            msg.authorDetails.displayName = data.chatname || "";
+            if (data.type && (data.type == "twitch") && !data.chatimg && data.chatname) {
+                msg.authorDetails.profileImageUrl = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+            } else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
+                let chatimg = data.chatimg.replace("=s32-", "=s256-");
+                msg.authorDetails.profileImageUrl = chatimg.replace("=s64-", "=s256-");
+            } else {
+                msg.authorDetails.profileImageUrl = data.chatimg || "https://socialstream.ninja/sources/images/unknown.png";
+            }
+            if (data.type && data.sourceImg && data.type == "restream") {
+                msg.platform = {};
+                msg.platform.name = data.type || "";
+                if (data.sourceImg === "restream.png") {
+                    msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.sourceImg;
+                } else {
+                    msg.platform.logoUrl = data.sourceImg;
+                }
+            } else if (data.type) {
+                msg.platform = {};
+                msg.platform.name = data.type || "";
+                msg.platform.logoUrl = "https://socialstream.ninja/sources/images/" + data.type + ".png";
+            }
+            var h2r = {};
+            h2r.messages = [];
+            h2r.messages.push(msg);
+            ajax(h2r, postServer, "POST");
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+}
+function sanitizeRelay(text, textonly=false, alt = false) {
+    if (!text || !text.trim()) {
+        return alt || text;
+    }
+    
+    // Extract all emojis from image alt attributes before stripping HTML
+    const emojiMap = new Map();
+    if (!textonly) {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = text;
+        
+        // Collect all image elements with alt text that appears to be an emoji
+        const imgElements = tempDiv.querySelectorAll('img');
+        imgElements.forEach((img, index) => {
+            const altText = img.getAttribute('alt');
+            if (altText && isEmoji(altText)) {
+                const placeholder = `__EMOJI_PLACEHOLDER_${index}__`;
+                emojiMap.set(placeholder, altText);
+                img.outerHTML = placeholder;
+            }
+        });
+        
+        // Get the potentially modified HTML
+        text = tempDiv.innerHTML;
+        
+        // Convert to text from html
+        var textArea = document.createElement('textarea');
+        textArea.innerHTML = text;
+        text = textArea.value;
+    }
+    
+    // Strip HTML and other unwanted characters
+    text = text.replace(/(<([^>]+)>)/gi, "");
+    text = text.replace(/[!#@]/g, "");
+    text = text.replace(/cheer\d+/gi, " ");
+    text = text.replace(/\.(?=\S(?!$))/g, " ");
+    
+    // Replace all emoji placeholders with their actual emojis
+    emojiMap.forEach((emoji, placeholder) => {
+        text = text.replace(placeholder, emoji);
+    });
+    
+    if (!text.trim() && alt) {
+        return alt;
+    }
+    return text.trim();
 }
 
-
-function sanitizeRelay(text, textonly=false, alt = false) {
-	if (!text.trim()) {
-		return text;
-	}
-	if (!textonly){
-		// convert to text from html if not text only mode
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = text;
-		text = textArea.value;
-	}
-	
-	text = text.replace(/(<([^>]+)>)/gi, "");
-	text = text.replace(/[!#@]/g, "");
-	text = text.replace(/cheer\d+/gi, " ");
-	text = text.replace(/\.(?=\S(?!$))/g, " ");
-	
-	if (!text.trim() && alt) {
-		return alt;
-	}
-	return text;
+// Add the isEmoji function from your original code
+function isEmoji(char) {
+    const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+    return emojiRegex.test(char);
 }
 
 const messageStore = {};
@@ -5592,6 +5173,8 @@ function setupSocket() {
 			if (data.target && (data.target==='null')){
 				data.target = "";
 			}
+			
+			console.log(data.kofi);
 
 			if (data.action && data.action === "sendChat" && data.value) {
 				var msg = {};
@@ -5688,6 +5271,329 @@ function setupSocket() {
 				} catch (e) {
 					console.error(e);
 				}
+			} else if ("stripe" in data) {
+				try {
+					if (data.stripe.type !== "checkout.session.completed") {
+						return false;
+					}
+					
+					console.log(data.stripe);
+
+					var message = {};
+					message.chatname = "";
+					message.chatmessage = "";
+					
+					var foundCustomField = false;
+
+					data.stripe.data.object.custom_fields.forEach(xx => {
+						if (xx.key == "displayname") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (typeof xx.key === 'string' && xx.key.toLowerCase() == "pseudo") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (xx.key == "tonpseudo") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (xx.key == "username") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (xx.key == "message") {
+							message.chatmessage = xx.text.value;
+							
+						} else if (xx.key == "messagetchat") {
+							message.chatmessage = xx.text.value;
+							
+						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "display name") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "name") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (!message.chatmessage && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "message") {
+							message.chatmessage = xx.text.value;
+							
+						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "pseudo") {
+							message.chatname = xx.text.value;
+							foundCustomField = true;
+							
+						} else if (!message.chatname && xx.key && typeof xx.key === 'string' && xx.key.toLowerCase() == "name") {
+							foundCustomField = true;
+							if (xx.text && xx.text.value && typeof xx.text.value === 'string' ){
+								message.chatname = xx.text.value;
+							}
+						}
+					});
+					
+					if (!foundCustomField){
+						console.warn("No custom name / custom display-name field found. We will skip this incoming stripe api webhook");
+						return;
+					}
+
+					var currency = "";
+
+					try {
+						currency = data.stripe.data.object.currency.toLowerCase() || "";
+					} catch (e) {
+						console.error(e);
+					}
+
+					var symbol = {};
+					if (currency && currency in Currencies) {
+						symbol = Currencies[currency];
+						if (symbol.d) {
+							data.stripe.data.object.amount_total = parseFloat(data.stripe.data.object.amount_total) / Math.pow(10, parseInt(symbol.d));
+						}
+					}
+
+					if (data.stripe.data.object.amount_total) {
+						try {
+							if (symbol.s && (data.stripe.data.object.currency.toUpperCase() == "EUR")){
+								message.hasDonation = (symbol.s || "") + (data.stripe.data.object.amount_total || "");
+							} else {
+								message.hasDonation = (symbol.s || "") + (data.stripe.data.object.amount_total || "") + " " + (data.stripe.data.object.currency.toUpperCase() || "");
+							}
+							message.hasDonation = message.hasDonation.trim();
+						} catch (e) {
+							console.error(e);
+						}
+					}
+					message.id = parseInt(Math.random() * 100000 + 1000000);
+					message.chatbadges = "";
+					message.backgroundColor = "";
+					message.textColor = "";
+					message.nameColor = "";
+					message.chatimg = "";
+					message.membership = "";
+					message.contentimg = "";
+					message.type = "stripe";
+
+					data = message; // replace inbound stripe message with new message
+					
+					try {
+						data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+						
+						if (data){
+							try {
+								data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+							} catch (e) {
+								console.warn(e);
+							}
+							
+							if (data) {
+								resp = await sendToDestinations(data);
+							}
+						}
+					} catch (e) {
+						console.error(e);
+					}
+					
+				} catch (e) {
+					console.error(e);
+					return;
+				}
+			} else if ("kofi" in data) {
+				try {
+					
+					if (!data.kofi.data) {
+						return false;
+					}
+					try {
+						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
+					} catch (e) {
+						console.error(e);
+						return;
+					}
+
+					if (kofi.type !== "Donation") {
+						return false;
+					} else if (!kofi.is_public) {
+						return false;
+					}
+
+					var message = {};
+					message.chatname = decodeURIComponent(kofi.from_name) || "Anonymous";
+					message.chatmessage = decodeURIComponent(kofi.message);
+
+					var currency = "";
+
+					try {
+						currency = kofi.currency.toLowerCase() || "";
+					} catch (e) {}
+
+					var symbol = {};
+					if (currency && currency in Currencies) {
+						symbol = Currencies[currency];
+					}
+
+					if (kofi.amount) {
+						message.hasDonation = (symbol.s || "") + (kofi.amount || "") + " " + (kofi.currency.toUpperCase() || "");
+						message.hasDonation = message.hasDonation.trim();
+					}
+					message.id = parseInt(Math.random() * 100000 + 1000000);
+					message.chatbadges = "";
+					message.backgroundColor = "";
+					message.textColor = "";
+					message.nameColor = "";
+					message.chatimg = "";
+					message.membership = "";
+					message.contentimg = "";
+					message.type = "kofi";
+
+					data = message; // replace inbound stripe message with new message
+					
+					try {
+						data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+						
+						if (data){
+							try {
+								data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+							} catch (e) {
+								console.warn(e);
+							}
+							
+							if (data) {
+								resp = await sendToDestinations(data);
+							}
+						}
+					} catch (e) {
+						console.error(e);
+					}
+				} catch (e) {
+					console.error(e);
+					return;
+				}
+
+			
+			} else if ("bmac" in data) { // Buy Me a Coffe New Membership and Donation detection 
+				try {
+					if (!data.bmac) {
+						return false;
+					}
+					else {
+						var bmac = data.bmac; 
+						var message = {};
+						if (bmac.type === "membership.started") {
+							message.chatname = bmac.data.supporter_name || "Anonymous"; 
+							message.chatmessage = bmac.data.support_note.trim(); 
+							//We use the donation badge from Kofi to feature the membership level name
+							message.hasDonation = bmac.data.membership_level_name; 
+					
+						}
+						if (bmac.type === "donation.created") {
+							var currency = "";
+							try {
+								currency = kofi.currency.toLowerCase() || "";
+							} catch (e) {}
+
+							var symbol = {};
+							if (currency && currency in Currencies) {
+								symbol = Currencies[currency];
+							}		
+							message.chatmessage = (bmac.data.message + " - " + "<em>" + bmac.data.support_note + "</em>").trim();
+							message.hasDonation = (symbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
+							message.hasDonation = message.hasDonation.trim();			
+						}
+						message.contentimg = "";
+						message.id = parseInt(Math.random() * 100000 + 1000000);
+						message.chatbadges = "";
+						message.backgroundColor = "";
+						message.textColor = "";
+						message.nameColor = "";
+						message.chatimg = "";
+						message.membership = "";
+						message.type = "bmac";
+						data = message; // replace inbound stripe message with new message
+					
+						try {
+							data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+							
+							if (data){
+								try {
+									data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+								} catch (e) {
+									console.warn(e);
+								}
+								
+								if (data) {
+									resp = await sendToDestinations(data);
+								}
+							}
+						} catch (e) {
+							console.error(e);
+						}
+
+					} 
+				} catch (e) {
+					return;
+				}	
+			} else if ("fourthwall" in data) { // Dorthwall
+			  try {
+				if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
+				  return false;
+				}
+				
+				const fourthwallData = data.fourthwall.data;
+				
+				var message = {};
+				message.chatname = fourthwallData.username || 
+								   (fourthwallData.billing?.address?.name || "Anonymous");
+				message.chatmessage = fourthwallData.message || "";
+				
+				var currency = "";
+				try {
+				  currency = fourthwallData.amounts.total.currency.toLowerCase() || "";
+				} catch (e) {
+				  console.error(e);
+				}
+				
+				var symbol = {};
+				if (currency && currency in Currencies) {
+				  symbol = Currencies[currency];
+				}
+				
+				if (fourthwallData.amounts && fourthwallData.amounts.total) {
+				  message.hasDonation = (symbol.s || "") + 
+									   (fourthwallData.amounts.total.value || "") + 
+									   " " + (fourthwallData.amounts.total.currency || "");
+				  message.hasDonation = message.hasDonation.trim();
+				}
+				
+				// Add product info to the subtitle
+				if (fourthwallData.offers && fourthwallData.offers.length) {
+				  let productInfo = [];
+				  fourthwallData.offers.forEach(offer => {
+					if (offer.name && offer.variant && offer.variant.quantity) {
+					  productInfo.push(`${offer.variant.quantity}× ${offer.name}`);
+					}
+				  });
+				  
+				  if (productInfo.length) {
+					message.subtitle = productInfo.join(", ");
+				  }
+				}
+				
+				message.id = parseInt(Math.random() * 100000 + 1000000);
+				message.chatbadges = "";
+				message.backgroundColor = "";
+				message.textColor = "";
+				message.nameColor = "";
+				message.chatimg = "";
+				message.membership = "";
+				message.contentimg = "";
+				message.type = "fourthwall";
+				
+				data = message; // replace inbound fourthwall message with new message
+			  } catch (e) {
+				console.error(e);
+				return;
+			  }
 			}
 
 			if (typeof resp == "object") {
@@ -7942,27 +7848,7 @@ function createTab(url) {
 }
 
 
-function sanitizeRelay(text, textonly=false, alt = false) {
-	if (!text.trim()) {
-		return text;
-	}
-	if (!textonly){
-		// convert to text from html if not text only mode
-		var textArea = document.createElement('textarea');
-		textArea.innerHTML = text;
-		text = textArea.value;
-	}
-	
-	text = text.replace(/(<([^>]+)>)/gi, "");
-	text = text.replace(/[!#@]/g, "");
-	text = text.replace(/cheer\d+/gi, " ");
-	text = text.replace(/\.(?=\S(?!$))/g, " ");
-	
-	if (!text.trim() && alt) {
-		return alt;
-	}
-	return text;
-}
+
 
 const commandLastExecuted = {};
 /* 
@@ -8036,6 +7922,66 @@ try {
 } catch(e){}
 
  */
+ 
+class HostMessageFilter {
+  constructor() {
+    this.messages = new Map();
+    this.expireTime = 60000; // 20 seconds in milliseconds
+  }
+
+  sanitizeMessage(message) {
+    if (!message || typeof message !== 'string') return '';
+    
+    // Strip HTML tags and normalize whitespace
+    return message.replace(/<\/?[^>]+(>|$)/g, "")
+      .replace(/\s\s+/g, " ")
+      .trim();
+  }
+
+  isHostDuplicate(message) {
+    if (!message || !message.host) return false;
+    
+    const currentTime = Date.now();
+    
+    // Determine message content based on available fields
+    let messageContent = '';
+    if (message.textonly) {
+      messageContent = message.textonly;
+    } else if (message.chatmessage !== undefined) {
+      messageContent = this.sanitizeMessage(message.chatmessage);
+    } else if (message.hasDonation || (message.membership && message.event)) {
+      // Handle empty messages with special events
+      messageContent = `${message.hasDonation ? 'donation' : ''}${message.membership && message.event ? 'membership' : ''}`;
+    }
+    
+    // Clean up expired messages
+    this.cleanUp(currentTime);
+    
+    // Check if this is a duplicate
+    for (const [existingContent, timestamp] of this.messages.entries()) {
+      if (messageContent === existingContent && (currentTime - timestamp < this.expireTime)) {
+        return true;
+      }
+    }
+    
+    // Not a duplicate, store this message
+    this.messages.set(messageContent, currentTime);
+    return false;
+  }
+
+  cleanUp(currentTime) {
+    for (const [content, timestamp] of this.messages.entries()) {
+      if (currentTime - timestamp > this.expireTime) {
+        this.messages.delete(content);
+      }
+    }
+  }
+}
+
+// Create an instance
+const hostMessageFilter = new HostMessageFilter();
+
+
 const patterns = {
 	botReply: {
 	  prefixes: ['botReplyMessageEvent', 'botReplyMessageCommand', 'botReplyMessageValue', 'botReplyMessageTimeout', 'botReplyMessageSource', 'botReplyAll'],
@@ -8095,6 +8041,7 @@ async function applyBotActions(data, tab = false) {
 		if (altSourceType == "youtubeshorts"){
 			altSourceType = "youtube";
 		}
+
 		
 		if (settings.blacklistuserstoggle && settings.blacklistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
@@ -8219,15 +8166,17 @@ async function applyBotActions(data, tab = false) {
 			return false;
 		}
 		
-		if (data.host && data.reflection && data.nohostreflections){
+		if (data.host && data.reflection && settings.nohostreflections){
+			return false;
+		}
+		
+		if (settings.hostFirstSimilarOnly && data.host && hostMessageFilter.isHostDuplicate(data)) {
 			return false;
 		}
 		
 		if (data.host && data.chatname && settings.hidehostnamesext) {
 			data.chatname = "";
 		}
-		
-
 		
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
@@ -8324,6 +8273,18 @@ async function applyBotActions(data, tab = false) {
 			data.timestamp = Date.now();
 		}
 		
+		
+		if (settings.normalizeText && data.chatmessage){
+			data.chatmessage = normalizeText(data.chatmessage, data.textonly || false)
+		}
+		
+		if (settings.firsttimers && data.chatname && data.type){
+			let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
+			if (!exists){
+				data.firsttime = true;
+				console.log("First timer");
+			}
+		}
 		
 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {
 			////console.log".");
@@ -9272,23 +9233,40 @@ if (chrome.action && chrome.action.setIcon){
 	chrome.action.setIcon({ path: "/icons/off.png" });
 }
 
-async function fetchData(url) {
-	try {
-		const response = await fetch(url);
-		if (!response.ok) {
-			return false;
-		}
-		return await response.json();
-	} catch (error) {
-		return false;
-	}
+async function fetchData(url, useLocalFs = false) {
+  try {
+    // Use local file system if explicitly requested or if in Electron and path is local
+    if ((useLocalFs || (isSSAPP && !url.startsWith('http'))) && isSSAPP) {
+      const fs = require('fs');
+      const path = require('path');
+      
+      try {
+        const filePath = path.join(__dirname, url);
+        const data = fs.readFileSync(filePath, 'utf8');
+        return JSON.parse(data);
+      } catch (fsError) {
+        return false;
+      }
+    } else {
+      // Use standard fetch for remote resources or when local access not requested
+      const response = await fetch(url);
+      if (!response.ok) {
+        return false;
+      }
+      return await response.json();
+    }
+  } catch (error) {
+    return false;
+  }
 }
 
+// Example usage in window.onload:
 window.onload = async function () {
-    let programmedSettings = await fetchData("settings.json");
-    if (programmedSettings && typeof programmedSettings === "object") {
-        log("Loading override settings via settongs.json");
-        loadSettings(programmedSettings, true);
+	// Pass true as second parameter to force local file system in Electron
+	let programmedSettings = await fetchData("settings.json", true);
+	if (programmedSettings && typeof programmedSettings === "object") {
+		log("Loading override settings via settings.json");
+		loadSettings(programmedSettings, true);
     } else {
         log("Loading settings from the main file into the background.js");
         chrome.storage.sync.get(properties, function (item) {
@@ -9340,2278 +9318,6 @@ window.onload = async function () {
         });
     }
 };
-
-var jokes = [
-	// jokes from reddit; sourced from github.
-	{
-		id: 1,
-		type: "general",
-		setup: "What did the fish say when it hit the wall?",
-		punchline: "Dam."
-	},
-	{
-		id: 2,
-		type: "general",
-		setup: "How do you make a tissue dance?",
-		punchline: "You put a little boogie on it."
-	},
-	{
-		id: 3,
-		type: "general",
-		setup: "What's Forrest Gump's password?",
-		punchline: "1Forrest1"
-	},
-	{
-		id: 4,
-		type: "general",
-		setup: "What do you call a belt made out of watches?",
-		punchline: "A waist of time."
-	},
-	{
-		id: 5,
-		type: "general",
-		setup: "Why can't bicycles stand on their own?",
-		punchline: "They are two tired"
-	},
-	{
-		id: 6,
-		type: "general",
-		setup: "How does a train eat?",
-		punchline: "It goes chew, chew"
-	},
-	{
-		id: 7,
-		type: "general",
-		setup: "What do you call a singing Laptop",
-		punchline: "A Dell"
-	},
-	{
-		id: 8,
-		type: "general",
-		setup: "How many lips does a flower have?",
-		punchline: "Tulips"
-	},
-	{
-		id: 9,
-		type: "general",
-		setup: "How do you organize an outer space party?",
-		punchline: "You planet"
-	},
-	{
-		id: 10,
-		type: "general",
-		setup: "What kind of shoes does a thief wear?",
-		punchline: "Sneakers"
-	},
-	{
-		id: 11,
-		type: "general",
-		setup: "What's the best time to go to the dentist?",
-		punchline: "Tooth hurty."
-	},
-	{
-		id: 12,
-		type: "knock-knock",
-		setup: "Knock knock. \n Who's there? \n A broken pencil. \n A broken pencil who?",
-		punchline: "Never mind. It's pointless."
-	},
-	{
-		id: 13,
-		type: "knock-knock",
-		setup: "Knock knock. \n Who's there? \n Cows go. \n Cows go who?",
-		punchline: "No, cows go moo."
-	},
-	{
-		id: 14,
-		type: "knock-knock",
-		setup: "Knock knock. \n Who's there? \n Little old lady. \n Little old lady who?",
-		punchline: "I didn't know you could yodel!"
-	},
-	{
-		id: 15,
-		type: "programming",
-		setup: "What's the best thing about a Boolean?",
-		punchline: "Even if you're wrong, you're only off by a bit."
-	},
-	{
-		id: 16,
-		type: "programming",
-		setup: "What's the object-oriented way to become wealthy?",
-		punchline: "Inheritance"
-	},
-	{
-		id: 17,
-		type: "programming",
-		setup: "Where do programmers like to hangout?",
-		punchline: "The Foo Bar."
-	},
-	{
-		id: 18,
-		type: "programming",
-		setup: "Why did the programmer quit his job?",
-		punchline: "Because he didn't get arrays."
-	},
-	{
-		id: 19,
-		type: "general",
-		setup: "Did you hear about the two silk worms in a race?",
-		punchline: "It ended in a tie."
-	},
-	{
-		id: 20,
-		type: "general",
-		setup: "What do you call a laughing motorcycle?",
-		punchline: "A Yamahahahaha."
-	},
-	{
-		id: 21,
-		type: "general",
-		setup: "A termite walks into a bar and says...",
-		punchline: "'Where is the bar tended?'"
-	},
-	{
-		id: 22,
-		type: "general",
-		setup: "What does C.S. Lewis keep at the back of his wardrobe?",
-		punchline: "Narnia business!"
-	},
-	{
-		id: 23,
-		type: "programming",
-		setup: "Why do programmers always mix up Halloween and Christmas?",
-		punchline: "Because Oct 31 == Dec 25"
-	},
-	{
-		id: 24,
-		type: "programming",
-		setup: "A SQL query walks into a bar, walks up to two tables and asks...",
-		punchline: "'Can I join you?'"
-	},
-	{
-		id: 25,
-		type: "programming",
-		setup: "How many programmers does it take to change a lightbulb?",
-		punchline: "None that's a hardware problem"
-	},
-	{
-		id: 26,
-		type: "programming",
-		setup: "If you put a million monkeys at a million keyboards, one of them will eventually write a Java program",
-		punchline: "the rest of them will write Perl"
-	},
-	{
-		id: 27,
-		type: "programming",
-		setup: "['hip', 'hip']",
-		punchline: "(hip hip array)"
-	},
-	{
-		id: 28,
-		type: "programming",
-		setup: "To understand what recursion is...",
-		punchline: "You must first understand what recursion is"
-	},
-	{
-		id: 29,
-		type: "programming",
-		setup: "There are 10 types of people in this world...",
-		punchline: "Those who understand binary and those who don't"
-	},
-	{
-		id: 30,
-		type: "general",
-		setup: "What did the duck say when he bought lipstick?",
-		punchline: "Put it on my bill"
-	},
-	{
-		id: 31,
-		type: "general",
-		setup: "What happens to a frog's car when it breaks down?",
-		punchline: "It gets toad away"
-	},
-	{
-		id: 32,
-		type: "general",
-		setup: "did you know the first French fries weren't cooked in France?",
-		punchline: "they were cooked in Greece"
-	},
-	{
-		id: 33,
-		type: "programming",
-		setup: "Which song would an exception sing?",
-		punchline: "Can't catch me - Avicii"
-	},
-	{
-		id: 34,
-		type: "knock-knock",
-		setup: "Knock knock. \n Who's there? \n Opportunity.",
-		punchline: "That is impossible. Opportunity doesn’t come knocking twice!"
-	},
-	{
-		id: 35,
-		type: "programming",
-		setup: "Why do Java programmers wear glasses?",
-		punchline: "Because they don't C#"
-	},
-	{
-		id: 36,
-		type: "general",
-		setup: "Why did the mushroom get invited to the party?",
-		punchline: "Because he was a fungi."
-	},
-	{
-		id: 37,
-		type: "general",
-		setup: "Why did the mushroom get invited to the party?",
-		punchline: "Because he was a fungi."
-	},
-	{
-		id: 38,
-		type: "general",
-		setup: "I'm reading a book about anti-gravity...",
-		punchline: "It's impossible to put down"
-	},
-	{
-		id: 39,
-		type: "general",
-		setup: "If you're American when you go into the bathroom, and American when you come out, what are you when you're in there?",
-		punchline: "European"
-	},
-	{
-		id: 40,
-		type: "general",
-		setup: "Want to hear a joke about a piece of paper?",
-		punchline: "Never mind...it's tearable"
-	},
-	{
-		id: 41,
-		type: "general",
-		setup: "I just watched a documentary about beavers.",
-		punchline: "It was the best dam show I ever saw"
-	},
-	{
-		id: 42,
-		type: "general",
-		setup: "If you see a robbery at an Apple Store...",
-		punchline: "Does that make you an iWitness?"
-	},
-	{
-		id: 43,
-		type: "general",
-		setup: "A ham sandwhich walks into a bar and orders a beer. The bartender says...",
-		punchline: "I'm sorry, we don't serve food here"
-	},
-	{
-		id: 44,
-		type: "general",
-		setup: "Why did the Clydesdale give the pony a glass of water?",
-		punchline: "Because he was a little horse"
-	},
-	{
-		id: 45,
-		type: "general",
-		setup: "If you boil a clown...",
-		punchline: "Do you get a laughing stock?"
-	},
-	{
-		id: 46,
-		type: "general",
-		setup: "Finally realized why my plant sits around doing nothing all day...",
-		punchline: "He loves his pot."
-	},
-	{
-		id: 47,
-		type: "general",
-		setup: "Don't look at the eclipse through a colander.",
-		punchline: "You'll strain your eyes."
-	},
-	{
-		id: 48,
-		type: "general",
-		setup: "I bought some shoes from a drug dealer.",
-		punchline: "I don't know what he laced them with, but I was tripping all day!"
-	},
-	{
-		id: 49,
-		type: "general",
-		setup: "Why do chicken coops only have two doors?",
-		punchline: "Because if they had four, they would be chicken sedans"
-	},
-	{
-		id: 50,
-		type: "general",
-		setup: "What do you call a factory that sells passable products?",
-		punchline: "A satisfactory"
-	},
-	{
-		id: 51,
-		type: "general",
-		setup: "When a dad drives past a graveyard: Did you know that's a popular cemetery?",
-		punchline: "Yep, people are just dying to get in there"
-	},
-	{
-		id: 52,
-		type: "general",
-		setup: "Why did the invisible man turn down the job offer?",
-		punchline: "He couldn't see himself doing it"
-	},
-	{
-		id: 53,
-		type: "general",
-		setup: "How do you make holy water?",
-		punchline: "You boil the hell out of it"
-	},
-	{
-		id: 54,
-		type: "general",
-		setup: "I had a dream that I was a muffler last night.",
-		punchline: "I woke up exhausted!"
-	},
-	{
-		id: 55,
-		type: "general",
-		setup: "Why is peter pan always flying?",
-		punchline: "Because he neverlands"
-	},
-	{
-		id: 56,
-		type: "programming",
-		setup: "How do you check if a webpage is HTML5?",
-		punchline: "Try it out on Internet Explorer"
-	},
-	{
-		id: 57,
-		type: "general",
-		setup: "What do you call a cow with no legs?",
-		punchline: "Ground beef!"
-	},
-	{
-		id: 58,
-		type: "general",
-		setup: "I dropped a pear in my car this morning.",
-		punchline: "You should drop another one, then you would have a pair."
-	},
-	{
-		id: 59,
-		type: "general",
-		setup: "Lady: How do I spread love in this cruel world?",
-		punchline: "Random Dude: [...💘]"
-	},
-	{
-		id: 60,
-		type: "programming",
-		setup: "A user interface is like a joke.",
-		punchline: "If you have to explain it then it is not that good."
-	},
-	{
-		id: 61,
-		type: "knock-knock",
-		setup: "Knock knock. \n Who's there? \n Hatch. \n Hatch who?",
-		punchline: "Bless you!"
-	},
-	{
-		id: 62,
-		type: "general",
-		setup: "What do you call sad coffee?",
-		punchline: "Despresso."
-	},
-	{
-		id: 63,
-		type: "general",
-		setup: "Why did the butcher work extra hours at the shop?",
-		punchline: "To make ends meat."
-	},
-	{
-		id: 64,
-		type: "general",
-		setup: "Did you hear about the hungry clock?",
-		punchline: "It went back four seconds."
-	},
-	{
-		id: 65,
-		type: "general",
-		setup: "Well...",
-		punchline: "That’s a deep subject."
-	},
-	{
-		id: 66,
-		type: "general",
-		setup: "Did you hear the story about the cheese that saved the world?",
-		punchline: "It was legend dairy."
-	},
-	{
-		id: 67,
-		type: "general",
-		setup: "Did you watch the new comic book movie?",
-		punchline: "It was very graphic!"
-	},
-	{
-		id: 68,
-		type: "general",
-		setup: "I started a new business making yachts in my attic this year...",
-		punchline: "The sails are going through the roof."
-	},
-	{
-		id: 69,
-		type: "general",
-		setup: "I got hit in the head by a soda can, but it didn't hurt that much...",
-		punchline: "It was a soft drink."
-	},
-	{
-		id: 70,
-		type: "general",
-		setup: "I can't tell if i like this blender...",
-		punchline: "It keeps giving me mixed results."
-	},
-	{
-		id: 71,
-		type: "general",
-		setup: "I couldn't get a reservation at the library...",
-		punchline: "They were fully booked."
-	},
-	{
-		id: 72,
-		type: "programming",
-		setup: "I was gonna tell you a joke about UDP...",
-		punchline: "...but you might not get it."
-	},
-	{
-		id: 73,
-		type: "programming",
-		setup: "The punchline often arrives before the set-up.",
-		punchline: "Do you know the problem with UDP jokes?"
-	},
-	{
-		id: 74,
-		type: "programming",
-		setup: "Why do C# and Java developers keep breaking their keyboards?",
-		punchline: "Because they use a strongly typed language."
-	},
-	{
-		id: 75,
-		type: "general",
-		setup: "What do you give to a lemon in need?",
-		punchline: "Lemonaid."
-	},
-	{
-		id: 76,
-		type: "general",
-		setup: "Never take advice from electrons.",
-		punchline: "They are always negative."
-	},
-	{
-		id: 78,
-		type: "general",
-		setup: "Hey, dad, did you get a haircut?",
-		punchline: "No, I got them all cut."
-	},
-	{
-		id: 79,
-		type: "general",
-		setup: "What time is it?",
-		punchline: "I don't know... it keeps changing."
-	},
-	{
-		id: 80,
-		type: "general",
-		setup: 'A weasel walks into a bar. The bartender says, "Wow, I\'ve never served a weasel before. What can I get for you?"',
-		punchline: "Pop,goes the weasel."
-	},
-	{
-		id: 81,
-		type: "general",
-		setup: "Bad at golf?",
-		punchline: "Join the club."
-	},
-	{
-		id: 82,
-		type: "general",
-		setup: "Can a kangaroo jump higher than the Empire State Building?",
-		punchline: "Of course. The Empire State Building can't jump."
-	},
-	{
-		id: 83,
-		type: "general",
-		setup: "Can February march?",
-		punchline: "No, but April may."
-	},
-	{
-		id: 84,
-		type: "general",
-		setup: "Can I watch the TV?",
-		punchline: "Yes, but don’t turn it on."
-	},
-	{
-		id: 85,
-		type: "general",
-		setup: "Dad, can you put my shoes on?",
-		punchline: "I don't think they'll fit me."
-	},
-	{
-		id: 86,
-		type: "general",
-		setup: "Did you hear about the bread factory burning down?",
-		punchline: "They say the business is toast."
-	},
-	{
-		id: 87,
-		type: "general",
-		setup: "Did you hear about the chameleon who couldn't change color?",
-		punchline: "They had a reptile dysfunction."
-	},
-	{
-		id: 88,
-		type: "general",
-		setup: "Did you hear about the cheese factory that exploded in France?",
-		punchline: "There was nothing left but de Brie."
-	},
-	{
-		id: 89,
-		type: "general",
-		setup: "Did you hear about the cow who jumped over the barbed wire fence?",
-		punchline: "It was udder destruction."
-	},
-	{
-		id: 90,
-		type: "general",
-		setup: "Did you hear about the guy who invented Lifesavers?",
-		punchline: "They say he made a mint."
-	},
-	{
-		id: 91,
-		type: "general",
-		setup: "Did you hear about the guy whose whole left side was cut off?",
-		punchline: "He's all right now."
-	},
-	{
-		id: 92,
-		type: "general",
-		setup: "Did you hear about the kidnapping at school?",
-		punchline: "It's ok, he woke up."
-	},
-	{
-		id: 93,
-		type: "general",
-		setup: "Did you hear about the Mexican train killer?",
-		punchline: "He had loco motives"
-	},
-	{
-		id: 94,
-		type: "general",
-		setup: "Did you hear about the new restaurant on the moon?",
-		punchline: "The food is great, but there’s just no atmosphere."
-	},
-	{
-		id: 95,
-		type: "general",
-		setup: "Did you hear about the runner who was criticized?",
-		punchline: "He just took it in stride"
-	},
-	{
-		id: 96,
-		type: "general",
-		setup: "Did you hear about the scientist who was lab partners with a pot of boiling water?",
-		punchline: "He had a very esteemed colleague."
-	},
-	{
-		id: 97,
-		type: "general",
-		setup: "Did you hear about the submarine industry?",
-		punchline: "It really took a dive..."
-	},
-	{
-		id: 98,
-		type: "general",
-		setup: "Did you hear that David lost his ID in prague?",
-		punchline: "Now we just have to call him Dav."
-	},
-	{
-		id: 99,
-		type: "general",
-		setup: "Did you hear that the police have a warrant out on a midget psychic ripping people off?",
-		punchline: 'It reads "Small medium at large."'
-	},
-	{
-		id: 100,
-		type: "general",
-		setup: "Did you hear the joke about the wandering nun?",
-		punchline: "She was a roman catholic."
-	},
-	{
-		id: 101,
-		type: "general",
-		setup: "Did you hear the news?",
-		punchline: "FedEx and UPS are merging. They’re going to go by the name Fed-Up from now on."
-	},
-	{
-		id: 102,
-		type: "general",
-		setup: "Did you hear the one about the guy with the broken hearing aid?",
-		punchline: "Neither did he."
-	},
-	{
-		id: 103,
-		type: "general",
-		setup: "Did you know crocodiles could grow up to 15 feet?",
-		punchline: "But most just have 4."
-	},
-	{
-		id: 104,
-		type: "general",
-		setup: "What do ghosts call their true love?",
-		punchline: "Their ghoul-friend"
-	},
-	{
-		id: 105,
-		type: "general",
-		setup: "Did you know that protons have mass?",
-		punchline: "I didn't even know they were catholic."
-	},
-	{
-		id: 106,
-		type: "general",
-		setup: "Did you know you should always take an extra pair of pants golfing?",
-		punchline: "Just in case you get a hole in one."
-	},
-	{
-		id: 107,
-		type: "general",
-		setup: "Do I enjoy making courthouse puns?",
-		punchline: "Guilty"
-	},
-	{
-		id: 108,
-		type: "general",
-		setup: "Do you know where you can get chicken broth in bulk?",
-		punchline: "The stock market."
-	},
-	{
-		id: 109,
-		type: "general",
-		setup: "Do you want a brief explanation of what an acorn is?",
-		punchline: "In a nutshell, it's an oak tree."
-	},
-	{
-		id: 110,
-		type: "general",
-		setup: "Ever wondered why bees hum?",
-		punchline: "It's because they don't know the words."
-	},
-	{
-		id: 111,
-		type: "general",
-		setup: "Have you ever heard of a music group called Cellophane?",
-		punchline: "They mostly wrap."
-	},
-	{
-		id: 112,
-		type: "general",
-		setup: "Have you heard of the band 1023MB?",
-		punchline: "They haven't got a gig yet."
-	},
-	{
-		id: 113,
-		type: "general",
-		setup: "Have you heard the rumor going around about butter?",
-		punchline: "Never mind, I shouldn't spread it."
-	},
-	{
-		id: 114,
-		type: "general",
-		setup: "How are false teeth like stars?",
-		punchline: "They come out at night!"
-	},
-	{
-		id: 115,
-		type: "general",
-		setup: "How can you tell a vampire has a cold?",
-		punchline: "They start coffin."
-	},
-	{
-		id: 116,
-		type: "general",
-		setup: "How come a man driving a train got struck by lightning?",
-		punchline: "He was a good conductor."
-	},
-	{
-		id: 117,
-		type: "general",
-		setup: "How come the stadium got hot after the game?",
-		punchline: "Because all of the fans left."
-	},
-	{
-		id: 118,
-		type: "general",
-		setup: "How did Darth Vader know what Luke was getting for Christmas?",
-		punchline: "He felt his presents."
-	},
-	{
-		id: 119,
-		type: "general",
-		setup: "How did the hipster burn the roof of his mouth?",
-		punchline: "He ate the pizza before it was cool."
-	},
-	{
-		id: 120,
-		type: "general",
-		setup: "How do hens stay fit?",
-		punchline: "They always egg-cercise!"
-	},
-	{
-		id: 121,
-		type: "general",
-		setup: "How do locomotives know where they're going?",
-		punchline: "Lots of training"
-	},
-	{
-		id: 122,
-		type: "general",
-		setup: "How do the trees get on the internet?",
-		punchline: "They log on."
-	},
-	{
-		id: 123,
-		type: "general",
-		setup: "How do you find Will Smith in the snow?",
-		punchline: " Look for fresh prints."
-	},
-	{
-		id: 124,
-		type: "general",
-		setup: "How do you fix a broken pizza?",
-		punchline: "With tomato paste."
-	},
-	{
-		id: 125,
-		type: "general",
-		setup: "How do you fix a damaged jack-o-lantern?",
-		punchline: "You use a pumpkin patch."
-	},
-	{
-		id: 126,
-		type: "general",
-		setup: "How do you get a baby alien to sleep?",
-		punchline: " You rocket."
-	},
-	{
-		id: 127,
-		type: "general",
-		setup: "How do you get two whales in a car?",
-		punchline: "Start in England and drive West."
-	},
-	{
-		id: 128,
-		type: "general",
-		setup: "How do you know if there’s an elephant under your bed?",
-		punchline: "Your head hits the ceiling!"
-	},
-	{
-		id: 129,
-		type: "general",
-		setup: "How do you make a hankie dance?",
-		punchline: "Put a little boogie in it."
-	},
-	{
-		id: 130,
-		type: "general",
-		setup: "How do you make holy water?",
-		punchline: "You boil the hell out of it."
-	},
-	{
-		id: 131,
-		type: "general",
-		setup: "How do you organize a space party?",
-		punchline: "You planet."
-	},
-	{
-		id: 132,
-		type: "general",
-		setup: "How do you steal a coat?",
-		punchline: "You jacket."
-	},
-	{
-		id: 133,
-		type: "general",
-		setup: "How do you tell the difference between a crocodile and an alligator?",
-		punchline: "You will see one later and one in a while."
-	},
-	{
-		id: 134,
-		type: "general",
-		setup: "How does a dyslexic poet write?",
-		punchline: "Inverse."
-	},
-	{
-		id: 135,
-		type: "general",
-		setup: "How does a French skeleton say hello?",
-		punchline: "Bone-jour."
-	},
-	{
-		id: 136,
-		type: "general",
-		setup: "How does a penguin build it’s house?",
-		punchline: "Igloos it together."
-	},
-	{
-		id: 137,
-		type: "general",
-		setup: "How does a scientist freshen their breath?",
-		punchline: "With experi-mints!"
-	},
-	{
-		id: 138,
-		type: "general",
-		setup: "How does the moon cut his hair?",
-		punchline: "Eclipse it."
-	},
-	{
-		id: 139,
-		type: "general",
-		setup: "How many apples grow on a tree?",
-		punchline: "All of them!"
-	},
-	{
-		id: 140,
-		type: "general",
-		setup: "How many bones are in the human hand?",
-		punchline: "A handful of them."
-	},
-	{
-		id: 141,
-		type: "general",
-		setup: "How many hipsters does it take to change a lightbulb?",
-		punchline: "Oh, it's a really obscure number. You've probably never heard of it."
-	},
-	{
-		id: 142,
-		type: "general",
-		setup: "How many kids with ADD does it take to change a lightbulb?",
-		punchline: "Let's go ride bikes!"
-	},
-	{
-		id: 143,
-		type: "general",
-		setup: "How many optometrists does it take to change a light bulb?",
-		punchline: "1 or 2? 1... or 2?"
-	},
-	{
-		id: 144,
-		type: "general",
-		setup: "How many seconds are in a year?",
-		punchline: "12. January 2nd, February 2nd, March 2nd, April 2nd.... etc"
-	},
-	{
-		id: 145,
-		type: "general",
-		setup: "How many South Americans does it take to change a lightbulb?",
-		punchline: "A Brazilian"
-	},
-	{
-		id: 146,
-		type: "general",
-		setup: "How many tickles does it take to tickle an octopus?",
-		punchline: "Ten-tickles!"
-	},
-	{
-		id: 147,
-		type: "general",
-		setup: "How much does a hipster weigh?",
-		punchline: "An instagram."
-	},
-	{
-		id: 148,
-		type: "general",
-		setup: "How was the snow globe feeling after the storm?",
-		punchline: "A little shaken."
-	},
-	{
-		id: 149,
-		type: "general",
-		setup: "Is the pool safe for diving?",
-		punchline: "It deep ends."
-	},
-	{
-		id: 150,
-		type: "general",
-		setup: "Is there a hole in your shoe?",
-		punchline: "No… Then how’d you get your foot in it?"
-	},
-	{
-		id: 151,
-		type: "general",
-		setup: "What did the spaghetti say to the other spaghetti?",
-		punchline: "Pasta la vista, baby!"
-	},
-	{
-		id: 152,
-		type: "general",
-		setup: "What’s 50 Cent’s name in Zimbabwe?",
-		punchline: "200 Dollars."
-	},
-	{
-		id: 153,
-		type: "general",
-		setup: "Want to hear a chimney joke?",
-		punchline: "Got stacks of em! First one's on the house"
-	},
-	{
-		id: 154,
-		type: "general",
-		setup: "Want to hear a joke about construction?",
-		punchline: "Nah, I'm still working on it."
-	},
-	{
-		id: 155,
-		type: "general",
-		setup: "Want to hear my pizza joke?",
-		punchline: "Never mind, it's too cheesy."
-	},
-	{
-		id: 156,
-		type: "general",
-		setup: "What animal is always at a game of cricket?",
-		punchline: "A bat."
-	},
-	{
-		id: 157,
-		type: "general",
-		setup: "What are the strongest days of the week?",
-		punchline: "Saturday and Sunday...the rest are weekdays."
-	},
-	{
-		id: 158,
-		type: "general",
-		setup: "What biscuit does a short person like?",
-		punchline: "Shortbread. "
-	},
-	{
-		id: 159,
-		type: "general",
-		setup: "What cheese can never be yours?",
-		punchline: "Nacho cheese."
-	},
-	{
-		id: 160,
-		type: "general",
-		setup: "What creature is smarter than a talking parrot?",
-		punchline: "A spelling bee."
-	},
-	{
-		id: 161,
-		type: "general",
-		setup: "What did celery say when he broke up with his girlfriend?",
-		punchline: "She wasn't right for me, so I really don't carrot all."
-	},
-	{
-		id: 162,
-		type: "general",
-		setup: "What did Michael Jackson name his denim store?",
-		punchline: "   Billy Jeans!"
-	},
-	{
-		id: 163,
-		type: "general",
-		setup: "What did one nut say as he chased another nut?",
-		punchline: " I'm a cashew!"
-	},
-	{
-		id: 164,
-		type: "general",
-		setup: "What did one plate say to the other plate?",
-		punchline: "Dinner is on me!"
-	},
-	{
-		id: 165,
-		type: "general",
-		setup: "What did one snowman say to the other snow man?",
-		punchline: "Do you smell carrot?"
-	},
-	{
-		id: 166,
-		type: "general",
-		setup: "What did one wall say to the other wall?",
-		punchline: "I'll meet you at the corner!"
-	},
-	{
-		id: 167,
-		type: "general",
-		setup: "What did Romans use to cut pizza before the rolling cutter was invented?",
-		punchline: "Lil Caesars"
-	},
-	{
-		id: 168,
-		type: "general",
-		setup: "What did the 0 say to the 8?",
-		punchline: "Nice belt."
-	},
-	{
-		id: 169,
-		type: "general",
-		setup: "What did the beaver say to the tree?",
-		punchline: "It's been nice gnawing you."
-	},
-	{
-		id: 170,
-		type: "general",
-		setup: "What did the big flower say to the littler flower?",
-		punchline: "Hi, bud!"
-	},
-	{
-		id: 180,
-		type: "general",
-		setup: "What did the Buffalo say to his little boy when he dropped him off at school?",
-		punchline: "Bison."
-	},
-	{
-		id: 181,
-		type: "general",
-		setup: "What did the digital clock say to the grandfather clock?",
-		punchline: "Look, no hands!"
-	},
-	{
-		id: 182,
-		type: "general",
-		setup: "What did the dog say to the two trees?",
-		punchline: "Bark bark."
-	},
-	{
-		id: 183,
-		type: "general",
-		setup: "What did the Dorito farmer say to the other Dorito farmer?",
-		punchline: "Cool Ranch!"
-	},
-	{
-		id: 184,
-		type: "general",
-		setup: "What did the fish say when it swam into a wall?",
-		punchline: "Damn!"
-	},
-	{
-		id: 185,
-		type: "general",
-		setup: "What did the grape do when he got stepped on?",
-		punchline: "He let out a little wine."
-	},
-	{
-		id: 186,
-		type: "general",
-		setup: "What did the judge say to the dentist?",
-		punchline: "Do you swear to pull the tooth, the whole tooth and nothing but the tooth?"
-	},
-	{
-		id: 187,
-		type: "general",
-		setup: "What did the late tomato say to the early tomato?",
-		punchline: "I’ll ketch up"
-	},
-	{
-		id: 188,
-		type: "general",
-		setup: "What did the left eye say to the right eye?",
-		punchline: "Between us, something smells!"
-	},
-	{
-		id: 189,
-		type: "general",
-		setup: "What did the mountain climber name his son?",
-		punchline: "Cliff."
-	},
-	{
-		id: 189,
-		type: "general",
-		setup: "What did the ocean say to the beach?",
-		punchline: "Thanks for all the sediment."
-	},
-	{
-		id: 190,
-		type: "general",
-		setup: "What did the ocean say to the shore?",
-		punchline: "Nothing, it just waved."
-	},
-	{
-		id: 191,
-		type: "general",
-		setup: "Why don't you find hippopotamuses hiding in trees?",
-		punchline: "They're really good at it."
-	},
-	{
-		id: 192,
-		type: "general",
-		setup: "What did the pirate say on his 80th birthday?",
-		punchline: "Aye Matey!"
-	},
-	{
-		id: 193,
-		type: "general",
-		setup: "What did the Red light say to the Green light?",
-		punchline: "Don't look at me I'm changing!"
-	},
-	{
-		id: 194,
-		type: "general",
-		setup: "What did the scarf say to the hat?",
-		punchline: "You go on ahead, I am going to hang around a bit longer."
-	},
-	{
-		id: 195,
-		type: "general",
-		setup: "What did the shy pebble wish for?",
-		punchline: "That she was a little boulder."
-	},
-	{
-		id: 196,
-		type: "general",
-		setup: "What did the traffic light say to the car as it passed?",
-		punchline: "Don't look I'm changing!"
-	},
-	{
-		id: 197,
-		type: "general",
-		setup: "What did the Zen Buddist say to the hotdog vendor?",
-		punchline: "Make me one with everything."
-	},
-	{
-		id: 198,
-		type: "general",
-		setup: "What do birds give out on Halloween?",
-		punchline: "Tweets."
-	},
-	{
-		id: 199,
-		type: "general",
-		setup: "What do I look like?",
-		punchline: "A JOKE MACHINE!?"
-	},
-	{
-		id: 200,
-		type: "general",
-		setup: "What do prisoners use to call each other?",
-		punchline: "Cell phones."
-	},
-	{
-		id: 201,
-		type: "general",
-		setup: "What do vegetarian zombies eat?",
-		punchline: "Grrrrrainnnnnssss."
-	},
-	{
-		id: 202,
-		type: "general",
-		setup: "What do you call a bear with no teeth?",
-		punchline: "A gummy bear!"
-	},
-	{
-		id: 203,
-		type: "general",
-		setup: "What do you call a bee that lives in America?",
-		punchline: "A USB."
-	},
-	{
-		id: 204,
-		type: "general",
-		setup: "What do you call a boomerang that won't come back?",
-		punchline: "A stick."
-	},
-	{
-		id: 205,
-		type: "general",
-		setup: "What do you call a careful wolf?",
-		punchline: "Aware wolf."
-	},
-	{
-		id: 206,
-		type: "general",
-		setup: "What do you call a cow on a trampoline?",
-		punchline: "A milk shake!"
-	},
-	{
-		id: 207,
-		type: "general",
-		setup: "What do you call a cow with no legs?",
-		punchline: "Ground beef."
-	},
-	{
-		id: 208,
-		type: "general",
-		setup: "What do you call a cow with two legs?",
-		punchline: "Lean beef."
-	},
-	{
-		id: 209,
-		type: "general",
-		setup: "What do you call a crowd of chess players bragging about their wins in a hotel lobby?",
-		punchline: "Chess nuts boasting in an open foyer."
-	},
-	{
-		id: 210,
-		type: "general",
-		setup: "What do you call a dad that has fallen through the ice?",
-		punchline: "A Popsicle."
-	},
-	{
-		id: 211,
-		type: "general",
-		setup: "What do you call a dictionary on drugs?",
-		punchline: "High definition."
-	},
-	{
-		id: 212,
-		type: "general",
-		setup: "what do you call a dog that can do magic tricks?",
-		punchline: "a labracadabrador"
-	},
-	{
-		id: 213,
-		type: "general",
-		setup: "What do you call a droid that takes the long way around?",
-		punchline: "R2 detour."
-	},
-	{
-		id: 214,
-		type: "general",
-		setup: "What do you call a duck that gets all A's?",
-		punchline: "A wise quacker."
-	},
-	{
-		id: 215,
-		type: "general",
-		setup: "What do you call a fake noodle?",
-		punchline: "An impasta."
-	},
-	{
-		id: 216,
-		type: "general",
-		setup: "What do you call a fashionable lawn statue with an excellent sense of rhythmn?",
-		punchline: "A metro-gnome"
-	},
-	{
-		id: 217,
-		type: "general",
-		setup: "What do you call a fat psychic?",
-		punchline: "A four-chin teller."
-	},
-	{
-		id: 218,
-		type: "general",
-		setup: "What do you call a fly without wings?",
-		punchline: "A walk."
-	},
-	{
-		id: 219,
-		type: "general",
-		setup: "What do you call a girl between two posts?",
-		punchline: "Annette."
-	},
-	{
-		id: 220,
-		type: "general",
-		setup: "What do you call a group of disorganized cats?",
-		punchline: "A cat-tastrophe."
-	},
-	{
-		id: 221,
-		type: "general",
-		setup: "What do you call a group of killer whales playing instruments?",
-		punchline: "An Orca-stra."
-	},
-	{
-		id: 222,
-		type: "general",
-		setup: "What do you call a monkey in a mine field?",
-		punchline: "A babooooom!"
-	},
-	{
-		id: 223,
-		type: "general",
-		setup: "What do you call a nervous javelin thrower?",
-		punchline: "Shakespeare."
-	},
-	{
-		id: 224,
-		type: "general",
-		setup: "What do you call a pig that knows karate?",
-		punchline: "A pork chop!"
-	},
-	{
-		id: 225,
-		type: "general",
-		setup: "What do you call a pig with three eyes?",
-		punchline: "Piiig"
-	},
-	{
-		id: 226,
-		type: "general",
-		setup: "What do you call a pile of cats?",
-		punchline: " A Meowtain."
-	},
-	{
-		id: 227,
-		type: "general",
-		setup: "What do you call a sheep with no legs?",
-		punchline: "A cloud."
-	},
-	{
-		id: 228,
-		type: "general",
-		setup: "What do you call a troublesome Canadian high schooler?",
-		punchline: "A poutine."
-	},
-	{
-		id: 229,
-		type: "general",
-		setup: "What do you call an alligator in a vest?",
-		punchline: "An in-vest-igator!"
-	},
-	{
-		id: 230,
-		type: "general",
-		setup: "What do you call an Argentinian with a rubber toe?",
-		punchline: "Roberto"
-	},
-	{
-		id: 231,
-		type: "general",
-		setup: "What do you call an eagle who can play the piano?",
-		punchline: "Talonted!"
-	},
-	{
-		id: 232,
-		type: "general",
-		setup: "What do you call an elephant that doesn’t matter?",
-		punchline: "An irrelephant."
-	},
-	{
-		id: 233,
-		type: "general",
-		setup: "What do you call an old snowman?",
-		punchline: "Water."
-	},
-	{
-		id: 234,
-		type: "general",
-		setup: "What do you call cheese by itself?",
-		punchline: "Provolone."
-	},
-	{
-		id: 235,
-		type: "general",
-		setup: "What do you call corn that joins the army?",
-		punchline: "Kernel."
-	},
-	{
-		id: 236,
-		type: "general",
-		setup: "What do you call someone with no nose?",
-		punchline: "Nobody knows."
-	},
-	{
-		id: 237,
-		type: "general",
-		setup: "What do you call two barracuda fish?",
-		punchline: " A Pairacuda!"
-	},
-	{
-		id: 238,
-		type: "general",
-		setup: "What do you do on a remote island?",
-		punchline: "Try and find the TV island it belongs to."
-	},
-	{
-		id: 239,
-		type: "general",
-		setup: "What do you do when you see a space man?",
-		punchline: "Park your car, man."
-	},
-	{
-		id: 240,
-		type: "general",
-		setup: "What do you get hanging from Apple trees?",
-		punchline: "Sore arms."
-	},
-	{
-		id: 241,
-		type: "general",
-		setup: "What do you get when you cross a bee and a sheep?",
-		punchline: "A bah-humbug."
-	},
-	{
-		id: 242,
-		type: "general",
-		setup: "What do you get when you cross a chicken with a skunk?",
-		punchline: "A fowl smell!"
-	},
-	{
-		id: 243,
-		type: "general",
-		setup: "What do you get when you cross a rabbit with a water hose?",
-		punchline: "Hare spray."
-	},
-	{
-		id: 244,
-		type: "general",
-		setup: "What do you get when you cross a snowman with a vampire?",
-		punchline: "Frostbite."
-	},
-	{
-		id: 245,
-		type: "general",
-		setup: "What do you give a sick lemon?",
-		punchline: "Lemonaid."
-	},
-	{
-		id: 246,
-		type: "general",
-		setup: "What does a clock do when it's hungry?",
-		punchline: "It goes back four seconds!"
-	},
-	{
-		id: 247,
-		type: "general",
-		setup: "What does a female snake use for support?",
-		punchline: "A co-Bra!"
-	},
-	{
-		id: 248,
-		type: "general",
-		setup: "What does a pirate pay for his corn?",
-		punchline: "A buccaneer!"
-	},
-	{
-		id: 249,
-		type: "general",
-		setup: "What does an angry pepper do?",
-		punchline: "It gets jalapeño face."
-	},
-	{
-		id: 250,
-		type: "general",
-		setup: "What happens to a frog's car when it breaks down?",
-		punchline: "It gets toad."
-	},
-	{
-		id: 251,
-		type: "general",
-		setup: "What happens when you anger a brain surgeon?",
-		punchline: "They will give you a piece of your mind."
-	},
-	{
-		id: 252,
-		type: "general",
-		setup: "What has ears but cannot hear?",
-		punchline: "A field of corn."
-	},
-	{
-		id: 253,
-		type: "general",
-		setup: "What is a centipedes's favorite Beatle song?",
-		punchline: " I want to hold your hand, hand, hand, hand..."
-	},
-	{
-		id: 254,
-		type: "general",
-		setup: "What is a tornado's favorite game to play?",
-		punchline: "Twister!"
-	},
-	{
-		id: 255,
-		type: "general",
-		setup: "What is a vampire's favorite fruit?",
-		punchline: "A blood orange."
-	},
-	{
-		id: 256,
-		type: "general",
-		setup: "What is a witch's favorite subject in school?",
-		punchline: "Spelling!"
-	},
-	{
-		id: 257,
-		type: "general",
-		setup: "What is red and smells like blue paint?",
-		punchline: "Red paint!"
-	},
-	{
-		id: 258,
-		type: "general",
-		setup: "What is the difference between ignorance and apathy?",
-		punchline: "I don't know and I don't care."
-	},
-	{
-		id: 259,
-		type: "general",
-		setup: "What is the hardest part about sky diving?",
-		punchline: "The ground."
-	},
-	{
-		id: 260,
-		type: "general",
-		setup: "What is the leading cause of dry skin?",
-		punchline: "Towels"
-	},
-	{
-		id: 261,
-		type: "general",
-		setup: "What is the least spoken language in the world?",
-		punchline: "Sign Language"
-	},
-	{
-		id: 262,
-		type: "general",
-		setup: "What is the tallest building in the world?",
-		punchline: "The library, it’s got the most stories!"
-	},
-	{
-		id: 263,
-		type: "general",
-		setup: "What is this movie about?",
-		punchline: "It is about 2 hours long."
-	},
-	{
-		id: 264,
-		type: "general",
-		setup: "What kind of award did the dentist receive?",
-		punchline: "A little plaque."
-	},
-	{
-		id: 265,
-		type: "general",
-		setup: "What kind of bagel can fly?",
-		punchline: "A plain bagel."
-	},
-	{
-		id: 266,
-		type: "general",
-		setup: "What kind of dinosaur loves to sleep?",
-		punchline: "A stega-snore-us."
-	},
-	{
-		id: 267,
-		type: "general",
-		setup: "What kind of dog lives in a particle accelerator?",
-		punchline: "A Fermilabrador Retriever."
-	},
-	{
-		id: 268,
-		type: "general",
-		setup: "What kind of magic do cows believe in?",
-		punchline: "MOODOO."
-	},
-	{
-		id: 269,
-		type: "general",
-		setup: "What kind of music do planets listen to?",
-		punchline: "Nep-tunes."
-	},
-	{
-		id: 270,
-		type: "general",
-		setup: "What kind of pants do ghosts wear?",
-		punchline: "Boo jeans."
-	},
-	{
-		id: 271,
-		type: "general",
-		setup: "What kind of tree fits in your hand?",
-		punchline: "A palm tree!"
-	},
-	{
-		id: 272,
-		type: "general",
-		setup: "What lies at the bottom of the ocean and twitches?",
-		punchline: "A nervous wreck."
-	},
-	{
-		id: 273,
-		type: "general",
-		setup: "What musical instrument is found in the bathroom?",
-		punchline: "A tuba toothpaste."
-	},
-	{
-		id: 274,
-		type: "general",
-		setup: "What time did the man go to the dentist?",
-		punchline: "Tooth hurt-y."
-	},
-	{
-		id: 275,
-		type: "general",
-		setup: "What type of music do balloons hate?",
-		punchline: "Pop music!"
-	},
-	{
-		id: 276,
-		type: "general",
-		setup: "What was a more important invention than the first telephone?",
-		punchline: "The second one."
-	},
-	{
-		id: 277,
-		type: "general",
-		setup: "What was the pumpkin’s favorite sport?",
-		punchline: "Squash."
-	},
-	{
-		id: 278,
-		type: "general",
-		setup: "What's black and white and read all over?",
-		punchline: "The newspaper."
-	},
-	{
-		id: 279,
-		type: "general",
-		setup: "What's blue and not very heavy?",
-		punchline: " Light blue."
-	},
-	{
-		id: 280,
-		type: "general",
-		setup: "What's brown and sticky?",
-		punchline: "A stick."
-	},
-	{
-		id: 281,
-		type: "general",
-		setup: "What's orange and sounds like a parrot?",
-		punchline: "A Carrot."
-	},
-	{
-		id: 282,
-		type: "general",
-		setup: "What's red and bad for your teeth?",
-		punchline: "A Brick."
-	},
-	{
-		id: 283,
-		type: "general",
-		setup: "What's the best thing about elevator jokes?",
-		punchline: "They work on so many levels."
-	},
-	{
-		id: 284,
-		type: "general",
-		setup: "What's the difference between a guitar and a fish?",
-		punchline: 'You can tune a guitar but you can\'t "tuna"fish!'
-	},
-	{
-		id: 285,
-		type: "general",
-		setup: "What's the difference between a hippo and a zippo?",
-		punchline: "One is really heavy, the other is a little lighter."
-	},
-	{
-		id: 286,
-		type: "general",
-		setup: "What's the difference between a seal and a sea lion?",
-		punchline: "An ion! "
-	},
-	{
-		id: 287,
-		type: "general",
-		setup: "What's the worst part about being a cross-eyed teacher?",
-		punchline: "They can't control their pupils."
-	},
-	{
-		id: 288,
-		type: "general",
-		setup: "What's the worst thing about ancient history class?",
-		punchline: "The teachers tend to Babylon."
-	},
-	{
-		id: 289,
-		type: "general",
-		setup: "What’s brown and sounds like a bell?",
-		punchline: "Dung!"
-	},
-	{
-		id: 290,
-		type: "general",
-		setup: "What’s E.T. short for?",
-		punchline: "He’s only got little legs."
-	},
-	{
-		id: 291,
-		type: "general",
-		setup: "What’s Forest Gump’s Facebook password?",
-		punchline: "1forest1"
-	},
-	{
-		id: 292,
-		type: "general",
-		setup: "What’s the advantage of living in Switzerland?",
-		punchline: "Well, the flag is a big plus."
-	},
-	{
-		id: 293,
-		type: "general",
-		setup: "What’s the difference between an African elephant and an Indian elephant?",
-		punchline: "About 5000 miles."
-	},
-	{
-		id: 294,
-		type: "general",
-		setup: "When do doctors get angry?",
-		punchline: "When they run out of patients."
-	},
-	{
-		id: 295,
-		type: "general",
-		setup: "When does a joke become a dad joke?",
-		punchline: "When it becomes apparent."
-	},
-	{
-		id: 296,
-		type: "general",
-		setup: "When is a door not a door?",
-		punchline: "When it's ajar."
-	},
-	{
-		id: 297,
-		type: "general",
-		setup: "Where did you learn to make ice cream?",
-		punchline: "Sunday school."
-	},
-	{
-		id: 298,
-		type: "general",
-		setup: "Where do bees go to the bathroom?",
-		punchline: " The BP station."
-	},
-	{
-		id: 299,
-		type: "general",
-		setup: "Where do hamburgers go to dance?",
-		punchline: "The meat-ball."
-	},
-	{
-		id: 300,
-		type: "general",
-		setup: "Where do rabbits go after they get married?",
-		punchline: "On a bunny-moon."
-	},
-	{
-		id: 301,
-		type: "general",
-		setup: "Where do sheep go to get their hair cut?",
-		punchline: "The baa-baa shop."
-	},
-	{
-		id: 302,
-		type: "general",
-		setup: "Where do you learn to make banana splits?",
-		punchline: "At sundae school."
-	},
-	{
-		id: 303,
-		type: "general",
-		setup: "Where do young cows eat lunch?",
-		punchline: "In the calf-ateria."
-	},
-	{
-		id: 304,
-		type: "general",
-		setup: "Where does batman go to the bathroom?",
-		punchline: "The batroom."
-	},
-	{
-		id: 305,
-		type: "general",
-		setup: "Where does Fonzie like to go for lunch?",
-		punchline: "Chick-Fil-Eyyyyyyyy."
-	},
-	{
-		id: 306,
-		type: "general",
-		setup: "Where does Napoleon keep his armies?",
-		punchline: "In his sleevies."
-	},
-	{
-		id: 307,
-		type: "general",
-		setup: "Where was the Declaration of Independence signed?",
-		punchline: "At the bottom! "
-	},
-	{
-		id: 308,
-		type: "general",
-		setup: "Where’s the bin?",
-		punchline: "I haven’t been anywhere!"
-	},
-	{
-		id: 309,
-		type: "general",
-		setup: "Which side of the chicken has more feathers?",
-		punchline: "The outside."
-	},
-	{
-		id: 310,
-		type: "general",
-		setup: "Who did the wizard marry?",
-		punchline: "His ghoul-friend"
-	},
-	{
-		id: 311,
-		type: "general",
-		setup: "Who is the coolest Doctor in the hospital?",
-		punchline: "The hip Doctor!"
-	},
-	{
-		id: 312,
-		type: "general",
-		setup: "Why are fish easy to weigh?",
-		punchline: "Because they have their own scales."
-	},
-	{
-		id: 313,
-		type: "general",
-		setup: "Why are fish so smart?",
-		punchline: "Because they live in schools!"
-	},
-	{
-		id: 314,
-		type: "general",
-		setup: "Why are ghosts bad liars?",
-		punchline: "Because you can see right through them!"
-	},
-	{
-		id: 315,
-		type: "general",
-		setup: "Why are graveyards so noisy?",
-		punchline: "Because of all the coffin."
-	},
-	{
-		id: 316,
-		type: "general",
-		setup: "Why are mummys scared of vacation?",
-		punchline: "They're afraid to unwind."
-	},
-	{
-		id: 317,
-		type: "general",
-		setup: "Why are oranges the smartest fruit?",
-		punchline: "Because they are made to concentrate. "
-	},
-	{
-		id: 318,
-		type: "general",
-		setup: "Why are pirates called pirates?",
-		punchline: "Because they arrr!"
-	},
-	{
-		id: 319,
-		type: "general",
-		setup: "Why are skeletons so calm?",
-		punchline: "Because nothing gets under their skin."
-	},
-	{
-		id: 320,
-		type: "general",
-		setup: "Why can't a bicycle stand on its own?",
-		punchline: "It's two-tired."
-	},
-	{
-		id: 321,
-		type: "general",
-		setup: 'Why can\'t you use "Beef stew"as a password?',
-		punchline: "Because it's not stroganoff."
-	},
-	{
-		id: 322,
-		type: "general",
-		setup: "Why can't your nose be 12 inches long?",
-		punchline: "Because then it'd be a foot!"
-	},
-	{
-		id: 323,
-		type: "general",
-		setup: "Why can’t you hear a pterodactyl go to the bathroom?",
-		punchline: "The p is silent."
-	},
-	{
-		id: 324,
-		type: "general",
-		setup: "Why couldn't the kid see the pirate movie?",
-		punchline: "Because it was rated arrr!"
-	},
-	{
-		id: 325,
-		type: "general",
-		setup: "Why couldn't the lifeguard save the hippie?",
-		punchline: "He was too far out, man."
-	},
-	{
-		id: 326,
-		type: "general",
-		setup: "Why did Dracula lie in the wrong coffin?",
-		punchline: "He made a grave mistake."
-	},
-	{
-		id: 327,
-		type: "general",
-		setup: "Why did Sweden start painting barcodes on the sides of their battleships?",
-		punchline: "So they could Scandinavian."
-	},
-	{
-		id: 328,
-		type: "general",
-		setup: "Why did the A go to the bathroom and come out as an E?",
-		punchline: "Because he had a vowel movement."
-	},
-	{
-		id: 329,
-		type: "general",
-		setup: "Why did the barber win the race?",
-		punchline: "He took a short cut."
-	},
-	{
-		id: 330,
-		type: "general",
-		setup: "Why did the belt go to prison?",
-		punchline: "He held up a pair of pants!"
-	},
-	{
-		id: 331,
-		type: "general",
-		setup: "Why did the burglar hang his mugshot on the wall?",
-		punchline: "To prove that he was framed!"
-	},
-	{
-		id: 332,
-		type: "general",
-		setup: "Why did the chicken get a penalty?",
-		punchline: "For fowl play."
-	},
-	{
-		id: 333,
-		type: "general",
-		setup: "Why did the Clydesdale give the pony a glass of water?",
-		punchline: "Because he was a little horse!"
-	},
-	{
-		id: 334,
-		type: "general",
-		setup: "Why did the coffee file a police report?",
-		punchline: "It got mugged."
-	},
-	{
-		id: 335,
-		type: "general",
-		setup: "Why did the cookie cry?",
-		punchline: "Because his mother was a wafer so long"
-	},
-	{
-		id: 336,
-		type: "general",
-		setup: "Why did the cookie cry?",
-		punchline: "It was feeling crumby."
-	},
-	{
-		id: 337,
-		type: "general",
-		setup: "Why did the cowboy have a weiner dog?",
-		punchline: "Somebody told him to get a long little doggy."
-	},
-	{
-		id: 338,
-		type: "general",
-		setup: "Why did the fireman wear red, white, and blue suspenders?",
-		punchline: "To hold his pants up."
-	},
-	{
-		id: 339,
-		type: "general",
-		setup: "Why did the girl smear peanut butter on the road?",
-		punchline: "To go with the traffic jam."
-	},
-	{
-		id: 340,
-		type: "general",
-		setup: "Why did the half blind man fall in the well?",
-		punchline: "Because he couldn't see that well!"
-	},
-	{
-		id: 341,
-		type: "general",
-		setup: "Why did the house go to the doctor?",
-		punchline: "It was having window panes."
-	},
-	{
-		id: 342,
-		type: "general",
-		setup: "Why did the kid cross the playground?",
-		punchline: "To get to the other slide."
-	},
-	{
-		id: 343,
-		type: "general",
-		setup: "Why did the man put his money in the freezer?",
-		punchline: "He wanted cold hard cash!"
-	},
-	{
-		id: 344,
-		type: "general",
-		setup: "Why did the man run around his bed?",
-		punchline: "Because he was trying to catch up on his sleep!"
-	},
-	{
-		id: 345,
-		type: "general",
-		setup: "Why did the melons plan a big wedding?",
-		punchline: "Because they cantaloupe!"
-	},
-	{
-		id: 346,
-		type: "general",
-		setup: "Why did the octopus beat the shark in a fight?",
-		punchline: "Because it was well armed."
-	},
-	{
-		id: 347,
-		type: "general",
-		setup: "Why did the opera singer go sailing?",
-		punchline: "They wanted to hit the high Cs."
-	},
-	{
-		id: 348,
-		type: "general",
-		setup: "Why did the scarecrow win an award?",
-		punchline: "Because he was outstanding in his field."
-	},
-	{
-		id: 349,
-		type: "general",
-		setup: "Why did the tomato blush?",
-		punchline: "Because it saw the salad dressing."
-	},
-	{
-		id: 350,
-		type: "general",
-		setup: "Why did the tree go to the dentist?",
-		punchline: "It needed a root canal."
-	},
-	{
-		id: 351,
-		type: "general",
-		setup: "Why did the worker get fired from the orange juice factory?",
-		punchline: "Lack of concentration."
-	},
-	{
-		id: 352,
-		type: "general",
-		setup: "Why didn't the number 4 get into the nightclub?",
-		punchline: "Because he is 2 square."
-	},
-	{
-		id: 353,
-		type: "general",
-		setup: "Why didn’t the orange win the race?",
-		punchline: "It ran out of juice."
-	},
-	{
-		id: 354,
-		type: "general",
-		setup: "Why didn’t the skeleton cross the road?",
-		punchline: "Because he had no guts."
-	},
-	{
-		id: 355,
-		type: "general",
-		setup: "Why do bananas have to put on sunscreen before they go to the beach?",
-		punchline: "Because they might peel!"
-	},
-	{
-		id: 356,
-		type: "general",
-		setup: "Why do bears have hairy coats?",
-		punchline: "Fur protection."
-	},
-	{
-		id: 357,
-		type: "general",
-		setup: "Why do bees have sticky hair?",
-		punchline: "Because they use honey combs!"
-	},
-	{
-		id: 358,
-		type: "general",
-		setup: "Why do bees hum?",
-		punchline: "Because they don't know the words."
-	},
-	{
-		id: 359,
-		type: "general",
-		setup: "Why do birds fly south for the winter?",
-		punchline: "Because it's too far to walk."
-	},
-	{
-		id: 360,
-		type: "general",
-		setup: "Why do choirs keep buckets handy?",
-		punchline: "So they can carry their tune"
-	},
-	{
-		id: 361,
-		type: "general",
-		setup: "Why do crabs never give to charity?",
-		punchline: "Because they’re shellfish."
-	},
-	{
-		id: 362,
-		type: "general",
-		setup: "Why do ducks make great detectives?",
-		punchline: "They always quack the case."
-	},
-	{
-		id: 363,
-		type: "general",
-		setup: "Why do mathematicians hate the U.S.?",
-		punchline: "Because it's indivisible."
-	},
-	{
-		id: 364,
-		type: "general",
-		setup: "Why do pirates not know the alphabet?",
-		punchline: 'They always get stuck at "C".'
-	},
-	{
-		id: 365,
-		type: "general",
-		setup: "Why do pumpkins sit on people’s porches?",
-		punchline: "They have no hands to knock on the door."
-	},
-	{
-		id: 366,
-		type: "general",
-		setup: "Why do scuba divers fall backwards into the water?",
-		punchline: "Because if they fell forwards they’d still be in the boat."
-	},
-	{
-		id: 367,
-		type: "general",
-		setup: "Why do trees seem suspicious on sunny days?",
-		punchline: "Dunno, they're just a bit shady."
-	},
-	{
-		id: 368,
-		type: "general",
-		setup: "Why do valley girls hang out in odd numbered groups?",
-		punchline: "Because they can't even."
-	},
-	{
-		id: 369,
-		type: "general",
-		setup: "Why do wizards clean their teeth three times a day?",
-		punchline: "To prevent bat breath!"
-	},
-	{
-		id: 370,
-		type: "general",
-		setup: "Why do you never see elephants hiding in trees?",
-		punchline: "Because they're so good at it."
-	},
-	{
-		id: 371,
-		type: "general",
-		setup: "Why does a chicken coop only have two doors?",
-		punchline: "Because if it had four doors it would be a chicken sedan."
-	},
-	{
-		id: 372,
-		type: "general",
-		setup: "Why does a Moon-rock taste better than an Earth-rock?",
-		punchline: "Because it's a little meteor."
-	},
-	{
-		id: 373,
-		type: "general",
-		setup: "Why does it take longer to get from 1st to 2nd base, than it does to get from 2nd to 3rd base?",
-		punchline: "Because there’s a Shortstop in between!"
-	},
-	{
-		id: 374,
-		type: "general",
-		setup: "Why does Norway have barcodes on their battleships?",
-		punchline: "So when they get back to port, they can Scandinavian."
-	},
-	{
-		id: 375,
-		type: "general",
-		setup: "Why does Superman get invited to dinners?",
-		punchline: "Because he is a Supperhero."
-	},
-	{
-		id: 376,
-		type: "general",
-		setup: "Why does Waldo only wear stripes?",
-		punchline: "Because he doesn't want to be spotted."
-	},
-	{
-		id: 377,
-		type: "programming",
-		setup: "Knock-knock.",
-		punchline: "A race condition. Who is there?"
-	},
-	{
-		id: 378,
-		type: "programming",
-		setup: "What's the best part about TCP jokes?",
-		punchline: "I get to keep telling them until you get them."
-	},
-	{
-		id: 379,
-		type: "programming",
-		setup: "A programmer puts two glasses on his bedside table before going to sleep.",
-		punchline: "A full one, in case he gets thirsty, and an empty one, in case he doesn’t."
-	},
-	{
-		id: 380,
-		type: "programming",
-		setup: "There are 10 kinds of people in this world.",
-		punchline: "Those who understand binary, those who don't, and those who weren't expecting a base 3 joke."
-	},
-	{
-		id: 381,
-		type: "general",
-		setup: "Two guys walk into a bar . . .",
-		punchline: 'The first guy says "Ouch!" and the second says "Yeah, I didn\'t see it either."'
-	},
-	{
-		id: 382,
-		type: "programming",
-		setup: "What did the router say to the doctor?",
-		punchline: "It hurts when IP."
-	},
-	{
-		id: 383,
-		type: "programming",
-		setup: "An IPv6 packet is walking out of the house.",
-		punchline: "He goes nowhere."
-	},
-	{
-		id: 384,
-		type: "programming",
-		setup: "A DHCP packet walks into a bar and asks for a beer.",
-		punchline: 'Bartender says, "here, but I’ll need that back in an hour!"'
-	},
-	{
-		id: 385,
-		type: "programming",
-		setup: "3 SQL statements walk into a NoSQL bar. Soon, they walk out",
-		punchline: "They couldn't find a table."
-	},
-	{
-		id: 386,
-		type: "general",
-		setup: "I saw a nice stereo on Craigslist for $1. Seller says the volume is stuck on ‘high’",
-		punchline: "I couldn’t turn it down."
-	},
-	{
-		id: 387,
-		type: "general",
-		setup: "My older brother always tore the last pages of my comic books, and never told me why.",
-		punchline: "I had to draw my own conclusions."
-	}
-];
 
 let fileHandleTicker;
 let fileContentTicker = "";
@@ -11723,97 +9429,112 @@ function monitorFileChanges() {
 		}
 	}, 1000); // Check for changes every second
 }
+// Add this variable at the top of your script file, outside any functions
+let lastRandomTestMessageData = null;
 
 async function triggerFakeRandomMessage(){
 	var data = {};
-	data.chatname = "John Doe";
-	data.nameColor = "";
-	data.chatbadges = "";
-	data.backgroundColor = "";
-	data.textColor = "";
-	data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
-	data.chatimg = "";
-	data.type = "youtube";
-	if (Math.random() > 0.9) {
-		data.hasDonation = "2500 gold";
-		data.membership = "";
-		data.chatname = "Bob";
-		data.chatbadges = [];
-		var html = {};
-		html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
-		html.type = "svg";
-		data.chatbadges.push(html);
-	} else if (Math.random() > 0.83 ){
-		data.hasDonation = "3 hearts";
-		data.membership = "";
-		data.chatmessage = "";
-		data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
-		data.chatname = "Lucy";
-		data.type = "youtubeshorts";
-	} else if (Math.random() > 0.7) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
-		data.chatname = "vdoninja";
-		data.type = "twitch";
-		data.event = "test";
-		var score = parseInt(Math.random() * 378);
-		data.chatmessage = jokes[score]["setup"] + "..  " + jokes[score]["punchline"] + " 😊";
-	} else if (Math.random() > 0.6) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
-		data.chatname = "Steve";
-		data.vip = true;
-		var score = parseInt(Math.random() * 378);
-		data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
-	} else if (Math.random() > 0.5) {
-		data.hasDonation = "";
-		data.nameColor = "#107516";
-		data.membership = "SPONSORSHIP";
-		data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
-		data.chatname = "Steve_" + randomDigits();
-		data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
-		data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
-	} else if (Math.random() > 0.45) {
-		data.hasDonation = "";
-		data.highlightColor = "pink";
-		data.nameColor = "lightblue";
-		data.chatname = "NewGuest";
-		data.type = "twitch";
-		data.chatmessage = "hi";
-		data.chatbadges = ["https://vdo.ninja/media/icon.png","https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj","https://socialstream.ninja/icons/announcement.png"];
-	} else if (Math.random() > 0.40) {
-		data.membership = "Coffee Addiction";
-		data.hasDonation = "";
-		data.subtitle = "32 Years";
-		data.highlightColor = "pink";
+	let attempts = 0;
+	const maxAttempts = 5;
+	
+	// Keep generating new messages until we get one that's different from the last one
+	// or until we've tried a reasonable number of times
+	do {
+		data = {};
+		data.chatname = "John Doe";
 		data.nameColor = "";
-		data.private = true;
-		data.chatname = "Sir Drinks-a-lot";
-		data.type = "discord";
-		data.chatmessage = "☕☕☕ COFFEE!";
-		data.chatbadges = ["https://socialstream.ninja/icons/bot.png","https://socialstream.ninja/icons/announcement.png"];
-	} else if (Math.random() > 0.3) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.chatmessage = "";
-		data.contentimg = "https://socialstream.ninja/media/logo.png";
-		data.chatname = "User123";
-		data.chatimg = "https://socialstream.ninja/media/user1.png";
+		data.chatbadges = "";
+		data.backgroundColor = "";
+		data.textColor = "";
+		data.chatmessage = "Looking good! 😘😘😊  This is a test message. 🎶🎵🎵🔨 ";
+		data.chatimg = "";
 		data.type = "youtube";
-	} else if (Math.random() > 0.2) {
-		data.hasDonation = "";
-		data.membership = "";
-		data.question = true;
-		data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
-		data.chatname = "Nich Lass";
-		data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
-		data.type = "zoom";
-	} else {
-		data.hasDonation = "";
-		data.membership = "SPONSORSHIP";
-	}
+		
+		if (Math.random() > 0.9) {
+			data.hasDonation = "2500 gold";
+			data.membership = "";
+			data.chatname = "Bob";
+			data.chatbadges = [];
+			var html = {};
+			html.html = '<svg viewBox="0 0 16 16" preserveAspectRatio="xMidYMid meet" focusable="false" class="style-scope yt-icon" style="pointer-events: none; display: block; width: 100%; height: 100%; fill: rgb(95, 132, 241);"><g class="style-scope yt-icon"><path d="M9.64589146,7.05569719 C9.83346524,6.562372 9.93617022,6.02722257 9.93617022,5.46808511 C9.93617022,3.00042984 7.93574038,1 5.46808511,1 C4.90894765,1 4.37379823,1.10270499 3.88047304,1.29027875 L6.95744681,4.36725249 L4.36725255,6.95744681 L1.29027875,3.88047305 C1.10270498,4.37379824 1,4.90894766 1,5.46808511 C1,7.93574038 3.00042984,9.93617022 5.46808511,9.93617022 C6.02722256,9.93617022 6.56237198,9.83346524 7.05569716,9.64589147 L12.4098057,15 L15,12.4098057 L9.64589146,7.05569719 Z" class="style-scope yt-icon"></path></g></svg>';
+			html.type = "svg";
+			data.chatbadges.push(html);
+		} else if (Math.random() > 0.8 ){
+			data.hasDonation = "3 hearts";
+			data.membership = "";
+			data.chatmessage = "";
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "Lucy";
+			data.type = "youtubeshorts";
+		} else if (Math.random() > 0.7) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.chatimg = "https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png";
+			data.chatname = "vdoninja";
+			data.type = "twitch";
+			data.event = "test";
+			var score = parseInt(Math.random() * 378);
+			data.chatmessage = jokes[score]["setup"] + "..  " + jokes[score]["punchline"] + " 😊";
+		} else if (Math.random() > 0.6) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.chatimg = "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve";
+			
+			data.vip = true;
+			var score = parseInt(Math.random() * 378);
+			data.chatmessage = '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png">😁 🇨🇦 https://vdo.ninja/';
+		} else if (Math.random() > 0.5) {
+			data.hasDonation = "";
+			data.nameColor = "#107516";
+			data.membership = "SPONSORSHIP";
+			data.chatimg = parseInt(Math.random() * 2) ? "" : "https://socialstream.ninja/media/sampleavatar.png";
+			data.chatname = "Steve_" + randomDigits();
+			data.type = parseInt(Math.random() * 2) ? "slack" : "facebook";
+			data.chatmessage = "!join The only way 2 do great work is to love what you do. If you haven't found it yet, keep looking. Don't settle. As with all matters of the heart, you'll know when you find it.";
+		} else if (Math.random() > 0.4) {
+			data.hasDonation = "";
+			data.highlightColor = "pink";
+			data.nameColor = "lightblue";
+			data.chatname = "NewGuest";
+			data.type = "twitch";
+			data.chatmessage = "hi";
+			data.chatbadges = ["https://vdo.ninja/media/icon.png","https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj","https://socialstream.ninja/icons/announcement.png"];
+		} else if (Math.random() > 0.30) {
+			data.membership = "Coffee Addiction";
+			data.hasDonation = "";
+			data.subtitle = "32 Years";
+			data.highlightColor = "pink";
+			data.nameColor = "";
+			data.private = true;
+			data.chatname = "Sir Drinks-a-lot";
+			data.type = "discord";
+			data.chatmessage = "☕☕☕ COFFEE!";
+			data.chatbadges = ["https://socialstream.ninja/icons/bot.png","https://socialstream.ninja/icons/announcement.png"];
+		} else if (Math.random() > 0.2) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.chatmessage = "";
+			data.contentimg = "https://socialstream.ninja/media/logo.png";
+			data.chatname = "User123";
+			data.chatimg = "https://socialstream.ninja/media/user1.jpg";
+			data.type = "youtube";
+		} else if (Math.random() > 0.1) {
+			data.hasDonation = "";
+			data.membership = "";
+			data.question = true;
+			data.chatmessage = "Is this a test question?  🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓🤓";
+			data.chatname = "Nich Lass";
+			data.chatimg = "https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj";
+			data.type = "zoom";
+		} else {
+			data.hasDonation = "";
+			data.membership = "SPONSORSHIP";
+		}
+		
+		attempts++;
+	} while (isEqualMessage(data, lastRandomTestMessageData) && attempts < maxAttempts);
+
 
 	data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
 	if (!data) {
@@ -11829,29 +9550,21 @@ async function triggerFakeRandomMessage(){
 		return response;
 	}
 	
+	lastRandomTestMessageData = JSON.parse(JSON.stringify(data)); // Store a deep copy of the current message
 	sendToDestinations(data);
 }
 
-function createTestMessage(options = {}) {
-    return {
-        chatname: options.chatname || "TestUser",
-        chatmessage: options.chatmessage || "This is a test message",
-        textonly: options.textonly || (options.chatmessage ? options.chatmessage.replace(/<[^>]*>?/gm, '') : "This is a test message"), // Basic textonly extraction
-        type: options.type || "twitch", // Example: 'twitch', 'youtube', etc.
-        mod: options.mod === true,
-        admin: options.admin === true, // Or 'host', 'owner' depending on platform specifics
-        vip: options.vip === true,
-        subscriber: options.subscriber === true, // Added common roles
-        follower: options.follower === true,
-        hasDonation: options.hasDonation || "", // e.g., "$5.00" or amount as number
-        donationAmount: options.donationAmount || 0, // Numerical donation amount
-        membership: options.membership || "", // e.g., "Tier 1"
-        chatimg: options.chatimg || "", // URL to user's avatar
-        userid: options.userid || `testuser_${Date.now()}`, // Unique user ID
-        badges: options.badges || {}, // e.g., { subscriber: '1', moderator: '1'}
-        id: options.id || `msg_${Date.now()}` // Unique message ID
-        // Add any other properties your flows might expect or that are common in your message objects
-    };
+// Helper function to compare if two messages are effectively the same
+function isEqualMessage(message1, message2) {
+	if (!message1 || !message2) return false;
+	
+	// Compare the key properties that would make messages look the same
+	return message1.chatname === message2.chatname &&
+		   message1.chatmessage === message2.chatmessage &&
+		   message1.chatimg === message2.chatimg &&
+		   message1.type === message2.type &&
+		   message1.hasDonation === message2.hasDonation &&
+		   message1.membership === message2.membership;
 }
 
 let tmp = new EventFlowSystem({

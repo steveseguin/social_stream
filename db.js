@@ -19,6 +19,12 @@ class MessageStoreDB {
             userMessages: new Map(),
             lastUpdate: 0
         };
+		
+		this.existenceCache = {
+            entries: new Map(),
+            maxSize: options.existenceCacheSize || 100,
+            ttl: options.existenceCacheTTL || 30 * 60 * 1000  // 30 minutes default
+        };
         
         this.initPromise = this.initDatabase();
     }
@@ -53,39 +59,40 @@ class MessageStoreDB {
     }
 
 	async addMessage(message) {
-		const db = await this.ensureDB();
-		const now = Date.now();
-		
-		const cloned = {...message};
-		
-		if (cloned.id){
-			cloned.mid = cloned.id;
-			delete cloned.id;   // Remove id as it will be auto-generated
-		}
-		
-		const messageData = { 
-			...cloned,
-			timestamp: now,
-			expiresAt: now + (this.daysToKeep * MS_PER_DAY)
-		};
+        const db = await this.ensureDB();
+        const now = Date.now();
+        
+        const cloned = {...message};
+        
+        if (cloned.id){
+            cloned.mid = cloned.id;
+            delete cloned.id;   // Remove id as it will be auto-generated
+        }
+        
+        // Set expiration only if unlimiteDB is not enabled
+        const messageData = { 
+            ...cloned,
+            timestamp: now,
+            expiresAt: now + (this.daysToKeep * MS_PER_DAY)
+        };
 
-		return new Promise((resolve, reject) => {
-			const tx = db.transaction(this.storeName, 'readwrite');
-			const store = tx.objectStore(this.storeName);
-			
-			const request = store.add(messageData);
-			
-			request.onsuccess = () => {
-				// Get the auto-generated ID from the request
-				messageData.id = request.result;
-				message.idx = request.result;;
-				this.updateCache(messageData);
-				resolve(request.result); 
-			};
-			
-			request.onerror = () => reject(request.error);
-		});
-	}
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            
+            const request = store.add(messageData);
+            
+            request.onsuccess = () => {
+                // Get the auto-generated ID from the request
+                messageData.id = request.result;
+                message.idx = request.result;
+                this.updateCache(messageData);
+                resolve(request.result); 
+            };
+            
+            request.onerror = () => reject(request.error);
+        });
+    }
 
 	async updateMessage(idx, updatedResponse) {
 		if (!idx || !updatedResponse) return null;
@@ -153,21 +160,83 @@ class MessageStoreDB {
             };
         });
     }
-
-    async getUserMessages(chatname, type, page = 0, pageSize = 100) {
-        const db = await this.ensureDB();
-        const now = Date.now();
-        
-        if (page === 0 && this.cache.userMessages.has(chatname)) {
-            const cached = this.cache.userMessages.get(chatname);
-            if (cached.length >= pageSize && (now - this.cache.lastUpdate) < this.cacheDuration) {
-                return cached.slice(0, pageSize);
-            }
-        }
+	
+	async checkUserTypeExists(chatname, type) {
+		const cacheKey = `${chatname}:${type}`;
+		const now = Date.now();
+		
+		// Check cache first
+		if (this.existenceCache.entries.has(cacheKey)) {
+			const entry = this.existenceCache.entries.get(cacheKey);
+			if (now - entry.timestamp < this.existenceCache.ttl) {
+				return entry.exists;
+			}
+			// Expired entry, remove from cache
+			this.existenceCache.entries.delete(cacheKey);
+		}
+		
+		// If database is disabled, update cache as not existing and return false
+		if (settings?.disableDB) {
+			// Update cache to indicate this user doesn't exist (since we can't check)
+			this.existenceCache.entries.set(cacheKey, {
+				exists: false,
+				timestamp: now
+			});
+			
+			// Trim cache if needed
+			if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
+				const oldestKey = Array.from(this.existenceCache.entries.keys())[0];
+				this.existenceCache.entries.delete(oldestKey);
+			}
+			
+			return false;
+		}
+		
+		// Not in cache and database enabled, check database
+		const db = await this.ensureDB();
+		
+		return new Promise((resolve) => {
+			const tx = db.transaction(this.storeName, 'readonly');
+			const index = tx.objectStore(this.storeName).index('user_type_timestamp');
+			
+			const range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
+			const countRequest = index.count(range);
+			
+			countRequest.onsuccess = () => {
+				const exists = countRequest.result > 0;
+				
+				// Update cache
+				this.existenceCache.entries.set(cacheKey, {
+					exists,
+					timestamp: now
+				});
+				
+				// Trim cache if needed
+				if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
+					const oldestKey = Array.from(this.existenceCache.entries.keys())[0];
+					this.existenceCache.entries.delete(oldestKey);
+				}
+				
+				resolve(exists);
+			};
+			
+			countRequest.onerror = () => {
+				console.error('Error counting user type records:', countRequest.error);
+				resolve(false);
+			};
+		});
+	}
+    clearExistenceCache() {
+        this.existenceCache.entries.clear();
+    }
+	
+	async getUserMessages(chatname, type, page = 0, pageSize = 100) {
+		const db = await this.ensureDB();
+		const now = Date.now();
 		
 		if (settings?.disableDB) return [];
-
-        return new Promise((resolve) => {
+		
+		return new Promise((resolve) => {
             const tx = db.transaction(this.storeName, 'readonly');
             const index = tx.objectStore(this.storeName).index(
                 type ? 'user_type_timestamp' : 'user_timestamp'
@@ -204,6 +273,12 @@ class MessageStoreDB {
 
     scheduleCleanup() {
         const cleanup = async () => {
+            // Skip cleanup if unlimiteDB is enabled
+            if (settings?.unlimiteDB) {
+                console.log('Unlimited DB mode enabled, skipping cleanup');
+                return;
+            }
+            
             const db = await this.ensureDB();
             const now = Date.now();
             

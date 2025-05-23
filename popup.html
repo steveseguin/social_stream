@@ -4,7 +4,6 @@
         <title>Menu</title>
         <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
         <meta content="utf-8" http-equiv="encoding" />
-        <script src="popup.js?v=2"></script>
         <style>
 :root {
     --body-background-enabled: #e7e7e7;
@@ -2388,6 +2387,20 @@ body.ssapp .wrapper.ssapp h3 {
                                 </div>
 								<div>
                                     <label class="switch">
+                                        <input type="checkbox" data-param1="exclude=kofi" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-kofi">🚫<img src="./sources/images/kofi.png" class="icon" /> Hide messages from Kofi</span>
+                                </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="exclude=youtube" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-youtube">🚫<img src="./sources/images/youtube.png" class="icon" /> Hide messages from YouTube</span>
+                                </div>
+								<div>
+                                    <label class="switch">
                                         <input type="checkbox" data-param1="blur" />
                                         <span class="slider round"></span>
                                     </label>
@@ -2797,6 +2810,13 @@ body.ssapp .wrapper.ssapp h3 {
                                     ✂️ <span data-translate="trim-names-to-8">Trim names longer than</span>
 									<input type="number" style="max-width: 4ch;" max="99" min="1" value="8" size="3" data-numbersetting="trimname" />chars...
                                 </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="normalize" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    🔠 <span data-translate="normalize-messages">Diacritic folding / Accent normalization</span>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="fixed" />
@@ -3151,7 +3171,7 @@ body.ssapp .wrapper.ssapp h3 {
 				
             </div>
 			<div style="color:white;font"><i>
-				Want a different design? Check out the <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">community made styles!</a></i>
+				Want a different design? Check out the <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">community made styles here</a>, or quick load a <a id="sampleoverlay" class="lightblue"  target="_blank" href="#">popular sample theme here</a>! Customize it with an AI chat bot.</i> 
 			</div>
             <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="single_message_title">
@@ -3563,7 +3583,7 @@ body.ssapp .wrapper.ssapp h3 {
 
                                 <div class="textInputContainer" style="display: inline-block; width: 250px;">
                                     <input type="text" id="filterfeaturedusers" class="textInput" autocomplete="off" placeholder="eg: name,name2:source,bob:twitch,Name3:*" data-textparam2="filterfeaturedusers" />
-                                    <label for="filterfeaturedusers"><span data-translate="filter-featured-users">&gt;Whitelist of allowed featured users</span></label>
+                                    <label for="filterfeaturedusers"><span data-translate="filter-featured-users">&gt;List of allowed featured users</span></label>
                                 </div>
                             </div>
                         </div>
@@ -3885,18 +3905,11 @@ body.ssapp .wrapper.ssapp h3 {
 									</div>
 								</div>
 								<div title="There's a minimum of 5-seconds by default" style="margin:5px 0">
-									<span data-translate="custom-ollama-rate">
-										🐢 Rate limit for responses per tab / source
+									🐢 <span data-translate="custom-ollama-rate">Rate limit for responses per tab / source</span>
 										<input type="number" style="max-width: 7ch;" step="1000" max="9999999" min="5000" value="5000" size="6" data-numbersetting="ollamaRateLimitPerTab" />ms
-									</span>
+									
 								</div>
-								<div style="display: inline-block;" title="Include message history as context for the bot. Will slow things down..">
-									<label class="switch">
-										<input type="checkbox" id="llmcontext" data-setting="nollmcontext" />
-										<span class="slider round"></span>
-									</label>
-									🚫🗄️ <span data-translate="nollmcontext">Do not include past message context</span>
-								</div>
+								
 								<div style="display: inline-block;" title="Include chat summaries with past context">
 									<label class="switch">
 										<input type="checkbox" id="llmsummary" data-setting="llmsummary" />
@@ -3904,6 +3917,37 @@ body.ssapp .wrapper.ssapp h3 {
 									</label>
 									📈 <span data-translate="llmsummary">Include chat summaries to chat bot</span>
 								</div>
+								
+								<div style="display: inline-block;" title="Include message history as context for the bot. Will slow things down..">
+									<label class="switch">
+										<input type="checkbox" id="llmcontext" data-setting="nollmcontext" />
+										<span class="slider round"></span>
+									</label>
+									🚫🗄️ <span data-translate="nollmcontext">Do not include past message context</span>
+								</div>
+								
+								
+								<div title="There's 10 included by default; this is user, not entire, chat history." style="margin:5px 0">
+									📃 <span data-translate="chatbotHistoryTotal"> Number of past user messages to include:</span>
+										<input type="number" style="max-width: 5ch;" step="1" max="500" min="0" value="10" size="6" data-numbersetting="chatbotHistoryTotal" />
+								</div>
+								
+								<div style="display: inline-block;" title="Include timestamp in chat history (toLocaleString).">
+									<label class="switch">
+										<input type="checkbox" id="chatbotTimestamps" data-setting="chatbotTimestamps" />
+										<span class="slider round"></span>
+									</label>
+									📔 <span data-translate="chatbotTimestamps">Include detailed timestamps in the chat history</span>
+								</div>
+								
+								<div style="display: inline-block;" title="Include the bot's own replies to user in chat history. This can confuse an LLM, so avoid it.">
+									<label class="switch">
+										<input type="checkbox" id="includeBotResponses" data-setting="includeBotResponses" />
+										<span class="slider round"></span>
+									</label>
+									🥨 <span data-translate="includeBotResponses">Include bot's replies with user's chat history</span>
+								</div>
+								
 								<div style="display: inline-block;" title="Include chat summaries with past context">
 									<label class="switch">
 										<input type="checkbox" id="allowLLMSummary" data-setting="allowLLMSummary" />
@@ -4227,7 +4271,7 @@ body.ssapp .wrapper.ssapp h3 {
 									<input type="checkbox" data-param10="googlelang" />
 									<span class="slider round"></span>
 								</label>
-								<select id="googleLanguageSelect10" data-optionparam1="googlelang10"> 
+								<select id="googleLanguageSelect10" data-optionparam10="googlelang10"> 
 									<option value="en-US">English (US)</option> 
 									<option value="en-GB">English (UK)</option> 
 									<option value="en-AU">English (Australia)</option> 
@@ -4797,7 +4841,7 @@ body.ssapp .wrapper.ssapp h3 {
                                         <input type="checkbox" data-param4="hidetitle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-show-the-sub-title">🧹 Do not show the sub-title </span>
+                                    <span data-translate="do-not-show-the-sub-title">🧹 Do not show the title "current viewer count"</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5096,7 +5140,23 @@ body.ssapp .wrapper.ssapp h3 {
                 </div>
             </div>
 			
-			<div class="link" title="Giveaway Tool">
+			
+			<div class="link" title="Flow Actions Overlay Page">
+                <h2 class="flowactions_mode_title">
+                    <span data-translate="flowactions">Flow Actions Tool</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#flowactions" title="Jump to the Flow Actions link options."><span data-translate="options">[options]</span></a>
+                </h2>
+				<h3>
+                    <span data-translate="flowactions">
+                       This page is the output for actions triggered by the Flow Editor page. 
+                    </span>
+                </h3>
+                <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
+            </div>
+			
+			
+			<div class="link hidden" title="Giveaway Tool" style="display:none;">
                 <h2 class="giveaway_mode_title">
                     <span data-translate="giveaway">Giveaway Tool</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -5110,7 +5170,6 @@ body.ssapp .wrapper.ssapp h3 {
                 <div id="giveaway" data-raw="" class="streaming_chat"><a href="" id="giveawaylink"></a></div>
             </div>
            
-			
 			
 			<div class="link" title="Polling system">
                 <h2 class="poll_mode_title">
@@ -5574,7 +5633,7 @@ body.ssapp .wrapper.ssapp h3 {
 						When enabled, custom commands will trigger specific GIFs or media in the overlay.
 					</span>
 				</h3>
-				<div id="custom-gif-commands" data-raw="" class="streaming_chat"><a href="" id="custom-gif-commands-link"></a></div>
+				<div id="custom-gif-commands" data-raw="" class="streaming_chat"><a href="" id="custom-gif-commandslink"></a></div>
 			</div>
 
 			<div class="wrapper">
@@ -5882,6 +5941,20 @@ body.ssapp .wrapper.ssapp h3 {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="disable-store-messages-in-local-database"> 🚫🗄️ Disable the <a href="./chathistory.html" id="chathistory"  class="lightblue"  target="blank">local message database</a> </span>
+                                </div>
+								<div title="Mark first time chatters/donators (requires the local database)">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="firsttimers" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="first-time-chatters"> 🌿 Use the DB to mark new-ish chatters</span>
+                                </div>
+								<div title="Override's the database 30-day storage limits">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="unlimitedDB" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    🤯 <span data-translate="unlimitedDB">Override the DB's 30-day storage limit</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -6229,10 +6302,16 @@ body.ssapp .wrapper.ssapp h3 {
                                         <input type="checkbox" id="nohostreflections" data-setting="nohostreflections" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="nohostreflections">🥷 Hide reflections of 'hosts'</span>
+                                    <span data-translate="nohostreflections">🥷 Hide relayed reflections of 'hosts'</span>
                                 </div>
 								
-								
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="hostFirstSimilarOnly" data-setting="hostFirstSimilarOnly" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hostFirstSimilarOnly">🥷 Hide duplicate messages from 'hosts'</span>
+                                </div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" id="forwardcommands2twitch" data-setting="forwardcommands2twitch" />
@@ -6473,7 +6552,7 @@ body.ssapp .wrapper.ssapp h3 {
 								
 								<h3><span data-translate="swear-words">Other filters</span></h3>
 								
-                                <div title="Censor common bad words with asterixis. Create badwords.txt to make your own blacklist.">
+                                <div title="Censor common bad words with asterixis. Create badwords.txt to make your own blocklist.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="blacklist" />
                                         <span class="slider round"></span>
@@ -6658,7 +6737,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
                                         <input type="text" id="whitelistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="whitelistusers" />
-										🤍 <span data-translate="only-allow-specified-users">Show only the specified users (whitelist)</span>
+										🤍 <span data-translate="only-allow-specified-users">Show only the specified users (approved list)</span>
                                     </div>
                                 </div>
 								
@@ -6670,7 +6749,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
                                         <input type="text" id="blacklistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="blacklistusers" />
-										🔮 <span data-translate="">Blocked users (blacklisted)</span>
+										🔮 <span data-translate="">Blocked users</span>
                                     </div>
                                 </div>
 							
@@ -7112,6 +7191,30 @@ body.ssapp .wrapper.ssapp h3 {
                 </div>
             </div>
 
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-profiles-options" />
+					<label class="collapsible-label" for="wrapper-profiles-options"><span data-translate="profiles">⚙️ Profiles</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<h3><span data-translate="save-current-settings-profile">Save current settings as profile</span></h3>
+								<span data-translate="save-all-your-current-settings-as-a-profile">Save all your current settings as a profile for easy switching</span>
+								<div class="grid">
+									<button class="glowingButton" data-action="saveProfile">
+										<span style="font-size: 0.8em;"><span data-translate="save-profile">💾 Save profile</span></span>
+									</button>
+								</div>
+
+								<h3><span data-translate="manage-profiles">Manage profiles</span></h3>
+								<span data-translate="switch-between-profiles">Switch between your saved profiles</span>
+								<div id="profilesList" class="profiles-list" style="max-height: 300px; overflow-y: auto; margin-top: 10px;"></div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-export-options" />
@@ -7148,13 +7251,13 @@ body.ssapp .wrapper.ssapp h3 {
                                     Just a unique list of names seen in chat; no messages
                                 </span>
                                 <div class="grid3">
-                                    <button class="glowingButton" style="width: 138px;" data-action="savenames">
+                                    <button class="glowingButton" style="min-width: 143px;" data-action="savenames">
                                         <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
                                     </button>
-                                    <button class="glowingButton" style="width: 95px;" data-action="savenamesStop">
+                                    <button class="glowingButton" data-action="savenamesStop">
                                         <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
                                     </button>
-									<button class="glowingButton" style="width: 85px;" data-action="savenamesClear">
+									<button class="glowingButton"  data-action="savenamesClear">
                                         <span style="font-size: 0.8em;"><span data-translate="reset-user-list">Reset list</span></span>
                                     </button>
                                 </div>
@@ -7164,7 +7267,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     Make sure to export your settings first or lose them
                                 </span>
                                 <div class="grid">
-                                    <button class="glowingButton" style="width: 140px;" data-action="bigwipe">
+                                    <button class="glowingButton" style="min-width: 140px;" data-action="bigwipe">
                                         <span style="font-size: 0.8em;"><span data-translate="reset-settings">Reset all settings</span></span>
                                     </button>
                                 </div>
@@ -7174,10 +7277,10 @@ body.ssapp .wrapper.ssapp h3 {
                                     Backup and load your extension settings.
                                 </span>
                                 <div class="grid">
-                                    <button class="glowingButton" style="width: 140px;" data-action="export">
+                                    <button class="glowingButton" style="min-width: 140px;" data-action="export">
                                         <span style="font-size: 0.8em;"><span data-translate="export-to-disk">💾 Export to disk</span></span>
                                     </button>
-                                    <button class="glowingButton" style="width: 140px;" data-action="import">
+                                    <button class="glowingButton" style="min-width: 140px;" data-action="import">
                                         <span style="font-size: 0.8em;"><span data-translate="import-settings">Import settings</span></span>
                                     </button>
                                 </div>
@@ -7245,5 +7348,7 @@ body.ssapp .wrapper.ssapp h3 {
             </p>
 			</span>
         </div>
+		<script type="text/javascript" src="./libs/profiles.js"></script>
+        <script type="text/javascript" src="popup.js?v=2"></script>
     </body>
 </html>

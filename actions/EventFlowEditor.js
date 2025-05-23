@@ -120,6 +120,10 @@ class EventFlowEditor {
                 </div>
             </div>
         `;
+		const saveButton = document.getElementById('save-flow-btn');
+		if (saveButton) {
+			saveButton.classList.add('disabled'); // Start with disabled state
+		}
     }
 
     initEventListeners() {
@@ -133,14 +137,18 @@ class EventFlowEditor {
                 this.markUnsavedChanges(true);
             }
         });
-        document.getElementById('flow-name').addEventListener('input', (e) => {
-            if (this.currentFlow) {
-                this.currentFlow.name = e.target.value;
-                // Do not mark unsaved changes here directly, let the save process handle the asterisk.
-                // Or, if you want the asterisk to appear on name change:
-                this.markUnsavedChanges(true); 
-            }
-        });
+		document.getElementById('flow-name').addEventListener('input', (e) => {
+			if (this.currentFlow) {
+				// Update the internal name value WITHOUT the asterisk
+				const inputValue = e.target.value;
+				this.currentFlow.name = inputValue.endsWith('*') ? inputValue.slice(0, -1) : inputValue;
+				
+				// Only mark as unsaved if the name has actually changed
+				if (this.currentFlow.id && this.currentFlow.name !== this.originalFlowName) {
+					this.markUnsavedChanges(true);
+				}
+			}
+		});
 
         const triggerItems = document.querySelectorAll('#trigger-list .node-item');
         triggerItems.forEach(item => {
@@ -180,33 +188,29 @@ class EventFlowEditor {
         });
     }
     
-    markUnsavedChanges(hasChanges) {
-        this.unsavedChanges = hasChanges;
-        const flowNameInput = document.getElementById('flow-name');
-        if (!flowNameInput || !this.currentFlow) return;
+	markUnsavedChanges(hasChanges) {
+		this.unsavedChanges = hasChanges;
+		const flowNameInput = document.getElementById('flow-name');
+		const saveButton = document.getElementById('save-flow-btn');
+		
+		if (!flowNameInput || !saveButton || !this.currentFlow) return;
 
-        let currentDisplayName = flowNameInput.value;
-        // Remove any existing asterisk for clean check
-        if (currentDisplayName.endsWith('*')) {
-            currentDisplayName = currentDisplayName.slice(0, -1);
-        }
-        
-        if (hasChanges) {
-            // Add asterisk only if it's an existing/saved flow and doesn't already have one
-            // For a new flow (no id), the name will be set, and the asterisk isn't strictly for "unsaved *from DB*"
-            if (this.currentFlow.id && !flowNameInput.value.endsWith('*')) { 
-                flowNameInput.value = currentDisplayName + '*';
-            } else if (!this.currentFlow.id && !flowNameInput.value.endsWith('*') && flowNameInput.value !== "New Flow") {
-                 // For new flows, if name is changed from "New Flow", show asterisk
-                flowNameInput.value = currentDisplayName + '*';
-            }
-        } else {
-            // Remove asterisk if no changes
-            if (flowNameInput.value.endsWith('*')) {
-                flowNameInput.value = currentDisplayName;
-            }
-        }
-    }
+		// Get the base name without any asterisks
+		let baseName = flowNameInput.value;
+		while (baseName.endsWith('*')) {
+			baseName = baseName.slice(0, -1);
+		}
+		
+		// Set the input value with or without asterisk
+		flowNameInput.value = hasChanges ? baseName + '*' : baseName;
+		
+		// Update save button appearance
+		if (hasChanges) {
+			saveButton.classList.remove('disabled');
+		} else {
+			saveButton.classList.add('disabled');
+		}
+	}
 
     async loadFlowList() {
         const flows = await this.eventFlowSystem.getAllFlows(); // Should be pre-sorted by order
@@ -361,7 +365,7 @@ class EventFlowEditor {
         document.querySelectorAll('.flow-item').forEach(item => {
             item.classList.toggle('selected-flow', item.dataset.id === flowId);
         });
-        
+        this.originalFlowName = this.currentFlow.name || '';
         this.markUnsavedChanges(false);
         this.renderFlow();
         this.selectNode(null);
@@ -397,6 +401,8 @@ class EventFlowEditor {
             order: newOrder // Assign new order
         };
         this.markUnsavedChanges(false); 
+		this.originalFlowName = 'New Flow';
+		this.markUnsavedChanges(false); 
 
         document.getElementById('flow-name').value = this.currentFlow.name;
         document.getElementById('flow-active').checked = this.currentFlow.active;
@@ -493,7 +499,7 @@ class EventFlowEditor {
             document.getElementById('flow-name').value = this.currentFlow.name; // Update input field without asterisk AFTER save
             this.markUnsavedChanges(false); // Reset flag AFTER successful save
 
-            alert('Flow saved successfully!');
+           // alert('Flow saved successfully!');
             await this.loadFlowList(); // Refresh list
             
             // Re-select the current flow in the list
@@ -520,7 +526,7 @@ class EventFlowEditor {
             if (duplicatedFlow) {
                 await this.loadFlowList();
                 this.loadFlow(duplicatedFlow.id); // This will reset unsavedChanges flag
-                alert('Flow duplicated successfully!');
+               // alert('Flow duplicated successfully!');
             } else {
                 alert('Error duplicating flow.');
             }
@@ -538,7 +544,7 @@ class EventFlowEditor {
                 this.createNewFlow(); // Will ask for confirmation if current flow has unsaved changes
             }
             this.loadFlowList();
-            alert('Flow deleted successfully.');
+           // alert('Flow deleted successfully.');
         } catch (error) {
             console.error('Error deleting flow:', error);
             alert('Failed to delete flow. Check console for details.');
@@ -759,6 +765,168 @@ class EventFlowEditor {
             console.error('Error dropping node:', err);
         }
     }
+	
+	runTestFlow(testMessage) {
+		if (!this.currentFlow) {
+			alert('No flow is currently active. Please create or select a flow to test.');
+			return { success: false, message: 'No active flow' };
+		}
+
+		// Create a temporary copy of the flow for testing
+		const testFlow = JSON.parse(JSON.stringify(this.currentFlow));
+		
+		// Ensure it's active for testing
+		testFlow.active = true;
+		
+		let testResult = { success: false, message: 'Test not run' };
+		
+		// Determine if we should test just this flow or all flows
+		const testAllActiveFlows = document.getElementById('test-all-active-flows').checked;
+		
+		if (testAllActiveFlows) {
+			// Test against all active flows in the system
+			this.eventFlowSystem.processMessage(testMessage)
+				.then(result => {
+					testResult = { 
+						success: true, 
+						message: result ? 'Message was processed successfully' : 'Message was blocked', 
+						result: result 
+					};
+					this.displayTestResults(testResult);
+				});
+		} else {
+			// Create a standalone copy of the flow system just for testing this flow
+			const tempFlowSystem = {
+				flows: [testFlow],
+				processMessage: this.eventFlowSystem.processMessage.bind(this.eventFlowSystem),
+				evaluateFlow: this.eventFlowSystem.evaluateFlow.bind(this.eventFlowSystem),
+				evaluateTrigger: this.eventFlowSystem.evaluateTrigger.bind(this.eventFlowSystem),
+				evaluateSpecificLogicNode: this.eventFlowSystem.evaluateSpecificLogicNode.bind(this.eventFlowSystem),
+				executeAction: this.eventFlowSystem.executeAction.bind(this.eventFlowSystem)
+			};
+			
+			// Process the message through just this flow
+			tempFlowSystem.evaluateFlow(testFlow, testMessage)
+				.then(result => {
+					testResult = { 
+						success: true, 
+						message: result.blocked ? 'Message was blocked by this flow' : 
+								 result.modified ? 'Message was modified by this flow' : 
+								 'Flow triggered but no actions affected the message',
+						result: result 
+					};
+					this.displayTestResults(testResult);
+				});
+		}
+		
+		return testResult;
+	}
+	
+	initTestPanel() {
+		const testOverlay = document.getElementById('test-overlay');
+		const testPanel = document.getElementById('test-panel');
+		const openTestBtn = document.getElementById('open-test-panel');
+		const closeTestBtn = document.getElementById('close-test-btn');
+		const runTestBtn = document.getElementById('run-test-btn');
+		const donationCheckbox = document.getElementById('test-donation');
+		const donationAmountField = document.getElementById('donation-amount');
+
+		// Show/hide donation amount field based on checkbox
+		donationCheckbox.addEventListener('change', function() {
+			donationAmountField.style.display = this.checked ? 'block' : 'none';
+		});
+
+		// Open test panel
+		openTestBtn.addEventListener('click', function() {
+			testOverlay.style.display = 'block';
+			testPanel.style.display = 'flex';
+		});
+
+		// Close test panel
+		closeTestBtn.addEventListener('click', function() {
+			testOverlay.style.display = 'none';
+			testPanel.style.display = 'none';
+		});
+
+		// Click outside to close
+		testOverlay.addEventListener('click', function() {
+			testOverlay.style.display = 'none';
+			testPanel.style.display = 'none';
+		});
+
+		// Run test
+		runTestBtn.addEventListener('click', () => {
+			// Show warning if flow has unsaved changes
+			document.getElementById('unsaved-flow-warning').style.display = 
+				this.unsavedChanges ? 'block' : 'none';
+			
+			// Create test message from form inputs
+			const testMessage = {
+				type: document.getElementById('test-source').value,
+				chatname: document.getElementById('test-username').value,
+				userid: document.getElementById('test-username').value.toLowerCase(),
+				chatmessage: document.getElementById('test-message').value,
+				mod: document.getElementById('test-mod').checked,
+				vip: document.getElementById('test-vip').checked,
+				admin: document.getElementById('test-admin').checked,
+				hasDonation: document.getElementById('test-donation').checked,
+				// Add other required properties
+				timestamp: Date.now(),
+			};
+			
+			// Add donation amount if donation checkbox is checked
+			if (testMessage.hasDonation) {
+				testMessage.donationAmount = document.getElementById('test-donation-amount').value;
+			}
+			
+			// Run the test
+			this.runTestFlow(testMessage);
+		});
+	}
+
+	displayTestResults(testResult) {
+		const resultsEl = document.getElementById('test-results');
+		if (!resultsEl) return;
+		
+		let html = `<h4>Test Results</h4>`;
+		
+		if (!testResult.success) {
+			html += `<p class="test-error">${testResult.message}</p>`;
+		} else {
+			const result = testResult.result;
+			
+			if (result === null) {
+				html += `<p class="test-blocked">Message was BLOCKED by a flow.</p>`;
+			} else if (result.blocked) {
+				html += `<p class="test-blocked">Message was BLOCKED by this flow.</p>`;
+			} else if (result.modified) {
+				html += `
+					<p class="test-modified">Message was MODIFIED.</p>
+					<div class="test-result-detail">
+						<strong>New Message:</strong> ${result.message.chatmessage}
+					</div>
+				`;
+				
+				// Show any properties that were modified
+				const originalKeys = Object.keys(testMessage);
+				const modifiedKeys = Object.keys(result.message).filter(key => 
+					!originalKeys.includes(key) || result.message[key] !== testMessage[key]
+				);
+				
+				if (modifiedKeys.length > 0) {
+					html += `<div class="test-result-detail"><strong>Modified Properties:</strong><ul>`;
+					modifiedKeys.forEach(key => {
+						html += `<li>${key}: ${JSON.stringify(result.message[key])}</li>`;
+					});
+					html += `</ul></div>`;
+				}
+			} else {
+				html += `<p class="test-passed">Flow was triggered but did not modify or block the message.</p>`;
+			}
+		}
+		
+		resultsEl.innerHTML = html;
+	}
 
     createNode(type, subtype, x, y) {
         const id = `node_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
@@ -795,7 +963,7 @@ class EventFlowEditor {
                 case 'customJs': 
 					node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
 				case 'playTenorGiphy':
-					node.config = { mediaUrl: 'https://media.giphy.com/media/KEYEpIngcmXlNH2h4m/giphy.gif', mediaType: 'iframe', duration: 10000 };
+					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000 };
 					break;
 				case 'triggerOBSScene':
 					node.config = { sceneName: 'Your Scene Name' };

@@ -367,12 +367,10 @@ async function getRecentBranchCommits(branchName) {
 async function enhanceCommitMessage(originalMessage, diff, branchName, dirSummary, recentCommits) {
   log('info', 'Generating enhanced commit message...');
 
-  // Prepare recent commits string for the prompt
   const recentCommitLines = recentCommits.length > 0
      ? `* **Recent Steps on Branch (${branchName}):**\n${recentCommits.map(s => `        * ${s}`).join('\n')}`
      : `* **Recent Steps on Branch (${branchName}):** (This appears to be the first commit on this branch since merging from the base branch)`;
 
-  // Construct the prompt for the AI
   const prompt = `
 You are an expert developer assistant tasked with refining Git commit messages for the "Social Stream Ninja" project. Your goal is to create a message that follows Conventional Commits format (e.g., "feat:", "fix:", "chore:", "refactor:", "style:", "test:", "docs:", "build:", "ci:") and provides clear, concise, and informative context about the changes.
 
@@ -399,7 +397,7 @@ Analyze the provided information (original message, code diff, branch context, d
     * Reference specific files, components (e.g., \`dock.html\`, TTS module, GitHub Actions), or features affected.
     * Incorporate context from the branch name, directory summary, and recent commits if relevant (e.g., "Continues work on feature X from previous commits").
 4.  **Tone:** Professional and clear.
-5.  **Focus:** The message should *only* contain the commit message itself, starting directly with the type/scope. Do not add introductions like "Here is the enhanced commit message:".
+5.  **Focus:** The message should *only* contain the commit message itself, starting directly with the type/scope. Do not add introductions like "Here is the enhanced commit message:". Crucially, do not include bracketed tags like '[skip ci]', '[auto-enhanced]', '[skip pages]', etc., in your generated message text.
 
 **Input Data:**
 
@@ -420,32 +418,27 @@ ${recentCommitLines}
 
   try {
     log('debug', 'Sending prompt to Gemini API.');
-    // Ensure the model object is valid before calling
     if (!model) {
         throw new Error('Gemini model is not initialized.');
     }
     const result = await model.generateContent(prompt);
-    // Basic validation of the response structure
     if (!result || !result.response || typeof result.response.text !== 'function') {
         log('error', 'Invalid response structure received from Gemini API.', { response: result });
         throw new Error('Invalid response structure from Gemini API.');
     }
     const enhancedMessage = result.response.text().trim();
     log('info', 'Successfully received enhanced commit message from Gemini API.');
-    log('debug', 'Enhanced Message:', { message: enhancedMessage }); // Log the message itself for debugging
-    // Basic check if the response seems like a commit message (starts with a common type)
+    log('debug', 'Enhanced Message:', { message: enhancedMessage }); 
     if (!/^(feat|fix|chore|refactor|style|test|docs|build|ci)/.test(enhancedMessage)) {
         log('warn', 'Generated message does not strictly follow Conventional Commit format.', { message: enhancedMessage });
-        // Decide if you want to proceed anyway or return null/error
     }
     return enhancedMessage;
   } catch (error) {
     log('error', 'Error calling Gemini API', { errorMessage: error.message, promptLength: prompt.length });
-    // Log more details if available (e.g., error response from API)
     if (error.response) {
         log('error', 'Gemini API Error Response:', { data: error.response.data });
     }
-    return null; // Indicate failure
+    return null; 
   }
 }
 
@@ -458,11 +451,9 @@ ${recentCommitLines}
  */
 async function updateCommitMessage(newMessage) {
   log('info', 'Updating commit message...');
-  const tempFilePath = path.join(process.cwd(), `.git-commit-msg-${Date.now()}.tmp`); // Unique temp file
+  const tempFilePath = path.join(process.cwd(), `.git-commit-msg-${Date.now()}.tmp`); 
 
   try {
-    // Configure Git user for the action (important for amend)
-    // Check if already configured to avoid redundant calls/warnings
     try {
         await runCommand('git config user.name');
         await runCommand('git config user.email');
@@ -473,39 +464,30 @@ async function updateCommitMessage(newMessage) {
         await runCommand('git config --global user.email "actions@github.com"');
     }
 
-    // Write the new message to a temporary file
     log('debug', `Writing new commit message to temporary file: ${tempFilePath}`);
-    await fs.writeFile(tempFilePath, newMessage);
+    const finalMessage = `${newMessage}\n\n[auto-enhanced]`; 
+    await fs.writeFile(tempFilePath, finalMessage);
 
-    // Amend the commit using the message from the file
     log('info', 'Amending commit with new message...');
-    await runCommand(`git commit --amend -F "${tempFilePath}"`); // Use quotes for path safety
+    await runCommand(`git commit --amend -F "${tempFilePath}"`); 
 
-    // Force push the amended commit
-    // Use --force-with-lease as a slightly safer alternative if possible,
-    // but standard --force is often needed in this CI amend scenario.
-    // Adding --no-verify to skip any potential pre-push hooks.
     log('info', 'Force-pushing amended commit (with --no-verify)...');
     await runCommand('git push --force --no-verify');
 
     log('info', 'Commit amended and pushed successfully.');
     return true;
   } catch (error) {
-    // Error is already logged by runCommand, just log the overall failure here
     log('error', 'Failed to update commit message and push.');
     return false;
   } finally {
-    // Clean up the temporary file in all cases (success or failure)
     try {
       log('debug', `Cleaning up temporary file: ${tempFilePath}`);
       await fs.unlink(tempFilePath);
     } catch (cleanupError) {
-      // Log cleanup error but don't mask the original error
       log('warn', `Failed to delete temporary commit message file: ${tempFilePath}`, { error: cleanupError.message });
     }
   }
 }
-
 
 // --- PR Description Update (Optional) ---
 

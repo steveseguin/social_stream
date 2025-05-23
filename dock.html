@@ -8,7 +8,8 @@
 		<link rel="icon" href="./favicon.ico" />
 		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
 		<meta name="robots" content="noindex">
-		<script src="currency.js"></script>
+		<script type="text/javascript" src="currency.js"></script>
+		<script type="text/javascript" src="./libs/objects.js"></script>
 
 		<style>
 			:root {
@@ -40,7 +41,7 @@
 				--cursor-type: pointer;
 				--pressed-color: #9c9c;
 				--blur-amount: 5px;
-
+				--content-images: 30px;
 				--pinned-queued-bg: #9d99cc;
 				--pinned-bg: #712a65;
 				--donation-amount-margin: 0 auto 0 0;
@@ -59,6 +60,8 @@
 				--member-bgcolor-odd: #65fdff33;
 				--member-bgcolor-bubble: #0f1620d1;
 				--member-bgcolor-bubble-odd: #060c16d1;
+				
+				--firstime-bgcolor: #976b6b4f;
 
 				--special-bgcolor: #0f2bfd33;
 				--special-bgcolor-odd: #273de433;
@@ -407,9 +410,10 @@
 			}
 
 			.hl-imgContent img, .hl-imgContent video {
-				max-width: 80px;
+				max-width: 80px !important;
 				margin: 0 2px;
-				max-height: 30px;
+				max-height: var(--content-images) !important;
+				height: var(--content-images) !important;
 			}
 			
 
@@ -1223,10 +1227,6 @@
 				background-color: var(--highlight-compact2);
 			}
 
-
-
-
-
 			.bubble {
 				border-radius: 13px;
 				padding: 7px 12px 7px 10px;
@@ -1238,10 +1238,12 @@
 				background-color: var(--bgcolor-bubble-odd);
 			}
 
-
-
 			.member {
 				background-color: var(--member-bgcolor);
+			}
+			
+			.odd.firsttime, .firsttime {
+				background-color: var(--firstime-bgcolor);
 			}
 
 			.odd.member:not(.expand) {
@@ -2580,7 +2582,7 @@
 			<button id="filterClearButton" class="imgButton imgSmallButton" style="background-image: url(./icons/clear.png)" title="🧹 Clear this filter"></button>
 			<button id="filterCloseButton" class="imgButton imgSmallButton" style="background-image: url(./icons/close.png)" title="❌ Close this dialog"></button>
 		</div>
-		<script src="tts.js"></script>
+		<script type="text/javascript" src="tts.js"></script>
 		<script>
 			window.onerror = function backupErr(errorMsg, url = false, lineNumber = false) {
 				console.error(errorMsg);
@@ -3480,6 +3482,7 @@
 				document.documentElement.style.setProperty("--stylized-emoji", `${100 * scale}%`);
 				document.documentElement.style.setProperty("--message-line-height", `${21 * scale}px`);
 				document.documentElement.style.setProperty("--stylized-img", `${scale * 21}px`);
+				document.documentElement.style.setProperty("--content-images", `${scale * 36}px`);
 			}
 
 			var flexOrNotToFlex = "flex";
@@ -3751,7 +3754,9 @@
 			if (urlParams.has("showvipbadge")) {
 				giveVIPBadge = true;
 			}
-
+			
+			const urlVersion = urlParams.get('v') || false;
+			
 			var openChatAutomatically = false;
 			if (urlParams.has("openchat")) {
 				openChatAutomatically = true;
@@ -3924,6 +3929,12 @@
 				document.documentElement.style.setProperty("--padding-rows", (parseInt(urlParams.get("padding") || 5)) + "px");
 			}
 			
+			var NormalizeText = false;
+			if (urlParams.has("normalize")) {
+				NormalizeText = true;
+			}
+			
+			
 			var hardFilter = false;
 
 			if (urlParams.has("hidemenu") || urlParams.has("nomenu")) {
@@ -3954,6 +3965,10 @@
 				window.obsstudio = false;
 			}
 			
+			var isMELD = false;
+			if (typeof navigator!== 'undefined' && navigator.userAgent && navigator.userAgent.includes("Meld/")) {
+				isMELD = true;
+			}
 			
 			var DoNotShowInitialReply = false;
 			if (urlParams.has("stripreplyto")) {
@@ -4182,6 +4197,7 @@
 								jumptoBottom2();
 							});
 						}
+						
 
 						window.obsstudio.getStatus(function (obsStatus) {
 							getById("menu").style.display = "none";
@@ -4207,6 +4223,31 @@
 								document.documentElement.style.setProperty("--pressed-color", "unset", "");
 							}
 						});
+					}
+					
+					if (isMELD){
+						getById("menu").style.display = "none";
+						hardFilter=true;
+						getById("output").style.marginBottom = "0";
+						document.body.style.overflow = "hidden";
+						mainOutputWindow.style.overflow = "hidden";
+						triggerState = false;
+
+						if (!reversed) {
+							forceAutoscroll = true;
+						}
+						//compactmode=true;
+						//mainOutputWindow.classList.remove("notcompactmode");
+						scale = scale * 2.0;
+
+						document.body.classList.add("OBS");
+						document.documentElement.style.setProperty("--scale-output", scale);
+						isOBSBrowserSource = true;
+
+						if (!urlParams.has("pressedcolor")) {
+							// hide the pressed color if not set otherwise, but in OBS.
+							document.documentElement.style.setProperty("--pressed-color", "unset", "");
+						}
 					}
 				} catch (e) {}
 			}
@@ -4251,6 +4292,8 @@
 			if (window.obsstudio) {
 				document.documentElement.style.setProperty("--background-color", "#2B2E38");
 				document.documentElement.style.setProperty("--menu-background-color", "#191B26");
+			} else if (isMELD){
+				document.documentElement.style.setProperty("--background-color", "#0000");
 			}
 
 			if (darkmode) {
@@ -4317,7 +4360,7 @@
 				document.documentElement.style.setProperty("--menu-background-color", "linear-gradient(to right, #0000, #0008, #0000)", "important");
 				mainOutputWindow.style.overflow = "hidden";
 				
-				if (window.obsstudio){
+				if (window.obsstudio || isMELD){
 					getById("main").style.overflow = "hidden"; // transparent auto hides the scroll bar; i guess that makes sense, since likely used in studio software then.
 				} else {
 					try {
@@ -5159,7 +5202,7 @@
 
 			var activeChatDestinations = new Set();
 
-			var Currencies = { usd: { d: 2, s: "$" }, cad: { d: 2, s: "$" }, eur: { d: 2, s: "€" }, aed: { d: 2, s: "د.إ.‏" }, afn: { d: 0, s: "؋" }, all: { d: 0, s: "Lek" }, amd: { d: 0, s: "դր." }, ars: { d: 2, s: "$" }, aud: { d: 2, s: "$" }, azn: { d: 2, s: "ман." }, bam: { d: 2, s: "KM" }, bdt: { d: 2, s: "৳" }, bgn: { d: 2, s: "лв." }, bhd: { d: 3, s: "د.ب.‏" }, bif: { d: 0, s: "FBu" }, bnd: { d: 2, s: "$" }, bob: { d: 2, s: "Bs" }, brl: { d: 2, s: "R$" }, bwp: { d: 2, s: "P" }, byn: { d: 2, s: "руб." }, bzd: { d: 2, s: "$" }, cdf: { d: 2, s: "FrCD" }, chf: { d: 2, s: "CHF" }, clp: { d: 0, s: "$" }, cny: { d: 2, s: "CN¥" }, cop: { d: 0, s: "$" }, crc: { d: 0, s: "₡" }, cve: { d: 2, s: "CV$" }, czk: { d: 2, s: "Kč" }, djf: { d: 0, s: "Fdj" }, dkk: { d: 2, s: "kr" }, dop: { d: 2, s: "RD$" }, dzd: { d: 2, s: "د.ج.‏" }, eek: { d: 2, s: "kr" }, egp: { d: 2, s: "ج.م.‏" }, ern: { d: 2, s: "Nfk" }, etb: { d: 2, s: "Br" }, gbp: { d: 2, s: "£" }, gel: { d: 2, s: "GEL" }, ghs: { d: 2, s: "GH₵" }, gnf: { d: 0, s: "FG" }, gtq: { d: 2, s: "Q" }, hkd: { d: 2, s: "$" }, hnl: { d: 2, s: "L" }, hrk: { d: 2, s: "kn" }, huf: { d: 0, s: "Ft" }, idr: { d: 0, s: "Rp" }, ils: { d: 2, s: "₪" }, inr: { d: 2, s: "টকা" }, iqd: { d: 0, s: "د.ع.‏" }, irr: { d: 0, s: "﷼" }, isk: { d: 0, s: "kr" }, jmd: { d: 2, s: "$" }, jod: { d: 3, s: "د.أ.‏" }, jpy: { d: 0, s: "￥" }, kes: { d: 2, s: "Ksh" }, khr: { d: 2, s: "៛" }, kmf: { d: 0, s: "FC" }, krw: { d: 0, s: "₩" }, kwd: { d: 3, s: "د.ك.‏" }, kzt: { d: 2, s: "тңг." }, lbp: { d: 0, s: "ل.ل.‏" }, lkr: { d: 2, s: "SL Re" }, ltl: { d: 2, s: "Lt" }, lvl: { d: 2, s: "Ls" }, lyd: { d: 3, s: "د.ل.‏" }, mad: { d: 2, s: "د.م.‏" }, mdl: { d: 2, s: "MDL" }, mga: { d: 0, s: "MGA" }, mkd: { d: 2, s: "MKD" }, mmk: { d: 0, s: "K" }, mop: { d: 2, s: "MOP$" }, mur: { d: 0, s: "MURs" }, mxn: { d: 2, s: "$" }, myr: { d: 2, s: "RM" }, mzn: { d: 2, s: "MTn" }, nad: { d: 2, s: "N$" }, ngn: { d: 2, s: "₦" }, nio: { d: 2, s: "C$" }, nok: { d: 2, s: "kr" }, npr: { d: 2, s: "नेरू" }, nzd: { d: 2, s: "$" }, omr: { d: 3, s: "ر.ع.‏" }, pab: { d: 2, s: "B/." }, pen: { d: 2, s: "S/." }, php: { d: 2, s: "₱" }, pkr: { d: 0, s: "₨" }, pln: { d: 2, s: "zł" }, pyg: { d: 0, s: "₲" }, qar: { d: 2, s: "ر.ق.‏" }, ron: { d: 2, s: "RON" }, rsd: { d: 0, s: "дин." }, rub: { d: 2, s: "₽." }, rwf: { d: 0, s: "FR" }, sar: { d: 2, s: "ر.س.‏" }, sdg: { d: 2, s: "SDG" }, sek: { d: 2, s: "kr" }, sgd: { d: 2, s: "$" }, sos: { d: 0, s: "Ssh" }, syp: { d: 0, s: "ل.س.‏" }, thb: { d: 2, s: "฿" }, tnd: { d: 3, s: "د.ت.‏" }, top: { d: 2, s: "T$" }, try: { d: 2, s: "TL" }, ttd: { d: 2, s: "$" }, twd: { d: 2, s: "NT$" }, tzs: { d: 0, s: "TSh" }, uah: { d: 2, s: "₴" }, ugx: { d: 0, s: "USh" }, uyu: { d: 2, s: "$" }, uzs: { d: 0, s: "UZS" }, vef: { d: 2, s: "Bs.F." }, vnd: { d: 0, s: "₫" }, xaf: { d: 0, s: "FCFA" }, xof: { d: 0, s: "CFA" }, yer: { d: 0, s: "ر.ي.‏" }, zar: { d: 2, s: "R" }, zmk: { d: 0, s: "ZK" }, zwl: { d: 0, s: "ZWL$" } };
+			
 
 			function processInput(data, force=false) {
 				if ("mid" in data) {
@@ -5683,6 +5726,12 @@
 							return false;
 						}
 						
+						const comparison = compareVersions(urlVersion, "3.21.10");
+						if (socketserver && comparison > 0) {
+							console.log(`URL version ${urlVersion} is too old`);
+							return false;
+						}
+						
 						console.log(data.stripe);
 
 						var message = {};
@@ -5790,6 +5839,13 @@
 						if (!data.kofi.data) {
 							return false;
 						}
+						
+						const comparison = compareVersions(urlVersion, "3.21.10");
+						if (socketserver && comparison > 0) {
+							console.log(`URL version ${urlVersion} is too old`);
+							return false;
+						}
+						
 						try {
 							var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
 						} catch (e) {
@@ -5834,10 +5890,9 @@
 
 						data = message; // replace inbound stripe message with new message
 					} catch (e) {
+						errorlog(e);
 						return;
 					}
-
-				
 				}
 				// Buy Me a Coffe New Membership and Donation detection 
 				else if ("bmac" in data) {
@@ -5846,6 +5901,13 @@
 							return false;
 						}
 						else {
+							
+							const comparison = compareVersions(urlVersion, "3.21.10");
+							if (socketserver && comparison > 0) {
+								console.log(`URL version ${urlVersion} is too old`);
+								return false;
+							}
+							
 							var bmac = data.bmac; 
 							var message = {};
 							if (bmac.type === "membership.started") {
@@ -5882,6 +5944,7 @@
 
 					} 
 					} catch (e) {
+						errorlog(e);
 						return;
 					}	
 				}
@@ -5944,7 +6007,7 @@
 					
 					data = message; // replace inbound fourthwall message with new message
 				  } catch (e) {
-					console.error(e);
+					errorlog(e);
 					return;
 				  }
 				}
@@ -7198,11 +7261,6 @@
 				traverse(element);
 			}
 			
-			const validTLDs = new Set(["a","aaa","aarp","abb","abbott","abbvie","abc","able","abogado","abudhabi","ac","academy","accenture","accountant","accountants","aco","actor","ad","ads","adult","ae","aeg","aero","aetna","af","afl","africa","ag","agakhan","agency","ai","aig","airbus","airforce","airtel","akdn","al","alibaba","alipay","allfinanz","allstate","ally","alsace","alstom","am","amazon","americanexpress","americanfamily","amex","amfam","amica","amsterdam","analytics","android","anquan","anz","ao","aol","apartments","app","apple","aq","aquarelle","ar","arab","aramco","archi","army","arpa","art","arte","as","asda","asia","associates","at","athleta","attorney","au","auction","audi","audible","audio","auspost","author","auto","autos","aw","aws","ax","axa","az","azure","b","ba","baby","baidu","banamex","band","bank","bar","barcelona","barclaycard","barclays","barefoot","bargains","baseball","basketball","bauhaus","bayern","bb","bbc","bbt","bbva","bcg","bcn","bd","be","beats","beauty","beer","bentley","berlin","best","bestbuy","bet","bf","bg","bh","bharti","bi","bible","bid","bike","bing","bingo","bio","biz","bj","black","blackfriday","blockbuster","blog","bloomberg","blue","bm","bms","bmw","bn","bnpparibas","bo","boats","boehringer","bofa","bom","bond","boo","book","booking","bosch","bostik","boston","bot","boutique","box","br","bradesco","bridgestone","broadway","broker","brother","brussels","bs","bt","build","builders","business","buy","buzz","bv","bw","by","bz","bzh","c","ca","cab","cafe","cal","call","calvinklein","cam","camera","camp","canon","capetown","capital","capitalone","car","caravan","cards","care","career","careers","cars","casa","case","cash","casino","cat","catering","catholic","cba","cbn","cbre","cc","cd","center","ceo","cern","cf","cfa","cfd","cg","ch","chanel","channel","charity","chase","chat","cheap","chintai","christmas","chrome","church","ci","cipriani","circle","cisco","citadel","citi","citic","city","ck","cl","claims","cleaning","click","clinic","clinique","clothing","cloud","club","clubmed","cm","cn","co","coach","codes","coffee","college","cologne","com","commbank","community","company","compare","computer","comsec","condos","construction","consulting","contact","contractors","cooking","cool","coop","corsica","country","coupon","coupons","courses","cpa","cr","credit","creditcard","creditunion","cricket","crown","crs","cruise","cruises","cu","cuisinella","cv","cw","cx","cy","cymru","cyou","cz","d","dabur","dad","dance","data","date","dating","datsun","day","dclk","dds","de","deal","dealer","deals","degree","delivery","dell","deloitte","delta","democrat","dental","dentist","desi","design","dev","dhl","diamonds","diet","digital","direct","directory","discount","discover","dish","diy","dj","dk","dm","dnp","do","docs","doctor","dog","domains","dot","download","drive","dtv","dubai","dunlop","dupont","durban","dvag","dvr","dz","e","earth","eat","ec","eco","edeka","edu","education","ee","eg","email","emerck","energy","engineer","engineering","enterprises","epson","equipment","er","ericsson","erni","es","esq","estate","et","eu","eurovision","eus","events","exchange","expert","exposed","express","extraspace","f","fage","fail","fairwinds","faith","family","fan","fans","farm","farmers","fashion","fast","fedex","feedback","ferrari","ferrero","fi","fidelity","fido","film","final","finance","financial","fire","firestone","firmdale","fish","fishing","fit","fitness","fj","fk","flickr","flights","flir","florist","flowers","fly","fm","fo","foo","food","football","ford","forex","forsale","forum","foundation","fox","fr","free","fresenius","frl","frogans","frontier","ftr","fujitsu","fun","fund","furniture","futbol","fyi","g","ga","gal","gallery","gallo","gallup","game","games","gap","garden","gay","gb","gbiz","gd","gdn","ge","gea","gent","genting","george","gf","gg","ggee","gh","gi","gift","gifts","gives","giving","gl","glass","gle","global","globo","gm","gmail","gmbh","gmo","gmx","gn","godaddy","gold","goldpoint","golf","goo","goodyear","goog","google","gop","got","gov","gp","gq","gr","grainger","graphics","gratis","green","gripe","grocery","group","gs","gt","gu","gucci","guge","guide","guitars","guru","gw","gy","h","hair","hamburg","hangout","haus","hbo","hdfc","hdfcbank","health","healthcare","help","helsinki","here","hermes","hiphop","hisamitsu","hitachi","hiv","hk","hkt","hm","hn","hockey","holdings","holiday","homedepot","homegoods","homes","homesense","honda","horse","hospital","host","hosting","hot","hotels","hotmail","house","how","hr","hsbc","ht","hu","hughes","hyatt","hyundai","i","ibm","icbc","ice","icu","id","ie","ieee","ifm","ikano","il","im","imamat","imdb","immo","immobilien","in","inc","industries","infiniti","info","ing","ink","institute","insurance","insure","int","international","intuit","investments","io","ipiranga","iq","ir","irish","is","ismaili","ist","istanbul","it","itau","itv","j","jaguar","java","jcb","je","jeep","jetzt","jewelry","jio","jll","jm","jmp","jnj","jo","jobs","joburg","jot","joy","jp","jpmorgan","jprs","juegos","juniper","k","kaufen","kddi","ke","kerryhotels","kerrylogistics","kerryproperties","kfh","kg","kh","ki","kia","kids","kim","kindle","kitchen","kiwi","km","kn","koeln","komatsu","kosher","kp","kpmg","kpn","kr","krd","kred","kuokgroup","kw","ky","kyoto","kz","l","la","lacaixa","lamborghini","lamer","lancaster","land","landrover","lanxess","lasalle","lat","latino","latrobe","law","lawyer","lb","lc","lds","lease","leclerc","lefrak","legal","lego","lexus","lgbt","li","lidl","life","lifeinsurance","lifestyle","lighting","like","lilly","limited","limo","lincoln","link","lipsy","live","living","lk","llc","llp","loan","loans","locker","locus","lol","london","lotte","lotto","love","lpl","lplfinancial","lr","ls","lt","ltd","ltda","lu","lundbeck","luxe","luxury","lv","ly","m","ma","madrid","maif","maison","makeup","man","management","mango","map","market","marketing","markets","marriott","marshalls","mattel","mba","mc","mckinsey","md","me","med","media","meet","melbourne","meme","memorial","men","menu","merckmsd","mg","mh","miami","microsoft","mil","mini","mint","mit","mitsubishi","mk","ml","mlb","mls","mm","mma","mn","mo","mobi","mobile","moda","moe","moi","mom","monash","money","monster","mormon","mortgage","moscow","moto","motorcycles","mov","movie","mp","mq","mr","ms","msd","mt","mtn","mtr","mu","museum","music","mv","mw","mx","my","mz","n","na","nab","nagoya","name","navy","nba","nc","ne","nec","net","netbank","netflix","network","neustar","new","news","next","nextdirect","nexus","nf","nfl","ng","ngo","nhk","ni","nico","nike","nikon","ninja","nissan","nissay","nl","no","nokia","norton","now","nowruz","nowtv","np","nr","nra","nrw","ntt","nu","nyc","nz","o","obi","observer","office","okinawa","olayan","olayangroup","ollo","om","omega","one","ong","onl","online","ooo","open","oracle","orange","org","organic","origins","osaka","otsuka","ott","ovh","p","pa","page","panasonic","paris","pars","partners","parts","party","pay","pccw","pe","pet","pf","pfizer","pg","ph","pharmacy","phd","philips","phone","photo","photography","photos","physio","pics","pictet","pictures","pid","pin","ping","pink","pioneer","pizza","pk","pl","place","play","playstation","plumbing","plus","pm","pn","pnc","pohl","poker","politie","porn","post","pr","pramerica","praxi","press","prime","pro","prod","productions","prof","progressive","promo","properties","property","protection","pru","prudential","ps","pt","pub","pw","pwc","py","q","qa","qpon","quebec","quest","r","racing","radio","re","read","realestate","realtor","realty","recipes","red","redstone","redumbrella","rehab","reise","reisen","reit","reliance","ren","rent","rentals","repair","report","republican","rest","restaurant","review","reviews","rexroth","rich","richardli","ricoh","ril","rio","rip","ro","rocks","rodeo","rogers","room","rs","rsvp","ru","rugby","ruhr","run","rw","rwe","ryukyu","s","sa","saarland","safe","safety","sakura","sale","salon","samsclub","samsung","sandvik","sandvikcoromant","sanofi","sap","sarl","sas","save","saxo","sb","sbi","sbs","sc","scb","schaeffler","schmidt","scholarships","school","schule","schwarz","science","scot","sd","se","search","seat","secure","security","seek","select","sener","services","seven","sew","sex","sexy","sfr","sg","sh","shangrila","sharp","shell","shia","shiksha","shoes","shop","shopping","shouji","show","si","silk","sina","singles","site","sj","sk","ski","skin","sky","skype","sl","sling","sm","smart","smile","sn","sncf","so","soccer","social","softbank","software","sohu","solar","solutions","song","sony","soy","spa","space","sport","spot","sr","srl","ss","st","stada","staples","star","statebank","statefarm","stc","stcgroup","stockholm","storage","store","stream","studio","study","style","su","sucks","supplies","supply","support","surf","surgery","suzuki","sv","swatch","swiss","sx","sy","sydney","systems","sz","t","tab","taipei","talk","taobao","target","tatamotors","tatar","tattoo","tax","taxi","tc","tci","td","tdk","team","tech","technology","tel","temasek","tennis","teva","tf","tg","th","thd","theater","theatre","tiaa","tickets","tienda","tips","tires","tirol","tj","tjmaxx","tjx","tk","tkmaxx","tl","tm","tmall","tn","to","today","tokyo","tools","top","toray","toshiba","total","tours","town","toyota","toys","tr","trade","trading","training","travel","travelers","travelersinsurance","trust","trv","tt","tube","tui","tunes","tushu","tv","tvs","tw","tz","u","ua","ubank","ubs","ug","uk","unicom","university","uno","uol","ups","us","uy","uz","v","va","vacations","vana","vanguard","vc","ve","vegas","ventures","verisign","vermögensberater","vermögensberatung","versicherung","vet","vg","vi","viajes","video","vig","viking","villas","vin","vip","virgin","visa","vision","viva","vivo","vlaanderen","vn","vodka","volvo","vote","voting","voto","voyage","vu","w","wales","walmart","walter","wang","wanggou","watch","watches","weather","weatherchannel","webcam","weber","website","wed","wedding","weibo","weir","wf","whoswho","wien","wiki","williamhill","win","windows","wine","winners","wme","wolterskluwer","woodside","work","works","world","wow","ws","wtc","wtf","x","xbox","xerox","xihuan","xin","xxx","xyz","y","yachts","yahoo","yamaxun","yandex","ye","yodobashi","yoga","yokohama","you","youtube","yt","yun","z","za","zappos","zara","zero","zip","zm","zone","zuerich","zw","IDNs","ελ","ευ","бг","бел","дети","ею","католик","ком","мкд","мон","москва","онлайн","орг","рус","рф","сайт","срб","укр","қаз","հայ","ישראל","קום","ابوظبي","ارامكو","الاردن","البحرين","الجزائر","السعودية","العليان","المغرب","امارات","ایران","بارت","بازار","بيتك","بھارت","تونس","سودان","سورية","شبكة","عراق","عرب","عمان","فلسطين","قطر","كاثوليك","كوم","مصر","مليسيا","موريتانيا","موقع","همراه","پاكستان","پاکستان","ڀارت","कॉम","नेट","भारत","भारतम्","भारोत","संगठन","বাংলা","ভারত","ভাৰত","ਭਾਰਤ","ભારત","ଭାରତ","இந்தியா","இலங்கை","சிங்கப்பூர்","భారత్","ಭಾರತ","ഭാരതം","ලංකා","คอม","ไทย","ລາວ","გე","みんな","アマゾン","クラウド","グーグル","コム","ストア","セール","ファッション","ポイント","世界","中信","中国","中國","中文网","亚马逊","企业","佛山","信息","健康","八卦","公司","公益","台湾","台灣","商城","商店","商标","嘉里","嘉里大酒店","在线","大拿","天主教","娱乐","家電","广东","微博","慈善","我爱你","手机","招聘","政务","政府","新加坡","新闻","时尚","書籍","机构","淡马锡","游戏","澳門","点看","移动","组织机构","网址","网店","网站","网络","联通","谷歌","购物","通販","集团","電訊盈科","飞利浦","食品","餐厅","香格里拉","香港","닷넷","닷컴","삼성","한국"]);
-			
-			function isValidTLD(tld) {
-			  return validTLDs.has(tld.toLowerCase());
-			}
 			
 			
 			function isEmojiOnly(str) {
@@ -7880,6 +7938,10 @@
 						chatmessage = truncateHTMLContent(chatmessage, trimChat);
 					}
 					
+					if (NormalizeText && chatmessage){
+						chatmessage = normalizeText(data.chatmessage, data.textonly || false);
+					}
+					
 					if (largeavatar) {
 						var node = createElementFromHTML('<div id="msg_' + data.id + '" ' + mid + ' data-menu="context-menu" class="highlight-chat' + expand + '" data-source-type="' + data.type + '">' + '<div class="hl-leftside">' + chatImg + showType + "</div>" + '<div class="hl-rightside' + larger + '">' + '<div class="hl-righttopline">' + chatname + timeArrived  +  "<div class='queueid'></div>" + "</div>" + '<div class="hl-message">' + '<span class="hl-content" dir="' + textDirection + '" id="content_' + data.id + '">' + chatmessage + "</span>" + addImage + donationHTML + "</div>" + "</div></div>");
 					} else if (twoLines) {
@@ -7981,6 +8043,10 @@
 					if (data.membership && !bubble && highlightMembers) {
 						node.classList.add("member");
 					}
+					
+					if (data.firsttime) {
+						node.classList.add("firsttime");
+					}
 
 					if (!bubble && highlightSpecial && data.question) {
 						node.classList.add("special");
@@ -8030,11 +8096,7 @@
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
 
-					var textContentLength =
-						node
-							.querySelector("#content_" + data.id)
-							.innerText.trim()
-							.replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
+					var textContentLength =  node.querySelector("#content_" + data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
 					node.dataset.contentLength = textContentLength;
 					if (!textContentLength) {
 						node.classList.add("noText");
@@ -8045,13 +8107,6 @@
 					transitionType.forEach(classtype => {
 						node.classList.add(classtype);
 					});
-					
-					if (beep) { 
-						if (!(nobeepbot && bot) && !(nobeephost && host) && !(nobeepmod && mod) && !(nobeepevent && data.event) && !(data.command && doNotTTSBeep)){
-							playtone();
-						}
-					}
-					
 					
 					if (waitToReveal){
 						node.classList.add("hidden");
@@ -8262,7 +8317,7 @@
 
 					node.onmousedown = selectedMessage;
 					node.title = "Click to feature message instantly. CTRL + Click to add to the queue. Alt + Click to Pin.";
-
+					
 					var imageElements = node.getElementsByTagName("img");
 					for (i = 0; i < imageElements.length; i++) {
 						if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("zero-width-parent")) {
@@ -8271,8 +8326,28 @@
 						if (imageElements[i].onerror) {
 							continue;
 						}
-						if (!imageElements[i].title && imageElements[i].alt) {
-							imageElements[i].title = imageElements[i].alt;
+						if (imageElements[i].alt){
+							if (!imageElements[i].title) {
+								imageElements[i].title = imageElements[i].alt;
+							}
+							if (imageElements[i].alt.startsWith("!")){
+								if (imageElements[i].parentNode && imageElements[i].parentNode.classList.contains("hl-content")) {
+									// Check if this image is the first non-text element or is within the first non-text element
+									let firstNode = imageElements[i].parentNode.firstChild;
+									
+									// Skip any text nodes that might be whitespace -- nah, too much CPU for no reason.
+									//while (firstNode && firstNode.nodeType === Node.TEXT_NODE && firstNode.textContent.trim() === "") {
+									//	firstNode = firstNode.nextSibling;
+									//}
+									
+									// Check if the image is the first element or contained within it
+									if (firstNode === imageElements[i] || 
+										(firstNode && firstNode.contains && firstNode.contains(imageElements[i]))) {
+										data.command = true;
+										node.rawContents.command = true;
+									}
+								}
+							}
 						}
 						if (darkmode && node.rawContents.type == "twitch" && imageElements[i].src.includes("/light/")) {
 							imageElements[i].srcBackup = imageElements[i].src;
@@ -8294,7 +8369,13 @@
 							}
 						};
 					}
-
+					
+					if (beep) { 
+						if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
+							playtone();
+						}
+					}
+					
 					cleanUpOldNodes();
 
 					applyBotActions(data); // Official actions
@@ -8308,7 +8389,7 @@
 						selectedQueue.push(node);
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
-						updateQueueButton();
+						updateQueueButton(); 
 					}
 					
 					if (data.command && doNotTTSBeep){
@@ -9171,7 +9252,7 @@
 
 			if (urlParams.has("js")) {
 				try {
-					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var jsURL = urlParams.get("js");
 						try {
 							jsURL = decodeURI(jsURL);
@@ -9201,7 +9282,7 @@
 
 			if (urlParams.has("base64js") || urlParams.has("b64js") || urlParams.has("jsbase64") || urlParams.has("jsb64")) {
 				try {
-					if (window.obsstudio || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
+					if (window.obsstudio || isMELD || (window.ninjafy || window.electronApi) || location.protocol === "file:" || location.hostname.endsWith("github.io") || location.hostname.endsWith("github.com")) {
 						var base64js = urlParams.get("base64js") || urlParams.get("b64js") || urlParams.get("jsbase64") || urlParams.get("jsb64");
 						base64js = decodeURIComponent(atob(base64js));
 						var externalJavaascript = document.createElement("script");

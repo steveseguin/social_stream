@@ -1,3 +1,4 @@
+// filename: ai.js
 // this file depends on background.js
 // this file contains the LLM / RAG component
 
@@ -2631,25 +2632,6 @@ async function loadDocumentsFromDB() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', async function() {
-    try {
-		loadDocumentsFromDB().then(() => {
-			//log("Documents loaded from DB:", documentsRAG);
-		}).catch(error => {
-			console.warn("Error loading documents from DB:", error);
-		});
-        loadLunrIndex().then(index => {
-			//log("Lunr index loaded:", index);
-			
-			//log("Number of documents in index:", Object.keys(index.fieldVectors).length / index.fields.length);
-		}).catch(error => {
-			console.warn("Error loading index:", error);
-		});
-    } catch (error) {
-        console.warn("Error initializing Lunr index:", error);
-    }
-});
-
 const SUMMARY_AGE = 30 * 60 * 1000;
 const MAX_TOKENS = 8000;
 const MAX_SUMMARY_MESSAGES = CACHE_SIZE;
@@ -2660,11 +2642,17 @@ const ChatContextManager = { // summary and chat context
     },
 
     async getContext(data) {
+		
+		const maxMessages = settings.chatbotHistoryTotal?.numbersetting || 10;
+		
         const [recentMessages, userHistory] = await Promise.all([
-            messageStoreDB.getRecentMessages(10),
-            data.chatname && data.type ? messageStoreDB.getUserMessages(data.chatname, data.type, 0, 10) : []
+            messageStoreDB.getRecentMessages(10), // recentMessages
+            data.chatname && data.type ? messageStoreDB.getUserMessages(data.chatname, data.type, 0, maxMessages) : [] // userHistory
         ]);
 
+		// messageToLLMString
+		
+		
         let summary = null;
         if (settings?.llmsummary && this.needsSummary()) {
             summary = await this.getSummary();
@@ -2719,34 +2707,63 @@ const ChatContextManager = { // summary and chat context
         return context;
     },
 
-    messageToLLMString(messages, shorten=false) {
-        if (!Array.isArray(messages) || !messages.length) return '';
+	messageToLLMString(messages, shorten=false) {
+		if (!Array.isArray(messages) || !messages.length) return '';
 		
 		let botname = "Bot (🤖💬)";
 		if (settings.ollamabotname?.textsetting) {
 		  botname = settings.ollamabotname.textsetting.trim();
 		}
-        
-        return messages
-            .map((msg, index) => {
-                if (!msg || msg.bot || (msg.event && !msg.hasDonation)) return '';
-                
-                const timeAgo = this.getTimeAgo(msg.timestamp);
-                const donation = msg.hasDonation ? ` (Donated ${msg.hasDonation})` : '';
-                const message = this.sanitizeMessage(msg, index > 20);
-                const botResponse = ""; // msg.botResponse ? `\n${botname} replied: ${msg.botResponse}` : ''; // temporarily disable this.
+		
+		return messages
+			.map((msg, index) => {
+				if (!msg || (msg.event && !msg.hasDonation)) return '';
+				
+				// Better time handling
+				const timeAgo = this.getTimeAgo(msg.timestamp);
+				let timeInfo;
+				
+				if (settings.chatbotTimestamps) {
+					const exactTime = this.getExactTime(msg.timestamp);
+					timeInfo = `${exactTime} (${timeAgo})`;
+				} else {
+					timeInfo = timeAgo;
+				}
+				
+				const donation = msg.hasDonation ? ` (Donated ${msg.hasDonation})` : '';
+				const message = this.sanitizeMessage(msg, index > 20);
 				
 				if (!message && !donation) return '';
 				
+				let output = '';
 				if (shorten) {
-					return `\n${message}${donation}${botResponse} - ${timeAgo}`;
+					output = `\n${message}${donation} - ${timeInfo}`;
+				} else {
+					output = `\n${msg.chatname} of ${msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}${donation} said ${timeInfo}: ${message}`;
 				}
-				return `\n${msg.chatname} of ${msg.type.charAt(0).toUpperCase() + msg.type.slice(1)}${donation} said ${timeAgo}: ${message}${botResponse}`;
-                
-            })
-            .filter(Boolean)
-            .join('');
-    },
+				
+				// Add bot response if it exists and the setting is enabled
+				if (settings.includeBotResponses && msg.botResponse) {
+					const botResponse = this.sanitizeMessage({chatmessage: msg.botResponse}, index > 20);
+					if (botResponse) {
+						if (shorten) {
+							output += `\n${botname}: ${botResponse} - ${timeAgo}`;
+						} else {
+							output += `\n${botname} responded ${timeAgo}: ${botResponse}`;
+						}
+					}
+				}
+				
+				return output;
+			})
+			.filter(Boolean)
+			.join('');
+	},
+
+	getExactTime(timestamp) {
+		const date = new Date(timestamp);
+		return date.toLocaleString();
+	},
 
     sanitizeMessage(msg, heavy = false) {
         const message = msg.textonly ? (msg.chatmessage || msg.message) : this.stripHTML((msg.chatmessage || msg.message), heavy);
@@ -2788,36 +2805,32 @@ const ChatContextManager = { // summary and chat context
     },
 	
 	async getSummary() {
-	  const recentMessages = await messageStoreDB.getRecentMessages(MAX_SUMMARY_MESSAGES); 
-	  let chatSummary = await this.generateSummary(recentMessages);
-	  if (chatSummary.length>120){
-		chatSummary = chatSummary.split(":").pop();
-	  }
-	  if (chatSummary.length>120){
-		chatSummary = chatSummary.split("\n").pop();
-	  }
-	  if (chatSummary.length>120){
-		chatSummary = chatSummary.split("* ").pop();
-	  }
-	  if (chatSummary.startsWith("Overall, ")){
-		  chatSummary = chatSummary.replace("Overall, ","")
-		  chatSummary = chatSummary.charAt(0).toUpperCase() + chatSummary.slice(1);
-	  }
-	  if (chatSummary.startsWith("In Summary, ")){
-		  chatSummary = chatSummary.replace("In Summary, ","")
-		  chatSummary = chatSummary.charAt(0).toUpperCase() + chatSummary.slice(1);
-	  }
-	  if (chatSummary.startsWith("* ")){
-		  chatSummary = chatSummary.replace("* ","")
-	  }
-	  if (chatSummary.startsWith(" this batch")){
-		  chatSummary = chatSummary.replace(" this batch"," this chat");
-	  }
-	  
-	  if (chatSummary){
-		this.updateSummary(chatSummary);
-	  }
-	  return chatSummary;
+		const recentMessages = await messageStoreDB.getRecentMessages(MAX_SUMMARY_MESSAGES); 
+		if (!recentMessages?.length) return null;
+		
+		let chatSummary = await this.generateSummary(recentMessages);
+		if (!chatSummary) return null;
+		
+		// Clean up summary with a series of transformations
+		if (chatSummary.length > 120) chatSummary = chatSummary.split(":").pop() || chatSummary;
+		if (chatSummary.length > 120) chatSummary = chatSummary.split("\n").pop() || chatSummary;
+		if (chatSummary.length > 120) chatSummary = chatSummary.split("* ").pop() || chatSummary;
+		
+		// Remove common prefixes and capitalize
+		const prefixes = ["Overall, ", "In Summary, "];
+		for (const prefix of prefixes) {
+			if (chatSummary.startsWith(prefix)) {
+				chatSummary = chatSummary.replace(prefix, "");
+				chatSummary = chatSummary.charAt(0).toUpperCase() + chatSummary.slice(1);
+				break;
+			}
+		}
+		
+		if (chatSummary.startsWith("* ")) chatSummary = chatSummary.replace("* ", "");
+		chatSummary = chatSummary.replace(" this batch", " this chat");
+		
+		if (chatSummary) this.updateSummary(chatSummary);
+		return chatSummary;
 	},
 
     async generateSummary(messages) {
@@ -2832,3 +2845,30 @@ const ChatContextManager = { // summary and chat context
         }
     }
 };
+
+async function startAIScript() {
+    try {
+		loadDocumentsFromDB().then(() => {
+			//log("Documents loaded from DB:", documentsRAG);
+		}).catch(error => {
+			console.warn("Error loading documents from DB:", error);
+		});
+        loadLunrIndex().then(index => {
+			//log("Lunr index loaded:", index);
+			
+			//log("Number of documents in index:", Object.keys(index.fieldVectors).length / index.fields.length);
+		}).catch(error => {
+			console.warn("Error loading index:", error);
+		});
+    } catch (error) {
+        console.warn("Error initializing Lunr index:", error);
+    }
+};
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    // DOM is already loaded
+    startAIScript();
+} else {
+    // DOM isn't loaded yet, wait for it
+    document.addEventListener("DOMContentLoaded", startAIScript);
+}

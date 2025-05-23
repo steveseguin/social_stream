@@ -165,6 +165,20 @@ a:hover {
     border-color: var(--primary-dark);
 }
 
+.btn-primary.disabled {
+    background-color: var(--background-surface);
+    color: var(--text-secondary);
+    border-color: var(--border-interactive);
+    cursor: default;
+    opacity: 0.6;
+}
+
+.btn-primary.disabled:hover {
+    background-color: var(--background-surface);
+    transform: none;
+    box-shadow: var(--shadow-sm);
+}
+
 .btn-secondary {
     background-color: var(--secondary-color);
     color: var(--text-on-secondary);
@@ -809,17 +823,6 @@ select.property-input {
     line-height: 1.5;
 }
 
-/* --- Test Panel (Modal) --- */
-.test-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
-    z-index: 999;
-    display: none; /* Controlled by JS */
-}
 
 .test-panel {
     position: fixed;
@@ -835,7 +838,69 @@ select.property-input {
     display: none; /* Controlled by JS */
     padding: 25px;
     color: var(--text-primary);
+	max-height: 90vh;
+	flex-direction: column;
 }
+
+.test-panel-header {
+    padding: 25px 25px 15px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* Prevent header from shrinking */
+}
+
+.test-panel-content {
+    flex-grow: 1;
+    overflow-y: auto; /* Make content area scrollable */
+    padding: 0 25px;
+}
+
+.test-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 0;
+    padding: 15px 25px;
+    border-top: 1px solid var(--border-color);
+    background-color: var(--background-dialog);
+    flex-shrink: 0; /* Prevent footer from shrinking */
+}
+
+#test-panel {
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Optional: Improve the scrollbar appearance */
+#test-panel::-webkit-scrollbar {
+  width: 8px;
+}
+
+#test-panel::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+#test-panel::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+#test-panel::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.test-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
+    z-index: 999;
+    display: none; /* Controlled by JS */
+}
+
 
 .test-panel h3 {
     margin-top: 0;

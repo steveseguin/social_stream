@@ -178,45 +178,53 @@ if (typeof(chrome.runtime)=='undefined'){
 	}
 }
 
-
 function copyToClipboard(event) {
 	//console.log(event);
-   
-	if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){
-		navigator.clipboard.writeText(event.target.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
-			//console.log('Link copied to clipboard!');
-			event.target.classList.add("flashing");
-			setTimeout(()=>{
-				event.target.classList.remove("flashing");
-			},500);
-		}, function(err) {
-			console.error('Could not copy text: ', err);
-		});
-	} else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
-		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
-			//console.log('Link copied to clipboard!');
-			event.target.classList.add("flashing");
-			setTimeout(()=>{
-				event.target.classList.remove("flashing");
-			},500);
-		}, function(err) {
-			console.error('Could not copy text: ', err);
-		});
-	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){
-		navigator.clipboard.writeText(event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]").href).then(function() {
-			//console.log('Link copied to clipboard!');
-			event.target.classList.add("flashing");
-			setTimeout(()=>{
-				event.target.classList.remove("flashing");
-			},500);
-		}, function(err) {
-			console.error('Could not copy text: ', err);
-		});
+   
+	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
+	if (event.target.parentNode.parentNode.querySelector("a[href]")){
+		const targetElement = event.target.parentNode.parentNode; // div containing the link and button
+		const linkOwnerDiv = document.getElementById(targetElement.id);
+		if (linkOwnerDiv && linkOwnerDiv.raw){
+			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
+				event.target.classList.add("flashing");
+				setTimeout(()=>{
+					event.target.classList.remove("flashing");
+				},500);
+			}, function(err) {
+				console.error('Could not copy text: ', err);
+			});
+		}
+	// } else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
+	} else if (event.target.parentNode.parentNode.parentNode.querySelector("a[href]")){
+		const targetElement = event.target.parentNode.parentNode.parentNode;
+		const linkOwnerDiv = document.getElementById(targetElement.id);
+		if (linkOwnerDiv && linkOwnerDiv.raw){
+			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
+				event.target.classList.add("flashing");
+				setTimeout(()=>{
+					event.target.classList.remove("flashing");
+				},500);
+			}, function(err) {
+				console.error('Could not copy text: ', err);
+			});
+		}
+	// } else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
+	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("a[href]")){
+		const targetElement = event.target.parentNode.parentNode.parentNode.parentNode;
+		const linkOwnerDiv = document.getElementById(targetElement.id);
+		if (linkOwnerDiv && linkOwnerDiv.raw){
+			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
+				event.target.classList.add("flashing");
+				setTimeout(()=>{
+					event.target.classList.remove("flashing");
+				},500);
+			}, function(err) {
+				console.error('Could not copy text: ', err);
+			});
+		}
 	}
 }
-
-
-
 var translation = {};
 
 function getTranslation(key, value=false){ 
@@ -1821,9 +1829,46 @@ function createTabsFromSettings(response) {
 var streamID = false;
 var lastResponse = false;
 
-
-// Function to handle link generation
 function setupPageLinks(hideLinks, baseURL, streamID, password) {
+  // Get any custom parameters from the current URL
+  let customParams = "";
+  try {
+    const currentUrl = new URL(window.location.href);
+    
+    // List of parameters to ignore (TTS-related and standard ones)
+    const ignoreParams = ['session', 'password', 'localserver'];
+    const ttsRelatedParams = [
+      'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
+      'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
+      'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
+      'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
+      'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
+      'kokorokey', 'voicekokoro', 'kokorospeed'
+    ];
+    
+    // Combine all params to ignore
+    const allIgnoreParams = [...ignoreParams, ...ttsRelatedParams];
+    
+    // Add all custom parameters that are not in the ignore list
+    //currentUrl.searchParams.forEach((value, key) => {
+   //   if (!allIgnoreParams.includes(key)) {
+   //     customParams += `&${key}=${encodeURIComponent(value)}`;
+    //  }
+   // });
+  } catch (e) {
+    console.error("Error getting custom params:", e);
+  }
+  
+  let versionParam = "";
+  try {
+    const manifestData = chrome.runtime.getManifest();
+    if (manifestData && manifestData.version) {
+      versionParam = `&v=${manifestData.version}`;
+    }
+  } catch (e) {
+    console.error("Error getting version from manifest:", e);
+  }
+  
   // Configuration array with all page details
   const pages = [
     { id: "dock", path: "dock.html" },
@@ -1838,51 +1883,38 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "battle", path: "battle.html" },
     { id: "chatbot", path: "bot.html", linkPath: "chatbot.html" },
     { id: "cohost", path: "cohost.html" },
-	{ id: "giveaway", path: "giveaway.html" },
-	{ id: "credits", path: "credits.html" },
+    { id: "giveaway", path: "giveaway.html" },
+    { id: "credits", path: "credits.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
-	{ id: "eventsdashboard", path: "events.html" }
+    { id: "eventsdashboard", path: "events.html" },
+	{ id: "flowactions", path: "actions.html" },
+	{ id: "custom-gif-commands", path: "gif.html" }
   ];
-  
-  // Handle special case for custom-gif-commands
-  const customGifConfig = { id: "custom-gif-commands", path: "gif.html" };
   
   // Process all standard pages
   pages.forEach(page => {
     const linkPath = page.linkPath || page.path;
-    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}`;
+    const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${versionParam}`;
     const element = document.getElementById(page.id);
     
     if (element) {
       const linkStyle = page.style ? `style="${page.style}"` : "";
       element.innerHTML = hideLinks 
         ? "Click to open link" 
-        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}</a>`;
+        : `<a target='_blank' ${linkStyle} id='${page.id}link' href='${fullURL}'>${baseURL}${linkPath}?session=${streamID}${password}${customParams}${versionParam}</a>`;
       element.raw = fullURL;
     }
   });
   
- /*   document.querySelectorAll("input[data-param10]").forEach(checkbox => {
-    if (checkbox.checked) {
-      const paramName = checkbox.getAttribute("data-param10");
-      const textInput = document.querySelector(`input[data-textparam10="${paramName}"]`);
-      
-      if (textInput && textInput.value.trim() !== "") {
-        password += `&${paramName}=${encodeURIComponent(textInput.value.trim())}`;
-      } else {
-        password += `&${paramName}`;
-      }
-    }
-  }); */
+  // Update sample overlay and remote control URLs too
+  const sampleOverlay = document.getElementById("sampleoverlay");
+  if (sampleOverlay) {
+    sampleOverlay.href = `${baseURL}sampleoverlay.html?session=${streamID}${password}${customParams}${versionParam}`;
+  }
   
-  // Handle the custom gif commands separately
-  const gifElement = document.getElementById(customGifConfig.id);
-  if (gifElement) {
-    const fullURL = `${baseURL}${customGifConfig.path}?session=${streamID}${password}`;
-    gifElement.innerHTML = hideLinks 
-      ? "Click to open link" 
-      : `<a target='_blank' id='${customGifConfig.id}-link' href='${fullURL}'>${fullURL}</a>`;
-    gifElement.raw = fullURL;
+  const remoteControlUrl = document.getElementById("remote_control_url");
+  if (remoteControlUrl) {
+    remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
   }
 }
 
@@ -2203,6 +2235,11 @@ function update(response, sync = true) {
 
             setupPageLinks(hideLinksInitial, baseURL, response.streamID, password); // Pass current hideLinks state
 
+			
+			if (document.getElementById("sampleoverlay")){
+				document.getElementById("sampleoverlay").href = baseURL + "sampleoverlay.html?session=" + response.streamID + password;
+			}
+			
             document.getElementById("remote_control_url").href = baseURL + "sampleapi.html?session=" + response.streamID + password;
             // The hideLinks variable is not reset to false globally here, its state is managed by the checkbox and classList.
 
@@ -2254,8 +2291,8 @@ function update(response, sync = true) {
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
-                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink',
-                    'battlelink', 'custom-gif-commands-link', 'creditslink', 'giveawaylink'
+                    'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
+                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink'
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -2312,57 +2349,15 @@ function update(response, sync = true) {
     }
 }
 
-// Process a single parameter
 function processParam(key, paramNum, settingObj, sync) {
-    const paramKey = `param${paramNum}`;
-    const ele = document.querySelector(`input[data-${paramKey}='${key}']`);
+    let paramKey = `param${paramNum}`;
+    let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
     if (!ele) return;
-    
-    ele.checked = settingObj[paramKey];
-    
-    if (!key.includes("=")) {
-        // Check for additional parameter values
-        const hasNumberSetting = `numbersetting${paramNum}` in settingObj;
-        const hasOptionParam = `optionparam${paramNum}` in settingObj;
-        const hasTextParam = `textparam${paramNum}` in settingObj;
-        
-        // Use the appropriate setting value
-        if (hasNumberSetting) {
-            updateSettings(ele, sync, parseFloat(settingObj[`numbersetting${paramNum}`]));
-        } else if (document.querySelector(`input[data-numbersetting${paramNum}='${key}']`)) {
-            updateSettings(ele, sync, parseFloat(document.querySelector(`input[data-numbersetting${paramNum}='${key}']`).value));
-        } else if (hasOptionParam) {
-            updateSettings(ele, sync, settingObj[`optionparam${paramNum}`]);
-        } else if (hasTextParam) {
-            updateSettings(ele, sync, settingObj[`textparam${paramNum}`]);
-        } else if (document.querySelector(`input[data-optionparam${paramNum}='${key}']`)) {
-            updateSettings(ele, sync, document.querySelector(`input[data-optionparam${paramNum}='${key}']`).value);
-        } else {
-            updateSettings(ele, sync);
-        }
-    } else {
-        // Handle keys with equality operator
-        const keys = key.split('=');
-        ele = document.querySelector(`input[data-${paramKey}='${keys[0]}']`);
-        
-        if (ele) {
-            ele.checked = settingObj[paramKey];
-            if (keys[1]) {
-                var ele2 = document.querySelector(`input[data-numbersetting${paramNum}='${keys[0]}']`);
-                if (ele2) {
-                    ele2.value = parseFloat(keys[1]);
-                } else {
-                    ele2 = document.querySelector(`input[data-optionparam${paramNum}='${keys[0]}'], input[data-textparam${paramNum}='${keys[0]}']`);
-                    if (ele2) {
-                        ele2.value = keys[1];
-                    }
-                }
-                updateSettings(ele, sync, parseFloat(keys[1]));
-            } else {
-                updateSettings(ele, sync);
-            }
-        }
-    }
+
+    ele.checked = settingObj[paramKey]; // Set the checked state based on loaded setting.
+
+    // Call updateSettings with the element. handleElementParam will figure out the value.
+    updateSettings(ele, sync);
 }
 
 // Handle legacy settings format
@@ -2517,61 +2512,130 @@ function compareVersions(a, b) { // https://stackoverflow.com/a/6832706
     // Otherwise they are the same.
     return 0;
 }
-var Beta = false
-async function checkVersion(){
-	
-	const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
-	
-	if (chrome.runtime.id === WEBSTORE_ID) { // don't show version info if the webstore version
-		document.getElementById("newVersion").classList.remove('show');
-		document.getElementById("newVersion").innerHTML = "";
-		return;
-	}
-	
-	try { 
-		fetch('https://raw.githubusercontent.com/steveseguin/social_stream/main/manifest.json').then(response => response.json()).then(data => {
-			var manifestData = chrome.runtime.getManifest();
-			if ("version" in data){
-				if (manifestData && (compareVersions(manifestData.version, data.version)==-1)){
-					document.getElementById("newVersion").classList.add('show')
-					document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
-				} else if (manifestData && (compareVersions(manifestData.version, data.version)==1)){ // beta
-					document.getElementById("newVersion").classList.add('show')
-					document.getElementById("newVersion").innerHTML = `You're using a BETA version. Thank you!<small><br><br>ℹ️ Note: The below overlay links point to their newest beta versions</small>`;
-					Beta = true;
-					if (Beta){
-						if (baseURL == "https://socialstream.ninja/"){
-							baseURL = "https://beta.socialstream.ninja/"
-							if (lastResponse){
-								update(lastResponse, false);
-							}
-						}
-					}
-				} else {
-					document.getElementById("newVersion").classList.remove('show')
-					document.getElementById("newVersion").innerHTML = "";
-				}
-				
-				
-				if (manifestData && manifestData.content_scripts) {
-				  // Extract source filenames from content_scripts
-				  manifestData.content_scripts.forEach(script => {
-					if (script.js && script.js.length > 0) {
-					  script.js.forEach(jsFile => {
-						if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-						  // Extract just the filename without path and extension
-						  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-						  sourcesList.add(sourceName);
-						}
-					  });
-					}
-				  });
-				}
-			}
-		});
-	} catch(e){}
+
+var Beta = false;
+var cachedManifestData = null; // Store the last successful manifest data
+
+async function checkVersion() {
+    const WEBSTORE_ID = "cppibjhfemifednoimlblfcmjgfhfjeg"; // our webstore ID
+    
+    if (chrome.runtime.id === WEBSTORE_ID) { // don't show version info if the webstore version
+        document.getElementById("newVersion").classList.remove('show');
+        document.getElementById("newVersion").innerHTML = "";
+        return;
+    }
+    
+    try {
+        const manifestData = chrome.runtime.getManifest();
+        
+        // Try to load cached manifest from localStorage on startup
+        if (!cachedManifestData) {
+            try {
+                const storedManifest = localStorage.getItem('cachedManifestData');
+                if (storedManifest) {
+                    cachedManifestData = JSON.parse(storedManifest);
+                    console.log("Loaded cached manifest data from localStorage");
+                }
+            } catch (e) {
+                console.error("Error loading cached manifest:", e);
+                localStorage.removeItem('cachedManifestData'); // Clear invalid cache
+            }
+        }
+        
+        // Try to fetch the latest manifest
+        fetch('https://socialstream.ninja/manifest.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`GitHub API returned ${response.status}: ${response.statusText}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Cache the successfully fetched manifest
+            cachedManifestData = data;
+            localStorage.setItem('cachedManifestData', JSON.stringify(data));
+            processManifestData(data, manifestData);
+        })
+        .catch(error => {
+            console.warn("Error fetching manifest:", error.message);
+            
+            // Use the cached data if fetch failed
+            if (cachedManifestData) {
+                console.log("Using cached manifest data");
+                processManifestData(cachedManifestData, manifestData);
+                
+                // Add a note that we're using cached data
+                const versionElement = document.getElementById("newVersion");
+                if (versionElement.classList.contains('show')) {
+                    versionElement.innerHTML += `<small class="cache-note" style="display:block;opacity:0.7"><br>⚠️ Using cached version info - couldn't connect to GitHub</small>`;
+                } else {
+                    versionElement.classList.add('show');
+                    versionElement.innerHTML = `<small class="cache-note" style="display:block;opacity:0.7">⚠️ Couldn't check for new versions - using cached data</small>`;
+                }
+            } else {
+                // No cache available - show error
+                document.getElementById("newVersion").classList.add('show');
+                document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Couldn't check for updates: ${error.message}</small>`;
+                console.warn("No cached manifest data available");
+            }
+        });
+    } catch(e) {
+        console.error("Version check error:", e);
+        document.getElementById("newVersion").classList.add('show');
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error checking version: ${e.message}</small>`;
+    }
 }
 
+// Function to process the manifest data (extracted to avoid code duplication)
+function processManifestData(data, manifestData) {
+    if (!data || !("version" in data)) {
+        console.error("Invalid manifest data:", data);
+        document.getElementById("newVersion").classList.add('show');
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Invalid manifest data received</small>`;
+        return;
+    }
+    
+    try {
+        if (manifestData && (compareVersions(manifestData.version, data.version) == -1)) {
+            document.getElementById("newVersion").classList.add('show');
+            document.getElementById("newVersion").innerHTML = `There's a <a target='_blank' class='downloadLink' title="Download the latest version as a zip" href='https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip'>new version available 💾</a><p class="installed"><span>Installed: ${manifestData.version}</span><span>Available: ${data.version}</span><a title="See the list of recent code changes" href="https://github.com/steveseguin/social_stream/commits/main" target='_blank' style='text-decoration: underline;'>[change log]</a>`;
+        } else if (manifestData && (compareVersions(manifestData.version, data.version) == 1)) { // beta
+            document.getElementById("newVersion").classList.add('show');
+            document.getElementById("newVersion").innerHTML = `You're using a BETA version. Thank you!<small><br><br>ℹ️ Note: The below overlay links point to their newest beta versions</small>`;
+            Beta = true;
+            if (Beta) {
+                if (baseURL == "https://socialstream.ninja/") {
+                    baseURL = "https://beta.socialstream.ninja/";
+                    if (lastResponse) {
+                        update(lastResponse, false);
+                    }
+                }
+            }
+        } else {
+            document.getElementById("newVersion").classList.remove('show');
+            document.getElementById("newVersion").innerHTML = "";
+        }
+        
+        if (manifestData && manifestData.content_scripts) {
+            // Extract source filenames from content_scripts
+            manifestData.content_scripts.forEach(script => {
+                if (script.js && script.js.length > 0) {
+                    script.js.forEach(jsFile => {
+                        if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
+                            // Extract just the filename without path and extension
+                            const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
+                            sourcesList.add(sourceName);
+                        }
+                    });
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Error processing manifest data:", e);
+        document.getElementById("newVersion").classList.add('show');
+        document.getElementById("newVersion").innerHTML = `<small class="error-note" style="display:block;color:#f44336">⚠️ Error processing version info: ${e.message}</small>`;
+    }
+}
 
 (function (w) {
 	w.URLSearchParams = w.URLSearchParams || function (searchString) {
@@ -2616,21 +2680,7 @@ if (sourcemode){
 
 
 
-function removeQueryParamWithValue(url, paramWithValue) {
-    let [baseUrl, queryString] = url.split('?');
-    if (!queryString) {
-        return url;
-    }
-    let [param, value] = paramWithValue.includes('=') ? paramWithValue.split('=') : [paramWithValue, null];
-    let queryParams = queryString.split('&');
-    queryParams = queryParams.filter(qp => {
-        let [key, val] = qp.split('=');
-        return !(key === param && (value === null || val === value));
-    });
-    let modifiedQueryString = queryParams.join('&');
-    let modifiedUrl = baseUrl + (modifiedQueryString ? '?' + modifiedQueryString : '');
-    return modifiedUrl;
-}
+
 function updateURL(param, href) {
     href = href.replace("??", "?");
     var arr = href.split('?');
@@ -2682,86 +2732,89 @@ function getTargetMap() {
         'giveaway': 14,
         'privatechatbot': 15,
 		'poll': 16,
-		'eventsdashboard': 17
+		'eventsdashboard': 17,
+		'flowactions': 18,
     };
 }
-
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const targetElement = document.getElementById(targetId);
     if (!targetElement) return false;
-    
+
     const paramAttr = `data-${paramType}`;
-    const paramValue = ele.dataset[paramType];
+    const paramValue = ele.dataset[paramType]; // e.g., 'scale=0.77' or 'darkmode'
     if (!paramValue) return false;
-    
-    // Get the param number (e.g., "10" from "param10")
+
     const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
-    
+    const parts = paramValue.split('=');
+    const keyOnly = parts[0]; // e.g., 'scale' or 'darkmode'
+    const valueInAttr = parts.length > 1 ? parts[1] : undefined; // e.g., '0.77' or undefined
+
     if (ele.checked) {
-        // Always remove any existing instance of this parameter first to prevent duplication
-        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
-        
-        if (value !== null) {
-            // If a value is explicitly provided, use it
-            targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
+        // Remove any existing instance of this parameter based on the key part
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
+
+        if (valueInAttr !== undefined) {
+            // If the value is embedded in the data attribute (like 'scale=0.77'), use the full paramValue
+            targetElement.raw = updateURL(paramValue, targetElement.raw);
         } else {
-            // Check for a corresponding text parameter first
-            const textParamSelector = `input[data-textparam${paramNum}='${paramValue}'], textarea[data-textparam${paramNum}='${paramValue}']`;
-            const textParam = document.querySelector(textParamSelector);
-            
-            if (textParam && textParam.value.trim() !== '') {
-                // If we have a text parameter with a value, use it
-                targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(textParam.value.trim())}`, targetElement.raw);
-            } else if (document.querySelector(`input[data-numbersetting${paramNum}='${paramValue}']`)) {
-                // If we have a number setting, use it
-                value = document.querySelector(`input[data-numbersetting${paramNum}='${paramValue}']`).value;
-                targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
-            } else if (document.querySelector(`[data-optionparam${paramNum}='${paramValue}']`)) {
-                // If we have an option parameter, use it
-                value = document.querySelector(`[data-optionparam${paramNum}='${paramValue}']`).value;
-                targetElement.raw = updateURL(`${paramValue}=${value}`, targetElement.raw);
-            } else {
-                // Otherwise just add the parameter with no value
-                targetElement.raw = updateURL(paramValue, targetElement.raw);
-            }
+			 // Determine the correct suffix for associated input attributes.
+			// If paramNum is '1', no suffix is used (e.g., "data-numbersetting").
+			// Otherwise, the paramNum itself is the suffix (e.g., "data-numbersetting2").
+			const numSuffix = paramNum === '1' ? '' : paramNum;
+
+			const numberSettingSelector = `[data-numbersetting${numSuffix}='${keyOnly}']`;
+			const optionSettingSelector = `[data-optionparam${numSuffix}='${keyOnly}']`;
+			const textSettingSelector = `[data-textparam${numSuffix}='${keyOnly}']`;
+
+			// Query for each type and take the first one found.
+			const associatedNumberInput = document.querySelector(numberSettingSelector);
+			const associatedOptionInput = document.querySelector(optionSettingSelector);
+			const associatedTextInput = document.querySelector(textSettingSelector);
+
+			const associatedInput = associatedNumberInput || associatedOptionInput || associatedTextInput;
+
+
+             if (associatedInput && associatedInput.value !== undefined && associatedInput.value !== '') {
+                  targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
+             } else {
+                 // Simple flag parameter
+                 targetElement.raw = updateURL(keyOnly, targetElement.raw);
+             }
         }
-        
+
         // Handle special case exclusions
         handleExclusiveCases(ele, paramType, paramValue, sync);
-    } else {
-        // If checkbox is unchecked, remove the parameter from URL
-        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
-        
-        // NEW CODE: Don't clear corresponding text parameter values - we want to preserve them
-        // Even though we're removing from URL, we need to keep the stored value
+    } else { // ele.checked is false
+        // If checkbox is unchecked, remove the parameter from URL based on the key part
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
     }
-    
+
     targetElement.raw = cleanURL(targetElement.raw);
-    
+
     if (sync) {
-        // Still save the checkbox state
+        // Still save the checkbox state using the full paramValue
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
             type: paramType,
             target: ele.dataset.target || null,
-            setting: paramValue,
+            setting: paramValue, // Save the full paramValue ('scale=0.77')
             value: ele.checked
         }, function (response) {});
-        
-        // NEW CODE: Save the text parameter value even if checkbox is unchecked
-        const textParamSelector = `input[data-textparam${paramNum}='${paramValue}'], textarea[data-textparam${paramNum}='${paramValue}']`;
-        const textParam = document.querySelector(textParamSelector);
-        if (textParam && textParam.value !== undefined) {
-            chrome.runtime.sendMessage({
-                cmd: "saveSetting",
-                type: `textparam${paramNum}`,
-                target: ele.dataset.target || null,
-                setting: paramValue,
-                value: textParam.value
-            }, function (response) {});
+
+        // Save associated text/number/option value if applicable, using the key part
+        const associatedInput = document.querySelector(`[data-numbersetting${paramNum}='${keyOnly}'], [data-optionparam${paramNum}='${keyOnly}'], [data-textparam${paramNum}='${keyOnly}']`);
+        if (associatedInput && associatedInput.value !== undefined) {
+             const inputType = associatedInput.dataset.numbersetting ? `numbersetting${paramNum}` : associatedInput.dataset.optionparam ? `optionparam${paramNum}` : `textparam${paramNum}`;
+             chrome.runtime.sendMessage({
+                 cmd: "saveSetting",
+                 type: inputType,
+                 target: ele.dataset.target || null,
+                 setting: keyOnly,
+                 value: associatedInput.value
+             }, function (response) {});
         }
     }
-    
+
     // Handle "siblings" with the same param prefix
     const paramPrefix = paramValue.split('=')[0];
     document.querySelectorAll(`input[data-${paramType}^='${paramPrefix}']:not([data-${paramType}='${paramValue}'])`).forEach(ele1 => {
@@ -2770,10 +2823,9 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
             updateSettings(ele1, sync);
         }
     });
-    
+
     return true;
 }
-
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
     if (paramType !== 'param1' && paramType !== 'param5') return;
     
@@ -3412,63 +3464,67 @@ function validateRoomId(roomId) {
 }
 
 function refreshLinks(){
-	
-	let hideLinks = false;
-	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
-		if (x.checked){
-			hideLinks = true;
-		}
-	});
-	
-	if (hideLinks){
-		document.body.classList.add("hidelinks");
-	} else {
-		document.body.classList.remove("hidelinks");
-	}
-	try {
-        // Use the same target map for consistency
-        const targetMap = getTargetMap();
-        
-        // Add 'poll' which wasn't in our original map but is in refreshLinks
-        targetMap['poll'] = Object.keys(targetMap).length + 1;
-        
-        // Create a mapping of element IDs to their link IDs
-        const linkMapping = {
-            'dock': 'docklink',
-            'overlay': 'overlaylink',
-            'emoteswall': 'emoteswalllink',
-            'hypemeter': 'hypemeterlink',
-            'waitlist': 'waitlistlink',
-            'ticker': 'tickerlink',
-            'wordcloud': 'wordcloudlink',
-            'poll': 'polllink',
-            'battle': 'battlelink',
-            'custom-gif-commands': 'custom-gif-commands-link',
-            'chatbot': 'chatbotlink',
-            'cohost': 'cohostlink',
-            'tipjar': 'tipjarlink',
-			'credits': 'creditslink',
-			'giveaway': 'giveawaylink',
-            'privatechatbot': 'privatechatbotlink',
-			'eventsdashboard': 'eventsdashboardlink'
-        };
-        
-        // Determine if links should be hidden based on the setting
-        const hideLinks = document.querySelector("input[data-setting='hideyourlinks']")?.checked || false;
-        
-        // Update all links dynamically
-        Object.entries(linkMapping).forEach(([targetId, linkId]) => {
-            const targetElement = document.getElementById(targetId);
-            const linkElement = document.getElementById(linkId);
-            
-            if (targetElement && linkElement) {
-                linkElement.innerText = hideLinks ? "Click to open link" : targetElement.raw;
-                linkElement.href = targetElement.raw;
-            }
-        });
-    } catch(e) {
-        // Silently handle any errors
+  let hideLinks = false;
+  document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+    if (x.checked){
+      hideLinks = true;
     }
+  });
+  
+  if (hideLinks){
+    document.body.classList.add("hidelinks");
+  } else {
+    document.body.classList.remove("hidelinks");
+  }
+  try {
+    const linkIdToDivIdMap = {
+      'docklink': 'dock',
+      'overlaylink': 'overlay',
+      'emoteswalllink': 'emoteswall',
+      'hypemeterlink': 'hypemeter',
+      'waitlistlink': 'waitlist',
+      'tipjarlink': 'tipjar',
+      'tickerlink': 'ticker',
+      'wordcloudlink': 'wordcloud',
+      'polllink': 'poll',
+      'flowactionslink': 'flowactions',
+      'battlelink': 'battle',
+      'chatbotlink': 'chatbot',
+      'cohostlink': 'cohost',
+      'giveawaylink': 'giveaway',
+      'creditslink': 'credits',
+      'privatechatbotlink': 'privatechatbot',
+      'eventsdashboardlink': 'eventsdashboard',
+      'custom-gif-commandslink': 'custom-gif-commands'
+    };
+    const linkIdsToClean = Object.keys(linkIdToDivIdMap);
+
+    const currentHideLinks = document.body.classList.contains("hidelinks");
+
+    linkIdsToClean.forEach(linkId => {
+      const linkElement = document.getElementById(linkId);
+      const divId = linkIdToDivIdMap[linkId];
+      const divElement = document.getElementById(divId);
+
+      if (linkElement && divElement && typeof divElement.raw === 'string' && divElement.raw.startsWith('http')) {
+        const urlToClean = divElement.raw; // Use .raw as the source of truth
+        const cleanedUrl = removeTTSProviderParams(urlToClean);
+
+        divElement.raw = cleanedUrl; // Update the .raw property
+        linkElement.href = cleanedUrl; // Update the link's href
+
+        // Update link's text based on hideLinks status
+        linkElement.innerText = currentHideLinks ? "Click to open link" : cleanedUrl;
+      }
+    });
+
+    const remoteCtrlUrlElement = document.getElementById("remote_control_url");
+    if (remoteCtrlUrlElement && remoteCtrlUrlElement.href) {
+      remoteCtrlUrlElement.href = removeTTSProviderParams(remoteCtrlUrlElement.href);
+    }
+  } catch (e) {
+    console.error("Error cleaning TTS params from links:", e);
+  }
 }
 
 if (!chrome.browserAction){
@@ -4515,3 +4571,10 @@ const PollManager = {
         });
     }
 };
+
+
+ProfileManager.init();
+
+document.querySelector('button[data-action="saveProfile"]').addEventListener('click', function() {
+  ProfileManager.saveCurrentProfile();
+});

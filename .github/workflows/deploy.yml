@@ -1,46 +1,38 @@
-# /* Replace this entire file with the content below */
 name: Deploy Main and Beta to GitHub Pages
 on:
   push:
     branches:
-      - main # /* Updated from master */
-      - beta # /* Updated from steveseguin-patch-1 */
+      - main
+      - beta
   workflow_dispatch:
 
 permissions:
-  contents: write # Required to push to the gh-pages branch
+  contents: write
 
 jobs:
   build-and-deploy:
+    if: "!contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
     runs-on: ubuntu-latest
     steps:
       - name: Create deployment structure
-        run: mkdir -p gh-pages-content/beta # /* Updated subdirectory to 'beta' */
+        run: mkdir -p gh-pages-content/beta
 
       - name: Checkout main branch
         uses: actions/checkout@v4
         with:
-          ref: main # /* Updated ref to 'main' */
-          path: main-content # Using 'main-content' for clarity
+          ref: main
+          path: main-content
 
       - name: Checkout beta branch
         uses: actions/checkout@v4
         with:
-          ref: beta # /* Updated ref to 'beta' */
-          path: beta-content # Using 'beta-content' for clarity
+          ref: beta
+          path: beta-content
 
       - name: Prepare content
         run: |
-          # Copy main content to deployment root (excluding .git)
           rsync -av --exclude='.git/' main-content/ gh-pages-content/
-          
-          # Copy beta content to beta directory (excluding .git)
-          rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/ # /* Updated target subdirectory to 'beta' */
-          
-          # Create .nojekyll file to prevent Jekyll processing
-          # touch gh-pages-content/.nojekyll
-          
-          # Debug: list content recursively
+          rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/
           echo "Deployment content (recursive):"
           ls -laR gh-pages-content
 
@@ -51,7 +43,8 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
           git add .
-          git commit -m "Deploy main and beta to GitHub Pages" # /* Updated commit message */
+          # /* Ensure this commit message contains '[skip pages]' */
+          git commit -m "Deploy main and beta to GitHub Pages [skip pages]"
           git branch -M gh-pages
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
           git push -f origin gh-pages

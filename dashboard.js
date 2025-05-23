@@ -207,14 +207,87 @@ function setupConsoleHook() {
     };
 }
 
-// Main initialization function
-function initDashboard() {
-	if (new URLSearchParams(window.location.search).has('ssapp')) {
-	 document.body.classList.add('ssapp');
-	}
-    setupConsoleHook();
-    setupPeriodicUpdates();
+function showEditorView() {
+    document.getElementById("dash").style.display = 'none';
+    document.getElementById("editorstyle").removeAttribute("disabled");
+    
+    document.getElementById("editor").style.opacity = '0';
+    document.getElementById("editor").style.display = 'block';
+    
+    void document.getElementById("editor").offsetWidth;
+    document.getElementById("editor").style.opacity = '1';
+    
+    document.getElementById("dashstyle").setAttribute("disabled", "true");
+    
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden';
+   
 }
 
-// Start dashboard when DOM is ready
-document.addEventListener('DOMContentLoaded', initDashboard);
+function showDashboardView() {
+    document.getElementById("editor").style.display = 'none';
+    
+    document.getElementById("dashstyle").removeAttribute("disabled");
+    document.getElementById("dash").style.display = 'block';
+    
+    document.body.style.padding = '20px';
+    document.body.style.overflow = 'auto';
+    
+    // Close test panel if open
+    if (window.testOverlay && window.testPanel) {
+        window.testOverlay.style.display = 'none';
+        window.testPanel.style.display = 'none';
+    }
+    
+}
+
+function showEditorView() {
+    document.getElementById("dash").style.display = 'none';
+    document.getElementById("editorstyle").removeAttribute("disabled");
+    
+    document.getElementById("editor").style.opacity = '0';
+    document.getElementById("editor").style.display = 'block';
+    
+    void document.getElementById("editor").offsetWidth;
+    document.getElementById("editor").style.opacity = '1';
+    
+    document.getElementById("dashstyle").setAttribute("disabled", "true");
+    
+    document.body.style.padding = '0';
+    document.body.style.overflow = 'hidden';
+	
+}
+
+function setupReturnButton() {
+    const returnButton = document.getElementById('return-to-dashboard');
+    if (returnButton) {
+        returnButton.addEventListener('click', function() {
+            showDashboardView();
+        });
+    }
+	
+	const showEditorViewButton = document.getElementById('showEditorViewButton');
+    if (showEditorViewButton) {
+        showEditorViewButton.addEventListener('click', function() {
+            showEditorView();
+        });
+    }
+}
+// Main initialization function
+function initDashboard() {
+    if (new URLSearchParams(window.location.search).has('ssapp')) {
+        document.body.classList.add('ssapp');
+    }
+    document.getElementById("editorstyle").setAttribute("disabled", "true");
+    setupConsoleHook();
+    setupPeriodicUpdates();
+	setupReturnButton();
+}
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    // DOM is already loaded
+    initDashboard();
+} else {
+    // DOM isn't loaded yet, wait for it
+    document.addEventListener("DOMContentLoaded", initDashboard);
+}

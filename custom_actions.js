@@ -59,7 +59,7 @@ window.customUserFunction = function(data) {
       return false; // Block the message
     }
     
-    // Block messages with specific words (in addition to the built-in blacklist)
+    // Block messages with specific words (in addition to the built-in blocklist)
     const customBadWords = ["badword1", "badword2", "badword3"];
     if (customBadWords.some(word => data.chatmessage.toLowerCase().includes(word))) {
       console.log("Blocking message with banned words");
