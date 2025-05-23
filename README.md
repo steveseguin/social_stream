@@ -1,22 +1,39 @@
-# Social Stream Ninja
-Consolidates your live social messaging streams and more. Free.
+<div align="center">
+	
+  <h1>🥷 Social Stream Ninja</h1>
+  <p><strong>Consolidate, control, and customize your live social messaging streams - completely free</strong></p>
+  
+  [![GitHub stars](https://img.shields.io/github/stars/steveseguin/social_stream?style=social)](https://github.com/steveseguin/social_stream/stargazers)
+  [![Discord](https://img.shields.io/discord/698324796546482177?color=7289DA&label=community&logo=discord&logoColor=white)](https://discord.socialstream.ninja)
+  [![GitHub release](https://img.shields.io/github/v/release/steveseguin/social_stream?include_prereleases)](https://github.com/steveseguin/social_stream/releases)
+  [![GitHub License](https://img.shields.io/github/license/steveseguin/social_stream)](https://github.com/steveseguin/social_stream/blob/main/LICENSE)
+
+  <img src="https://socialstream.ninja/media/logo.png" width="200"> 
+</div>
+
+## 👀 What is Social Stream Ninja?
+
+Much more than just an overlay - Social Stream Ninja is a complete chat ecosystem available as either a browser extension or standalone desktop application. It consolidates messaging from **120+ sites and growing**, with an open API for programmatic control, data access, and engagement. Built on VDO.Ninja's peer-to-peer data transport API for secure, low-latency, and free operation.
+
+
+<div align="center">
+  <img src="https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png" width="400">
+  <img src="https://user-images.githubusercontent.com/2575698/148505691-8a08e7b0-29e6-4eb5-9632-9dbcac50c204.png" width="400">
+</div>
+
+## ✨ Key Features
 
  [Jump to Download and Install instructions](#to-install)
 
-- Supports live automated two-way chat messaging with Facebook, Youtube, Twitch, Zoom, and dozens more
-- Includes a "featured chat" overlay, with messages selectable via the dockable dashboard; auto or manual selection.
-- Supports bot-commands and automated chat responses, with custom logic supported via scriptable plugin file.
-- Support for LLMs, including native Ollama API support; powering AI-based moderation, chat, RAG, and custom instructions.
-- Text-to-speech support, including free, premium and ultra-premium TTS services supported.
-- Multi-channel source-icon support, so you can differentiate between different streams and creators
-- Message relaying support; send messages from one platform to other platforms automatically
-- No user login, API key, or permission needed to capture the chat messages from most sites and services.
-- Queuing of messages for later highlighting
-- Free community support at https://discord.socialstream.ninja
-
-Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream data securely between browser windows with extremely low latency and all for free!
-
-![image](https://user-images.githubusercontent.com/2575698/148505639-972eec38-7d8b-4bf3-9f15-2bd02182591e.png) ![image](https://user-images.githubusercontent.com/2575698/148505691-8a08e7b0-29e6-4eb5-9632-9dbcac50c204.png)
+- **Cross-platform chat**: Connect 120+ platforms with automated two-way messaging
+- **Open API architecture**: Programmatically control, access, and engage with chat data
+- **Your choice of format**: Use as a browser extension or standalone desktop application
+- **Featured chat overlay**: Highlight selected messages with auto or manual selection
+- **AI integration**: Ollama and many premium AI services supported for AI moderation and bots
+- **Voice capability**: Text-to-speech with free, premium and ultra-premium TTS services
+- **Zero authentication**: No logins, API keys, or permissions required for most platforms
+- **Highly customizable**: Themes, CSS editing, and scriptable plugin support
+- **Message relaying**: between Facebook, Youtube, Twitch, Zoom, and dozens more
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
@@ -183,7 +200,7 @@ Social Stream Ninja (SSN) makes use of VDO.Ninja's data-transport API to stream 
 - mixlr (paywalled. cannot support going forward until that's fixed)
 - parti.com (pop out chat)
 - live.nicovideo.jp (no pop out chat)
-- bitchute.com (no pop out chat)
+- bitchute.com (pop out chat)
 - substack
 - online.church (no pop out)
 - fansly - pop out chat
