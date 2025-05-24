@@ -834,6 +834,14 @@
 			chatmessage = "";
 		}
 		
+		if (!chatname && chatmessage.startsWith("Subscribers-only mode.")){
+			return;
+		}
+		
+		if (!chatname && !chatimg && !eventType && !hasDonation && !donoValue && !hasMembership){
+			return;
+		}
+		
 		var data = {};
 		data.chatname = chatname;
 		data.nameColor = nameColor;

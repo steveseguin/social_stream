@@ -2,7 +2,6 @@ var settings = {};
 var textonlymode = false;
 
 window.addEventListener('youtubeMessage', function(e) {
-    console.log(e);
     if (e.detail) {
         pushMessage(e.detail);
     }
