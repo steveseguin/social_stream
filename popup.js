@@ -2658,6 +2658,32 @@ const devmode = urlParams.has("devmode");
 var sourcemode = urlParams.get("sourcemode") || false;
 ssapp = urlParams.has("ssapp") || ssapp;
 
+// Check for language parameter
+const lnParam = urlParams.get("ln") || urlParams.get("lang");
+if (lnParam) {
+    // Map common language codes to our translation file names
+    const languageMap = {
+        'en': 'en-us',
+        'en-US': 'en-us',
+        'en-GB': 'en-uk',
+        'de': 'de',
+        'es': 'es',
+        'pt': 'pt-br',
+        'pt-BR': 'pt-br'
+    };
+    
+    const mappedLang = languageMap[lnParam] || lnParam;
+    
+    // Check if we have a translation for this language
+    const availableLanguages = ['de', 'es', 'en-uk', 'en-us', 'pt-br'];
+    if (availableLanguages.includes(mappedLang)) {
+        // Store the language preference
+        chrome.storage.local.set({ translationlanguage: mappedLang }, function() {
+            console.log("Language set to:", mappedLang);
+        });
+    }
+}
+
 
 var baseURL = "https://socialstream.ninja/";
 
