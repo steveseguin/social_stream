@@ -1296,6 +1296,7 @@ try {
 							isChatOwner: item.authorDetails.isChatOwner,
 							isChatSponsor: item.authorDetails.isChatSponsor,
 							isChatModerator: item.authorDetails.isChatModerator,
+							authorChannelId: item.authorDetails.channelId,
 							publishedAt,
 							skipEvent: isBacklogMessage
 						});
@@ -1326,7 +1327,7 @@ try {
 						console.log('Initial backlog processing complete');
 					}
 					const baseInterval = data.pollingIntervalMillis || 5000;
-					updatePollSpinner(baseInterval-300);
+					updatePollSpinner(baseInterval - 300);
 					if (!isPageVisible) {
 						modifiedSetTimeout(fetchChatMessages, baseInterval);
 					} else {
@@ -1340,14 +1341,16 @@ try {
 							amount: item.snippet.superChatDetails.amountDisplayString,
 							message: item.snippet.superChatDetails.userComment,
 							tier: item.snippet.superChatDetails.tier,
-							profileImageUrl: item.authorDetails.profileImageUrl
+							profileImageUrl: item.authorDetails.profileImageUrl,
+							authorChannelId: item.authorDetails.channelId
 						});
 					}
 					if (item.snippet.membershipDetails) {
 						processMembership({
 							authorName: item.authorDetails.displayName,
 							level: item.snippet.membershipDetails.memberLevelName,
-							profileImageUrl: item.authorDetails.profileImageUrl
+							profileImageUrl: item.authorDetails.profileImageUrl,
+							authorChannelId: item.authorDetails.channelId
 						});
 					}
 				});
@@ -1395,7 +1398,7 @@ try {
 				})
 			});
 			const data = await response.json();
-			console.log('Chat message sent successfully:', data);
+			//console.log('Chat message sent successfully:', data);
 			return data;
 		} catch (error) {
 			console.error('Error sending chat message:', error);
@@ -1462,7 +1465,6 @@ try {
 		activeOscillator: null,
 		nextId: 1,
 		
-		// Add a new timeout to the queue
 		add: function(callback, delay) {
 			const id = this.nextId++;
 			const executeTime = performance.now() + delay;
@@ -1888,10 +1890,9 @@ try {
 			if (messageData.isChatOwner) badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>';
 			if (messageData.isChatModerator) badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>';
 			if (messageData.isChatSponsor) badgeHtml += '<span class="chat-badge" title="Member">⭐</span>';
-			
-			// Apply emoji replacement to the message
+
 			const messageWithEmojis = replaceEmojis(messageData.message);
-			
+
 			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
 			textarea.appendChild(span);
 			while (textarea.childNodes.length > 20) {
@@ -1902,6 +1903,7 @@ try {
 				pushMessage({
 					chatname: messageData.authorName,
 					chatbadges: badgeHtml,
+					userid: messageData.authorChannelId,
 					backgroundColor: "",
 					textColor: "",
 					chatmessage: messageWithEmojis, // Use the version with emojis replaced
@@ -1918,41 +1920,60 @@ try {
 	}
 	
     function processSuperChat(superChatData) {
-        try {
-            addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
-            const textarea = document.querySelector("#textarea");
-            var span = document.createElement("div");
-            span.innerHTML = `<strong>${superChatData.authorName}</strong> <span style="color:#00c851">${superChatData.amount}</span>: ${superChatData.message || ''}`;
-            textarea.appendChild(span);
-            if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
-            textarea.scrollTop = textarea.scrollHeight;
-            pushMessage({
-                chatname: superChatData.authorName, chatbadges: "", backgroundColor: "", textColor: "#00c851",
-                chatmessage: superChatData.message || '', chatimg: superChatData.profileImageUrl || "",
-                hasDonation: superChatData.amount, membership: "", type: "youtube", event: "donation",
+		try {
+			addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
+			const textarea = document.querySelector("#textarea");
+			var span = document.createElement("div");
+			span.innerHTML = `<strong>${superChatData.authorName}</strong> <span style="color:#00c851">${superChatData.amount}</span>: ${superChatData.message || ''}`;
+			textarea.appendChild(span);
+			if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
+			textarea.scrollTop = textarea.scrollHeight;
+			pushMessage({
+				chatname: superChatData.authorName,
+				chatbadges: "",
+				userid: superChatData.authorChannelId,
+				backgroundColor: "",
+				textColor: "#00c851",
+				chatmessage: superChatData.message || '',
+				chatimg: superChatData.profileImageUrl || "",
+				hasDonation: superChatData.amount,
+				membership: "",
+				type: "youtube",
+				event: "donation",
 				type: "youtube"
-            });
-        } catch (e) { console.error('Error processing super chat:', e); }
-    }
+			});
+		} catch (e) {
+			console.error('Error processing super chat:', e);
+		}
+	}
     function processMembership(membershipData) {
-        try {
-            addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
-            const textarea = document.querySelector("#textarea");
-            var span = document.createElement("div");
-            span.innerHTML = `<strong>${membershipData.authorName}</strong> <span style="color:#2196f3">joined as a member (${membershipData.level})</span>`;
-            textarea.appendChild(span);
-            if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
-            textarea.scrollTop = textarea.scrollHeight;
-            pushMessage({
-                chatname: membershipData.authorName,
-                chatbadges: '<span class="chat-badge" title="Member">⭐</span>',
-                backgroundColor: "", textColor: "#2196f3", chatmessage: `joined as a member (${membershipData.level})`,
-                chatimg: membershipData.profileImageUrl || "", hasDonation: "", membership: "new_member",
-                membershipLevel: membershipData.level, type: "youtube", event: "new_member",
+		try {
+			addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
+			const textarea = document.querySelector("#textarea");
+			var span = document.createElement("div");
+			span.innerHTML = `<strong>${membershipData.authorName}</strong> <span style="color:#2196f3">joined as a member (${membershipData.level})</span>`;
+			textarea.appendChild(span);
+			if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
+			textarea.scrollTop = textarea.scrollHeight;
+			pushMessage({
+				chatname: membershipData.authorName,
+				chatbadges: '<span class="chat-badge" title="Member">⭐</span>',
+				userid: membershipData.authorChannelId,
+				backgroundColor: "",
+				textColor: "#2196f3",
+				chatmessage: `joined as a member (${membershipData.level})`,
+				chatimg: membershipData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "new_member",
+				membershipLevel: membershipData.level,
+				type: "youtube",
+				event: "new_member",
 				type: "youtube"
-            });
-        } catch (e) { console.error('Error processing membership:', e); }
-    }
+			});
+		} catch (e) {
+			console.error('Error processing membership:', e);
+		}
+	}
 	function updateStats(type, data) {
 		switch(type) {
 			case 'viewer_update':
@@ -2093,10 +2114,10 @@ try {
 					});
 				}
 			}
-			console.log('Fetching:', URL, options);
+			//console.log('Fetching:', URL, options);
 			const response = await fetch(URL, options);
 			clearTimeout(timeout_id);
-			console.log('Response status:', response.status, response.statusText);
+			//console.log('Response status:', response.status, response.statusText);
 			if (!response.ok) {
 				const errorText = await response.text();
 				console.error('API error response:', errorText);
