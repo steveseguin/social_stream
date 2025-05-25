@@ -1414,7 +1414,7 @@ body.ssapp .wrapper.ssapp h3 {
             </button>
         </div>
         <div id="newVersion"></div>
-        <input type="text" id="searchInput" placeholder="Search all options by keyword..." />
+        <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
         <div class="container">
@@ -1664,7 +1664,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30% </span>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom beep audio file">
-                                    <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam1="custombeep" />
+                                    <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
                                 </div>
                                 <div>
@@ -1797,7 +1797,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="allow-lan-only-p2p-connections">🖥️💻 P2P connections via LAN only </span>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a command that lets a guest auto-queue a message">
-                                    <input type="text" id="selfqueue" class="textInput instant" autocomplete="off" placeholder="eg: !lookie" data-textparam1="selfqueue" />
+                                    <input type="text" id="selfqueue" class="textInput instant" autocomplete="off" placeholder="eg: !lookie" data-translate="placeholder-command-example" data-textparam1="selfqueue" />
                                     <label for="selfqueue"><span data-translate="selfqueue">&gt; Chat command to auto-queue the message</span></label>
                                 </div>
                             </div>
@@ -1816,7 +1816,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<div class="options">
 							<div class="options_group streaming_chat">
 								<!-- Main TTS Toggle -->
-								<h4>Enable Text to Speech in the Dock</h4>
+								<h4 data-translate="enable-tts-dock">Enable Text to Speech in the Dock</h4>
 								<div title="Tip: You can use &amp;myname=name1,name2 to list names to exclude from TTS.">
 									<label class="switch">
 										<input type="checkbox" data-param1="speech" />
@@ -1830,7 +1830,7 @@ body.ssapp .wrapper.ssapp h3 {
 							
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
-								<h4>TTS Behaviors</h4>
+								<h4 data-translate="tts-behaviors">TTS Behaviors</h4>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param1="simpletts" />
@@ -1861,7 +1861,7 @@ body.ssapp .wrapper.ssapp h3 {
 									</label>
 									<span data-translate="ttscommand">🗣️ Any message containing 
 										<input type="text" id="ttscommandcustom" class="textInput instant" autocomplete="off" 
-											placeholder="!say" data-textparam1="ttscommand" value="!say" 
+											placeholder="!say" data-translate="placeholder-tts-command" data-textparam1="ttscommand" value="!say" 
 											title="You need to include the ! if you want it" style="width:36px" /> will be read out 
 									</span>
 								</div>
@@ -1889,7 +1889,7 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 							</div>
 							<div class="options_group tts-behavior-options">
-								<h4>Read out only specific user/messages</h4>
+								<h4 data-translate="tts-read-specific">Read out only specific user/messages</h4>
 								<div title="Only 'bot' marked users will have messages read out.">
 									<label class="switch">
 										<input type="checkbox" data-param1="bottts" />
@@ -1941,7 +1941,7 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 							</div>
 							<div class="options_group tts-behavior-options">
-								<h4>Bots, hosts and events are excluded from TTS</h4>
+								<h4 data-translate="tts-exclude-bots">Bots, hosts and events are excluded from TTS</h4>
 								<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
 									<label class="switch">
 										<input type="checkbox" data-param1="allowbottts" />
@@ -1965,7 +1965,7 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 							</div>
 							<div class="options_group tts-behavior-options">
-								<h4>More TTS options</h4>
+								<h4 data-translate="tts-more-options">More TTS options</h4>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param1="skipmessages=3" />
@@ -2010,7 +2010,7 @@ body.ssapp .wrapper.ssapp h3 {
 						
 						
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
-							<h3>Text-to-Speech Service Provider</h3>
+							<h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
 							<select id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="kokoro">Kokoro (webGPU/CPU)</option>
@@ -2023,7 +2023,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<div id="ttsButton" class="hidden"></div>
 						
 						<div class="tts-provider-options options_group" id="systemTTS">
-							<h4>Built-in System TTS Options</h4>
+							<h4 data-translate="tts-system-options">Built-in System TTS Options</h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 							<br /><br />
 							<div>
@@ -2058,7 +2058,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Kokoro TTS Options -->
 						<div class="tts-provider-options options_group" id="kokoroTTS">
-							<h4>Kokoro TTS Options</h4>
+							<h4 data-translate="tts-kokoro-options">Kokoro TTS Options</h4>
 							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
 							<br /><br />
 							<div>
@@ -2082,10 +2082,10 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- ElevenLabs TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="elevenlabsTTS">
-							<h4>ElevenLabs TTS Options</h4>
+							<h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="elevenLabsKey" class="textInput instant" autocomplete="off" 
-									placeholder="Your ElevenLabs API Key" data-textparam1="elevenlabskey" />
+									placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam1="elevenlabskey" />
 								<label for="elevenLabsKey">
 									<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
 								</label>
@@ -2177,7 +2177,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Google Cloud TTS Options -->
 						<div class="tts-provider-options options_group hidden"  id="googleTTS">
-							<h4>Google Cloud TTS Options</h4>
+							<h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
 								<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
@@ -2291,7 +2291,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Speechify TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="speechifyTTS">
-							<h4>Speechify TTS Options</h4>
+							<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
 								<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
@@ -2671,7 +2671,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     ✒️<span data-translate="reduce-text-outlining">Decrease text outline by 33%</span>
                                 </div>
-								<h3>Background Shading for Messages</h3>
+								<h3 data-translate="background-shading">Background Shading for Messages</h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hideshadow" />
@@ -2715,7 +2715,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="no-background-shading-for-donations">⭕💰 No background shading for donations </span>
                                 </div>
 								<div>
-									<h3>Customize Donation Colors by Threshold 🌈💰</h3>
+									<h3 data-translate="donation-colors">Customize Donation Colors by Threshold 🌈💰</h3>
 									<div style="width: 100%; display:inline-block;">
 										<label class="switch">
 											<input type="checkbox" data-param1="t1" />
@@ -2890,7 +2890,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="messages-smoothly-scroll-in"> Messages smoothly scroll in </span>
                                 </div>
 
-                                <h3>Advanced animation options can be set below.</h3>
+                                <h3 data-translate="advanced-animation">Advanced animation options can be set below.</h3>
                                 <i>
                                     <p>
                                         These may override the basic transition options listed above.
@@ -3273,7 +3273,7 @@ body.ssapp .wrapper.ssapp h3 {
                                 </div>
 
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom beep audio file">
-                                    <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam2="custombeep" />
+                                    <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam2="custombeep" />
                                     <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>												 
                                 </div>
                                 <div>
@@ -3418,9 +3418,9 @@ body.ssapp .wrapper.ssapp h3 {
 								<br />
 								<!-- ElevenLabs TTS Options -->
 								<div class="tts-provider-options">
-									<h4>ElevenLabs TTS Options</h4>
+									<h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="elevenLabsKey2" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-textparam2="elevenlabskey" />
+										<input type="password" id="elevenLabsKey2" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam2="elevenlabskey" />
 										<label for="elevenLabsKey"><span data-translate="elevenlabs-api-key">ElevenLabs API Key</span></label>
 									</div>
 									<div class="textInputContainer" style="width: 95%;">
@@ -3441,7 +3441,7 @@ body.ssapp .wrapper.ssapp h3 {
 								<br />
 								<!-- Speechify TTS Options -->
 								<div class="tts-provider-options">
-									<h4>Speechify TTS Options</h4>
+									<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="password" id="speechifyAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam2="speechifykey" />
 										<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
@@ -3722,7 +3722,7 @@ body.ssapp .wrapper.ssapp h3 {
 								<p>Using this section requires a bot service to be made available.</p>
 								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai" class="lightblue"  target="_blank">Installation Guide Here</a></p>
 
-								<h3>Configure LLM API 🦙</h3>
+								<h3 data-translate="configure-llm">Configure LLM API 🦙</h3>
 								
 								<div>
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
@@ -3978,7 +3978,7 @@ body.ssapp .wrapper.ssapp h3 {
 										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
 									</label>
 								</div>
-								<h3>Give the above chat bot access to additional custom knowledge that you can provide</h3>
+								<h3 data-translate="chatbot-knowledge">Give the above chat bot access to additional custom knowledge that you can provide</h3>
 								<br>
 								<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
 									<label class="switch">
@@ -3997,7 +3997,7 @@ body.ssapp .wrapper.ssapp h3 {
 											<span data-translate="clear-rag">Clear all</span>
 										</button>
 									</div>
-									<h4>Custom knowledge-base - File Management</h4>
+									<h4 data-translate="knowledge-file-management">Custom knowledge-base - File Management</h4>
 									<div id="ragFileList"></div>
 									<div>
 										<input type="checkbox" id="enhancedProcessing" checked>
@@ -4035,7 +4035,7 @@ body.ssapp .wrapper.ssapp h3 {
 							
 							<div class="options_group streaming_chat">
 								<!-- Main TTS Toggle -->
-								<h4>Enable Text to Speech</h4>
+								<h4 data-translate="enable-tts">Enable Text to Speech</h4>
 								<div style="display: inline-block;" title="Text to speech bot messages">
 									<label class="switch">
 										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
@@ -4048,7 +4048,7 @@ body.ssapp .wrapper.ssapp h3 {
 							
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
-								<h4>TTS Behaviours</h4>
+								<h4 data-translate="tts-behaviours">TTS Behaviours</h4>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param10="readouturls" />
@@ -4074,7 +4074,7 @@ body.ssapp .wrapper.ssapp h3 {
 							</div>
 							
 							<div class="options_group tts-behavior-options">
-								<h4>More bot overlay page options</h4>
+								<h4 data-translate="bot-overlay-options">More bot overlay page options</h4>
 								<div title="For the purpose of using this with neurosync. WILL NOT WORK WITH SYSTEM TTS">
 									<label class="switch">
 										<input type="checkbox" data-param10="neurosync" />
@@ -4117,7 +4117,7 @@ body.ssapp .wrapper.ssapp h3 {
 						
 						
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
-							<h3>Text-to-Speech Service Provider</h3>
+							<h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
 							<select id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="elevenlabs">ElevenLabs</option>
@@ -4130,12 +4130,12 @@ body.ssapp .wrapper.ssapp h3 {
 						<div id="ttsButton10" class="hidden"></div>
 						
 						<div class="tts-provider-options options_group" id="systemTTS10">
-							<h4>Built-in System TTS Options</h4>
+							<h4 data-translate="tts-system-options">Built-in System TTS Options</h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue"  target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 							<br /><br />
 							<div>
 								<label class="switch">
-									<input type="checkbox" data-param10="lang" data-del10="lang,voice"/>
+									<input type="checkbox" data-param10="lang"/>
 									<span class="slider round"></span>
 								</label>
 								<select id="systemLanguageSelect10" data-optionparam10="lang" title="Select the system TTS language"></select>
@@ -4165,10 +4165,10 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- ElevenLabs TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="elevenlabsTTS10">
-							<h4>ElevenLabs TTS Options</h4>
+							<h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="elevenLabsKey10" class="textInput instant" autocomplete="off" 
-									placeholder="Your ElevenLabs API Key" data-textparam10="elevenlabskey" />
+									placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam10="elevenlabskey" />
 								<label for="elevenLabsKey">
 									<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
 								</label>
@@ -4256,7 +4256,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Google Cloud TTS Options -->
 						<div class="tts-provider-options options_group hidden"  id="googleTTS10">
-							<h4>Google Cloud TTS Options</h4>
+							<h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="googleAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam10="ttskey" />
 								<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
@@ -4370,7 +4370,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Speechify TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="speechifyTTS10">
-							<h4>Speechify TTS Options</h4>
+							<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="speechifyAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam10="speechifykey" />
 								<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
@@ -4419,7 +4419,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Kokoro TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kokoroTTS10">
-							<h4>Kokoro TTS Options</h4>
+							<h4 data-translate="tts-kokoro-options">Kokoro TTS Options</h4>
 							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
 							<br /><br />
 							<div>
@@ -4490,7 +4490,7 @@ body.ssapp .wrapper.ssapp h3 {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
-								<h2 style="margin:0;">Standalone one-on-one chat bot</h2>
+								<h2 style="margin:0;" data-translate="standalone-chatbot">Standalone one-on-one chat bot</h2>
 								
 								
 								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
@@ -4524,7 +4524,7 @@ body.ssapp .wrapper.ssapp h3 {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
-								<h3>A virtual co-host that can both listen, see, and talk back</h3>
+								<h3 data-translate="virtual-cohost">A virtual co-host that can both listen, see, and talk back</h3>
 								
 								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
 									<div id="cohost" data-raw="" class="single_message">
@@ -5191,7 +5191,7 @@ body.ssapp .wrapper.ssapp h3 {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group poll">
-								<h3>Poll Settings</h3>
+								<h3 data-translate="poll-settings">Poll Settings</h3>
 								<p>Enable and customize the poll:</p>
 								<br>
 								<div>

@@ -449,7 +449,6 @@ function createUniqueVoiceIdentifiers(voices) {
             voiceObj.code = `lang=${voiceObj.lang}&voice=${encodeURIComponent(uniquePart)}`;
             voiceObj.lang = voiceObj.lang; // Ensure lang is explicitly available
             voiceObj.name = voiceObj.name; // Ensure name is explicitly available
-            voiceObj.voiceId = uniquePart; // Store just the voice identifier separately
         });
     }
 
@@ -2018,21 +2017,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
         if (optionParamKey in settingObj) {
             const ele = document.querySelector(`select[data-${optionParamKey}='${key}']`);
             if (ele) {
-                let storedValue = settingObj[optionParamKey];
-                
-                // Backward compatibility: if stored value doesn't have 'lang=' prefix but contains '&voice=',
-                // it's likely an old format. Try to find a matching option.
-                if (storedValue && storedValue.includes('&voice=') && !storedValue.includes('lang=')) {
-                    // Try to find an option that matches when we add the 'lang=' prefix
-                    const compatValue = `lang=${storedValue}`;
-                    // Check if this value exists in the options
-                    const hasCompatOption = Array.from(ele.options).some(opt => opt.value === compatValue);
-                    if (hasCompatOption) {
-                        storedValue = compatValue;
-                    }
-                }
-                
-                ele.value = storedValue;
+                ele.value = settingObj[optionParamKey];
                 updateSettings(ele, sync);
 
                 if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
@@ -2797,55 +2782,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
 			const associatedInput = associatedNumberInput || associatedOptionInput || associatedTextInput;
 
-            // Check if this is a select element with language/voice options
-            if (associatedInput && associatedInput.tagName === 'SELECT' && associatedInput.selectedOptions.length > 0) {
-                const selectedOption = associatedInput.selectedOptions[0];
-                
-                // Check if this is a language dropdown with voice data
-                if (selectedOption.hasAttribute('data-lang') && selectedOption.value && selectedOption.value.includes('=')) {
-                    // Parse the value to extract language and voice
-                    const params = new URLSearchParams(selectedOption.value);
-                    const langValue = params.get('lang') || selectedOption.getAttribute('data-lang');
-                    const voiceValue = params.get('voice');
-                    
-                    // Handle language parameters specially
-                    if (keyOnly === 'googlelang') {
-                        // Remove existing parameters first to avoid duplicates
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'googlelang');
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicegoogle');
-                        // Add new parameters
-                        targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
-                        targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
-                    } else if (keyOnly === 'lang' || keyOnly === 'systemlang') {
-                        // Remove existing parameters first to avoid duplicates
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'lang');
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
-                        // Add new parameters
-                        targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
-                        targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
-                    } else if (keyOnly === 'speechifylang') {
-                        // Remove existing parameter first
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
-                        // Speechify only uses voice parameter
-                        targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
-                    } else if (keyOnly.endsWith('lang')) {
-                        // Generic handling for other *lang parameters
-                        const prefix = keyOnly.slice(0, -4);
-                        // Remove existing parameters first
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
-                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, `voice${prefix}`);
-                        // Add new parameters
-                        targetElement.raw = updateURL(`${keyOnly}=${langValue}`, targetElement.raw);
-                        targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
-                    } else {
-                        // Not a language parameter, use standard handling
-                        targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
-                    }
-                } else {
-                    // Standard select without language/voice data
-                    targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
-                }
-            } else if (associatedInput && associatedInput.code !== undefined && associatedInput.code !== '') {
+            if (associatedInput && associatedInput.code !== undefined && associatedInput.code !== '') {
                 targetElement.raw = updateURL(`${keyOnly}=${associatedInput.code}`, targetElement.raw);
             } else if (associatedInput && associatedInput.value !== undefined && associatedInput.value !== '') {
                 targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
@@ -2860,19 +2797,6 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     } else { // ele.checked is false
         // If checkbox is unchecked, remove the parameter from URL based on the key part
         targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
-        
-        // Special handling for language parameters - also remove associated voice parameter
-        if (keyOnly === 'googlelang') {
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicegoogle');
-        } else if (keyOnly === 'lang' || keyOnly === 'systemlang') {
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
-        } else if (keyOnly === 'speechifylang') {
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
-        } else if (keyOnly.endsWith('lang')) {
-            // Generic handling for other *lang parameters
-            const prefix = keyOnly.slice(0, -4);
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, `voice${prefix}`);
-        }
     }
 
     targetElement.raw = cleanURL(targetElement.raw);
@@ -3013,9 +2937,7 @@ function handleOptionParam(ele, targetId, paramType, sync) {
     targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
     
     // Check if this option should be active based on its related checkbox
-    // Extract the number from paramType (e.g., "10" from "optionparam10")
-    const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
-    const preEleSelector = `[data-param${paramNum}='${paramValue}']`;
+    const preEleSelector = `[data-param${paramType.slice(-1)}='${paramValue}']`;
     const preEle = document.querySelector(preEleSelector);
     
     if (ele.value && (!preEle || preEle.checked)) {
@@ -3032,44 +2954,81 @@ function handleOptionParam(ele, targetId, paramType, sync) {
             targetElement.raw = removeTTSProviderParams(targetElement.raw, ele.value);
         }
         
-        // Check if this is a select element with language/voice options
-        if (ele.tagName === 'SELECT' && ele.selectedOptions.length > 0) {
-            const selectedOption = ele.selectedOptions[0];
+        const encodedValue = ele.value; // It should now be 'lang=X&voice=Y'
+        // Try to parse as URL parameters
+        let params = null;
+        try {
+            params = new URLSearchParams(encodedValue);
+        } catch (e) {
+            // Not URL parameters, use as regular value
+        }
+        
+        // Check if this is a language/voice combination
+        if (params && params.has('lang') && params.has('voice')) {
+            const langValue = params.get('lang');
+            const voiceValue = params.get('voice');
             
-            // Check if this is a language dropdown with voice data
-            if (selectedOption.hasAttribute('data-lang') && selectedOption.value && selectedOption.value.includes('=')) {
-                // Parse the value to extract language and voice
-                const params = new URLSearchParams(selectedOption.value);
-                const langValue = params.get('lang') || selectedOption.getAttribute('data-lang');
-                const voiceValue = params.get('voice');
-            
-                // Determine the correct parameter names based on the paramValue
-                if (paramValue === 'googlelang') {
-                    targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
-                    targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
-                } else if (paramValue === 'speechifylang') {
-                    // Speechify doesn't use separate lang param, just voice
-                    targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
-                } else if (paramValue === 'lang' || paramValue === 'systemlang') {
-                    // System TTS uses generic lang and voice
-                    targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
-                    targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
-                } else if (paramValue.endsWith('lang')) {
-                    // Generic handling for other *lang parameters
-                    const prefix = paramValue.slice(0, -4);
-                    targetElement.raw = updateURL(`${paramValue}=${langValue}`, targetElement.raw);
-                    targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
-                } else {
-                    // Not a language parameter, use standard value
-                    targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
-                }
+            // Determine the correct parameter names based on the paramValue
+            if (paramValue === 'googlelang') {
+                targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
+            } else if (paramValue === 'speechifylang') {
+                // Speechify doesn't use separate lang param, just voice
+                targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+            } else if (paramValue === 'lang' || paramValue === 'systemlang') {
+                // System TTS uses generic lang and voice
+                targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+            } else if (paramValue.endsWith('lang')) {
+                // Generic handling for other *lang parameters
+                const prefix = paramValue.slice(0, -4);
+                targetElement.raw = updateURL(`${paramValue}=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
             } else {
-                // Standard select without language/voice data
-                targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+                // Default: use lang and voice as-is
+                targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
             }
         } else {
-            // Not a select element, use standard value
-            targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+            // Regular single value
+            targetElement.raw = updateURL(`${paramValue}=${encodedValue}`, targetElement.raw);
+        }
+        let params = null;
+        try {
+            params = new URLSearchParams(encodedValue);
+        } catch (e) {
+            // Not URL parameters, use as regular value
+        }
+        
+        // Check if this is a language/voice combination
+        if (params && params.has("lang") && params.has("voice")) {
+            const langValue = params.get("lang");
+            const voiceValue = params.get("voice");
+            
+            // Determine the correct parameter names based on the paramValue
+            if (paramValue === "googlelang") {
+                targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
+            } else if (paramValue === "speechifylang") {
+                // Speechify doesn't use separate lang param, just voice
+                targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+            } else if (paramValue === "lang" || paramValue === "systemlang") {
+                // System TTS uses generic lang and voice
+                targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+            } else if (paramValue.endsWith("lang")) {
+                // Generic handling for other *lang parameters
+                const prefix = paramValue.slice(0, -4);
+                targetElement.raw = updateURL(`${paramValue}=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
+            } else {
+                // Default: use lang and voice as-is
+                targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
+                targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+            }
+        } else {
+            // Regular single value
+            targetElement.raw = updateURL(`${paramValue}=${encodedValue}`, targetElement.raw);
         }
     }
     
