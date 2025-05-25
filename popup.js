@@ -2758,13 +2758,14 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
             targetElement.raw = updateURL(paramValue, targetElement.raw);
         } else {
 			 // Determine the correct suffix for associated input attributes.
-			// If paramNum is '1', no suffix is used (e.g., "data-numbersetting").
-			// Otherwise, the paramNum itself is the suffix (e.g., "data-numbersetting2").
-			const numSuffix = paramNum === '1' ? '' : paramNum;
+			// Only numbersetting strips the '1' (e.g., "data-numbersetting" not "data-numbersetting1")
+			// textparam and optionparam keep the number (e.g., "data-textparam1", "data-optionparam1")
+			const numberSettingSuffix = paramNum === '1' ? '' : paramNum;
+			const otherSuffix = paramNum || '';
 
-			const numberSettingSelector = `[data-numbersetting${numSuffix}='${keyOnly}']`;
-			const optionSettingSelector = `[data-optionparam${numSuffix}='${keyOnly}']`;
-			const textSettingSelector = `[data-textparam${numSuffix}='${keyOnly}']`;
+			const numberSettingSelector = `[data-numbersetting${numberSettingSuffix}='${keyOnly}']`;
+			const optionSettingSelector = `[data-optionparam${otherSuffix}='${keyOnly}']`;
+			const textSettingSelector = `[data-textparam${otherSuffix}='${keyOnly}']`;
 
 			// Query for each type and take the first one found.
 			const associatedNumberInput = document.querySelector(numberSettingSelector);

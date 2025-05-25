@@ -43,6 +43,11 @@
             max-width: 1200px;
             margin: 0 auto;
             display: grid;
+            grid-template-columns: 1fr;
+        }
+        
+        /* When logged in, switch to two-column layout */
+        body:has(.socket:not(.hidden)) .container {
             grid-template-columns: 1fr 300px;
         }
 		.socket > div {
@@ -144,7 +149,7 @@
 			max-width: 1200px;
 			margin: 0 auto;
 			display: grid;
-			grid-template-columns: 1fr 300px;
+			grid-template-columns: 1fr;
 			height: calc(100vh - 20px);
 			padding: 10px;
 		}
@@ -412,18 +417,126 @@
 			justify-content: space-between;
 			margin: 0 0 10px 0;
 		}
+		
+		/* Landing page styles */
+		.landing-container {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			min-height: 400px;
+			padding: 40px 20px;
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+			margin: 20px auto;
+			max-width: 600px;
+		}
+		
+		.youtube-logo {
+			width: 80px;
+			height: 56px;
+			margin-bottom: 20px;
+			background: url('../images/youtube.png') center/contain no-repeat;
+		}
+		
+		.landing-title {
+			font-size: 24px;
+			font-weight: bold;
+			margin-bottom: 10px;
+			color: #333;
+		}
+		
+		.landing-subtitle {
+			font-size: 16px;
+			color: #666;
+			margin-bottom: 30px;
+		}
+		
+		.auth-section {
+			text-align: center;
+			margin-bottom: 30px;
+		}
+		
+		.landing-description {
+			font-size: 14px;
+			color: #666;
+			text-align: center;
+			line-height: 1.6;
+			margin: 20px 0;
+			max-width: 500px;
+		}
+		
+		.policy-footer {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: white;
+			border-top: 1px solid #e0e0e0;
+			padding: 15px;
+			text-align: center;
+			font-size: 13px;
+			z-index: 100;
+		}
+		
+		.policy-footer a {
+			color: #1a73e8;
+			text-decoration: none;
+			margin: 0 10px;
+		}
+		
+		.policy-footer a:hover {
+			text-decoration: underline;
+		}
+		
+		body {
+			padding-bottom: 60px; /* Make room for fixed footer */
+		}
+		
+		@media (max-width: 768px) {
+			.landing-container {
+				margin: 10px;
+			}
+			.policy-footer {
+				font-size: 12px;
+				padding: 12px 10px;
+			}
+			.policy-footer a {
+				margin: 0 5px;
+				display: inline-block;
+				line-height: 1.5;
+			}
+			/* Stack layout on mobile when socket is visible */
+			body:has(.socket:not(.hidden)) .container {
+				grid-template-columns: 1fr;
+			}
+			.sidebar {
+				order: 2;
+				margin-top: 20px;
+			}
+		}
     </style>
 </head>
 <body>
     <div class="container">
         <div class="main-content">
-            <div class="auth text-center">
-				<a id="auth-link" class="auth-button">Sign in to YouTube</a>
-				<div style="margin-top: 15px; font-size: 13px; max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.5;">
-					<p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
-					<p>Please note: Events related to subscriptions, memberships, and followers are only available for your own channel. Chat functionality will still work across most public channels.</p>
-				</div>
-			</div>
+            <div class="auth">
+                <div class="landing-container">
+                    <div class="youtube-logo"></div>
+                    <h1 class="landing-title">Social Stream for YouTube</h1>
+                    <p class="landing-subtitle">Connect to YouTube Live Chat</p>
+                    
+                    <div class="auth-section">
+                        <a id="auth-link" class="auth-button">Sign in with YouTube</a>
+                    </div>
+                    
+                    <div class="landing-description">
+                        <p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
+                        <p><strong>Note:</strong> Events related to subscriptions, memberships, and followers are only available for your own channel. Chat functionality will work across most public channels.</p>
+                    </div>
+                </div>
+            </div>
             
             <div class="hidden socket">
                <div class="channel-header">
@@ -494,6 +607,15 @@
             </div>
         </div>
     </div>
+    
+    <div class="policy-footer">
+        <a href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a>
+        |
+        <a href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a>
+        |
+        <a href="https://www.youtube.com/t/terms" target="_blank">YouTube's Terms of Service</a>
+    </div>
+    
 <script>
 
 
