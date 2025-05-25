@@ -1004,663 +1004,6 @@ const sourceTypes = ['relaytargets','eventsSources'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
-document.addEventListener("DOMContentLoaded", async function(event) {
-	if (ssapp){
-		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
-		const basePath = decodeURIComponent(urlParams.get('basePath'));
- 		if (basePath){
- 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
- 		}
-	} else {
-		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
-	}
-	
-	if (ssapp && urlParams.get("ssapp")){
-		document.body.classList.add('ssapp');
-	}
-	if (ssapp){
-		const style = document.createElement('style');
-		style.textContent = 'body .ssapp { display: none !important; }';
-		style.id = 'hide-ssapp-style';
-		document.head.appendChild(style);
-	}
-
-	
-	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
-	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
-
-	if (uploadCustomJsButton) {
-	  uploadCustomJsButton.addEventListener('click', uploadCustomJsFile);
-	}
-
-	if (deleteCustomJsButton) {
-	  deleteCustomJsButton.addEventListener('click', deleteCustomJsFile);
-	}
-	
-	//document.body.className = "extension-disabled";
-	document.getElementById("disableButton").style.display = "";
-	//chrome.browserAction.setIcon({path: "/icons/off.png"});
-	document.getElementById("extensionState").checked = null;
-	
-	document.getElementById("disableButton").onclick = function(event){
-		event.stopPropagation()
-		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
-			chrome.runtime.lastError;
-			update(response);
-		});
-		return false;
-	};
-	if (!ssapp) {
-		// Get reference to the select element first
-		const sourceSelector = document.getElementById('source-selector');
-		
-		// Check if the element exists
-		if (!sourceSelector) {
-		  console.error("Could not find source-selector element");
-		  return;
-		}
-		
-		const manifestData = chrome.runtime.getManifest();
-		
-		if (manifestData && manifestData.content_scripts) {
-		  // Set to store unique source files
-		  
-		  
-		  // Extract source filenames from content_scripts
-		  manifestData.content_scripts.forEach(script => {
-			if (script.js && script.js.length > 0) {
-			  script.js.forEach(jsFile => {
-				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-				  // Extract just the filename without path and extension
-				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-				  sourcesList.add(sourceName);
-				}
-			  });
-			}
-		  });
-		  
-		  // Create and add options for each source
-		  Array.from(sourcesList).sort().forEach(source => {
-			const option = document.createElement('option');
-			option.value = source;
-			// Capitalize first letter for display
-			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
-			sourceSelector.appendChild(option);
-		  });
-		}
-		
-		document.getElementById("custominject").classList.remove("hidden");
-		document.getElementById('inject-button').addEventListener('click', function() {
-		  const source = document.getElementById('source-selector').value;
-		  
-		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-			chrome.runtime.sendMessage({
-			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
-			  source: source,
-			  tabId: tabs[0].id
-			});
-		  });
-		});
-	}
-	
-	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
-		const commandsList = document.getElementById('customGifCommandsList');
-		const newCommandEntry = createCommandEntry();
-		commandsList.appendChild(newCommandEntry);
-		updateSettings(newCommandEntry, true);
-	});
-	
-	document.querySelectorAll("[data-copy]").forEach(ele=>{
-		ele.onclick = copyToClipboard;
-	});
-	
-	
-	try {
-		
-		
-		const textInputs = document.querySelectorAll('.textInputContainer');
-		textInputs.forEach(container => {
-		  const input = container.querySelector('.textInput');
-		  if (!input) return;
-		  
-		  const id = input.id;
-		  if (userTypes.includes(id)) {
-			input.classList.add('hidden');
-			
-			const listContainer = document.createElement('div');
-			listContainer.className = 'username-list-container';
-			listContainer.id = `${id}List`;
-			
-			const addContainer = document.createElement('div');
-			addContainer.className = 'add-username-container';
-			
-			// Replace text input with select dropdown if sourcesList is available
-			if (sourcesList && sourcesList.size > 0) {
-			  addContainer.innerHTML = `
-				<input type="text" id="new${id}" placeholder="Add username">
-				<select id="new${id}Type">
-				  <option value="" selected>All sources</option>
-				  ${Array.from(sourcesList).sort().map(source => 
-					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-				  ).join('')}
-				</select>
-				<button id="add${id}">Add</button>
-			  `;
-			} else {
-			  addContainer.innerHTML = `
-				<input type="text" id="new${id}" placeholder="Add username">
-				<input type="text" id="new${id}Type" placeholder="Source type (optional)">
-				<button id="add${id}">Add</button>
-			  `;
-			}
-			
-			container.parentNode.classList.add("isolate");
-			container.parentNode.insertBefore(listContainer, container.nextSibling);
-			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
-		  }
-		});
-		
-		userTypes.forEach(type => {
-		  try {
-			document.getElementById(`${type}List`).addEventListener('click', (e) => {
-			  if (e.target.classList.contains('remove-username')) {
-				removeUsername(
-				  e.target.dataset.username,
-				  e.target.dataset.sourceType,
-				  type
-				);
-			  }
-			});
-
-			document.getElementById(`add${type}`).addEventListener('click', () => {
-			  const input = document.getElementById(`new${type}`);
-			  const username = input.value.trim();
-			  if (username) {
-				addUsername(username, type);
-				input.value = '';
-				const sourceInput = document.getElementById(`new${type}Type`);
-				if (sourceInput) {
-				  sourceInput.value = '';
-				}
-			  }
-			});
-		  } catch(e) {
-			console.error(e);
-		  }
-		});
-		
-	} catch(e){
-		console.error(e);
-	}
-
-	try {
-		
-		const textInputs = document.querySelectorAll('.textInputContainer');
-		textInputs.forEach(container => {
-			const input = container.querySelector('.textInput');
-			if (!input) return;
-			
-			const id = input.id;
-			if (sourceTypes.includes(id)) {
-				input.classList.add('hidden');
-				
-				const listContainer = document.createElement('div');
-				listContainer.className = 'source-list-container';
-				listContainer.id = `${id}List`;
-				
-				const addContainer = document.createElement('div');
-				addContainer.className = 'add-source-container';
-				
-				// Replace text input with select dropdown if sourcesList is available
-				if (sourcesList && sourcesList.size > 0) {
-				  addContainer.innerHTML = `
-					<select id="new${id}Type">
-					  <option value="" selected>All sources</option>
-					  ${Array.from(sourcesList).sort().map(source => 
-						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-					  ).join('')}
-					</select>
-					<button id="add${id}">Add</button>
-				  `;
-				} else {
-				  addContainer.innerHTML = `
-					<input type="text" id="new${id}Type" placeholder="Source type">
-					<button id="add${id}">Add</button>
-				  `;
-				}
-				
-				container.parentNode.classList.add("isolate");
-				container.parentNode.insertBefore(listContainer, container.nextSibling);
-				container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
-			}
-		});
-		
-		sourceTypes.forEach(type => {
-			try {
-				document.getElementById(`${type}List`).addEventListener('click', (e) => {
-					if (e.target.classList.contains('remove-source')) {
-						removeSourceType(
-							e.target.dataset.sourceType,
-							type
-						);
-					}
-				});
-				document.getElementById(`add${type}`).addEventListener('click', () => {
-					const input = document.getElementById(`new${type}Type`);
-					const sourceType = input.value.trim();
-					if (sourceType) {
-						addSourceType(sourceType, type);
-						input.value = '';
-					}
-				});
-			} catch(e) {
-				console.error(e);
-			}
-		});
-		
-	} catch(e){
-		console.error(e);
-	}
-	
-/* 	userTypes.forEach(type => {
-	  try {
-		updateUsernameList(type);
-	  } catch(e) {
-		console.error(e);
-	  }
-	});
-
-	// Add this after the sourceTypes setup and event listeners
-	sourceTypes.forEach(type => {
-	  try {
-		updateSourceTypeList(type);
-	  } catch(e) {
-		console.error(e);
-	  }
-	}); */
-	
-	//userTypes.forEach(type => updateUsernameList(type));
-    //sourceTypes.forEach(type => updateSourceTypeList(type));
-	
-	setTimeout(function(){
-		populateFontDropdown(); 
-		PollManager.init();
-	},1000);
-	
-	// populate language drop down
-	if (speechSynthesis){
-		async function populateVoices() {
-			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
-
-			voices.sort((a, b) => {
-				if (a.default) {
-					return -1; // a is the default, move a to the front
-				} else if (b.default) {
-					return 1; // b is the default, move b to the front
-				} else {
-					return 0; // neither a nor b is the default, keep original order
-				}
-			});
-
-			const populateDropdown = (dropdownId) => {
-				const dropdown = document.getElementById(dropdownId);
-				if (!dropdown) return;
-
-				const existingOptions = new Set(Array.from(dropdown.options).map(option => option.textContent));
-
-				voices.forEach(voice => {
-					const voiceText = `${voice.name} (${voice.lang})`;
-					if (!existingOptions.has(voiceText)) {
-						const option = document.createElement('option');
-						option.textContent = voiceText;
-						option.value = voice.code; // This sets the value attribute
-						option.code = voice.code;   // <--- THIS IS THE CRUCIAL LINE THAT WAS MISSING
-						option.setAttribute('data-lang', voice.lang);
-						option.setAttribute('data-name', voice.name);
-						dropdown.appendChild(option);
-					}
-				});
-			};
-
-			populateDropdown('systemLanguageSelect');
-			populateDropdown('languageSelect2');
-			populateDropdown('systemLanguageSelect10');
-
-			try {
-				TTSManager.init(voices)
-			} catch(e){
-				console.error(e);
-			}
-		}
-		speechSynthesis.onvoiceschanged = populateVoices;
-		
-		document.getElementById('searchInput').addEventListener('keyup', function() {
-			var searchQuery = this.value.toLowerCase();
-			
-			if (searchQuery){
-				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
-					ele.checked = true
-				});
-				document.querySelectorAll('.wrapper').forEach(w=>{
-					var menuItems = w.querySelectorAll('.options_group > div');
-					var matches = 0;
-					menuItems.forEach(function(item) {
-						var text = item.textContent.toLowerCase();
-						
-						if (item.querySelector("[title]")){
-							text += " " + item.querySelector("[title]").title.toLowerCase();
-						}
-						
-						if (item.querySelector("input")){
-							[...item.querySelector("input").attributes].forEach(att=>{
-								if (att.name.startsWith("data-")){
-									text += " " + att.value.toLowerCase();
-								}
-							});
-						}
-						if (text.includes(searchQuery)) {
-							item.style.display = '';
-							matches += 1;
-						} else {
-							item.style.display = 'none';
-						}
-					});
-					if (!matches){
-						w.style.display = "none";
-					} else {
-						w.style.display = "";
-					}
-				});
-			} else {
-				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
-					ele.checked = null
-				});
-				document.querySelectorAll('.wrapper').forEach(ele=>{
-					ele.style.display = "";
-				});
-				document.querySelectorAll('.options_group > div').forEach(ele=>{
-					ele.style.display = "";
-				});
-			}
-		});
-	}
-	
-	document.getElementById('searchIcon').addEventListener('click', function() {
-		var searchInput = document.getElementById('searchInput');
-		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-			searchInput.style.display = 'block';
-			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
-			searchInput.focus(); // Optional: Focus on the input field when it's shown
-		} else {
-			searchInput.style.display = 'none';
-			searchInput.style.width = '0';
-		}
-	});
-	
-	var activeToggle = false;
-	document.getElementById('activeIcon').addEventListener('click', function() {
-		activeToggle = !activeToggle;
-		if (activeToggle) {
-			// Open all collapsible sections
-			document.querySelectorAll('input.collapsible-input').forEach(ele => {
-				ele.checked = true;
-			});
-			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = 'none';
-			});
-
-			document.querySelectorAll('.wrapper').forEach(w => {
-				var menuItems = w.querySelectorAll('.options_group > div');
-				var matches = 0;
-				menuItems.forEach(function(item) {
-					var checkbox = item.querySelector('input[type="checkbox"]');
-					var textInput = item.querySelector('input[type="text"], input[type="password"], input[type="number"]');
-					
-					var isActive = false;
-
-					if (checkbox && checkbox.checked) {
-						isActive = true;
-					} else if (textInput) {
-						var associatedToggle = item.querySelector('input[type="checkbox"]');
-						if (associatedToggle && associatedToggle.checked && textInput.value.trim() !== '') {
-							isActive = true;
-						} else if (!associatedToggle && textInput.value.trim() !== '') {
-							isActive = true;
-						}
-					}
-
-					if (isActive) {
-						matches += 1;
-						item.style.display = '';
-					} else {
-						item.style.display = 'none';
-					}
-				});
-				
-				if (!matches) {
-					w.style.display = "none";
-				} else {
-					w.style.display = "";
-				}
-			});
-		} else {
-			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = '';
-			});
-			// Reset to original state
-			document.querySelectorAll('input.collapsible-input').forEach(ele => {
-				ele.checked = false;
-			});
-			document.querySelectorAll('.wrapper').forEach(ele => {
-				ele.style.display = "";
-			});
-			document.querySelectorAll('.options_group > div').forEach(ele => {
-				ele.style.display = "";
-			});
-		}
-	});
-	
-	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
-	const deleteBadwordsButton = document.getElementById('deleteBadwordsButton');
-	if (uploadBadwordsButton) {
-		uploadBadwordsButton.addEventListener('click', uploadBadwordsFile);
-	}
-	if (deleteBadwordsButton) {
-		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
-	}
-	
-	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
-	const ragFileManagement = document.getElementById('ragFileManagement');
-
-	ragEnabledCheckbox.addEventListener('change', function() {
-		ragFileManagement.style.display = this.checked ? 'block' : 'none';
-	});
-
-	let initialSetup = setInterval(()=>{
-		log("pop up asking main for settings yet again..");
-		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-			chrome.runtime.lastError;
-			log("getSettings response",response);
-			if ((response == undefined) || (!response.streamID)){
-				
-			} else {
-				clearInterval(initialSetup);
-				update(response, false); // we dont want to sync things
-			}
-		});
-	}, 500);
-	
-	log("pop up asking main for settings");
-	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-		chrome.runtime.lastError;
-		log("getSettings response",response);
-		if ((response == undefined) || (!response.streamID)){
-			
-		} else {
-			clearInterval(initialSetup);
-			update(response, false); // we dont want to sync things
-		}
-	});
-
-	//botReplyAll
-	var iii = document.querySelectorAll("input[type='checkbox']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-
-	var iii = document.querySelectorAll("input[type='text'],textarea");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-	var iii = document.querySelectorAll("input[type='text'][class*='instant']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].oninput = updateSettings;
-	}
-	
-	var iii = document.querySelectorAll("input[type='number']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-	var iii = document.querySelectorAll("input[type='password']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-	var iii = document.querySelectorAll("input[type='color']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings; 
-	}
-	
-	var iii = document.querySelectorAll("select");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-
-	var iii = document.querySelectorAll("button[data-action]");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onclick = function(e){
-			var msg = {};
-			msg.cmd = this.dataset.action;
-			msg.ctrl = e.ctrlKey || false;
-			
-			if (this.dataset.target){
-				msg.target = this.dataset.target;
-			}
-			
-			msg.value = this.dataset.value || null;
-			if (msg.cmd == "fakemsg"){
-				chrome.runtime.sendMessage(msg, function (response) {
-					// actions have callbacks? maybe
-				});
-			} else if (msg.cmd == "uploadRAGfile"){
-				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
-				});
-			} else if (msg.cmd == "savePoll"){
-				
-				PollManager.saveCurrentPoll();
-			} else if (msg.cmd == "createNewPoll"){
-				
-				PollManager.createNewPoll();
-			} else if (msg.cmd == "bigwipe"){
-				var confirmit = confirm("Are you sure you want to reset all your settings?");
-				if (confirmit){
-					chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-						setTimeout(function(){
-							window.location.reload();
-						},100);
-					});
-				}
-			} else {
-				//console.log(msg);
-				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-					log("ignore callback for this action");
-					// update(response);  
-				});
-			}
-		};
-	}
-
-
-	document.getElementById("ytcopy").onclick = async function(){
-		document.getElementById("ytcopy").innerHTML = "📎";
-		var YoutubeChannel = document.querySelector('input[data-textsetting="youtube_username"]').value;
-		if (!YoutubeChannel){return;}
-
-		if (!YoutubeChannel.startsWith("@")){
-			YoutubeChannel = "@"+YoutubeChannel;
-		}
-
-		fetch("https://www.youtube.com/c/"+YoutubeChannel+"/live").then((response) => response.text()).then((data) => {
-			document.getElementById("ytcopy").innerHTML = "🔄";
-			try{
-				var videoID = data.split('{"videoId":"')[1].split('"')[0];
-				log(videoID);
-				if (videoID){
-					navigator.clipboard.writeText(videoID).then(() => {
-						document.getElementById("ytcopy").innerHTML = "✔️"; // Video ID copied to clipboard
-						setTimeout(function(){
-							document.getElementById("ytcopy").innerHTML = "📎";
-						},1000);
-					}, () => {
-						document.getElementById("ytcopy").innerHTML = "❌"; // Failed to copy to clipboard
-					});
-				}
-			} catch(e){
-				document.getElementById("ytcopy").innerHTML = "❓"; // Video not found
-			}
-		});
-	};
-
-	checkVersion(); 
-	
-	let hideLinks = false;
-	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
-		if (x.checked){
-			hideLinks = true;
-		}
-	});
-	
-	if (hideLinks){
-		document.body.classList.add("hidelinks");
-	} 
-	
-	// Function to dynamically load the WebMidi script
-    async function loadWebMidiScript(callback) {
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = "./thirdparty/webmidi3.js";
-        script.onload = callback; // Run the callback once the script loads
-        script.onerror = () => {
-            console.error("Failed to load WebMidi script.");
-        };
-        document.body.appendChild(script);
-    }
-    // Function to initialize the MIDI dropdown logic
-    async function initializeMIDIDropdown() {
-	  try {
-		await WebMidi.enable();
-		console.log("WebMidi enabled!");
-		
-		// Initial population of all MIDI selects
-		updateAllMidiSelects();
-		
-		// Handle device changes
-		WebMidi.addListener("connected", updateAllMidiSelects);
-		WebMidi.addListener("disconnected", updateAllMidiSelects);
-		
-	  } catch(e) {
-		console.log("Failed to initialize WebMidi:", e);
-	  }
-	}
-    // Dynamically load the WebMidi script and initialize the dropdown logic
-	try {
-		setTimeout(function(){
-			loadWebMidiScript(initializeMIDIDropdown);
-		},3000);
-	} catch(e){ console.error(e);}
-});
-
 
 // Function to handle custom JS file upload
 function uploadCustomJsFile() {
@@ -2655,31 +1998,7 @@ const devmode = urlParams.has("devmode");
 var sourcemode = urlParams.get("sourcemode") || false;
 ssapp = urlParams.has("ssapp") || ssapp;
 
-// Check for language parameter
-const lnParam = urlParams.get("ln") || urlParams.get("lang");
-if (lnParam) {
-    // Map common language codes to our translation file names
-    const languageMap = {
-        'en': 'en-us',
-        'en-US': 'en-us',
-        'en-GB': 'en-uk',
-        'de': 'de',
-        'es': 'es',
-        'pt': 'pt-br',
-        'pt-BR': 'pt-br'
-    };
-    
-    const mappedLang = languageMap[lnParam] || lnParam;
-    
-    // Check if we have a translation for this language
-    const availableLanguages = ['de', 'es', 'en-uk', 'en-us', 'pt-br'];
-    if (availableLanguages.includes(mappedLang)) {
-        // Store the language preference
-        chrome.storage.local.set({ translationlanguage: mappedLang }, function() {
-            console.log("Language set to:", mappedLang);
-        });
-    }
-}
+// Language parameter handling removed - use the translation dropdown instead
 
 
 var baseURL = "https://socialstream.ninja/";
@@ -4703,4 +4022,666 @@ ProfileManager.init();
 
 document.querySelector('button[data-action="saveProfile"]').addEventListener('click', function() {
   ProfileManager.saveCurrentProfile();
+});
+
+
+document.addEventListener("DOMContentLoaded", async function(event) {
+	if (ssapp){
+		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
+		const basePath = decodeURIComponent(urlParams.get('basePath'));
+ 		if (basePath){
+ 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
+ 		}
+	} else {
+		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+	}
+	
+	if (ssapp && urlParams.get("ssapp")){
+		document.body.classList.add('ssapp');
+	}
+	if (ssapp){
+		const style = document.createElement('style');
+		style.textContent = 'body .ssapp { display: none !important; }';
+		style.id = 'hide-ssapp-style';
+		document.head.appendChild(style);
+	}
+
+	
+	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
+	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
+
+	if (uploadCustomJsButton) {
+	  uploadCustomJsButton.addEventListener('click', uploadCustomJsFile);
+	}
+
+	if (deleteCustomJsButton) {
+	  deleteCustomJsButton.addEventListener('click', deleteCustomJsFile);
+	}
+	
+	//document.body.className = "extension-disabled";
+	document.getElementById("disableButton").style.display = "";
+	//chrome.browserAction.setIcon({path: "/icons/off.png"});
+	document.getElementById("extensionState").checked = null;
+	
+	document.getElementById("disableButton").onclick = function(event){
+		event.stopPropagation()
+		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
+			chrome.runtime.lastError;
+			update(response);
+		});
+		return false;
+	};
+	if (!ssapp) {
+		// Get reference to the select element first
+		const sourceSelector = document.getElementById('source-selector');
+		
+		// Check if the element exists
+		if (!sourceSelector) {
+		  console.error("Could not find source-selector element");
+		  return;
+		}
+		
+		const manifestData = chrome.runtime.getManifest();
+		
+		if (manifestData && manifestData.content_scripts) {
+		  // Set to store unique source files
+		  
+		  
+		  // Extract source filenames from content_scripts
+		  manifestData.content_scripts.forEach(script => {
+			if (script.js && script.js.length > 0) {
+			  script.js.forEach(jsFile => {
+				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
+				  // Extract just the filename without path and extension
+				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
+				  sourcesList.add(sourceName);
+				}
+			  });
+			}
+		  });
+		  
+		  // Create and add options for each source
+		  Array.from(sourcesList).sort().forEach(source => {
+			const option = document.createElement('option');
+			option.value = source;
+			// Capitalize first letter for display
+			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
+			sourceSelector.appendChild(option);
+		  });
+		}
+		
+		document.getElementById("custominject").classList.remove("hidden");
+		document.getElementById('inject-button').addEventListener('click', function() {
+		  const source = document.getElementById('source-selector').value;
+		  
+		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+			chrome.runtime.sendMessage({
+			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
+			  source: source,
+			  tabId: tabs[0].id
+			});
+		  });
+		});
+	}
+	
+	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
+		const commandsList = document.getElementById('customGifCommandsList');
+		const newCommandEntry = createCommandEntry();
+		commandsList.appendChild(newCommandEntry);
+		updateSettings(newCommandEntry, true);
+	});
+	
+	document.querySelectorAll("[data-copy]").forEach(ele=>{
+		ele.onclick = copyToClipboard;
+	});
+	
+	
+	try {
+		
+		
+		const textInputs = document.querySelectorAll('.textInputContainer');
+		textInputs.forEach(container => {
+		  const input = container.querySelector('.textInput');
+		  if (!input) return;
+		  
+		  const id = input.id;
+		  if (userTypes.includes(id)) {
+			input.classList.add('hidden');
+			
+			const listContainer = document.createElement('div');
+			listContainer.className = 'username-list-container';
+			listContainer.id = `${id}List`;
+			
+			const addContainer = document.createElement('div');
+			addContainer.className = 'add-username-container';
+			
+			// Replace text input with select dropdown if sourcesList is available
+			if (sourcesList && sourcesList.size > 0) {
+			  addContainer.innerHTML = `
+				<input type="text" id="new${id}" placeholder="Add username">
+				<select id="new${id}Type">
+				  <option value="" selected>All sources</option>
+				  ${Array.from(sourcesList).sort().map(source => 
+					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+				  ).join('')}
+				</select>
+				<button id="add${id}">Add</button>
+			  `;
+			} else {
+			  addContainer.innerHTML = `
+				<input type="text" id="new${id}" placeholder="Add username">
+				<input type="text" id="new${id}Type" placeholder="Source type (optional)">
+				<button id="add${id}">Add</button>
+			  `;
+			}
+			
+			container.parentNode.classList.add("isolate");
+			container.parentNode.insertBefore(listContainer, container.nextSibling);
+			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+		  }
+		});
+		
+		userTypes.forEach(type => {
+		  try {
+			document.getElementById(`${type}List`).addEventListener('click', (e) => {
+			  if (e.target.classList.contains('remove-username')) {
+				removeUsername(
+				  e.target.dataset.username,
+				  e.target.dataset.sourceType,
+				  type
+				);
+			  }
+			});
+
+			document.getElementById(`add${type}`).addEventListener('click', () => {
+			  const input = document.getElementById(`new${type}`);
+			  const username = input.value.trim();
+			  if (username) {
+				addUsername(username, type);
+				input.value = '';
+				const sourceInput = document.getElementById(`new${type}Type`);
+				if (sourceInput) {
+				  sourceInput.value = '';
+				}
+			  }
+			});
+		  } catch(e) {
+			console.error(e);
+		  }
+		});
+		
+	} catch(e){
+		console.error(e);
+	}
+
+	try {
+		
+		const textInputs = document.querySelectorAll('.textInputContainer');
+		textInputs.forEach(container => {
+			const input = container.querySelector('.textInput');
+			if (!input) return;
+			
+			const id = input.id;
+			if (sourceTypes.includes(id)) {
+				input.classList.add('hidden');
+				
+				const listContainer = document.createElement('div');
+				listContainer.className = 'source-list-container';
+				listContainer.id = `${id}List`;
+				
+				const addContainer = document.createElement('div');
+				addContainer.className = 'add-source-container';
+				
+				// Replace text input with select dropdown if sourcesList is available
+				if (sourcesList && sourcesList.size > 0) {
+				  addContainer.innerHTML = `
+					<select id="new${id}Type">
+					  <option value="" selected>All sources</option>
+					  ${Array.from(sourcesList).sort().map(source => 
+						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+					  ).join('')}
+					</select>
+					<button id="add${id}">Add</button>
+				  `;
+				} else {
+				  addContainer.innerHTML = `
+					<input type="text" id="new${id}Type" placeholder="Source type">
+					<button id="add${id}">Add</button>
+				  `;
+				}
+				
+				container.parentNode.classList.add("isolate");
+				container.parentNode.insertBefore(listContainer, container.nextSibling);
+				container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+			}
+		});
+		
+		sourceTypes.forEach(type => {
+			try {
+				document.getElementById(`${type}List`).addEventListener('click', (e) => {
+					if (e.target.classList.contains('remove-source')) {
+						removeSourceType(
+							e.target.dataset.sourceType,
+							type
+						);
+					}
+				});
+				document.getElementById(`add${type}`).addEventListener('click', () => {
+					const input = document.getElementById(`new${type}Type`);
+					const sourceType = input.value.trim();
+					if (sourceType) {
+						addSourceType(sourceType, type);
+						input.value = '';
+					}
+				});
+			} catch(e) {
+				console.error(e);
+			}
+		});
+		
+	} catch(e){
+		console.error(e);
+	}
+	
+/* 	userTypes.forEach(type => {
+	  try {
+		updateUsernameList(type);
+	  } catch(e) {
+		console.error(e);
+	  }
+	});
+
+	// Add this after the sourceTypes setup and event listeners
+	sourceTypes.forEach(type => {
+	  try {
+		updateSourceTypeList(type);
+	  } catch(e) {
+		console.error(e);
+	  }
+	}); */
+	
+	//userTypes.forEach(type => updateUsernameList(type));
+    //sourceTypes.forEach(type => updateSourceTypeList(type));
+	
+	setTimeout(function(){
+		populateFontDropdown(); 
+		if (typeof PollManager !== 'undefined') {
+			PollManager.init();
+		}
+	},1000);
+	
+	// populate language drop down
+	if (speechSynthesis){
+		async function populateVoices() {
+			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
+
+			voices.sort((a, b) => {
+				if (a.default) {
+					return -1; // a is the default, move a to the front
+				} else if (b.default) {
+					return 1; // b is the default, move b to the front
+				} else {
+					return 0; // neither a nor b is the default, keep original order
+				}
+			});
+
+			const populateDropdown = (dropdownId) => {
+				const dropdown = document.getElementById(dropdownId);
+				if (!dropdown) return;
+
+				const existingOptions = new Set(Array.from(dropdown.options).map(option => option.textContent));
+
+				voices.forEach(voice => {
+					const voiceText = `${voice.name} (${voice.lang})`;
+					if (!existingOptions.has(voiceText)) {
+						const option = document.createElement('option');
+						option.textContent = voiceText;
+						option.value = voice.code; // This sets the value attribute
+						option.code = voice.code;   // <--- THIS IS THE CRUCIAL LINE THAT WAS MISSING
+						option.setAttribute('data-lang', voice.lang);
+						option.setAttribute('data-name', voice.name);
+						dropdown.appendChild(option);
+					}
+				});
+			};
+
+			populateDropdown('systemLanguageSelect');
+			populateDropdown('languageSelect2');
+			populateDropdown('systemLanguageSelect10');
+
+			if (typeof TTSManager !== 'undefined') {
+				try {
+					TTSManager.init(voices)
+				} catch(e){
+					console.error(e);
+				}
+			}
+		}
+		speechSynthesis.onvoiceschanged = populateVoices;
+		
+		document.getElementById('searchInput').addEventListener('keyup', function() {
+			var searchQuery = this.value.toLowerCase();
+			
+			if (searchQuery){
+				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
+					ele.checked = true
+				});
+				document.querySelectorAll('.wrapper').forEach(w=>{
+					var menuItems = w.querySelectorAll('.options_group > div');
+					var matches = 0;
+					menuItems.forEach(function(item) {
+						var text = item.textContent.toLowerCase();
+						
+						if (item.querySelector("[title]")){
+							text += " " + item.querySelector("[title]").title.toLowerCase();
+						}
+						
+						if (item.querySelector("input")){
+							[...item.querySelector("input").attributes].forEach(att=>{
+								if (att.name.startsWith("data-")){
+									text += " " + att.value.toLowerCase();
+								}
+							});
+						}
+						if (text.includes(searchQuery)) {
+							item.style.display = '';
+							matches += 1;
+						} else {
+							item.style.display = 'none';
+						}
+					});
+					if (!matches){
+						w.style.display = "none";
+					} else {
+						w.style.display = "";
+					}
+				});
+			} else {
+				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
+					ele.checked = null
+				});
+				document.querySelectorAll('.wrapper').forEach(ele=>{
+					ele.style.display = "";
+				});
+				document.querySelectorAll('.options_group > div').forEach(ele=>{
+					ele.style.display = "";
+				});
+			}
+		});
+	}
+	
+	document.getElementById('searchIcon').addEventListener('click', function() {
+		var searchInput = document.getElementById('searchInput');
+		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
+			searchInput.style.display = 'block';
+			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
+			searchInput.focus(); // Optional: Focus on the input field when it's shown
+		} else {
+			searchInput.style.display = 'none';
+			searchInput.style.width = '0';
+		}
+	});
+	
+	var activeToggle = false;
+	document.getElementById('activeIcon').addEventListener('click', function() {
+		activeToggle = !activeToggle;
+		if (activeToggle) {
+			// Open all collapsible sections
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = true;
+			});
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = 'none';
+			});
+
+			document.querySelectorAll('.wrapper').forEach(w => {
+				var menuItems = w.querySelectorAll('.options_group > div');
+				var matches = 0;
+				menuItems.forEach(function(item) {
+					var checkbox = item.querySelector('input[type="checkbox"]');
+					var textInput = item.querySelector('input[type="text"], input[type="password"], input[type="number"]');
+					
+					var isActive = false;
+
+					if (checkbox && checkbox.checked) {
+						isActive = true;
+					} else if (textInput) {
+						var associatedToggle = item.querySelector('input[type="checkbox"]');
+						if (associatedToggle && associatedToggle.checked && textInput.value.trim() !== '') {
+							isActive = true;
+						} else if (!associatedToggle && textInput.value.trim() !== '') {
+							isActive = true;
+						}
+					}
+
+					if (isActive) {
+						matches += 1;
+						item.style.display = '';
+					} else {
+						item.style.display = 'none';
+					}
+				});
+				
+				if (!matches) {
+					w.style.display = "none";
+				} else {
+					w.style.display = "";
+				}
+			});
+		} else {
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = '';
+			});
+			// Reset to original state
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = false;
+			});
+			document.querySelectorAll('.wrapper').forEach(ele => {
+				ele.style.display = "";
+			});
+			document.querySelectorAll('.options_group > div').forEach(ele => {
+				ele.style.display = "";
+			});
+		}
+	});
+	
+	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
+	const deleteBadwordsButton = document.getElementById('deleteBadwordsButton');
+	if (uploadBadwordsButton) {
+		uploadBadwordsButton.addEventListener('click', uploadBadwordsFile);
+	}
+	if (deleteBadwordsButton) {
+		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
+	}
+	
+	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
+	const ragFileManagement = document.getElementById('ragFileManagement');
+
+	ragEnabledCheckbox.addEventListener('change', function() {
+		ragFileManagement.style.display = this.checked ? 'block' : 'none';
+	});
+
+	let initialSetup = setInterval(()=>{
+		log("pop up asking main for settings yet again..");
+		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+			chrome.runtime.lastError;
+			log("getSettings response",response);
+			if ((response == undefined) || (!response.streamID)){
+				
+			} else {
+				clearInterval(initialSetup);
+				update(response, false); // we dont want to sync things
+			}
+		});
+	}, 500);
+	
+	log("pop up asking main for settings");
+	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+		chrome.runtime.lastError;
+		log("getSettings response",response);
+		if ((response == undefined) || (!response.streamID)){
+			
+		} else {
+			clearInterval(initialSetup);
+			update(response, false); // we dont want to sync things
+		}
+	});
+
+	//botReplyAll
+	var iii = document.querySelectorAll("input[type='checkbox']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+
+	var iii = document.querySelectorAll("input[type='text'],textarea");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	var iii = document.querySelectorAll("input[type='text'][class*='instant']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].oninput = updateSettings;
+	}
+	
+	var iii = document.querySelectorAll("input[type='number']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	var iii = document.querySelectorAll("input[type='password']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	var iii = document.querySelectorAll("input[type='color']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings; 
+	}
+	
+	var iii = document.querySelectorAll("select");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+
+	var iii = document.querySelectorAll("button[data-action]");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onclick = function(e){
+			var msg = {};
+			msg.cmd = this.dataset.action;
+			msg.ctrl = e.ctrlKey || false;
+			
+			if (this.dataset.target){
+				msg.target = this.dataset.target;
+			}
+			
+			msg.value = this.dataset.value || null;
+			if (msg.cmd == "fakemsg"){
+				chrome.runtime.sendMessage(msg, function (response) {
+					// actions have callbacks? maybe
+				});
+			} else if (msg.cmd == "uploadRAGfile"){
+				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
+				});
+			} else if (msg.cmd == "savePoll"){
+				
+				PollManager.saveCurrentPoll();
+			} else if (msg.cmd == "createNewPoll"){
+				
+				PollManager.createNewPoll();
+			} else if (msg.cmd == "bigwipe"){
+				var confirmit = confirm("Are you sure you want to reset all your settings?");
+				if (confirmit){
+					chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+						setTimeout(function(){
+							window.location.reload();
+						},100);
+					});
+				}
+			} else {
+				//console.log(msg);
+				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+					log("ignore callback for this action");
+					// update(response);  
+				});
+			}
+		};
+	}
+
+
+	document.getElementById("ytcopy").onclick = async function(){
+		document.getElementById("ytcopy").innerHTML = "📎";
+		var YoutubeChannel = document.querySelector('input[data-textsetting="youtube_username"]').value;
+		if (!YoutubeChannel){return;}
+
+		if (!YoutubeChannel.startsWith("@")){
+			YoutubeChannel = "@"+YoutubeChannel;
+		}
+
+		fetch("https://www.youtube.com/c/"+YoutubeChannel+"/live").then((response) => response.text()).then((data) => {
+			document.getElementById("ytcopy").innerHTML = "🔄";
+			try{
+				var videoID = data.split('{"videoId":"')[1].split('"')[0];
+				log(videoID);
+				if (videoID){
+					navigator.clipboard.writeText(videoID).then(() => {
+						document.getElementById("ytcopy").innerHTML = "✔️"; // Video ID copied to clipboard
+						setTimeout(function(){
+							document.getElementById("ytcopy").innerHTML = "📎";
+						},1000);
+					}, () => {
+						document.getElementById("ytcopy").innerHTML = "❌"; // Failed to copy to clipboard
+					});
+				}
+			} catch(e){
+				document.getElementById("ytcopy").innerHTML = "❓"; // Video not found
+			}
+		});
+	};
+
+	checkVersion(); 
+	
+	let hideLinks = false;
+	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+		if (x.checked){
+			hideLinks = true;
+		}
+	});
+	
+	if (hideLinks){
+		document.body.classList.add("hidelinks");
+	} 
+	
+	// Function to dynamically load the WebMidi script
+    async function loadWebMidiScript(callback) {
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "./thirdparty/webmidi3.js";
+        script.onload = callback; // Run the callback once the script loads
+        script.onerror = () => {
+            console.error("Failed to load WebMidi script.");
+        };
+        document.body.appendChild(script);
+    }
+    // Function to initialize the MIDI dropdown logic
+    async function initializeMIDIDropdown() {
+	  try {
+		await WebMidi.enable();
+		console.log("WebMidi enabled!");
+		
+		// Initial population of all MIDI selects
+		updateAllMidiSelects();
+		
+		// Handle device changes
+		WebMidi.addListener("connected", updateAllMidiSelects);
+		WebMidi.addListener("disconnected", updateAllMidiSelects);
+		
+	  } catch(e) {
+		console.log("Failed to initialize WebMidi:", e);
+	  }
+	}
+    // Dynamically load the WebMidi script and initialize the dropdown logic
+	try {
+		setTimeout(function(){
+			loadWebMidiScript(initializeMIDIDropdown);
+		},3000);
+	} catch(e){ console.error(e);}
 });
