@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Speech Synthesis Languages</title>
+   <style>
+body {
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   background-color: #222;
+   color: #e0e0e0;
+   margin: 0;
+   padding: 0;
+   min-height: 100vh;
+}
+
+.container {
+   max-width: 100%;
+   padding: 15px;
+   box-sizing: border-box;
+}
+
+h1 {
+   font-size: clamp(1.3rem, 4vw, 1.8rem);
+   text-align: center;
+   margin: 15px 0;
+   color: #fff;
+}
+
+p {
+   font-size: clamp(0.85rem, 2.5vw, 1rem);
+   text-align: center;
+   margin: 15px auto;
+   max-width: 600px;
+   line-height: 1.5;
+}
+
+#loadBtn {
+   display: block;
+   width: 100%;
+   max-width: 300px;
+   margin: 25px auto;
+   padding: 15px;
+   font-size: clamp(1rem, 3vw, 1.2rem);
+   background-color: #007bff;
+   color: #fff;
+   border: none;
+   border-radius: 8px;
+   cursor: pointer;
+   transition: background-color 0.2s;
+}
+
+#loadBtn:hover {
+   background-color: #0056b3;
+}
+
+#languageSelect, #status {
+   display: none;
+}
+
+#status {
+   text-align: center;
+   padding: 10px;
+   margin: 10px auto;
+   border-radius: 4px;
+   max-width: 600px;
+}
+
+#status.offline {
+   background-color: #d32f2f;
+   color: white;
+}
+
+#status.error {
+   background-color: #f57c00;
+   color: white;
+}
+
+.table-container {
+   overflow-x: auto;
+   margin: 25px auto;
+   border-radius: 8px;
+   background-color: #333;
+   box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+   width: fit-content;
+}
+
+table {
+   width: 100%;
+   border-collapse: collapse;
+   min-width: 400px;
+   max-width: 800px;
+   font-size: clamp(0.8rem, 2vw, 0.95rem);
+}
+
+th, td {
+   border: 1px solid #444;
+   padding: 12px 8px;
+   text-align: left;
+}
+
+th {
+   background-color: #2a2a2a;
+   color: #fff;
+   font-weight: 600;
+   position: sticky;
+   top: 0;
+   z-index: 10;
+}
+
+tr:nth-child(even) {
+   background-color: #3a3a3a;
+}
+
+tr:nth-child(odd) {
+   background-color: #333;
+}
+
+tr:hover {
+   background-color: #444 !important;
+}
+
+.test-btn {
+   background-color: #007bff;
+   color: #fff;
+   border: none;
+   padding: 8px 12px;
+   border-radius: 4px;
+   cursor: pointer;
+   font-size: clamp(0.75rem, 2vw, 0.9rem);
+   transition: background-color 0.2s;
+   min-width: 60px;
+}
+
+.test-btn:hover {
+   background-color: #0056b3;
+}
+
+.test-btn:active {
+   background-color: #004494;
+}
+
+.local-indicator {
+   display: inline-block;
+   width: 10px;
+   height: 10px;
+   border-radius: 50%;
+   margin-right: 5px;
+}
+
+.local-yes {
+   background-color: #4caf50;
+}
+
+.local-no {
+   background-color: #f44336;
+}
+
+.local-status {
+   display: flex;
+   align-items: center;
+}
+
+@media (max-width: 768px) {
+   .container {
+       padding: 10px;
+   }
+
+   th, td {
+       padding: 8px 4px;
+   }
+
+   table {
+       font-size: 0.85rem;
+   }
+
+   .test-btn {
+       padding: 6px 8px;
+       font-size: 0.8rem;
+   }
+}
+
+@media (max-width: 480px) {
+   td:nth-child(4), th:nth-child(4) {
+       display: none;
+   }
+
+   th, td {
+       padding: 6px 3px;
+   }
+
+   .test-btn {
+       padding: 5px 6px;
+       font-size: 0.75rem;
+       min-width: 45px;
+   }
+   
+   .local-status span:last-child {
+       display: none;
+   }
+}
+   </style>
+</head>
+<body>
+   <div class="container">
+       <h1>Available TTS Language Options</h1>
+       <p>This list only applies to the current browser that loads it. Different browsers have different options. You might be able to add more, however OBS Studio specific has very options by default</p>
+       <button id="loadBtn" onclick="populateVoices();">Load Voice List</button>
+       <select id="languageSelect"></select>
+       <div id="status"></div>
+       <div class="table-container">
+           <table id="voicesTable">
+               <tr>
+                   <th>Name</th>
+                   <th>Language</th>
+                   <th>Local</th>
+                   <th>Default</th>
+                   <th>Test</th>
+               </tr>
+           </table>
+       </div>
+   </div>
+   <script>
+       let englishPhraseIndex = 0;
+       
+       document.addEventListener('DOMContentLoaded', () => {
+           const select = document.getElementById('languageSelect');
+           const table = document.getElementById('voicesTable');
+           speechSynthesis.onvoiceschanged = function() {
+               if (document.getElementById("loadBtn").style.display === 'none') {
+                   populateVoices();
+               }
+           };
+           
+           window.addEventListener('online', updateConnectionStatus);
+           window.addEventListener('offline', updateConnectionStatus);
+           updateConnectionStatus();
+       });
+
+       function updateConnectionStatus() {
+           const status = document.getElementById('status');
+           if (!navigator.onLine) {
+               status.className = 'offline';
+               status.style.display = 'block';
+               status.textContent = 'You are offline - some voices may not work';
+           } else {
+               status.style.display = 'none';
+           }
+       }
+
+   	function populateVoices() {
+   		const select = document.getElementById('languageSelect');
+   		select.innerHTML = "";
+   		const table = document.getElementById('voicesTable');
+   		table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local</th><th>Default</th><th>Test</th></tr>";
+
+   		document.getElementById('loadBtn').style.display = 'none';
+
+   		const voices = speechSynthesis.getVoices();
+   		
+   		const sortedVoices = voices.sort((a, b) => {
+   			const aIsEnglish = a.lang.toLowerCase().startsWith('en');
+   			const bIsEnglish = b.lang.toLowerCase().startsWith('en');
+   			
+   			if (aIsEnglish && !bIsEnglish) return -1;
+   			if (!aIsEnglish && bIsEnglish) return 1;
+   			return 0;
+   		});
+   		
+   		sortedVoices.forEach((voice, index) => {
+   			const option = document.createElement('option');
+   			option.textContent = `${voice.name} (${voice.lang})`;
+   			select.appendChild(option);
+   			const row = table.insertRow();
+   			row.insertCell().textContent = voice.name;
+   			row.insertCell().textContent = voice.lang;
+   			
+   			const localCell = row.insertCell();
+   			const localStatus = document.createElement('div');
+   			localStatus.className = 'local-status';
+   			
+   			const indicator = document.createElement('span');
+   			indicator.className = 'local-indicator ' + (voice.localService ? 'local-yes' : 'local-no');
+   			
+   			const text = document.createElement('span');
+   			text.textContent = voice.localService ? 'Yes' : 'No';
+   			
+   			localStatus.appendChild(indicator);
+   			localStatus.appendChild(text);
+   			localCell.appendChild(localStatus);
+   			
+   			row.insertCell().textContent = voice.default ? 'Yes' : 'No';
+
+   			const testCell = row.insertCell();
+   			const testBtn = document.createElement('button');
+   			testBtn.textContent = 'Test';
+   			testBtn.className = 'test-btn';
+   			testBtn.onclick = function() { testVoice(index, sortedVoices); };
+   			testCell.appendChild(testBtn);
+   		});
+   	}
+
+   	function testVoice(voiceIndex, voicesList = null) {
+   		const voices = voicesList || speechSynthesis.getVoices();
+   		const selectedVoice = voices[voiceIndex];
+
+   		speechSynthesis.cancel();
+
+   		const message = new SpeechSynthesisUtterance(getTestPhrase(selectedVoice.lang));
+   		message.voice = selectedVoice;
+   		message.lang = selectedVoice.lang;
+   		message.rate = 1;
+   		message.pitch = 1;
+   		message.volume = 1;
+
+   		let timeout;
+   		let speechStarted = false;
+
+   		message.onstart = function() {
+   			speechStarted = true;
+   			clearTimeout(timeout);
+   		};
+
+   		message.onerror = function(event) {
+   			clearTimeout(timeout);
+   			showError(`Error playing voice: ${event.error}. This voice may require an internet connection.`);
+   		};
+
+   		message.onend = function() {
+   			clearTimeout(timeout);
+   		};
+
+   		timeout = setTimeout(() => {
+   			if (!speechStarted) {
+   				speechSynthesis.cancel();
+   				showError('Voice test timed out. This voice may not be available offline.');
+   			}
+   		}, 5000);
+
+   		speechSynthesis.speak(message);
+   	}
+
+   	function showError(errorText) {
+   		const status = document.getElementById('status');
+   		status.className = 'error';
+   		status.style.display = 'block';
+   		status.textContent = errorText;
+   		setTimeout(() => {
+   			status.style.display = 'none';
+   		}, 3000);
+   	}
+
+       function getTestPhrase(lang) {
+           const phrases = {
+               'en': [
+                   'The quick brown fox jumps over the lazy dog.',
+                   'Pack my box with five dozen liquor jugs.',
+                   'How quickly daft jumping zebras vex.',
+                   'Sphinx of black quartz, judge my vow.',
+                   'Testing speech synthesis for the English language.',
+                   'Hello, this is a voice test.',
+                   'Can you hear me now?',
+                   'Every good boy does fine.',
+                   'The wizard quickly jinxed the gnomes before they vaporized.',
+                   'Amazingly few discotheques provide jukeboxes.'
+               ],
+               'es': 'El rápido zorro marrón salta sobre el perro perezoso.',
+               'fr': 'Le rapide renard brun saute par-dessus le chien paresseux.',
+               'de': 'Der schnelle braune Fuchs springt über den faulen Hund.',
+               'it': 'La rapida volpe marrone salta sopra il cane pigro.',
+               'pt': 'A rápida raposa marrom salta sobre o cão preguiçoso.',
+               'ru': 'Быстрая коричневая лиса перепрыгивает через ленивую собаку.',
+               'ja': '素早い茶色の狐が怠け者の犬を飛び越える。',
+               'ko': '빠른 갈색 여우가 게으른 개 위로 점프합니다.',
+               'zh': '快速的棕色狐狸跳过懒狗。',
+               'nl': 'De snelle bruine vos springt over de luie hond.',
+               'pl': 'Szybki brązowy lis przeskakuje nad leniwym psem.',
+               'id': 'Rubah cokelat yang cepat melompati anjing yang malas.',
+               'hi': 'तेज भूरी लोमड़ी आलसी कुत्ते के ऊपर कूदती है।',
+               'ar': 'الثعلب البني السريع يقفز فوق الكلب الكسول.',
+               'sv': 'Snabba bruna räven hoppar över den lata hunden.',
+               'tr': 'Hızlı kahverengi tilki tembel köpeğin üzerinden atlar.',
+               'cs': 'Rychlá hnědá liška skáče přes líného psa.',
+               'el': 'Η γρήγορη καφέ αλεπού πηδάει πάνω από τον τεμπέλη σκύλο.',
+               'fi': 'Nopea ruskea kettu hyppää laiskan koiran yli.',
+               'da': 'Den hurtige brune ræv hopper over den dovne hund.',
+               'no': 'Den raske brune reven hopper over den late hunden.'
+           };
+
+           const normalizedLang = lang.toLowerCase();
+
+           for (const [key, phraseOrArray] of Object.entries(phrases)) {
+               if (normalizedLang === key || normalizedLang.startsWith(key + '-') || normalizedLang.startsWith(key + '_')) {
+                   if (Array.isArray(phraseOrArray)) {
+                       const phrase = phraseOrArray[englishPhraseIndex % phraseOrArray.length];
+                       englishPhraseIndex++;
+                       return phrase;
+                   }
+                   return phraseOrArray;
+               }
+           }
+
+           return 'This is a test of the speech synthesis system.';
+       }
+   </script>
+</body>
+</html>
