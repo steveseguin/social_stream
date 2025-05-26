@@ -5955,6 +5955,7 @@ var users = {};
 var hype = {};
 var viewerCounts = {};
 var lastUpdated = {};
+var activeViewerSources = {}; // Track sources that have received viewer updates
 var hypeInterval = null;
 
 function clearAndRefreshHypeSources() {
@@ -5966,6 +5967,7 @@ function clearAndRefreshHypeSources() {
   hype = {};
   viewerCounts = {};
   lastUpdated = {}; // Important to clear this too
+  activeViewerSources = {}; // Clear active viewer sources too
 
   // Create a clear action object
   let clearAction = {
@@ -6041,6 +6043,7 @@ function updateViewerCount(data) {
     const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
     viewerCounts[sourceKey] = data.meta;
     lastUpdated[sourceKey] = Date.now();
+    activeViewerSources[sourceKey] = true; // Mark this source as having received viewer data
     
     // Combine and send the updated counts
     const combinedData = combineHypeData();
@@ -6076,20 +6079,6 @@ function processHype2() {
     hype = {}; // Reset active chatters counts for this interval's calculation
     var now = Date.now();
 
-    if (typeof metaDataStore !== 'undefined' && metaDataStore.forEach) {
-		metaDataStore.forEach((tabData, tabId) => {
-			if (tabData && tabData.type) {
-				const rawSourceKey = tabData.tid ? `${tabData.type}-${tabData.tid}` : tabData.type;
-				if (viewerCounts[rawSourceKey] === undefined) {
-					viewerCounts[rawSourceKey] = 0; // Initialize with 0 viewers
-				}
-				if (lastUpdated[rawSourceKey] === undefined) {
-					lastUpdated[rawSourceKey] = now;
-				}
-			}
-		});
-	}
-
     // Track sources with actual viewer data (>0)
     var sourcesWithActualViewers = {};
     for (const sourceKey in viewerCounts) {
@@ -6111,6 +6100,7 @@ function processHype2() {
             if (shouldDelete) {
                 delete viewerCounts[sourceKey];
                 delete lastUpdated[sourceKey];
+                delete activeViewerSources[sourceKey]; // Remove from active sources
                 // Also remove from users if this source is only tracked via lastUpdated/viewerCounts
                 // Note: `users` are cleaned based on their own chatter activity timeout.
                 // If a sourceKey from lastUpdated/viewerCounts represents an effective type (e.g. "global"),
@@ -6171,7 +6161,9 @@ function combineHypeData() {
     if (settings.hypeCombineAll) {
         let totalViewers = 0;
         for (const sourceKey in viewerCounts) {
-            totalViewers += viewerCounts[sourceKey];
+            if (activeViewerSources[sourceKey]) {
+                totalViewers += viewerCounts[sourceKey];
+            }
         }
         result.viewers["global"] = totalViewers;
         if (result.combined["global"]) {
@@ -6182,37 +6174,53 @@ function combineHypeData() {
     } else if (settings.hypeCombineYouTube) {
         // Combine YouTube and YouTube Shorts
         let youtubeViewers = 0;
+        let hasActiveYoutubeSources = false;
         for (const sourceKey in viewerCounts) {
             if (sourceKey.startsWith("youtube-") || sourceKey.startsWith("youtubeshorts-") || 
                 sourceKey === "youtube" || sourceKey === "youtubeshorts") {
-                youtubeViewers += viewerCounts[sourceKey];
+                // Only include YouTube sources that have actually received viewer updates
+                if (activeViewerSources[sourceKey]) {
+                    youtubeViewers += viewerCounts[sourceKey];
+                    hasActiveYoutubeSources = true;
+                }
             } else {
-                result.viewers[sourceKey] = viewerCounts[sourceKey];
-                if (result.combined[sourceKey]) {
-                    result.combined[sourceKey].viewers = viewerCounts[sourceKey];
-                } else {
-                    result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+                // Only include active non-YouTube sources
+                if (activeViewerSources[sourceKey]) {
+                    result.viewers[sourceKey] = viewerCounts[sourceKey];
+                    if (result.combined[sourceKey]) {
+                        result.combined[sourceKey].viewers = viewerCounts[sourceKey];
+                    } else {
+                        result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+                    }
                 }
             }
         }
-        result.viewers["youtube-combined"] = youtubeViewers;
-        if (result.combined["youtube-combined"]) {
-            result.combined["youtube-combined"].viewers = youtubeViewers;
-        } else {
-            result.combined["youtube-combined"] = { chatters: 0, viewers: youtubeViewers };
+        // Only add youtube if we have active YouTube sources
+        if (hasActiveYoutubeSources) {
+            result.viewers["youtube"] = youtubeViewers;
+            if (result.combined["youtube"]) {
+                result.combined["youtube"].viewers = youtubeViewers;
+            } else {
+                result.combined["youtube"] = { chatters: 0, viewers: youtubeViewers };
+            }
         }
     } else if (settings.hypeCombineSameType) {
         // Combine by type
         const typeViewers = {};
+        const activeTypes = {}; // Track which types have active sources
         for (const sourceKey in viewerCounts) {
-            const type = sourceKey.split('-')[0];
-            if (!typeViewers[type]) {
-                typeViewers[type] = 0;
+            if (activeViewerSources[sourceKey]) {
+                const type = sourceKey.split('-')[0];
+                if (!typeViewers[type]) {
+                    typeViewers[type] = 0;
+                }
+                typeViewers[type] += viewerCounts[sourceKey];
+                activeTypes[type] = true;
             }
-            typeViewers[type] += viewerCounts[sourceKey];
         }
         
-        for (const type in typeViewers) {
+        // Only add types that have active sources
+        for (const type in activeTypes) {
             result.viewers[type] = typeViewers[type];
             if (result.combined[type]) {
                 result.combined[type].viewers = typeViewers[type];
@@ -6221,13 +6229,15 @@ function combineHypeData() {
             }
         }
     } else {
-        // No combination, use raw data
+        // No combination, use raw data but only for active sources
         for (const sourceKey in viewerCounts) {
-            result.viewers[sourceKey] = viewerCounts[sourceKey];
-            if (result.combined[sourceKey]) {
-                result.combined[sourceKey].viewers = viewerCounts[sourceKey];
-            } else {
-                result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+            if (activeViewerSources[sourceKey]) {
+                result.viewers[sourceKey] = viewerCounts[sourceKey];
+                if (result.combined[sourceKey]) {
+                    result.combined[sourceKey].viewers = viewerCounts[sourceKey];
+                } else {
+                    result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+                }
             }
         }
     }
@@ -7386,11 +7396,24 @@ function delayedDetach(tabid) {
 }
 
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 3500) {
+    console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
+        data: data,
+        reverse: reverse,
+        metadata: metadata,
+        relayMode: relayMode,
+        antispam: antispam,
+        overrideTimeout: overrideTimeout,
+        isExtensionOn: isExtensionOn,
+        disablehost: settings.disablehost
+    });
+    
     if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
+        console.log('[RELAY DEBUG - sendMessageToTabs] Early return - Extension off or host disabled');
         return false;
     }
 
 	if (!data.response){
+		console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
 		return false;
 	}
     if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
@@ -7425,6 +7448,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     try {
 		
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+        console.log(`[RELAY DEBUG - sendMessageToTabs] Found ${tabs.length} tabs`);
         var published = {};
 		
         
@@ -7433,8 +7457,10 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 // Skip invalid tabs
 				let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
                 if (!isValid) {
+                    console.log(`[RELAY DEBUG - sendMessageToTabs] Tab ${tab.id} (${tab.url?.substring(0, 50)}...) is invalid, skipping`);
                     continue;
                 }
+                console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
 
                 // Handle message store
                 if (msg2Save) {  
@@ -8379,6 +8405,28 @@ async function applyBotActions(data, tab = false) {
 				data.queueme = true;
 			} catch (e) {
 				errorlog(e);
+			}
+		}
+		
+		// Question identification logic
+		if (settings.identifyQuestions && data.chatmessage) {
+			// Default keywords to identify questions
+			const questionKeywords = settings.questionKeywords?.textsetting?.split(",").map(k => k.trim()) || ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
+			
+			// Check if message contains any question keywords
+			const messageText = data.chatmessage.toLowerCase();
+			const isQuestion = questionKeywords.some(keyword => {
+				const keywordLower = keyword.toLowerCase();
+				if (keywordLower === "?") {
+					return messageText.includes(keywordLower);
+				}
+				// For word-based keywords, check word boundaries
+				const wordRegex = new RegExp(`\\b${keywordLower}\\b`);
+				return wordRegex.test(messageText);
+			});
+			
+			if (isQuestion) {
+				data.question = true;
 			}
 		}
 		
@@ -9567,6 +9615,8 @@ function isEqualMessage(message1, message2) {
 		   message1.membership === message2.membership;
 }
 
+console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
+
 let tmp = new EventFlowSystem({
 	sendMessageToTabs: window.sendMessageToTabs || null,
 	sendToDestinations: window.sendToDestinations || null,
@@ -9576,6 +9626,8 @@ let tmp = new EventFlowSystem({
 
 tmp.initPromise.then(() => {
 	window.eventFlowSystem = tmp;
+	console.log('[EventFlow Init] EventFlowSystem initialized successfully');
+	console.log('[EventFlow Init] sendMessageToTabs in system:', typeof tmp.sendMessageToTabs, tmp.sendMessageToTabs ? 'Function present' : 'Function missing');
 }).catch(error => {
 	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });
