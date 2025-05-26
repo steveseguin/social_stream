@@ -939,7 +939,7 @@ class EventFlowEditor {
                 case 'messageStartsWith': node.config = { text: '!' }; break;
                 case 'messageEquals': node.config = { text: 'hello' }; break;
                 case 'messageRegex': node.config = { pattern: 'pattern', flags: 'i' }; break;
-                case 'fromSource': node.config = { source: 'twitch' }; break;
+                case 'fromSource': node.config = { source: '*' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
                 case 'hasDonation': node.config = {}; break;
@@ -1161,6 +1161,7 @@ class EventFlowEditor {
 				break;
 			case 'fromSource':
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
+						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
 						   ${['twitch', 'youtube', 'facebook', 'kick', 'tiktok', 'instagram', 'discord', 'slack', 'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join('')}
 						 </select></div>`;
 				break;

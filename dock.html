@@ -2857,6 +2857,11 @@
 			}
 
 			var blockMessageSelecting = false;
+			
+			var autoPinQuestions = false;
+			if (urlParams.has("autopinquestions") || urlParams.has("autopinquestion")) {
+				autoPinQuestions = true;
+			}
 			if (urlParams.has("viewonly")) {
 				blockMessageSelecting = true;
 			}
@@ -8390,6 +8395,12 @@
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
 						updateQueueButton(); 
+					} else if (autoPinQuestions && data.question) {
+						// Auto-pin questions when autopinquestions URL parameter is set
+						selectedQueue.push(node);
+						node.children[0].dataset.qid = selectedQueue.length;
+						node.classList.add("queued");
+						updateQueueButton();
 					}
 					
 					if (data.command && doNotTTSBeep){

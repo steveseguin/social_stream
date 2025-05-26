@@ -765,7 +765,6 @@ document.body.style.height = `${100/scale}%`;
 
 function getSourceImage(type) {
     if (type === "global") return "global";
-    if (type === "youtube-combined") return "youtube";
     if (type.includes('-')) {
         return type.split('-')[0];
     }
@@ -830,7 +829,11 @@ function processInput(data) {
             activeChatters[sourceType] = true;
         }
         let displayThisSpecificSourceItem = true;
-        if (hasViewerCount[sourceType] && (now - lastUpdated[sourceType] > 33000) && viewerCount === 0) {} else if (!hasViewerCount[sourceType] && activeChatters[sourceType] && (now - lastUpdated[sourceType] > 300000) && chatterCount === 0) {}
+        if (hasViewerCount[sourceType] && (now - lastUpdated[sourceType] > 33000) && viewerCount === 0) {
+            displayThisSpecificSourceItem = false; // Hide inactive sources with viewer data
+        } else if (!hasViewerCount[sourceType] && activeChatters[sourceType] && (now - lastUpdated[sourceType] > 300000) && chatterCount === 0) {
+            displayThisSpecificSourceItem = false; // Hide inactive sources without viewer data
+        }
         if (displayThisSpecificSourceItem && (showChatters || showViewers)) {
             hasContentToDisplay = true;
             const sourceImgName = getSourceImage(sourceType);
