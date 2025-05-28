@@ -163,7 +163,7 @@
 				}
 				try {
 					if (!name){
-						name = getAllContentNodes(ele.querySelector("[id^='message-username-']")).trim();
+						name = getAllContentNodes(ele.querySelector("[id^='message-username-'] [class^='username']"), true).trim();
 					}
 				} catch(e){
 				}
