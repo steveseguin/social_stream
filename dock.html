@@ -8395,12 +8395,10 @@
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
 						updateQueueButton(); 
-					} else if (autoPinQuestions && data.question) {
-						// Auto-pin questions when autopinquestions URL parameter is set
-						selectedQueue.push(node);
-						node.children[0].dataset.qid = selectedQueue.length;
-						node.classList.add("queued");
-						updateQueueButton();
+					}
+					
+					if (autoPinQuestions && data.question) {
+						pinIt(node);
 					}
 					
 					if (data.command && doNotTTSBeep){
