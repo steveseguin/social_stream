@@ -1259,7 +1259,7 @@
 	}
 	
 	setTimeout(function(){checkViewers();},2500);
-	setInterval(function(){checkViewers()},10000);
+	setInterval(function(){checkViewers()},30000);
 	
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.

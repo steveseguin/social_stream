@@ -6079,22 +6079,14 @@ function updateViewerCount(data) {
 }
 
 function getEffectiveSourceType(data) {
-    // Apply source combination logic
-    if (settings.hypeCombineAll) {
-        return "global";
-    }
-    
+    // Always group by source type (no tab IDs)
+    // Check if YouTube and YouTube Shorts should be combined
     if (settings.hypeCombineYouTube && (data.type === "youtube" || data.type === "youtubeshorts")) {
-        return "youtube-combined";
+        return "youtube";
     }
     
-    if (settings.hypeCombineSameType && data.tid) {
-        // When combining same types, we return just the type without the tab ID
-        return data.type;
-    }
-    
-    // Default: return type-tabid as the unique source identifier
-    return data.tid ? `${data.type}-${data.tid}` : data.type;
+    // Always return just the type without tab ID
+    return data.type;
 }
 
 function processHype2() {

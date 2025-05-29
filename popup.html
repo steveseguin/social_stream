@@ -4932,7 +4932,7 @@ body.ssapp .wrapper.ssapp h3 {
 			
 			<div class="link" title="This link shows a tally of donations recieved">
                 <h2 class="tipjar_title">
-                    <span data-translate="tipjar">Tip Jar</span>
+                    <span data-translate="tipjar">Tip Jar and Goal Meter</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#tipjarhref" title="Jump to the tip jar link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -4944,20 +4944,82 @@ body.ssapp .wrapper.ssapp h3 {
                 <div id="tipjar" data-raw="" class="tipjar"></div>
             </div>
             <a href="" id="tipjarhref"></a>
-            <div class="wrapper hidden">
+            <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-general-options" />
                     <label class="collapsible-label" for="wrapper-tipjar-general-options"><span data-translate="enable-and-customize">📊 Customize</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group tipjar">
-                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+                                <h3><span data-translate="general-options">General Options</span></h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param12="alignright" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="align-overly-to-the-right-side">➡️ Align overlay to the right-side </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="persistent" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="keep-amount-between-sessions">💾 Keep amount between sessions</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="sound" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="play-sound-on-donation">🔊 Play sound on donation</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="controls" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="show-control-panel">🎛️ Show control panel</span>
+                                </div>
+                                
+                                <h3><span data-translate="style-and-theme">Style and Theme</span></h3>
+                                <div>
+                                    <label><span data-translate="display-style">Display Style:</span></label>
+                                    <select data-optionparam12="style" class="textInput">
+                                        <option value="jar" selected><span data-translate="jar-style">Jar (Default)</span></option>
+                                        <option value="meter"><span data-translate="meter-style">Goal Meter</span></option>
+                                        <option value="minimal"><span data-translate="minimal-style">Minimal</span></option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label><span data-translate="theme">Theme:</span></label>
+                                    <select data-optionparam12="theme" class="textInput">
+                                        <option value="default" selected><span data-translate="default-theme">Default</span></option>
+                                        <option value="neon"><span data-translate="neon-theme">Neon</span></option>
+                                        <option value="gold"><span data-translate="gold-theme">Gold</span></option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label><span data-translate="celebration-effect">Celebration Effect:</span></label>
+                                    <select data-optionparam12="celebration" class="textInput">
+                                        <option value="hearts" selected><span data-translate="hearts-effect">Hearts (Default)</span></option>
+                                        <option value="confetti"><span data-translate="confetti-effect">Confetti</span></option>
+                                        <option value="fireworks"><span data-translate="fireworks-effect">Fireworks</span></option>
+                                        <option value="none"><span data-translate="no-effect">None</span></option>
+                                    </select>
+                                </div>
+                                
+                                <h3><span data-translate="goal-settings">Goal Settings</span></h3>
+                                <div>
+                                    <label><span data-translate="goal-amount">Goal Amount ($):</span></label>
+                                    <input type="number" data-optionparam12="goal" class="textInput" placeholder="250" value="250" min="1" step="1" />
+                                </div>
+                                <div>
+                                    <label><span data-translate="custom-title">Custom Title:</span></label>
+                                    <input type="text" data-optionparam12="title" class="textInput" placeholder="Stream Goal" />
+                                </div>
+                                <div>
+                                    <label><span data-translate="custom-jar-image">Custom Jar Image URL:</span></label>
+                                    <input type="text" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
                                 </div>
 								
                             </div>

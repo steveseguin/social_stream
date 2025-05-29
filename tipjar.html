@@ -9,196 +9,637 @@
     <!-- Matter.js Library -->
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
     <script type="text/javascript" src="currency.js"></script>
-	
+    
     <style>
-	* { 
-		margin: 0; 
-		padding: 0; 
-		box-sizing: border-box; 
-	}
+    * { 
+        margin: 0; 
+        padding: 0; 
+        box-sizing: border-box; 
+    }
 
-	body, html { 
-		width: 100%; 
-		height: 100%; 
-		overflow: hidden; 
-		display: flex; 
-		justify-content: center; 
-		align-items: center; 
-		background-color: transparent; 
-	}
+    body, html { 
+        width: 100%; 
+        height: 100%; 
+        overflow: hidden; 
+        display: flex; 
+        justify-content: center; 
+        align-items: center; 
+        background-color: transparent;
+        font-family: 'Arial', sans-serif;
+    }
 
-	#canvas-container { 
-		position: relative;
-		width: 400px;  /* Match canvas width */
-		height: 600px;
-		max-height: 100vh;
-		margin: 0 auto;
-	}
+    /* Style-specific containers */
+    .style-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: none;
+    }
+    
+    .style-container.active {
+        display: block;
+    }
 
-	canvas { 
-		position: absolute; 
-		top: 0; 
-		left: 0; 
-		width: 100%;
-		height: 100%;
-		z-index: 1; 
-	}
+    /* Original Jar Style */
+    #jar-style {
+        width: 400px;
+        height: 600px;
+        max-height: 100vh;
+        margin: 0 auto;
+    }
 
-	#tip-text { 
-		position: absolute; 
-		top: 10px; 
-		left: 0;
-		width: 100%; 
-		text-align: center; 
-		color: #0A1236; 
-		font-family: 'Arial', sans-serif; 
-		font-weight: bold; 
-		font-size: 24px; 
-		z-index: 4;
-		text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
-	}
+    #canvas-container { 
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
 
-	#cup-overlay { 
-		position: absolute; 
-		top: 0; 
-		left: 0; 
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-		z-index: 0; 
-		pointer-events: none; 
-	}
+    canvas { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%;
+        height: 100%;
+        z-index: 1; 
+    }
 
-	#notification { 
-		position: fixed; 
-		top: 20px; 
-		left: 50%; 
-		transform: translateX(-50%); 
-		background-color: rgba(0, 0, 0, 0.7); 
-		color: white; 
-		padding: 10px 20px; 
-		border-radius: 5px; 
-		display: none;
-		z-index: 5;
-		font-family: 'Arial', sans-serif;
-	}
+    #tip-text { 
+        position: absolute; 
+        top: 10px; 
+        left: 0;
+        width: 100%; 
+        text-align: center; 
+        color: #0A1236; 
+        font-weight: bold; 
+        font-size: 24px; 
+        z-index: 4;
+        text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+    }
+
+    #cup-overlay { 
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        z-index: 0; 
+        pointer-events: none; 
+    }
+
+    /* Goal Meter Style */
+    #meter-style {
+        width: 100%;
+        max-width: 800px;
+        padding: 20px;
+    }
+
+    .goal-meter-container {
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .goal-title {
+        color: #fff;
+        font-size: 28px;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 20px;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .meter-wrapper {
+        background: #2a2a2a;
+        border-radius: 50px;
+        height: 60px;
+        padding: 5px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .meter-fill {
+        background: linear-gradient(90deg, #4CAF50 0%, #8BC34A 50%, #CDDC39 100%);
+        height: 100%;
+        border-radius: 45px;
+        width: 0%;
+        transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .meter-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            transparent 100%
+        );
+        animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+
+    .meter-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #fff;
+        font-size: 24px;
+        font-weight: bold;
+        text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        z-index: 10;
+    }
+
+    .milestones {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        color: #ccc;
+        font-size: 14px;
+    }
+
+    /* Recent Tips List */
+    .recent-tips {
+        margin-top: 20px;
+        max-height: 200px;
+        overflow-y: hidden;
+    }
+
+    .tip-item {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 10px 15px;
+        margin-bottom: 10px;
+        display: flex;
+        justify-content: space-between;
+        animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(-100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    .tip-name {
+        color: #4CAF50;
+        font-weight: bold;
+    }
+
+    .tip-amount {
+        color: #FFD700;
+        font-weight: bold;
+    }
+
+    /* Celebration Effects */
+    .celebration-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 1000;
+    }
+
+    .confetti {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: #f0f;
+        animation: confettiFall 3s linear forwards;
+    }
+
+    @keyframes confettiFall {
+        to {
+            transform: translateY(100vh) rotate(720deg);
+            opacity: 0;
+        }
+    }
+
+    .firework {
+        position: absolute;
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        animation: fireworkExplode 1s ease-out forwards;
+    }
+
+    @keyframes fireworkExplode {
+        0% {
+            transform: scale(0);
+            opacity: 1;
+        }
+        100% {
+            transform: scale(30);
+            opacity: 0;
+        }
+    }
+
+    /* Notification Styles */
+    #notification { 
+        position: fixed; 
+        top: 20px; 
+        left: 50%; 
+        transform: translateX(-50%); 
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white; 
+        padding: 15px 30px; 
+        border-radius: 50px; 
+        display: none;
+        z-index: 1001;
+        font-size: 18px;
+        font-weight: bold;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        animation: notificationPop 0.5s ease-out;
+    }
+
+    @keyframes notificationPop {
+        0% {
+            transform: translateX(-50%) scale(0);
+        }
+        70% {
+            transform: translateX(-50%) scale(1.1);
+        }
+        100% {
+            transform: translateX(-50%) scale(1);
+        }
+    }
+
+    /* Theme variations */
+    body.neon {
+        --primary-color: #ff00ff;
+        --secondary-color: #00ffff;
+        --bg-color: #000;
+    }
+
+    body.neon .goal-meter-container {
+        background: rgba(0, 0, 0, 0.9);
+        border: 2px solid var(--primary-color);
+        box-shadow: 0 0 30px var(--primary-color);
+    }
+
+    body.neon .meter-fill {
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        box-shadow: 0 0 20px var(--primary-color);
+    }
+
+    body.gold .goal-meter-container {
+        background: linear-gradient(135deg, #B8860B 0%, #FFD700 50%, #B8860B 100%);
+        border: 3px solid #FFD700;
+    }
+
+    body.gold .meter-fill {
+        background: linear-gradient(90deg, #FFD700 0%, #FFA500 50%, #FFD700 100%);
+    }
+
+    /* Minimal style */
+    #minimal-style {
+        width: 100%;
+        max-width: 400px;
+        padding: 20px;
+    }
+
+    .minimal-container {
+        text-align: center;
+    }
+
+    .minimal-amount {
+        font-size: 48px;
+        font-weight: bold;
+        color: #4CAF50;
+        text-shadow: 0 2px 10px rgba(76, 175, 80, 0.5);
+        margin-bottom: 10px;
+    }
+
+    .minimal-goal {
+        font-size: 20px;
+        color: #ccc;
+    }
+
+    .minimal-percentage {
+        font-size: 72px;
+        font-weight: bold;
+        background: linear-gradient(45deg, #4CAF50, #8BC34A);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 20px 0;
+    }
     </style>
 </head>
 <body>
-    <div id="canvas-container">
-        <canvas id="canvas"></canvas>
-        <img id="cup-overlay" src="./media/tipsjar.png" alt="Cup Overlay">
-        <div id="tip-text">$0 / $250</div>
+    <!-- Original Jar Style -->
+    <div id="jar-style" class="style-container active">
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+            <img id="cup-overlay" src="./media/tipsjar.png" alt="Cup Overlay">
+            <div id="tip-text">$0 / $250</div>
+        </div>
     </div>
+
+    <!-- Goal Meter Style -->
+    <div id="meter-style" class="style-container">
+        <div class="goal-meter-container">
+            <h2 class="goal-title">Stream Goal</h2>
+            <div class="meter-wrapper">
+                <div class="meter-fill" id="meter-fill"></div>
+                <div class="meter-text" id="meter-text">$0 / $250</div>
+            </div>
+            <div class="milestones">
+                <span>$0</span>
+                <span id="milestone-25">$62.50</span>
+                <span id="milestone-50">$125</span>
+                <span id="milestone-75">$187.50</span>
+                <span id="milestone-100">$250</span>
+            </div>
+            <div class="recent-tips" id="recent-tips"></div>
+        </div>
+    </div>
+
+    <!-- Minimal Style -->
+    <div id="minimal-style" class="style-container">
+        <div class="minimal-container">
+            <div class="minimal-amount" id="minimal-amount">$0.00</div>
+            <div class="minimal-goal">of $250 goal</div>
+            <div class="minimal-percentage" id="minimal-percentage">0%</div>
+        </div>
+    </div>
+
+    <!-- Shared Elements -->
     <div id="notification"></div>
+    <div class="celebration-container" id="celebration"></div>
+    
+    <!-- Controls Panel -->
+    <div id="controls-panel" style="position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); padding: 15px; border-radius: 10px; display: none; z-index: 1000;">
+        <button id="export-csv" style="display: block; margin: 5px 0; padding: 8px 15px; background: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer;">Export CSV</button>
+        <button id="reset-amount" style="display: block; margin: 5px 0; padding: 8px 15px; background: #f44336; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset Amount</button>
+        <button id="toggle-history" style="display: block; margin: 5px 0; padding: 8px 15px; background: #2196F3; color: white; border: none; border-radius: 5px; cursor: pointer;">View History</button>
+        <button id="toggle-leaderboard" style="display: block; margin: 5px 0; padding: 8px 15px; background: #FF9800; color: white; border: none; border-radius: 5px; cursor: pointer;">Leaderboard</button>
+        <input type="file" id="custom-jar-input" accept="image/*" style="display: none;">
+        <button id="custom-jar-btn" style="display: block; margin: 5px 0; padding: 8px 15px; background: #9C27B0; color: white; border: none; border-radius: 5px; cursor: pointer;">Custom Jar Image</button>
+    </div>
+    
+    <!-- History Panel -->
+    <div id="history-panel" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; display: none; z-index: 1001; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <h3 style="color: white; margin-bottom: 15px;">Donation History</h3>
+        <div id="history-list" style="color: white;"></div>
+        <button id="close-history" style="margin-top: 15px; padding: 8px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer;">Close</button>
+    </div>
+    
+    <!-- Leaderboard Panel -->
+    <div id="leaderboard-panel" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.9); padding: 20px; border-radius: 10px; display: none; z-index: 1001; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+        <h3 style="color: white; margin-bottom: 15px; text-align: center;">🏆 Top Donors 🏆</h3>
+        <div id="leaderboard-list" style="color: white;"></div>
+        <button id="close-leaderboard" style="margin-top: 15px; padding: 8px 15px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; display: block; margin-left: auto; margin-right: auto;">Close</button>
+    </div>
 
     <script>
-        const { Engine, Render, Runner, World, Bodies, Composite, Body } = Matter;
+        // URL Parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const style = urlParams.get('style') || 'jar'; // jar, meter, minimal
+        const theme = urlParams.get('theme') || 'default'; // default, neon, gold
+        const goal = parseFloat(urlParams.get('goal')) || 250;
+        const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
+        const persistent = urlParams.has('persistent'); // Keep amount between sessions
+        const sound = urlParams.has('sound'); // Play sound on donation
+        const customTitle = urlParams.get('title') || 'Stream Goal';
+        const showControls = urlParams.has('controls'); // Show control panel
+        const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         
-        // Setup Matter.js engine
-        const engine = Engine.create();
-        const world = engine.world;
-        engine.world.gravity.y = 0.6;  // Reduced from 1
+        // Apply theme
+        if (theme !== 'default') {
+            document.body.classList.add(theme);
+        }
 
-        // Canvas setup
-        const canvas = document.getElementById('canvas');
-        canvas.width = 400;
-        canvas.height = 600;
-
-        // Setup renderer
-        const render = Render.create({
-            canvas: canvas,
-            engine: engine,
-            options: {
-                width: 400,
-                height: 600,
-                wireframes: false,
-                background: 'transparent'
-            }
+        // Initialize style
+        document.querySelectorAll('.style-container').forEach(container => {
+            container.classList.remove('active');
         });
-
-        // Start the engine and renderer
-        Runner.run(engine);
-        Render.run(render);
-
-        // Create cup container
-        const cupContainer = Composite.create();
-        const wallOptions = { 
-            isStatic: true, 
-            render: { visible: false }
-        };
+        document.getElementById(`${style}-style`)?.classList.add('active');
         
-        const leftWall = Bodies.rectangle(100, 300, 20, 500, wallOptions);
-        const rightWall = Bodies.rectangle(300, 300, 20, 500, wallOptions);
-        const bottomWall = Bodies.rectangle(200, 470, 200, 20, wallOptions);
-        const leftSlope = Bodies.rectangle(150, 500, 140, 20, {
-            isStatic: true,
-            angle: Math.PI * 0.15,
-            render: { visible: false }
-        });
-        const rightSlope = Bodies.rectangle(250, 500, 140, 20, {
-            isStatic: true,
-            angle: -Math.PI * 0.15,
-            render: { visible: false }
-        });
+        // Apply custom jar image if provided
+        if (customJarUrl && style === 'jar') {
+            document.getElementById('cup-overlay').src = customJarUrl;
+        }
 
-        Composite.add(cupContainer, [leftWall, rightWall, bottomWall, leftSlope, rightSlope]);
-        World.add(world, cupContainer);
+        // Update goal in UI
+        if (style === 'meter') {
+            document.querySelector('.goal-title').textContent = customTitle;
+            document.getElementById('milestone-100').textContent = `$${goal}`;
+            document.getElementById('milestone-75').textContent = `$${(goal * 0.75).toFixed(2)}`;
+            document.getElementById('milestone-50').textContent = `$${(goal * 0.50).toFixed(2)}`;
+            document.getElementById('milestone-25').textContent = `$${(goal * 0.25).toFixed(2)}`;
+        }
 
         // Tracking variables
-        let currentAmount = 0;
-        const goalAmount = 250;
+        let currentAmount = persistent ? (parseFloat(localStorage.getItem('tipjar_amount')) || 0) : 0;
+        const recentTips = [];
+        const maxRecentTips = 5;
+        const donationHistory = persistent ? (JSON.parse(localStorage.getItem('tipjar_history') || '[]')) : [];
 
-        
+        // Matter.js setup for jar style
+        let engine, world, render;
+        if (style === 'jar') {
+            const { Engine, Render, Runner, World, Bodies, Composite, Body } = Matter;
+            
+            engine = Engine.create();
+            world = engine.world;
+            engine.world.gravity.y = 0.6;
 
-		function addHeart(amount) {
-			const heartSize = Math.min(20 + (amount / 10), 50);
-			const xPosition = 110 + Math.random() * 180;
-			
-			const heart = Bodies.circle(xPosition, 50, heartSize / 2, {
-				restitution: 0.4,      // Increased bounce
-				friction: 0.9,         // Increased friction
-				density: 0.004,        // Increased density
-				frictionAir: 0.03,     // Increased air friction
-				torque: (Math.random() - 0.5) * 0.002, // Add slight rotation
-				render: {
-					sprite: {
-						texture: "./media/goldenheart.png",
-						xScale: heartSize / 50,
-						yScale: heartSize / 50
-					}
-				}
-			});
+            const canvas = document.getElementById('canvas');
+            canvas.width = 400;
+            canvas.height = 600;
 
-			// Add random initial velocity
-			const velocityY = 2 + Math.random() * 2;
-			Body.setVelocity(heart, { 
-				x: (Math.random() - 0.5) * 2,
-				y: velocityY 
-			});
+            render = Render.create({
+                canvas: canvas,
+                engine: engine,
+                options: {
+                    width: 400,
+                    height: 600,
+                    wireframes: false,
+                    background: 'transparent'
+                }
+            });
 
-			World.add(world, heart);
-			
-			// Increased timeout for hearts to stay longer
-			setTimeout(() => {
-				// Fade out effect before removal
-				const fadeInterval = setInterval(() => {
-					if (heart.render.opacity > 0) {
-						heart.render.opacity -= 0.05;
-					} else {
-						clearInterval(fadeInterval);
-						World.remove(world, heart);
-					}
-				}, 100);
-			}, 15000);  // Hearts stay for 15 seconds now
+            Runner.run(engine);
+            Render.run(render);
 
-			updateAmount(amount);
-		}
+            // Create cup container
+            const cupContainer = Composite.create();
+            const wallOptions = { 
+                isStatic: true, 
+                render: { visible: false }
+            };
+            
+            const leftWall = Bodies.rectangle(100, 300, 20, 500, wallOptions);
+            const rightWall = Bodies.rectangle(300, 300, 20, 500, wallOptions);
+            const bottomWall = Bodies.rectangle(200, 470, 200, 20, wallOptions);
+            const leftSlope = Bodies.rectangle(150, 500, 140, 20, {
+                isStatic: true,
+                angle: Math.PI * 0.15,
+                render: { visible: false }
+            });
+            const rightSlope = Bodies.rectangle(250, 500, 140, 20, {
+                isStatic: true,
+                angle: -Math.PI * 0.15,
+                render: { visible: false }
+            });
+
+            Composite.add(cupContainer, [leftWall, rightWall, bottomWall, leftSlope, rightSlope]);
+            World.add(world, cupContainer);
+        }
+
+        // Celebration functions
+        function createConfetti() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+            for (let i = 0; i < 50; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.className = 'confetti';
+                    confetti.style.left = Math.random() * 100 + '%';
+                    confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    confetti.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                    document.getElementById('celebration').appendChild(confetti);
+                    
+                    setTimeout(() => confetti.remove(), 3000);
+                }, i * 50);
+            }
+        }
+
+        function createFirework(x, y) {
+            const colors = ['#ff0000', '#ffff00', '#00ff00', '#00ffff', '#ff00ff'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            
+            for (let i = 0; i < 20; i++) {
+                const spark = document.createElement('div');
+                spark.className = 'firework';
+                spark.style.left = x + 'px';
+                spark.style.top = y + 'px';
+                spark.style.background = color;
+                spark.style.boxShadow = `0 0 6px ${color}`;
+                document.getElementById('celebration').appendChild(spark);
+                
+                setTimeout(() => spark.remove(), 1000);
+            }
+        }
+
+        function triggerFireworks() {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const x = Math.random() * window.innerWidth;
+                    const y = Math.random() * window.innerHeight * 0.5;
+                    createFirework(x, y);
+                }, i * 300);
+            }
+        }
+
+        function addHeart(amount) {
+            if (style !== 'jar' || !world) return;
+            
+            const heartSize = Math.min(20 + (amount / 10), 50);
+            const xPosition = 110 + Math.random() * 180;
+            
+            const heart = Matter.Bodies.circle(xPosition, 50, heartSize / 2, {
+                restitution: 0.4,
+                friction: 0.9,
+                density: 0.004,
+                frictionAir: 0.03,
+                torque: (Math.random() - 0.5) * 0.002,
+                render: {
+                    sprite: {
+                        texture: "./media/goldenheart.png",
+                        xScale: heartSize / 50,
+                        yScale: heartSize / 50
+                    }
+                }
+            });
+
+            const velocityY = 2 + Math.random() * 2;
+            Matter.Body.setVelocity(heart, { 
+                x: (Math.random() - 0.5) * 2,
+                y: velocityY 
+            });
+
+            Matter.World.add(world, heart);
+            
+            setTimeout(() => {
+                Matter.World.remove(world, heart);
+            }, 15000);
+        }
 
         function updateAmount(amount) {
             currentAmount += amount;
-            document.getElementById('tip-text').textContent = 
-                `$${currentAmount.toFixed(2)} / $${goalAmount}`;
+            
+            if (persistent) {
+                localStorage.setItem('tipjar_amount', currentAmount.toString());
+            }
+
+            const percentage = Math.min((currentAmount / goal) * 100, 100);
+
+            // Update different styles
+            if (style === 'jar') {
+                document.getElementById('tip-text').textContent = 
+                    `$${currentAmount.toFixed(2)} / $${goal}`;
+            } else if (style === 'meter') {
+                document.getElementById('meter-fill').style.width = percentage + '%';
+                document.getElementById('meter-text').textContent = 
+                    `$${currentAmount.toFixed(2)} / $${goal}`;
+            } else if (style === 'minimal') {
+                document.getElementById('minimal-amount').textContent = `$${currentAmount.toFixed(2)}`;
+                document.getElementById('minimal-percentage').textContent = `${Math.round(percentage)}%`;
+            }
+
+            // Milestone celebration
+            if (percentage >= 25 && percentage < 26) triggerMilestone(25);
+            if (percentage >= 50 && percentage < 51) triggerMilestone(50);
+            if (percentage >= 75 && percentage < 76) triggerMilestone(75);
+            if (percentage >= 100) triggerMilestone(100);
+        }
+
+        function triggerMilestone(percent) {
+            if (celebration === 'fireworks') {
+                triggerFireworks();
+            } else if (celebration === 'confetti') {
+                createConfetti();
+            }
+            showNotification(`🎉 ${percent}% of goal reached!`);
+        }
+
+        function addRecentTip(name, amount, currency) {
+            if (style !== 'meter') return;
+            
+            const tipItem = document.createElement('div');
+            tipItem.className = 'tip-item';
+            tipItem.innerHTML = `
+                <span class="tip-name">${name}</span>
+                <span class="tip-amount">${amount} ${currency}</span>
+            `;
+            
+            const container = document.getElementById('recent-tips');
+            container.insertBefore(tipItem, container.firstChild);
+            
+            // Keep only recent tips
+            while (container.children.length > maxRecentTips) {
+                container.removeChild(container.lastChild);
+            }
         }
 
         function showNotification(message) {
@@ -207,23 +648,54 @@
             notification.style.display = 'block';
             setTimeout(() => {
                 notification.style.display = 'none';
-            }, 3000);
+            }, 4000);
         }
 
-		function processTip(amount, currency, donator) {
-		   // Use convertToUSD function from currency.js
-		   let tipValue = convertToUSD(`${amount} ${currency}`);
+        function playDonationSound() {
+            if (!sound) return;
+            const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N2QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N2QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N2QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N2QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N2QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N2QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+DyvmwhBjiS1/LNeSsFJXfH8N6QQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS1/LNeSsFJXfH8N+RQAoUXrTp7KlVFApGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJXfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFAlGn+Dzv2whBjiS2/PNeSsFJnfH8N+RQAoUXrTp7KlVFA==');
+            audio.volume = 0.5;
+            audio.play().catch(() => {});
+        }
 
-		   // Add multiple hearts with varying delays and positions
-		   const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
-		   for (let i = 0; i < heartCount; i++) {
-			   setTimeout(() => {
-				   addHeart(tipValue / heartCount);
-			   }, i * 200 + Math.random() * 300); // Randomized delay between hearts
-		   }
+        function processTip(amount, currency, donator) {
+            // Use convertToUSD function from currency.js
+            let tipValue = convertToUSD(`${amount} ${currency}`);
+            
+            // Add to history
+            const donation = {
+                timestamp: new Date().toISOString(),
+                donator: donator,
+                amount: amount,
+                currency: currency,
+                usdValue: tipValue
+            };
+            donationHistory.push(donation);
+            
+            if (persistent) {
+                localStorage.setItem('tipjar_history', JSON.stringify(donationHistory));
+            }
 
-		   showNotification(`${donator} tipped ${amount} ${currency}!`);
-		}
+            updateAmount(tipValue);
+            addRecentTip(donator, amount, currency);
+            playDonationSound();
+
+            // Celebration effects
+            if (celebration === 'hearts' && style === 'jar') {
+                const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
+                for (let i = 0; i < heartCount; i++) {
+                    setTimeout(() => {
+                        addHeart(tipValue / heartCount);
+                    }, i * 200 + Math.random() * 300);
+                }
+            } else if (celebration === 'confetti') {
+                createConfetti();
+            } else if (celebration === 'fireworks') {
+                triggerFireworks();
+            }
+
+            showNotification(`${donator} tipped ${amount} ${currency}!`);
+        }
 
         function processData(data) {
             console.log(data);
@@ -235,14 +707,228 @@
             if (data.donation || data.hasDonation) {
                 const donationString = data.donation || data.hasDonation;
                 const [amount, currency] = donationString.split(' ');
-                processTip(parseFloat(amount), currency, data.chatname);
+                processTip(parseFloat(amount), currency, data.chatname || 'Anonymous');
             }
+        }
+
+        // Initialize display
+        updateAmount(0);
+        
+        // Show controls if enabled
+        if (showControls) {
+            document.getElementById('controls-panel').style.display = 'block';
+        }
+        
+        // Control panel functionality
+        document.getElementById('export-csv').addEventListener('click', () => {
+            exportToCSV();
+        });
+        
+        document.getElementById('reset-amount').addEventListener('click', () => {
+            if (confirm('Are you sure you want to reset the tip jar amount to $0?')) {
+                currentAmount = 0;
+                updateAmount(0);
+                if (persistent) {
+                    localStorage.setItem('tipjar_amount', '0');
+                }
+            }
+        });
+        
+        document.getElementById('toggle-history').addEventListener('click', () => {
+            showHistoryPanel();
+        });
+        
+        document.getElementById('toggle-leaderboard').addEventListener('click', () => {
+            showLeaderboard();
+        });
+        
+        document.getElementById('close-history').addEventListener('click', () => {
+            document.getElementById('history-panel').style.display = 'none';
+        });
+        
+        document.getElementById('close-leaderboard').addEventListener('click', () => {
+            document.getElementById('leaderboard-panel').style.display = 'none';
+        });
+        
+        // Custom jar image functionality
+        document.getElementById('custom-jar-btn').addEventListener('click', () => {
+            document.getElementById('custom-jar-input').click();
+        });
+        
+        document.getElementById('custom-jar-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const imageUrl = event.target.result;
+                    document.getElementById('cup-overlay').src = imageUrl;
+                    
+                    // Save to localStorage if persistent
+                    if (persistent) {
+                        // Note: storing large images in localStorage might hit size limits
+                        try {
+                            localStorage.setItem('tipjar_custom_image', imageUrl);
+                        } catch (e) {
+                            console.warn('Could not save custom image to localStorage:', e);
+                        }
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Load custom image from localStorage if available
+        if (persistent && style === 'jar' && !customJarUrl) {
+            const savedImage = localStorage.getItem('tipjar_custom_image');
+            if (savedImage) {
+                document.getElementById('cup-overlay').src = savedImage;
+            }
+        }
+        
+        function exportToCSV() {
+            if (donationHistory.length === 0) {
+                alert('No donations to export');
+                return;
+            }
+            
+            let csv = 'Timestamp,Donator,Amount,Currency,USD Value\n';
+            donationHistory.forEach(donation => {
+                const date = new Date(donation.timestamp).toLocaleString();
+                csv += `"${date}","${donation.donator}",${donation.amount},${donation.currency},${donation.usdValue.toFixed(2)}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('hidden', '');
+            a.setAttribute('href', url);
+            a.setAttribute('download', `donations_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        
+        function showHistoryPanel() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+            
+            if (donationHistory.length === 0) {
+                historyList.innerHTML = '<p>No donations yet</p>';
+            } else {
+                const sortedHistory = [...donationHistory].reverse();
+                sortedHistory.forEach(donation => {
+                    const date = new Date(donation.timestamp).toLocaleString();
+                    const item = document.createElement('div');
+                    item.style.cssText = 'margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 5px;';
+                    item.innerHTML = `
+                        <div><strong>${donation.donator}</strong></div>
+                        <div>${donation.amount} ${donation.currency} ($${donation.usdValue.toFixed(2)} USD)</div>
+                        <div style="font-size: 12px; color: #aaa;">${date}</div>
+                    `;
+                    historyList.appendChild(item);
+                });
+                
+                // Add total at the bottom
+                const total = donationHistory.reduce((sum, d) => sum + d.usdValue, 0);
+                const totalDiv = document.createElement('div');
+                totalDiv.style.cssText = 'margin-top: 20px; padding-top: 20px; border-top: 1px solid #666; font-size: 18px; font-weight: bold;';
+                totalDiv.innerHTML = `Total: $${total.toFixed(2)} USD`;
+                historyList.appendChild(totalDiv);
+            }
+            
+            document.getElementById('history-panel').style.display = 'block';
+        }
+        
+        // Get currency breakdown for display
+        function getCurrencyBreakdown() {
+            const currencyTotals = {};
+            donationHistory.forEach(donation => {
+                if (!currencyTotals[donation.currency]) {
+                    currencyTotals[donation.currency] = 0;
+                }
+                currencyTotals[donation.currency] += donation.amount;
+            });
+            
+            const parts = [];
+            for (const [currency, total] of Object.entries(currencyTotals)) {
+                parts.push(`${total.toFixed(2)} ${currency}`);
+            }
+            
+            return parts.join(' + ');
+        }
+        
+        // Show leaderboard
+        function showLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.innerHTML = '';
+            
+            if (donationHistory.length === 0) {
+                leaderboardList.innerHTML = '<p style="text-align: center;">No donations yet</p>';
+            } else {
+                // Aggregate donations by donator
+                const donatorTotals = {};
+                donationHistory.forEach(donation => {
+                    if (!donatorTotals[donation.donator]) {
+                        donatorTotals[donation.donator] = {
+                            totalUSD: 0,
+                            count: 0,
+                            currencies: {}
+                        };
+                    }
+                    donatorTotals[donation.donator].totalUSD += donation.usdValue;
+                    donatorTotals[donation.donator].count += 1;
+                    
+                    if (!donatorTotals[donation.donator].currencies[donation.currency]) {
+                        donatorTotals[donation.donator].currencies[donation.currency] = 0;
+                    }
+                    donatorTotals[donation.donator].currencies[donation.currency] += donation.amount;
+                });
+                
+                // Sort by total USD
+                const sortedDonators = Object.entries(donatorTotals)
+                    .sort((a, b) => b[1].totalUSD - a[1].totalUSD)
+                    .slice(0, 10); // Top 10
+                
+                sortedDonators.forEach(([donator, data], index) => {
+                    const item = document.createElement('div');
+                    item.style.cssText = 'margin-bottom: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 10px; display: flex; align-items: center; justify-content: space-between;';
+                    
+                    const medals = ['🥇', '🥈', '🥉'];
+                    const medal = index < 3 ? medals[index] : `#${index + 1}`;
+                    
+                    const currencyBreakdown = Object.entries(data.currencies)
+                        .map(([currency, amount]) => `${amount.toFixed(2)} ${currency}`)
+                        .join(' + ');
+                    
+                    item.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <span style="font-size: 24px; margin-right: 15px;">${medal}</span>
+                            <div>
+                                <div style="font-size: 18px; font-weight: bold; color: #4CAF50;">${donator}</div>
+                                <div style="font-size: 14px; color: #aaa;">${data.count} donation${data.count > 1 ? 's' : ''}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 20px; font-weight: bold; color: #FFD700;">$${data.totalUSD.toFixed(2)}</div>
+                            <div style="font-size: 12px; color: #ccc;">${currencyBreakdown}</div>
+                        </div>
+                    `;
+                    
+                    if (index === 0) {
+                        item.style.background = 'linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.1) 100%)';
+                        item.style.border = '2px solid #FFD700';
+                    }
+                    
+                    leaderboardList.appendChild(item);
+                });
+            }
+            
+            document.getElementById('leaderboard-panel').style.display = 'block';
         }
 
         // IFRAME setup for Social Stream Ninja
         const iframe = document.createElement("iframe");
         const filename = "dock";
-        const urlParams = new URLSearchParams(window.location.search);
         iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + 
             urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
         iframe.style.width = "0px";
