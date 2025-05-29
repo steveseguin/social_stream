@@ -584,6 +584,7 @@
                 data = data.content;
             }
 
+			console.log(data);
             if (!data.chatname || !data.type) return;
 
             const user = getOrCreateUser(data.chatname, data.type);
@@ -697,10 +698,11 @@
 
         // IFRAME setup for Social Stream Ninja
         const iframe = document.createElement("iframe");
-        const filename = "leaderboard";
+		
+        const filename = "dock";
         iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + 
-                     urlParams.get('session') + "&novideo&noaudio&label=" + filename + 
-                     "&cleanoutput&room=" + urlParams.get('session');
+            urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+			
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";

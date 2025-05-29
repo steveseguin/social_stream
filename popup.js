@@ -1270,6 +1270,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "hypemeter", path: "hype.html" },
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
+	{ id: "leaderboard", path: "leaderboard.html" },
     { id: "ticker", path: "ticker.html" },
     { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
@@ -1278,7 +1279,6 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "cohost", path: "cohost.html" },
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
-    { id: "leaderboard", path: "leaderboard.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "flowactions", path: "actions.html" },
@@ -1700,7 +1700,7 @@ function update(response, sync = true) {
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
-                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink'
+                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'leaderboardlink',
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -2140,6 +2140,7 @@ function getTargetMap() {
         'tipjar': 12,
         'credits': 13,
         'giveaway': 14,
+		'leaderboard': 19,
         'privatechatbot': 15,
 		'poll': 16,
 		'eventsdashboard': 17,
@@ -2997,6 +2998,7 @@ function refreshLinks(){
       'hypemeterlink': 'hypemeter',
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
+	  'leaderboardlink': 'leaderboard',
       'tickerlink': 'ticker',
       'wordcloudlink': 'wordcloud',
       'polllink': 'poll',

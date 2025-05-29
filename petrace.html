@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pet Racing - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #87CEEB 0%, #98D8C8 50%, #F0E68C 100%);
+            overflow: hidden;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #race-track {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 400px;
+            transform: translateY(-50%);
+            background: linear-gradient(to bottom, 
+                #8B4513 0%, #A0522D 10%, 
+                #228B22 10%, #228B22 90%, 
+                #A0522D 90%, #8B4513 100%);
+            border-top: 5px solid #654321;
+            border-bottom: 5px solid #654321;
+        }
+        
+        .lane {
+            position: absolute;
+            width: 100%;
+            height: 80px;
+            border-bottom: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+        
+        .pet {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            transition: left 0.1s linear;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .pet-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        
+        .finish-line {
+            position: absolute;
+            right: 50px;
+            top: 0;
+            width: 10px;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #000,
+                #000 10px,
+                #fff 10px,
+                #fff 20px
+            );
+            border: 2px solid #FFD700;
+        }
+        
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        #race-status {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        #betting-board {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            min-width: 300px;
+        }
+        
+        .bet-entry {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+        
+        #winner-announcement {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            display: none;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+            100% { transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        .boost-effect {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle, rgba(255,255,0,0.8) 0%, rgba(255,165,0,0) 70%);
+            border-radius: 50%;
+            animation: boost 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes boost {
+            0% { 
+                transform: scale(0.5) translateX(0);
+                opacity: 1;
+            }
+            100% { 
+                transform: scale(2) translateX(-50px);
+                opacity: 0;
+            }
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .pet-stats {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 2px 4px;
+            border-radius: 3px;
+            color: white;
+        }
+        
+        .floating-points {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            color: #00FF00;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: floatUp 2s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100px);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="race-track">
+            <div class="finish-line"></div>
+        </div>
+        
+        <div id="ui-overlay">
+            <div id="race-status">Waiting for racers...</div>
+            <div id="race-timer"></div>
+        </div>
+        
+        <div id="betting-board">
+            <h3>Current Bets</h3>
+            <div id="bet-list"></div>
+            <div id="total-pool" style="margin-top: 10px; font-weight: bold;">Total Pool: 0 points</div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>How to Play:</strong></div>
+            <div>!race [points] [pet] - Join race (pets: dog, cat, rabbit, turtle, hamster)</div>
+            <div>!upgrade [pet] [stat] - Upgrade pet (stats: speed, stamina, luck)</div>
+            <div>!mypets - View your pet stats</div>
+        </div>
+        
+        <div id="winner-announcement"></div>
+    </div>
+    
+    <script>
+    // Pet configurations
+    const PET_TYPES = {
+        dog: { 
+            emoji: '🐕', 
+            baseSpeed: 1.2, 
+            baseStamina: 0.8, 
+            baseLuck: 0.5,
+            name: 'Dog'
+        },
+        cat: { 
+            emoji: '🐈', 
+            baseSpeed: 1.0, 
+            baseStamina: 0.9, 
+            baseLuck: 0.7,
+            name: 'Cat'
+        },
+        rabbit: { 
+            emoji: '🐰', 
+            baseSpeed: 1.5, 
+            baseStamina: 0.6, 
+            baseLuck: 0.4,
+            name: 'Rabbit'
+        },
+        turtle: { 
+            emoji: '🐢', 
+            baseSpeed: 0.5, 
+            baseStamina: 1.5, 
+            baseLuck: 0.8,
+            name: 'Turtle'
+        },
+        hamster: { 
+            emoji: '🐹', 
+            baseSpeed: 0.9, 
+            baseStamina: 0.7, 
+            baseLuck: 1.0,
+            name: 'Hamster'
+        }
+    };
+    
+    // Game state
+    let raceInProgress = false;
+    let racers = new Map();
+    let betPool = 0;
+    let raceCountdown = null;
+    let raceStartTime = null;
+    let playerPets = new Map(); // Store pet upgrades
+    
+    // URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || 'test';
+    const password = urlParams.get('password') || 'false';
+    
+    // Points system integration
+    let pointsSystem = null;
+    let pointsActions = null;
+    
+    // Initialize points system if available
+    if (window.parent && window.parent.pointsSystem) {
+        pointsSystem = window.parent.pointsSystem;
+        pointsActions = window.parent.pointsActions;
+    }
+    
+    class Racer {
+        constructor(username, type, betAmount, laneNumber) {
+            this.username = username;
+            this.type = type;
+            this.betAmount = betAmount;
+            this.lane = laneNumber;
+            this.position = 0;
+            this.finished = false;
+            this.finishTime = null;
+            
+            // Get user's pet stats or use defaults
+            const userPetKey = `${username}:${type}`;
+            const petData = playerPets.get(userPetKey) || {};
+            
+            // Calculate stats with upgrades
+            const petConfig = PET_TYPES[type];
+            this.speed = petConfig.baseSpeed + (petData.speedLevel || 0) * 0.1;
+            this.stamina = petConfig.baseStamina + (petData.staminaLevel || 0) * 0.1;
+            this.luck = petConfig.baseLuck + (petData.luckLevel || 0) * 0.1;
+            
+            this.currentStamina = this.stamina;
+            this.element = this.createElement();
+        }
+        
+        createElement() {
+            const petDiv = document.createElement('div');
+            petDiv.className = 'pet';
+            petDiv.style.top = `${this.lane * 80 + 10}px`;
+            petDiv.style.left = '10px';
+            petDiv.style.fontSize = '50px';
+            petDiv.textContent = PET_TYPES[this.type].emoji;
+            
+            const label = document.createElement('div');
+            label.className = 'pet-label';
+            label.textContent = `${this.username} ($${this.betAmount})`;
+            petDiv.appendChild(label);
+            
+            const stats = document.createElement('div');
+            stats.className = 'pet-stats';
+            stats.textContent = `S:${this.speed.toFixed(1)} ST:${this.stamina.toFixed(1)} L:${this.luck.toFixed(1)}`;
+            petDiv.appendChild(stats);
+            
+            document.getElementById('race-track').appendChild(petDiv);
+            return petDiv;
+        }
+        
+        update() {
+            if (this.finished) return;
+            
+            // Calculate speed based on stamina
+            let currentSpeed = this.speed;
+            if (this.currentStamina < 0.3) {
+                currentSpeed *= 0.5; // Tired penalty
+            }
+            
+            // Lucky boost chance
+            if (Math.random() < this.luck * 0.01) {
+                currentSpeed *= 2;
+                this.createBoostEffect();
+            }
+            
+            // Random events
+            if (Math.random() < 0.005) {
+                // Stumble
+                currentSpeed *= 0.1;
+            }
+            
+            this.position += currentSpeed;
+            this.currentStamina -= 0.005;
+            
+            // Update visual position
+            const trackWidth = window.innerWidth - 100;
+            const visualPosition = Math.min(this.position / 100 * trackWidth, trackWidth - 50);
+            this.element.style.left = `${visualPosition}px`;
+            
+            // Check if finished
+            if (this.position >= 100 && !this.finished) {
+                this.finished = true;
+                this.finishTime = Date.now() - raceStartTime;
+            }
+        }
+        
+        createBoostEffect() {
+            const boost = document.createElement('div');
+            boost.className = 'boost-effect';
+            boost.style.top = `${this.lane * 80 + 30}px`;
+            boost.style.left = this.element.style.left;
+            document.getElementById('race-track').appendChild(boost);
+            
+            setTimeout(() => boost.remove(), 500);
+        }
+        
+        remove() {
+            if (this.element && this.element.parentNode) {
+                this.element.remove();
+            }
+        }
+    }
+    
+    function updateBettingBoard() {
+        const betList = document.getElementById('bet-list');
+        betList.innerHTML = '';
+        
+        racers.forEach(racer => {
+            const betDiv = document.createElement('div');
+            betDiv.className = 'bet-entry';
+            betDiv.innerHTML = `
+                <span>${racer.username}</span>
+                <span>${PET_TYPES[racer.type].emoji} ${PET_TYPES[racer.type].name}</span>
+                <span>${racer.betAmount} pts</span>
+            `;
+            betList.appendChild(betDiv);
+        });
+        
+        document.getElementById('total-pool').textContent = `Total Pool: ${betPool} points`;
+    }
+    
+    function startRaceCountdown() {
+        let countdown = 30;
+        document.getElementById('race-status').textContent = 'Race starting soon!';
+        
+        raceCountdown = setInterval(() => {
+            countdown--;
+            document.getElementById('race-timer').textContent = `Starting in: ${countdown}s`;
+            
+            if (countdown <= 0) {
+                clearInterval(raceCountdown);
+                startRace();
+            }
+        }, 1000);
+    }
+    
+    function startRace() {
+        if (racers.size < 2) {
+            // Cancel race if not enough participants
+            document.getElementById('race-status').textContent = 'Not enough racers!';
+            document.getElementById('race-timer').textContent = '';
+            
+            // Refund all bets
+            racers.forEach(racer => {
+                refundBet(racer.username, racer.type, racer.betAmount);
+            });
+            
+            resetRace();
+            return;
+        }
+        
+        raceInProgress = true;
+        raceStartTime = Date.now();
+        document.getElementById('race-status').textContent = 'RACE IN PROGRESS!';
+        document.getElementById('race-timer').textContent = '';
+        
+        // Main race loop
+        const raceInterval = setInterval(() => {
+            let allFinished = true;
+            
+            racers.forEach(racer => {
+                racer.update();
+                if (!racer.finished) {
+                    allFinished = false;
+                }
+            });
+            
+            if (allFinished) {
+                clearInterval(raceInterval);
+                endRace();
+            }
+        }, 50);
+    }
+    
+    function endRace() {
+        // Sort racers by finish time
+        const results = Array.from(racers.values())
+            .sort((a, b) => a.finishTime - b.finishTime);
+        
+        const winner = results[0];
+        
+        // Calculate payouts (winner takes 70%, second place 20%, third place 10%)
+        const payouts = {
+            0: Math.floor(betPool * 0.7),
+            1: Math.floor(betPool * 0.2),
+            2: Math.floor(betPool * 0.1)
+        };
+        
+        // Display winner
+        const winnerDiv = document.getElementById('winner-announcement');
+        winnerDiv.innerHTML = `
+            <div>${PET_TYPES[winner.type].emoji}</div>
+            <div>${winner.username} WINS!</div>
+            <div style="font-size: 24px;">+${payouts[0]} points!</div>
+        `;
+        winnerDiv.style.display = 'block';
+        
+        // Award points to winners
+        results.forEach((racer, index) => {
+            if (index < 3 && payouts[index] > 0) {
+                awardPoints(racer.username, racer.type, payouts[index]);
+                createFloatingPoints(racer.element, `+${payouts[index]}`);
+            }
+        });
+        
+        // Reset after delay
+        setTimeout(() => {
+            winnerDiv.style.display = 'none';
+            resetRace();
+        }, 5000);
+    }
+    
+    function resetRace() {
+        racers.forEach(racer => racer.remove());
+        racers.clear();
+        betPool = 0;
+        raceInProgress = false;
+        updateBettingBoard();
+        document.getElementById('race-status').textContent = 'Waiting for racers...';
+        document.getElementById('race-timer').textContent = '';
+    }
+    
+    function createFloatingPoints(element, text) {
+        const points = document.createElement('div');
+        points.className = 'floating-points';
+        points.textContent = text;
+        points.style.left = element.style.left;
+        points.style.top = `${parseInt(element.style.top) - 20}px`;
+        document.getElementById('race-track').appendChild(points);
+        
+        setTimeout(() => points.remove(), 2000);
+    }
+    
+    async function processJoinRace(username, type, betAmount, userType) {
+        if (raceInProgress) {
+            sendChatResponse(`@${username}, a race is already in progress!`);
+            return;
+        }
+        
+        if (racers.has(username)) {
+            sendChatResponse(`@${username}, you're already in the race!`);
+            return;
+        }
+        
+        if (!PET_TYPES[betAmount.pet]) {
+            sendChatResponse(`@${username}, invalid pet type! Choose: dog, cat, rabbit, turtle, hamster`);
+            return;
+        }
+        
+        if (betAmount.amount < 10) {
+            sendChatResponse(`@${username}, minimum bet is 10 points!`);
+            return;
+        }
+        
+        // Check if user has enough points
+        if (pointsSystem) {
+            const result = await pointsSystem.spendPoints(username, userType, betAmount.amount);
+            if (!result.success) {
+                sendChatResponse(`@${username}, you don't have enough points! (${result.available} available)`);
+                return;
+            }
+        }
+        
+        // Add racer
+        const laneNumber = racers.size;
+        const racer = new Racer(username, betAmount.pet, betAmount.amount, laneNumber);
+        racers.set(username, racer);
+        betPool += betAmount.amount;
+        
+        updateBettingBoard();
+        sendChatResponse(`@${username} joined the race with ${PET_TYPES[betAmount.pet].emoji} for ${betAmount.amount} points!`);
+        
+        // Start countdown on first racer
+        if (racers.size === 1 && !raceCountdown) {
+            startRaceCountdown();
+        }
+    }
+    
+    async function processUpgradePet(username, type, upgradeParts, userType) {
+        const petType = upgradeParts.pet;
+        const stat = upgradeParts.stat;
+        
+        if (!PET_TYPES[petType]) {
+            sendChatResponse(`@${username}, invalid pet type!`);
+            return;
+        }
+        
+        if (!['speed', 'stamina', 'luck'].includes(stat)) {
+            sendChatResponse(`@${username}, invalid stat! Choose: speed, stamina, luck`);
+            return;
+        }
+        
+        const userPetKey = `${username}:${petType}`;
+        const petData = playerPets.get(userPetKey) || {
+            speedLevel: 0,
+            staminaLevel: 0,
+            luckLevel: 0
+        };
+        
+        const currentLevel = petData[`${stat}Level`];
+        const upgradeCost = (currentLevel + 1) * 50;
+        
+        if (pointsSystem) {
+            const result = await pointsSystem.spendPoints(username, userType, upgradeCost);
+            if (!result.success) {
+                sendChatResponse(`@${username}, upgrade costs ${upgradeCost} points! (${result.available} available)`);
+                return;
+            }
+        }
+        
+        petData[`${stat}Level`]++;
+        playerPets.set(userPetKey, petData);
+        
+        sendChatResponse(`@${username} upgraded their ${PET_TYPES[petType].name}'s ${stat} to level ${petData[`${stat}Level`]}!`);
+    }
+    
+    async function processMyPets(username) {
+        let response = `@${username}'s pets:\n`;
+        let hasPets = false;
+        
+        for (const [petType, config] of Object.entries(PET_TYPES)) {
+            const userPetKey = `${username}:${petType}`;
+            const petData = playerPets.get(userPetKey);
+            
+            if (petData) {
+                hasPets = true;
+                response += `${config.emoji} ${config.name}: Speed Lv${petData.speedLevel || 0}, Stamina Lv${petData.staminaLevel || 0}, Luck Lv${petData.luckLevel || 0}\n`;
+            }
+        }
+        
+        if (!hasPets) {
+            response = `@${username}, you haven't upgraded any pets yet!`;
+        }
+        
+        sendChatResponse(response);
+    }
+    
+    function sendChatResponse(message) {
+        // Send response back through the overlay system
+        const response = {
+            chatname: 'PetRaceBot',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        
+        // If we're in an iframe, send to parent
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                overlay: 'petrace',
+                response: response
+            }, '*');
+        }
+        
+        console.log('Bot response:', message);
+    }
+    
+    async function awardPoints(username, type, amount) {
+        if (pointsSystem) {
+            // Add points back to user
+            const userData = await pointsSystem.getUserPoints(username, type);
+            userData.points += amount;
+            await pointsSystem.saveUserPoints(userData);
+        }
+    }
+    
+    async function refundBet(username, type, amount) {
+        if (pointsSystem) {
+            // Refund points
+            const userData = await pointsSystem.getUserPoints(username, type);
+            userData.pointsSpent -= amount; // Reduce spent amount to effectively refund
+            await pointsSystem.saveUserPoints(userData);
+        }
+    }
+    
+    function processData(data) {
+        if (data.content) {
+            data = data.content;
+        }
+        
+        if (!data.chatmessage || !data.chatname) return;
+        
+        const message = data.chatmessage.trim().toLowerCase();
+        const parts = message.split(' ');
+        const command = parts[0];
+        
+        switch (command) {
+            case '!race':
+                if (parts.length >= 3) {
+                    const amount = parseInt(parts[1]);
+                    const pet = parts[2];
+                    if (!isNaN(amount) && amount > 0) {
+                        processJoinRace(data.chatname, data.type, { amount, pet }, data.type);
+                    }
+                }
+                break;
+                
+            case '!upgrade':
+                if (parts.length >= 3) {
+                    const pet = parts[1];
+                    const stat = parts[2];
+                    processUpgradePet(data.chatname, data.type, { pet, stat }, data.type);
+                }
+                break;
+                
+            case '!mypets':
+                processMyPets(data.chatname);
+                break;
+        }
+    }
+    
+    // Setup iframe communication
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=petrace&cleanoutput&room=${sessionId}`;
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.position = "fixed";
+    iframe.style.left = "-100px";
+    iframe.style.top = "-100px";
+    iframe.id = "frame1";
+    document.body.appendChild(iframe);
+    
+    // Listen for messages
+    window.addEventListener("message", function(e) {
+        if (e.source !== iframe.contentWindow) return;
+        
+        if ("dataReceived" in e.data) {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+    
+    // Handle WebSocket connection if server parameters are provided
+    if (urlParams.has('server')) {
+        const socketserver = new WebSocket(urlParams.get('server'));
+        
+        socketserver.onopen = function() {
+            socketserver.send(JSON.stringify({ 
+                join: sessionId.split(",")[0], 
+                out: 2, 
+                in: 1 
+            }));
+        };
+        
+        socketserver.onmessage = function(event) {
+            if (event.data) {
+                try {
+                    const data = JSON.parse(event.data);
+                    processData(data);
+                } catch (e) {
+                    console.error('WebSocket parse error:', e);
+                }
+            }
+        };
+    }
+    
+    // Add sample races for testing
+    if (urlParams.has('demo')) {
+        setTimeout(() => {
+            // Add demo racers
+            processJoinRace('DemoPlayer1', 'youtube', { amount: 50, pet: 'dog' }, 'youtube');
+            setTimeout(() => {
+                processJoinRace('DemoPlayer2', 'twitch', { amount: 30, pet: 'rabbit' }, 'twitch');
+            }, 2000);
+            setTimeout(() => {
+                processJoinRace('DemoPlayer3', 'youtube', { amount: 20, pet: 'turtle' }, 'youtube');
+            }, 4000);
+        }, 1000);
+    }
+    </script>
+</body>
+</html>
