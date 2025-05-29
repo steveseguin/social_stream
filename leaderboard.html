@@ -630,19 +630,88 @@
                 if (hideEmpty) {
                     container.classList.remove('visible');
                 } else {
-                    leaderboardContent.innerHTML = '<div class="empty-state">No activity yet</div>';
+                    if (!leaderboardContent.querySelector('.empty-state')) {
+                        leaderboardContent.innerHTML = '<div class="empty-state">No activity yet</div>';
+                    }
                     container.classList.add('visible');
                 }
                 return;
             }
 
-            let html = '';
+            // Get existing items
+            const existingItems = Array.from(leaderboardContent.querySelectorAll('.leaderboard-item'));
+            const existingUserMap = new Map();
+            
+            existingItems.forEach(item => {
+                const userNameEl = item.querySelector('.user-name');
+                if (userNameEl) {
+                    // Get only the text content, not including the source icon
+                    const userName = userNameEl.childNodes[0]?.textContent?.trim();
+                    if (userName) {
+                        existingUserMap.set(userName, item);
+                    }
+                }
+            });
+
+            // Clear empty state if it exists
+            const emptyState = leaderboardContent.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            // Update or create items
             sortedUsers.forEach((user, index) => {
                 const rank = index + 1;
                 const badges = user.getBadges();
+                let listItem = existingUserMap.get(user.name);
                 
-                html += `
-                    <li class="leaderboard-item rank-${rank} new-entry">
+                if (listItem) {
+                    // Update existing item
+                    existingUserMap.delete(user.name);
+                    
+                    // Update rank
+                    const rankEl = listItem.querySelector('.rank-number');
+                    if (rankEl) rankEl.textContent = rank;
+                    
+                    // Update rank class
+                    listItem.className = `leaderboard-item rank-${rank}`;
+                    
+                    // Update score
+                    const scoreEl = listItem.querySelector('.score-number');
+                    if (scoreEl) scoreEl.textContent = user.score.toLocaleString();
+                    
+                    // Update badges
+                    if (layout !== 'bar') {
+                        const badgesEl = listItem.querySelector('.user-badges');
+                        if (badges.length > 0) {
+                            if (badgesEl) {
+                                badgesEl.textContent = badges.join(' ');
+                            } else {
+                                const userInfo = listItem.querySelector('.user-info');
+                                if (userInfo) {
+                                    const newBadgesEl = document.createElement('div');
+                                    newBadgesEl.className = 'user-badges';
+                                    newBadgesEl.textContent = badges.join(' ');
+                                    userInfo.appendChild(newBadgesEl);
+                                }
+                            }
+                        } else if (badgesEl) {
+                            badgesEl.remove();
+                        }
+                    }
+                    
+                    // Move to correct position
+                    if (index < leaderboardContent.children.length - 1) {
+                        leaderboardContent.insertBefore(listItem, leaderboardContent.children[index]);
+                    } else {
+                        leaderboardContent.appendChild(listItem);
+                    }
+                } else {
+                    // Create new item
+                    const newItem = document.createElement('li');
+                    newItem.className = `leaderboard-item rank-${rank} new-entry`;
+                    
+                    newItem.innerHTML = `
                         <div class="rank-number">${rank}</div>
                         ${showAvatars && user.avatarUrl ? 
                             `<img src="${user.avatarUrl}" alt="${user.name}" class="user-avatar" onerror="this.style.display='none'">` : 
@@ -662,11 +731,22 @@
                             <div class="score-number">${user.score.toLocaleString()}</div>
                             <div class="score-label">points</div>
                         </div>
-                    </li>
-                `;
+                    `;
+                    
+                    // Insert at correct position
+                    if (index < leaderboardContent.children.length) {
+                        leaderboardContent.insertBefore(newItem, leaderboardContent.children[index]);
+                    } else {
+                        leaderboardContent.appendChild(newItem);
+                    }
+                }
             });
 
-            leaderboardContent.innerHTML = html;
+            // Remove items that are no longer in top N
+            existingUserMap.forEach(item => {
+                item.remove();
+            });
+
             container.classList.add('visible');
 
             // Remove animation class after animation completes
