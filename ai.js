@@ -2647,7 +2647,7 @@ const ChatContextManager = { // summary and chat context
 		
         const [recentMessages, userHistory] = await Promise.all([
             messageStoreDB.getRecentMessages(10), // recentMessages
-            data.chatname && data.type ? messageStoreDB.getUserMessages(data.chatname, data.type, 0, maxMessages) : [] // userHistory
+            data.chatname && data.type ? messageStoreDB.getUserMessages(data.userid || data.chatname, data.type, 0, maxMessages) : [] // userHistory
         ]);
 
 		// messageToLLMString

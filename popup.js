@@ -527,7 +527,10 @@ function updateUsernameList(type = 'blacklistusers') {
 }
 
 function addSourceType(sourceType, type) {
-    const input = document.getElementById(type);
+    let input = document.getElementById(type);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${type}"]`);
+    }
     if (!input) return;
     
     const sources = input.value.split(',').map(t => t.trim()).filter(t => t);
@@ -541,7 +544,10 @@ function addSourceType(sourceType, type) {
 }
 
 function removeSourceType(sourceType, type) {
-    const input = document.getElementById(type);
+    let input = document.getElementById(type);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${type}"]`);
+    }
     if (!input) return;
     
     const sources = input.value.split(',').map(t => t.trim()).filter(t => t);
@@ -556,10 +562,10 @@ function removeSourceType(sourceType, type) {
 }
 
 function updateSourceTypeList(type) {
-	
-	if (!sourceTypes.includes(type)) return;
-	
-    const input = document.getElementById(type);
+    let input = document.getElementById(type);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${type}"]`);
+    }
     const list = document.getElementById(`${type}List`);
     if (!input || !list) return;
     
@@ -573,6 +579,67 @@ function updateSourceTypeList(type) {
             <button class="remove-source" data-source-type="${source}">×</button>
         </div>
     `).join('');
+}
+
+// Function to setup source selection for a given input
+function setupSourceSelection(inputId, isSettingBased = false) {
+    const input = isSettingBased ? 
+        document.querySelector(`[data-textsetting="${inputId}"]`) : 
+        document.getElementById(inputId);
+    
+    if (!input) return;
+    
+    const container = input.closest('.textInputContainer');
+    if (!container || container.querySelector('.source-list-container')) return; // Already setup
+    
+    input.classList.add('hidden');
+    
+    const listContainer = document.createElement('div');
+    listContainer.className = 'source-list-container';
+    listContainer.id = `${inputId}List`;
+    
+    const addContainer = document.createElement('div');
+    addContainer.className = 'add-source-container';
+    
+    if (sourcesList && sourcesList.size > 0) {
+        addContainer.innerHTML = `
+            <select id="new${inputId}Type">
+                <option value="" selected>All sources</option>
+                ${Array.from(sourcesList).sort().map(source => 
+                    `<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+                ).join('')}
+            </select>
+            <button id="add${inputId}">Add</button>
+        `;
+    } else {
+        addContainer.innerHTML = `
+            <input type="text" id="new${inputId}Type" placeholder="Source type">
+            <button id="add${inputId}">Add</button>
+        `;
+    }
+    
+    container.parentNode.classList.add("isolate");
+    container.parentNode.insertBefore(listContainer, container.nextSibling);
+    container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+    
+    // Add event listeners
+    listContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-source')) {
+            removeSourceType(e.target.dataset.sourceType, inputId);
+        }
+    });
+    
+    document.getElementById(`add${inputId}`).addEventListener('click', () => {
+        const selectInput = document.getElementById(`new${inputId}Type`);
+        const sourceType = selectInput.value.trim();
+        if (sourceType) {
+            addSourceType(sourceType, inputId);
+            selectInput.value = '';
+        }
+    });
+    
+    // Update the list with existing values
+    updateSourceTypeList(inputId);
 }
 
 // Templates for different event types
@@ -1000,7 +1067,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 	  }
 }
 
-const sourceTypes = ['relaytargets','eventsSources'];
+const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
@@ -1177,9 +1244,9 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     // Add all custom parameters that are not in the ignore list
     //currentUrl.searchParams.forEach((value, key) => {
-   //   if (!allIgnoreParams.includes(key)) {
+    //  if (!allIgnoreParams.includes(key)) {
    //     customParams += `&${key}=${encodeURIComponent(value)}`;
-    //  }
+   //   }
    // });
   } catch (e) {
     console.error("Error getting custom params:", e);
@@ -1211,6 +1278,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "cohost", path: "cohost.html" },
     { id: "giveaway", path: "giveaway.html" },
     { id: "credits", path: "credits.html" },
+    { id: "leaderboard", path: "leaderboard.html" },
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "flowactions", path: "actions.html" },
@@ -1250,7 +1318,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
   // Map of all provider-specific parameters
   const providerParams = {
     system: ['lang', 'voice', 'rate', 'pitch'],
-    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate'],
+    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
     google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
     speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
     kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed']
@@ -2951,7 +3019,7 @@ function refreshLinks(){
       const divId = linkIdToDivIdMap[linkId];
       const divElement = document.getElementById(divId);
 
-      if (linkElement && divElement && typeof divElement.raw === 'string' && divElement.raw.startsWith('http')) {
+      if (linkElement && divElement && typeof divElement.raw === 'string' && (divElement.raw.startsWith('http') || divElement.raw.startsWith('file://'))) {
         const urlToClean = divElement.raw; // Use .raw as the source of truth
         const cleanedUrl = removeTTSProviderParams(urlToClean);
 
@@ -3312,7 +3380,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 	
     getServiceName() {
         const settings = this.getSettings();
-		if (settings.service) return document.getElementById('ttsProvider').options[document.getElementById('ttsProvider').selectedIndex].innerText;
+		if (settings.service) {
+            const provider = document.getElementById('ttsProvider');
+            if (provider && provider.selectedIndex >= 0) {
+                return provider.options[provider.selectedIndex].innerText;
+            }
+        }
         if (settings.google.key) return 'Google Cloud TTS';
         if (settings.elevenLabs.key) return 'ElevenLabs TTS';
         if (settings.speechify.key) return 'Speechify TTS';
@@ -4283,6 +4356,21 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		console.error(e);
 	}
 	
+	// Setup source selection for bot reply inputs - simple approach without MutationObserver
+	try {
+		// Just setup any existing bot reply source inputs on page load
+		setTimeout(() => {
+			document.querySelectorAll('[id^="botReplyMessageSource"]').forEach(input => {
+				if (input.id) {
+					setupSourceSelection(input.id);
+				}
+			});
+		}, 200);
+		
+	} catch(e) {
+		console.error("Error setting up bot reply source selection:", e);
+	}
+	
 /* 	userTypes.forEach(type => {
 	  try {
 		updateUsernameList(type);
@@ -4302,6 +4390,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	//userTypes.forEach(type => updateUsernameList(type));
     //sourceTypes.forEach(type => updateSourceTypeList(type));
+	
+	// Initialize existing source type lists
+	sourceTypes.forEach(type => {
+		try {
+			updateSourceTypeList(type);
+		} catch(e) {
+			console.error(e);
+		}
+	});
 	
 	setTimeout(function(){
 		populateFontDropdown(); 
@@ -4359,7 +4456,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 		speechSynthesis.onvoiceschanged = populateVoices;
 		
-		document.getElementById('searchInput').addEventListener('keyup', function() {
+		document.getElementById('searchInput').addEventListener('keyup', function(e) {
+			// Handle escape key to close search
+			if (e.key === 'Escape') {
+				this.value = '';
+				this.style.display = 'none';
+				this.style.width = '0';
+				// Reset all visibility
+				document.querySelectorAll('input.collapsible-input').forEach(ele => {
+					ele.checked = null;
+				});
+				document.querySelectorAll('.wrapper').forEach(ele => {
+					ele.style.display = "";
+				});
+				document.querySelectorAll('.options_group > div').forEach(ele => {
+					ele.style.display = "";
+				});
+				return;
+			}
+			
 			var searchQuery = this.value.toLowerCase();
 			
 			if (searchQuery){
@@ -4374,6 +4489,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						
 						if (item.querySelector("[title]")){
 							text += " " + item.querySelector("[title]").title.toLowerCase();
+						}
+						
+						// Include data-keywords for better searchability
+						if (item.dataset.keywords) {
+							text += " " + item.dataset.keywords.toLowerCase();
 						}
 						
 						if (item.querySelector("input")){

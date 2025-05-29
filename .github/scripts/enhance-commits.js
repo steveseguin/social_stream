@@ -138,14 +138,7 @@ async function getChangedFiles(commitSha) {
 function getDirectorySummary(changedFiles) {
   const directories = new Set();
   const componentMapping = {
-    'sources': 'Platform Integrations',
-    'themes': 'Theming',
-    'dock.html': 'Consolidated Chat Dashboard and Overlay UI',
-    'featured.html': 'Featured Overlay UI',
-    'background.js': 'Extension Core Logic and Message Routing',
-    'manifest.json': 'Extension Manifest',
-    '.github': 'GitHub Actions/Workflows', // Added mapping
-    'scripts': 'Utility Scripts' // Added mapping
+    'publish.py': 'Main pythong script for publishing and viewing WebRTC streams using Gstreamer'
   };
   const knownComponents = new Set();
 
@@ -372,14 +365,11 @@ async function enhanceCommitMessage(originalMessage, diff, branchName, dirSummar
      : `* **Recent Steps on Branch (${branchName}):** (This appears to be the first commit on this branch since merging from the base branch)`;
 
   const prompt = `
-You are an expert developer assistant tasked with refining Git commit messages for the "Social Stream Ninja" project. Your goal is to create a message that follows Conventional Commits format (e.g., "feat:", "fix:", "chore:", "refactor:", "style:", "test:", "docs:", "build:", "ci:") and provides clear, concise, and informative context about the changes.
+You are an expert developer assistant tasked with refining Git commit messages for the "Raspberry Ninja" project. Your goal is to create a message that follows Conventional Commits format (e.g., "feat:", "fix:", "chore:", "refactor:", "style:", "test:", "docs:", "build:", "ci:") and provides clear, concise, and informative context about the changes.
 
-**Project Context: Social Stream Ninja**
-
-* **Purpose:** Consolidates live social messaging streams (Twitch, YouTube, Facebook, etc.) for content creators into a unified interface.
-* **Core Features:** Multi-platform chat aggregation, customizable chat overlay (for OBS/streaming), Text-to-Speech (TTS), bot commands & automation, API support (message ingest/egress, webhooks for donations like Stripe/Ko-Fi), theming, standalone desktop app, and browser extension.
-* **Key Components:** \`dock.html\` (main dashboard/controller), \`featured.html\` (chat overlay), \`sources/\` directory (platform integrations), \`custom.js\` (user scripting), TTS functionality, API handling logic, \`.github/\` (workflows/actions), \`scripts/\` (utility scripts).
-* **Technology Stack:** Primarily JavaScript, HTML, CSS, Node.js (for scripts/actions), Browser Extension APIs, WebRTC (via VDO.Ninja), potentially Electron.
+**Project Context: Raspberry Ninja**
+* **Purpose:** Live streaming via Python; multipurpose toolkit with VDO.Ninja as the central WebRTC component.
+* **Technology Stack:** Primarily Python, HTML, CSS, Gstreamer, Browser Extension APIs, WebRTC (via VDO.Ninja).
 
 **Task:**
 
@@ -547,7 +537,7 @@ async function updatePRDescription() {
 
     // Generate enhanced description using Gemini
     const prompt = `
-You are an expert developer assistant helping refine a Pull Request description for the "Social Stream Ninja" project.
+You are an expert developer assistant helping refine a Pull Request description for the "Raspberry Ninja" project.
 
 **Project Context:** (Same as commit message context - consolidates social streams, features like overlay, TTS, API, etc.)
 

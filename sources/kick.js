@@ -1,4 +1,4 @@
-(function () {
+(async function () {
 	
 	var EMOTELIST = false;
 	var BTTV = false;
@@ -82,6 +82,9 @@
 	}
 	
 	var cachedUserProfiles = {};
+	var processedMessages = new Set();
+	var maxTrackedMessages = 40;
+	var pastMessages = [];
 	
 	function escapeHtml(unsafe){
 		try {
@@ -107,9 +110,17 @@
 		}
 		return false;
 	}
+	
+	// Determine if we're on the new popout chat or the old chatroom
+	var isPopoutChat = window.location.href.includes("/popout/") && window.location.href.includes("/chat");
+	var isOldChatroom = window.location.href.includes("/chatroom");
 
 	try {
+		var kickUserID = false;
 		var kickUsername = extractKickUsername(window.location.href);
+		if (kickUsername && isPopoutChat){
+			kickUserID = await getKickUserIdByUsername();
+		}
 	} catch(e){}
 
 	var isExtensionOn = true;
@@ -132,6 +143,20 @@
 		} catch (error) {
 			console.log(error);
 			return 0;
+		}
+	}
+	
+	async function getKickUserIdByUsername() {
+		try {
+			const response = await fetch(`https://kick.com/api/v2/channels/${kickUsername}`);
+			if (!response.ok) {
+				throw new Error(`Failed to fetch user data: ${response.status}`);
+			}
+			const data = await response.json();
+			return data.user_id;
+		} catch (error) {
+			console.error(`Error fetching Kick user ID: ${error.message}`);
+			return null;
 		}
 	}
 	
@@ -258,6 +283,10 @@
 		});
 	}
 	
+	function clearMessageTracking() {
+		processedMessages.clear();
+	}
+	
 	function sleep(ms) {
 		return new Promise(resolve => setTimeout(resolve, ms));
 	}
@@ -287,7 +316,7 @@
 		 }
 	}
 	
-	async function processMessage(ele){	// twitch
+	async function processMessageOld(ele){	// old chatroom format
 	
 	  if (settings.delaykick){
 		  await sleep(3000);
@@ -439,13 +468,231 @@
 		  //
 	  }
 	}
+	
+	async function processMessageNew(ele){	// new popout format
+	
+	  if (!ele || !ele.isConnected) return;
+	  
+	  if (ele.querySelector(".line-through")){
+		 // console.log("DELETEED");
+		  try {
+				var data = {};
+				data.chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+				data.chatname = data.chatname.replace("Channel Host", "");
+				data.chatname = data.chatname.replace(":", "");
+				data.chatname = data.chatname.trim();
+				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				data.type = "kick";
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					{
+						delete: data
+					},
+					function (e) {}
+				);
+			} catch (e) {
+			}
+		return;
+	  }
+	  
+	  if (ele.dataset.matched){return;}
+	  ele.dataset.matched = true;
+	  let sibling = ele.nextElementSibling;
+	  let nextCount = 0;
+	  while(sibling) {
+		nextCount++;
+		if (nextCount>5){return;}
+		if (sibling.dataset.matched){return;}
+		sibling = sibling.nextElementSibling;
+	  }
+	  
+	  let messageId = "";
+	  try {
+		  const content = ele.textContent || "";
+		  messageId = `${content.slice(0, 100)}`;
+		
+		if (processedMessages.has(messageId)) return;
+		
+		processedMessages.add(messageId);
+		
+		if (processedMessages.size > maxTrackedMessages) {
+		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
+		  const entries = Array.from(processedMessages);
+		  for (let i = 0; i < entriesToRemove; i++) {
+			processedMessages.delete(entries[i]);
+		  }
+		}
+		
+	  } catch(e) {
+		return;
+	  }
+		
+	  if (settings.delaykick){
+		  await sleep(3000);
+	  }
+	  
+	  if (settings.customkickstate) {
+		return;
+	  }
+		
+	  var chatsticker = false;
+	  var chatmessage = "";
+	  var nameColor = "";
+	  var chatname = "";
+	  var name ="";
+	  var chatbadges = [];
+	  
+	  
+	  try {
+		chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+		
+	  } catch(e){
+		  return;
+	  }
+	  try {
+		nameColor = ele.querySelector("button[title]").style.color;
+	  } catch(e){}
+	  
+	   
+	  if (!settings.textonlymode){
+		  try {
+			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
+			
+			if (!chatNodes.length){
+				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
+			} else {
+				chatNodes = ele.querySelectorAll("seventv-container, .chat-emote-container, .seventv-painted-content"); // 7tv support, as of june 20th
+			}
+			
+			if (!chatNodes.length){
+				let tmp = ele.querySelector("div span[class^='font-normal']");
+				if (tmp){
+					chatmessage = getAllContentNodes(tmp);
+					chatmessage = chatmessage.trim();
+				}
+			} 
+		  } catch(e){
+		  }
+	  } else {
+		  if (!chatNodes.length){
+			let tmp = ele.querySelector("div span[class^='font-normal']");
+			if (tmp){
+				chatmessage = getAllContentNodes(tmp);
+				chatmessage = chatmessage.trim();
+			}
+		  }
+	  }
+	  if (chatNodes.length){
+		for (var i=0;i<chatNodes.length;i++){
+			chatmessage += getAllContentNodes(chatNodes[i])+" ";
+		}
+		chatmessage = chatmessage.trim();
+	  }
+	  
+	  if (!chatmessage){return;}
+	  
+	  var originalMessage = "";
+	  var replyMessage = "";
+	  
+	  if (settings.replyingto){
+		  let reply = ele.querySelector(".text-xs button");
+		  if (reply){
+				reply = getAllContentNodes(reply).trim();
+				if (reply){
+					replyMessage = reply;
+					originalMessage = chatmessage;
+					if (settings.textonlymode) {
+						chatmessage = "@"+reply + ": " + chatmessage;
+					} else {
+						chatmessage = "<i><small>@"+reply + ":&nbsp;</small></i> " + chatmessage;
+					}
+				}
+		  }
+	  }
+	  
+	  
+	  ele.querySelectorAll("div > div > div > div > div > div[data-state] img[src], div > div > div > div > div > div[data-state] svg").forEach(badge=>{
+		try {
+			if (badge && badge.nodeName == "IMG"){
+				var tmp = {};
+				tmp.src = badge.src;
+				tmp.type = "img";
+				chatbadges.push(tmp);
+			} else if (badge && badge.nodeName.toLowerCase() == "svg"){
+				var tmp = {};
+				tmp.html = badge.outerHTML;
+				tmp.type = "svg";
+				chatbadges.push(tmp);
+			}
+		} catch(e){  }
+	  });
+
+
+	  var hasDonation = '';
+	
+	  
+	  chatname = chatname.replace("Channel Host", "");
+	  chatname = chatname.replace(":", "");
+	  chatname = chatname.trim();
+	  
+	  var chatimg = "";
+	  var channelName = window.location.pathname.split("/")[2];
+	  
+	  if (channelName && chatname){
+		  chatimg = await getKickAvatarImage(chatname, channelName) || "";
+	  }
+	  
+	  var data = {};
+	  
+	    if (replyMessage){
+			data.initial = replyMessage;
+		}
+	    if (originalMessage){
+			data.reply = originalMessage;
+		}
+		
+	  data.chatname = chatname;
+	  data.chatbadges = chatbadges;
+	  data.nameColor = nameColor;
+	  data.chatmessage = chatmessage;
+	  data.chatimg = chatimg;
+	  data.hasDonation = hasDonation;
+	  data.membership = "";
+	  data.textonly = settings.textonlymode || false;
+	  data.type = "kick";
+	  
+	  if (!chatmessage && !hasDonation){
+		return;
+	  }
+	  
+	  //if (brandedImageURL){
+	  //  data.sourceImg = brandedImageURL;
+	  //}
+	  
+	  try {
+		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			if (e){
+				ele.dataset.mid = e?.id;
+			}
+		});
+	  } catch(e){
+		  //
+	  }
+	}
+
+	// Route to the appropriate processMessage function based on the URL
+	var processMessage = isPopoutChat ? processMessageNew : processMessageOld;
 
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
 				if ("getSource" == request){sendResponse("kick");	return;	}
 				if ("focusChat" == request){
-					document.querySelector('#message-input').focus();
+					if (isPopoutChat) {
+						document.querySelector('[data-input="true"]').focus();
+					} else {
+						document.querySelector('#message-input').focus();
+					}
 					sendResponse(true);
 					return;
 				}
@@ -457,13 +704,27 @@
 						settings = request.settings;
 						sendResponse(true);
 						if (settings.bttv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							if (isPopoutChat) {
+								// kick_new.js had this commented out
+								// chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							} else {
+								chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							}
 						}
 						if (settings.seventv) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							if (isPopoutChat) {
+								chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							} else {
+								chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							}
 						}
 						if (settings.ffz) {
-							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							if (isPopoutChat) {
+								// kick_new.js had this commented out
+								// chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							} else {
+								chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+							}
 						}
 						return;
 					}
@@ -505,19 +766,33 @@
 				settings = response.settings;
 				
 				if (settings.bttv && !BTTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					if (isPopoutChat) {
+						// kick_new.js had this commented out
+						// chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					} else {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
 				}
 				if (settings.seventv && !SEVENTV) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					if (isPopoutChat) {
+						chrome.runtime.sendMessage(chrome.runtime.id, {getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					} else {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
 				}
 				if (settings.ffz && !FFZ) {
-					chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					if (isPopoutChat) {
+						// kick_new.js had this commented out
+						// chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					} else {
+						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
+					}
 				}
 			}
 		}
 	});
 
-	function onElementInserted(target) {
+	function onElementInsertedOld(target) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -553,23 +828,79 @@
 		observer.observe(target, config);
 	}
 	
-	var pastMessages = [];
+	function onElementInsertedNew(target, subtree=false) {
+		var onMutationsObserved = function(mutations) {
+			mutations.forEach(function(mutation) {
+				if (mutation.removedNodes.length) {
+					if (mutation.target.parentNode && mutation.target.parentNode.dataset.index){
+						processMessage(mutation.target.parentNode);
+					}
+				} else if (mutation.target == target || subtree){
+					if (mutation.addedNodes.length) {
+						for (var i = 0; i < mutation.addedNodes.length; i++) {
+							try {
+								if (mutation.addedNodes[i].dataset && mutation.addedNodes[i].dataset.index){
+									if (SevenTV){
+										setTimeout(function(ele){
+											processMessage(ele);
+										}, 300, mutation.addedNodes[i]); // give seventv time to load, before parsing the message
+									} else {
+										processMessage(mutation.addedNodes[i]);
+									}
+									
+								} else if (mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner")){
+									let ele = mutation.addedNodes[i].classList.contains("chatroom-banner") || mutation.addedNodes[i].querySelector(".chatroom-banner");
+									
+									processMessage(ele);
+								}
+							} catch(e){}
+						}
+					}
+				} 
+			});
+		};
+		var config = { childList: true, subtree: true };
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		var observer = new MutationObserver(onMutationsObserved);
+		observer.observe(target, config);
+	}
+	
 	var SevenTV = false;
 	
-	console.log("Social stream injected - old");
+	console.log("Social stream injected - " + (isPopoutChat ? "new popout" : "old chatroom"));
+	
 	var xxx = setInterval(function(){
-		if (document.getElementById("chatroom")){
-			clearInterval(xxx);
-			setTimeout(function(){
-				if (document.getElementById("seventv-extension")){
-					SevenTV = true;
-				}
-				var clear = document.querySelectorAll("div[data-chat-entry]");
-				for (var i = 0;i<clear.length;i++){
-					pastMessages.push(clear[i].dataset.chatEntry);
-				}
-				onElementInserted(document.getElementById("chatroom"));
-			},3000);
+		if (isPopoutChat) {
+			// New popout chat
+			if (document.querySelectorAll("#chatroom-messages > div").length){
+				clearInterval(xxx);
+				setTimeout(function(){
+					clearMessageTracking();
+					if (document.getElementById("seventv-extension")){
+						SevenTV = true;
+					}
+					var clear = document.querySelectorAll("div[data-chat-entry]");
+					onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[0], false);
+					if (document.querySelectorAll("#chatroom-messages > div").length>1){
+						onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[1], true);
+					}
+				},3000);
+			}
+		} else {
+			// Old chatroom
+			if (document.getElementById("chatroom")){
+				clearInterval(xxx);
+				setTimeout(function(){
+					if (document.getElementById("seventv-extension")){
+						SevenTV = true;
+					}
+					var clear = document.querySelectorAll("div[data-chat-entry]");
+					for (var i = 0;i<clear.length;i++){
+						pastMessages.push(clear[i].dataset.chatEntry);
+					}
+					onElementInsertedOld(document.getElementById("chatroom"));
+				},3000);
+			}
 		}
 	},1000);
 	

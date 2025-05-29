@@ -1806,24 +1806,31 @@ async function getBTTVEmotes(url = false, type=null, channel=null) {
 			}
 
 			if (vid) {
+				console.log("YouTube video ID extracted:", vid);
 				userID = localStorage.getItem("vid2uid:" + vid);
 				
 				if (!userID) {
+					console.log("Fetching user ID for video:", vid);
 					userID = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
 						.then(result => {
 							return result.text();
 						})
 						.then(result => {
+							console.log("User ID received:", result);
 							return result;
 						})
 						.catch(err => {
+							console.error("Error fetching user ID:", err);
 							//	log(err);
 						});
 					if (userID) {
 						localStorage.setItem("vid2uid:" + vid, userID);
 					} else {
+						console.log("No user ID found for video:", vid);
 						return false;
 					}
+				} else {
+					console.log("User ID from cache:", userID);
 				}
 				if (userID) {
 					bttv = getItemWithExpiry("uid2bttv2.youtube:" + userID);
@@ -1840,14 +1847,18 @@ async function getBTTVEmotes(url = false, type=null, channel=null) {
 								//	log(err);
 							});
 						if (bttv) {
+							console.log("BTTV raw response for YouTube channel:", bttv);
 							if (bttv.channelEmotes) {
+								console.log("BTTV channel emotes found:", bttv.channelEmotes.length);
 								bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
 									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 									acc[emote.code] = imageUrl;
+									console.log("Added channel emote:", emote.code);
 									return acc;
 								}, {});
 							}
 							if (bttv.sharedEmotes) {
+								console.log("BTTV shared emotes found:", bttv.sharedEmotes.length);
 								bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
 									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 									acc[emote.code] = imageUrl;
@@ -3154,26 +3165,41 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} else {
 				sendResponse({ state: isExtensionOn});
 			}
+		} else if ("messages" in request) {
+			// Handle batch messages from YouTube
+			sendResponse({ state: isExtensionOn });
+			if (Array.isArray(request.messages)) {
+				for (const message of request.messages) {
+					await processIncomingMessage(message, sender);
+				}
+			}
 		} else if ("getBTTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			//console.log(JSON.stringify(request));
+			console.log("BTTV request received:", JSON.stringify(request));
 			sendResponse({ state: isExtensionOn });
-			if (sender.tab.url) {
-				var BTTV2 = await getBTTVEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+			if (sender.tab.url || request.url) {
+				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+				var urlToUse = request.url || sender.tab.url;
+				console.log("Using URL for BTTV:", urlToUse);
+				var BTTV2 = await getBTTVEmotes(urlToUse, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (BTTV2) {
-					//console.log(sender);
+					console.log("BTTV emotes found, sending to tab:", sender.tab.id);
 					//console.log(BTTV2);
 					chrome.tabs.sendMessage(sender.tab.id, { BTTV: BTTV2 }, function (response = false) {
 						chrome.runtime.lastError;
 					});
+				} else {
+					console.log("No BTTV emotes found");
 				}
 			}
 		} else if ("getSEVENTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			//console.log("getSEVENTV");
 			sendResponse({ state: isExtensionOn });
-			if (sender.tab.url) {
-				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
+			if (sender.tab.url || request.url) {
+				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+				var urlToUse = request.url || sender.tab.url;
+				var SEVENTV2 = await getSEVENTVEmotes(urlToUse, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
 					//	//console.logsender);
 					//	//console.logSEVENTV2);
@@ -3186,8 +3212,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			////console.log"getFFZ");
 			sendResponse({ state: isExtensionOn });
-			if (sender.tab.url) {
-				var FFZ2 = await getFFZEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+			if (sender.tab.url || request.url) {
+				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+				var urlToUse = request.url || sender.tab.url;
+				var FFZ2 = await getFFZEmotes(urlToUse, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (FFZ2) {
 					//	//console.logsender);
 					//	//console.logFFZ2);
@@ -6791,7 +6819,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			openchat(request.value || null);
 		} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type) {
 			if (isExtensionOn) {
-				getMessagesDB(request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {
+				getMessagesDB(request.value.userid || request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {
 					if (isExtensionOn) {
 						sendDataP2P({ userHistory: response }, UUID);
 					}
@@ -7052,36 +7080,7 @@ eventer(messageEvent, async function (e) {
 		if ("dataReceived" in e.data && "overlayNinja" in e.data.dataReceived) {
 			processIncomingRequest(e.data.dataReceived.overlayNinja, e.data.UUID);
 		} else if ("action" in e.data) {
-			// this is from vdo.ninja, not socialstream.
-			if (e.data.action === "YoutubeChat") {
-				// I never got around to completing this, so ignore it
-				if (e.data.value && data.value.snippet && data.value.authorDetails) {
-					var data = {};
-					data.chatname = e.data.value.authorDetails.displayName || "";
-					data.chatimg = e.data.value.authorDetails.profileImageUrl || "";
-					data.nameColor = "";
-					data.chatbadges = "";
-					data.backgroundColor = "";
-					data.textColor = "";
-					data.chatmessage = data.value.snippet.displayMessage || "";
-					data.hasDonation = "";
-					data.membership = "";
-					data.type = "youtube";
-
-					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
-					
-					if (data) {
-						try {
-							data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
-						} catch (e) {
-							console.warn(e);
-						}
-						if (data) {
-							sendToDestinations(data);
-						}
-					}
-				}
-			} else if (e.data.action == "view-stats-updated") {
+			if (e.data.action == "view-stats-updated") {
 				return;
 			} else if (e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 				// flip this
@@ -8305,11 +8304,23 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.firsttimers && data.chatname && data.type){
-			let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
-			if (!exists){
-				data.firsttime = true;
-				console.log("First timer");
+			console.log("Checking first timer:", data.chatname, data.type, data.userid);
+			try {
+				let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
+				console.log("User exists:", exists);
+				if (!exists){
+					data.firsttime = true;
+					console.log("First timer marked:", data.chatname);
+				}
+			} catch (e) {
+				console.error("Error checking first timer:", e);
 			}
+		} else {
+			console.log("First timer check skipped:", {
+				setting: settings.firsttimers,
+				chatname: data.chatname,
+				type: data.type
+			});
 		}
 		
 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {

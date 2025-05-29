@@ -150,8 +150,7 @@
 			margin: 0 auto;
 			display: grid;
 			grid-template-columns: 1fr;
-			height: calc(100vh - 20px);
-			padding: 10px;
+			height: calc(100vh);
 		}
 		.chat-container h3 {
 			margin: 0 0 10px 0;
@@ -271,6 +270,21 @@
 		  width: auto;
 		  vertical-align: middle;
 		  margin: 0 0.05em;
+		}
+		
+		.regular-emote {
+		  height: 1.5em;
+		  width: auto;
+		  vertical-align: middle;
+		  margin: 0 0.1em;
+		}
+		
+		.zero-width-emote-centered {
+		  position: absolute;
+		  height: 1.5em;
+		  width: auto;
+		  transform: translate(-50%, -50%);
+		  pointer-events: none;
 		}
 
 		/* User info styling */
@@ -490,8 +504,8 @@
 			text-decoration: underline;
 		}
 		
-		body {
-			padding-bottom: 60px; /* Make room for fixed footer */
+		body:has(.auth:not(.hidden)) {
+			padding-bottom: 60px; /* Make room for fixed footer only during sign-in */
 		}
 		
 		@media (max-width: 768px) {
@@ -608,7 +622,7 @@
         </div>
     </div>
     
-    <div class="policy-footer">
+    <div class="policy-footer hidden">
         <a href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a>
         |
         <a href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a>
@@ -627,6 +641,8 @@ try {
     var channel = '';
     var videoId = '';
     let pollInterval;
+    let channelStatsInterval; // Separate interval for channel stats
+    let fetchTimeout; // Track fetch timeout to clear on disconnect
     var lastMessageTime = null;
     var liveChatId = null;
     var nextPageToken = null;
@@ -642,7 +658,11 @@ try {
 	var initialBacklogProcessing = true;
 	var initialBacklogTimestamp = null;
 	var lastPollingTime = Date.now();
-
+	var lastDisconnectTime = 0;
+	var lastConnectedVideoId = null;
+	var activeTimeouts = new Set(); // Track all active timeouts
+	var lastSuccessfulPollTime = 0;
+	var youtubeRecommendedInterval = 5000; // Default, will be updated by API
 	var isPageVisible = true;
 	var lastVisibilityChange = Date.now();
 	var keepAliveInterval;
@@ -654,8 +674,63 @@ try {
 	var shortcutMap = new Map(); // For :word: patterns
 	var unicodeMap = new Map();  // For Unicode emoji characters
 	
-	var usetextonlymode = false;
+	
+	// BTTV/7TV/FFZ emote support
+	var settings = {};
+	var BTTV = false;
+	var SEVENTV = false;
+	var FFZ = false;
+	var EMOTELIST = false;
 
+	// Request emotes from extension
+	function requestEmotesFromExtension() {
+		if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+			// Get video ID from current connection
+			if (videoId) {
+				console.log("Requesting emotes for video:", videoId);
+				
+				// Request BTTV emotes
+				chrome.runtime.sendMessage(chrome.runtime.id, { 
+					getBTTV: true,
+					url: "https://youtube.com/?v=" + videoId,
+					videoId: videoId,
+					type: "youtube"
+				}, function (response) {
+					if (chrome.runtime.lastError) {
+						console.log('BTTV request error:', chrome.runtime.lastError.message);
+					}
+				});
+				
+				// Request 7TV emotes if enabled
+				if (settings.seventv) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { 
+						getSEVENTV: true,
+						url: "https://youtube.com/?v=" + videoId,
+						videoId: videoId,
+						type: "youtube"
+					}, function (response) {
+						if (chrome.runtime.lastError) {
+							console.log('7TV request error:', chrome.runtime.lastError.message);
+						}
+					});
+				}
+				
+				// Request FFZ emotes if enabled
+				if (settings.ffz) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { 
+						getFFZ: true,
+						url: "https://youtube.com/?v=" + videoId,
+						videoId: videoId,
+						type: "youtube"
+					}, function (response) {
+						if (chrome.runtime.lastError) {
+							console.log('FFZ request error:', chrome.runtime.lastError.message);
+						}
+					});
+				}
+			}
+		}
+	}
 	function processEmojiData(data) {
 	  emojiData = data;
 	  // Clear existing data if any
@@ -680,7 +755,30 @@ try {
 		}
 	  });
 	}
-
+	function setTrackedTimeout(callback, delay, isBackground = false) {
+		let timeoutHandle;
+		if (isBackground && !isPageVisible && delay > 100) {
+			timeoutHandle = modifiedSetTimeout(callback, delay);
+		} else {
+			timeoutHandle = setTimeout(callback, delay);
+		}
+		
+		// Track the timeout
+		activeTimeouts.add(timeoutHandle);
+		
+		// Wrap the clear function to remove from tracking
+		const originalClear = timeoutHandle.clear || (() => clearTimeout(timeoutHandle));
+		const trackedHandle = {
+			clear: () => {
+				originalClear();
+				activeTimeouts.delete(timeoutHandle);
+				activeTimeouts.delete(trackedHandle);
+			},
+			timeoutId: timeoutHandle.timeoutId || timeoutHandle
+		};
+		
+		return trackedHandle;
+	}
 	function processCustomEmoteData(data) {
 	  customEmoteData = data;
 	  // Map custom emotes by their name (only in shortcut map)
@@ -692,6 +790,53 @@ try {
 		  isCustom: true
 		});
 	  });
+	}
+	
+	
+	function escapeHtml(unsafe) {
+		try {
+			if (settings.textonlymode || false) {
+				return unsafe;
+			}
+			return unsafe.replace(/[&<>"']/g, function(m) {
+				return {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;'
+				}[m];
+			}) || "";
+		} catch (e) {
+			return "";
+		}
+	}
+	
+	function replaceEmotesWithImages(text) {
+		if (!text || typeof text !== 'string') {
+			return text || '';
+		}
+		if (!EMOTELIST) {
+			return text;
+		}
+		
+		let replacedCount = 0;
+		const result = text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (emote) {
+				replacedCount++;
+				const escapedMatch = escapeHtml(emoteMatch); // should I be escaping this? It might be wastful CPU?
+				const isZeroWidth = typeof emote !== "string" && emote.zw;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+			}
+			return match;
+		});
+		
+		if (replacedCount > 0) {
+			console.log(`Replaced ${replacedCount} emotes in message: "${text}"`);
+		}
+		
+		return result;
 	}
 
 
@@ -777,72 +922,79 @@ try {
 	}
 
 	function replaceEmojis(message) {
-	  if (!shortcutMap.size && !unicodeMap.size) return message; // If emoji data not loaded yet
-	  
-	  // Create a copy of the original message
-	  let result = message;
-	  
-	  // Process all shortcut emotes including custom ones using the format :name:
-	  const shortcutRegex = /:([\w_-]+):/g;
-	  result = result.replace(shortcutRegex, (match) => {
-		const emojiInfo = shortcutMap.get(match);
-		if (!emojiInfo) return match; // If not found, return original
-		
-		if (usetextonlymode) {
-		  if (emojiInfo.isCustom) return '';
-		  return emojiInfo.id;
-		} else {
-		  const altText = emojiInfo.isCustom ? "" : emojiInfo.id;
-		  return `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
+		if (!message || typeof message !== 'string') {
+			return message || '';
 		}
-	  });
+		let result = message;
+		
+		// Process BTTV/7TV/FFZ emotes first
+		if (EMOTELIST) {
+			result = replaceEmotesWithImages(result);
+		}
+		
+		if (!shortcutMap.size && !unicodeMap.size) return result;
+		
+		// Process shortcut emotes
+		const shortcutRegex = /:([\w_-]+):/g;
+		result = result.replace(shortcutRegex, (match) => {
+			const emojiInfo = shortcutMap.get(match);
+			if (!emojiInfo) return match;
+			
+			if (settings.textonlymode || false) {
+				if (emojiInfo.isCustom) return '';
+				return emojiInfo.id;
+			} else {
+				const altText = emojiInfo.isCustom ? "" : emojiInfo.id;
+				return `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
+			}
+		});
 	  
-	  if (!usetextonlymode) {
+		if (!settings.textonlymode || false) {
 		// Helper function to convert emoji sequences to their combined URLs
-		function processEmojiSequence(text) {
-		  // Match emoji followed by skin tone modifier
-		  const emojiWithSkinToneRegex = /([\u{1F000}-\u{1FFFF}])([\u{1F3FB}-\u{1F3FF}])/gu;
-		  
-		  return text.replace(emojiWithSkinToneRegex, (match, baseEmoji, skinTone) => {
-			// Check if base emoji exists in our map
-			if (unicodeMap.has(baseEmoji)) {
-			  // Generate the combined emoji URL
-			  const baseUrl = unicodeMap.get(baseEmoji).url;
+			function processEmojiSequence(text) {
+			  // Match emoji followed by skin tone modifier
+			  const emojiWithSkinToneRegex = /([\u{1F000}-\u{1FFFF}])([\u{1F3FB}-\u{1F3FF}])/gu;
 			  
-			  // Format: baseUrl is in format like "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f/72.png"
-			  // Combined URL would be "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f_1f3ff/72.png"
-			  
-			  // Extract the emoji code from the URL
-			  const emojiCodeMatch = baseUrl.match(/\/([^\/]+)\/\d+\.png$/);
-			  if (emojiCodeMatch) {
-				const baseCode = emojiCodeMatch[1];
-				const skinToneCode = skinTone.codePointAt(0).toString(16);
-				const combinedUrl = baseUrl.replace(
-				  `/${baseCode}/`,
-				  `/${baseCode}_${skinToneCode}/`
-				);
+			  return text.replace(emojiWithSkinToneRegex, (match, baseEmoji, skinTone) => {
+				// Check if base emoji exists in our map
+				if (unicodeMap.has(baseEmoji)) {
+				  // Generate the combined emoji URL
+				  const baseUrl = unicodeMap.get(baseEmoji).url;
+				  
+				  // Format: baseUrl is in format like "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f/72.png"
+				  // Combined URL would be "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f_1f3ff/72.png"
+				  
+				  // Extract the emoji code from the URL
+				  const emojiCodeMatch = baseUrl.match(/\/([^\/]+)\/\d+\.png$/);
+				  if (emojiCodeMatch) {
+					const baseCode = emojiCodeMatch[1];
+					const skinToneCode = skinTone.codePointAt(0).toString(16);
+					const combinedUrl = baseUrl.replace(
+					  `/${baseCode}/`,
+					  `/${baseCode}_${skinToneCode}/`
+					);
+					
+					return `<img class="regular-emote" src="${combinedUrl}" alt="${match}" title="${match}" />`;
+				  }
+				}
 				
-				return `<img class="regular-emote" src="${combinedUrl}" alt="${match}" title="${match}" />`;
+				return match; // Return original if not found
+			  });
+			}
+
+			// Process emoji sequences first
+			result = processEmojiSequence(result);
+
+			// Then handle remaining standalone Unicode emoji characters
+			for (const [unicodeChar, emojiInfo] of unicodeMap.entries()) {
+			  if (result.includes(unicodeChar)) {
+				const imgTag = `<img src="${emojiInfo.url}" alt="${unicodeChar}" class="chat-emoji" title="${unicodeChar}" />`;
+				result = result.replace(new RegExp(unicodeChar, 'g'), imgTag);
 			  }
 			}
-			
-			return match; // Return original if not found
-		  });
 		}
-		
-		// Process emoji sequences first
-		result = processEmojiSequence(result);
-		
-		// Then handle remaining standalone Unicode emoji characters
-		for (const [unicodeChar, emojiInfo] of unicodeMap.entries()) {
-		  if (result.includes(unicodeChar)) {
-			const imgTag = `<img src="${emojiInfo.url}" alt="${unicodeChar}" class="chat-emoji" title="${unicodeChar}" />`;
-			result = result.replace(new RegExp(unicodeChar, 'g'), imgTag);
-		  }
-		}
-	  }
-	  
-	  return result;
+
+		return result;
 	}
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
@@ -876,55 +1028,297 @@ try {
         const authElement = document.querySelector('.auth');
         if (authElement) authElement.classList.remove("hidden");
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
+        const policyFooter = document.querySelector('.policy-footer');
+        if (policyFooter) policyFooter.classList.remove('hidden');
     }
     function showSocketInterface() {
         const authElement = document.querySelector('.auth');
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'));
         if (authElement) authElement.classList.add("hidden");
+        const policyFooter = document.querySelector('.policy-footer');
+        if (policyFooter) policyFooter.classList.add('hidden');
     }
 	function handleVisibilityChange() {
+		const wasVisible = isPageVisible;
 		isPageVisible = document.visibilityState === 'visible';
 		lastVisibilityChange = Date.now();
-		if (isPageVisible) {
-			console.log('Page is now visible - resuming normal polling');
+		
+		if (isPageVisible && !wasVisible) {
+			console.log('Page is now visible - checking polling state');
+			
+			// Clear any background keep-alive
 			if (keepAliveInterval) {
-				clearInterval(keepAliveInterval);
+				if (typeof keepAliveInterval.clear === 'function') {
+					keepAliveInterval.clear();
+				} else if (keepAliveInterval.intervalId) {
+					clearInterval(keepAliveInterval.intervalId);
+				}
 				keepAliveInterval = null;
 			}
-			if (foregroundPollingInterval && liveChatId) {
+			
+			// Only resume if we have an active connection and aren't already polling
+			if (liveChatId && !isPolling && !fetchTimeout) {
 				const timeSinceLastPoll = Date.now() - lastPollingTime;
-				if (timeSinceLastPoll > foregroundPollingInterval) {
-					console.log('Sufficient time has passed since last poll, resuming polling');
-					isPolling = false;
+				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
+				const requiredInterval = Math.max(
+					youtubeRecommendedInterval,
+					foregroundPollingInterval || 5000
+				);
+				
+				// Additional safety check for rapid visibility changes
+				if (timeSinceLastSuccess < requiredInterval) {
+					const remainingTime = requiredInterval - timeSinceLastSuccess;
+					console.log(`Waiting ${remainingTime}ms before resuming (respecting YouTube interval)`);
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, remainingTime);
+				} else if (timeSinceLastPoll < requiredInterval) {
+					const remainingTime = requiredInterval - timeSinceLastPoll;
+					console.log(`Waiting ${remainingTime}ms before resuming polling`);
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, remainingTime);
 				} else {
-					console.log('Recent poll detected, respecting interval to avoid rate limiting');
+					console.log('Safe to resume polling');
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, 1000); // Small delay to be safe
 				}
 			}
-		} else {
+		} else if (!isPageVisible && wasVisible) {
 			console.log('Page is now hidden - switching to background mode');
+			
+			// When going to background, trim queue to 200 messages
+			if (messageQueue.length > 200) {
+				messageQueue = messageQueue.slice(-200);
+				console.log(`Trimmed message queue to 200 messages (was ${messageQueue.length})`);
+			}
+			
+			// Cancel any pending fetch if we're going to background
+			if (fetchTimeout && !isPolling) {
+				if (typeof fetchTimeout.clear === 'function') {
+					fetchTimeout.clear();
+				} else {
+					clearTimeout(fetchTimeout);
+				}
+				fetchTimeout = null;
+			}
+			
 			if (!foregroundPollingInterval && pollInterval) {
 				foregroundPollingInterval = pollInterval;
 			}
-			if (!keepAliveInterval) {
-				keepAliveInterval = modifiedSetTimeout(backgroundKeepAlive, backgroundPollingInterval);
-				keepAliveInterval.intervalId = setInterval(() => {
-					keepAliveInterval = modifiedSetTimeout(backgroundKeepAlive, backgroundPollingInterval);
-				}, backgroundPollingInterval);
+			
+			// Set up background keep-alive with proper interval
+			if (!keepAliveInterval && liveChatId) {
+				const scheduleNextKeepAlive = () => {
+					const interval = Math.max(backgroundPollingInterval, youtubeRecommendedInterval);
+					keepAliveInterval = modifiedSetTimeout(() => {
+						backgroundKeepAlive();
+						if (!isPageVisible && liveChatId) {
+							scheduleNextKeepAlive();
+						}
+					}, interval);
+				};
+				scheduleNextKeepAlive();
 			}
 		}
 	}
+	async function fetchChatMessages() {
+		if (!liveChatId || isPolling) return;
+		
+		// Double-check we're not polling too soon
+		const timeSinceLastPoll = Date.now() - lastPollingTime;
+		if (timeSinceLastPoll < youtubeRecommendedInterval) {
+			console.warn(`Attempted to poll too soon. Waiting ${youtubeRecommendedInterval - timeSinceLastPoll}ms`);
+			fetchTimeout = setTrackedTimeout(fetchChatMessages, youtubeRecommendedInterval - timeSinceLastPoll, !isPageVisible);
+			return;
+		}
+		
+		isPolling = true;
+		lastPollingTime = Date.now();
+		const token = getStoredToken();
+		if (!token) {
+			isPolling = false;
+			refreshToken();
+			return;
+		}
+		
+		let response;
+		try {
+			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
+			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
+			
+			response = await fetchWithTimeout(url, 5000, {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			});
+			
+			if (!response.ok) {
+				const status = response.status;
+				if (status === 401) {
+					isPolling = false;
+					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+					return;
+				} else if (status === 403) {
+					console.warn('Access forbidden - chat may be disabled or restricted');
+					isPolling = false;
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, 30000, !isPageVisible);
+					return;
+				} else if (status === 429) {
+					console.warn('Rate limited by YouTube API');
+					isPolling = false;
+					// Use exponential backoff for rate limits
+					const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000); // Max 5 minutes
+					quickPollCount++;
+					
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
+					return;
+				}
+				throw new Error(`HTTP error! status: ${status}`);
+			}
+			
+			const data = await response.json();
+			
+			// ALWAYS respect YouTube's polling interval
+			const recommendedInterval = data.pollingIntervalMillis || 5000;
+			youtubeRecommendedInterval = recommendedInterval; // Store for future reference
+			lastSuccessfulPollTime = Date.now(); // Track successful poll time
+			
+			if (data.items && data.items.length > 0) {
+				// Process initial backlog timestamp
+				if (initialBacklogProcessing && !initialBacklogTimestamp && data.items.length > 0) {
+					const timestamps = data.items.map(item => new Date(item.snippet.publishedAt).getTime());
+					initialBacklogTimestamp = Math.max(...timestamps);
+					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
+				}
+				
+				
+				// Process all message types in a single loop
+				data.items.forEach(item => {
+				
+					const publishedAt = new Date(item.snippet.publishedAt);
+					const messageTime = publishedAt.getTime();
+					if (!lastMessageTime || publishedAt > lastMessageTime) {
+						const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
+						
+						// Process regular messages
+						if (!isBacklogMessage) {
+							queueMessage({
+								authorName: item.authorDetails.displayName,
+								message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								isChatOwner: item.authorDetails.isChatOwner,
+								isChatSponsor: item.authorDetails.isChatSponsor,
+								isChatModerator: item.authorDetails.isChatModerator,
+								authorChannelId: item.authorDetails.channelId,
+								publishedAt,
+								skipEvent: isBacklogMessage
+							});
+						}
+						
+						// Process special message types
+						if (item.snippet.superChatDetails) {
+							processSuperChat({
+								authorName: item.authorDetails.displayName,
+								amount: item.snippet.superChatDetails.amountDisplayString,
+								message: item.snippet.superChatDetails.userComment,
+								tier: item.snippet.superChatDetails.tier,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId
+							});
+						}
+						if (item.snippet.membershipDetails) {
+							processMembership({
+								authorName: item.authorDetails.displayName,
+								level: item.snippet.membershipDetails.memberLevelName,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId
+							});
+						}
+						
+						// Update timestamp once for all message types
+						lastMessageTime = publishedAt;
+					}
+				});
+			}
+			
+			// Update pagination token
+			nextPageToken = data.nextPageToken;
+			
+			// Handle completion of initial backlog
+			if (initialBacklogProcessing && data.items.length < 200) {
+				initialBacklogProcessing = false;
+				console.log('Initial backlog processing complete');
+			}
+			
+			// Reset quick poll count on successful request
+			quickPollCount = 0;
+			
+			// Calculate next poll interval
+			let nextPollInterval = recommendedInterval;
+			
+			// Only adjust for background, never go below recommended interval
+			if (!isPageVisible) {
+				nextPollInterval = Math.max(backgroundPollingInterval, recommendedInterval);
+			}
+			
+			// Clear any existing timeout before setting new one
+			if (fetchTimeout) {
+				if (typeof fetchTimeout.clear === 'function') {
+					fetchTimeout.clear();
+				} else {
+					clearTimeout(fetchTimeout);
+				}
+				fetchTimeout = null;
+			}
+			
+			// Update spinner to show actual polling interval
+			updatePollSpinner(nextPollInterval);
+			
+			// Schedule next poll
+			fetchTimeout = setTrackedTimeout(fetchChatMessages, nextPollInterval, !isPageVisible);
+			
+		} catch (error) {
+			console.error('Error fetching chat messages:', error);
+			// Use exponential backoff for errors
+			const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
+			quickPollCount++;
+			
+			// Clear any existing timeout before setting new one
+			if (fetchTimeout) {
+				if (typeof fetchTimeout.clear === 'function') {
+					fetchTimeout.clear();
+				} else {
+					clearTimeout(fetchTimeout);
+				}
+				fetchTimeout = null;
+			}
+			
+			fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
+		} finally {
+			isPolling = false;
+		}
+	}
+	
 	function backgroundKeepAlive() {
 		if (!isPageVisible && liveChatId) {
 			console.log('Background keep-alive ping:', new Date().toISOString());
-			if (!isPolling) {
+			
+			// Only attempt to poll if we're not already polling and don't have a scheduled fetch
+			if (!isPolling && !fetchTimeout) {
 				const timeSinceLastPoll = Date.now() - lastPollingTime;
-				if (timeSinceLastPoll > backgroundPollingInterval) {
+				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
+				const requiredInterval = Math.max(backgroundPollingInterval, youtubeRecommendedInterval);
+				
+				if (timeSinceLastPoll >= requiredInterval && timeSinceLastSuccess >= requiredInterval) {
 					console.log('Sufficient time since last poll, fetching in background');
 					fetchChatMessages();
 				} else {
-					console.log('Too soon to poll again in background, skipping to avoid rate limiting');
+					const timeToWait = Math.max(
+						requiredInterval - timeSinceLastPoll,
+						requiredInterval - timeSinceLastSuccess
+					);
+					console.log(`Too soon to poll again in background, need to wait ${timeToWait}ms more`);
 				}
+			} else {
+				console.log('Already polling or fetch scheduled, skipping background fetch');
 			}
+			
+			// Audio context keep-alive to prevent browser from suspending the page
 			if (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined') {
 				if (!window.keepAliveAudioContext) {
 					const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -942,14 +1336,28 @@ try {
 					window.keepAliveAudioContext.resume();
 				}
 			}
+			
+			// DOM manipulation to keep the page "active"
 			if (document.getElementById('textarea')) {
 				const timestamp = document.createElement('div');
 				timestamp.style.display = 'none';
 				timestamp.setAttribute('data-keepalive', Date.now());
 				document.getElementById('textarea').appendChild(timestamp);
+				
+				// Clean up old timestamps to prevent memory leak
 				const oldTimestamps = document.querySelectorAll('[data-keepalive]');
 				if (oldTimestamps.length > 10) {
 					oldTimestamps[0].remove();
+				}
+			}
+		} else if (isPageVisible) {
+			// Page became visible, clean up audio context
+			if (window.keepAliveAudioContext) {
+				try {
+					window.keepAliveAudioContext.close();
+					window.keepAliveAudioContext = null;
+				} catch (e) {
+					// Ignore errors when closing audio context
 				}
 			}
 		}
@@ -1160,8 +1568,24 @@ try {
 		});
 	}
 	async function handleConnect() {
+		const connectButton = document.getElementById('connect-button');
 		const channelInput = document.getElementById('channel-input');
 		const videoInput = document.getElementById('video-input');
+		
+		// If already connected, disconnect
+		if (liveChatId || pollInterval) {
+			clearPolling();
+			updateHeaderInfo(username, 'Disconnected');
+			document.getElementById('textarea').innerHTML = '<div>Disconnected from chat.</div>';
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			document.getElementById('events-list').innerHTML = '';
+			connectButton.textContent = 'Connect';
+			connectButton.style.backgroundColor = '#2255dd';
+			return;
+		}
+		
 		const channelNameFromInput = channelInput.value.trim();
 		const videoIdFromInput = videoInput.value.trim();
 		clearPolling();
@@ -1296,6 +1720,8 @@ try {
 	function updatePollSpinner(interval) {
 	  const spinner = document.getElementById('poll-spinner');
 	  if (spinner) {
+		interval -= 300;
+		if (interval<100){interval=100};
 		const seconds = (interval / 1000).toFixed(1);
 		spinner.style.animation = 'none';
 		void spinner.offsetWidth;
@@ -1317,6 +1743,10 @@ try {
 	  updatePollSpinner(5000);
 	}
 	function queueMessage(messageData) {
+		// Limit queue to 500 messages
+		if (messageQueue.length >= 500) {
+			messageQueue.splice(0, messageQueue.length - 499);
+		}
 		messageQueue.push(messageData);
 		if (!isDisplaying) startDisplayQueue();
 	}
@@ -1361,146 +1791,8 @@ try {
 			modifiedSetTimeout(() => displayNextMessage(), delay);
 		}
 	}
-	async function fetchChatMessages() {
-		if (!liveChatId || isPolling) return;
-		isPolling = true;
-		lastPollingTime = Date.now();
-		let adaptivePollingInterval;
-		const token = getStoredToken();
-		if (!token) {
-			isPolling = false;
-			refreshToken();
-			return;
-		}
-		let response;
-		try {
-			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
-			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
-			response = await fetchWithTimeout(url, 5000, {
-				'Authorization': `Bearer ${token}`,
-				'Content-Type': 'application/json'
-			});
-			if (!response.ok) {
-				const status = response.status;
-				if (status === 401) {
-					isPolling = false;
-					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
-					return;
-				} else if (status === 403) {
-					console.warn('Access forbidden - chat may be disabled or restricted');
-					isPolling = false;
-					setTimeout(fetchChatMessages, 30000);
-					return;
-				} else if (status === 429) {
-					console.warn('Rate limited by YouTube API');
-					isPolling = false;
-					setTimeout(fetchChatMessages, 60000);
-					return;
-				}
-				throw new Error(`HTTP error! status: ${status}`);
-			}
-			const data = await response.json();
-			if (data.items && data.items.length > 0) {
-				if (initialBacklogProcessing && !initialBacklogTimestamp && data.items.length > 0) {
-					const timestamps = data.items.map(item => new Date(item.snippet.publishedAt).getTime());
-					initialBacklogTimestamp = Math.max(...timestamps);
-					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
-				}
-				data.items.forEach(item => {
-					const publishedAt = new Date(item.snippet.publishedAt);
-					const messageTime = publishedAt.getTime();
-					if (!lastMessageTime || publishedAt > lastMessageTime) {
-						const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
-						queueMessage({
-							authorName: item.authorDetails.displayName,
-							message: item.snippet.displayMessage,
-							profileImageUrl: item.authorDetails.profileImageUrl,
-							isChatOwner: item.authorDetails.isChatOwner,
-							isChatSponsor: item.authorDetails.isChatSponsor,
-							isChatModerator: item.authorDetails.isChatModerator,
-							authorChannelId: item.authorDetails.channelId,
-							publishedAt,
-							skipEvent: isBacklogMessage
-						});
-						if (!lastMessageTime || publishedAt > lastMessageTime) {
-							lastMessageTime = publishedAt;
-						}
-					}
-				});
-				const isMaxedOut = data.items.length >= 200;
-				const highActivity = messageQueue.length > 100;
-				if (isMaxedOut) {
-					if (highActivity) {
-						quickPollCount = 0;
-					} else if (quickPollCount < 20) {
-						quickPollCount++;
-					}
-					nextPageToken = data.nextPageToken;
-					if (!isPageVisible) {
-						modifiedSetTimeout(fetchChatMessages, highActivity ? 50 : 200);
-					} else {
-						setTimeout(fetchChatMessages, highActivity ? 50 : 200);
-					}
-				} else {
-					quickPollCount = 0;
-					nextPageToken = data.nextPageToken;
-					if (initialBacklogProcessing) {
-						initialBacklogProcessing = false;
-						console.log('Initial backlog processing complete');
-					}
-					const baseInterval = data.pollingIntervalMillis || 5000;
-					updatePollSpinner(baseInterval - 300);
-					if (!isPageVisible) {
-						modifiedSetTimeout(fetchChatMessages, baseInterval);
-					} else {
-						setTimeout(fetchChatMessages, baseInterval);
-					}
-				}
-				data.items.forEach(item => {
-					if (item.snippet.superChatDetails) {
-						processSuperChat({
-							authorName: item.authorDetails.displayName,
-							amount: item.snippet.superChatDetails.amountDisplayString,
-							message: item.snippet.superChatDetails.userComment,
-							tier: item.snippet.superChatDetails.tier,
-							profileImageUrl: item.authorDetails.profileImageUrl,
-							authorChannelId: item.authorDetails.channelId
-						});
-					}
-					if (item.snippet.membershipDetails) {
-						processMembership({
-							authorName: item.authorDetails.displayName,
-							level: item.snippet.membershipDetails.memberLevelName,
-							profileImageUrl: item.authorDetails.profileImageUrl,
-							authorChannelId: item.authorDetails.channelId
-						});
-					}
-				});
-			} else {
-				const baseInterval = data.pollingIntervalMillis || 5000;
-				if (!isPageVisible) {
-					adaptivePollingInterval = Math.max(backgroundPollingInterval, baseInterval);
-					console.log('Background polling interval:', adaptivePollingInterval);
-					modifiedSetTimeout(fetchChatMessages, adaptivePollingInterval);
-				} else {
-					adaptivePollingInterval = baseInterval;
-					updatePollSpinner(adaptivePollingInterval - 300);
-					setTimeout(fetchChatMessages, adaptivePollingInterval);
-				}
-			}
-		} catch (error) {
-			console.error('Error fetching chat messages:', error);
-			const backoffTime = quickPollCount > 5 ? 30000 : 10000;
-			if (!isPageVisible) {
-				modifiedSetTimeout(fetchChatMessages, backoffTime);
-			} else {
-				setTimeout(fetchChatMessages, backoffTime);
-			}
-			quickPollCount = 0;
-		} finally {
-			isPolling = false;
-		}
-	}
+		
+	
     async function sendChatMessage(message) {
 		const token = getStoredToken();
 		if (!token || !liveChatId) return { success: false };
@@ -1717,15 +2009,20 @@ try {
 		}
 	};
 
-	// function modifiedSetTimeout(callback, delay) {
-		// if (!isPageVisible && delay > 100) {
-			// return oscillatorTimeout(callback, delay);
-		// } else {
-			// return {
-				// clear: () => clearTimeout(setTimeout(callback, delay))
-			// };
-		// }
-	// }
+	function notifyVideoChange(videoId, channelId) {
+		window.dispatchEvent(new CustomEvent('youtubeVideoChanged', {
+			detail: {
+				videoId: videoId || null,
+				channelId: channelId || null
+			},
+			bubbles: true
+		}));
+		
+		// Also request emotes for this video
+		if (videoId) {
+			requestEmotesFromExtension();
+		}
+	}
 	
 	function modifiedSetTimeout(callback, delay) {
 		if (!isPageVisible && delay > 100) {
@@ -1780,11 +2077,53 @@ try {
         }
     }
 	function clearPolling() {
+		// Clear all tracked timeouts
+		activeTimeouts.forEach(timeout => {
+			try {
+				if (typeof timeout.clear === 'function') {
+					timeout.clear();
+				} else if (timeout.timeoutId) {
+					clearTimeout(timeout.timeoutId);
+				} else {
+					clearTimeout(timeout);
+				}
+			} catch (e) {
+				// Ignore errors from already cleared timeouts
+			}
+		});
+		activeTimeouts.clear();
+		
 		if (pollInterval) clearInterval(pollInterval);
-		if (keepAliveInterval) clearInterval(keepAliveInterval);
+		if (channelStatsInterval) clearInterval(channelStatsInterval);
+		if (keepAliveInterval) {
+			if (typeof keepAliveInterval.clear === 'function') {
+				keepAliveInterval.clear();
+			} else if (keepAliveInterval.intervalId) {
+				clearInterval(keepAliveInterval.intervalId);
+			} else {
+				clearInterval(keepAliveInterval);
+			}
+		}
+		if (fetchTimeout) {
+			if (typeof fetchTimeout.clear === 'function') {
+				fetchTimeout.clear();
+			} else {
+				clearTimeout(fetchTimeout);
+			}
+		}
+		
 		keepAliveInterval = null;
 		foregroundPollingInterval = null;
 		pollInterval = null;
+		channelStatsInterval = null;
+		fetchTimeout = null;
+		
+		// Track disconnection time and video ID
+		if (liveChatId && currentStream) {
+			lastDisconnectTime = Date.now();
+			lastConnectedVideoId = currentStream.id;
+		}
+		
 		liveChatId = null;
 		nextPageToken = null;
 		lastMessageTime = null;
@@ -1793,6 +2132,9 @@ try {
 		messageQueue = [];
 		isDisplaying = false;
 		quickPollCount = 0;
+		lastSuccessfulPollTime = 0;
+		youtubeRecommendedInterval = 5000; // Reset to default
+		
 		const chatHeader = document.querySelector('.chat-container h3');
 		if (chatHeader) {
 			chatHeader.className = '';
@@ -1813,10 +2155,10 @@ try {
 				const stats = data.items[0].statistics;
 				if (stats.subscriberCount) {
 					updateStats('subscriber_update', { meta: stats.subscriberCount });
-					pushMessage({ type: "youtube", event: 'subscriber_update', meta: stats.subscriberCount });
+					pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'subscriber_update', meta: stats.subscriberCount });
 				}
 				if (stats.viewCount) {
-					pushMessage({ type: "youtube", event: 'view_update', meta: stats.viewCount });
+					pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount });
 				}
 			}
 		} catch (error) {
@@ -1824,6 +2166,11 @@ try {
 		}
 	}
 	async function connect(directVideoIdParam = null) {
+		// Prevent double connections
+		if (liveChatId || pollInterval) {
+			console.warn('Already connected. Call clearPolling() first to disconnect.');
+			return;
+		}
 		clearPolling();
 		initialBacklogProcessing = true;
 		initialBacklogTimestamp = null;
@@ -1883,6 +2230,8 @@ try {
 						await getSubscriberCount(effectiveChannelIdToUse);
 					}
 					currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+					notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
+
 					return;
 				} else if (isVideoUpcoming) {
 					liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
@@ -1907,6 +2256,8 @@ try {
 					updateHeaderInfo(username, `${channelDisplayNameToUse} (Live: ${streamTitleToUse.substring(0,20)}...)`);
 				}
 				currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+				notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
+
 			} else if (channelToUse) {
                 channelInfoForHeaderAndStats = await getChannelInfo(channelToUse);
                 if (!channelInfoForHeaderAndStats) {
@@ -1930,6 +2281,8 @@ try {
                     throw new Error(`No live chat available for stream: ${streamTitleToUse}`);
                 }
                 currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+				notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
+
                 updateHeaderInfo(username, channelDisplayNameToUse + (liveChatId ? ` (Live: ${streamTitleToUse.substring(0,20)}...)` : ` (Upcoming Stream)`));
             }
             document.getElementById('textarea').innerHTML = '';
@@ -1957,19 +2310,59 @@ try {
 				const chatAvailableMessage = document.createElement("div");
 				chatAvailableMessage.innerText = "Connected to live chat.";
 				document.getElementById('textarea').appendChild(chatAvailableMessage);
+				// Update connect button to show disconnect
+				const connectButton = document.getElementById('connect-button');
+				if (connectButton) {
+					connectButton.textContent = 'Disconnect';
+					connectButton.style.backgroundColor = '#f44336';
+				}
 				initializeSpinner();
-				fetchChatMessages();
+				// Calculate delay based on reconnection timing
+				let initialFetchDelay = 2000; // Default 2 second delay
+				
+				// If reconnecting to the same video within 10 seconds, use longer delay
+				if (currentStream && lastConnectedVideoId === currentStream.id) {
+					const timeSinceDisconnect = Date.now() - lastDisconnectTime;
+					if (timeSinceDisconnect < 10000) {
+						initialFetchDelay = Math.max(5000, 10000 - timeSinceDisconnect);
+						console.log(`Reconnecting to same video after ${timeSinceDisconnect}ms, using ${initialFetchDelay}ms delay`);
+					}
+				}
+				
+				if (!isPageVisible) {
+					fetchTimeout = modifiedSetTimeout(fetchChatMessages, initialFetchDelay);
+				} else {
+					fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
+				}
 			} else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
                  noChatMessage.innerText = "Live chat is not currently active for this stream.";
                  document.getElementById('textarea').appendChild(noChatMessage);
             }
+            // Clear existing intervals
             if (pollInterval) clearInterval(pollInterval);
-            pollInterval = setInterval(() => {
-                if (currentStream && currentStream.id && liveChatId) getStreamStats();
-                if (effectiveChannelIdToUse) getChannelStats(effectiveChannelIdToUse);
-            }, 30000);
+            if (channelStatsInterval) clearInterval(channelStatsInterval);
+            
+            // Stream stats (viewers & likes) - every 10 seconds
+            if (currentStream && currentStream.id && liveChatId) {
+                // Get stream stats immediately
+                getStreamStats();
+                // Then update every 10 seconds
+                pollInterval = setInterval(() => {
+                    getStreamStats();
+                }, 10000);
+            }
+            
+            // Channel stats (subscribers) - every 30 minutes
+            if (effectiveChannelIdToUse) {
+                // Get channel stats immediately
+                getChannelStats(effectiveChannelIdToUse);
+                // Then update every 30 minutes
+                channelStatsInterval = setInterval(() => {
+                    getChannelStats(effectiveChannelIdToUse);
+                }, 30 * 60 * 1000); // 30 minutes
+            }
             console.log('Connection process complete for target:', channelDisplayNameToUse);
 			const channelInput = document.getElementById('channel-input');
             if (channelInput.value && channelToUse) channelInput.value = '';
@@ -1989,19 +2382,26 @@ try {
             document.getElementById('likes-count').textContent = '-';
         }
     }
+	
 	function pushMessage(data) {
-		window.dispatchEvent(new CustomEvent('youtubeMessage', { detail: data, bubbles: true }));
+		window.dispatchEvent(new CustomEvent('youtubeMessage', { 
+			detail: data, 
+			bubbles: true 
+		}));
 	}
 	
+
+	function containsShorts(url) {
+		const urlObj = new URL(url);
+		const searchParams = new URLSearchParams(urlObj.search);
+		const hasShortsParam = searchParams.has('shorts');
+		const hasShortsPath = urlObj.pathname.includes('/shorts');
+		return hasShortsParam || hasShortsPath;
+	}
 	
-	
-	function setupSettingsListener() {
-		window.addEventListener('settingsChanged', function(e) {
-			if (e.detail && e.detail.hasOwnProperty('textonlymode')) {
-				usetextonlymode = e.detail.textonlymode;
-				console.log('Text-only mode updated:', usetextonlymode);
-			}
-		});
+	var youtubeShorts = false;
+	if (containsShorts(window.location.href)){
+		youtubeShorts = true;
 	}
 
 	function processMessage(messageData) {
@@ -2009,11 +2409,18 @@ try {
 			const textarea = document.querySelector("#textarea");
 			var span = document.createElement("div");
 			let badgeHtml = '';
-			if (messageData.isChatOwner) badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>';
-			if (messageData.isChatModerator) badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>';
-			if (messageData.isChatSponsor) badgeHtml += '<span class="chat-badge" title="Member">⭐</span>';
+			let badgeText = '';
+			
+			if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; badgeText = "👑"; }
+			if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; badgeText = "🛡️"; }
+			if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; badgeText = "⭐"; }
 
-			const messageWithEmojis = replaceEmojis(messageData.message);
+			//console.log("Processing message:", messageData.message, "EMOTELIST available:", !!EMOTELIST);
+			if (!messageData.message && messageData.message !== '') {
+				console.warn('Message data missing message property:', messageData);
+			}
+			const messageText = messageData.message || '';
+			const messageWithEmojis = replaceEmojis(messageText);
 
 			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
 			textarea.appendChild(span);
@@ -2024,7 +2431,7 @@ try {
 			if (!messageData.skipEvent && messageWithEmojis) {
 				pushMessage({
 					chatname: messageData.authorName,
-					chatbadges: badgeHtml,
+					chatbadges: (badgeText ? [{"type":"text", "text": badgeText}] : ""),
 					userid: messageData.authorChannelId,
 					backgroundColor: "",
 					textColor: "",
@@ -2032,8 +2439,8 @@ try {
 					chatimg: messageData.profileImageUrl || "",
 					hasDonation: "",
 					membership: messageData.isChatSponsor ? "member" : "",
-					type: "youtube",
-					textonly: usetextonlymode // Pass the setting to the extension
+					type: youtubeShorts ? "youtubeshorts" : "youtube",
+					textonly: settings.textonlymode || false // Pass the setting to the extension
 				});
 			}
 		} catch (e) {
@@ -2046,7 +2453,7 @@ try {
 			addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
 			const textarea = document.querySelector("#textarea");
 			var span = document.createElement("div");
-			span.innerHTML = `<strong>${superChatData.authorName}</strong> <span style="color:#00c851">${superChatData.amount}</span>: ${superChatData.message || ''}`;
+			span.innerHTML = `<strong>${superChatData.authorName}</strong> <span>${superChatData.amount}</span>: ${superChatData.message || ''}`;
 			textarea.appendChild(span);
 			if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
 			textarea.scrollTop = textarea.scrollHeight;
@@ -2055,42 +2462,46 @@ try {
 				chatbadges: "",
 				userid: superChatData.authorChannelId,
 				backgroundColor: "",
-				textColor: "#00c851",
+				textColor: "#111",
 				chatmessage: superChatData.message || '',
 				chatimg: superChatData.profileImageUrl || "",
 				hasDonation: superChatData.amount,
 				membership: "",
-				type: "youtube",
-				event: "donation",
-				type: "youtube"
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "donation"
 			});
 		} catch (e) {
 			console.error('Error processing super chat:', e);
 		}
 	}
-    function processMembership(membershipData) {
+	
+	function processMembership(membershipData) {
 		try {
 			addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
 			const textarea = document.querySelector("#textarea");
 			var span = document.createElement("div");
-			span.innerHTML = `<strong>${membershipData.authorName}</strong> <span style="color:#2196f3">joined as a member (${membershipData.level})</span>`;
+			span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>joined as a member (${membershipData.level})</span>`;
 			textarea.appendChild(span);
-			if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
+			
+			while (textarea.childNodes.length > 20) {
+				textarea.removeChild(textarea.firstChild);
+			}
 			textarea.scrollTop = textarea.scrollHeight;
+			
 			pushMessage({
-				chatname: membershipData.authorName,
-				chatbadges: '<span class="chat-badge" title="Member">⭐</span>',
+				chatname: escapeHtml(membershipData.authorName),
+				chatbadges: [{"type":"text", "text": "⭐"}],
 				userid: membershipData.authorChannelId,
 				backgroundColor: "",
-				textColor: "#2196f3",
+				textColor: "",
 				chatmessage: `joined as a member (${membershipData.level})`,
 				chatimg: membershipData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "new_member",
-				membershipLevel: membershipData.level,
-				type: "youtube",
+				subtitle: membershipData.level,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "new_member",
-				type: "youtube"
+				textonly: settings.textonlymode || false
 			});
 		} catch (e) {
 			console.error('Error processing membership:', e);
@@ -2100,14 +2511,16 @@ try {
 		switch(type) {
 			case 'viewer_update':
 				document.getElementById('viewer-count').textContent = data.meta;
-				pushMessage({ type: "youtube", event: 'viewer_update', meta: data.meta });
+				if (settings.showviewercount || settings.hypemode){
+					pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'viewer_update', meta: data.meta });
+				}
 				break;
 			case 'subscriber_update':
 				document.getElementById('subscriber-count').textContent = data.meta;
 				break;
 			case 'likes_update':
 				document.getElementById('likes-count').textContent = data.meta;
-				pushMessage({ type: "youtube", event: 'likes_update', meta: data.meta });
+				//pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'likes_update', meta: data.meta });
 				break;
 		}
 	}
@@ -2125,6 +2538,7 @@ try {
         if (currentChannelElement) currentChannelElement.textContent = targetName || 'No target';
     }
 	function initializePage() {
+		
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
 		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || urlParams.get("v") || hashParams.get("videoId");
@@ -2183,6 +2597,12 @@ try {
 				videoId = '';
 				localStorage.removeItem('youtubeChannel');
 				localStorage.removeItem('youtubeVideoId');
+				// Reset connect button
+				const connectButton = document.getElementById('connect-button');
+				if (connectButton) {
+					connectButton.textContent = 'Connect';
+					connectButton.style.backgroundColor = '#2255dd';
+				}
 			});
 		}
 		const channelInput = document.getElementById('channel-input');
@@ -2215,6 +2635,23 @@ try {
 		  console.error('Failed to load emoji data:', error);
 		});
 	}
+	
+	function setupSettingsListener() {
+		window.addEventListener('settingsChanged', function(e) {
+			if (e.detail) {
+				if ("EMOTELIST" in e.detail) {
+					EMOTELIST = e.detail.EMOTELIST;
+					console.log('EMOTELIST updated:', EMOTELIST);
+				}
+				if ("settings" in e.detail) {
+					settings = e.detail.settings;
+					console.log('settings updated:', settings);
+				}
+			}
+		});
+	}
+	
+	
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
 		const controller = new AbortController();
 		const timeout_id = setTimeout(() => controller.abort(), timeout);

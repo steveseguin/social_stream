@@ -663,12 +663,12 @@ class EventFlowSystem {
                     console.log('  - message:', relayMessage);
                     console.log('  - reverse:', false);
                     console.log('  - metadata:', null);
-                    console.log('  - relayMode:', false);
+                    console.log('  - relayMode:', true);
                     console.log('  - antispam:', false);
                     console.log('  - timeout:', config.timeout || 5100);
                     
-                    // Don't use relayMode for Event Flow relay actions - that's for the relay targets setting
-                    const result = this.sendMessageToTabs(relayMessage, false, null, false, false, config.timeout || 5100);
+                    // Use relayMode=true to mark this as a relayed message and prevent circular relaying
+                    const result = this.sendMessageToTabs(relayMessage, false, null, true, false, config.timeout || 5100);
                     console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
                 } else {
                     console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');

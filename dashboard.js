@@ -126,7 +126,7 @@ function addLogMessage(message, isError = false) {
     debugOutput.scrollTop = debugOutput.scrollHeight;
     
     // Keep only the last 10 messages
-    while (debugOutput.children.length > 10) {
+    while (debugOutput.children.length > 30) {
         debugOutput.removeChild(debugOutput.firstChild);
     }
 }
