@@ -841,9 +841,17 @@ try {
 
 
 	function loadEmojiData() {
-	  // Try to get cached data first
-	  const cachedData = localStorage.getItem('emojiData');
-	  const cachedCustomData = localStorage.getItem('customEmoteData');
+	  // Try to get cached data first with expiration check
+	  const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+	  const now = Date.now();
+	  
+	  const cachedDataStr = localStorage.getItem('emojiData');
+	  const cachedDataTime = localStorage.getItem('emojiDataTime');
+	  const cachedData = (cachedDataStr && cachedDataTime && (now - parseInt(cachedDataTime)) < CACHE_DURATION) ? cachedDataStr : null;
+	  
+	  const cachedCustomDataStr = localStorage.getItem('customEmoteData');
+	  const cachedCustomDataTime = localStorage.getItem('customEmoteDataTime');
+	  const cachedCustomData = (cachedCustomDataStr && cachedCustomDataTime && (now - parseInt(cachedCustomDataTime)) < CACHE_DURATION) ? cachedCustomDataStr : null;
 	  
 	  const promises = [];
 	  
@@ -860,6 +868,7 @@ try {
 		.then(data => {
 		  try {
 			localStorage.setItem('emojiData', JSON.stringify(data));
+			localStorage.setItem('emojiDataTime', Date.now().toString());
 		  } catch (error) {
 			console.warn('Failed to cache emoji data:', error);
 		  }
@@ -895,6 +904,7 @@ try {
 	  .then(data => {
 		try {
 		  localStorage.setItem('customEmoteData', JSON.stringify(data));
+		  localStorage.setItem('customEmoteDataTime', Date.now().toString());
 		} catch (error) {
 		  console.warn('Failed to cache custom emote data:', error);
 		}
