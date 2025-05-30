@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Message - Neon Glow Effects</title>
+    <link rel="icon" href="../../favicon.ico" />
+    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Teko:wght@400;600;700&family=Exo+2:wght@400;700;900&display=swap');
+        
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif, 'NotoColorEmojiLimited';
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Neon light streaks background */
+        .neon-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .neon-streak {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ffff, transparent);
+            filter: blur(1px);
+            animation: neonStreak 4s linear infinite;
+        }
+
+        @keyframes neonStreak {
+            0% {
+                left: -100%;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                left: 100%;
+                opacity: 0;
+            }
+        }
+
+        /* Base message structure */
+        .message-wrapper {
+            position: relative;
+            margin: 20px 0;
+            opacity: 0;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 24px;
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            border: 2px solid;
+            border-color: #ff00ff;
+            box-shadow: 
+                0 0 20px rgba(255, 0, 255, 0.5),
+                inset 0 0 20px rgba(255, 0, 255, 0.1);
+        }
+
+        /* Neon glow effect */
+        .message::before {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff, #ff00ff);
+            opacity: 0.5;
+            filter: blur(15px);
+            animation: neonGlow 3s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes neonGlow {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(1.05);
+            }
+        }
+
+        /* Corner accents */
+        .message::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                linear-gradient(135deg, #ff00ff 0%, transparent 20px) top left,
+                linear-gradient(-135deg, #00ffff 0%, transparent 20px) top right,
+                linear-gradient(45deg, #ff00ff 0%, transparent 20px) bottom left,
+                linear-gradient(-45deg, #00ffff 0%, transparent 20px) bottom right;
+            background-size: 50% 50%;
+            background-repeat: no-repeat;
+            pointer-events: none;
+        }
+
+        .avatar {
+            width: 72px;
+            height: 72px;
+            border-radius: 0;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid #00ffff;
+            position: relative;
+            filter: contrast(1.2) brightness(1.1);
+            box-shadow: 
+                0 0 20px #00ffff,
+                inset 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Neon frame animation for avatar */
+        .avatar::before {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            background: conic-gradient(from 0deg, #ff00ff, #00ffff, #ff00ff);
+            animation: neonRotate 3s linear infinite;
+            z-index: -1;
+        }
+
+        .avatar::after {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: #000;
+            z-index: -1;
+        }
+
+        @keyframes neonRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .message-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .username {
+            font-family: 'Teko', sans-serif;
+            font-weight: 700;
+            font-size: 28px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 
+                0 0 10px currentColor,
+                0 0 20px currentColor,
+                0 0 30px currentColor,
+                0 0 40px currentColor;
+            animation: neonFlicker 2s infinite;
+        }
+
+        @keyframes neonFlicker {
+            0%, 100% { opacity: 1; }
+            95% { opacity: 0.9; }
+        }
+
+        .badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .badge {
+            height: 22px;
+            filter: 
+                drop-shadow(0 0 5px #ff00ff)
+                brightness(1.2);
+        }
+
+        .source-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.9;
+            filter: 
+                drop-shadow(0 0 5px #00ffff)
+                brightness(1.2);
+        }
+
+        .text {
+            font-size: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            color: #f0f0f0;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Inline images/SVGs */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em;
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+            filter: drop-shadow(0 0 5px #ff00ff);
+        }
+
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
+        }
+
+        .donation-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            margin-top: 12px;
+            background: transparent;
+            color: #ffff00;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 16px;
+            border: 2px solid #ffff00;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 
+                0 0 10px #ffff00,
+                0 0 20px #ffff00;
+            box-shadow: 
+                0 0 20px #ffff00,
+                inset 0 0 20px rgba(255, 255, 0, 0.2);
+            animation: neonPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes neonPulse {
+            0%, 100% {
+                box-shadow: 
+                    0 0 20px #ffff00,
+                    inset 0 0 20px rgba(255, 255, 0, 0.2);
+            }
+            50% {
+                box-shadow: 
+                    0 0 40px #ffff00,
+                    inset 0 0 40px rgba(255, 255, 0, 0.4);
+            }
+        }
+
+        .content-image {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 12px;
+            border: 2px solid #ff00ff;
+            box-shadow: 
+                0 0 20px #ff00ff,
+                inset 0 0 10px rgba(255, 0, 255, 0.2);
+            filter: contrast(1.1) saturate(1.2);
+        }
+
+        /* Hide empty elements */
+        .badges:empty,
+        .donation-info:empty {
+            display: none;
+        }
+
+        /* Style 1: Electric Blue */
+        .style-electric .message {
+            border-color: #00ffff;
+            box-shadow: 
+                0 0 30px #00ffff,
+                inset 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        .style-electric .username {
+            color: #00ffff;
+        }
+
+        .style-electric .message::before {
+            background: linear-gradient(45deg, #0080ff, #00ffff, #0080ff);
+        }
+
+        .style-electric .message-wrapper.show {
+            animation: electricIn 0.8s ease-out forwards;
+        }
+
+        @keyframes electricIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-100vw);
+                filter: blur(20px);
+            }
+            50% {
+                filter: blur(5px) brightness(2);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+                filter: blur(0) brightness(1);
+            }
+        }
+
+        /* Style 2: Toxic Green */
+        .style-toxic .message {
+            border-color: #00ff00;
+            box-shadow: 
+                0 0 30px #00ff00,
+                inset 0 0 30px rgba(0, 255, 0, 0.1);
+        }
+
+        .style-toxic .username {
+            color: #00ff00;
+        }
+
+        .style-toxic .avatar {
+            border-color: #00ff00;
+            box-shadow: 0 0 20px #00ff00;
+        }
+
+        .style-toxic .message::before {
+            background: linear-gradient(45deg, #00ff00, #40ff00, #00ff00);
+        }
+
+        .style-toxic .message-wrapper.show {
+            animation: toxicSpread 0.9s ease-out forwards;
+        }
+
+        @keyframes toxicSpread {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+                filter: hue-rotate(180deg);
+            }
+            50% {
+                transform: scale(1.2) rotate(90deg);
+                filter: hue-rotate(90deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                filter: hue-rotate(0);
+            }
+        }
+
+        /* Style 3: Hot Pink */
+        .style-hotpink .message {
+            border-color: #ff1493;
+            box-shadow: 
+                0 0 30px #ff1493,
+                inset 0 0 30px rgba(255, 20, 147, 0.1);
+        }
+
+        .style-hotpink .username {
+            color: #ff69b4;
+        }
+
+        .style-hotpink .message::before {
+            background: linear-gradient(45deg, #ff1493, #ff69b4, #ff1493);
+        }
+
+        .style-hotpink .message-wrapper.show {
+            animation: pinkBloom 0.8s ease-out forwards;
+        }
+
+        @keyframes pinkBloom {
+            0% {
+                opacity: 0;
+                transform: scale(0.5);
+                filter: blur(10px) brightness(3);
+            }
+            50% {
+                filter: blur(5px) brightness(1.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0) brightness(1);
+            }
+        }
+
+        /* Style 4: UV Purple */
+        .style-uv .message {
+            border-color: #9d00ff;
+            box-shadow: 
+                0 0 30px #9d00ff,
+                inset 0 0 30px rgba(157, 0, 255, 0.1);
+        }
+
+        .style-uv .username {
+            color: #bf40ff;
+        }
+
+        .style-uv .message::before {
+            background: linear-gradient(45deg, #9d00ff, #bf40ff, #9d00ff);
+        }
+
+        .style-uv .message-wrapper.show {
+            animation: uvReveal 1s ease-out forwards;
+        }
+
+        @keyframes uvReveal {
+            0% {
+                opacity: 0;
+                transform: translateY(-100vh) scaleX(0.1);
+                filter: brightness(0);
+            }
+            50% {
+                transform: translateY(0) scaleX(1.2);
+                filter: brightness(2);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scaleX(1);
+                filter: brightness(1);
+            }
+        }
+
+        /* Style 5: Sunset Orange */
+        .style-sunset .message {
+            border-color: #ff4500;
+            box-shadow: 
+                0 0 30px #ff4500,
+                inset 0 0 30px rgba(255, 69, 0, 0.1);
+        }
+
+        .style-sunset .username {
+            color: #ff6347;
+            animation: sunsetGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes sunsetGlow {
+            0%, 100% {
+                text-shadow: 
+                    0 0 10px #ff4500,
+                    0 0 20px #ff4500,
+                    0 0 30px #ff4500;
+            }
+            50% {
+                text-shadow: 
+                    0 0 20px #ff6347,
+                    0 0 40px #ff6347,
+                    0 0 60px #ff6347;
+            }
+        }
+
+        .style-sunset .message::before {
+            background: linear-gradient(45deg, #ff4500, #ff6347, #ff8c00, #ff4500);
+        }
+
+        .style-sunset .message-wrapper.show {
+            animation: sunsetFade 0.9s ease-out forwards;
+        }
+
+        @keyframes sunsetFade {
+            0% {
+                opacity: 0;
+                transform: scale(2) translateY(50px);
+                filter: blur(20px) brightness(3);
+            }
+            50% {
+                filter: blur(5px) brightness(1.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: blur(0) brightness(1);
+            }
+        }
+
+        /* Exit animations */
+        .message-wrapper.hide {
+            animation-duration: 0.6s;
+            animation-fill-mode: forwards;
+        }
+
+        .style-electric .message-wrapper.hide,
+        .style-toxic .message-wrapper.hide {
+            animation: neonShortCircuit 0.6s steps(10) forwards;
+        }
+
+        @keyframes neonShortCircuit {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+                filter: brightness(1);
+            }
+            20% {
+                transform: scale(1.1) translateX(-5px);
+                filter: brightness(2);
+            }
+            40% {
+                transform: scale(0.9) translateX(5px);
+                filter: brightness(0.5);
+            }
+            60% {
+                transform: scale(1.05) translateY(-5px);
+                filter: brightness(3);
+            }
+            80% {
+                transform: scale(0.95) translateY(5px);
+                filter: brightness(0.2);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+                filter: brightness(0);
+            }
+        }
+
+        .style-hotpink .message-wrapper.hide,
+        .style-uv .message-wrapper.hide,
+        .style-sunset .message-wrapper.hide {
+            animation: neonFadeOut 0.6s ease-in forwards;
+        }
+
+        @keyframes neonFadeOut {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8);
+                filter: blur(20px) brightness(0);
+            }
+        }
+
+        /* Special effects for donations/memberships */
+        .has-donation .message,
+        .has-membership .message {
+            animation: neonIntensify 2s ease-in-out infinite;
+        }
+
+        @keyframes neonIntensify {
+            0%, 100% {
+                filter: brightness(1);
+            }
+            50% {
+                filter: brightness(1.2) contrast(1.1);
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #container {
+                width: 95%;
+            }
+            
+            .message {
+                padding: 16px;
+            }
+            
+            .text {
+                font-size: 16px;
+            }
+            
+            .username {
+                font-size: 24px;
+            }
+            
+            .avatar {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .neon-streak,
+            .message::before,
+            .avatar::before,
+            .username,
+            .donation-info,
+            .message-wrapper {
+                animation: none !important;
+            }
+            
+            .message-wrapper.show {
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
+            
+            .message-wrapper.hide {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="neon-bg"></div>
+    <div id="container">
+        <div id="output"></div>
+    </div>
+
+    <script src="../../tts.js"></script>
+    <script>
+        // Configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get('session') || urlParams.get('room') || urlParams.get('roomid') || 'TESTROOM';
+        const style = urlParams.get('style') || 'electric'; // electric, toxic, hotpink, uv, sunset
+        const password = urlParams.get('password') || urlParams.get('pass') || urlParams.get('pw') || "false";
+        const showtime = parseInt(urlParams.get('showtime') || urlParams.get('timer') || '30000');
+        
+        // Apply selected style
+        document.body.className = `style-${style}`;
+
+        // Create neon light streaks
+        const bgContainer = document.querySelector('.neon-bg');
+        const neonColors = {
+            electric: ['#00ffff', '#0080ff', '#00bfff'],
+            toxic: ['#00ff00', '#40ff00', '#80ff00'],
+            hotpink: ['#ff1493', '#ff69b4', '#ff00ff'],
+            uv: ['#9d00ff', '#bf40ff', '#8b00ff'],
+            sunset: ['#ff4500', '#ff6347', '#ff8c00']
+        };
+        
+        const colors = neonColors[style] || neonColors.electric;
+        
+        for (let i = 0; i < 5; i++) {
+            const streak = document.createElement('div');
+            streak.className = 'neon-streak';
+            streak.style.top = Math.random() * 100 + '%';
+            streak.style.width = Math.random() * 200 + 100 + 'px';
+            streak.style.animationDelay = Math.random() * 4 + 's';
+            streak.style.animationDuration = (Math.random() * 2 + 3) + 's';
+            streak.style.background = `linear-gradient(90deg, transparent, ${colors[Math.floor(Math.random() * colors.length)]}, transparent)`;
+            bgContainer.appendChild(streak);
+        }
+
+        // State
+        let messageTimeout = null;
+        let currentMessage = null;
+
+        // Create VDO.Ninja iframe for receiving messages
+        function createIframe() {
+            var iframe = document.createElement("iframe");
+            
+            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+            
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            iframe.allow = "microphone";
+            document.body.appendChild(iframe);
+
+            var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            var eventer = window[eventMethod];
+            var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                
+                if ("dataReceived" in e.data) {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
+                            // pass
+                        } else {
+                            processData({ contents: e.data.dataReceived.overlayNinja });
+                        }
+                    }
+                }
+            });
+        }
+
+        // Process incoming messages
+        function processData(data) {
+            // Handle clear command
+            if (!data || data === false) {
+                hideMessage();
+                return;
+            }
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                hideMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
+            if (data && data.contents) {
+                showMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processData({ contents: data.content });
+                } else {
+                    hideMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            showMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    hideMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                showMessage(data);
+            }
+        }
+
+        // Display message
+        function showMessage(content) {
+            if (!content.chatmessage && !content.chatname) return;
+
+            hideMessage(() => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                
+                // Add special classes for donations/memberships
+                if (content.hasDonation) {
+                    wrapper.classList.add('has-donation');
+                }
+                if (content.membership) {
+                    wrapper.classList.add('has-membership');
+                }
+                
+                const message = document.createElement('div');
+                message.className = 'message';
+
+                // Avatar
+                if (content.chatimg) {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = content.chatimg;
+                    avatar.onerror = () => {
+                        avatar.src = '../../sources/images/unknown.png';
+                    };
+                    message.appendChild(avatar);
+                }
+
+                // Content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'header';
+                
+                // Username
+                if (content.chatname) {
+                    const name = document.createElement('span');
+                    name.className = 'username';
+                    name.innerHTML = content.chatname;
+                    header.appendChild(name);
+                }
+
+                // Badges
+                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                    const badges = document.createElement('div');
+                    badges.className = 'badges';
+                    content.chatbadges.forEach(badge => {
+                        if (typeof badge === 'string') {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge;
+                            badges.appendChild(img);
+                        } else if (badge.src) {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge.src;
+                            badges.appendChild(img);
+                        }
+                    });
+                    header.appendChild(badges);
+                }
+
+                // Source icon
+                if (content.type) {
+                    const sourceIcon = document.createElement('img');
+                    sourceIcon.className = 'source-icon';
+                    sourceIcon.src = `../../sources/images/${content.type}.png`;
+                    sourceIcon.onerror = () => { sourceIcon.style.display = 'none'; };
+                    header.appendChild(sourceIcon);
+                }
+
+                contentDiv.appendChild(header);
+
+                // Message text
+                if (content.chatmessage) {
+                    const text = document.createElement('div');
+                    text.className = 'text';
+                    text.innerHTML = content.chatmessage;
+                    contentDiv.appendChild(text);
+                }
+
+                // Donation/Membership info
+                if (content.hasDonation || content.membership) {
+                    const donationDiv = document.createElement('div');
+                    donationDiv.className = 'donation-info';
+                    
+                    if (content.hasDonation) {
+                        const amount = content.hasDonation;
+                        const title = content.title || 'DONATION';
+                        donationDiv.innerHTML = `⚡ ${title}: ${amount}`;
+                    } else if (content.membership) {
+                        const memberInfo = typeof content.membership === 'string' ? 
+                            content.membership : 'NEW MEMBER';
+                        donationDiv.innerHTML = `✨ ${memberInfo}`;
+                    }
+                    
+                    contentDiv.appendChild(donationDiv);
+                }
+
+                // Content image (stickers, etc)
+                if (content.contentimg) {
+                    const img = document.createElement('img');
+                    img.className = 'content-image';
+                    img.src = content.contentimg;
+                    contentDiv.appendChild(img);
+                }
+
+                message.appendChild(contentDiv);
+                wrapper.appendChild(message);
+                
+                const output = document.getElementById('output');
+                output.innerHTML = '';
+                output.appendChild(wrapper);
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    wrapper.classList.add('show');
+                });
+
+                currentMessage = wrapper;
+
+                // TTS support
+                if (window.initTTS && urlParams.has('tts')) {
+                    const ttsText = content.chatmessage ? 
+                        content.chatmessage.replace(/<[^>]*>/g, '') : '';
+                    if (ttsText) {
+                        window.speak(content.chatname + ' says ' + ttsText);
+                    }
+                }
+
+                // Auto-hide after showtime
+                if (messageTimeout) clearTimeout(messageTimeout);
+                messageTimeout = setTimeout(() => {
+                    hideMessage();
+                }, showtime);
+            });
+        }
+
+        // Hide current message
+        function hideMessage(callback) {
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+                messageTimeout = null;
+            }
+
+            if (currentMessage) {
+                currentMessage.classList.remove('show');
+                currentMessage.classList.add('hide');
+                setTimeout(() => {
+                    if (currentMessage && currentMessage.parentNode) {
+                        currentMessage.parentNode.removeChild(currentMessage);
+                    }
+                    currentMessage = null;
+                    if (callback) callback();
+                }, 600); // Match animation duration
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        // Initialize TTS if requested
+        if (urlParams.has('tts') && window.initTTS) {
+            window.initTTS({
+                lang: urlParams.get('tts') || urlParams.get('lang') || 'en-US',
+                pitch: parseFloat(urlParams.get('pitch') || '1'),
+                rate: parseFloat(urlParams.get('rate') || '1'),
+                voice: urlParams.get('voice') || null
+            });
+        }
+
+        // Initialize iframe connection
+        createIframe();
+    </script>
+</body>
+</html>

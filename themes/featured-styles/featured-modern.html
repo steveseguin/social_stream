@@ -58,10 +58,22 @@
 
         /* Neon style animations - Electric slide in */
         @keyframes neonGlitch {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-2px); }
-            40% { transform: translateX(2px); }
-            60% { transform: translateX(-1px); }
+            0%, 100% { 
+                transform: translateX(0);
+                opacity: 1;
+            }
+            20% { 
+                transform: translateX(-2px);
+                opacity: 1;
+            }
+            40% { 
+                transform: translateX(2px);
+                opacity: 1;
+            }
+            60% { 
+                transform: translateX(-1px);
+                opacity: 1;
+            }
         }
 
         .style-neon .message-wrapper {
@@ -73,7 +85,7 @@
         .style-neon .message-wrapper.show {
             opacity: 1;
             transform: translateX(0);
-            animation: neonGlitch 0.3s ease-out 0.8s;
+            animation: neonGlitch 0.3s ease-out 0.8s forwards;
         }
 
         .style-neon .message-wrapper.hide {
@@ -153,9 +165,11 @@
                 transform: translateX(10px) scale(1.05);
             }
             80% {
+                opacity: 1;
                 transform: translateX(-5px) scale(0.98);
             }
             100% {
+                opacity: 1;
                 transform: translateX(0) scale(1);
             }
         }
@@ -215,6 +229,28 @@
             font-size: 20px;
             line-height: 1.4;
             word-wrap: break-word;
+        }
+        
+        /* Inline images/SVGs in chat messages */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em; /* Relative to text size */
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+        }
+        
+        /* Emote-specific sizing */
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
         }
 
         .badges {
@@ -389,6 +425,11 @@
         .badges:empty,
         .donation-info:empty {
             display: none;
+        }
+        
+        /* Ensure show state persists */
+        .message-wrapper.show {
+            opacity: 1 !important;
         }
 
         /* Sticker/Image support */
@@ -571,7 +612,7 @@
                 
                 if (content.chatname) {
                     const name = document.createElement('span');
-                    name.textContent = content.chatname;
+                    name.innerHTML = content.chatname;
                     if (content.nameColor) {
                         name.style.color = content.nameColor;
                     }

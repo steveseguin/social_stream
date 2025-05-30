@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Wars - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #team-scores {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 30px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .team-score {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .team-indicator {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        #leaderboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+        }
+        
+        #leaderboard h3 {
+            margin-top: 0;
+            color: #FFD700;
+            text-align: center;
+        }
+        
+        .player-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .player-entry:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+        
+        .player-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 0 5px currentColor;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        #instructions strong {
+            color: #FFD700;
+            font-size: 18px;
+        }
+        
+        .paint-splash {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: splash 0.5s ease-out forwards;
+        }
+        
+        @keyframes splash {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        
+        .power-up {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid white;
+            animation: powerUpPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes powerUpPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 10px rgba(255,255,255,0.5); }
+            50% { transform: scale(1.1); box-shadow: 0 0 20px rgba(255,255,255,0.8); }
+        }
+        
+        #round-timer {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        #winner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        #winner-text {
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.9);
+            margin-bottom: 20px;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="canvas"></canvas>
+        
+        <div id="team-scores">
+            <div class="team-score">
+                <div class="team-indicator" style="background-color: #ff6b6b;"></div>
+                <span id="red-score">Red: 0%</span>
+            </div>
+            <div class="team-score">
+                <div class="team-indicator" style="background-color: #4ecdc4;"></div>
+                <span id="blue-score">Blue: 0%</span>
+            </div>
+            <div class="team-score">
+                <div class="team-indicator" style="background-color: #ffe66d;"></div>
+                <span id="yellow-score">Yellow: 0%</span>
+            </div>
+            <div class="team-score">
+                <div class="team-indicator" style="background-color: #a8e6cf;"></div>
+                <span id="green-score">Green: 0%</span>
+            </div>
+        </div>
+        
+        <div id="round-timer">2:00</div>
+        
+        <div id="leaderboard">
+            <h3>🎨 Top Painters</h3>
+            <div id="player-list"></div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🎨 Color Wars</strong></div>
+            <div>Type <b>!red</b>, <b>!blue</b>, <b>!yellow</b>, or <b>!green</b> to paint!</div>
+            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">
+                Cover the most area with your team's color!
+            </div>
+        </div>
+        
+        <div id="winner-overlay">
+            <div id="winner-text"></div>
+            <div style="font-size: 24px;">Next round starting soon...</div>
+        </div>
+    </div>
+    
+    <script>
+    // Game settings
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const teams = {
+        red: { color: '#ff6b6b', players: new Map() },
+        blue: { color: '#4ecdc4', players: new Map() },
+        yellow: { color: '#ffe66d', players: new Map() },
+        green: { color: '#a8e6cf', players: new Map() }
+    };
+    
+    const GRID_SIZE = 10;
+    const PAINT_RADIUS = 30;
+    const ROUND_DURATION = 120; // 2 minutes
+    
+    let grid = [];
+    let powerUps = [];
+    let particles = [];
+    let roundTime = ROUND_DURATION;
+    let gameActive = true;
+    
+    // URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || 'test';
+    const password = urlParams.get('password') || 'false';
+    
+    // Initialize grid
+    function initGrid() {
+        const cols = Math.ceil(canvas.width / GRID_SIZE);
+        const rows = Math.ceil(canvas.height / GRID_SIZE);
+        
+        grid = [];
+        for (let y = 0; y < rows; y++) {
+            grid[y] = [];
+            for (let x = 0; x < cols; x++) {
+                grid[y][x] = null;
+            }
+        }
+    }
+    
+    function paintArea(x, y, team, username, radius = PAINT_RADIUS) {
+        const gridX = Math.floor(x / GRID_SIZE);
+        const gridY = Math.floor(y / GRID_SIZE);
+        const radiusInGrid = Math.ceil(radius / GRID_SIZE);
+        
+        let paintedCells = 0;
+        
+        for (let dy = -radiusInGrid; dy <= radiusInGrid; dy++) {
+            for (let dx = -radiusInGrid; dx <= radiusInGrid; dx++) {
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance <= radiusInGrid) {
+                    const gx = gridX + dx;
+                    const gy = gridY + dy;
+                    
+                    if (gx >= 0 && gx < grid[0].length && gy >= 0 && gy < grid.length) {
+                        if (grid[gy][gx] !== team) {
+                            grid[gy][gx] = team;
+                            paintedCells++;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Update player stats
+        const playerData = teams[team].players.get(username) || { paintedCells: 0, splashes: 0 };
+        playerData.paintedCells += paintedCells;
+        playerData.splashes++;
+        teams[team].players.set(username, playerData);
+        
+        // Create visual splash effect
+        createSplash(x, y, teams[team].color, radius);
+        
+        // Create particles
+        for (let i = 0; i < 20; i++) {
+            particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                color: teams[team].color,
+                life: 1
+            });
+        }
+        
+        return paintedCells;
+    }
+    
+    function createSplash(x, y, color, radius) {
+        const splash = document.createElement('div');
+        splash.className = 'paint-splash';
+        splash.style.left = x + 'px';
+        splash.style.top = y + 'px';
+        splash.style.width = radius * 2 + 'px';
+        splash.style.height = radius * 2 + 'px';
+        splash.style.backgroundColor = color;
+        splash.style.marginLeft = -radius + 'px';
+        splash.style.marginTop = -radius + 'px';
+        document.getElementById('game-container').appendChild(splash);
+        
+        setTimeout(() => splash.remove(), 500);
+    }
+    
+    function spawnPowerUp() {
+        if (powerUps.length < 3 && Math.random() < 0.01) {
+            const types = ['🚀', '💣', '⭐', '🌈'];
+            powerUps.push({
+                x: Math.random() * (canvas.width - 100) + 50,
+                y: Math.random() * (canvas.height - 200) + 100,
+                type: types[Math.floor(Math.random() * types.length)],
+                element: null
+            });
+            
+            const powerUp = powerUps[powerUps.length - 1];
+            const element = document.createElement('div');
+            element.className = 'power-up';
+            element.style.left = powerUp.x + 'px';
+            element.style.top = powerUp.y + 'px';
+            element.textContent = powerUp.type;
+            document.getElementById('game-container').appendChild(element);
+            powerUp.element = element;
+        }
+    }
+    
+    function checkPowerUpCollection(x, y, team, username) {
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+            const powerUp = powerUps[i];
+            const distance = Math.sqrt(Math.pow(x - powerUp.x, 2) + Math.pow(y - powerUp.y, 2));
+            
+            if (distance < 50) {
+                // Apply power-up effect
+                switch (powerUp.type) {
+                    case '🚀': // Speed paint - larger radius
+                        paintArea(x, y, team, username, PAINT_RADIUS * 2);
+                        sendResponse(`🚀 ${username} got a MEGA SPLASH!`);
+                        break;
+                    case '💣': // Paint bomb - multiple splashes
+                        for (let j = 0; j < 5; j++) {
+                            const angle = (Math.PI * 2 / 5) * j;
+                            const bx = x + Math.cos(angle) * 100;
+                            const by = y + Math.sin(angle) * 100;
+                            paintArea(bx, by, team, username);
+                        }
+                        sendResponse(`💣 ${username} triggered a PAINT BOMB!`);
+                        break;
+                    case '⭐': // Star power - bonus points
+                        const playerData = teams[team].players.get(username) || { paintedCells: 0, splashes: 0 };
+                        playerData.paintedCells += 100;
+                        teams[team].players.set(username, playerData);
+                        sendResponse(`⭐ ${username} got bonus points!`);
+                        break;
+                    case '🌈': // Rainbow - paint all colors randomly
+                        const allTeams = Object.keys(teams);
+                        for (let j = 0; j < 10; j++) {
+                            const rx = x + (Math.random() - 0.5) * 200;
+                            const ry = y + (Math.random() - 0.5) * 200;
+                            const randomTeam = allTeams[Math.floor(Math.random() * allTeams.length)];
+                            paintArea(rx, ry, randomTeam, username, PAINT_RADIUS / 2);
+                        }
+                        sendResponse(`🌈 ${username} created CHAOS!`);
+                        break;
+                }
+                
+                // Remove power-up
+                powerUp.element.remove();
+                powerUps.splice(i, 1);
+                break;
+            }
+        }
+    }
+    
+    function updateScores() {
+        const totalCells = grid.length * grid[0].length;
+        const counts = { red: 0, blue: 0, yellow: 0, green: 0 };
+        
+        for (let y = 0; y < grid.length; y++) {
+            for (let x = 0; x < grid[y].length; x++) {
+                if (grid[y][x]) {
+                    counts[grid[y][x]]++;
+                }
+            }
+        }
+        
+        Object.keys(teams).forEach(team => {
+            const percentage = Math.round((counts[team] / totalCells) * 100);
+            document.getElementById(`${team}-score`).textContent = `${team.charAt(0).toUpperCase() + team.slice(1)}: ${percentage}%`;
+        });
+        
+        return counts;
+    }
+    
+    function updateLeaderboard() {
+        const allPlayers = [];
+        
+        Object.entries(teams).forEach(([team, data]) => {
+            data.players.forEach((stats, username) => {
+                allPlayers.push({
+                    username,
+                    team,
+                    paintedCells: stats.paintedCells,
+                    color: teams[team].color
+                });
+            });
+        });
+        
+        allPlayers.sort((a, b) => b.paintedCells - a.paintedCells);
+        
+        const playerList = document.getElementById('player-list');
+        playerList.innerHTML = '';
+        
+        allPlayers.slice(0, 5).forEach(player => {
+            const entry = document.createElement('div');
+            entry.className = 'player-entry';
+            entry.innerHTML = `
+                <div style="display: flex; align-items: center;">
+                    <div class="player-color" style="background-color: ${player.color};"></div>
+                    <span>${player.username}</span>
+                </div>
+                <span>${player.paintedCells} cells</span>
+            `;
+            playerList.appendChild(entry);
+        });
+    }
+    
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw grid
+        for (let y = 0; y < grid.length; y++) {
+            for (let x = 0; x < grid[y].length; x++) {
+                if (grid[y][x]) {
+                    ctx.fillStyle = teams[grid[y][x]].color;
+                    ctx.fillRect(x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE);
+                }
+            }
+        }
+        
+        // Draw particles
+        particles = particles.filter(particle => {
+            particle.x += particle.vx;
+            particle.y += particle.vy;
+            particle.vy += 0.5; // gravity
+            particle.life -= 0.02;
+            
+            if (particle.life > 0) {
+                ctx.globalAlpha = particle.life;
+                ctx.fillStyle = particle.color;
+                ctx.fillRect(particle.x, particle.y, 4, 4);
+                return true;
+            }
+            return false;
+        });
+        
+        ctx.globalAlpha = 1;
+    }
+    
+    function updateTimer() {
+        if (!gameActive) return;
+        
+        roundTime--;
+        const minutes = Math.floor(roundTime / 60);
+        const seconds = roundTime % 60;
+        document.getElementById('round-timer').textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (roundTime <= 0) {
+            endRound();
+        }
+    }
+    
+    function endRound() {
+        gameActive = false;
+        
+        const scores = updateScores();
+        const winner = Object.entries(scores).sort((a, b) => b[1] - a[1])[0];
+        
+        const winnerOverlay = document.getElementById('winner-overlay');
+        const winnerText = document.getElementById('winner-text');
+        winnerText.textContent = `${winner[0].toUpperCase()} TEAM WINS!`;
+        winnerText.style.color = teams[winner[0]].color;
+        winnerOverlay.style.display = 'flex';
+        
+        // Celebration particles
+        for (let i = 0; i < 100; i++) {
+            setTimeout(() => {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: canvas.height + 10,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: -Math.random() * 20 - 10,
+                    color: teams[winner[0]].color,
+                    life: 1
+                });
+            }, i * 20);
+        }
+        
+        setTimeout(() => {
+            startNewRound();
+        }, 5000);
+    }
+    
+    function startNewRound() {
+        // Reset game state
+        initGrid();
+        powerUps.forEach(p => p.element && p.element.remove());
+        powerUps = [];
+        particles = [];
+        roundTime = ROUND_DURATION;
+        gameActive = true;
+        
+        // Clear player stats
+        Object.values(teams).forEach(team => {
+            team.players.clear();
+        });
+        
+        document.getElementById('winner-overlay').style.display = 'none';
+        updateScores();
+        updateLeaderboard();
+    }
+    
+    function processPaint(username, team) {
+        if (!gameActive || !teams[team]) return;
+        
+        // Random position for the paint
+        const x = Math.random() * (canvas.width - 100) + 50;
+        const y = Math.random() * (canvas.height - 200) + 100;
+        
+        paintArea(x, y, team, username);
+        checkPowerUpCollection(x, y, team, username);
+        
+        updateScores();
+        updateLeaderboard();
+    }
+    
+    function sendResponse(message) {
+        const response = {
+            chatname: 'ColorWarsBot',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                overlay: 'colorwars',
+                response: response
+            }, '*');
+        }
+        
+        console.log('Bot response:', message);
+    }
+    
+    function processData(data) {
+        if (data.content) {
+            data = data.content;
+        }
+        
+        if (!data.chatmessage || !data.chatname) return;
+        
+        const message = data.chatmessage.trim().toLowerCase();
+        
+        if (message.startsWith('!')) {
+            const team = message.substring(1);
+            if (teams[team]) {
+                processPaint(data.chatname, team);
+            }
+        }
+    }
+    
+    // Game loop
+    function gameLoop() {
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+    
+    // Initialize
+    initGrid();
+    gameLoop();
+    setInterval(updateTimer, 1000);
+    setInterval(spawnPowerUp, 1000);
+    
+    // Setup iframe communication
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.position = "fixed";
+    iframe.style.left = "-100px";
+    iframe.style.top = "-100px";
+    iframe.id = "frame1";
+    document.body.appendChild(iframe);
+    
+    window.addEventListener("message", function(e) {
+        if (e.source !== iframe.contentWindow) return;
+        
+        if ("dataReceived" in e.data) {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        initGrid();
+    });
+    
+    // Demo mode
+    if (urlParams.has('demo')) {
+        setInterval(() => {
+            const demoUsers = ['Painter1', 'Painter2', 'Painter3', 'Painter4'];
+            const demoTeams = Object.keys(teams);
+            const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+            const team = demoTeams[Math.floor(Math.random() * demoTeams.length)];
+            processPaint(user, team);
+        }, 500);
+    }
+    </script>
+</body>
+</html>

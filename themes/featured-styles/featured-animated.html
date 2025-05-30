@@ -37,12 +37,15 @@
             width: 90%;
             max-width: 900px;
             position: relative;
+            min-height: 100px;
         }
 
         /* Base message structure */
         .message-container {
             position: relative;
             margin: 20px 0;
+            width: 100%;
+            overflow: visible;
         }
 
         /* Style 1: Bounce & Glow - Energetic bounce with trail effect */
@@ -249,16 +252,43 @@
         }
 
         .style-typewriter .text {
-            overflow: hidden;
-            white-space: nowrap;
-            animation: typewriter 2s steps(40, end);
-            border-right: 3px solid #0ff;
-            animation-fill-mode: forwards;
+            position: relative;
+            overflow: visible;
+            white-space: normal;
+            animation: typewriterReveal 2s ease-out forwards;
+        }
+        
+        .style-typewriter .text::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -3px;
+            width: 3px;
+            height: 100%;
+            background: #0ff;
+            animation: blink 1s infinite;
         }
 
-        @keyframes typewriter {
-            from { width: 0; }
-            to { width: 100%; }
+        @keyframes typewriterReveal {
+            0% {
+                opacity: 0;
+                filter: blur(5px);
+                transform: translateX(-10px);
+            }
+            50% {
+                opacity: 0.7;
+                filter: blur(2px);
+            }
+            100% {
+                opacity: 1;
+                filter: blur(0);
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
         }
 
         @keyframes fadeInUp {
@@ -394,6 +424,8 @@
             gap: 16px;
             position: relative;
             z-index: 1;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .avatar {
@@ -410,6 +442,8 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            min-width: 0; /* Important for flex text wrapping */
+            width: 100%;
         }
 
         .header {
@@ -442,6 +476,33 @@
             font-size: 18px;
             line-height: 1.5;
             word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Inline images/SVGs in chat messages */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em; /* Relative to text size */
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+        }
+        
+        /* Emote-specific sizing */
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
         }
 
         .donation-tag {
@@ -641,6 +702,49 @@
             margin-top: 12px;
             border-radius: 8px;
         }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #output {
+                width: 95%;
+            }
+            
+            .message {
+                padding: 16px;
+            }
+            
+            .text {
+                font-size: 16px;
+            }
+            
+            .username {
+                font-size: 18px;
+            }
+            
+            .avatar {
+                width: 48px;
+                height: 48px;
+            }
+        }
+        
+        /* Style-specific overflow fixes */
+        .style-bounce .message,
+        .style-slide .message,
+        .style-comic .message,
+        .style-holo .message {
+            overflow: visible;
+            min-height: fit-content;
+        }
+        
+        /* Ensure typewriter doesn't clip */
+        .style-typewriter .message {
+            overflow: visible;
+            min-height: fit-content;
+        }
+        
+        .style-typewriter .text::after {
+            display: none; /* Remove the CSS cursor in favor of JS one */
+        }
     </style>
 </head>
 <body>
@@ -665,7 +769,7 @@
         // Create VDO.Ninja iframe
         function createIframe() {
             const iframe = document.createElement('iframe');
-            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
             iframe.style.width = '0px';
             iframe.style.height = '0px';
             iframe.style.position = 'fixed';
@@ -681,21 +785,66 @@
                 
                 if ('dataReceived' in e.data) {
                     if ('overlayNinja' in e.data.dataReceived) {
-                        handleMessage(e.data.dataReceived.overlayNinja);
+                        const data = e.data.dataReceived.overlayNinja;
+                        
+                        // Skip response messages
+                        if (data && 'response' in data) {
+                            return;
+                        }
+                        
+                        // Process the message with proper format
+                        processData({ contents: data });
                     }
                 }
             });
         }
 
-        // Handle incoming messages
-        function handleMessage(data) {
-            if (!data || data === false || (data.contents === false)) {
+        // Process incoming data
+        function processData(data) {
+            console.log('Processing data:', data);
+            
+            // Handle clear command
+            if (!data || data === false) {
                 clearMessage();
                 return;
             }
-
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                clearMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
             if (data && data.contents) {
                 displayMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processData({ contents: data.content });
+                } else {
+                    clearMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            displayMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    clearMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                displayMessage(data);
             }
         }
 
@@ -733,7 +882,7 @@
                 if (content.chatname) {
                     const username = document.createElement('div');
                     username.className = 'username';
-                    username.textContent = content.chatname;
+                    username.innerHTML = content.chatname;
                     if (content.nameColor && style !== 'comic') {
                         username.style.color = content.nameColor;
                     }
@@ -771,11 +920,21 @@
                     const text = document.createElement('div');
                     text.className = 'text';
                     
-                    // For typewriter effect, we need special handling
+                    // For typewriter effect, we can still use HTML
                     if (style === 'typewriter') {
-                        // Strip HTML for typewriter effect
-                        const plainText = content.chatmessage.replace(/<[^>]*>/g, '');
-                        text.textContent = plainText;
+                        text.innerHTML = content.chatmessage;
+                        // Add a typewriter cursor effect
+                        const cursor = document.createElement('span');
+                        cursor.className = 'typewriter-cursor';
+                        cursor.style.cssText = 'display: inline-block; width: 3px; height: 1.2em; background: #0ff; animation: blink 1s infinite; margin-left: 2px;';
+                        text.appendChild(cursor);
+                        
+                        // Remove cursor after animation
+                        setTimeout(() => {
+                            if (cursor.parentNode) {
+                                cursor.remove();
+                            }
+                        }, 3000);
                     } else {
                         text.innerHTML = content.chatmessage;
                     }

@@ -3234,6 +3234,15 @@ body.ssapp .wrapper.ssapp h3 {
                         <option value="themes/featured-styles/featured-particles.html?style=matrix">Matrix Rain</option>
                         <option value="themes/featured-styles/featured-particles.html?style=bubbles">Bubbles</option>
                         <option value="themes/featured-styles/featured-particles.html?style=stars">Starfield</option>
+                        <option value="themes/featured-styles/featured-slide.html">Sliding Effects</option>
+                        <option value="themes/featured-styles/featured-gradient.html">Gradient Animations</option>
+                        <option value="themes/featured-styles/featured-retro.html">Retro/Synthwave</option>
+                        <option value="themes/featured-styles/featured-glass.html">Glassmorphism</option>
+                        <option value="themes/featured-styles/featured-cyberpunk.html">Cyberpunk</option>
+                        <option value="themes/featured-styles/featured-gaming.html">Gaming Themed</option>
+                        <option value="themes/featured-styles/featured-elegant.html">Elegant & Sophisticated</option>
+                        <option value="themes/featured-styles/featured-dynamic.html">Dynamic Physics</option>
+                        <option value="themes/featured-styles/featured-neon.html">Neon Glow</option>
                     </select>
                     <span style="margin-left: 10px; font-size: 12px; opacity: 0.7;">
                         <i data-translate="preset-note">Note: Presets have limited customization options</i>
@@ -5509,59 +5518,6 @@ body.ssapp .wrapper.ssapp h3 {
 					</div>
 				</div>
 			</div>
-			<div class="link" title="Battle Royal">
-                <h2 class="battle_mode_title">
-                    <span data-translate="pollmeter">Battle Royal </span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">[options]</span></a>
-                </h2>
-                <h3>
-                    <span data-translate="when-enabled-a-battle">
-                       A battle royal mini game. Users can enter !join to play
-                    </span>
-                </h3>
-				<div id="battle" data-raw="" class="streaming_chat"><a href="" id="battlelink"></a></div>
-			</div>
-			
-			<div class="wrapper">
-                <div class="collapsible">
-                    <input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
-                    <label class="collapsible-label" for="wrapper-battle-general-options">📊 <span data-translate="options-and-actions">Options and actions</span></label>
-                    <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group battle">
-								<div>
-										<label class="switch">
-											<input type="checkbox" data-param8="lobby" />
-											<span class="slider round"></span>
-										</label>
-
-										🚦 <span data-translate="enable-the-battle">Host Starts</span>
-									
-										<button class="glowingButton" style="width: 170px; border: 1px solid #000; padding: 2px;" data-action="startgame">
-											<span style="font-size: 0.8em;"><span data-translate="start-game">Start the game</span></span>
-										</button>
-								</div>
-							
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param8="nocomputers" />
-										<span class="slider round"></span>
-									</label>
-									🚫🤖 <span data-translate="disable-computer-players">Disable computer players</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param8="lobbytime=30" />
-										<span class="slider round"></span>
-									</label>
-									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 			
 			<div class="link" title="End credits roll">
 				<h2 class="credits_mode_title">
@@ -5929,6 +5885,223 @@ body.ssapp .wrapper.ssapp h3 {
 					</div>
 				</div>
 			</div>
+			
+			<!-- GAMES SECTION -->
+			<div class="link" title="Interactive Games">
+				<h2 class="games_mode_title">
+					<span data-translate="interactive-games">🎮 Interactive Games</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#games" title="Jump to the games link options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<h3>
+					<span data-translate="interactive-chat-games">
+					   Interactive chat-based games for viewer engagement. Choose from various mini-games.
+					</span>
+				</h3>
+				<div id="games" data-raw="" class="streaming_chat"><a href="" id="gameslink"></a></div>
+				
+				<!-- Games Preset Selector -->
+				<div class="games-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+					<label for="games-preset-select" style="display: inline-block; margin-right: 10px;">
+						<span data-translate="select-game">🎯 Select Game:</span>
+					</label>
+					<select id="games-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+						<option value="">Choose a game...</option>
+						<option value="games/petrace.html">🏁 Pet Race - Racing game</option>
+						<option value="games/wordchain.html">🔤 Word Chain - Word puzzle</option>
+						<option value="games/emojitower.html">🏗️ Emoji Tower - Stacking game</option>
+						<option value="games/colorwars.html">🎨 Color Wars - Territory painting</option>
+						<option value="games/treasurehunt.html">🏴‍☠️ Treasure Hunt - Grid exploration</option>
+						<option value="games/dancingparade.html">💃 Dancing Parade - Lower third animation</option>
+					</select>
+					<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;">
+						<i data-translate="games-note">Note: Each game has unique commands and mechanics</i>
+					</span>
+				</div>
+			</div>
+			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-games-general-options" />
+					<label class="collapsible-label" for="wrapper-games-general-options">🎮 <span data-translate="game-options">Game Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group games">
+								<!-- Pet Race Options -->
+								<div class="game-config-section" id="petrace-config" style="display: none;">
+									<h3>🏁 <span data-translate="pet-race-options">Pet Race Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-petrace">
+											🤖 Enable demo mode (auto-racers)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Word Chain Options -->
+								<div class="game-config-section" id="wordchain-config" style="display: none;">
+									<h3>🔤 <span data-translate="word-chain-options">Word Chain Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-wordchain">
+											🤖 Enable demo mode
+										</span>
+									</div>
+								</div>
+								
+								<!-- Emoji Tower Options -->
+								<div class="game-config-section" id="emojitower-config" style="display: none;">
+									<h3>🏗️ <span data-translate="emoji-tower-options">Emoji Tower Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-emojitower">
+											🤖 Enable demo builders
+										</span>
+									</div>
+								</div>
+								
+								<!-- Color Wars Options -->
+								<div class="game-config-section" id="colorwars-config" style="display: none;">
+									<h3>🎨 <span data-translate="color-wars-options">Color Wars Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-colorwars">
+											🤖 Enable demo painters
+										</span>
+									</div>
+								</div>
+								
+								<!-- Treasure Hunt Options -->
+								<div class="game-config-section" id="treasurehunt-config" style="display: none;">
+									<h3>🏴‍☠️ <span data-translate="treasure-hunt-options">Treasure Hunt Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-treasurehunt">
+											🤖 Enable demo hunters
+										</span>
+									</div>
+								</div>
+								
+								<!-- Dancing Parade Options -->
+								<div class="game-config-section" id="dancingparade-config" style="display: none;">
+									<h3>💃 <span data-translate="dancing-parade-options">Dancing Parade Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-dancingparade">
+											🤖 Enable demo dancers
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="chroma" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="transparent-background-parade">
+											🟢 Transparent background (for overlays)
+										</span>
+									</div>
+								</div>
+								
+								<!-- General Game Options -->
+								<div class="game-config-section" id="general-game-config">
+									<h3><span data-translate="general-game-settings">General Game Settings</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="chroma" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="green-background-games">
+											🟢 Green screen background
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="darkmode" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="dark-mode-games">
+											⚫ Dark mode
+										</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="link" title="Battle Royal">
+                <h2 class="battle_mode_title">
+                    <span data-translate="pollmeter">Battle Royal </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">[options]</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-battle">
+                       A battle royal mini game. Users can enter !join to play
+                    </span>
+                </h3>
+				<div id="battle" data-raw="" class="streaming_chat"><a href="" id="battlelink"></a></div>
+			</div>
+			
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
+                    <label class="collapsible-label" for="wrapper-battle-general-options">📊 <span data-translate="options-and-actions">Options and actions</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group battle">
+								<div>
+										<label class="switch">
+											<input type="checkbox" data-param8="lobby" />
+											<span class="slider round"></span>
+										</label>
+
+										🚦 <span data-translate="enable-the-battle">Host Starts</span>
+									
+										<button class="glowingButton" style="width: 170px; border: 1px solid #000; padding: 2px;" data-action="startgame">
+											<span style="font-size: 0.8em;"><span data-translate="start-game">Start the game</span></span>
+										</button>
+								</div>
+							
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param8="nocomputers" />
+										<span class="slider round"></span>
+									</label>
+									🚫🤖 <span data-translate="disable-computer-players">Disable computer players</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param8="lobbytime=30" />
+										<span class="slider round"></span>
+									</label>
+									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- END GAMES SECTION -->
 			
 			<div class="link" title="Customizable ticker banner bar">
                 <h2 class="ticker_mode_title">

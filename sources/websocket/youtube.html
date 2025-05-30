@@ -1330,20 +1330,37 @@ try {
 			
 			// Audio context keep-alive to prevent browser from suspending the page
 			if (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined') {
-				if (!window.keepAliveAudioContext) {
-					const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-					window.keepAliveAudioContext = new AudioContextClass();
-					const oscillator = window.keepAliveAudioContext.createOscillator();
-					oscillator.type = 'sine';
-					oscillator.frequency.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
-					const gainNode = window.keepAliveAudioContext.createGain();
-					gainNode.gain.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
-					oscillator.connect(gainNode);
-					gainNode.connect(window.keepAliveAudioContext.destination);
-					oscillator.start();
+				if (!window.keepAliveAudioContext || window.keepAliveAudioContext.state === 'closed') {
+					try {
+						// Clean up any existing context first
+						if (window.keepAliveAudioContext && window.keepAliveAudioContext.state !== 'closed') {
+							window.keepAliveAudioContext.close();
+						}
+						const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+						window.keepAliveAudioContext = new AudioContextClass();
+						window.keepAliveOscillator = window.keepAliveAudioContext.createOscillator();
+						window.keepAliveOscillator.type = 'sine';
+						window.keepAliveOscillator.frequency.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
+						const gainNode = window.keepAliveAudioContext.createGain();
+						gainNode.gain.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
+						window.keepAliveOscillator.connect(gainNode);
+						gainNode.connect(window.keepAliveAudioContext.destination);
+						window.keepAliveOscillator.start();
+						// Schedule cleanup after 30 seconds to prevent long-running oscillators
+						setTimeout(() => {
+							if (window.keepAliveOscillator) {
+								try {
+									window.keepAliveOscillator.stop();
+									window.keepAliveOscillator = null;
+								} catch(e) {}
+							}
+						}, 30000);
+					} catch (e) {
+						console.warn('Failed to create keep-alive audio context:', e);
+					}
 				}
-				if (window.keepAliveAudioContext.state === 'suspended') {
-					window.keepAliveAudioContext.resume();
+				if (window.keepAliveAudioContext && window.keepAliveAudioContext.state === 'suspended') {
+					window.keepAliveAudioContext.resume().catch(e => console.warn('Failed to resume audio context:', e));
 				}
 			}
 			
@@ -2434,10 +2451,15 @@ try {
 
 			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
 			textarea.appendChild(span);
-			while (textarea.childNodes.length > 20) {
+			// More aggressive cleanup to prevent memory buildup
+			const maxMessages = isPageVisible ? 50 : 20;
+			while (textarea.childNodes.length > maxMessages) {
 				textarea.removeChild(textarea.firstChild);
 			}
-			textarea.scrollTop = textarea.scrollHeight;
+			// Only auto-scroll if user is near bottom
+			if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+				textarea.scrollTop = textarea.scrollHeight;
+			}
 			if (!messageData.skipEvent && messageWithEmojis) {
 				pushMessage({
 					chatname: messageData.authorName,
@@ -2465,8 +2487,15 @@ try {
 			var span = document.createElement("div");
 			span.innerHTML = `<strong>${superChatData.authorName}</strong> <span>${superChatData.amount}</span>: ${superChatData.message || ''}`;
 			textarea.appendChild(span);
-			if (textarea.childNodes.length > 100) textarea.childNodes[0].remove();
-			textarea.scrollTop = textarea.scrollHeight;
+			// Use same cleanup limit as regular messages
+			const maxMessages = isPageVisible ? 50 : 20;
+			while (textarea.childNodes.length > maxMessages) {
+				textarea.removeChild(textarea.firstChild);
+			}
+			// Only auto-scroll if user is near bottom
+			if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+				textarea.scrollTop = textarea.scrollHeight;
+			}
 			pushMessage({
 				chatname: superChatData.authorName,
 				chatbadges: "",
@@ -2493,10 +2522,15 @@ try {
 			span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>joined as a member (${membershipData.level})</span>`;
 			textarea.appendChild(span);
 			
-			while (textarea.childNodes.length > 20) {
+			// Use same cleanup limit as regular messages
+			const maxMessages = isPageVisible ? 50 : 20;
+			while (textarea.childNodes.length > maxMessages) {
 				textarea.removeChild(textarea.firstChild);
 			}
-			textarea.scrollTop = textarea.scrollHeight;
+			// Only auto-scroll if user is near bottom
+			if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+				textarea.scrollTop = textarea.scrollHeight;
+			}
 			
 			pushMessage({
 				chatname: escapeHtml(membershipData.authorName),
@@ -2547,6 +2581,60 @@ try {
         if (currentUserElement) currentUserElement.textContent = currentUsername || 'Not signed in';
         if (currentChannelElement) currentChannelElement.textContent = targetName || 'No target';
     }
+	
+	// Cleanup function to remove all event listeners and clear resources
+	let cleanupFunctions = [];
+	function registerCleanup(fn) {
+		cleanupFunctions.push(fn);
+	}
+	
+	function cleanupResources() {
+		console.log('Cleaning up resources...');
+		
+		// Clear all intervals
+		if (pollInterval) clearInterval(pollInterval);
+		if (channelStatsInterval) clearInterval(channelStatsInterval);
+		if (keepAliveInterval) clearInterval(keepAliveInterval);
+		if (displayInterval) clearInterval(displayInterval);
+		
+		// Clear all timeouts
+		if (fetchTimeout) clearTimeout(fetchTimeout);
+		activeTimeouts.forEach(timeout => clearTimeout(timeout));
+		activeTimeouts.clear();
+		
+		// Close audio context
+		if (window.keepAliveAudioContext) {
+			try {
+				if (window.keepAliveOscillator) {
+					window.keepAliveOscillator.stop();
+					window.keepAliveOscillator = null;
+				}
+				window.keepAliveAudioContext.close();
+				window.keepAliveAudioContext = null;
+			} catch (e) {}
+		}
+		
+		// Run all registered cleanup functions
+		cleanupFunctions.forEach(fn => {
+			try { fn(); } catch(e) { console.error('Cleanup error:', e); }
+		});
+		cleanupFunctions = [];
+		
+		// Clear polling resources
+		clearPolling();
+		
+		// Clear message queue
+		messageQueue = [];
+		
+		// Limit userDetails cache size
+		const userDetailsKeys = Object.keys(userDetails);
+		if (userDetailsKeys.length > 100) {
+			// Keep only the most recent 100 users
+			const toRemove = userDetailsKeys.slice(0, userDetailsKeys.length - 100);
+			toRemove.forEach(key => delete userDetails[key]);
+		}
+	}
+	
 	function initializePage() {
 		
 		urlParams = new URLSearchParams(window.location.search);
@@ -2577,25 +2665,37 @@ try {
 			}
 		}
 		const signOutButton = document.getElementById('sign-out-button');
-		if (signOutButton) signOutButton.addEventListener('click', signOut);
+		if (signOutButton) {
+			signOutButton.addEventListener('click', signOut);
+			registerCleanup(() => signOutButton.removeEventListener('click', signOut));
+		}
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
-			authLink.addEventListener('click', function(e) {
+			const authHandler = function(e) {
 				e.preventDefault();
 				window.location.href = authUrl();
-			});
+			};
+			authLink.addEventListener('click', authHandler);
+			registerCleanup(() => authLink.removeEventListener('click', authHandler));
 		}
 		document.addEventListener('visibilitychange', handleVisibilityChange);
+		registerCleanup(() => document.removeEventListener('visibilitychange', handleVisibilityChange));
 		isPageVisible = document.visibilityState === 'visible';
 		const sendButton = document.querySelector('#sendmessage');
 		if (sendButton) sendButton.onclick = handleSendMessage;
 		const inputText = document.querySelector('#input-text');
-		if (inputText) inputText.addEventListener('keypress', handleEnterKey);
+		if (inputText) {
+			inputText.addEventListener('keypress', handleEnterKey);
+			registerCleanup(() => inputText.removeEventListener('keypress', handleEnterKey));
+		}
 		const connectButton = document.getElementById('connect-button');
-		if (connectButton) connectButton.addEventListener('click', handleConnect);
+		if (connectButton) {
+			connectButton.addEventListener('click', handleConnect);
+			registerCleanup(() => connectButton.removeEventListener('click', handleConnect));
+		}
 		const changeButton = document.getElementById('change-button');
 		if (changeButton) {
-			changeButton.addEventListener('click', function() {
+			const changeHandler = function() {
 				clearPolling();
 				updateHeaderInfo(username, 'No target (Ready to connect)');
 				document.getElementById('textarea').innerHTML = '<div>Connection cleared. Enter new channel name or video ID and click Connect.</div>';
@@ -2613,19 +2713,25 @@ try {
 					connectButton.textContent = 'Connect';
 					connectButton.style.backgroundColor = '#2255dd';
 				}
-			});
+			};
+			changeButton.addEventListener('click', changeHandler);
+			registerCleanup(() => changeButton.removeEventListener('click', changeHandler));
 		}
 		const channelInput = document.getElementById('channel-input');
 		const videoInput = document.getElementById('video-input');
 		if (channelInput) {
-			channelInput.addEventListener('keypress', function(event) {
+			const channelHandler = function(event) {
 				if (event.key === 'Enter') handleConnect();
-			});
+			};
+			channelInput.addEventListener('keypress', channelHandler);
+			registerCleanup(() => channelInput.removeEventListener('keypress', channelHandler));
 		}
 		if (videoInput) {
-			videoInput.addEventListener('keypress', function(event) {
+			const videoHandler = function(event) {
 				if (event.key === 'Enter') handleConnect();
-			});
+			};
+			videoInput.addEventListener('keypress', videoHandler);
+			registerCleanup(() => videoInput.removeEventListener('keypress', videoHandler));
 		}
 		if (urlParams.has('code')) {
 			handleAuthCallback();
@@ -2644,10 +2750,14 @@ try {
 		loadEmojiData().catch(error => {
 		  console.error('Failed to load emoji data:', error);
 		});
+		
+		// Add cleanup on page unload
+		window.addEventListener('beforeunload', cleanupResources);
+		registerCleanup(() => window.removeEventListener('beforeunload', cleanupResources));
 	}
 	
 	function setupSettingsListener() {
-		window.addEventListener('settingsChanged', function(e) {
+		const settingsHandler = function(e) {
 			if (e.detail) {
 				if ("EMOTELIST" in e.detail) {
 					EMOTELIST = e.detail.EMOTELIST;
@@ -2658,7 +2768,9 @@ try {
 					console.log('settings updated:', settings);
 				}
 			}
-		});
+		};
+		window.addEventListener('settingsChanged', settingsHandler);
+		registerCleanup(() => window.removeEventListener('settingsChanged', settingsHandler));
 	}
 	
 	

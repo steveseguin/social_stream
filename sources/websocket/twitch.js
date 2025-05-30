@@ -285,8 +285,11 @@ try{
 		}
 
 		// Fetch badges before setting up the chat connection
-		const badges = await fetchBadges(channelInfo.id);
-		if (!badges) {
+		const badgeData = await fetchBadges(channelInfo.id);
+		if (badgeData) {
+			globalBadges = badgeData.globalBadges;
+			channelBadges = badgeData.channelBadges;
+		} else {
 			console.log('Failed to fetch badges');
 			// Continue anyway, just won't show badges
 		}
@@ -338,8 +341,8 @@ try{
 			}
 			console.log(channel);
 			getViewerCount(channel);
-			clearInterval(getFollowersInterval);
-			getFollowersInterval = setInterval(() => getViewerCount(channel), 60000);
+			clearInterval(getViewerCountInterval);
+			getViewerCountInterval = setInterval(() => getViewerCount(channel), 60000);
 			
 		} catch (error) {
 			console.log('Error during connection setup:', error);

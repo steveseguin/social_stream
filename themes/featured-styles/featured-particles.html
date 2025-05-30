@@ -404,6 +404,28 @@
             word-wrap: break-word;
             text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
         }
+        
+        /* Inline images/SVGs in chat messages */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em; /* Relative to text size */
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+        }
+        
+        /* Emote-specific sizing */
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
+        }
 
         .donation-info {
             display: inline-flex;
@@ -634,7 +656,7 @@
         // Create iframe
         function createIframe() {
             const iframe = document.createElement('iframe');
-            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=featured-particles&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
             iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;';
             iframe.id = 'vdoninja';
             iframe.allow = 'microphone';
@@ -642,19 +664,56 @@
 
             window.addEventListener('message', function(e) {
                 if (e.source !== iframe.contentWindow) return;
-                if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+                if (e.data.dataReceived && "overlayNinja" in  e.data.dataReceived) {
                     processMessage(e.data.dataReceived.overlayNinja);
                 }
             });
         }
 
         function processMessage(data) {
-            if (!data || data === false || (data.contents === false)) {
+            
+            // Handle clear command
+            if (!data || data === false) {
                 hideMessage();
                 return;
             }
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                hideMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
             if (data && data.contents) {
                 showMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processMessage({ contents: data.content });
+                } else {
+                    hideMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            showMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    hideMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                showMessage(data);
             }
         }
 
@@ -687,7 +746,7 @@
 
                 const username = document.createElement('span');
                 username.className = 'username';
-                username.textContent = content.chatname || 'Anonymous';
+                username.innerHTML = content.chatname || 'Anonymous';
                 if (content.nameColor && style !== 'snow' && style !== 'matrix') {
                     username.style.color = content.nameColor;
                 }

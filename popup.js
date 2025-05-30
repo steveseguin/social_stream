@@ -1271,6 +1271,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
 	{ id: "leaderboard", path: "leaderboard.html" },
+	{ id: "games", path: "games.html" },
     { id: "ticker", path: "ticker.html" },
     { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
@@ -1700,7 +1701,7 @@ function update(response, sync = true) {
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
-                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'leaderboardlink',
+                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink',
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -2143,6 +2144,7 @@ function getTargetMap() {
         'credits': 13,
         'giveaway': 14,
 		'leaderboard': 19,
+		'games': 20,
         'privatechatbot': 15,
 		'poll': 16,
 		'eventsdashboard': 17,
@@ -3001,6 +3003,7 @@ function refreshLinks(){
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
 	  'leaderboardlink': 'leaderboard',
+	  'gameslink': 'games',
       'tickerlink': 'ticker',
       'wordcloudlink': 'wordcloud',
       'polllink': 'poll',
@@ -4752,6 +4755,78 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	// Games preset selector handler
+	const gamesSelector = document.getElementById('games-preset-select');
+	if (gamesSelector) {
+		gamesSelector.addEventListener('change', function() {
+			const overlayDiv = document.getElementById('games');
+			const overlayLink = document.getElementById('gameslink');
+			
+			if (!overlayDiv || !overlayLink) return;
+			
+			// Hide all game config sections
+			document.querySelectorAll('.game-config-section').forEach(section => {
+				section.style.display = 'none';
+			});
+			
+			if (this.value) {
+				// A game was selected
+				const gameUrl = baseURL + this.value;
+				
+				// Extract existing parameters from current URL
+				let existingParams = '';
+				if (overlayDiv.raw && overlayDiv.raw.includes('?')) {
+					existingParams = overlayDiv.raw.split('?')[1];
+				}
+				
+				// Extract session parameter to preserve it
+				let sessionParam = '';
+				if (existingParams) {
+					const params = new URLSearchParams(existingParams);
+					const session = params.get('session') || params.get('s');
+					if (session) {
+						sessionParam = session;
+					}
+				}
+				
+				// Construct new URL with game
+				let newUrl = gameUrl;
+				if (sessionParam) {
+					newUrl += '?session=' + sessionParam;
+				}
+				
+				// Update the overlay URL
+				overlayDiv.raw = newUrl;
+				overlayLink.href = newUrl;
+				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+				
+				// Show game-specific config section
+				const gameType = this.value.match(/games\/(\w+)\.html/);
+				if (gameType && gameType[1]) {
+					const configSection = document.getElementById(gameType[1] + '-config');
+					if (configSection) {
+						configSection.style.display = 'block';
+					}
+				}
+				
+				// Hide general game config when a specific game is selected
+				const generalConfig = document.getElementById('general-game-config');
+				if (generalConfig) {
+					generalConfig.style.display = 'none';
+				}
+			} else {
+				// No game selected - show general options
+				const generalConfig = document.getElementById('general-game-config');
+				if (generalConfig) {
+					generalConfig.style.display = 'block';
+				}
+				
+				// Reset URL to basic games.html (or remove the games parameter)
+				// This would need to be implemented based on how you want to handle "no game selected"
+			}
+		});
+	}
+
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onclick = function(e){
@@ -4874,4 +4949,17 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			loadWebMidiScript(initializeMIDIDropdown);
 		},3000);
 	} catch(e){ console.error(e);}
+	
+	// Handle games selector initial state
+	const gamesSelectorInit = document.getElementById('games-preset-select');
+	if (gamesSelectorInit && gamesSelectorInit.value) {
+		// Trigger change event to show correct config
+		gamesSelectorInit.dispatchEvent(new Event('change'));
+	} else {
+		// Show general config by default
+		const generalConfig = document.getElementById('general-game-config');
+		if (generalConfig) {
+			generalConfig.style.display = 'block';
+		}
+	}
 });
