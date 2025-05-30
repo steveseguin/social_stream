@@ -45,9 +45,61 @@
             margin: 20px 0;
         }
 
-        /* Style 1: Bounce & Glow */
+        /* Style 1: Bounce & Glow - Energetic bounce with trail effect */
+        @keyframes bounceInWithTrail {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(100px);
+            }
+            20% {
+                opacity: 0.2;
+                transform: scale(0.5) translateY(80px);
+            }
+            40% {
+                opacity: 0.4;
+                transform: scale(0.7) translateY(60px);
+            }
+            60% {
+                opacity: 0.7;
+                transform: scale(1.1) translateY(-20px);
+            }
+            80% {
+                opacity: 0.9;
+                transform: scale(0.95) translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
         .style-bounce .message-container {
-            animation: bounceIn 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            animation: bounceInWithTrail 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+        }
+
+        .style-bounce .message-container::before,
+        .style-bounce .message-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: inherit;
+            border-radius: inherit;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        .style-bounce .message-container.show::before {
+            animation: bounceTrail 0.8s ease-out;
+        }
+
+        .style-bounce .message-container.show::after {
+            animation: bounceTrail 0.8s 0.1s ease-out;
+        }
+
+        @keyframes bounceTrail {
+            0%, 100% { opacity: 0; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.1); }
         }
 
         .style-bounce .message {
@@ -130,9 +182,59 @@
             50% { transform: translateY(-10px); }
         }
 
-        /* Style 3: Typewriter Effect */
+        /* Style 3: Typewriter Effect - Terminal boot sequence */
+        @keyframes terminalBoot {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scaleY(0.1);
+                filter: blur(10px);
+            }
+            20% {
+                opacity: 0.5;
+                transform: translateY(20px) scaleY(0.3);
+                filter: blur(5px) brightness(2);
+            }
+            40% {
+                opacity: 0.8;
+                transform: translateY(10px) scaleY(0.7);
+                filter: blur(2px) brightness(1.5);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(5px) scaleY(1.1);
+                filter: blur(0) brightness(1.2);
+            }
+            80% {
+                transform: translateY(0) scaleY(0.95);
+                filter: brightness(1);
+            }
+            100% {
+                transform: translateY(0) scaleY(1);
+                filter: brightness(1);
+            }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
         .style-typewriter .message-container {
-            animation: fadeInUp 0.5s ease-out;
+            animation: terminalBoot 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .style-typewriter .message-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to bottom, transparent, #0ff, transparent);
+            animation: scanline 2s linear infinite;
+            opacity: 0.5;
         }
 
         .style-typewriter .message {
@@ -389,53 +491,141 @@
             text-shadow: 0 0 5px currentColor;
         }
 
-        /* Exit animations */
-        .message-container.exit-bounce {
-            animation: bounceOut 0.6s ease-in forwards;
-        }
-
-        .message-container.exit-slide {
-            animation: slideOutRotate 0.6s ease-in forwards;
-        }
-
-        .message-container.exit-fade {
-            animation: fadeOutDown 0.5s ease-in forwards;
-        }
-
-        @keyframes bounceOut {
+        /* Exit animations - Style-specific exits */
+        
+        /* Bounce style exit - Implode with particles */
+        @keyframes bounceImplode {
             0% {
                 opacity: 1;
-                transform: scale(1);
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(5deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(720deg);
+                filter: blur(10px);
+            }
+        }
+
+        .style-bounce .message-container.exit {
+            animation: bounceImplode 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        }
+
+        /* Slide style exit - Warp away */
+        @keyframes warpAway {
+            0% {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0) translateZ(0) scaleX(1);
+            }
+            100% {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(90deg) translateZ(500px) scaleX(0.1);
+                filter: blur(20px);
+            }
+        }
+
+        .style-slide .message-container.exit {
+            animation: warpAway 0.8s ease-in forwards;
+        }
+
+        /* Typewriter exit - Terminal shutdown */
+        @keyframes terminalShutdown {
+            0% {
+                opacity: 1;
+                transform: scaleY(1);
+                filter: brightness(1);
             }
             20% {
-                transform: scale(1.1);
+                opacity: 1;
+                transform: scaleY(1);
+                filter: brightness(2) contrast(2);
+            }
+            40% {
+                opacity: 1;
+                transform: scaleY(0.5);
+                filter: brightness(0.5) blur(1px);
+            }
+            60% {
+                opacity: 1;
+                transform: scaleY(0.1);
+                filter: brightness(3) blur(2px);
+            }
+            80% {
+                opacity: 0.5;
+                transform: scaleY(0.01);
+                filter: brightness(0) blur(5px);
             }
             100% {
                 opacity: 0;
-                transform: scale(0);
+                transform: scaleY(0);
             }
         }
 
-        @keyframes slideOutRotate {
+        .style-typewriter .message-container.exit {
+            animation: terminalShutdown 0.5s ease-in forwards;
+            transform-origin: center;
+        }
+
+        /* Comic exit - Comic poof */
+        @keyframes comicPoof {
             0% {
                 opacity: 1;
-                transform: translateX(0) rotateY(0);
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5) rotate(180deg);
             }
             100% {
                 opacity: 0;
-                transform: translateX(100%) rotateY(90deg);
+                transform: scale(0) rotate(360deg);
+                filter: blur(20px);
             }
         }
 
-        @keyframes fadeOutDown {
+        .style-comic .message-container.exit {
+            animation: comicPoof 0.5s ease-out forwards;
+        }
+
+        /* Holo exit - Digital disintegration */
+        @keyframes digitalDisintegrate {
             0% {
                 opacity: 1;
-                transform: translateY(0);
+                transform: translateX(0);
+                filter: none;
+            }
+            20% {
+                opacity: 1;
+                transform: translateX(-2px);
+                filter: hue-rotate(90deg);
+            }
+            40% {
+                opacity: 0.8;
+                transform: translateX(2px);
+                filter: hue-rotate(180deg) blur(1px);
+            }
+            60% {
+                opacity: 0.6;
+                transform: translateX(-4px) skewX(10deg);
+                filter: hue-rotate(270deg) blur(2px);
+            }
+            80% {
+                opacity: 0.3;
+                transform: translateX(4px) skewX(-10deg);
+                filter: hue-rotate(360deg) blur(5px);
             }
             100% {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateX(0) skewX(45deg) scaleY(0.1);
+                filter: blur(10px);
             }
+        }
+
+        .style-holo .message-container.exit {
+            animation: digitalDisintegrate 0.7s ease-out forwards;
         }
 
         /* Hide empty elements */
@@ -462,7 +652,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomID = urlParams.get('session') || urlParams.get('room') || urlParams.get('roomid') || 'TESTROOM';
         const style = urlParams.get('style') || 'bounce'; // bounce, slide, typewriter, comic, holo
-        const exitStyle = urlParams.get('exit') || 'bounce'; // bounce, slide, fade
         const password = urlParams.get('password') || 'false';
         const showtime = parseInt(urlParams.get('showtime') || '6000');
         
@@ -649,14 +838,23 @@
             }
 
             if (currentMessage) {
-                currentMessage.classList.add(`exit-${exitStyle}`);
+                currentMessage.classList.add('exit');
+                // Different exit timings for different styles
+                const exitTime = {
+                    bounce: 600,
+                    slide: 800,
+                    typewriter: 500,
+                    comic: 500,
+                    holo: 700
+                }[style] || 600;
+                
                 setTimeout(() => {
                     if (currentMessage && currentMessage.parentNode) {
                         currentMessage.parentNode.removeChild(currentMessage);
                     }
                     currentMessage = null;
                     if (callback) callback();
-                }, 600);
+                }, exitTime);
             } else if (callback) {
                 callback();
             }

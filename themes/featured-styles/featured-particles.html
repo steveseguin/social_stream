@@ -47,20 +47,240 @@
             padding: 20px;
         }
 
-        .message-container {
-            opacity: 0;
-            transform: scale(0.8);
-            transition: all 0.6s ease-out;
+        /* Style-specific entrance animations */
+        
+        /* Fireflies - Glow fade in */
+        @keyframes fireflyGlow {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) translateY(30px);
+                filter: brightness(0) blur(20px);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1) translateY(15px);
+                filter: brightness(2) blur(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: brightness(1) blur(0);
+            }
         }
-
-        .message-container.show {
-            opacity: 1;
-            transform: scale(1);
+        
+        .style-fireflies .message-container.show {
+            animation: fireflyGlow 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
-
-        .message-container.hide {
-            opacity: 0;
-            transform: scale(0.8) translateY(20px);
+        
+        /* Snow - Drift down */
+        @keyframes snowDrift {
+            0% {
+                opacity: 0;
+                transform: translateY(-50px) translateX(-20px) rotate(-5deg);
+            }
+            50% {
+                opacity: 0.7;
+                transform: translateY(-25px) translateX(10px) rotate(2deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) translateX(0) rotate(0);
+            }
+        }
+        
+        .style-snow .message-container.show {
+            animation: snowDrift 0.8s ease-out;
+        }
+        
+        /* Matrix - Digital construction */
+        @keyframes matrixConstruct {
+            0% {
+                opacity: 0;
+                transform: scaleY(0) translateY(20px);
+                filter: brightness(0) contrast(2);
+            }
+            25% {
+                opacity: 0.3;
+                transform: scaleY(0.3) translateY(20px);
+                filter: brightness(2) contrast(2) hue-rotate(90deg);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scaleY(0.7) translateY(10px);
+                filter: brightness(1.5) contrast(1.5) hue-rotate(180deg);
+            }
+            75% {
+                opacity: 0.9;
+                transform: scaleY(1.1) translateY(5px);
+                filter: brightness(1.2) contrast(1.2) hue-rotate(270deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scaleY(1) translateY(0);
+                filter: brightness(1) contrast(1) hue-rotate(360deg);
+            }
+        }
+        
+        .style-matrix .message-container.show {
+            animation: matrixConstruct 0.8s ease-out;
+            transform-origin: top;
+        }
+        
+        /* Bubbles - Float up */
+        @keyframes bubbleFloat {
+            0% {
+                opacity: 0;
+                transform: translateY(50px) scale(0.5);
+                filter: blur(10px);
+            }
+            50% {
+                opacity: 0.5;
+                transform: translateY(25px) scale(0.8) translateX(-10px);
+                filter: blur(3px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1) translateX(0);
+                filter: blur(0);
+            }
+        }
+        
+        .style-bubbles .message-container.show {
+            animation: bubbleFloat 1s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        /* Stars - Twinkle in */
+        @keyframes starTwinkle {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+                filter: brightness(3);
+            }
+            25% {
+                opacity: 0.3;
+                transform: scale(1.5) rotate(135deg);
+                filter: brightness(2);
+            }
+            50% {
+                opacity: 0.6;
+                transform: scale(0.8) rotate(90deg);
+                filter: brightness(1.5);
+            }
+            75% {
+                opacity: 0.9;
+                transform: scale(1.1) rotate(45deg);
+                filter: brightness(1.2);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                filter: brightness(1);
+            }
+        }
+        
+        .style-stars .message-container.show {
+            animation: starTwinkle 0.8s ease-out;
+        }
+        
+        /* Exit animations */
+        
+        /* Fireflies - Fade to darkness */
+        @keyframes fireflyFade {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: brightness(1) blur(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.5) translateY(30px);
+                filter: brightness(0) blur(20px);
+            }
+        }
+        
+        .style-fireflies .message-container.hide {
+            animation: fireflyFade 0.8s ease-in forwards;
+        }
+        
+        /* Snow - Melt away */
+        @keyframes snowMelt {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scaleY(1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: translateY(10px) scaleY(0.5);
+                filter: blur(2px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(20px) scaleY(0.1);
+                filter: blur(10px);
+            }
+        }
+        
+        .style-snow .message-container.hide {
+            animation: snowMelt 0.6s ease-in forwards;
+        }
+        
+        /* Matrix - Digital deconstruction */
+        @keyframes matrixDeconstruct {
+            0% {
+                opacity: 1;
+                transform: scaleY(1) translateY(0);
+                filter: brightness(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scaleY(0) translateY(20px) skewX(45deg);
+                filter: brightness(0) blur(10px) hue-rotate(180deg);
+            }
+        }
+        
+        .style-matrix .message-container.hide {
+            animation: matrixDeconstruct 0.5s ease-in forwards;
+            transform-origin: bottom;
+        }
+        
+        /* Bubbles - Pop */
+        @keyframes bubblePop {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.3);
+                filter: brightness(1.5);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0);
+                filter: brightness(2) blur(20px);
+            }
+        }
+        
+        .style-bubbles .message-container.hide {
+            animation: bubblePop 0.4s ease-out forwards;
+        }
+        
+        /* Stars - Fade to stardust */
+        @keyframes starDust {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                filter: brightness(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(-720deg);
+                filter: brightness(0) blur(20px);
+            }
+        }
+        
+        .style-stars .message-container.hide {
+            animation: starDust 0.8s ease-in forwards;
         }
 
         /* Style 1: Fireflies */

@@ -281,16 +281,199 @@
             height: 22px;
         }
 
-        /* Exit animations */
-        .message-wrapper.exit {
-            animation: exitScale 0.6s ease-in forwards;
+        /* Style-specific entrance animations */
+        
+        /* Cube entrance - Assemble from fragments */
+        @keyframes cubeAssemble {
+            0% {
+                opacity: 0;
+                transform: rotateX(180deg) rotateY(180deg) scale(0.1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: rotateX(90deg) rotateY(90deg) scale(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: rotateX(0) rotateY(0) scale(1);
+            }
+        }
+        
+        .style-cube .message-wrapper.show {
+            animation: cubeAssemble 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards,
+                      rotateCube 20s infinite linear 1s;
+        }
+        
+        /* Flip entrance - Card deal effect */
+        @keyframes cardDeal {
+            0% {
+                opacity: 0;
+                transform: rotateY(-180deg) translateX(-200px) translateZ(500px) scale(0.5);
+            }
+            50% {
+                opacity: 1;
+                transform: rotateY(-90deg) translateX(-100px) translateZ(250px) scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: rotateY(0) translateX(0) translateZ(0) scale(1);
+            }
+        }
+        
+        .style-flip .message-wrapper.show {
+            animation: cardDeal 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        
+        /* Float entrance - Materialize from particles */
+        @keyframes materialize {
+            0% {
+                opacity: 0;
+                transform: scale(0) translateY(50px);
+                filter: blur(20px);
+            }
+            50% {
+                opacity: 0.5;
+                transform: scale(1.1) translateY(25px);
+                filter: blur(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: blur(0);
+            }
+        }
+        
+        .style-float .message-wrapper.show {
+            animation: materialize 0.8s ease-out forwards,
+                      float 6s ease-in-out infinite 0.8s;
+        }
+        
+        /* Helix entrance - Spiral in */
+        @keyframes spiralIn {
+            0% {
+                opacity: 0;
+                transform: rotateY(720deg) translateZ(1000px) scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: rotateY(0) translateZ(0) scale(1);
+            }
+        }
+        
+        .style-helix .message-wrapper.show {
+            animation: spiralIn 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+                      helixRotate 10s linear infinite 1.2s;
+        }
+        
+        /* Iso entrance - Build block by block */
+        @keyframes isoBuild {
+            0% {
+                opacity: 0;
+                transform: rotateX(30deg) rotateY(-45deg) translateY(100px) scale(0);
+            }
+            33% {
+                opacity: 0.3;
+                transform: rotateX(30deg) rotateY(-45deg) translateY(50px) scale(0.5);
+            }
+            66% {
+                opacity: 0.7;
+                transform: rotateX(30deg) rotateY(-45deg) translateY(25px) scale(0.8);
+            }
+            100% {
+                opacity: 1;
+                transform: rotateX(30deg) rotateY(-45deg) translateY(0) scale(1);
+            }
+        }
+        
+        .style-iso .message-wrapper.show {
+            animation: isoBuild 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards,
+                      isoFloat 4s ease-in-out infinite 0.8s;
         }
 
-        @keyframes exitScale {
-            to {
-                opacity: 0;
-                transform: scale(0) rotateX(90deg);
+        /* Exit animations */
+        
+        /* Cube exit - Explode into fragments */
+        @keyframes cubeExplode {
+            0% {
+                opacity: 1;
+                transform: rotateX(0) rotateY(0) scale(1);
             }
+            100% {
+                opacity: 0;
+                transform: rotateX(720deg) rotateY(720deg) scale(0) translateZ(-500px);
+                filter: blur(20px);
+            }
+        }
+        
+        .style-cube .message-wrapper.exit {
+            animation: cubeExplode 0.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        }
+        
+        /* Flip exit - Card fly away */
+        @keyframes cardFlyAway {
+            0% {
+                opacity: 1;
+                transform: rotateY(0) translateX(0) translateZ(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: rotateY(180deg) translateX(200px) translateZ(-500px) scale(0.3);
+            }
+        }
+        
+        .style-flip .message-wrapper.exit {
+            animation: cardFlyAway 0.6s ease-in forwards;
+        }
+        
+        /* Float exit - Dematerialize */
+        @keyframes dematerialize {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) translateY(-50px);
+                filter: blur(20px);
+            }
+        }
+        
+        .style-float .message-wrapper.exit {
+            animation: dematerialize 0.6s ease-in forwards;
+        }
+        
+        /* Helix exit - Spiral out */
+        @keyframes spiralOut {
+            0% {
+                opacity: 1;
+                transform: rotateY(0) translateZ(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: rotateY(-720deg) translateZ(-1000px) scale(0);
+            }
+        }
+        
+        .style-helix .message-wrapper.exit {
+            animation: spiralOut 0.8s ease-in forwards;
+        }
+        
+        /* Iso exit - Collapse */
+        @keyframes isoCollapse {
+            0% {
+                opacity: 1;
+                transform: rotateX(30deg) rotateY(-45deg) translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: rotateX(30deg) rotateY(-45deg) translateY(100px) scale(0);
+                filter: brightness(0);
+            }
+        }
+        
+        .style-iso .message-wrapper.exit {
+            animation: isoCollapse 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
         }
 
         /* Hide on load */

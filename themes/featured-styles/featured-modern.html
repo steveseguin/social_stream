@@ -36,20 +36,140 @@
             padding: 20px;
         }
 
-        .message-wrapper {
+        /* Glass style animations - Smooth fade and blur */
+        .style-glass .message-wrapper {
             opacity: 0;
-            transform: translateY(20px);
-            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            transform: scale(0.9) translateY(20px);
+            filter: blur(10px);
+            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        .message-wrapper.show {
+        .style-glass .message-wrapper.show {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+            filter: blur(0);
+        }
+
+        .style-glass .message-wrapper.hide {
+            opacity: 0;
+            transform: scale(1.1) translateY(-20px);
+            filter: blur(10px);
+        }
+
+        /* Neon style animations - Electric slide in */
+        @keyframes neonGlitch {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-2px); }
+            40% { transform: translateX(2px); }
+            60% { transform: translateX(-1px); }
+        }
+
+        .style-neon .message-wrapper {
+            opacity: 0;
+            transform: translateX(-100vw);
+            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .style-neon .message-wrapper.show {
+            opacity: 1;
+            transform: translateX(0);
+            animation: neonGlitch 0.3s ease-out 0.8s;
+        }
+
+        .style-neon .message-wrapper.hide {
+            opacity: 0;
+            transform: translateX(100vw);
+        }
+
+        /* Minimal style animations - Subtle slide up */
+        .style-minimal .message-wrapper {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .style-minimal .message-wrapper.show {
             opacity: 1;
             transform: translateY(0);
         }
 
-        .message-wrapper.hide {
+        .style-minimal .message-wrapper.hide {
             opacity: 0;
-            transform: translateY(-20px);
+            transform: translateY(-30px) scale(0.95);
+        }
+
+        /* Gaming style animations - Matrix-like assembly */
+        @keyframes matrixAssemble {
+            0% {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(90deg) translateZ(300px);
+                filter: brightness(2) contrast(2);
+            }
+            50% {
+                opacity: 0.5;
+                transform: perspective(1000px) rotateY(45deg) translateZ(150px);
+                filter: brightness(1.5) contrast(1.5);
+            }
+            100% {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0) translateZ(0);
+                filter: brightness(1) contrast(1);
+            }
+        }
+
+        @keyframes matrixDisassemble {
+            0% {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0) translateZ(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(-90deg) translateZ(300px) scale(0.5);
+                filter: brightness(0) hue-rotate(180deg);
+            }
+        }
+
+        .style-gaming .message-wrapper {
+            opacity: 0;
+            transform-style: preserve-3d;
+        }
+
+        .style-gaming .message-wrapper.show {
+            animation: matrixAssemble 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .style-gaming .message-wrapper.hide {
+            animation: matrixDisassemble 0.6s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+        }
+
+        /* Twitch style animations - Bounce and slide */
+        @keyframes twitchBounce {
+            0% {
+                opacity: 0;
+                transform: translateX(-50px) scale(0.8);
+            }
+            60% {
+                opacity: 1;
+                transform: translateX(10px) scale(1.05);
+            }
+            80% {
+                transform: translateX(-5px) scale(0.98);
+            }
+            100% {
+                transform: translateX(0) scale(1);
+            }
+        }
+
+        .style-twitch .message-wrapper {
+            opacity: 0;
+        }
+
+        .style-twitch .message-wrapper.show {
+            animation: twitchBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+        }
+
+        .style-twitch .message-wrapper.hide {
+            animation: twitchBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) reverse forwards;
         }
 
         /* Base message structure */
@@ -373,7 +493,6 @@
 
         // Process incoming messages
         function processData(data) {
-			console.log("processData received:", data);
             
             // Handle clear command
             if (!data || data === false) {
@@ -573,7 +692,7 @@
                     }
                     currentMessage = null;
                     if (callback) callback();
-                }, 500);
+                }, 800); // Increased to match longest animation
             } else if (callback) {
                 callback();
             }
