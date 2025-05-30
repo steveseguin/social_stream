@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Rain - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: #000000;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .emoji-drop {
+            position: absolute;
+            font-size: 48px;
+            pointer-events: none;
+            z-index: 10;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            animation: fall linear forwards;
+        }
+        
+        @keyframes fall {
+            0% {
+                transform: translateY(-100px) rotate(0deg);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(calc(100vh + 100px)) rotate(360deg);
+                opacity: 0.3;
+            }
+        }
+        
+        .emoji-burst {
+            position: absolute;
+            font-size: 80px;
+            pointer-events: none;
+            z-index: 20;
+            animation: burst 2s ease-out forwards;
+        }
+        
+        @keyframes burst {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0.8) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        #stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #emoji-counter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            z-index: 100;
+        }
+        
+        #rain-intensity {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .intensity-bar {
+            width: 200px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .intensity-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff88, #ffaa00, #ff0066);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #ffaa00;
+            font-size: 18px;
+        }
+        
+        .combo-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: bold;
+            color: #ffaa00;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.8);
+            z-index: 50;
+            pointer-events: none;
+            animation: combo-pop 1s ease-out forwards;
+        }
+        
+        @keyframes combo-pop {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="stats">
+            <div class="stat-line">Emojis/min: <span id="emoji-rate">0</span></div>
+            <div class="stat-line">Total Drops: <span id="total-drops">0</span></div>
+            <div class="stat-line">Combo Count: <span id="combo-count">0</span></div>
+            <div class="stat-line">Peak Intensity: <span id="peak-intensity">0</span></div>
+        </div>
+        
+        <div id="emoji-counter">
+            <div style="font-size: 24px; font-weight: bold; color: #ffaa00;">🌧️ Emoji Rain</div>
+            <div style="font-size: 48px; margin: 10px 0;" id="current-emoji">☔</div>
+            <div style="font-size: 14px;">Active Drops: <span id="active-count">0</span></div>
+        </div>
+        
+        <div id="rain-intensity">
+            <div>Rain Intensity</div>
+            <div class="intensity-bar">
+                <div class="intensity-fill" id="intensity-fill"></div>
+            </div>
+            <div id="intensity-level">Calm</div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🌧️ Emoji Rain - How to Play:</strong></div>
+            <div>Send any emoji in chat to make it rain!</div>
+            <div>Multiple emojis = heavier rain</div>
+            <div>Same emoji combos create bursts!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            totalDrops: 0,
+            emojiRate: 0,
+            activeDrops: 0,
+            comboCount: 0,
+            peakIntensity: 0,
+            recentEmojis: [],
+            emojiTimestamps: [],
+            lastComboEmoji: '',
+            comboStreak: 0
+        };
+
+        // Intensity levels
+        const intensityLevels = [
+            { threshold: 0, name: 'Calm', color: '#00ff88' },
+            { threshold: 20, name: 'Light Rain', color: '#88ff00' },
+            { threshold: 50, name: 'Steady Rain', color: '#ffff00' },
+            { threshold: 100, name: 'Heavy Rain', color: '#ffaa00' },
+            { threshold: 200, name: 'Downpour', color: '#ff6600' },
+            { threshold: 300, name: 'STORM!', color: '#ff0066' }
+        ];
+
+        // Extract emojis from text
+        function extractEmojis(text) {
+            const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+            return text.match(emojiRegex) || [];
+        }
+
+        // Create falling emoji
+        function createFallingEmoji(emoji, x = null) {
+            const drop = document.createElement('div');
+            drop.className = 'emoji-drop';
+            drop.textContent = emoji;
+            
+            // Random horizontal position if not specified
+            const xPos = x !== null ? x : Math.random() * (window.innerWidth - 50);
+            drop.style.left = xPos + 'px';
+            drop.style.top = '-100px';
+            
+            // Random fall duration based on intensity
+            const intensity = gameState.emojiRate;
+            const baseDuration = Math.max(2, 6 - (intensity / 50));
+            const duration = baseDuration + (Math.random() * 2);
+            drop.style.animationDuration = duration + 's';
+            
+            // Add slight horizontal drift
+            const drift = (Math.random() - 0.5) * 100;
+            drop.style.setProperty('--drift', drift + 'px');
+            
+            document.getElementById('game-container').appendChild(drop);
+            gameState.activeDrops++;
+            
+            // Remove after animation
+            setTimeout(() => {
+                if (drop.parentNode) {
+                    drop.parentNode.removeChild(drop);
+                    gameState.activeDrops--;
+                    updateDisplay();
+                }
+            }, duration * 1000);
+        }
+
+        // Create emoji burst effect
+        function createEmojiBurst(emoji, x, y) {
+            const burst = document.createElement('div');
+            burst.className = 'emoji-burst';
+            burst.textContent = emoji;
+            burst.style.left = x + 'px';
+            burst.style.top = y + 'px';
+            
+            document.getElementById('game-container').appendChild(burst);
+            
+            setTimeout(() => {
+                if (burst.parentNode) {
+                    burst.parentNode.removeChild(burst);
+                }
+            }, 2000);
+        }
+
+        // Show combo indicator
+        function showCombo(comboCount) {
+            const combo = document.createElement('div');
+            combo.className = 'combo-indicator';
+            combo.textContent = comboCount + 'x COMBO!';
+            
+            document.getElementById('game-container').appendChild(combo);
+            
+            setTimeout(() => {
+                if (combo.parentNode) {
+                    combo.parentNode.removeChild(combo);
+                }
+            }, 1000);
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('emoji-rate').textContent = gameState.emojiRate.toFixed(1);
+            document.getElementById('total-drops').textContent = gameState.totalDrops;
+            document.getElementById('combo-count').textContent = gameState.comboCount;
+            document.getElementById('peak-intensity').textContent = gameState.peakIntensity.toFixed(1);
+            document.getElementById('active-count').textContent = gameState.activeDrops;
+
+            // Update intensity
+            const currentIntensity = gameState.emojiRate;
+            if (currentIntensity > gameState.peakIntensity) {
+                gameState.peakIntensity = currentIntensity;
+            }
+
+            // Find current intensity level
+            let currentLevel = intensityLevels[0];
+            for (let level of intensityLevels) {
+                if (currentIntensity >= level.threshold) {
+                    currentLevel = level;
+                }
+            }
+
+            document.getElementById('intensity-level').textContent = currentLevel.name;
+            document.getElementById('intensity-fill').style.width = Math.min(100, (currentIntensity / 300) * 100) + '%';
+            document.getElementById('intensity-fill').style.background = `linear-gradient(90deg, #00ff88, ${currentLevel.color})`;
+
+            // Update current emoji display
+            if (gameState.recentEmojis.length > 0) {
+                document.getElementById('current-emoji').textContent = gameState.recentEmojis[gameState.recentEmojis.length - 1];
+            }
+        }
+
+        // Calculate emoji rate
+        function updateEmojiRate() {
+            const now = Date.now();
+            gameState.emojiTimestamps = gameState.emojiTimestamps.filter(t => now - t < 60000); // Last minute
+            gameState.emojiRate = gameState.emojiTimestamps.length;
+            updateDisplay();
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const emojis = extractEmojis(data.chatmessage);
+            if (emojis.length === 0) return;
+
+            // Track emoji activity
+            gameState.emojiTimestamps.push(Date.now());
+            
+            emojis.forEach((emoji, index) => {
+                gameState.totalDrops++;
+                gameState.recentEmojis.push(emoji);
+                
+                // Keep recent emojis list manageable
+                if (gameState.recentEmojis.length > 20) {
+                    gameState.recentEmojis.shift();
+                }
+
+                // Check for combo (same emoji in sequence)
+                if (emoji === gameState.lastComboEmoji) {
+                    gameState.comboStreak++;
+                    if (gameState.comboStreak >= 3) {
+                        gameState.comboCount++;
+                        showCombo(gameState.comboStreak);
+                        
+                        // Create burst effect at random location
+                        const x = Math.random() * (window.innerWidth - 100);
+                        const y = Math.random() * (window.innerHeight - 200) + 100;
+                        createEmojiBurst(emoji, x, y);
+                    }
+                } else {
+                    gameState.comboStreak = 1;
+                }
+                gameState.lastComboEmoji = emoji;
+
+                // Create falling emoji with slight delay for multiple emojis
+                setTimeout(() => {
+                    createFallingEmoji(emoji);
+                }, index * 100);
+            });
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoEmojis = ['😀', '😍', '🤔', '😂', '👍', '❤️', '🔥', '💯', '🎉', '⚡', '🌟', '💫'];
+            
+            setInterval(() => {
+                const emoji = demoEmojis[Math.floor(Math.random() * demoEmojis.length)];
+                const shouldCombo = Math.random() < 0.3; // 30% chance for combo
+                
+                processData({
+                    chatname: 'DemoUser',
+                    chatmessage: shouldCombo && gameState.lastComboEmoji ? gameState.lastComboEmoji : emoji
+                });
+            }, 500 + Math.random() * 1000);
+        }
+        
+        // Update emoji rate periodically
+        setInterval(updateEmojiRate, 1000);
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

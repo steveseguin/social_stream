@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Lane - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 50%, #2c3e50 100%);
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #memory-timeline {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 80%;
+            perspective: 1000px;
+        }
+        
+        .memory-photo {
+            position: absolute;
+            width: 200px;
+            height: 150px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.5s ease;
+            animation: photo-float 8s ease-in-out infinite;
+        }
+        
+        .memory-photo:hover {
+            transform: scale(1.1) rotateY(5deg);
+            z-index: 10;
+        }
+        
+        @keyframes photo-float {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg);
+            }
+            25% { 
+                transform: translateY(-10px) rotate(1deg);
+            }
+            50% { 
+                transform: translateY(-5px) rotate(-1deg);
+            }
+            75% { 
+                transform: translateY(-15px) rotate(1deg);
+            }
+        }
+        
+        .photo-polaroid {
+            width: 100%;
+            height: 100%;
+            padding: 15px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .photo-image {
+            flex: 1;
+            background: linear-gradient(45deg, #ffeaa7, #fab1a0, #fd79a8, #e17055);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .photo-text {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            right: 10px;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            text-align: center;
+        }
+        
+        .photo-caption {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #333;
+            text-align: center;
+            font-family: 'Courier New', monospace;
+            height: 20px;
+            overflow: hidden;
+        }
+        
+        .memory-sparkle {
+            position: absolute;
+            font-size: 16px;
+            color: #ffd700;
+            animation: sparkle-twinkle 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes sparkle-twinkle {
+            0%, 100% { 
+                opacity: 0;
+                transform: scale(0.5) rotate(0deg);
+            }
+            50% { 
+                opacity: 1;
+                transform: scale(1) rotate(180deg);
+            }
+        }
+        
+        .nostalgic-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 177, 153, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 198, 244, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        #memory-stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #memory-album {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 250px;
+            max-height: 400px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            overflow-y: auto;
+        }
+        
+        .album-memory {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .album-memory:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+        
+        .album-emoji {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+        
+        .album-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .album-author {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        
+        #mood-detector {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            text-align: center;
+        }
+        
+        .mood-indicator {
+            font-size: 48px;
+            margin: 10px 0;
+            animation: mood-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes mood-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #fab1a0;
+            font-size: 18px;
+        }
+        
+        .memory-trail {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #ffd700;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trail-fade 3s ease-out forwards;
+        }
+        
+        @keyframes trail-fade {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.3) translateY(-50px);
+            }
+        }
+        
+        .vintage-filter {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(255, 255, 255, 0.03) 2px,
+                    rgba(255, 255, 255, 0.03) 4px
+                );
+            pointer-events: none;
+            z-index: 15;
+        }
+        
+        .photo-developing {
+            animation: develop-photo 2s ease-out forwards;
+        }
+        
+        @keyframes develop-photo {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) rotateY(90deg);
+                filter: blur(10px) sepia(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.1) rotateY(45deg);
+                filter: blur(5px) sepia(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotateY(0deg);
+                filter: blur(0px) sepia(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="nostalgic-effect"></div>
+        <div class="vintage-filter"></div>
+        
+        <div id="memory-stats">
+            <div class="stat-line">📸 Photos: <span id="photo-count">0</span></div>
+            <div class="stat-line">💭 Memories: <span id="memory-count">0</span></div>
+            <div class="stat-line">👥 Contributors: <span id="contributor-count">0</span></div>
+            <div class="stat-line">🕰️ Nostalgia Level: <span id="nostalgia-level">0</span>%</div>
+        </div>
+        
+        <div id="memory-album">
+            <h4 style="margin-top: 0; color: #fab1a0;">📖 Memory Album</h4>
+            <div id="album-entries"></div>
+        </div>
+        
+        <div id="mood-detector">
+            <h4 style="margin-top: 0; color: #fab1a0;">Current Mood</h4>
+            <div class="mood-indicator" id="current-mood">😊</div>
+            <div id="mood-text">Happy</div>
+        </div>
+        
+        <div id="memory-timeline"></div>
+        
+        <div id="instructions">
+            <div><strong>📷 Memory Lane - How to Play:</strong></div>
+            <div>Share memories and stories in chat!</div>
+            <div>Keywords: <strong>remember</strong>, <strong>childhood</strong>, <strong>nostalgia</strong></div>
+            <div>Emojis become photo themes!</div>
+            <div>Click photos to make them sparkle!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            photos: [],
+            memories: [],
+            contributors: new Set(),
+            nostalgiaLevel: 0,
+            currentMood: 'happy',
+            photoCount: 0,
+            memoryCount: 0
+        };
+
+        // Memory keywords and their themes
+        const memoryKeywords = {
+            childhood: { emoji: '🧸', theme: 'childhood', mood: 'nostalgic' },
+            school: { emoji: '🎒', theme: 'education', mood: 'nostalgic' },
+            friend: { emoji: '👫', theme: 'friendship', mood: 'happy' },
+            family: { emoji: '👨‍👩‍👧‍👦', theme: 'family', mood: 'warm' },
+            vacation: { emoji: '🏖️', theme: 'travel', mood: 'relaxed' },
+            birthday: { emoji: '🎂', theme: 'celebration', mood: 'joyful' },
+            christmas: { emoji: '🎄', theme: 'holiday', mood: 'festive' },
+            summer: { emoji: '☀️', theme: 'season', mood: 'happy' },
+            winter: { emoji: '❄️', theme: 'season', mood: 'cozy' },
+            love: { emoji: '💕', theme: 'romance', mood: 'loving' },
+            graduation: { emoji: '🎓', theme: 'achievement', mood: 'proud' },
+            wedding: { emoji: '💒', theme: 'celebration', mood: 'joyful' },
+            pet: { emoji: '🐕', theme: 'animals', mood: 'loving' },
+            music: { emoji: '🎵', theme: 'hobby', mood: 'happy' },
+            book: { emoji: '📚', theme: 'hobby', mood: 'thoughtful' },
+            game: { emoji: '🎮', theme: 'hobby', mood: 'excited' },
+            cooking: { emoji: '👨‍🍳', theme: 'hobby', mood: 'creative' },
+            art: { emoji: '🎨', theme: 'hobby', mood: 'creative' },
+            remember: { emoji: '💭', theme: 'memory', mood: 'nostalgic' },
+            nostalgia: { emoji: '🕰️', theme: 'memory', mood: 'nostalgic' }
+        };
+
+        // Mood definitions
+        const moods = {
+            happy: { emoji: '😊', color: '#ffd700' },
+            sad: { emoji: '😢', color: '#87ceeb' },
+            nostalgic: { emoji: '😌', color: '#dda0dd' },
+            excited: { emoji: '🤩', color: '#ff6347' },
+            peaceful: { emoji: '😇', color: '#98fb98' },
+            loving: { emoji: '🥰', color: '#ffb6c1' },
+            thoughtful: { emoji: '🤔', color: '#d3d3d3' },
+            joyful: { emoji: '😄', color: '#ffa500' },
+            warm: { emoji: '🤗', color: '#ffdab9' },
+            festive: { emoji: '🥳', color: '#ff69b4' },
+            proud: { emoji: '😤', color: '#9370db' },
+            creative: { emoji: '🤓', color: '#20b2aa' },
+            relaxed: { emoji: '😎', color: '#00ced1' },
+            cozy: { emoji: '☺️', color: '#f4a460' }
+        };
+
+        // Photo background gradients
+        const photoBackgrounds = [
+            'linear-gradient(45deg, #ffeaa7, #fab1a0)',
+            'linear-gradient(45deg, #fd79a8, #e17055)',
+            'linear-gradient(45deg, #74b9ff, #0984e3)',
+            'linear-gradient(45deg, #55efc4, #00b894)',
+            'linear-gradient(45deg, #fdcb6e, #e17055)',
+            'linear-gradient(45deg, #e17055, #d63031)',
+            'linear-gradient(45deg, #a29bfe, #6c5ce7)',
+            'linear-gradient(45deg, #fd79a8, #fdcb6e)',
+            'linear-gradient(45deg, #00b894, #00cec9)',
+            'linear-gradient(45deg, #0984e3, #74b9ff)'
+        ];
+
+        // Extract memory keywords and emojis from text
+        function analyzeMessage(text) {
+            const analysis = {
+                keywords: [],
+                emojis: [],
+                mood: 'happy',
+                theme: 'general'
+            };
+
+            const lowerText = text.toLowerCase();
+            
+            // Find memory keywords
+            Object.entries(memoryKeywords).forEach(([keyword, data]) => {
+                if (lowerText.includes(keyword)) {
+                    analysis.keywords.push({ keyword, ...data });
+                }
+            });
+
+            // Extract emojis
+            const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+            const foundEmojis = text.match(emojiRegex) || [];
+            analysis.emojis = foundEmojis;
+
+            // Determine mood and theme
+            if (analysis.keywords.length > 0) {
+                const primaryKeyword = analysis.keywords[0];
+                analysis.mood = primaryKeyword.mood;
+                analysis.theme = primaryKeyword.theme;
+            }
+
+            return analysis;
+        }
+
+        // Get random position for photo
+        function getPhotoPosition() {
+            return {
+                left: Math.random() * 80 + 5, // 5% to 85%
+                top: Math.random() * 70 + 10   // 10% to 80%
+            };
+        }
+
+        // Create memory photo
+        function createMemoryPhoto(analysis, username, message) {
+            const position = getPhotoPosition();
+            
+            const photo = document.createElement('div');
+            photo.className = 'memory-photo photo-developing';
+            photo.style.left = position.left + '%';
+            photo.style.top = position.top + '%';
+            
+            // Random animation delay
+            photo.style.animationDelay = Math.random() * 4 + 's';
+            
+            const polaroid = document.createElement('div');
+            polaroid.className = 'photo-polaroid';
+            
+            const imageDiv = document.createElement('div');
+            imageDiv.className = 'photo-image';
+            imageDiv.style.background = photoBackgrounds[Math.floor(Math.random() * photoBackgrounds.length)];
+            
+            // Choose main emoji for photo
+            let mainEmoji = '📷';
+            if (analysis.emojis.length > 0) {
+                mainEmoji = analysis.emojis[0];
+            } else if (analysis.keywords.length > 0) {
+                mainEmoji = analysis.keywords[0].emoji;
+            }
+            
+            imageDiv.textContent = mainEmoji;
+            
+            // Add message text overlay
+            const textOverlay = document.createElement('div');
+            textOverlay.className = 'photo-text';
+            textOverlay.textContent = message.length > 30 ? message.substring(0, 30) + '...' : message;
+            imageDiv.appendChild(textOverlay);
+            
+            const caption = document.createElement('div');
+            caption.className = 'photo-caption';
+            caption.textContent = `by ${username}`;
+            
+            polaroid.appendChild(imageDiv);
+            polaroid.appendChild(caption);
+            photo.appendChild(polaroid);
+            
+            // Click handler for sparkles
+            photo.addEventListener('click', () => createPhotoSparkles(photo));
+            
+            document.getElementById('memory-timeline').appendChild(photo);
+            
+            // Store photo data
+            gameState.photos.push({
+                element: photo,
+                analysis,
+                username,
+                message,
+                timestamp: Date.now()
+            });
+            
+            gameState.photoCount++;
+            
+            // Auto-remove after time
+            setTimeout(() => {
+                if (photo.parentNode) {
+                    photo.style.animation = 'develop-photo 1s ease-in reverse';
+                    setTimeout(() => {
+                        if (photo.parentNode) {
+                            photo.remove();
+                            gameState.photos = gameState.photos.filter(p => p.element !== photo);
+                        }
+                    }, 1000);
+                }
+            }, 45000); // Remove after 45 seconds
+        }
+
+        // Create photo sparkles
+        function createPhotoSparkles(photoElement) {
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'memory-sparkle';
+                    sparkle.textContent = '✨';
+                    
+                    const rect = photoElement.getBoundingClientRect();
+                    const containerRect = document.getElementById('memory-timeline').getBoundingClientRect();
+                    
+                    sparkle.style.left = (rect.left - containerRect.left + Math.random() * rect.width) + 'px';
+                    sparkle.style.top = (rect.top - containerRect.top + Math.random() * rect.height) + 'px';
+                    sparkle.style.animationDelay = Math.random() * 1000 + 'ms';
+                    
+                    document.getElementById('memory-timeline').appendChild(sparkle);
+                    
+                    setTimeout(() => sparkle.remove(), 2000);
+                }, i * 100);
+            }
+        }
+
+        // Create memory trail
+        function createMemoryTrail(x, y) {
+            const trail = document.createElement('div');
+            trail.className = 'memory-trail';
+            trail.style.left = x + 'px';
+            trail.style.top = y + 'px';
+            
+            document.getElementById('game-container').appendChild(trail);
+            
+            setTimeout(() => trail.remove(), 3000);
+        }
+
+        // Update mood based on recent messages
+        function updateMood() {
+            if (gameState.photos.length === 0) return;
+            
+            // Analyze recent photos for mood
+            const recentPhotos = gameState.photos.slice(-5);
+            const moodCounts = {};
+            
+            recentPhotos.forEach(photo => {
+                const mood = photo.analysis.mood;
+                moodCounts[mood] = (moodCounts[mood] || 0) + 1;
+            });
+            
+            // Find dominant mood
+            const dominantMood = Object.entries(moodCounts)
+                .sort((a, b) => b[1] - a[1])[0];
+            
+            if (dominantMood) {
+                gameState.currentMood = dominantMood[0];
+                const moodData = moods[gameState.currentMood];
+                
+                document.getElementById('current-mood').textContent = moodData.emoji;
+                document.getElementById('mood-text').textContent = gameState.currentMood.charAt(0).toUpperCase() + gameState.currentMood.slice(1);
+                document.getElementById('mood-text').style.color = moodData.color;
+            }
+        }
+
+        // Update memory album
+        function updateMemoryAlbum() {
+            const albumEntries = document.getElementById('album-entries');
+            albumEntries.innerHTML = '';
+            
+            // Show recent memories
+            const recentMemories = gameState.memories.slice(-8).reverse();
+            
+            recentMemories.forEach(memory => {
+                const entry = document.createElement('div');
+                entry.className = 'album-memory';
+                
+                const emoji = document.createElement('div');
+                emoji.className = 'album-emoji';
+                emoji.textContent = memory.emoji;
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'album-text';
+                textDiv.textContent = memory.text;
+                
+                const author = document.createElement('div');
+                author.className = 'album-author';
+                author.textContent = `- ${memory.author}`;
+                
+                textDiv.appendChild(author);
+                entry.appendChild(emoji);
+                entry.appendChild(textDiv);
+                albumEntries.appendChild(entry);
+            });
+        }
+
+        // Calculate nostalgia level
+        function calculateNostalgia() {
+            const nostalgicKeywords = ['remember', 'childhood', 'nostalgia', 'school', 'family'];
+            let nostalgicCount = 0;
+            
+            gameState.memories.forEach(memory => {
+                if (nostalgicKeywords.some(keyword => memory.text.toLowerCase().includes(keyword))) {
+                    nostalgicCount++;
+                }
+            });
+            
+            gameState.nostalgiaLevel = Math.min(100, (nostalgicCount / Math.max(gameState.memories.length, 1)) * 100);
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('photo-count').textContent = gameState.photoCount;
+            document.getElementById('memory-count').textContent = gameState.memoryCount;
+            document.getElementById('contributor-count').textContent = gameState.contributors.size;
+            document.getElementById('nostalgia-level').textContent = Math.floor(gameState.nostalgiaLevel);
+            
+            updateMood();
+            updateMemoryAlbum();
+            calculateNostalgia();
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const username = data.chatname;
+            const message = data.chatmessage;
+            
+            // Analyze message for memory content
+            const analysis = analyzeMessage(message);
+            
+            // Create memory if keywords or emojis found, or if message is long enough
+            if (analysis.keywords.length > 0 || analysis.emojis.length > 0 || message.length > 20) {
+                gameState.contributors.add(username);
+                
+                // Create photo
+                createMemoryPhoto(analysis, username, message);
+                
+                // Add to memory collection
+                const memory = {
+                    text: message,
+                    author: username,
+                    emoji: analysis.emojis[0] || analysis.keywords[0]?.emoji || '💭',
+                    timestamp: Date.now(),
+                    theme: analysis.theme,
+                    mood: analysis.mood
+                };
+                
+                gameState.memories.push(memory);
+                gameState.memoryCount++;
+                
+                // Keep memory list manageable
+                if (gameState.memories.length > 50) {
+                    gameState.memories.shift();
+                }
+                
+                // Create memory trail at random position
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                createMemoryTrail(x, y);
+            }
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoMemories = [
+                'I remember my childhood summer vacations 🏖️',
+                'My first day at school was so exciting! 🎒',
+                'Family dinners were always the best 👨‍👩‍👧‍👦',
+                'Christmas mornings were magical ✨🎄',
+                'Remember playing games all night with friends 🎮',
+                'That wedding was beautiful 💒💕',
+                'My graduation day was unforgettable 🎓',
+                'Nostalgia hits when I see old photos 📷',
+                'Love spending time with my pet 🐕❤️',
+                'Those winter nights by the fireplace ❄️🔥'
+            ];
+            
+            const demoUsers = ['Nostalgic_User', 'Memory_Keeper', 'Old_Soul', 'Time_Traveler', 'Dreamer'];
+            
+            setInterval(() => {
+                const memory = demoMemories[Math.floor(Math.random() * demoMemories.length)];
+                const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+                
+                processData({
+                    chatname: user,
+                    chatmessage: memory
+                });
+            }, 2000 + Math.random() * 3000);
+        }
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
