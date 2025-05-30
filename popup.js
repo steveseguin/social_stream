@@ -2071,6 +2071,12 @@ ssapp = urlParams.has("ssapp") || ssapp;
 
 var baseURL = "https://socialstream.ninja/";
 
+// First check if we're on a beta URL (either subdomain or path)
+if (location.href.includes("/beta/") || location.hostname === "beta.socialstream.ninja"){
+    Beta = true;
+    baseURL = "https://beta.socialstream.ninja/";
+}
+
 if (sourcemode){
 	baseURL = sourcemode;
 } else if (devmode) {
@@ -2079,14 +2085,9 @@ if (sourcemode){
     } else {
         baseURL = "file:///C:/Users/steve/Code/social_stream/";
     }
-} else if (location.protocol !== "chrome-extension:") {
-    // Check if we're on the beta path first
-    if (location.href.includes("/beta/") || location.hostname === "beta.socialstream.ninja"){
-        Beta = true;
-        baseURL = "https://beta.socialstream.ninja/";
-    } else {
-        baseURL = `${location.protocol}//${location.host}/`;
-    }
+} else if (location.protocol !== "chrome-extension:" && !Beta) {
+    // Only set baseURL from location if we're not already in beta mode
+    baseURL = `${location.protocol}//${location.host}/`;
 }
 
 

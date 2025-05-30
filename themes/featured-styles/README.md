@@ -56,7 +56,7 @@ featured-animated.html?session=YOUR_SESSION_ID&style=bounce
 
 #### Optional Parameters
 - `password` - Session password if required
-- `showtime` - How long to display each message in milliseconds (default: 8000 for modern, 6000 for animated)
+- `showtime` - How long to display each message in milliseconds (default: 30000)
 - `server` - Custom WebSocket server URL (default: wss://io.socialstream.ninja)
 - `exit` - Exit animation style for animated overlay: `bounce`, `slide`, `fade`
 
