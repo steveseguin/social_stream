@@ -2080,16 +2080,13 @@ if (sourcemode){
         baseURL = "file:///C:/Users/steve/Code/social_stream/";
     }
 } else if (location.protocol !== "chrome-extension:") {
-    baseURL = `${location.protocol}//${location.host}/`;
-	if (location.href.startsWith("https://socialstream.ninja/beta/")){
-		Beta = true;
-	}
-	
-	if (Beta){
-		if (baseURL == "https://socialstream.ninja/"){
-			baseURL = "https://beta.socialstream.ninja/"
-		}
-	}
+    // Check if we're on the beta path first
+    if (location.href.includes("/beta/") || location.hostname === "beta.socialstream.ninja"){
+        Beta = true;
+        baseURL = "https://beta.socialstream.ninja/";
+    } else {
+        baseURL = `${location.protocol}//${location.host}/`;
+    }
 }
 
 

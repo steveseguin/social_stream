@@ -228,7 +228,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomID = urlParams.get('session') || urlParams.get('room') || 'TESTROOM';
         const style = urlParams.get('style') || 'fireflies'; // fireflies, snow, matrix, bubbles, stars
-        const password = urlParams.get('password') || '';
+        const password = urlParams.get('password') || 'false';
         const showtime = parseInt(urlParams.get('showtime') || '8000');
         
         document.body.className = `style-${style}`;

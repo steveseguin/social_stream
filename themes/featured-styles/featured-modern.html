@@ -311,8 +311,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomID = urlParams.get('session') || urlParams.get('room') || urlParams.get('roomid') || 'TESTROOM';
         const style = urlParams.get('style') || 'glass'; // glass, neon, minimal, gaming, twitch
-        const password = urlParams.get('password') || urlParams.get('pass') || urlParams.get('pw') || '';
+        const password = urlParams.get('password') || urlParams.get('pass') || urlParams.get('pw') || "false";
         const showtime = parseInt(urlParams.get('showtime') || urlParams.get('timer') || '8000');
+        const pseudodock = urlParams.has('autoshow'); // Enable pseudodock mode for dock compatibility
         
         // Apply selected style
         document.body.className = `style-${style}`;
@@ -323,45 +324,99 @@
 
         // Create VDO.Ninja iframe for receiving messages
         function createIframe() {
-            const iframe = document.createElement('iframe');
-            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
-            iframe.style.width = '0px';
-            iframe.style.height = '0px';
-            iframe.style.position = 'fixed';
-            iframe.style.left = '-100px';
-            iframe.style.top = '-100px';
-            iframe.id = 'vdoninja';
-            iframe.allow = 'microphone'; // Needed for Safari WebRTC
-            document.body.appendChild(iframe);
+			var iframe = document.createElement("iframe");
 
-            // Listen for messages from iframe
-            const eventMethod = window.addEventListener ? 'addEventListener' : 'attachEvent';
-            const eventer = window[eventMethod];
-            const messageEvent = eventMethod === 'attachEvent' ? 'onmessage' : 'message';
+			if (pseudodock) {
+				// Connect as dock to receive direct messages
+				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
+			} else {
+				// Standard overlay connection
+				iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+			}
+			
+			iframe.style.width = "0px";
+			iframe.style.height = "0px";
+			iframe.style.position = "fixed";
+			iframe.style.left = "-100px";
+			iframe.style.top = "-100px";
+			iframe.id = "frame1";
+			iframe.allow = "midi;geolocation;microphone;"; // microphone is needed for Safari webRTC P2P connections
+			document.body.appendChild(iframe);
 
-            eventer(messageEvent, function(e) {
-                if (e.source !== iframe.contentWindow) return;
-                
-                if ('dataReceived' in e.data) {
-                    if ('overlayNinja' in e.data.dataReceived) {
-                        processMessage(e.data.dataReceived.overlayNinja);
-                    }
-                }
-            });
+			var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+			var eventer = window[eventMethod];
+			var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+			eventer(messageEvent, function (e) {
+				if (e.source != iframe.contentWindow) {
+					return;
+				} // reject messages send from other iframes
+				
+				if ("dataReceived" in e.data) {
+					// raw data
+					if ("overlayNinja" in e.data.dataReceived) {
+					
+						if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
+							// pass
+						} else {
+							// Handle pseudodock format
+							if (pseudodock && e.data.dataReceived.overlayNinja && !e.data.dataReceived.overlayNinja.contents) {
+								processData({ contents: e.data.dataReceived.overlayNinja });
+							} else {
+								processData({ contents: e.data.dataReceived.overlayNinja });
+							}
+						}
+					}
+				}
+			});
         }
 
         // Process incoming messages
-        function processMessage(data) {
-			console.log(data);
+        function processData(data) {
+			console.log("processData received:", data);
+            
             // Handle clear command
-            if (!data || data === false || (data.contents === false)) {
+            if (!data || data === false) {
                 hideMessage();
                 return;
             }
-
-            // Handle featured content
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                hideMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
             if (data && data.contents) {
                 showMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processData({ contents: data.content });
+                } else {
+                    hideMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            showMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    hideMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                showMessage(data);
             }
         }
 
