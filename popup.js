@@ -4865,7 +4865,18 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				}
 				
 				// Show overlay-specific config section (for future use)
-				const overlayType = this.value.match(/themes\/(\w+)\//)?.[1] || this.value.replace('.html', '');
+				let overlayType = '';
+				if (this.value.includes('themes/overlay-')) {
+					// Handle new animated overlays in themes folder
+					overlayType = this.value.replace('themes/', '').replace('.html', '');
+				} else if (this.value.match(/themes\/(\w+)\//)) {
+					// Handle theme folders like themes/Neutron/
+					overlayType = this.value.match(/themes\/(\w+)\//)[1];
+				} else {
+					// Handle other files
+					overlayType = this.value.replace('.html', '');
+				}
+				
 				const configSection = document.getElementById(overlayType + '-overlay-config');
 				if (configSection) {
 					configSection.style.display = 'block';
