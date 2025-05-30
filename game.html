@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spam Power - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: #000000;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #power-core {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, 
+                rgba(255, 255, 255, 0.2) 0%, 
+                rgba(0, 150, 255, 0.3) 30%, 
+                rgba(0, 50, 150, 0.5) 60%, 
+                rgba(0, 0, 50, 0.8) 100%);
+            box-shadow: 0 0 50px rgba(0, 150, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        #power-level {
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            z-index: 10;
+        }
+        
+        #progress-ring {
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        #progress-ring svg {
+            transform: rotate(-90deg);
+        }
+        
+        #progress-ring circle {
+            fill: none;
+            stroke-width: 20;
+            stroke-linecap: round;
+        }
+        
+        #progress-bg {
+            stroke: rgba(255, 255, 255, 0.1);
+        }
+        
+        #progress-fill {
+            stroke: #00ff88;
+            stroke-dasharray: 1005;
+            stroke-dashoffset: 1005;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .power-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ff88;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float-up 2s ease-out forwards;
+        }
+        
+        @keyframes float-up {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--dx), -200px) scale(0);
+            }
+        }
+        
+        #stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #goal-display {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        
+        #goal-text {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00ff88;
+            margin-bottom: 5px;
+        }
+        
+        #multiplier {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: #ffaa00;
+            text-shadow: 0 0 20px rgba(255, 170, 0, 0.8);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        #win-animation {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 120px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            animation: win-burst 2s ease-out;
+        }
+        
+        @keyframes win-burst {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+        
+        .message-burst {
+            position: absolute;
+            padding: 8px 15px;
+            background: rgba(0, 255, 136, 0.2);
+            border: 1px solid rgba(0, 255, 136, 0.5);
+            border-radius: 20px;
+            font-size: 14px;
+            pointer-events: none;
+            animation: burst-fade 1s ease-out forwards;
+        }
+        
+        @keyframes burst-fade {
+            0% {
+                opacity: 1;
+                transform: translate(0, 0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--burst-x), var(--burst-y)) scale(0.5);
+            }
+        }
+
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        #instructions strong {
+            color: #00ff88;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="stats">
+            <div class="stat-line">Messages/sec: <span id="msg-rate">0</span></div>
+            <div class="stat-line">Peak Rate: <span id="peak-rate">0</span></div>
+            <div class="stat-line">Total Power: <span id="total-power">0</span></div>
+            <div class="stat-line">Win Streak: <span id="win-streak">0</span></div>
+        </div>
+        
+        <div id="goal-display">
+            <div id="goal-text">GOAL: <span id="goal-value">100</span></div>
+            <div>Time: <span id="timer">60</span>s</div>
+        </div>
+        
+        <div id="power-core">
+            <div id="power-level">0</div>
+        </div>
+        
+        <div id="progress-ring">
+            <svg width="320" height="320">
+                <circle id="progress-bg" cx="160" cy="160" r="160"></circle>
+                <circle id="progress-fill" cx="160" cy="160" r="160"></circle>
+            </svg>
+        </div>
+        
+        <div id="multiplier">x1</div>
+        <div id="win-animation">WIN!</div>
+        
+        <div id="instructions">
+            <div><strong>⚡ Spam Power - How to Play:</strong></div>
+            <div>Chat spams to build power! The more everyone chats, the higher the power grows!</div>
+            <div style="margin-top: 5px; font-size: 14px; opacity: 0.8;">Goal increases based on your community's peak activity</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings from URL parameters
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            power: 0,
+            goal: 100,
+            timeLeft: 60,
+            messagesPerSecond: 0,
+            peakRate: 0,
+            totalPower: 0,
+            winStreak: 0,
+            multiplier: 1,
+            isActive: false,
+            messageTimestamps: [],
+            lastWinTime: 0
+        };
+        
+        // Load historical data
+        const historicalData = {
+            peakActivity: parseInt(localStorage.getItem('spamPowerPeakActivity') || '10'),
+            totalWins: parseInt(localStorage.getItem('spamPowerTotalWins') || '0'),
+            bestStreak: parseInt(localStorage.getItem('spamPowerBestStreak') || '0'),
+            averageWinRate: parseFloat(localStorage.getItem('spamPowerAvgWinRate') || '10'),
+            recentGoals: JSON.parse(localStorage.getItem('spamPowerRecentGoals') || '[]')
+        };
+        
+        // Calculate dynamic goal based on history
+        function calculateDynamicGoal() {
+            let baseGoal = 100;
+            
+            // Increase based on peak activity
+            if (historicalData.peakActivity > 20) {
+                baseGoal = Math.floor(historicalData.peakActivity * 5);
+            }
+            
+            // Adjust based on recent performance
+            if (historicalData.recentGoals.length > 0) {
+                const avgGoal = historicalData.recentGoals.reduce((a, b) => a + b, 0) / historicalData.recentGoals.length;
+                baseGoal = Math.floor(avgGoal * 1.1); // 10% harder each time
+            }
+            
+            // Add streak bonus difficulty
+            baseGoal += gameState.winStreak * 20;
+            
+            // Ensure reasonable bounds
+            return Math.max(50, Math.min(baseGoal, 1000));
+        }
+        
+        // Initialize game
+        function initGame() {
+            gameState.goal = calculateDynamicGoal();
+            gameState.power = 0;
+            gameState.timeLeft = 60;
+            gameState.isActive = true;
+            gameState.multiplier = 1;
+            
+            updateDisplay();
+            startTimer();
+        }
+        
+        // Update display
+        function updateDisplay() {
+            document.getElementById('power-level').textContent = Math.floor(gameState.power);
+            document.getElementById('goal-value').textContent = gameState.goal;
+            document.getElementById('timer').textContent = gameState.timeLeft;
+            document.getElementById('msg-rate').textContent = gameState.messagesPerSecond.toFixed(1);
+            document.getElementById('peak-rate').textContent = gameState.peakRate.toFixed(1);
+            document.getElementById('total-power').textContent = gameState.totalPower;
+            document.getElementById('win-streak').textContent = gameState.winStreak;
+            
+            // Update progress ring
+            const progressPercent = Math.min(gameState.power / gameState.goal, 1);
+            const circumference = 2 * Math.PI * 160;
+            const offset = circumference - (progressPercent * circumference);
+            document.getElementById('progress-fill').style.strokeDashoffset = offset;
+            
+            // Update core intensity based on power
+            const intensity = Math.min(gameState.power / gameState.goal, 1);
+            const core = document.getElementById('power-core');
+            core.style.boxShadow = `0 0 ${50 + intensity * 100}px rgba(0, ${150 + intensity * 105}, 255, ${0.5 + intensity * 0.5})`;
+            core.style.transform = `scale(${1 + intensity * 0.2})`;
+            
+            // Color change as approaching goal
+            if (progressPercent > 0.8) {
+                document.getElementById('progress-fill').style.stroke = '#ffaa00';
+            } else if (progressPercent > 0.5) {
+                document.getElementById('progress-fill').style.stroke = '#00ffff';
+            } else {
+                document.getElementById('progress-fill').style.stroke = '#00ff88';
+            }
+        }
+        
+        // Timer
+        function startTimer() {
+            const timerInterval = setInterval(() => {
+                if (!gameState.isActive) {
+                    clearInterval(timerInterval);
+                    return;
+                }
+                
+                gameState.timeLeft--;
+                document.getElementById('timer').textContent = gameState.timeLeft;
+                
+                if (gameState.timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    endGame(false);
+                }
+                
+                // Check win condition
+                if (gameState.power >= gameState.goal) {
+                    clearInterval(timerInterval);
+                    endGame(true);
+                }
+            }, 1000);
+        }
+        
+        // Calculate messages per second
+        function updateMessageRate() {
+            const now = Date.now();
+            gameState.messageTimestamps = gameState.messageTimestamps.filter(t => now - t < 1000);
+            gameState.messagesPerSecond = gameState.messageTimestamps.length;
+            
+            if (gameState.messagesPerSecond > gameState.peakRate) {
+                gameState.peakRate = gameState.messagesPerSecond;
+                if (gameState.peakRate > historicalData.peakActivity) {
+                    historicalData.peakActivity = gameState.peakRate;
+                    localStorage.setItem('spamPowerPeakActivity', gameState.peakRate.toString());
+                }
+            }
+            
+            // Update multiplier based on message rate
+            if (gameState.messagesPerSecond >= 10) {
+                gameState.multiplier = 3;
+                document.getElementById('multiplier').textContent = 'x3';
+                document.getElementById('multiplier').style.opacity = '1';
+            } else if (gameState.messagesPerSecond >= 5) {
+                gameState.multiplier = 2;
+                document.getElementById('multiplier').textContent = 'x2';
+                document.getElementById('multiplier').style.opacity = '1';
+            } else {
+                gameState.multiplier = 1;
+                document.getElementById('multiplier').style.opacity = '0';
+            }
+        }
+        
+        // Handle incoming messages (compatible with Social Stream format)
+        function processData(data) {
+            if (!gameState.isActive) return;
+            
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+            
+            // Track message timestamp
+            gameState.messageTimestamps.push(Date.now());
+            updateMessageRate();
+            
+            // Add power with multiplier
+            const powerGain = 1 * gameState.multiplier;
+            gameState.power += powerGain;
+            gameState.totalPower += powerGain;
+            
+            // Create particle effect
+            createPowerParticle();
+            
+            // Create message burst
+            createMessageBurst(data.chatname || 'Anonymous');
+            
+            updateDisplay();
+        }
+        
+        // Particle effects
+        function createPowerParticle() {
+            const particle = document.createElement('div');
+            particle.className = 'power-particle';
+            
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 150 + Math.random() * 50;
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance;
+            
+            particle.style.setProperty('--dx', x + 'px');
+            particle.style.left = '50%';
+            particle.style.top = '50%';
+            particle.style.transform = 'translate(-50%, -50%)';
+            
+            document.getElementById('power-core').appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 2000);
+        }
+        
+        // Message burst effect
+        function createMessageBurst(username) {
+            const burst = document.createElement('div');
+            burst.className = 'message-burst';
+            burst.textContent = username;
+            
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 200 + Math.random() * 100;
+            const x = Math.cos(angle) * distance;
+            const y = Math.sin(angle) * distance;
+            
+            burst.style.setProperty('--burst-x', x + 'px');
+            burst.style.setProperty('--burst-y', y + 'px');
+            burst.style.left = '50%';
+            burst.style.top = '50%';
+            burst.style.transform = 'translate(-50%, -50%)';
+            
+            document.getElementById('game-container').appendChild(burst);
+            
+            setTimeout(() => burst.remove(), 1000);
+        }
+        
+        // End game
+        function endGame(won) {
+            gameState.isActive = false;
+            
+            if (won) {
+                // Show win animation
+                const winAnim = document.getElementById('win-animation');
+                winAnim.style.animation = 'none';
+                setTimeout(() => {
+                    winAnim.style.animation = 'win-burst 2s ease-out';
+                }, 10);
+                
+                // Update streak
+                const now = Date.now();
+                if (now - gameState.lastWinTime < 300000) { // 5 minutes
+                    gameState.winStreak++;
+                } else {
+                    gameState.winStreak = 1;
+                }
+                gameState.lastWinTime = now;
+                
+                // Update historical data
+                historicalData.totalWins++;
+                historicalData.averageWinRate = (historicalData.averageWinRate + gameState.messagesPerSecond) / 2;
+                historicalData.recentGoals.push(gameState.goal);
+                if (historicalData.recentGoals.length > 5) {
+                    historicalData.recentGoals.shift();
+                }
+                if (gameState.winStreak > historicalData.bestStreak) {
+                    historicalData.bestStreak = gameState.winStreak;
+                }
+                
+                // Save to localStorage
+                localStorage.setItem('spamPowerTotalWins', historicalData.totalWins.toString());
+                localStorage.setItem('spamPowerAvgWinRate', historicalData.averageWinRate.toString());
+                localStorage.setItem('spamPowerRecentGoals', JSON.stringify(historicalData.recentGoals));
+                localStorage.setItem('spamPowerBestStreak', historicalData.bestStreak.toString());
+            } else {
+                gameState.winStreak = 0;
+            }
+            
+            // Restart after delay
+            setTimeout(() => {
+                initGame();
+            }, 3000);
+        }
+        
+        // Setup iframe communication (same as petrace.html)
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection if server parameters are provided
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            setInterval(() => {
+                if (gameState.isActive && Math.random() < 0.3) {
+                    processData({
+                        chatname: ['DemoUser', 'TestBot', 'Spammer', 'ChatHero', 'PowerPlayer'][Math.floor(Math.random() * 5)],
+                        chatmessage: ['GO!', 'POWER!', '⚡', 'SPAM!', 'ENERGY!'][Math.floor(Math.random() * 5)]
+                    });
+                }
+            }, 200);
+        }
+        
+        // Start game
+        initGame();
+        
+        // Update rate display
+        setInterval(updateMessageRate, 100);
+    </script>
+</body>
+</html>
