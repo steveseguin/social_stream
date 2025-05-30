@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Message - Particle Effects</title>
+    <link rel="icon" href="../../favicon.ico" />
+    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif, 'NotoColorEmojiLimited';
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        #output {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .message-container {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.6s ease-out;
+        }
+
+        .message-container.show {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .message-container.hide {
+            opacity: 0;
+            transform: scale(0.8) translateY(20px);
+        }
+
+        /* Style 1: Fireflies */
+        .style-fireflies .message {
+            background: rgba(10, 10, 20, 0.9);
+            border: 1px solid rgba(255, 200, 100, 0.3);
+            box-shadow: 0 0 40px rgba(255, 200, 100, 0.2);
+            color: #ffd700;
+        }
+
+        /* Style 2: Snow */
+        .style-snow .message {
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(200, 200, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(100, 100, 200, 0.2);
+            color: #2c3e50;
+        }
+
+        /* Style 3: Matrix Rain */
+        .style-matrix .message {
+            background: rgba(0, 10, 0, 0.95);
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 30px rgba(0, 255, 0, 0.3);
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* Style 4: Bubbles */
+        .style-bubbles .message {
+            background: rgba(100, 150, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 40px rgba(100, 150, 255, 0.2);
+            color: #fff;
+        }
+
+        /* Style 5: Stars */
+        .style-stars .message {
+            background: rgba(10, 0, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 50px rgba(100, 100, 255, 0.3);
+            color: #fff;
+        }
+
+        /* Common message styling */
+        .message {
+            max-width: 800px;
+            padding: 25px 30px;
+            border-radius: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .message::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            animation: shimmer 3s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes shimmer {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .content {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .username {
+            font-size: 22px;
+            font-weight: 700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .badges {
+            display: flex;
+            gap: 6px;
+        }
+
+        .badge {
+            height: 20px;
+        }
+
+        .source-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.8;
+        }
+
+        .text {
+            font-size: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .donation-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        /* Style-specific text colors */
+        .style-fireflies .username { color: #ffdb58; }
+        .style-fireflies .text { color: #ffeaa7; }
+        
+        .style-snow .username { color: #2980b9; }
+        .style-snow .text { color: #34495e; }
+        
+        .style-matrix .username { 
+            color: #00ff00; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .style-bubbles .username { color: #ffffff; }
+        .style-bubbles .text { color: #e0f2ff; }
+        
+        .style-stars .username { color: #ffd700; }
+        .style-stars .text { color: #e0e0ff; }
+    </style>
+</head>
+<body>
+    <canvas id="particles-canvas"></canvas>
+    <div id="output"></div>
+
+    <script src="../../tts.js"></script>
+    <script>
+        // Configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get('session') || urlParams.get('room') || 'TESTROOM';
+        const style = urlParams.get('style') || 'fireflies'; // fireflies, snow, matrix, bubbles, stars
+        const password = urlParams.get('password') || '';
+        const showtime = parseInt(urlParams.get('showtime') || '8000');
+        
+        document.body.className = `style-${style}`;
+        
+        let messageTimeout = null;
+        let currentMessage = null;
+
+        // Particle System
+        const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        let animationId = null;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                if (style === 'fireflies') {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 3 + 1;
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.speedY = (Math.random() - 0.5) * 0.5;
+                    this.life = 1;
+                    this.decay = Math.random() * 0.01 + 0.005;
+                    this.color = `hsl(${Math.random() * 60 + 40}, 100%, 50%)`;
+                } else if (style === 'snow') {
+                    this.x = Math.random() * canvas.width;
+                    this.y = -10;
+                    this.size = Math.random() * 3 + 2;
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.speedY = Math.random() * 1 + 0.5;
+                    this.opacity = Math.random() * 0.6 + 0.4;
+                } else if (style === 'matrix') {
+                    this.x = Math.random() * canvas.width;
+                    this.y = -100;
+                    this.speedY = Math.random() * 5 + 5;
+                    this.characters = '01';
+                    this.char = this.characters[Math.floor(Math.random() * this.characters.length)];
+                    this.size = Math.random() * 15 + 10;
+                } else if (style === 'bubbles') {
+                    this.x = Math.random() * canvas.width;
+                    this.y = canvas.height + 50;
+                    this.size = Math.random() * 20 + 10;
+                    this.speedY = -(Math.random() * 2 + 1);
+                    this.speedX = (Math.random() - 0.5) * 0.5;
+                    this.opacity = Math.random() * 0.3 + 0.1;
+                } else if (style === 'stars') {
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.twinkle = Math.random() * Math.PI * 2;
+                    this.twinkleSpeed = Math.random() * 0.05 + 0.02;
+                }
+            }
+
+            update() {
+                if (style === 'fireflies') {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.life -= this.decay;
+                    
+                    if (this.life <= 0 || this.x < 0 || this.x > canvas.width || 
+                        this.y < 0 || this.y > canvas.height) {
+                        this.reset();
+                    }
+                } else if (style === 'snow') {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.speedX += (Math.random() - 0.5) * 0.01;
+                    
+                    if (this.y > canvas.height) {
+                        this.reset();
+                    }
+                } else if (style === 'matrix') {
+                    this.y += this.speedY;
+                    
+                    if (this.y > canvas.height) {
+                        this.reset();
+                    }
+                } else if (style === 'bubbles') {
+                    this.x += this.speedX;
+                    this.y += this.speedY;
+                    this.speedX += (Math.random() - 0.5) * 0.02;
+                    
+                    if (this.y < -50) {
+                        this.reset();
+                    }
+                } else if (style === 'stars') {
+                    this.twinkle += this.twinkleSpeed;
+                }
+            }
+
+            draw() {
+                if (style === 'fireflies') {
+                    ctx.save();
+                    ctx.globalAlpha = this.life;
+                    ctx.fillStyle = this.color;
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                } else if (style === 'snow') {
+                    ctx.save();
+                    ctx.globalAlpha = this.opacity;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                } else if (style === 'matrix') {
+                    ctx.save();
+                    ctx.fillStyle = '#00ff00';
+                    ctx.font = `${this.size}px monospace`;
+                    ctx.globalAlpha = Math.max(0, 1 - (this.y / canvas.height));
+                    ctx.fillText(this.char, this.x, this.y);
+                    ctx.restore();
+                } else if (style === 'bubbles') {
+                    ctx.save();
+                    ctx.globalAlpha = this.opacity;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.stroke();
+                    
+                    // Highlight
+                    ctx.beginPath();
+                    ctx.arc(this.x - this.size/3, this.y - this.size/3, this.size/4, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fill();
+                    ctx.restore();
+                } else if (style === 'stars') {
+                    ctx.save();
+                    const brightness = Math.sin(this.twinkle) * 0.5 + 0.5;
+                    ctx.globalAlpha = brightness;
+                    ctx.fillStyle = '#ffffff';
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+            }
+        }
+
+        // Initialize particles
+        function initParticles() {
+            const count = style === 'matrix' ? 100 : style === 'stars' ? 200 : 50;
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            if (style === 'matrix') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            particles.forEach(particle => {
+                particle.update();
+                particle.draw();
+            });
+            
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Create iframe
+        function createIframe() {
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=featured-particles&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+            iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;';
+            iframe.id = 'vdoninja';
+            iframe.allow = 'microphone';
+            document.body.appendChild(iframe);
+
+            window.addEventListener('message', function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+                    processMessage(e.data.dataReceived.overlayNinja);
+                }
+            });
+        }
+
+        function processMessage(data) {
+            if (!data || data === false || (data.contents === false)) {
+                hideMessage();
+                return;
+            }
+            if (data && data.contents) {
+                showMessage(data.contents);
+            }
+        }
+
+        function showMessage(content) {
+            if (!content.chatmessage && !content.chatname) return;
+
+            hideMessage(() => {
+                const container = document.createElement('div');
+                container.className = 'message-container';
+                
+                const message = document.createElement('div');
+                message.className = 'message';
+
+                // Avatar
+                if (content.chatimg) {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = content.chatimg;
+                    avatar.onerror = () => { avatar.src = '../../sources/images/unknown.png'; };
+                    message.appendChild(avatar);
+                }
+
+                // Content
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'content';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'header';
+
+                const username = document.createElement('span');
+                username.className = 'username';
+                username.textContent = content.chatname || 'Anonymous';
+                if (content.nameColor && style !== 'snow' && style !== 'matrix') {
+                    username.style.color = content.nameColor;
+                }
+                header.appendChild(username);
+
+                // Badges
+                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                    const badges = document.createElement('div');
+                    badges.className = 'badges';
+                    content.chatbadges.forEach(badge => {
+                        if (typeof badge === 'string') {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge;
+                            badges.appendChild(img);
+                        }
+                    });
+                    header.appendChild(badges);
+                }
+
+                // Source icon
+                if (content.type) {
+                    const icon = document.createElement('img');
+                    icon.className = 'source-icon';
+                    icon.src = `../../sources/images/${content.type}.png`;
+                    icon.onerror = () => { icon.style.display = 'none'; };
+                    header.appendChild(icon);
+                }
+
+                contentDiv.appendChild(header);
+
+                // Message text
+                if (content.chatmessage) {
+                    const text = document.createElement('div');
+                    text.className = 'text';
+                    text.innerHTML = content.chatmessage;
+                    contentDiv.appendChild(text);
+                }
+
+                // Donation info
+                if (content.hasDonation || content.membership) {
+                    const info = document.createElement('div');
+                    info.className = 'donation-info';
+                    info.textContent = content.hasDonation || content.membership;
+                    contentDiv.appendChild(info);
+                }
+
+                message.appendChild(contentDiv);
+                container.appendChild(message);
+                
+                document.getElementById('output').appendChild(container);
+                currentMessage = container;
+
+                requestAnimationFrame(() => {
+                    container.classList.add('show');
+                });
+
+                // TTS
+                if (window.speak && urlParams.has('tts')) {
+                    const text = content.chatmessage ? content.chatmessage.replace(/<[^>]*>/g, '') : '';
+                    if (text) window.speak(content.chatname + ' says ' + text);
+                }
+
+                if (messageTimeout) clearTimeout(messageTimeout);
+                messageTimeout = setTimeout(hideMessage, showtime);
+            });
+        }
+
+        function hideMessage(callback) {
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+                messageTimeout = null;
+            }
+
+            if (currentMessage) {
+                currentMessage.classList.add('hide');
+                setTimeout(() => {
+                    if (currentMessage && currentMessage.parentNode) {
+                        currentMessage.parentNode.removeChild(currentMessage);
+                    }
+                    currentMessage = null;
+                    if (callback) callback();
+                }, 600);
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        // Initialize
+        if (urlParams.has('tts') && window.initTTS) {
+            window.initTTS({
+                lang: urlParams.get('tts') || 'en-US',
+                pitch: parseFloat(urlParams.get('pitch') || '1'),
+                rate: parseFloat(urlParams.get('rate') || '1')
+            });
+        }
+
+        initParticles();
+        animate();
+        createIframe();
+    </script>
+</body>
+</html>

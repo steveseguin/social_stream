@@ -2081,6 +2081,10 @@ if (sourcemode){
     }
 } else if (location.protocol !== "chrome-extension:") {
     baseURL = `${location.protocol}//${location.host}/`;
+	if (location.href.startsWith("https://socialstream.ninja/beta/")){
+		Beta = true;
+	}
+	
 	if (Beta){
 		if (baseURL == "https://socialstream.ninja/"){
 			baseURL = "https://beta.socialstream.ninja/"

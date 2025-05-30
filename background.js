@@ -6111,7 +6111,7 @@ function processHype2() {
     if (settings.hypeAutoCleanup) {
         for (const sourceKey in lastUpdated) {
             let shouldDelete = false;
-            if (sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 33000)) { // Has actual viewers, short timeout
+            if (sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 90000)) { // Has actual viewers, 90s timeout
                 shouldDelete = true;
             } else if (!sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 300000)) { // No actual viewers (or just chatters), long timeout
                 shouldDelete = true;
@@ -6163,101 +6163,55 @@ function processHype2() {
 
 function combineHypeData() {
     const result = { chatters: {}, viewers: {}, combined: {} };
-    for (const sourceType in hype) { // If hype[sourceType] was not set (0 chatters), it's not in this loop.
+    
+    // Copy active chatters data
+    for (const sourceType in hype) {
         result.chatters[sourceType] = hype[sourceType];
         if (!result.combined[sourceType]) result.combined[sourceType] = { chatters: 0, viewers: 0 };
         result.combined[sourceType].chatters = hype[sourceType];
     }
-
-    // Copy active chatters data
-    for (const sourceType in hype) { // `hype` here is from processHype2's calculation
-        result.chatters[sourceType] = hype[sourceType];
-        // Initialize combined structure for this source
-        if (!result.combined[sourceType]) result.combined[sourceType] = { chatters: 0, viewers: 0};
-        result.combined[sourceType].chatters = hype[sourceType];
-    }
     
-    // Process viewer counts with combination logic
-    if (settings.hypeCombineAll) {
-        let totalViewers = 0;
-        for (const sourceKey in viewerCounts) {
-            if (activeViewerSources[sourceKey]) {
-                totalViewers += viewerCounts[sourceKey];
-            }
-        }
-        result.viewers["global"] = totalViewers;
-        if (result.combined["global"]) {
-            result.combined["global"].viewers = totalViewers;
-        } else {
-            result.combined["global"] = { chatters: 0, viewers: totalViewers };
-        }
-    } else if (settings.hypeCombineYouTube) {
-        // Combine YouTube and YouTube Shorts
+    // Process viewer counts - always grouped by type
+    // Since viewerCounts are already stored by sourceType (from getEffectiveSourceType),
+    // we just need to handle YouTube combining if enabled
+    if (settings.hypeCombineYouTube) {
+        // Combine YouTube and YouTube Shorts viewers
         let youtubeViewers = 0;
-        let hasActiveYoutubeSources = false;
-        for (const sourceKey in viewerCounts) {
-            if (sourceKey.startsWith("youtube-") || sourceKey.startsWith("youtubeshorts-") || 
-                sourceKey === "youtube" || sourceKey === "youtubeshorts") {
-                // Only include YouTube sources that have actually received viewer updates
-                if (activeViewerSources[sourceKey]) {
-                    youtubeViewers += viewerCounts[sourceKey];
-                    hasActiveYoutubeSources = true;
-                }
-            } else {
-                // Only include active non-YouTube sources
-                if (activeViewerSources[sourceKey]) {
-                    result.viewers[sourceKey] = viewerCounts[sourceKey];
-                    if (result.combined[sourceKey]) {
-                        result.combined[sourceKey].viewers = viewerCounts[sourceKey];
-                    } else {
-                        result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+        let hasActiveYoutube = false;
+        
+        for (const sourceType in viewerCounts) {
+            if (activeViewerSources[sourceType]) {
+                if (sourceType === "youtube" || sourceType === "youtubeshorts") {
+                    youtubeViewers += viewerCounts[sourceType];
+                    hasActiveYoutube = true;
+                } else {
+                    // Non-YouTube sources
+                    result.viewers[sourceType] = viewerCounts[sourceType];
+                    if (!result.combined[sourceType]) {
+                        result.combined[sourceType] = { chatters: 0, viewers: 0 };
                     }
+                    result.combined[sourceType].viewers = viewerCounts[sourceType];
                 }
-            }
-        }
-        // Only add youtube if we have active YouTube sources
-        if (hasActiveYoutubeSources) {
-            result.viewers["youtube"] = youtubeViewers;
-            if (result.combined["youtube"]) {
-                result.combined["youtube"].viewers = youtubeViewers;
-            } else {
-                result.combined["youtube"] = { chatters: 0, viewers: youtubeViewers };
-            }
-        }
-    } else if (settings.hypeCombineSameType) {
-        // Combine by type
-        const typeViewers = {};
-        const activeTypes = {}; // Track which types have active sources
-        for (const sourceKey in viewerCounts) {
-            if (activeViewerSources[sourceKey]) {
-                const type = sourceKey.split('-')[0];
-                if (!typeViewers[type]) {
-                    typeViewers[type] = 0;
-                }
-                typeViewers[type] += viewerCounts[sourceKey];
-                activeTypes[type] = true;
             }
         }
         
-        // Only add types that have active sources
-        for (const type in activeTypes) {
-            result.viewers[type] = typeViewers[type];
-            if (result.combined[type]) {
-                result.combined[type].viewers = typeViewers[type];
-            } else {
-                result.combined[type] = { chatters: 0, viewers: typeViewers[type] };
+        // Add combined YouTube if we have any
+        if (hasActiveYoutube) {
+            result.viewers["youtube"] = youtubeViewers;
+            if (!result.combined["youtube"]) {
+                result.combined["youtube"] = { chatters: 0, viewers: 0 };
             }
+            result.combined["youtube"].viewers = youtubeViewers;
         }
     } else {
-        // No combination, use raw data but only for active sources
-        for (const sourceKey in viewerCounts) {
-            if (activeViewerSources[sourceKey]) {
-                result.viewers[sourceKey] = viewerCounts[sourceKey];
-                if (result.combined[sourceKey]) {
-                    result.combined[sourceKey].viewers = viewerCounts[sourceKey];
-                } else {
-                    result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
+        // No YouTube combining - just copy all active sources
+        for (const sourceType in viewerCounts) {
+            if (activeViewerSources[sourceType]) {
+                result.viewers[sourceType] = viewerCounts[sourceType];
+                if (!result.combined[sourceType]) {
+                    result.combined[sourceType] = { chatters: 0, viewers: 0 };
                 }
+                result.combined[sourceType].viewers = viewerCounts[sourceType];
             }
         }
     }

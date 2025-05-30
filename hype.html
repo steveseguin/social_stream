@@ -829,10 +829,10 @@ function processInput(data) {
             activeChatters[sourceType] = true;
         }
         let displayThisSpecificSourceItem = true;
-        if (hasViewerCount[sourceType] && (now - lastUpdated[sourceType] > 33000) && viewerCount === 0) {
-            displayThisSpecificSourceItem = false; // Hide inactive sources with viewer data
+        if (hasViewerCount[sourceType] && (now - lastUpdated[sourceType] > 90000) && viewerCount === 0) {
+            displayThisSpecificSourceItem = false; // Hide inactive sources with viewer data (90s timeout)
         } else if (!hasViewerCount[sourceType] && activeChatters[sourceType] && (now - lastUpdated[sourceType] > 300000) && chatterCount === 0) {
-            displayThisSpecificSourceItem = false; // Hide inactive sources without viewer data
+            displayThisSpecificSourceItem = false; // Hide inactive sources without viewer data (5min timeout)
         }
         if (displayThisSpecificSourceItem && (showChatters || showViewers)) {
             hasContentToDisplay = true;
