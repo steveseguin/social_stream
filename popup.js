@@ -4827,6 +4827,81 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	// Overlay preset selector handler
+	const overlaySelector = document.getElementById('overlay-preset-select');
+	if (overlaySelector) {
+		overlaySelector.addEventListener('change', function() {
+			const dockDiv = document.getElementById('dock');
+			const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
+			
+			if (!dockDiv) return;
+			
+			// Hide all overlay config sections (if we add them later)
+			document.querySelectorAll('.overlay-config-section').forEach(section => {
+				section.style.display = 'none';
+			});
+			
+			if (this.value) {
+				// An overlay theme was selected
+				const overlayUrl = baseURL + this.value;
+				
+				// Extract existing parameters from current dock URL
+				let existingParams = '';
+				if (dockDiv.raw && dockDiv.raw.includes('?')) {
+					existingParams = dockDiv.raw.split('?')[1];
+				}
+				
+				// Preserve ALL parameters, not just session
+				let newUrl = overlayUrl;
+				if (existingParams) {
+					newUrl += '?' + existingParams;
+				}
+				
+				// Update the dock URL
+				dockDiv.raw = newUrl;
+				if (dockLink) {
+					dockLink.href = newUrl;
+					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+				}
+				
+				// Show overlay-specific config section (for future use)
+				const overlayType = this.value.match(/themes\/(\w+)\//)?.[1] || this.value.replace('.html', '');
+				const configSection = document.getElementById(overlayType + '-overlay-config');
+				if (configSection) {
+					configSection.style.display = 'block';
+				}
+				
+				// Hide classic dock options when an overlay theme is selected
+				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+					wrapper.style.display = 'none';
+				});
+			} else {
+				// Classic dock.html selected - restore all parameters
+				let existingParams = '';
+				if (dockDiv.raw && dockDiv.raw.includes('?')) {
+					existingParams = dockDiv.raw.split('?')[1];
+				}
+				
+				let newUrl = baseURL + 'dock.html';
+				if (existingParams) {
+					newUrl += '?' + existingParams;
+				}
+				
+				// Update the dock URL back to classic
+				dockDiv.raw = newUrl;
+				if (dockLink) {
+					dockLink.href = newUrl;
+					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+				}
+				
+				// Show classic dock customization options
+				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+					wrapper.style.display = '';
+				});
+			}
+		});
+	}
+
 	var iii = document.querySelectorAll("button[data-action]");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onclick = function(e){

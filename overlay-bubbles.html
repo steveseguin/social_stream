@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<!-- Bubble Chat Overlay for Social Stream Ninja -->
+<!--
+This overlay creates a floating bubble chat experience with:
+- Messages displayed in floating speech bubbles
+- Bubble physics with floating and popping animations
+- Dynamic bubble sizes based on message length
+- Underwater/aquatic theme with floating effects
+- Smooth continuous scrolling with bubble interactions
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap">
+    <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+    <link rel="canonical" href="https://socialstream.ninja/">
+    <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Comfortaa', cursive, sans-serif;
+    background: linear-gradient(180deg, #0077be 0%, #005c98 30%, #003d66 70%, #002a4a 100%);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Underwater background effects */
+#background-bubbles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.bg-bubble {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), rgba(255,255,255,0.1));
+    animation: bubble-float linear infinite;
+    opacity: 0.6;
+}
+
+@keyframes bubble-float {
+    0% {
+        transform: translateY(100vh) translateX(0) rotate(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.6;
+    }
+    90% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(-100px) translateX(var(--drift)) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+/* Water caustics effect */
+#water-caustics {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(ellipse at 20% 50%, rgba(173,216,230,0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(135,206,235,0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 40% 80%, rgba(176,224,230,0.1) 0%, transparent 50%);
+    animation: caustics-wave 8s ease-in-out infinite;
+    z-index: 2;
+    pointer-events: none;
+}
+
+@keyframes caustics-wave {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+#chat-container {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 400px;
+    height: 100vh;
+    overflow: hidden;
+    padding: 0 30px;
+    box-sizing: border-box;
+    z-index: 5;
+}
+
+#message-list-wrapper {
+    width: 100%;
+    transition: transform 0.5s ease-out;
+}
+
+.message {
+    background: radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.9), rgba(255,255,255,0.8));
+    border: 3px solid rgba(255,255,255,0.4);
+    padding: 18px 22px;
+    margin-bottom: 25px;
+    border-radius: 30px;
+    box-shadow: 
+        0 8px 25px rgba(0,0,0,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.8),
+        0 0 0 1px rgba(255,255,255,0.3);
+    color: #2c3e50;
+    opacity: 0;
+    transform: translateY(50px) scale(0.3);
+    transition: all 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    flex-shrink: 0;
+    overflow: visible;
+    max-height: 500px;
+    box-sizing: border-box;
+    position: relative;
+    animation: bubble-bob 4s ease-in-out infinite;
+}
+
+@keyframes bubble-bob {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    25% { transform: translateY(-8px) rotate(1deg); }
+    50% { transform: translateY(-5px) rotate(0deg); }
+    75% { transform: translateY(-12px) rotate(-1deg); }
+}
+
+/* Speech bubble tail */
+.message::before {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 30px;
+    width: 0;
+    height: 0;
+    border-style: solid;
+    border-width: 15px 15px 0 15px;
+    border-color: rgba(255,255,255,0.8) transparent transparent transparent;
+    filter: drop-shadow(0 3px 3px rgba(0,0,0,0.1));
+}
+
+.message::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.4));
+    animation: small-bubble-float 3s ease-in-out infinite;
+}
+
+@keyframes small-bubble-float {
+    0%, 100% { transform: translateY(0px); opacity: 0.6; }
+    50% { transform: translateY(-15px); opacity: 1; }
+}
+
+.message.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.message.fading {
+    opacity: 0;
+    transform: translateY(-50px) scale(0.8);
+    transition: all 2s ease-out;
+}
+
+.message.hidden {
+    opacity: 0;
+    transform: translateY(50px) scale(0.3);
+    max-height: 0px !important;
+    padding: 0px !important;
+    margin-bottom: 0px !important;
+    border-width: 0px !important;
+}
+
+.message.popping {
+    animation: bubble-pop 0.6s ease-out forwards;
+}
+
+@keyframes bubble-pop {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.3); opacity: 0.8; }
+    100% { transform: scale(0); opacity: 0; }
+}
+
+.avatar-wrapper {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 12px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #87CEEB, #4682B4);
+    padding: 3px;
+    vertical-align: top;
+    flex-shrink: 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    animation: avatar-bubble 6s ease-in-out infinite;
+}
+
+@keyframes avatar-bubble {
+    0%, 100% { transform: scale(1) rotate(0deg); }
+    33% { transform: scale(1.05) rotate(2deg); }
+    66% { transform: scale(0.95) rotate(-2deg); }
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+}
+
+.name {
+    color: #2980b9;
+    font-size: 1em;
+    font-weight: 600;
+    max-width: 180px;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    animation: name-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes name-glow {
+    0% { color: #2980b9; }
+    100% { color: #3498db; text-shadow: 0 1px 4px rgba(52,152,219,0.6); }
+}
+
+.text {
+    font-size: 0.9em;
+    line-height: 1.5;
+    margin: 8px 0;
+    word-wrap: break-word;
+    color: #34495e;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+}
+
+.text img {
+    max-width: 90px;
+    max-height: 22px;
+    vertical-align: bottom;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.donation {
+    color: #e74c3c;
+    font-weight: 700;
+    text-shadow: 0 0 8px rgba(231,76,60,0.6);
+    animation: donation-sparkle 1.5s ease-in-out infinite;
+}
+
+@keyframes donation-sparkle {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); text-shadow: 0 0 12px rgba(231,76,60,0.8); }
+}
+
+.name-bg {
+    background: linear-gradient(135deg, rgba(52,152,219,0.2), rgba(41,128,185,0.3));
+    padding: 4px 10px;
+    border-radius: 15px;
+    border: 1px solid rgba(52,152,219,0.3);
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.membership-status {
+    color: #f39c12;
+    font-weight: 600;
+    font-size: 0.8em;
+    margin-bottom: 6px;
+    text-shadow: 0 1px 2px rgba(243,156,18,0.6);
+    animation: membership-shine 2s ease-in-out infinite;
+}
+
+@keyframes membership-shine {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; text-shadow: 0 1px 4px rgba(243,156,18,0.8); }
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border-radius: 20px;
+    display: block;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    border: 2px solid rgba(255,255,255,0.6);
+}
+
+.source-icon {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-left: 4px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.badge {
+    display: inline-block;
+    height: 0.8em;
+    margin-left: 3px;
+    vertical-align: middle;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.message-content-wrapper {
+    display: flex;
+    align-items: flex-start;
+}
+
+.message-text-meta {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#spacer {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    background: transparent;
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+
+/* Special bubble effects for different message types */
+.message.donation-bubble {
+    background: radial-gradient(ellipse at 20% 20%, rgba(255,215,0,0.9), rgba(255,193,7,0.8));
+    border-color: rgba(255,215,0,0.6);
+    box-shadow: 
+        0 8px 25px rgba(255,193,7,0.4),
+        inset 0 1px 0 rgba(255,255,255,0.9),
+        0 0 20px rgba(255,215,0,0.3);
+    animation: golden-bubble 3s ease-in-out infinite;
+}
+
+@keyframes golden-bubble {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    25% { transform: translateY(-10px) scale(1.02); }
+    50% { transform: translateY(-5px) scale(1); }
+    75% { transform: translateY(-15px) scale(0.98); }
+}
+
+.message.member-bubble {
+    background: radial-gradient(ellipse at 20% 20%, rgba(138,43,226,0.9), rgba(147,112,219,0.8));
+    border-color: rgba(138,43,226,0.6);
+    color: #ffffff;
+}
+
+.message.special-bubble {
+    background: radial-gradient(ellipse at 20% 20%, rgba(255,105,180,0.9), rgba(255,182,193,0.8));
+    border-color: rgba(255,105,180,0.6);
+    animation: rainbow-bubble 4s ease-in-out infinite;
+}
+
+@keyframes rainbow-bubble {
+    0% { filter: hue-rotate(0deg); }
+    25% { filter: hue-rotate(90deg); }
+    50% { filter: hue-rotate(180deg); }
+    75% { filter: hue-rotate(270deg); }
+    100% { filter: hue-rotate(360deg); }
+}
+
+/* Bubble trail effects */
+.bubble-trail {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.8), rgba(255,255,255,0.3));
+    pointer-events: none;
+    animation: trail-float 2s ease-out forwards;
+}
+
+@keyframes trail-float {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.3) translateY(-60px);
+        opacity: 0;
+    }
+}
+
+/* Size variations based on message length */
+.message.small-bubble {
+    transform: scale(0.9);
+    padding: 12px 16px;
+}
+
+.message.large-bubble {
+    transform: scale(1.1);
+    padding: 24px 28px;
+}
+
+.message.huge-bubble {
+    transform: scale(1.2);
+    padding: 28px 32px;
+    animation: huge-bubble-bob 5s ease-in-out infinite;
+}
+
+@keyframes huge-bubble-bob {
+    0%, 100% { transform: scale(1.2) translateY(0px); }
+    25% { transform: scale(1.25) translateY(-12px); }
+    50% { transform: scale(1.2) translateY(-8px); }
+    75% { transform: scale(1.15) translateY(-18px); }
+}
+</style>
+</head>
+<body>
+<div id="background-bubbles"></div>
+<div id="water-caustics"></div>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        <div id="spacer" style="height: 2200px; width: 100%;"></div>
+    </div>
+</div>
+
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false";
+    var featuredMode = false;
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = 18;
+    const topSpacer = document.getElementById('spacer');
+    const messageTimestamps = new Map();
+    const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
+
+    // Background bubble generation
+    function createBackgroundBubbles() {
+        const container = document.getElementById('background-bubbles');
+        
+        for (let i = 0; i < 15; i++) {
+            const bubble = document.createElement('div');
+            bubble.className = 'bg-bubble';
+            
+            const size = Math.random() * 30 + 10;
+            bubble.style.width = size + 'px';
+            bubble.style.height = size + 'px';
+            bubble.style.left = Math.random() * 100 + '%';
+            bubble.style.animationDuration = (Math.random() * 10 + 10) + 's';
+            bubble.style.animationDelay = Math.random() * 5 + 's';
+            bubble.style.setProperty('--drift', (Math.random() - 0.5) * 200 + 'px');
+            
+            container.appendChild(bubble);
+            
+            // Remove and recreate bubble after animation
+            setTimeout(() => {
+                if (bubble.parentNode) {
+                    bubble.remove();
+                    createBackgroundBubbles();
+                }
+            }, (parseFloat(bubble.style.animationDuration) + parseFloat(bubble.style.animationDelay)) * 1000);
+        }
+    }
+
+    function createBubbleTrail(x, y) {
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                const trail = document.createElement('div');
+                trail.className = 'bubble-trail';
+                trail.style.left = x + (Math.random() - 0.5) * 30 + 'px';
+                trail.style.top = y + (Math.random() - 0.5) * 30 + 'px';
+                
+                document.body.appendChild(trail);
+                setTimeout(() => trail.remove(), 2000);
+            }, i * 100);
+        }
+    }
+
+    function adjustMessageWrapperScroll() {
+        requestAnimationFrame(() => {
+            const wrapperScrollHeight = messageListWrapper.scrollHeight;
+            const containerClientHeight = chatContainer.clientHeight;
+            
+            let translateY = 0;
+            if (wrapperScrollHeight > containerClientHeight) {
+                translateY = -(wrapperScrollHeight - containerClientHeight);
+            }
+            translateY = Math.min(0, translateY);
+
+            messageListWrapper.style.transform = `translateY(${translateY}px)`;
+        });
+    }
+    
+    setInterval(() => {
+        const now = Date.now();
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message')
+        );
+        
+        messages.forEach(message => {
+            const timestamp = messageTimestamps.get(message.id);
+            if (timestamp) {
+                const age = now - timestamp;
+                
+                // After 35 seconds, start fading
+                if (age > 35000 && !message.classList.contains('fading')) {
+                    message.classList.add('fading', 'popping');
+                }
+                
+                // Create occasional bubble trails
+                if (Math.random() < 0.03 && !message.classList.contains('fading')) {
+                    const rect = message.getBoundingClientRect();
+                    createBubbleTrail(
+                        rect.left + Math.random() * rect.width,
+                        rect.top + Math.random() * rect.height
+                    );
+                }
+            }
+        });
+    }, 1000);
+    
+    function addMessageToOverlay(data) {
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+            return;
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        // Determine bubble size based on message length
+        const messageLength = (data.chatmessage || '').length;
+        if (messageLength < 20) {
+            messageDiv.classList.add('small-bubble');
+        } else if (messageLength > 100) {
+            messageDiv.classList.add('huge-bubble');
+        } else if (messageLength > 50) {
+            messageDiv.classList.add('large-bubble');
+        }
+        
+        // Add special classes based on message type
+        if (data.hasDonation || data.donation) {
+            messageDiv.classList.add('donation-bubble');
+        } else if (data.membership) {
+            messageDiv.classList.add('member-bubble');
+        } else if (data.event || Math.random() < 0.15) {
+            messageDiv.classList.add('special-bubble');
+        }
+        
+        // Generate unique ID and track timestamp for aging
+        const messageId = data.mid || 'msg-' + Date.now();
+        messageDiv.id = messageId;
+        messageTimestamps.set(messageId, Date.now());
+        
+        var chatbadgesHtml = "";
+        if (data.chatbadges) {
+            data.chatbadges.forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else { 
+                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
+                }
+            });
+        }
+        
+        let avatarBorderColor = "linear-gradient(135deg, #87CEEB, #4682B4)";
+        if (data.nameColor) {
+            avatarBorderColor = `linear-gradient(135deg, ${data.nameColor}, #4682B4)`;
+        }
+        
+        let leftEdgeColor = null;
+        if (typeof getColorFromType === 'function' && data.type) {
+            try {
+                leftEdgeColor = getColorFromType(data.type);
+            } catch (e) {
+                console.error("Error getting color from type:", e);
+            }
+        }
+        
+        if (leftEdgeColor) {
+            messageDiv.style.borderLeft = `6px solid ${leftEdgeColor}`;
+            messageDiv.style.paddingLeft = '16px';
+        }
+        
+        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = data.chatimg ? 
+            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
+        const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="color: ${data.nameColor}; text-shadow: 0 1px 2px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
+        const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
+        const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+        
+        const contentImgHtml = data.contentimg ? 
+            `<div style="padding: 3px; border-radius: 20px; background: ${avatarBorderColor}; display: inline-block; margin-top: 10px;">
+                <img src="${data.contentimg}" alt="Content Image" class="large-image" style="margin-top: 0;" onerror="this.parentNode.style.display='none';">
+             </div>` : '';
+
+        messageDiv.innerHTML = `
+            <div class="message-content-wrapper">
+                ${avatarHtml}
+                <div class="message-text-meta">
+                    <div>
+                        ${nameHtml}
+                        ${sourceIconHtml}
+                        ${chatbadgesHtml}
+                    </div>
+                    ${membershipHtml}
+                    ${messageTextHtml}
+                    ${donationHtml}
+                </div>
+            </div>
+            ${contentImgHtml}
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+        void messageDiv.offsetWidth; 
+        messageDiv.classList.add('visible');
+        
+        // Create bubble trail when message appears
+        setTimeout(() => {
+            const rect = messageDiv.getBoundingClientRect();
+            createBubbleTrail(
+                rect.left + rect.width / 2,
+                rect.top + rect.height / 2
+            );
+        }, 500);
+        
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message') 
+        );
+        
+        if (messages.length > MAX_MESSAGES) {
+            const oldestMessage = messages[0]; 
+            
+            if (oldestMessage) {
+                const messageStyle = getComputedStyle(oldestMessage);
+                const marginBottom = parseFloat(messageStyle.marginBottom) || 0;
+                const spaceOccupiedByOldestMessage = oldestMessage.offsetHeight + marginBottom;
+                
+                const currentSpacerHeight = parseFloat(topSpacer.style.height) || 0;
+                let newPotentialSpacerHeight = currentSpacerHeight + spaceOccupiedByOldestMessage;
+
+                if (newPotentialSpacerHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) {
+                    console.log(`Spacer height (${newPotentialSpacerHeight}px) exceeded threshold (${MAX_SPACER_HEIGHT_BEFORE_RESET}px). Resetting to 0px.`);
+                    newPotentialSpacerHeight = 0;
+                }
+                
+                topSpacer.style.height = newPotentialSpacerHeight + 'px';
+
+                messageTimestamps.delete(oldestMessage.id);
+                messageListWrapper.removeChild(oldestMessage);
+            }
+        }
+        
+        adjustMessageWrapperScroll();
+    }
+
+    // Initialize background effects
+    createBackgroundBubbles();
+
+    // Standard Social Stream messaging setup
+    var iframe = document.createElement("iframe");
+    if (featuredMode){
+        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+    
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) { 
+                        addMessageToOverlay(data);
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

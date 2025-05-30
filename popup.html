@@ -1431,6 +1431,34 @@ body.ssapp .wrapper.ssapp h3 {
 					
                 </h2>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
+					
+					<!-- Stream Overlay Preset Selector -->
+					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
+							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
+						</label>
+						<select id="overlay-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+							<option value="">Classic dock.html (Full Customization)</option>
+							<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
+							<option value="overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
+							<option value="overlay-particles.html">✨ Particle System - Floating message effects</option>
+							<option value="overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
+							<option value="overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
+							<option value="overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
+							<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
+							<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
+							<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
+							<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
+							<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
+							<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
+							<option value="themes/events/index.html">🎉 Events Theme - Special occasions</option>
+							<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
+							<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
+						</select>
+						<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
+							<i data-translate="overlay-note">Note: Preset styles cannot be further modified here.</i>
+						</span>
+					</div>
 				
             </div>
 
@@ -3244,7 +3272,7 @@ body.ssapp .wrapper.ssapp h3 {
                         <option value="themes/featured-styles/featured-dynamic.html">Dynamic Physics</option>
                         <option value="themes/featured-styles/featured-neon.html">Neon Glow</option>
                     </select>
-                    <span style="margin-left: 10px; font-size: 12px; opacity: 0.7;">
+                    <span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
                         <i data-translate="preset-note">Note: Presets have limited customization options</i>
                     </span>
                 </div>
@@ -5886,6 +5914,198 @@ body.ssapp .wrapper.ssapp h3 {
 				</div>
 			</div>
 			
+			<!-- OVERLAY THEME CONFIGURATION SECTIONS -->
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-overlay-theme-options" />
+					<label class="collapsible-label" for="wrapper-overlay-theme-options">🎨 <span data-translate="overlay-theme-options">Overlay Theme Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<!-- Sample Overlay Options -->
+							<div class="overlay-config-section" id="sampleoverlay-overlay-config" style="display: none;">
+								<h3>📄 <span data-translate="sample-overlay-options">Sample Overlay Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="demo" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="demo-mode-overlay">
+										🤖 Enable demo mode (auto-messages)
+									</span>
+								</div>
+							</div>
+							
+							<!-- New Animated Overlay Options -->
+							<div class="overlay-config-section" id="overlay-neon-cyberpunk-overlay-config" style="display: none;">
+								<h3>⚡ <span data-translate="neon-cyberpunk-options">Neon Cyberpunk Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cyberpunk-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="intensegfx" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cyberpunk-intense">
+										🔥 Intense glitch effects mode
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-particles-overlay-config" style="display: none;">
+								<h3>✨ <span data-translate="particles-options">Particle System Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="denseparticles" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="particles-dense">
+										💫 Dense particle mode
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="particles-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-typewriter-overlay-config" style="display: none;">
+								<h3>⌨️ <span data-translate="typewriter-options">Terminal Typewriter Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="fastype" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="typewriter-fast">
+										⚡ Fast typing mode
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="nosound" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="typewriter-nosound">
+										🔇 Disable terminal sounds
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-bubbles-overlay-config" style="display: none;">
+								<h3>🫧 <span data-translate="bubbles-options">Bubble Chat Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="bigbubbles" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="bubbles-big">
+										🎈 Extra large bubbles
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="bubbles-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-cards-overlay-config" style="display: none;">
+								<h3>🃏 <span data-translate="cards-options">Card Flip 3D Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="autoflip" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cards-autoflip">
+										🔄 Auto-flip cards periodically
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cards-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<!-- Neutron Theme Options -->
+							<div class="overlay-config-section" id="Neutron-overlay-config" style="display: none;">
+								<h3>⚛️ <span data-translate="neutron-overlay-options">Neutron Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="darkmode" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="neutron-dark-mode">
+										🌙 Dark mode variant
+									</span>
+								</div>
+							</div>
+							
+							<!-- Pretty Theme Options -->
+							<div class="overlay-config-section" id="pretty-overlay-config" style="display: none;">
+								<h3>✨ <span data-translate="pretty-overlay-options">Pretty Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="pretty-chroma-key">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<!-- Windows 3.1 Theme Options -->
+							<div class="overlay-config-section" id="Windows3-overlay-config" style="display: none;">
+								<h3>🖥️ <span data-translate="windows31-overlay-options">Windows 3.1 Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="retro" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="windows31-retro-mode">
+										📺 Enhanced retro mode
+									</span>
+								</div>
+							</div>
+							
+							<!-- T3nk3y Theme Options -->
+							<div class="overlay-config-section" id="t3nk3y-overlay-config" style="display: none;">
+								<h3>🎮 <span data-translate="t3nk3y-overlay-options">T3nk3y Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="gaming" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="t3nk3y-gaming-mode">
+										🕹️ Enhanced gaming mode
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
 			<!-- GAMES SECTION -->
 			<div class="link" title="Interactive Games">
 				<h2 class="games_mode_title">
@@ -5924,7 +6144,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<option value="games/treasurehunt.html">🏴‍☠️ Treasure Hunt - Grid exploration</option>
 						<option value="games/dancingparade.html">💃 Dancing Parade - Lower third animation</option>
 					</select>
-					<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;">
+					<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
 						<i data-translate="games-note">Note: Each game has unique commands and mechanics</i>
 					</span>
 				</div>
