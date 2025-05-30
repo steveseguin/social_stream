@@ -12,6 +12,7 @@
       this.tts = null;
       this.audioContext = null;
       this.lastSampleRate = 22050;
+      this.initError = null;
     }
 
     async init() {
@@ -66,8 +67,9 @@
         // Wait for TTS to be ready
         await new Promise((resolve, reject) => {
           const timeout = setTimeout(() => {
+            this.initError = 'eSpeak-NG initialization timeout';
             reject(new Error('eSpeak-NG initialization timeout'));
-          }, 30000);
+          }, 10000);
           
           this.tts.onReady(() => {
             clearTimeout(timeout);
@@ -76,6 +78,18 @@
             console.log('Real eSpeak-NG TTS ready!');
             resolve();
           });
+          
+          // Handle initialization errors
+          if (this.tts.worker) {
+            this.tts.worker.onerror = (error) => {
+              clearTimeout(timeout);
+              this.initError = 'eSpeak worker error: ' + error;
+              console.error('eSpeak worker error:', error);
+              this.initialized = false;
+              this.initializing = false;
+              reject(error);
+            };
+          }
           
           // Also handle the case where onReady might have already been called
           if (this.tts.ready) {
@@ -91,6 +105,7 @@
         console.error('Failed to initialize eSpeak-NG:', error);
         this.initialized = false;
         this.initializing = false;
+        this.initError = error.message;
         throw error;
       }
     }
@@ -121,7 +136,7 @@
 
     async speak(text, settings = {}) {
       if (!this.initialized) {
-        throw new Error('eSpeak-NG not initialized');
+        throw new Error('eSpeak-NG not initialized: ' + (this.initError || 'Unknown error'));
       }
       
       return new Promise((resolve, reject) => {
@@ -220,8 +235,11 @@
       let offset = 44;
       for (let i = 0; i < length; i++) {
         for (let channel = 0; channel < numberOfChannels; channel++) {
-          const sample = Math.max(-1, Math.min(1, audioBuffer.getChannelData(channel)[i]));
-          view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+          let sample = audioBuffer.getChannelData(channel)[i];
+          // Clamp sample
+          sample = Math.max(-1, Math.min(1, sample));
+          // Convert to 16-bit PCM
+          view.setInt16(offset, sample * 0x7FFF, true);
           offset += 2;
         }
       }
@@ -230,27 +248,26 @@
     }
     
     createWAVFromAudioData(audioData) {
-      const sampleRate = this.lastSampleRate || 22050; // Use actual sample rate or eSpeak default
-      const numChannels = 1;
+      // Assume audioData is a Float32Array or similar
+      const sampleRate = this.lastSampleRate;
+      const numberOfChannels = 1;
       const bitsPerSample = 16;
       
-      // Get samples
       let samples;
       if (audioData instanceof Float32Array) {
         samples = audioData;
-      } else if (audioData.buffer instanceof ArrayBuffer) {
-        samples = new Float32Array(audioData.buffer);
       } else if (audioData instanceof ArrayBuffer) {
         samples = new Float32Array(audioData);
       } else {
-        samples = new Float32Array(audioData);
+        throw new Error('Unsupported audio data format');
       }
       
       const length = samples.length;
-      const arrayBuffer = new ArrayBuffer(44 + length * 2);
+      const wavLength = 44 + length * 2;
+      const arrayBuffer = new ArrayBuffer(wavLength);
       const view = new DataView(arrayBuffer);
       
-      // Write WAV header
+      // WAV header
       const writeString = (offset, string) => {
         for (let i = 0; i < string.length; i++) {
           view.setUint8(offset + i, string.charCodeAt(i));
@@ -258,41 +275,35 @@
       };
       
       writeString(0, 'RIFF');
-      view.setUint32(4, 36 + length * 2, true);
+      view.setUint32(4, wavLength - 8, true);
       writeString(8, 'WAVE');
       writeString(12, 'fmt ');
       view.setUint32(16, 16, true);
       view.setUint16(20, 1, true);
-      view.setUint16(22, numChannels, true);
+      view.setUint16(22, numberOfChannels, true);
       view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * numChannels * bitsPerSample / 8, true);
-      view.setUint16(32, numChannels * bitsPerSample / 8, true);
+      view.setUint32(28, sampleRate * numberOfChannels * bitsPerSample / 8, true);
+      view.setUint16(32, numberOfChannels * bitsPerSample / 8, true);
       view.setUint16(34, bitsPerSample, true);
       writeString(36, 'data');
       view.setUint32(40, length * 2, true);
       
-      // Write samples
+      // Write audio data
       let offset = 44;
       for (let i = 0; i < length; i++) {
-        const sample = Math.max(-1, Math.min(1, samples[i]));
-        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        let sample = samples[i];
+        // Clamp sample
+        sample = Math.max(-1, Math.min(1, sample));
+        // Convert to 16-bit PCM
+        view.setInt16(offset, sample * 0x7FFF, true);
         offset += 2;
       }
       
       return arrayBuffer;
     }
-    
-    destroy() {
-      this.tts = null;
-      this.initialized = false;
-      if (this.audioContext) {
-        this.audioContext.close();
-        this.audioContext = null;
-      }
-    }
   }
-
-  // Export
+  
+  // Export to window
   window.RealESpeakTTS = RealESpeakTTS;
-
+  
 })(window);

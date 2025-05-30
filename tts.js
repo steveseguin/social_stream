@@ -1774,6 +1774,12 @@ TTS.initEspeak = async function() {
         return true;
     } catch (error) {
         console.error('Failed to initialize real eSpeak-NG TTS:', error);
+        if (error.message && error.message.includes('Wrong version of espeak-ng-data')) {
+            console.error('eSpeak-NG data version mismatch detected. The eSpeak TTS engine requires compatible data files.');
+            console.error('Please use the browser\'s built-in TTS or another TTS provider instead.');
+        }
+        TTS.espeakLoaded = false;
+        TTS.espeakInstance = null;
         return false;
     }
 };
@@ -1788,7 +1794,7 @@ TTS.espeakTTS = async function(text) {
         if (!TTS.espeakLoaded || !TTS.espeakInstance) {
             const initialized = await TTS.initEspeak();
             if (!initialized) {
-                console.error("Failed to initialize eSpeak TTS");
+                console.error("Failed to initialize eSpeak TTS - please use a different TTS provider");
                 TTS.finishedAudio();
                 return;
             }
