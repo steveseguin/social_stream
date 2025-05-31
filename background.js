@@ -3050,12 +3050,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 			}
 			
-			if (request.setting === "hypeCombineAll" || 
-				  request.setting === "hypeCombineYouTube" || 
-				  request.setting === "hypeCombineSameType") {
-				clearAndRefreshHypeSources();
-			}
-
 			if (request.setting == "hypemode") {
 				if (!request.value) {
 					processHype2(); // stop hype and clear old hype
@@ -5976,37 +5970,6 @@ var lastUpdated = {};
 var activeViewerSources = {}; // Track sources that have received viewer updates
 var hypeInterval = null;
 
-function clearAndRefreshHypeSources() {
-  // Don't do anything if hype mode is disabled
-  if (!settings.hypemode) return;
-
-  // Reset data structures
-  users = {};
-  hype = {};
-  viewerCounts = {};
-  lastUpdated = {}; // Important to clear this too
-  activeViewerSources = {}; // Clear active viewer sources too
-
-  // Create a clear action object
-  let clearAction = {
-    action: "refreshSources",
-    combineAll: settings.hypeCombineAll,
-    combineYouTube: settings.hypeCombineYouTube,
-    combineSameType: settings.hypeCombineSameType,
-    timestamp: Date.now()
-  };
-
-  // Add uniqueId if set
-  if (settings.hypeUniqueId) {
-    clearAction.uniqueId = settings.hypeUniqueId;
-  }
-
-  // Send the clear action to hype.html
-  sendHypeP2P({ clear: clearAction });
-
-  // Force an immediate update with the now cleared data and new settings
-  processHype2();
-}
 
 function processHype(data) { // data here should be a chat message
     if (!settings.hypemode) {
@@ -6024,7 +5987,7 @@ function processHype(data) { // data here should be a chat message
     }
 	
     // If it's not a viewer_update, proceed to process as a chatter
-    const sourceType = getEffectiveSourceType(data);
+    const sourceType = data.type;
 	
     let newSource = false;
 	
@@ -6088,17 +6051,6 @@ function updateViewerCount(data) {
     sendHypeP2P(combinedData);
 }
 
-function getEffectiveSourceType(data) {
-    // Always group by source type (no tab IDs)
-    // Check if YouTube and YouTube Shorts should be combined
-    if (settings.hypeCombineYouTube && (data.type === "youtube" || data.type === "youtubeshorts")) {
-        return "youtube";
-    }
-    
-    // Always return just the type without tab ID
-    return data.type;
-}
-
 function processHype2() {
     if (!settings.hypemode) {
         if (hypeInterval) clearInterval(hypeInterval);
@@ -6114,28 +6066,6 @@ function processHype2() {
     for (const sourceKey in viewerCounts) {
         if (viewerCounts[sourceKey] > 0) {
             sourcesWithActualViewers[sourceKey] = true;
-        }
-    }
-
-    // Clean up inactive sources
-    if (settings.hypeAutoCleanup) {
-        for (const sourceKey in lastUpdated) {
-            let shouldDelete = false;
-            if (sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 90000)) { // Has actual viewers, 90s timeout
-                shouldDelete = true;
-            } else if (!sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 300000)) { // No actual viewers (or just chatters), long timeout
-                shouldDelete = true;
-            }
-
-            if (shouldDelete) {
-                delete viewerCounts[sourceKey];
-                delete lastUpdated[sourceKey];
-                delete activeViewerSources[sourceKey]; // Remove from active sources
-                // Also remove from users if this source is only tracked via lastUpdated/viewerCounts
-                // Note: `users` are cleaned based on their own chatter activity timeout.
-                // If a sourceKey from lastUpdated/viewerCounts represents an effective type (e.g. "global"),
-                // be careful deleting from `users` which might use different keys.
-            }
         }
     }
 
@@ -6181,50 +6111,15 @@ function combineHypeData() {
         result.combined[sourceType].chatters = hype[sourceType];
     }
     
-    // Process viewer counts - always grouped by type
-    // Since viewerCounts are already stored by sourceType (from getEffectiveSourceType),
-    // we just need to handle YouTube combining if enabled
-    if (settings.hypeCombineYouTube) {
-        // Combine YouTube and YouTube Shorts viewers
-        let youtubeViewers = 0;
-        let hasActiveYoutube = false;
-        
-        for (const sourceType in viewerCounts) {
-            if (activeViewerSources[sourceType]) {
-                if (sourceType === "youtube" || sourceType === "youtubeshorts") {
-                    youtubeViewers += viewerCounts[sourceType];
-                    hasActiveYoutube = true;
-                } else {
-                    // Non-YouTube sources
-                    result.viewers[sourceType] = viewerCounts[sourceType];
-                    if (!result.combined[sourceType]) {
-                        result.combined[sourceType] = { chatters: 0, viewers: 0 };
-                    }
-                    result.combined[sourceType].viewers = viewerCounts[sourceType];
-                }
-            }
-        }
-        
-        // Add combined YouTube if we have any
-        if (hasActiveYoutube) {
-            result.viewers["youtube"] = youtubeViewers;
-            if (!result.combined["youtube"]) {
-                result.combined["youtube"] = { chatters: 0, viewers: 0 };
-            }
-            result.combined["youtube"].viewers = youtubeViewers;
-        }
-    } else {
-        // No YouTube combining - just copy all active sources
-        for (const sourceType in viewerCounts) {
-            if (activeViewerSources[sourceType]) {
-                result.viewers[sourceType] = viewerCounts[sourceType];
-                if (!result.combined[sourceType]) {
-                    result.combined[sourceType] = { chatters: 0, viewers: 0 };
-                }
-                result.combined[sourceType].viewers = viewerCounts[sourceType];
-            }
-        }
-    }
+	for (const sourceType in viewerCounts) {
+		// Include all sources that have viewer data, even if 0
+		result.viewers[sourceType] = viewerCounts[sourceType];
+		if (!result.combined[sourceType]) {
+			result.combined[sourceType] = { chatters: 0, viewers: 0 };
+		}
+		result.combined[sourceType].viewers = viewerCounts[sourceType];
+	}
+
     
     // Add unique ID if specified
     if (settings.hypeUniqueId) {
