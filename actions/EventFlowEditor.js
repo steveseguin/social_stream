@@ -672,7 +672,13 @@ class EventFlowEditor {
             switch (node.triggerType) {
                 case 'messageContains': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageStartsWith': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
+                case 'messageEquals': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
+                case 'messageRegex': return `Pattern: "${(node.config.pattern || '').substring(0,15)}${(node.config.pattern || '').length > 15 ? '...' : ''}"`;
                 case 'fromSource': return `Source: ${node.config.source || 'Any'}`;
+                case 'fromUser': return `User: ${node.config.username || 'Any'}`;
+                case 'userRole': return `Role: ${node.config.role || 'Any'}`;
+                case 'hasDonation': return 'Has donation';
+                case 'customJs': return 'Custom JS';
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
