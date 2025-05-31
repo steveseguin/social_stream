@@ -668,7 +668,7 @@ class EventFlowSystem {
                     console.log('  - timeout:', config.timeout || 5100);
                     
                     // Use relayMode=true to mark this as a relayed message and prevent circular relaying
-                    const result = this.sendMessageToTabs(relayMessage, false, null, true, false, config.timeout || 5100);
+                    const result = this.sendMessageToTabs(relayMessage, config.toAll === true, null, true, false, config.timeout || 5100);
                     console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
                 } else {
                     console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
