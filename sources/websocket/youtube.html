@@ -651,7 +651,6 @@ try {
     var currentStream = null;
 	var messageQueue = [];
 	var displayInterval;
-	var isDisplaying = false;
 	var quickPollCount = 0
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
@@ -665,7 +664,6 @@ try {
 	var youtubeRecommendedInterval = 5000; // Default, will be updated by API
 	var isPageVisible = true;
 	var lastVisibilityChange = Date.now();
-	var keepAliveInterval;
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
 
@@ -756,28 +754,9 @@ try {
 	  });
 	}
 	function setTrackedTimeout(callback, delay, isBackground = false) {
-		let timeoutHandle;
-		if (isBackground && !isPageVisible && delay > 100) {
-			timeoutHandle = modifiedSetTimeout(callback, delay);
-		} else {
-			timeoutHandle = setTimeout(callback, delay);
-		}
-		
-		// Track the timeout
+		const timeoutHandle = setTimeout(callback, delay);
 		activeTimeouts.add(timeoutHandle);
-		
-		// Wrap the clear function to remove from tracking
-		const originalClear = timeoutHandle.clear || (() => clearTimeout(timeoutHandle));
-		const trackedHandle = {
-			clear: () => {
-				originalClear();
-				activeTimeouts.delete(timeoutHandle);
-				activeTimeouts.delete(trackedHandle);
-			},
-			timeoutId: timeoutHandle.timeoutId || timeoutHandle
-		};
-		
-		return trackedHandle;
+		return timeoutHandle;
 	}
 	function processCustomEmoteData(data) {
 	  customEmoteData = data;
@@ -1056,14 +1035,10 @@ try {
 		if (isPageVisible && !wasVisible) {
 			console.log('Page is now visible - checking polling state');
 			
-			// Clear any background keep-alive
-			if (keepAliveInterval) {
-				if (typeof keepAliveInterval.clear === 'function') {
-					keepAliveInterval.clear();
-				} else if (keepAliveInterval.intervalId) {
-					clearInterval(keepAliveInterval.intervalId);
-				}
-				keepAliveInterval = null;
+			// Process any queued messages
+			if (messageQueue.length > 0) {
+				console.log(`Processing ${messageQueue.length} queued messages`);
+				processQueuedMessages();
 			}
 			
 			// Only resume if we have an active connection and aren't already polling
@@ -1112,19 +1087,6 @@ try {
 				foregroundPollingInterval = pollInterval;
 			}
 			
-			// Set up background keep-alive with proper interval
-			if (!keepAliveInterval && liveChatId) {
-				const scheduleNextKeepAlive = () => {
-					const interval = Math.max(backgroundPollingInterval, youtubeRecommendedInterval);
-					keepAliveInterval = modifiedSetTimeout(() => {
-						backgroundKeepAlive();
-						if (!isPageVisible && liveChatId) {
-							scheduleNextKeepAlive();
-						}
-					}, interval);
-				};
-				scheduleNextKeepAlive();
-			}
 		}
 	}
 	async function fetchChatMessages() {
@@ -1268,11 +1230,7 @@ try {
 			
 			// Clear any existing timeout before setting new one
 			if (fetchTimeout) {
-				if (typeof fetchTimeout.clear === 'function') {
-					fetchTimeout.clear();
-				} else {
-					clearTimeout(fetchTimeout);
-				}
+				clearTimeout(fetchTimeout);
 				fetchTimeout = null;
 			}
 			
@@ -1290,11 +1248,7 @@ try {
 			
 			// Clear any existing timeout before setting new one
 			if (fetchTimeout) {
-				if (typeof fetchTimeout.clear === 'function') {
-					fetchTimeout.clear();
-				} else {
-					clearTimeout(fetchTimeout);
-				}
+				clearTimeout(fetchTimeout);
 				fetchTimeout = null;
 			}
 			
@@ -1304,91 +1258,6 @@ try {
 		}
 	}
 	
-	function backgroundKeepAlive() {
-		if (!isPageVisible && liveChatId) {
-			console.log('Background keep-alive ping:', new Date().toISOString());
-			
-			// Only attempt to poll if we're not already polling and don't have a scheduled fetch
-			if (!isPolling && !fetchTimeout) {
-				const timeSinceLastPoll = Date.now() - lastPollingTime;
-				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
-				const requiredInterval = Math.max(backgroundPollingInterval, youtubeRecommendedInterval);
-				
-				if (timeSinceLastPoll >= requiredInterval && timeSinceLastSuccess >= requiredInterval) {
-					console.log('Sufficient time since last poll, fetching in background');
-					fetchChatMessages();
-				} else {
-					const timeToWait = Math.max(
-						requiredInterval - timeSinceLastPoll,
-						requiredInterval - timeSinceLastSuccess
-					);
-					console.log(`Too soon to poll again in background, need to wait ${timeToWait}ms more`);
-				}
-			} else {
-				console.log('Already polling or fetch scheduled, skipping background fetch');
-			}
-			
-			// Audio context keep-alive to prevent browser from suspending the page
-			if (typeof window.AudioContext !== 'undefined' || typeof window.webkitAudioContext !== 'undefined') {
-				if (!window.keepAliveAudioContext || window.keepAliveAudioContext.state === 'closed') {
-					try {
-						// Clean up any existing context first
-						if (window.keepAliveAudioContext && window.keepAliveAudioContext.state !== 'closed') {
-							window.keepAliveAudioContext.close();
-						}
-						const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-						window.keepAliveAudioContext = new AudioContextClass();
-						window.keepAliveOscillator = window.keepAliveAudioContext.createOscillator();
-						window.keepAliveOscillator.type = 'sine';
-						window.keepAliveOscillator.frequency.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
-						const gainNode = window.keepAliveAudioContext.createGain();
-						gainNode.gain.setValueAtTime(0, window.keepAliveAudioContext.currentTime);
-						window.keepAliveOscillator.connect(gainNode);
-						gainNode.connect(window.keepAliveAudioContext.destination);
-						window.keepAliveOscillator.start();
-						// Schedule cleanup after 30 seconds to prevent long-running oscillators
-						setTimeout(() => {
-							if (window.keepAliveOscillator) {
-								try {
-									window.keepAliveOscillator.stop();
-									window.keepAliveOscillator = null;
-								} catch(e) {}
-							}
-						}, 30000);
-					} catch (e) {
-						console.warn('Failed to create keep-alive audio context:', e);
-					}
-				}
-				if (window.keepAliveAudioContext && window.keepAliveAudioContext.state === 'suspended') {
-					window.keepAliveAudioContext.resume().catch(e => console.warn('Failed to resume audio context:', e));
-				}
-			}
-			
-			// DOM manipulation to keep the page "active"
-			if (document.getElementById('textarea')) {
-				const timestamp = document.createElement('div');
-				timestamp.style.display = 'none';
-				timestamp.setAttribute('data-keepalive', Date.now());
-				document.getElementById('textarea').appendChild(timestamp);
-				
-				// Clean up old timestamps to prevent memory leak
-				const oldTimestamps = document.querySelectorAll('[data-keepalive]');
-				if (oldTimestamps.length > 10) {
-					oldTimestamps[0].remove();
-				}
-			}
-		} else if (isPageVisible) {
-			// Page became visible, clean up audio context
-			if (window.keepAliveAudioContext) {
-				try {
-					window.keepAliveAudioContext.close();
-					window.keepAliveAudioContext = null;
-				} catch (e) {
-					// Ignore errors when closing audio context
-				}
-			}
-		}
-	}
 
 	function verifyAndUseToken(token) {
 		try {
@@ -1770,52 +1639,31 @@ try {
 	  updatePollSpinner(5000);
 	}
 	function queueMessage(messageData) {
-		// Limit queue to 500 messages
-		if (messageQueue.length >= 500) {
-			messageQueue.splice(0, messageQueue.length - 499);
-		}
-		messageQueue.push(messageData);
-		if (!isDisplaying) startDisplayQueue();
-	}
-	function startDisplayQueue() {
-		if (isDisplaying || messageQueue.length === 0) return;
-		isDisplaying = true;
-		displayNextMessage();
-	}
-	function displayNextMessage() {
-		if (messageQueue.length === 0) {
-			isDisplaying = false;
-			return;
-		}
-		
-		isDisplaying = true;
-		
-		// Determine batch size based on queue length
-		let batchSize = 1;
-		if (messageQueue.length > 100) batchSize = 10;
-		else if (messageQueue.length > 50) batchSize = 5;
-		else if (messageQueue.length > 30) batchSize = 4;
-		else if (messageQueue.length > 20) batchSize = 3;
-		else if (messageQueue.length > 10) batchSize = 2;
-		
-		// Process a batch of messages
-		const batchToProcess = messageQueue.splice(0, Math.min(batchSize, messageQueue.length));
-		for (const message of batchToProcess) {
-			processMessage(message);
-		}
-		
-		// Calculate delay for next batch (more messages = shorter delay)
-		let delay = 500; // Base delay between batches
-		if (messageQueue.length > 50) delay = 80;
-		else if (messageQueue.length > 20) delay = 100;
-		else if (messageQueue.length > 10) delay = 200;
-		else if (messageQueue.length > 4) delay = 300;
-		
-		// Schedule next batch processing with appropriate delay and method
+		// If page is visible, process immediately
 		if (isPageVisible) {
-			setTimeout(() => displayNextMessage(), delay);
+			processMessage(messageData);
 		} else {
-			modifiedSetTimeout(() => displayNextMessage(), delay);
+			// Queue messages when page is not visible
+			if (messageQueue.length >= 200) {
+				messageQueue.splice(0, messageQueue.length - 199);
+			}
+			messageQueue.push(messageData);
+		}
+	}
+	
+	function processQueuedMessages() {
+		// Process all queued messages when page becomes visible
+		if (messageQueue.length === 0) return;
+		
+		// Process messages in batches to avoid blocking UI
+		const batchSize = Math.min(20, messageQueue.length);
+		const batch = messageQueue.splice(0, batchSize);
+		
+		batch.forEach(message => processMessage(message));
+		
+		// If more messages remain, process them after a short delay
+		if (messageQueue.length > 0) {
+			setTimeout(processQueuedMessages, 50);
 		}
 	}
 		
@@ -1846,195 +1694,6 @@ try {
 			return { success: false };
 		}
 	}
-	function oscillatorTimeout(callback, delay) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        const ctx = new AudioContext();
-
-        const oscillator = ctx.createOscillator();
-        const gain = ctx.createGain();
-        gain.gain.value = 0;
-        oscillator.connect(gain);
-        gain.connect(ctx.destination);
-
-        let rafId;
-        let startTime = performance.now();
-        let isDone = false;
-        const checkTime = (timestamp) => {
-            if (isDone) return;
-
-            if ((timestamp - startTime) >= delay) {
-                isDone = true;
-                oscillator.onended = () => {};
-                oscillator.disconnect();
-                gain.disconnect();
-                ctx.close();
-                cancelAnimationFrame(rafId);
-                callback();
-                return;
-            }
-            rafId = requestAnimationFrame(checkTime);
-        };
-        oscillator.onended = () => {
-            if (isDone) return;
-            isDone = true;
-            cancelAnimationFrame(rafId);
-            oscillator.disconnect();
-            gain.disconnect();
-            ctx.close();
-            callback();
-        };
-
-        oscillator.start();
-        oscillator.stop(ctx.currentTime + delay/1000);
-        rafId = requestAnimationFrame(checkTime);
-
-        return {
-            clear: () => {
-                isDone = true;
-                cancelAnimationFrame(rafId);
-                oscillator.onended = () => {};
-                oscillator.disconnect();
-                gain.disconnect();
-                ctx.close();
-            }
-        };
-    }
-	
-	// Global queue for managing timeouts when page isn't visible
-	const timeoutQueue = {
-		items: [],
-		activeOscillator: null,
-		nextId: 1,
-		
-		add: function(callback, delay) {
-			const id = this.nextId++;
-			const executeTime = performance.now() + delay;
-			
-			this.items.push({
-				id,
-				callback,
-				executeTime
-			});
-			
-			// Sort the queue by execution time
-			this.items.sort((a, b) => a.executeTime - b.executeTime);
-			
-			// If we have an active oscillator, check if we need to update its timing
-			if (this.activeOscillator && this.items[0].id === id) {
-				// This new item is now the first in the queue, so we need to update the oscillator
-				this.activeOscillator.clear();
-				this.activeOscillator = null;
-				this.processQueue();
-			} else if (!this.activeOscillator) {
-				// Start the queue processing if no active oscillator
-				this.processQueue();
-			}
-			
-			// Return an object with clear method
-			return {
-				clear: () => this.remove(id)
-			};
-		},
-		
-		// Remove a timeout from the queue
-		remove: function(id) {
-			const index = this.items.findIndex(item => item.id === id);
-			if (index !== -1) {
-				this.items.splice(index, 1);
-				
-				// If we removed the first item and we have an active oscillator,
-				// we need to clear it and start a new one for the next item
-				if (index === 0 && this.activeOscillator) {
-					this.activeOscillator.clear();
-					this.activeOscillator = null;
-					this.processQueue();
-				}
-			}
-		},
-		
-		// Process the queue, executing due callbacks and setting up next oscillator
-		processQueue: function() {
-			if (this.items.length === 0) return;
-			
-			const now = performance.now();
-			
-			// Execute all items that are due
-			while (this.items.length > 0 && this.items[0].executeTime <= now) {
-				const item = this.items.shift();
-				try {
-					item.callback();
-				} catch (e) {
-					console.error('Error executing timeout callback:', e);
-				}
-			}
-			
-			// If there are more items, set up the next oscillator
-			if (this.items.length > 0) {
-				const nextItem = this.items[0];
-				const nextDelay = Math.max(100, nextItem.executeTime - now);
-				
-				this.activeOscillator = this.createOscillator(() => {
-					this.activeOscillator = null;
-					this.processQueue();
-				}, nextDelay);
-			}
-		},
-		
-		// Create an oscillator with the given callback and delay
-		createOscillator: function(callback, delay) {
-			const AudioContext = window.AudioContext || window.webkitAudioContext;
-			const ctx = new AudioContext();
-
-			const oscillator = ctx.createOscillator();
-			const gain = ctx.createGain();
-			gain.gain.value = 0;
-			oscillator.connect(gain);
-			gain.connect(ctx.destination);
-
-			let rafId;
-			let startTime = performance.now();
-			let isDone = false;
-			const checkTime = (timestamp) => {
-				if (isDone) return;
-
-				if ((timestamp - startTime) >= delay) {
-					isDone = true;
-					oscillator.onended = () => {};
-					oscillator.disconnect();
-					gain.disconnect();
-					ctx.close();
-					cancelAnimationFrame(rafId);
-					callback();
-					return;
-				}
-				rafId = requestAnimationFrame(checkTime);
-			};
-			oscillator.onended = () => {
-				if (isDone) return;
-				isDone = true;
-				cancelAnimationFrame(rafId);
-				oscillator.disconnect();
-				gain.disconnect();
-				ctx.close();
-				callback();
-			};
-
-			oscillator.start();
-			oscillator.stop(ctx.currentTime + delay/1000);
-			rafId = requestAnimationFrame(checkTime);
-
-			return {
-				clear: () => {
-					isDone = true;
-					cancelAnimationFrame(rafId);
-					oscillator.onended = () => {};
-					oscillator.disconnect();
-					gain.disconnect();
-					ctx.close();
-				}
-			};
-		}
-	};
 
 	function notifyVideoChange(videoId, channelId) {
 		window.dispatchEvent(new CustomEvent('youtubeVideoChanged', {
@@ -2051,16 +1710,6 @@ try {
 		}
 	}
 	
-	function modifiedSetTimeout(callback, delay) {
-		if (!isPageVisible && delay > 100) {
-			return timeoutQueue.add(callback, delay);
-		} else {
-			const timeoutId = setTimeout(callback, delay);
-			return {
-				clear: () => clearTimeout(timeoutId)
-			};
-		}
-	}
 
     async function getStreamStats() {
         if (!currentStream || !currentStream.id) return;
@@ -2107,13 +1756,7 @@ try {
 		// Clear all tracked timeouts
 		activeTimeouts.forEach(timeout => {
 			try {
-				if (typeof timeout.clear === 'function') {
-					timeout.clear();
-				} else if (timeout.timeoutId) {
-					clearTimeout(timeout.timeoutId);
-				} else {
-					clearTimeout(timeout);
-				}
+				clearTimeout(timeout);
 			} catch (e) {
 				// Ignore errors from already cleared timeouts
 			}
@@ -2122,24 +1765,10 @@ try {
 		
 		if (pollInterval) clearInterval(pollInterval);
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
-		if (keepAliveInterval) {
-			if (typeof keepAliveInterval.clear === 'function') {
-				keepAliveInterval.clear();
-			} else if (keepAliveInterval.intervalId) {
-				clearInterval(keepAliveInterval.intervalId);
-			} else {
-				clearInterval(keepAliveInterval);
-			}
-		}
 		if (fetchTimeout) {
-			if (typeof fetchTimeout.clear === 'function') {
-				fetchTimeout.clear();
-			} else {
-				clearTimeout(fetchTimeout);
-			}
+			clearTimeout(fetchTimeout);
 		}
 		
-		keepAliveInterval = null;
 		foregroundPollingInterval = null;
 		pollInterval = null;
 		channelStatsInterval = null;
@@ -2157,7 +1786,6 @@ try {
 		isPolling = false;
 		currentStream = null;
 		messageQueue = [];
-		isDisplaying = false;
 		quickPollCount = 0;
 		lastSuccessfulPollTime = 0;
 		youtubeRecommendedInterval = 5000; // Reset to default
@@ -2356,11 +1984,7 @@ try {
 					}
 				}
 				
-				if (!isPageVisible) {
-					fetchTimeout = modifiedSetTimeout(fetchChatMessages, initialFetchDelay);
-				} else {
-					fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
-				}
+				fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
 			} else {
                  const noChatMessage = document.createElement("div");
                  noChatMessage.style.color = "orange";
@@ -2433,14 +2057,11 @@ try {
 
 	function processMessage(messageData) {
 		try {
-			const textarea = document.querySelector("#textarea");
-			var span = document.createElement("div");
-			let badgeHtml = '';
 			let badgeText = '';
 			
-			if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; badgeText = "👑"; }
-			if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; badgeText = "🛡️"; }
-			if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; badgeText = "⭐"; }
+			if (messageData.isChatOwner) { badgeText = "👑"; }
+			if (messageData.isChatModerator) { badgeText = "🛡️"; }
+			if (messageData.isChatSponsor) { badgeText = "⭐"; }
 
 			//console.log("Processing message:", messageData.message, "EMOTELIST available:", !!EMOTELIST);
 			if (!messageData.message && messageData.message !== '') {
@@ -2449,16 +2070,28 @@ try {
 			const messageText = messageData.message || '';
 			const messageWithEmojis = replaceEmojis(messageText);
 
-			span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
-			textarea.appendChild(span);
-			// More aggressive cleanup to prevent memory buildup
-			const maxMessages = isPageVisible ? 50 : 20;
-			while (textarea.childNodes.length > maxMessages) {
-				textarea.removeChild(textarea.firstChild);
-			}
-			// Only auto-scroll if user is near bottom
-			if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
-				textarea.scrollTop = textarea.scrollHeight;
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					let badgeHtml = '';
+					if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
+					if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
+					if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
+					
+					span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
+					textarea.appendChild(span);
+					// More aggressive cleanup to prevent memory buildup
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
 			}
 			if (!messageData.skipEvent && messageWithEmojis) {
 				pushMessage({
@@ -2483,18 +2116,24 @@ try {
     function processSuperChat(superChatData) {
 		try {
 			addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
-			const textarea = document.querySelector("#textarea");
-			var span = document.createElement("div");
-			span.innerHTML = `<strong>${superChatData.authorName}</strong> <span>${superChatData.amount}</span>: ${superChatData.message || ''}`;
-			textarea.appendChild(span);
-			// Use same cleanup limit as regular messages
-			const maxMessages = isPageVisible ? 50 : 20;
-			while (textarea.childNodes.length > maxMessages) {
-				textarea.removeChild(textarea.firstChild);
-			}
-			// Only auto-scroll if user is near bottom
-			if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
-				textarea.scrollTop = textarea.scrollHeight;
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${superChatData.authorName}</strong> <span>${superChatData.amount}</span>: ${superChatData.message || ''}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
 			}
 			pushMessage({
 				chatname: superChatData.authorName,
@@ -2517,19 +2156,25 @@ try {
 	function processMembership(membershipData) {
 		try {
 			addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
-			const textarea = document.querySelector("#textarea");
-			var span = document.createElement("div");
-			span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>joined as a member (${membershipData.level})</span>`;
-			textarea.appendChild(span);
 			
-			// Use same cleanup limit as regular messages
-			const maxMessages = isPageVisible ? 50 : 20;
-			while (textarea.childNodes.length > maxMessages) {
-				textarea.removeChild(textarea.firstChild);
-			}
-			// Only auto-scroll if user is near bottom
-			if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
-				textarea.scrollTop = textarea.scrollHeight;
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>joined as a member (${membershipData.level})</span>`;
+					textarea.appendChild(span);
+					
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
 			}
 			
 			pushMessage({
@@ -2594,7 +2239,6 @@ try {
 		// Clear all intervals
 		if (pollInterval) clearInterval(pollInterval);
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
-		if (keepAliveInterval) clearInterval(keepAliveInterval);
 		if (displayInterval) clearInterval(displayInterval);
 		
 		// Clear all timeouts
@@ -2602,17 +2246,6 @@ try {
 		activeTimeouts.forEach(timeout => clearTimeout(timeout));
 		activeTimeouts.clear();
 		
-		// Close audio context
-		if (window.keepAliveAudioContext) {
-			try {
-				if (window.keepAliveOscillator) {
-					window.keepAliveOscillator.stop();
-					window.keepAliveOscillator = null;
-				}
-				window.keepAliveAudioContext.close();
-				window.keepAliveAudioContext = null;
-			} catch (e) {}
-		}
 		
 		// Run all registered cleanup functions
 		cleanupFunctions.forEach(fn => {

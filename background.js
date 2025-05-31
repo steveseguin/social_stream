@@ -3675,34 +3675,24 @@ async function sendToDestinations(message) {
 						}
 					  }
 					});
-				  }, 600000); 
+				  }, 610000); 
 				}
 				
-				if (settings.hypemode) {
-					// ONLY update viewer counts if it's a viewer_update
-					if (message.event === 'viewer_update') {
-						updateViewerCount(message); // updateViewerCount already calls combineHypeData and sends
-					} else if (message.event === 'follower_update') {
+				if (message.event === 'viewer_update') {
+					var viewerCounts = {};
+					for (const [tid, tabData] of metaDataStore) {
+						if (tabData.viewer_update && tabData.viewer_update.type){
+							const count = parseInt(tabData.viewer_update.meta) || 0;
+							viewerCounts[tabData.viewer_update.type] = (viewerCounts[tabData.viewer_update.type] || 0) + count;
+						}
 					}
+					if (settings.hypemode) {
+						updateViewerCount({event: "viewer_updates", meta: viewerCounts}); // updateViewerCount already calls combineHypeData and sends
+					}
+					
+					sendDataP2P({event: "viewer_updates", meta: viewerCounts});
 				}
-			
-				try {
-				  // Only send data to P2P for non-hype targets
-				  const peersToSend = [];
-				  for (const UUID in connectedPeers) {
-					if (connectedPeers[UUID] !== "hype") {
-					  peersToSend.push(UUID);
-					}
-				  }
-				  
-				  if (peersToSend.length > 0) {
-					for (const UUID of peersToSend) {
-					  iframe.contentWindow.postMessage({ sendData: { overlayNinja: message }, type: "pcs", UUID: UUID }, "*");
-					}
-				  }
-				} catch (e) {
-				  console.error(e);
-				}
+				
 				return true;
 			}
 		}
@@ -6030,7 +6020,7 @@ function processHype(data) { // data here should be a chat message
     // Handle viewer count updates separately
     if (data.event === 'viewer_update' && data.meta) {
         updateViewerCount(data); // This updates viewers and sends combined data via its own path
-        // return; // Return here so it doesn't process as a chatter
+        return; // Return here so it doesn't process as a chatter
     }
 	
     // If it's not a viewer_update, proceed to process as a chatter
@@ -6067,11 +6057,31 @@ function processHype(data) { // data here should be a chat message
 
 
 function updateViewerCount(data) {
-    // Store the viewer count with the tab ID
-    const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
-    viewerCounts[sourceKey] = data.meta;
-    lastUpdated[sourceKey] = Date.now();
-    activeViewerSources[sourceKey] = true; // Mark this source as having received viewer data
+    // Handle new aggregated viewer_updates format
+    if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+        // Clear old viewer counts since we're getting aggregated data
+        viewerCounts = {};
+        lastUpdated = {};
+        activeViewerSources = {};
+        
+        // Process each platform's viewer count
+        Object.keys(data.meta).forEach(type => {
+            viewerCounts[type] = parseInt(data.meta[type]) || 0;
+            lastUpdated[type] = Date.now();
+            if (viewerCounts[type] > 0) {
+                activeViewerSources[type] = true;
+            }
+        });
+    } 
+    // Handle legacy single viewer_update format
+    else if (data.type && ("meta" in data)) {
+        const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
+        viewerCounts[sourceKey] = parseInt(data.meta) || 0;
+        lastUpdated[sourceKey] = Date.now();
+        if (viewerCounts[sourceKey] > 0) {
+            activeViewerSources[sourceKey] = true;
+        }
+    }
     
     // Combine and send the updated counts
     const combinedData = combineHypeData();

@@ -886,7 +886,29 @@ eventer(messageEvent, function(e) {
     }
     if ("dataReceived" in e.data) {
         if ("overlayNinja" in e.data.dataReceived) {
-            processInput(e.data.dataReceived.overlayNinja);
+            var data = e.data.dataReceived.overlayNinja;
+            
+            // Handle new viewer_updates format by converting to hype format
+            if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+                // Since viewer counts are now handled upstream, we just need to update our local tracking
+                // The actual hype data will come through the regular hype updates
+                console.log("Received aggregated viewer updates:", data.meta);
+                
+                // Update lastUpdated to prevent sources from being hidden prematurely
+                const now = Date.now();
+                Object.keys(data.meta).forEach(function(platform) {
+                    if (data.meta[platform] > 0) {
+                        lastUpdated[platform] = now;
+                        hasViewerCount[platform] = true;
+                    }
+                });
+                
+                // Don't process this as hype data, wait for the actual hype update
+                return;
+            }
+            
+            // Process regular hype data
+            processInput(data);
         }
     }
 });

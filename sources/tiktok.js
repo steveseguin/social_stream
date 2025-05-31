@@ -856,14 +856,14 @@
 		if (chatname && (chatimg || chatbadges || membership)) {
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
 		}
-		if ((ital === true) && chatmessage && (chatmessage === "joined")) {
+		if ((ital === true) && chatmessage && chatmessage.includes("joined")) {
 			if (!settings.capturejoinedevent) {
 				return;
 			}
 			ital = "joined";
-			if (!chatname) {
-				return;
-			}
+			//if (!chatname) {
+			//	return;
+			//}
 		} else if ((ital === true) && chatmessage && chatmessage.includes("shared")) {
 			return;
 		} else if ((ital === true) && chatmessage && chatmessage.includes("followed")) {
@@ -1025,14 +1025,14 @@
 		if (!chatmessage || (chatmessage === "----")) {
 			return;
 		}
-		if ((ital === true) && !settings.capturejoinedevent && (chatmessage.includes("joined"))) {
+		if ((ital === true) && chatmessage && (chatmessage.includes("joined"))) {
 			if (!settings.capturejoinedevent) {
 				return;
 			}
 			ital = "joined";
-			if (!chatname) {
-				return;
-			}
+			//if (!chatname) {
+			//	return;
+			//}
 		} else if ((ital === true) && chatmessage.includes("shared")) {
 			return;
 		} else if ((ital === true) && chatmessage.includes("followed")) {

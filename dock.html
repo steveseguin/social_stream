@@ -5046,11 +5046,11 @@
 			var topBarElement = getById("topbar");
 			
 			function updateMeta(data){
-				if (data && data.event && data.type && ("meta" in data)){
-					if (data.event == "follower_update"){
+				if (data && data.event && ("meta" in data)){
+					if (data.type && data.event == "follower_update"){
 						followers[data.type] = parseInt(data.meta) || 0;
 						return true;
-					} else if (data.event == "viewer_update"){
+					} else if (data.type && data.event == "viewer_update"){
 						viewers[data.type] = parseInt(data.meta) || 0;
 						
 						if (showviewercount){
@@ -5069,9 +5069,44 @@
 							clearTimeout(ele.timeout);
 							ele.timeout = setTimeout(function(ele){
 								if (ele){
-									delete ele;
+									ele.remove();
 								}
 							},130000,ele)
+						}
+						return true;
+					} else if (data.event == "viewer_updates"){
+						if (showviewercount){
+							if (data.meta && typeof data.meta == "object"){
+								// First, remove any viewer elements not in the current update
+								topBarElement.querySelectorAll(".viewerIcons").forEach(ele => {
+									if (!data.meta.hasOwnProperty(ele.dataset.type)) {
+										clearTimeout(ele.timeout);
+										ele.remove();
+									}
+								});
+								
+								// Then update or create elements for types in the current update
+								Object.keys(data.meta).forEach(type=>{
+									let ele = topBarElement.querySelector("[data-type='"+type+"']");
+									if (ele){
+										ele.innerText = data.meta[type];
+									} else {
+										ele = document.createElement("div");
+										ele.dataset.type = type;
+										ele.classList.add("viewerIcons");
+										ele.title = "Viewer count for "+type;
+										ele.innerText = data.meta[type];
+										ele.style.backgroundImage = "url(./sources/images/"+type+".png)";
+										topBarElement.prepend(ele);
+									}
+									clearTimeout(ele.timeout);
+									ele.timeout = setTimeout(function(ele){
+										if (ele){
+											ele.remove();
+										}
+									},130000,ele)
+								});
+							}
 						}
 						return true;
 					}
