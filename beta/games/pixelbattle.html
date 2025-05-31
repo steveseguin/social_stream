@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Battle - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #1a1a1a;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: #000000;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #pixel-canvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 3px solid #333;
+            border-radius: 10px;
+            cursor: crosshair;
+            image-rendering: pixelated;
+            image-rendering: -moz-crisp-edges;
+            image-rendering: crisp-edges;
+        }
+        
+        .pixel {
+            position: absolute;
+            transition: all 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+        
+        .pixel:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        
+        .pixel-flash {
+            animation: pixel-flash 0.5s ease-out;
+        }
+        
+        @keyframes pixel-flash {
+            0% { 
+                transform: scale(1);
+                box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+            }
+            50% { 
+                transform: scale(1.2);
+                box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+            }
+            100% { 
+                transform: scale(1);
+                box-shadow: 0 0 0 rgba(255, 255, 255, 0);
+            }
+        }
+        
+        #color-palette {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .color-swatch {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin: 3px;
+            border-radius: 5px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .color-swatch:hover {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+        
+        .color-swatch.active {
+            border-color: #fff;
+            box-shadow: 0 0 15px currentColor;
+        }
+        
+        #pixel-stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #artist-leaderboard {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .artist-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .artist-rank {
+            font-weight: bold;
+            color: #ffd700;
+            margin-right: 10px;
+        }
+        
+        #canvas-tools {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .tool-button {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+        
+        .tool-button:hover,
+        .tool-button.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: #fff;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 120px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #ff6b7a;
+            font-size: 18px;
+        }
+        
+        .drawing-cursor {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            pointer-events: none;
+            z-index: 200;
+            animation: cursor-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes cursor-pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+        }
+        
+        .collaboration-burst {
+            position: absolute;
+            font-size: 32px;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: collab-burst 2s ease-out forwards;
+            pointer-events: none;
+            z-index: 150;
+        }
+        
+        @keyframes collab-burst {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(1) rotate(360deg);
+            }
+        }
+        
+        #template-selector {
+            position: absolute;
+            top: 200px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .template-option {
+            padding: 5px 10px;
+            margin: 2px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .template-option:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="color-palette">
+            <h4 style="margin-top: 0; color: #ff6b7a;">🎨 Color Palette</h4>
+            <div id="palette-colors"></div>
+        </div>
+        
+        <div id="pixel-stats">
+            <div class="stat-line">Pixels Painted: <span id="pixels-painted">0</span></div>
+            <div class="stat-line">Active Artists: <span id="active-artists">0</span></div>
+            <div class="stat-line">Collaborations: <span id="collaborations">0</span></div>
+            <div class="stat-line">Canvas Progress: <span id="canvas-progress">0</span>%</div>
+        </div>
+        
+        <div id="template-selector">
+            <h5 style="margin-top: 0; color: #ff6b7a;">📋 Templates</h5>
+            <div class="template-option" data-template="heart">❤️ Heart</div>
+            <div class="template-option" data-template="smiley">😊 Smiley</div>
+            <div class="template-option" data-template="star">⭐ Star</div>
+            <div class="template-option" data-template="house">🏠 House</div>
+            <div class="template-option" data-template="clear">🗑️ Clear All</div>
+        </div>
+        
+        <canvas id="pixel-canvas" width="400" height="300"></canvas>
+        
+        <div id="artist-leaderboard">
+            <h4 style="margin-top: 0; color: #ff6b7a;">🏆 Top Artists</h4>
+            <div id="leaderboard-list"></div>
+        </div>
+        
+        <div id="canvas-tools">
+            <div class="tool-button active" data-tool="paint">🎨 Paint</div>
+            <div class="tool-button" data-tool="erase">🧽 Erase</div>
+            <div class="tool-button" data-tool="fill">🪣 Fill</div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🎨 Pixel Battle - How to Play:</strong></div>
+            <div>Type <strong>paint red x y</strong> to paint a pixel!</div>
+            <div>Example: <strong>paint blue 10 5</strong></div>
+            <div>Or use color shortcuts: <strong>red 15 8</strong></div>
+            <div>Click templates for guided art!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            canvas: null,
+            ctx: null,
+            gridSize: 20,
+            canvasWidth: 400,
+            canvasHeight: 300,
+            currentTool: 'paint',
+            selectedColor: '#ff0000',
+            pixelsPainted: 0,
+            artists: new Map(),
+            collaborations: 0,
+            canvasProgress: 0,
+            lastPaintTime: new Map()
+        };
+
+        // Color palette
+        const colors = {
+            red: '#ff0000',
+            blue: '#0000ff',
+            green: '#00ff00',
+            yellow: '#ffff00',
+            purple: '#800080',
+            orange: '#ffa500',
+            pink: '#ffc0cb',
+            cyan: '#00ffff',
+            white: '#ffffff',
+            black: '#000000',
+            brown: '#8b4513',
+            gray: '#808080'
+        };
+
+        // Templates
+        const templates = {
+            heart: [
+                [0,1,1,0,1,1,0],
+                [1,1,1,1,1,1,1],
+                [1,1,1,1,1,1,1],
+                [0,1,1,1,1,1,0],
+                [0,0,1,1,1,0,0],
+                [0,0,0,1,0,0,0]
+            ],
+            smiley: [
+                [0,1,1,1,1,1,0],
+                [1,0,0,0,0,0,1],
+                [1,0,1,0,1,0,1],
+                [1,0,0,0,0,0,1],
+                [1,0,1,1,1,0,1],
+                [1,0,0,0,0,0,1],
+                [0,1,1,1,1,1,0]
+            ],
+            star: [
+                [0,0,0,1,0,0,0],
+                [0,0,1,1,1,0,0],
+                [1,1,1,1,1,1,1],
+                [0,1,1,1,1,1,0],
+                [0,1,0,1,0,1,0],
+                [1,0,0,1,0,0,1]
+            ],
+            house: [
+                [0,0,0,1,0,0,0],
+                [0,0,1,1,1,0,0],
+                [0,1,1,1,1,1,0],
+                [1,1,1,1,1,1,1],
+                [1,0,1,1,1,0,1],
+                [1,0,1,0,1,0,1],
+                [1,1,1,0,1,1,1]
+            ]
+        };
+
+        // Initialize canvas
+        function initCanvas() {
+            gameState.canvas = document.getElementById('pixel-canvas');
+            gameState.ctx = gameState.canvas.getContext('2d');
+            
+            // Set canvas size
+            gameState.canvas.width = gameState.canvasWidth;
+            gameState.canvas.height = gameState.canvasHeight;
+            
+            // Fill with white background
+            gameState.ctx.fillStyle = '#ffffff';
+            gameState.ctx.fillRect(0, 0, gameState.canvasWidth, gameState.canvasHeight);
+            
+            // Draw grid
+            drawGrid();
+            
+            // Add click handler
+            gameState.canvas.addEventListener('click', handleCanvasClick);
+        }
+
+        // Draw grid
+        function drawGrid() {
+            gameState.ctx.strokeStyle = '#e0e0e0';
+            gameState.ctx.lineWidth = 1;
+            
+            // Vertical lines
+            for (let x = 0; x <= gameState.canvasWidth; x += gameState.gridSize) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(x, 0);
+                gameState.ctx.lineTo(x, gameState.canvasHeight);
+                gameState.ctx.stroke();
+            }
+            
+            // Horizontal lines
+            for (let y = 0; y <= gameState.canvasHeight; y += gameState.gridSize) {
+                gameState.ctx.beginPath();
+                gameState.ctx.moveTo(0, y);
+                gameState.ctx.lineTo(gameState.canvasWidth, y);
+                gameState.ctx.stroke();
+            }
+        }
+
+        // Handle canvas click
+        function handleCanvasClick(event) {
+            const rect = gameState.canvas.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            const gridX = Math.floor(x / gameState.gridSize);
+            const gridY = Math.floor(y / gameState.gridSize);
+            
+            paintPixel(gridX, gridY, gameState.selectedColor, 'Manual');
+        }
+
+        // Paint pixel
+        function paintPixel(x, y, color, artist) {
+            if (x < 0 || x >= Math.floor(gameState.canvasWidth / gameState.gridSize) ||
+                y < 0 || y >= Math.floor(gameState.canvasHeight / gameState.gridSize)) {
+                return false;
+            }
+            
+            const pixelX = x * gameState.gridSize;
+            const pixelY = y * gameState.gridSize;
+            
+            // Paint the pixel
+            gameState.ctx.fillStyle = color;
+            gameState.ctx.fillRect(pixelX + 1, pixelY + 1, gameState.gridSize - 2, gameState.gridSize - 2);
+            
+            // Update stats
+            gameState.pixelsPainted++;
+            
+            // Track artist
+            const currentCount = gameState.artists.get(artist) || 0;
+            gameState.artists.set(artist, currentCount + 1);
+            
+            // Check for collaborations (pixels painted near each other by different artists)
+            checkCollaboration(x, y, artist);
+            
+            // Create visual effect
+            createPaintEffect(pixelX + gameState.gridSize/2, pixelY + gameState.gridSize/2, color);
+            
+            updateDisplay();
+            return true;
+        }
+
+        // Check for collaboration
+        function checkCollaboration(x, y, artist) {
+            const now = Date.now();
+            const recentPaints = Array.from(gameState.lastPaintTime.entries())
+                .filter(([_, time]) => now - time < 5000); // Last 5 seconds
+            
+            // Check adjacent pixels for recent activity by different artists
+            for (let dx = -1; dx <= 1; dx++) {
+                for (let dy = -1; dy <= 1; dy++) {
+                    if (dx === 0 && dy === 0) continue;
+                    
+                    const checkKey = `${x + dx},${y + dy}`;
+                    const recentPaint = recentPaints.find(([key, _]) => key.startsWith(checkKey));
+                    
+                    if (recentPaint && !recentPaint[0].includes(artist)) {
+                        gameState.collaborations++;
+                        createCollaborationBurst(x * gameState.gridSize, y * gameState.gridSize);
+                        break;
+                    }
+                }
+            }
+            
+            // Record this paint
+            gameState.lastPaintTime.set(`${x},${y}:${artist}`, now);
+        }
+
+        // Create paint effect
+        function createPaintEffect(x, y, color) {
+            const effect = document.createElement('div');
+            effect.style.position = 'absolute';
+            effect.style.left = (gameState.canvas.offsetLeft + x) + 'px';
+            effect.style.top = (gameState.canvas.offsetTop + y) + 'px';
+            effect.style.width = '20px';
+            effect.style.height = '20px';
+            effect.style.backgroundColor = color;
+            effect.style.borderRadius = '50%';
+            effect.style.pointerEvents = 'none';
+            effect.style.zIndex = '150';
+            effect.className = 'pixel-flash';
+            
+            document.getElementById('game-container').appendChild(effect);
+            
+            setTimeout(() => effect.remove(), 500);
+        }
+
+        // Create collaboration burst
+        function createCollaborationBurst(x, y) {
+            const burst = document.createElement('div');
+            burst.className = 'collaboration-burst';
+            burst.textContent = '🤝';
+            burst.style.left = (gameState.canvas.offsetLeft + x) + 'px';
+            burst.style.top = (gameState.canvas.offsetTop + y) + 'px';
+            
+            document.getElementById('game-container').appendChild(burst);
+            
+            setTimeout(() => burst.remove(), 2000);
+        }
+
+        // Initialize color palette
+        function initColorPalette() {
+            const paletteDiv = document.getElementById('palette-colors');
+            
+            Object.entries(colors).forEach(([name, hex]) => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = hex;
+                swatch.title = name;
+                swatch.addEventListener('click', () => {
+                    gameState.selectedColor = hex;
+                    updatePaletteSelection();
+                });
+                
+                if (hex === gameState.selectedColor) {
+                    swatch.classList.add('active');
+                }
+                
+                paletteDiv.appendChild(swatch);
+            });
+        }
+
+        // Update palette selection
+        function updatePaletteSelection() {
+            document.querySelectorAll('.color-swatch').forEach(swatch => {
+                swatch.classList.remove('active');
+                if (swatch.style.backgroundColor === gameState.selectedColor) {
+                    swatch.classList.add('active');
+                }
+            });
+        }
+
+        // Apply template
+        function applyTemplate(templateName) {
+            if (templateName === 'clear') {
+                clearCanvas();
+                return;
+            }
+            
+            const template = templates[templateName];
+            if (!template) return;
+            
+            const startX = Math.floor((Math.floor(gameState.canvasWidth / gameState.gridSize) - template[0].length) / 2);
+            const startY = Math.floor((Math.floor(gameState.canvasHeight / gameState.gridSize) - template.length) / 2);
+            
+            template.forEach((row, rowIndex) => {
+                row.forEach((pixel, colIndex) => {
+                    if (pixel === 1) {
+                        const x = startX + colIndex;
+                        const y = startY + rowIndex;
+                        paintPixel(x, y, gameState.selectedColor, 'Template');
+                    }
+                });
+            });
+        }
+
+        // Clear canvas
+        function clearCanvas() {
+            gameState.ctx.fillStyle = '#ffffff';
+            gameState.ctx.fillRect(0, 0, gameState.canvasWidth, gameState.canvasHeight);
+            drawGrid();
+            
+            gameState.pixelsPainted = 0;
+            gameState.artists.clear();
+            gameState.collaborations = 0;
+            updateDisplay();
+        }
+
+        // Update leaderboard
+        function updateLeaderboard() {
+            const leaderboardList = document.getElementById('leaderboard-list');
+            leaderboardList.innerHTML = '';
+            
+            const sortedArtists = Array.from(gameState.artists.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            sortedArtists.forEach(([artist, count], index) => {
+                const entry = document.createElement('div');
+                entry.className = 'artist-entry';
+                entry.innerHTML = `
+                    <span><span class="artist-rank">#${index + 1}</span>${artist}</span>
+                    <span>${count}</span>
+                `;
+                leaderboardList.appendChild(entry);
+            });
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('pixels-painted').textContent = gameState.pixelsPainted;
+            document.getElementById('active-artists').textContent = gameState.artists.size;
+            document.getElementById('collaborations').textContent = gameState.collaborations;
+            
+            const totalPixels = Math.floor(gameState.canvasWidth / gameState.gridSize) * Math.floor(gameState.canvasHeight / gameState.gridSize);
+            gameState.canvasProgress = (gameState.pixelsPainted / totalPixels) * 100;
+            document.getElementById('canvas-progress').textContent = gameState.canvasProgress.toFixed(1);
+            
+            updateLeaderboard();
+        }
+
+        // Parse paint commands from chat
+        function parsePaintCommand(message) {
+            message = message.toLowerCase().trim();
+            
+            // Pattern: "paint color x y" or "color x y"
+            let match = message.match(/(?:paint\s+)?(\w+)\s+(\d+)\s+(\d+)/);
+            if (match) {
+                const colorName = match[1];
+                const x = parseInt(match[2]);
+                const y = parseInt(match[3]);
+                
+                if (colors[colorName]) {
+                    return { color: colors[colorName], x, y };
+                }
+            }
+            
+            // Pattern: "x y color"
+            match = message.match(/(\d+)\s+(\d+)\s+(\w+)/);
+            if (match) {
+                const x = parseInt(match[1]);
+                const y = parseInt(match[2]);
+                const colorName = match[3];
+                
+                if (colors[colorName]) {
+                    return { color: colors[colorName], x, y };
+                }
+            }
+            
+            return null;
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const username = data.chatname;
+            const message = data.chatmessage;
+            
+            // Try to parse paint command
+            const paintCommand = parsePaintCommand(message);
+            if (paintCommand) {
+                const success = paintPixel(paintCommand.x, paintCommand.y, paintCommand.color, username);
+                if (!success) {
+                    console.log(`Invalid coordinates: ${paintCommand.x}, ${paintCommand.y}`);
+                }
+            }
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoArtists = ['PixelMaster', 'ArtBot', 'PaintPro', 'ColorKing', 'PixelQueen'];
+            const colorNames = Object.keys(colors);
+            
+            setInterval(() => {
+                const artist = demoArtists[Math.floor(Math.random() * demoArtists.length)];
+                const color = colorNames[Math.floor(Math.random() * colorNames.length)];
+                const x = Math.floor(Math.random() * 20);
+                const y = Math.floor(Math.random() * 15);
+                
+                processData({
+                    chatname: artist,
+                    chatmessage: `paint ${color} ${x} ${y}`
+                });
+            }, 1000 + Math.random() * 2000);
+        }
+        
+        // Initialize everything
+        initCanvas();
+        initColorPalette();
+        
+        // Tool button handlers
+        document.querySelectorAll('.tool-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tool-button').forEach(b => b.classList.remove('active'));
+                button.classList.add('active');
+                gameState.currentTool = button.dataset.tool;
+            });
+        });
+        
+        // Template button handlers
+        document.querySelectorAll('.template-option').forEach(option => {
+            option.addEventListener('click', () => {
+                applyTemplate(option.dataset.template);
+            });
+        });
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

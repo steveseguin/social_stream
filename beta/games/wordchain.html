@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Chain Game - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #word-display {
+            font-size: 72px;
+            font-weight: bold;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.5);
+            margin-bottom: 50px;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from { text-shadow: 4px 4px 8px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.5); }
+            to { text-shadow: 4px 4px 8px rgba(0,0,0,0.5), 0 0 30px rgba(255,255,255,0.8); }
+        }
+        
+        #chain-container {
+            position: relative;
+            width: 80%;
+            height: 300px;
+            overflow: hidden;
+        }
+        
+        .chain-word {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 25px;
+            border: 2px solid rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.5s ease;
+            white-space: nowrap;
+        }
+        
+        .chain-link {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.8), transparent);
+            transform-origin: left center;
+        }
+        
+        #scoreboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+        }
+        
+        #scoreboard h3 {
+            margin-top: 0;
+            color: #FFD700;
+            text-align: center;
+        }
+        
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .score-entry:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(5px);
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        #instructions strong {
+            color: #FFD700;
+            font-size: 18px;
+        }
+        
+        #timer {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 36px;
+            font-weight: bold;
+            background: rgba(0,0,0,0.7);
+            padding: 15px 25px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .combo-indicator {
+            position: absolute;
+            font-size: 48px;
+            font-weight: bold;
+            color: #FFD700;
+            animation: comboFlash 1s ease-out forwards;
+        }
+        
+        @keyframes comboFlash {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.5); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+        
+        .wrong-answer {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        #theme-indicator {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            font-size: 24px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="timer">Time: 60s</div>
+        <div id="theme-indicator">Theme: <span id="current-theme">General</span></div>
+        
+        <div id="word-display">HELLO</div>
+        
+        <div id="chain-container"></div>
+        
+        <div id="scoreboard">
+            <h3>🏆 Top Players</h3>
+            <div id="score-list"></div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🔤 Word Chain Game</strong></div>
+            <div>Type a word starting with the last letter!</div>
+            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">
+                Example: HELLO → ORANGE → EGG
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // Game state
+    let currentWord = 'HELLO';
+    let wordChain = ['HELLO'];
+    let usedWords = new Set(['HELLO']);
+    let scores = new Map();
+    let timeLeft = 60;
+    let gameActive = true;
+    let currentTheme = 'General';
+    let comboMultiplier = 1;
+    let lastContributor = null;
+    
+    // Themes with starting words
+    const themes = {
+        'General': ['HELLO', 'START', 'GAME', 'PLAY'],
+        'Animals': ['TIGER', 'ELEPHANT', 'MONKEY', 'ZEBRA'],
+        'Food': ['PIZZA', 'BURGER', 'SALAD', 'TACO'],
+        'Gaming': ['MARIO', 'ZELDA', 'SONIC', 'PACMAN'],
+        'Nature': ['TREE', 'OCEAN', 'MOUNTAIN', 'RIVER']
+    };
+    
+    // URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || 'test';
+    const password = urlParams.get('password') || 'false';
+    
+    // Update display
+    document.getElementById('word-display').textContent = currentWord;
+    
+    function addWordToChain(word, username) {
+        const container = document.getElementById('chain-container');
+        const wordDiv = document.createElement('div');
+        wordDiv.className = 'chain-word';
+        wordDiv.textContent = word;
+        wordDiv.style.left = '50%';
+        wordDiv.style.top = '50%';
+        wordDiv.style.transform = 'translate(-50%, -50%)';
+        
+        // Add username attribution
+        const userSpan = document.createElement('span');
+        userSpan.style.fontSize = '12px';
+        userSpan.style.opacity = '0.7';
+        userSpan.style.marginLeft = '10px';
+        userSpan.textContent = `- ${username}`;
+        wordDiv.appendChild(userSpan);
+        
+        container.appendChild(wordDiv);
+        
+        // Animate existing words
+        const existingWords = container.querySelectorAll('.chain-word');
+        existingWords.forEach((el, index) => {
+            if (el !== wordDiv) {
+                const angle = (index / existingWords.length) * Math.PI * 2;
+                const radius = Math.min(container.offsetWidth, container.offsetHeight) * 0.3;
+                const x = Math.cos(angle) * radius;
+                const y = Math.sin(angle) * radius;
+                el.style.left = `calc(50% + ${x}px)`;
+                el.style.top = `calc(50% + ${y}px)`;
+                el.style.opacity = Math.max(0.3, 1 - (index * 0.1));
+                el.style.transform = 'translate(-50%, -50%) scale(' + Math.max(0.5, 1 - (index * 0.05)) + ')';
+            }
+        });
+        
+        // Remove old words if too many
+        if (existingWords.length > 8) {
+            existingWords[0].remove();
+        }
+    }
+    
+    function updateScoreboard() {
+        const scoreList = document.getElementById('score-list');
+        scoreList.innerHTML = '';
+        
+        const sortedScores = Array.from(scores.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        sortedScores.forEach(([username, score], index) => {
+            const scoreDiv = document.createElement('div');
+            scoreDiv.className = 'score-entry';
+            
+            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+            scoreDiv.innerHTML = `
+                <span>${medals[index]} ${username}</span>
+                <span>${score} pts</span>
+            `;
+            scoreList.appendChild(scoreDiv);
+        });
+    }
+    
+    function processWord(username, word) {
+        if (!gameActive) return;
+        
+        word = word.toUpperCase().trim();
+        
+        // Validate word
+        if (word.length < 3) {
+            sendResponse(`@${username}, word must be at least 3 letters!`);
+            return;
+        }
+        
+        const lastLetter = currentWord[currentWord.length - 1];
+        if (word[0] !== lastLetter) {
+            sendResponse(`@${username}, your word must start with '${lastLetter}'!`);
+            document.getElementById('word-display').classList.add('wrong-answer');
+            setTimeout(() => {
+                document.getElementById('word-display').classList.remove('wrong-answer');
+            }, 500);
+            return;
+        }
+        
+        if (usedWords.has(word)) {
+            sendResponse(`@${username}, '${word}' was already used!`);
+            return;
+        }
+        
+        // Valid word!
+        currentWord = word;
+        wordChain.push(word);
+        usedWords.add(word);
+        
+        // Calculate points
+        let points = word.length;
+        if (username === lastContributor) {
+            comboMultiplier = Math.min(comboMultiplier + 0.5, 3);
+        } else {
+            comboMultiplier = 1;
+        }
+        points = Math.floor(points * comboMultiplier);
+        
+        // Update score
+        scores.set(username, (scores.get(username) || 0) + points);
+        
+        // Update display
+        document.getElementById('word-display').textContent = currentWord;
+        addWordToChain(word, username);
+        updateScoreboard();
+        
+        // Show combo
+        if (comboMultiplier > 1) {
+            showCombo(comboMultiplier);
+        }
+        
+        lastContributor = username;
+        
+        // Add bonus time for good words
+        if (word.length >= 7) {
+            timeLeft += 5;
+            sendResponse(`⏰ +5 seconds! Nice long word, ${username}!`);
+        }
+    }
+    
+    function showCombo(multiplier) {
+        const combo = document.createElement('div');
+        combo.className = 'combo-indicator';
+        combo.textContent = `${multiplier}x COMBO!`;
+        combo.style.left = '50%';
+        combo.style.top = '40%';
+        combo.style.transform = 'translate(-50%, -50%)';
+        document.getElementById('game-container').appendChild(combo);
+        
+        setTimeout(() => combo.remove(), 1000);
+    }
+    
+    function startNewRound() {
+        // Pick random theme
+        const themeNames = Object.keys(themes);
+        currentTheme = themeNames[Math.floor(Math.random() * themeNames.length)];
+        document.getElementById('current-theme').textContent = currentTheme;
+        
+        // Pick random starting word from theme
+        const themeWords = themes[currentTheme];
+        currentWord = themeWords[Math.floor(Math.random() * themeWords.length)];
+        
+        // Reset game state
+        wordChain = [currentWord];
+        usedWords = new Set([currentWord]);
+        timeLeft = 60;
+        gameActive = true;
+        comboMultiplier = 1;
+        lastContributor = null;
+        
+        // Clear chain display
+        document.getElementById('chain-container').innerHTML = '';
+        
+        // Update display
+        document.getElementById('word-display').textContent = currentWord;
+        addWordToChain(currentWord, 'System');
+        
+        sendResponse(`🎮 New round! Theme: ${currentTheme} - Starting word: ${currentWord}`);
+    }
+    
+    function updateTimer() {
+        if (!gameActive) return;
+        
+        timeLeft--;
+        document.getElementById('timer').textContent = `Time: ${timeLeft}s`;
+        
+        if (timeLeft <= 10) {
+            document.getElementById('timer').style.color = '#ff6b6b';
+        } else {
+            document.getElementById('timer').style.color = 'white';
+        }
+        
+        if (timeLeft <= 0) {
+            endRound();
+        }
+    }
+    
+    function endRound() {
+        gameActive = false;
+        
+        // Find winner
+        const winner = Array.from(scores.entries())
+            .sort((a, b) => b[1] - a[1])[0];
+        
+        if (winner) {
+            sendResponse(`🏆 Round over! Winner: ${winner[0]} with ${winner[1]} points! Chain length: ${wordChain.length} words`);
+        }
+        
+        // Start new round after delay
+        setTimeout(startNewRound, 5000);
+    }
+    
+    function sendResponse(message) {
+        const response = {
+            chatname: 'WordChainBot',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                overlay: 'wordchain',
+                response: response
+            }, '*');
+        }
+        
+        console.log('Bot response:', message);
+    }
+    
+    function processData(data) {
+        if (data.content) {
+            data = data.content;
+        }
+        
+        if (!data.chatmessage || !data.chatname) return;
+        
+        const message = data.chatmessage.trim();
+        
+        // Check if it's a valid word attempt
+        if (message.length >= 3 && /^[a-zA-Z]+$/.test(message)) {
+            processWord(data.chatname, message);
+        }
+    }
+    
+    // Timer
+    setInterval(updateTimer, 1000);
+    
+    // Setup iframe communication
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.position = "fixed";
+    iframe.style.left = "-100px";
+    iframe.style.top = "-100px";
+    iframe.id = "frame1";
+    document.body.appendChild(iframe);
+    
+    window.addEventListener("message", function(e) {
+        if (e.source !== iframe.contentWindow) return;
+        
+        if ("dataReceived" in e.data) {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+    
+    // Handle WebSocket if server parameter provided
+    if (urlParams.has('server')) {
+        const socketserver = new WebSocket(urlParams.get('server'));
+        
+        socketserver.onopen = function() {
+            socketserver.send(JSON.stringify({ 
+                join: sessionId.split(",")[0], 
+                out: 2, 
+                in: 1 
+            }));
+        };
+        
+        socketserver.onmessage = function(event) {
+            if (event.data) {
+                try {
+                    const data = JSON.parse(event.data);
+                    processData(data);
+                } catch (e) {
+                    console.error('WebSocket parse error:', e);
+                }
+            }
+        };
+    }
+    
+    // Demo mode
+    if (urlParams.has('demo')) {
+        setTimeout(() => {
+            processWord('DemoPlayer1', 'ORANGE');
+            setTimeout(() => {
+                processWord('DemoPlayer2', 'ELEPHANT');
+                setTimeout(() => {
+                    processWord('DemoPlayer1', 'TURTLE');
+                }, 3000);
+            }, 3000);
+        }, 2000);
+    }
+    </script>
+</body>
+</html>

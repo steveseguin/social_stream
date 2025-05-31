@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<!-- Neon Cyberpunk Chat Overlay for Social Stream Ninja -->
+<!--
+This overlay creates a futuristic cyberpunk atmosphere with:
+- Neon glowing messages with glitch effects
+- Matrix-style digital rain background
+- Holographic message containers
+- RGB color cycling and scanlines
+- Smooth continuous scrolling (based on sampleoverlay.html)
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Cyberpunk Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap">
+    <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+    <link rel="canonical" href="https://socialstream.ninja/">
+    <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Orbitron', 'Courier New', monospace;
+    background: #000;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Digital rain background */
+#digital-rain {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.3;
+}
+
+.rain-drop {
+    position: absolute;
+    color: #00ff41;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    animation: rain-fall linear infinite;
+}
+
+@keyframes rain-fall {
+    0% { transform: translateY(-100vh); opacity: 1; }
+    100% { transform: translateY(100vh); opacity: 0; }
+}
+
+/* Scanline overlay */
+#scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 255, 65, 0.03) 2px,
+        rgba(0, 255, 65, 0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 10;
+    animation: scanline-flicker 2s ease-in-out infinite alternate;
+}
+
+@keyframes scanline-flicker {
+    0% { opacity: 0.8; }
+    100% { opacity: 1; }
+}
+
+#chat-container {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 400px;
+    height: 100vh;
+    overflow: hidden;
+    padding: 0 20px;
+    box-sizing: border-box;
+    z-index: 5;
+}
+
+#message-list-wrapper {
+    width: 100%;
+    transition: transform 0.5s ease-out;
+}
+
+.message {
+    background: linear-gradient(135deg, 
+        rgba(0, 255, 65, 0.1) 0%, 
+        rgba(0, 200, 255, 0.05) 50%, 
+        rgba(255, 0, 150, 0.1) 100%);
+    border: 1px solid #00ff41;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 0;
+    box-shadow: 
+        0 0 20px rgba(0, 255, 65, 0.3),
+        inset 0 0 20px rgba(0, 255, 65, 0.05);
+    color: #00ff41;
+    opacity: 0;
+    transform: translateX(-100px) rotateY(45deg);
+    transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 500px;
+    box-sizing: border-box;
+    position: relative;
+    clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px));
+}
+
+.message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+    transform: translateX(-100%);
+    transition: transform 0.8s ease;
+}
+
+.message:hover::before {
+    transform: translateX(100%);
+}
+
+.message.visible {
+    opacity: 1;
+    transform: translateX(0) rotateY(0deg);
+}
+
+.message.fading {
+    opacity: 0;
+    transform: translateX(100px) rotateY(-45deg);
+    transition: all 1.5s ease-out;
+}
+
+.message.hidden {
+    opacity: 0;
+    transform: translateX(-100px) rotateY(45deg) scale(0.5);
+    max-height: 0px !important;
+    padding: 0px !important;
+    margin-bottom: 0px !important;
+    border-width: 0px !important;
+}
+
+.message.glitch {
+    animation: glitch-effect 0.3s ease-in-out;
+}
+
+@keyframes glitch-effect {
+    0% { transform: translateX(0); }
+    10% { transform: translateX(-2px) scaleX(0.98); }
+    20% { transform: translateX(2px) scaleX(1.02); }
+    30% { transform: translateX(-1px) scaleX(0.99); }
+    40% { transform: translateX(1px) scaleX(1.01); }
+    50% { transform: translateX(-2px) scaleX(0.98); filter: hue-rotate(90deg); }
+    60% { transform: translateX(2px) scaleX(1.02); filter: hue-rotate(180deg); }
+    70% { transform: translateX(-1px) scaleX(0.99); filter: hue-rotate(270deg); }
+    80% { transform: translateX(1px) scaleX(1.01); }
+    90% { transform: translateX(-1px) scaleX(0.99); }
+    100% { transform: translateX(0) scaleX(1); filter: none; }
+}
+
+.avatar-wrapper {
+    width: 50px;
+    height: 50px;
+    border-radius: 0;
+    display: inline-block;
+    margin-right: 15px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(45deg, #00ff41, #0080ff);
+    padding: 2px;
+    vertical-align: middle;
+    flex-shrink: 0;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 35%, 100% 100%, 90% 100%, 10% 100%, 0% 65%, 0% 0%);
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    clip-path: polygon(10% 0%, 90% 0%, 100% 35%, 100% 100%, 90% 100%, 10% 100%, 0% 65%, 0% 0%);
+}
+
+.name {
+    color: #00ff41;
+    font-size: 1.1em;
+    font-weight: 700;
+    max-width: 200px;
+    overflow: hidden;
+    text-shadow: 0 0 10px #00ff41;
+    animation: neon-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes neon-pulse {
+    0% { text-shadow: 0 0 5px #00ff41, 0 0 10px #00ff41; }
+    100% { text-shadow: 0 0 10px #00ff41, 0 0 20px #00ff41, 0 0 30px #00ff41; }
+}
+
+.text {
+    font-size: 0.9em;
+    line-height: 1.4;
+    margin: 8px 0;
+    word-wrap: break-word;
+    color: #ffffff;
+    text-shadow: 0 0 5px rgba(255,255,255,0.5);
+}
+
+.text img {
+    max-width: 100px;
+    max-height: 24px;
+    vertical-align: bottom;
+    filter: sepia(1) hue-rotate(90deg) saturate(2);
+}
+
+.donation {
+    color: #ff0080;
+    font-weight: 600;
+    text-shadow: 0 0 10px #ff0080;
+    animation: donation-glow 1s ease-in-out infinite alternate;
+}
+
+@keyframes donation-glow {
+    0% { text-shadow: 0 0 5px #ff0080; }
+    100% { text-shadow: 0 0 15px #ff0080, 0 0 25px #ff0080; }
+}
+
+.name-bg {
+    background: linear-gradient(45deg, rgba(0, 255, 65, 0.2), rgba(0, 128, 255, 0.2));
+    padding: 4px 8px;
+    border: 1px solid #00ff41;
+    clip-path: polygon(0 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 5px 100%, 0 calc(100% - 5px));
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.membership-status {
+    color: #ffff00;
+    font-weight: 700;
+    font-size: 0.85em;
+    margin-bottom: 5px;
+    text-shadow: 0 0 10px #ffff00;
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 10px;
+    border: 2px solid #00ff41;
+    display: block;
+    filter: saturate(1.2) contrast(1.1);
+}
+
+.source-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-left: 5px;
+    filter: sepia(1) hue-rotate(90deg) saturate(2);
+}
+
+.badge {
+    display: inline-block;
+    height: 0.9em;
+    margin-left: 4px;
+    vertical-align: middle;
+    filter: sepia(1) hue-rotate(90deg) saturate(2);
+}
+
+.message-content-wrapper {
+    display: flex;
+    align-items: flex-start;
+}
+
+.message-text-meta {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#spacer {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    background: transparent;
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+
+/* Terminal cursor effect */
+.cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1.2em;
+    background: #00ff41;
+    animation: cursor-blink 1s infinite;
+    margin-left: 2px;
+}
+
+@keyframes cursor-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+/* Holographic border effects */
+.message.holo {
+    border: 2px solid transparent;
+    background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(0,200,255,0.1), rgba(255,0,150,0.1));
+    background-clip: padding-box;
+    position: relative;
+}
+
+.message.holo::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(45deg, #00ff41, #0080ff, #ff0080, #00ff41);
+    border-radius: inherit;
+    z-index: -1;
+    animation: holo-rotate 3s linear infinite;
+}
+
+@keyframes holo-rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* RGB split effect for special messages */
+.message.rgb-split {
+    position: relative;
+}
+
+.message.rgb-split::before,
+.message.rgb-split::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.message.rgb-split::before {
+    color: #ff0000;
+    transform: translateX(-2px);
+    mix-blend-mode: screen;
+}
+
+.message.rgb-split::after {
+    color: #0000ff;
+    transform: translateX(2px);
+    mix-blend-mode: screen;
+}
+</style>
+</head>
+<body>
+<div id="digital-rain"></div>
+<div id="scanlines"></div>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        <div id="spacer" style="height: 2200px; width: 100%;"></div>
+    </div>
+</div>
+
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false";
+    var featuredMode = false;
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = 20;
+    const topSpacer = document.getElementById('spacer');
+    const messageTimestamps = new Map();
+    const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
+
+    // Digital rain effect
+    function createDigitalRain() {
+        const rainContainer = document.getElementById('digital-rain');
+        const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        
+        for (let i = 0; i < 50; i++) {
+            const drop = document.createElement('div');
+            drop.className = 'rain-drop';
+            drop.textContent = characters[Math.floor(Math.random() * characters.length)];
+            drop.style.left = Math.random() * 100 + '%';
+            drop.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            drop.style.animationDelay = Math.random() * 2 + 's';
+            rainContainer.appendChild(drop);
+            
+            // Replace character periodically
+            setInterval(() => {
+                drop.textContent = characters[Math.floor(Math.random() * characters.length)];
+            }, 100 + Math.random() * 500);
+        }
+    }
+
+    function adjustMessageWrapperScroll() {
+        requestAnimationFrame(() => {
+            const wrapperScrollHeight = messageListWrapper.scrollHeight;
+            const containerClientHeight = chatContainer.clientHeight;
+            
+            let translateY = 0;
+            if (wrapperScrollHeight > containerClientHeight) {
+                translateY = -(wrapperScrollHeight - containerClientHeight);
+            }
+            translateY = Math.min(0, translateY);
+
+            messageListWrapper.style.transform = `translateY(${translateY}px)`;
+        });
+    }
+    
+    setInterval(() => {
+        const now = Date.now();
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message')
+        );
+        
+        messages.forEach(message => {
+            const timestamp = messageTimestamps.get(message.id);
+            if (timestamp) {
+                const age = now - timestamp;
+                
+                // After 30 seconds, start fading
+                if (age > 30000 && !message.classList.contains('fading')) {
+                    message.classList.add('fading');
+                }
+                
+                // Random glitch effect
+                if (Math.random() < 0.01 && !message.classList.contains('glitch')) {
+                    message.classList.add('glitch');
+                    setTimeout(() => message.classList.remove('glitch'), 300);
+                }
+            }
+        });
+    }, 1000); 
+    
+    function addMessageToOverlay(data) {
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+            return;
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        // Generate unique ID and track timestamp for aging
+        const messageId = data.mid || 'msg-' + Date.now();
+        messageDiv.id = messageId;
+        messageTimestamps.set(messageId, Date.now());
+        
+        // Add special effects based on message content or type
+        if (data.hasDonation || data.donation) {
+            messageDiv.classList.add('holo');
+        } else if (Math.random() < 0.3) {
+            messageDiv.classList.add('holo');
+        }
+        
+        var chatbadgesHtml = "";
+        if (data.chatbadges) {
+            data.chatbadges.forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else { 
+                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
+                }
+            });
+        }
+        
+        let avatarBorderColor = "linear-gradient(45deg, #00ff41, #0080ff)";
+        if (data.nameColor) {
+            avatarBorderColor = `linear-gradient(45deg, ${data.nameColor}, #00ff41)`;
+        }
+        
+        let leftEdgeColor = null;
+        if (typeof getColorFromType === 'function' && data.type) {
+            try {
+                leftEdgeColor = getColorFromType(data.type);
+            } catch (e) {
+                console.error("Error getting color from type:", e);
+            }
+        }
+        
+        if (leftEdgeColor) {
+            messageDiv.style.borderLeft = `4px solid ${leftEdgeColor}`;
+            messageDiv.style.paddingLeft = '12px';
+        }
+        
+        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = data.chatimg ? 
+            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
+        const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="color: ${data.nameColor}; text-shadow: 0 0 10px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
+        const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}<span class="cursor"></span></div>`;
+        const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+        
+        const contentImgHtml = data.contentimg ? 
+            `<div style="padding: 3px; background: ${avatarBorderColor}; display: inline-block; margin-top: 10px; border: 1px solid #00ff41;">
+                <img src="${data.contentimg}" alt="Content Image" class="large-image" style="margin-top: 0;" onerror="this.parentNode.style.display='none';">
+             </div>` : '';
+
+        messageDiv.innerHTML = `
+            <div class="message-content-wrapper">
+                ${avatarHtml}
+                <div class="message-text-meta">
+                    <div>
+                        ${nameHtml}
+                        ${sourceIconHtml}
+                        ${chatbadgesHtml}
+                    </div>
+                    ${membershipHtml}
+                    ${messageTextHtml}
+                    ${donationHtml}
+                </div>
+            </div>
+            ${contentImgHtml}
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+        void messageDiv.offsetWidth; 
+        messageDiv.classList.add('visible');
+        
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message') 
+        );
+        
+        if (messages.length > MAX_MESSAGES) {
+            const oldestMessage = messages[0]; 
+            
+            if (oldestMessage) {
+                const messageStyle = getComputedStyle(oldestMessage);
+                const marginBottom = parseFloat(messageStyle.marginBottom) || 0;
+                const spaceOccupiedByOldestMessage = oldestMessage.offsetHeight + marginBottom;
+                
+                const currentSpacerHeight = parseFloat(topSpacer.style.height) || 0;
+                let newPotentialSpacerHeight = currentSpacerHeight + spaceOccupiedByOldestMessage;
+
+                if (newPotentialSpacerHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) {
+                    console.log(`Spacer height (${newPotentialSpacerHeight}px) exceeded threshold (${MAX_SPACER_HEIGHT_BEFORE_RESET}px). Resetting to 0px.`);
+                    newPotentialSpacerHeight = 0;
+                }
+                
+                topSpacer.style.height = newPotentialSpacerHeight + 'px';
+
+                messageTimestamps.delete(oldestMessage.id);
+                messageListWrapper.removeChild(oldestMessage);
+            }
+        }
+        
+        adjustMessageWrapperScroll();
+    }
+
+    // Initialize digital rain
+    createDigitalRain();
+
+    // Standard Social Stream messaging setup
+    var iframe = document.createElement("iframe");
+    if (featuredMode){
+        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+    
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) { 
+                        addMessageToOverlay(data);
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

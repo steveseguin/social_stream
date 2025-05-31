@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Garden - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #87CEEB 0%, #90EE90 30%, #228B22 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: linear-gradient(to bottom, #2c3e50 0%, #34495e 30%, #1a252f 100%);
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #garden-ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 30%;
+            background: linear-gradient(to bottom, #8FBC8F 0%, #228B22 100%);
+            border-top: 3px solid #654321;
+        }
+        
+        .plant {
+            position: absolute;
+            bottom: 0;
+            animation: plant-grow 2s ease-out forwards;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .plant:hover {
+            transform: scale(1.1);
+        }
+        
+        .plant-flower {
+            font-size: 48px;
+            animation: flower-bloom 1.5s ease-out forwards;
+        }
+        
+        .plant-tree {
+            font-size: 64px;
+            animation: tree-grow 2.5s ease-out forwards;
+        }
+        
+        .plant-bush {
+            font-size: 36px;
+            animation: bush-spread 2s ease-out forwards;
+        }
+        
+        .plant-grass {
+            font-size: 24px;
+            animation: grass-wave 3s ease-in-out infinite;
+        }
+        
+        @keyframes plant-grow {
+            0% {
+                transform: scale(0) translateY(50px);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes flower-bloom {
+            0% { transform: scale(0) rotate(0deg); }
+            50% { transform: scale(1.2) rotate(180deg); }
+            100% { transform: scale(1) rotate(360deg); }
+        }
+        
+        @keyframes tree-grow {
+            0% { 
+                transform: scale(0.1) translateY(100px);
+                filter: blur(2px);
+            }
+            100% { 
+                transform: scale(1) translateY(0);
+                filter: blur(0px);
+            }
+        }
+        
+        @keyframes bush-spread {
+            0% { transform: scaleX(0.1) scaleY(0.5); }
+            100% { transform: scaleX(1) scaleY(1); }
+        }
+        
+        @keyframes grass-wave {
+            0%, 100% { transform: rotate(-2deg); }
+            50% { transform: rotate(2deg); }
+        }
+        
+        .plant-label {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            white-space: nowrap;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .plant:hover .plant-label {
+            opacity: 1;
+        }
+        
+        .sparkle {
+            position: absolute;
+            font-size: 20px;
+            color: #ffd700;
+            animation: sparkle-float 2s ease-out forwards;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        @keyframes sparkle-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) rotate(360deg);
+            }
+        }
+        
+        .butterfly {
+            position: absolute;
+            font-size: 32px;
+            animation: butterfly-flight 8s linear infinite;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        @keyframes butterfly-flight {
+            0% {
+                left: -100px;
+                top: 20%;
+                transform: rotate(0deg);
+            }
+            25% {
+                left: 25%;
+                top: 30%;
+                transform: rotate(15deg);
+            }
+            50% {
+                left: 50%;
+                top: 15%;
+                transform: rotate(-10deg);
+            }
+            75% {
+                left: 75%;
+                top: 35%;
+                transform: rotate(20deg);
+            }
+            100% {
+                left: 110%;
+                top: 25%;
+                transform: rotate(0deg);
+            }
+        }
+        
+        #garden-stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #growth-meter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .growth-bar {
+            width: 100%;
+            height: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+        
+        .growth-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #90EE90, #228B22);
+            border-radius: 8px;
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+        
+        #weather-system {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        .rain-drop {
+            position: absolute;
+            width: 2px;
+            height: 20px;
+            background: linear-gradient(to bottom, transparent, #87CEEB);
+            animation: rain-fall 1s linear infinite;
+        }
+        
+        @keyframes rain-fall {
+            0% {
+                top: -20px;
+                opacity: 1;
+            }
+            100% {
+                top: 100%;
+                opacity: 0;
+            }
+        }
+        
+        .sun-ray {
+            position: absolute;
+            top: 10%;
+            right: 10%;
+            font-size: 48px;
+            color: #FFD700;
+            animation: sun-shine 3s ease-in-out infinite;
+        }
+        
+        @keyframes sun-shine {
+            0%, 100% { 
+                transform: scale(1) rotate(0deg);
+                text-shadow: 0 0 20px #FFD700;
+            }
+            50% { 
+                transform: scale(1.1) rotate(180deg);
+                text-shadow: 0 0 40px #FFD700;
+            }
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #90EE90;
+            font-size: 18px;
+        }
+        
+        .seasonal-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        .spring-petals {
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="2" fill="%23FFC0CB"/></svg>') repeat;
+            animation: petals-drift 10s linear infinite;
+        }
+        
+        @keyframes petals-drift {
+            0% { background-position: 0 -100%; }
+            100% { background-position: 0 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="weather-system">
+            <div class="sun-ray" id="sun">☀️</div>
+        </div>
+        
+        <div class="seasonal-effect spring-petals" id="seasonal-overlay"></div>
+        
+        <div id="garden-stats">
+            <div class="stat-line">🌱 Plants: <span id="plant-count">0</span></div>
+            <div class="stat-line">🌸 Flowers: <span id="flower-count">0</span></div>
+            <div class="stat-line">🌳 Trees: <span id="tree-count">0</span></div>
+            <div class="stat-line">👨‍🌾 Gardeners: <span id="gardener-count">0</span></div>
+        </div>
+        
+        <div id="growth-meter">
+            <h4 style="margin-top: 0; color: #90EE90;">🌿 Garden Health</h4>
+            <div>Biodiversity</div>
+            <div class="growth-bar">
+                <div class="growth-fill" id="biodiversity-fill"></div>
+            </div>
+            <div>Growth Rate</div>
+            <div class="growth-bar">
+                <div class="growth-fill" id="growth-fill"></div>
+            </div>
+            <div>Garden Age: <span id="garden-age">0</span>s</div>
+        </div>
+        
+        <div id="garden-ground"></div>
+        
+        <div id="instructions">
+            <div><strong>🌻 Chat Garden - How to Play:</strong></div>
+            <div>Type plant names to grow them!</div>
+            <div><strong>flower</strong>, <strong>tree</strong>, <strong>rose</strong>, <strong>sunflower</strong>, <strong>grass</strong></div>
+            <div>Long messages = bigger plants!</div>
+            <div>Click plants to make them sparkle!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            plants: [],
+            totalPlants: 0,
+            flowerCount: 0,
+            treeCount: 0,
+            gardeners: new Set(),
+            biodiversity: 0,
+            growthRate: 0,
+            gardenAge: 0,
+            lastPlantTime: Date.now(),
+            weatherState: 'sunny'
+        };
+
+        // Plant definitions
+        const plantTypes = {
+            // Flowers
+            flower: { emoji: '🌸', type: 'flower', size: 'medium', growthTime: 1500 },
+            rose: { emoji: '🌹', type: 'flower', size: 'medium', growthTime: 2000 },
+            tulip: { emoji: '🌷', type: 'flower', size: 'medium', growthTime: 1800 },
+            sunflower: { emoji: '🌻', type: 'flower', size: 'large', growthTime: 2500 },
+            daisy: { emoji: '🌼', type: 'flower', size: 'small', growthTime: 1200 },
+            hibiscus: { emoji: '🌺', type: 'flower', size: 'medium', growthTime: 2200 },
+            
+            // Trees
+            tree: { emoji: '🌳', type: 'tree', size: 'large', growthTime: 3000 },
+            palm: { emoji: '🌴', type: 'tree', size: 'large', growthTime: 3500 },
+            pine: { emoji: '🌲', type: 'tree', size: 'large', growthTime: 3200 },
+            cherry: { emoji: '🌸', type: 'tree', size: 'large', growthTime: 2800 },
+            
+            // Bushes and others
+            bush: { emoji: '🌿', type: 'bush', size: 'medium', growthTime: 1800 },
+            grass: { emoji: '🌱', type: 'grass', size: 'small', growthTime: 800 },
+            herb: { emoji: '🌾', type: 'grass', size: 'small', growthTime: 1000 },
+            fern: { emoji: '🌿', type: 'bush', size: 'medium', growthTime: 1600 },
+            
+            // Special plants
+            cactus: { emoji: '🌵', type: 'special', size: 'medium', growthTime: 4000 },
+            mushroom: { emoji: '🍄', type: 'special', size: 'small', growthTime: 1500 },
+            bamboo: { emoji: '🎋', type: 'special', size: 'large', growthTime: 2000 }
+        };
+
+        // Weather patterns
+        const weatherTypes = {
+            sunny: { icon: '☀️', effect: 'growth', multiplier: 1.2 },
+            rainy: { icon: '🌧️', effect: 'water', multiplier: 1.5 },
+            cloudy: { icon: '☁️', effect: 'neutral', multiplier: 1.0 },
+            stormy: { icon: '⛈️', effect: 'dramatic', multiplier: 0.8 }
+        };
+
+        // Extract plant names from text
+        function extractPlants(text) {
+            const foundPlants = [];
+            const words = text.toLowerCase().split(/\s+/);
+            
+            words.forEach(word => {
+                // Direct plant matches
+                if (plantTypes[word]) {
+                    foundPlants.push(word);
+                }
+                // Plant variations
+                else if (word.includes('flower') && !foundPlants.includes('flower')) foundPlants.push('flower');
+                else if (word.includes('tree') && !foundPlants.includes('tree')) foundPlants.push('tree');
+                else if (word.includes('rose') && !foundPlants.includes('rose')) foundPlants.push('rose');
+                else if (word.includes('grass') && !foundPlants.includes('grass')) foundPlants.push('grass');
+                else if (word.includes('plant')) foundPlants.push('flower'); // Generic plant becomes flower
+            });
+            
+            return foundPlants;
+        }
+
+        // Get random position for plant
+        function getPlantPosition() {
+            return {
+                left: Math.random() * 85 + 5, // 5% to 90% to avoid edges
+                bottom: Math.random() * 15 // Vary height on ground slightly
+            };
+        }
+
+        // Create plant element
+        function createPlant(plantName, username, messageLength) {
+            const plantConfig = plantTypes[plantName];
+            const position = getPlantPosition();
+            
+            const plant = document.createElement('div');
+            plant.className = `plant plant-${plantConfig.type}`;
+            plant.style.left = position.left + '%';
+            plant.style.bottom = position.bottom + '%';
+            plant.textContent = plantConfig.emoji;
+            
+            // Scale based on message length (longer messages = bigger plants)
+            const sizeMultiplier = Math.min(1 + (messageLength / 100), 2);
+            let fontSize = 48;
+            if (plantConfig.size === 'small') fontSize = 24;
+            else if (plantConfig.size === 'large') fontSize = 64;
+            
+            plant.style.fontSize = (fontSize * sizeMultiplier) + 'px';
+            
+            // Add label
+            const label = document.createElement('div');
+            label.className = 'plant-label';
+            label.textContent = `${plantName} by ${username}`;
+            plant.appendChild(label);
+            
+            // Click handler for sparkles
+            plant.addEventListener('click', () => createSparkles(plant));
+            
+            document.getElementById('garden-ground').appendChild(plant);
+            
+            // Track in game state
+            gameState.plants.push({
+                element: plant,
+                type: plantConfig.type,
+                name: plantName,
+                gardener: username,
+                plantTime: Date.now()
+            });
+            
+            gameState.totalPlants++;
+            if (plantConfig.type === 'flower') gameState.flowerCount++;
+            if (plantConfig.type === 'tree') gameState.treeCount++;
+            
+            // Auto-cleanup old plants
+            setTimeout(() => {
+                if (plant.parentNode) {
+                    plant.style.animation = 'plant-grow 1s ease-in reverse';
+                    setTimeout(() => {
+                        if (plant.parentNode) {
+                            plant.remove();
+                            gameState.plants = gameState.plants.filter(p => p.element !== plant);
+                        }
+                    }, 1000);
+                }
+            }, 60000); // Remove after 1 minute
+        }
+
+        // Create sparkle effect
+        function createSparkles(plantElement) {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.textContent = '✨';
+                    sparkle.style.left = plantElement.style.left;
+                    sparkle.style.bottom = (parseInt(plantElement.style.bottom) + 30) + '%';
+                    sparkle.style.left = (parseFloat(plantElement.style.left) + (Math.random() * 10 - 5)) + '%';
+                    
+                    document.getElementById('game-container').appendChild(sparkle);
+                    
+                    setTimeout(() => sparkle.remove(), 2000);
+                }, i * 100);
+            }
+        }
+
+        // Create butterfly
+        function createButterfly() {
+            const butterfly = document.createElement('div');
+            butterfly.className = 'butterfly';
+            butterfly.textContent = '🦋';
+            
+            document.getElementById('game-container').appendChild(butterfly);
+            
+            setTimeout(() => butterfly.remove(), 8000);
+        }
+
+        // Create rain effect
+        function createRain() {
+            for (let i = 0; i < 20; i++) {
+                setTimeout(() => {
+                    const drop = document.createElement('div');
+                    drop.className = 'rain-drop';
+                    drop.style.left = Math.random() * 100 + '%';
+                    drop.style.animationDelay = Math.random() * 1000 + 'ms';
+                    
+                    document.getElementById('weather-system').appendChild(drop);
+                    
+                    setTimeout(() => drop.remove(), 1000);
+                }, i * 50);
+            }
+        }
+
+        // Update weather
+        function updateWeather() {
+            const weatherKeys = Object.keys(weatherTypes);
+            const newWeather = weatherKeys[Math.floor(Math.random() * weatherKeys.length)];
+            
+            if (newWeather !== gameState.weatherState) {
+                gameState.weatherState = newWeather;
+                const weather = weatherTypes[newWeather];
+                
+                document.getElementById('sun').textContent = weather.icon;
+                
+                if (newWeather === 'rainy') {
+                    createRain();
+                }
+            }
+        }
+
+        // Calculate garden metrics
+        function updateGardenMetrics() {
+            // Calculate biodiversity (different plant types)
+            const plantTypeSet = new Set(gameState.plants.map(p => p.name));
+            gameState.biodiversity = Math.min(100, (plantTypeSet.size / 10) * 100);
+            
+            // Calculate growth rate (plants per minute)
+            const now = Date.now();
+            const timeSinceLastPlant = now - gameState.lastPlantTime;
+            gameState.growthRate = Math.max(0, 100 - (timeSinceLastPlant / 1000));
+            
+            // Update garden age
+            gameState.gardenAge = Math.floor((now - gameStartTime) / 1000);
+            
+            // Weather effect on growth
+            const weatherMultiplier = weatherTypes[gameState.weatherState].multiplier;
+            gameState.growthRate *= weatherMultiplier;
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('plant-count').textContent = gameState.totalPlants;
+            document.getElementById('flower-count').textContent = gameState.flowerCount;
+            document.getElementById('tree-count').textContent = gameState.treeCount;
+            document.getElementById('gardener-count').textContent = gameState.gardeners.size;
+            document.getElementById('garden-age').textContent = gameState.gardenAge;
+            
+            // Update progress bars
+            document.getElementById('biodiversity-fill').style.width = gameState.biodiversity + '%';
+            document.getElementById('growth-fill').style.width = Math.min(gameState.growthRate, 100) + '%';
+            
+            updateGardenMetrics();
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const username = data.chatname;
+            const message = data.chatmessage;
+            const foundPlants = extractPlants(message);
+            
+            if (foundPlants.length === 0) return;
+
+            gameState.gardeners.add(username);
+            gameState.lastPlantTime = Date.now();
+            
+            foundPlants.forEach(plantName => {
+                createPlant(plantName, username, message.length);
+            });
+
+            // Random butterfly spawn
+            if (Math.random() < 0.1) {
+                createButterfly();
+            }
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoPlants = Object.keys(plantTypes);
+            const demoGardeners = ['GreenThumb', 'PlantLover', 'GardenMaster', 'FloralQueen', 'TreeHugger'];
+            
+            setInterval(() => {
+                const plant = demoPlants[Math.floor(Math.random() * demoPlants.length)];
+                const gardener = demoGardeners[Math.floor(Math.random() * demoGardeners.length)];
+                const messages = [
+                    `Beautiful ${plant}!`,
+                    `Growing ${plant} here`,
+                    `${plant} garden time`,
+                    `Let's plant ${plant}`,
+                    `${plant} power!`
+                ];
+                
+                processData({
+                    chatname: gardener,
+                    chatmessage: messages[Math.floor(Math.random() * messages.length)]
+                });
+            }, 1500 + Math.random() * 2000);
+        }
+        
+        // Initialize
+        const gameStartTime = Date.now();
+        
+        // Update weather periodically
+        setInterval(updateWeather, 30000); // Every 30 seconds
+        
+        // Update metrics periodically
+        setInterval(updateDisplay, 1000);
+        
+        // Spawn random butterflies
+        setInterval(() => {
+            if (Math.random() < 0.3) createButterfly();
+        }, 15000);
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

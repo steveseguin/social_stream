@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treasure Hunt - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #1a5490 0%, #2e86ab 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #map {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(135deg, #d4a574 0%, #c19a6b 100%);
+            border: 10px solid #8b6914;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            gap: 2px;
+            padding: 10px;
+            border-radius: 10px;
+        }
+        
+        .grid-cell {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .grid-cell:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .revealed {
+            background: rgba(255,255,255,0.2);
+            animation: reveal 0.5s ease-out;
+        }
+        
+        @keyframes reveal {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .treasure {
+            animation: shimmer 2s ease-in-out infinite;
+        }
+        
+        @keyframes shimmer {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+        }
+        
+        .dig-animation {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, transparent 0%, rgba(139,69,19,0.8) 70%);
+            animation: dig 0.5s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes dig {
+            0% { transform: scale(1.5); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        #scoreboard {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+        }
+        
+        #scoreboard h3 {
+            margin-top: 0;
+            color: #FFD700;
+            text-align: center;
+        }
+        
+        .score-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        #hint-display {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 15px;
+            font-size: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        #hint-display .hint-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        #instructions strong {
+            color: #FFD700;
+            font-size: 18px;
+        }
+        
+        .compass {
+            position: absolute;
+            top: 150px;
+            left: 20px;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, #fff 0%, #ccc 100%);
+            border-radius: 50%;
+            border: 5px solid #8b6914;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        
+        .compass-needle {
+            width: 60px;
+            height: 4px;
+            background: linear-gradient(to right, red 0%, red 50%, black 50%, black 100%);
+            position: absolute;
+            transition: transform 0.5s ease;
+            transform-origin: center;
+        }
+        
+        .treasure-found {
+            position: absolute;
+            font-size: 72px;
+            animation: treasureFound 2s ease-out forwards;
+        }
+        
+        @keyframes treasureFound {
+            0% { 
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% { 
+                opacity: 1;
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(1.5) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        .clue-marker {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #FFD700;
+            border-radius: 50%;
+            animation: pulse 1s ease-in-out infinite;
+            transform: translate(-50%, -50%);
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.3); }
+        }
+        
+        #round-info {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="hint-display">
+            <div class="hint-icon">🗺️</div>
+            <div id="hint-text">Waiting for treasure placement...</div>
+        </div>
+        
+        <div class="compass">
+            <div class="compass-needle" id="compass-needle"></div>
+            <div style="position: absolute; top: 5px; font-size: 12px; font-weight: bold; color: #333;">N</div>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div id="scoreboard">
+            <h3>💰 Treasure Hunters</h3>
+            <div id="score-list"></div>
+        </div>
+        
+        <div id="round-info">
+            <div>Round <span id="round-number">1</span></div>
+            <div id="treasures-left">Treasures left: 3</div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🏴‍☠️ Treasure Hunt</strong></div>
+            <div>Type coordinates like <b>!dig B5</b> to search!</div>
+            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">
+                Follow the clues to find hidden treasures!
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    // Game state
+    const GRID_SIZE = 10;
+    const TREASURES_PER_ROUND = 3;
+    let grid = [];
+    let treasures = [];
+    let foundTreasures = 0;
+    let round = 1;
+    let scores = new Map();
+    let revealedCells = new Set();
+    let currentHint = '';
+    let recentDigs = [];
+    
+    // Treasure types with different values
+    const treasureTypes = [
+        { emoji: '💎', name: 'Diamond', value: 100 },
+        { emoji: '👑', name: 'Crown', value: 75 },
+        { emoji: '💰', name: 'Gold', value: 50 },
+        { emoji: '🏺', name: 'Artifact', value: 40 },
+        { emoji: '📿', name: 'Jewels', value: 30 }
+    ];
+    
+    // URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || 'test';
+    const password = urlParams.get('password') || 'false';
+    
+    // Initialize grid
+    function initGrid() {
+        const mapElement = document.getElementById('map');
+        mapElement.innerHTML = '';
+        grid = [];
+        revealedCells.clear();
+        
+        for (let row = 0; row < GRID_SIZE; row++) {
+            grid[row] = [];
+            for (let col = 0; col < GRID_SIZE; col++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                cell.dataset.row = row;
+                cell.dataset.col = col;
+                
+                // Add coordinate label
+                const coord = document.createElement('span');
+                coord.style.position = 'absolute';
+                coord.style.top = '2px';
+                coord.style.left = '2px';
+                coord.style.fontSize = '10px';
+                coord.style.opacity = '0.5';
+                coord.textContent = String.fromCharCode(65 + col) + (row + 1);
+                cell.appendChild(coord);
+                
+                mapElement.appendChild(cell);
+                grid[row][col] = null;
+            }
+        }
+    }
+    
+    function placeTreasures() {
+        treasures = [];
+        foundTreasures = 0;
+        
+        for (let i = 0; i < TREASURES_PER_ROUND; i++) {
+            let placed = false;
+            while (!placed) {
+                const row = Math.floor(Math.random() * GRID_SIZE);
+                const col = Math.floor(Math.random() * GRID_SIZE);
+                
+                // Check if cell is empty
+                if (!grid[row][col]) {
+                    const treasure = treasureTypes[Math.floor(Math.random() * treasureTypes.length)];
+                    grid[row][col] = { ...treasure, row, col };
+                    treasures.push({ ...treasure, row, col });
+                    placed = true;
+                }
+            }
+        }
+        
+        updateHint();
+        updateRoundInfo();
+    }
+    
+    function updateHint() {
+        if (treasures.length === 0) return;
+        
+        // Pick a random unfound treasure
+        const unfoundTreasures = treasures.filter(t => 
+            !Array.from(revealedCells).some(cell => {
+                const [row, col] = cell.split(',').map(Number);
+                return row === t.row && col === t.col;
+            })
+        );
+        
+        if (unfoundTreasures.length === 0) return;
+        
+        const targetTreasure = unfoundTreasures[Math.floor(Math.random() * unfoundTreasures.length)];
+        
+        // Generate different types of hints
+        const hintTypes = [
+            () => {
+                const col = String.fromCharCode(65 + targetTreasure.col);
+                return `🧭 The ${targetTreasure.name} is somewhere in column ${col}`;
+            },
+            () => {
+                const row = targetTreasure.row + 1;
+                return `🧭 The ${targetTreasure.name} is somewhere in row ${row}`;
+            },
+            () => {
+                const quadrant = getQuadrant(targetTreasure.row, targetTreasure.col);
+                return `🧭 Look in the ${quadrant} quadrant for the ${targetTreasure.name}`;
+            },
+            () => {
+                const nearWater = targetTreasure.row < 3 ? 'north' : targetTreasure.row > 6 ? 'south' : 'middle';
+                return `🧭 The ${targetTreasure.name} is in the ${nearWater} region`;
+            }
+        ];
+        
+        currentHint = hintTypes[Math.floor(Math.random() * hintTypes.length)]();
+        document.getElementById('hint-text').textContent = currentHint;
+    }
+    
+    function getQuadrant(row, col) {
+        if (row < 5 && col < 5) return 'northwest';
+        if (row < 5 && col >= 5) return 'northeast';
+        if (row >= 5 && col < 5) return 'southwest';
+        return 'southeast';
+    }
+    
+    function dig(username, coordinate) {
+        // Parse coordinate (e.g., "B5" -> row 4, col 1)
+        const match = coordinate.match(/^([A-J])(\d|10)$/i);
+        if (!match) {
+            sendResponse(`@${username}, invalid coordinate! Use format like B5`);
+            return;
+        }
+        
+        const col = match[1].toUpperCase().charCodeAt(0) - 65;
+        const row = parseInt(match[2]) - 1;
+        
+        if (col < 0 || col >= GRID_SIZE || row < 0 || row >= GRID_SIZE) {
+            sendResponse(`@${username}, that coordinate is off the map!`);
+            return;
+        }
+        
+        const cellKey = `${row},${col}`;
+        if (revealedCells.has(cellKey)) {
+            sendResponse(`@${username}, that spot was already dug!`);
+            return;
+        }
+        
+        // Mark as revealed
+        revealedCells.add(cellKey);
+        const cell = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+        cell.classList.add('revealed');
+        
+        // Add dig animation
+        const digEffect = document.createElement('div');
+        digEffect.className = 'dig-animation';
+        cell.appendChild(digEffect);
+        setTimeout(() => digEffect.remove(), 500);
+        
+        // Update recent digs for compass
+        recentDigs.push({ row, col, time: Date.now() });
+        if (recentDigs.length > 1) {
+            recentDigs.shift();
+        }
+        updateCompass();
+        
+        // Check if treasure found
+        const treasure = grid[row][col];
+        if (treasure) {
+            foundTreasure(username, treasure, cell);
+        } else {
+            // Give proximity hint
+            const distance = getNearestTreasureDistance(row, col);
+            let message = `@${username} dug at ${coordinate}... `;
+            
+            if (distance <= 1) {
+                message += '🔥 Very hot! Treasure is adjacent!';
+                cell.textContent = '🔥';
+            } else if (distance <= 2) {
+                message += '♨️ Hot! Getting close!';
+                cell.textContent = '♨️';
+            } else if (distance <= 3) {
+                message += '🌡️ Warm... keep searching!';
+                cell.textContent = '🌡️';
+            } else {
+                message += '❄️ Cold... try elsewhere!';
+                cell.textContent = '❄️';
+            }
+            
+            sendResponse(message);
+        }
+    }
+    
+    function getNearestTreasureDistance(row, col) {
+        let minDistance = Infinity;
+        
+        treasures.forEach(treasure => {
+            const cellKey = `${treasure.row},${treasure.col}`;
+            if (!revealedCells.has(cellKey)) {
+                const distance = Math.max(Math.abs(treasure.row - row), Math.abs(treasure.col - col));
+                minDistance = Math.min(minDistance, distance);
+            }
+        });
+        
+        return minDistance;
+    }
+    
+    function foundTreasure(username, treasure, cell) {
+        // Show treasure
+        cell.textContent = treasure.emoji;
+        cell.classList.add('treasure');
+        
+        // Update score
+        const currentScore = scores.get(username) || 0;
+        scores.set(username, currentScore + treasure.value);
+        updateScoreboard();
+        
+        // Show found animation
+        const foundEffect = document.createElement('div');
+        foundEffect.className = 'treasure-found';
+        foundEffect.textContent = treasure.emoji;
+        foundEffect.style.left = '50%';
+        foundEffect.style.top = '50%';
+        document.getElementById('game-container').appendChild(foundEffect);
+        setTimeout(() => foundEffect.remove(), 2000);
+        
+        // Send message
+        sendResponse(`🎉 ${username} found the ${treasure.name} ${treasure.emoji} worth ${treasure.value} points!`);
+        
+        foundTreasures++;
+        updateRoundInfo();
+        
+        // Check if round complete
+        if (foundTreasures >= TREASURES_PER_ROUND) {
+            setTimeout(startNewRound, 3000);
+        } else {
+            // Update hint for remaining treasures
+            setTimeout(updateHint, 1000);
+        }
+    }
+    
+    function updateCompass() {
+        if (recentDigs.length === 0) return;
+        
+        const lastDig = recentDigs[recentDigs.length - 1];
+        let nearestTreasure = null;
+        let minDistance = Infinity;
+        
+        treasures.forEach(treasure => {
+            const cellKey = `${treasure.row},${treasure.col}`;
+            if (!revealedCells.has(cellKey)) {
+                const distance = Math.sqrt(
+                    Math.pow(treasure.row - lastDig.row, 2) + 
+                    Math.pow(treasure.col - lastDig.col, 2)
+                );
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestTreasure = treasure;
+                }
+            }
+        });
+        
+        if (nearestTreasure) {
+            const angle = Math.atan2(
+                nearestTreasure.row - lastDig.row,
+                nearestTreasure.col - lastDig.col
+            ) * 180 / Math.PI + 90;
+            
+            document.getElementById('compass-needle').style.transform = `rotate(${angle}deg)`;
+        }
+    }
+    
+    function updateScoreboard() {
+        const scoreList = document.getElementById('score-list');
+        scoreList.innerHTML = '';
+        
+        const sortedScores = Array.from(scores.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        sortedScores.forEach(([username, score], index) => {
+            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+            const entry = document.createElement('div');
+            entry.className = 'score-entry';
+            entry.innerHTML = `
+                <span>${medals[index]} ${username}</span>
+                <span>${score} pts</span>
+            `;
+            scoreList.appendChild(entry);
+        });
+    }
+    
+    function updateRoundInfo() {
+        document.getElementById('round-number').textContent = round;
+        document.getElementById('treasures-left').textContent = 
+            `Treasures left: ${TREASURES_PER_ROUND - foundTreasures}`;
+    }
+    
+    function startNewRound() {
+        round++;
+        initGrid();
+        placeTreasures();
+        recentDigs = [];
+        sendResponse(`🗺️ Round ${round} begins! New treasures have been hidden!`);
+    }
+    
+    function sendResponse(message) {
+        const response = {
+            chatname: 'TreasureBot',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                overlay: 'treasurehunt',
+                response: response
+            }, '*');
+        }
+        
+        console.log('Bot response:', message);
+    }
+    
+    function processData(data) {
+        if (data.content) {
+            data = data.content;
+        }
+        
+        if (!data.chatmessage || !data.chatname) return;
+        
+        const message = data.chatmessage.trim();
+        
+        if (message.toLowerCase().startsWith('!dig ')) {
+            const coordinate = message.substring(5).toUpperCase();
+            dig(data.chatname, coordinate);
+        }
+    }
+    
+    // Initialize game
+    initGrid();
+    placeTreasures();
+    
+    // Setup iframe communication
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.position = "fixed";
+    iframe.style.left = "-100px";
+    iframe.style.top = "-100px";
+    iframe.id = "frame1";
+    document.body.appendChild(iframe);
+    
+    window.addEventListener("message", function(e) {
+        if (e.source !== iframe.contentWindow) return;
+        
+        if ("dataReceived" in e.data) {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+    
+    // Demo mode
+    if (urlParams.has('demo')) {
+        setTimeout(() => {
+            const demoCoords = ['A1', 'B5', 'C3', 'D7', 'E2', 'F9', 'G4', 'H6', 'I8', 'J10'];
+            setInterval(() => {
+                if (Math.random() < 0.3) {
+                    const user = `Hunter${Math.floor(Math.random() * 3) + 1}`;
+                    const coord = demoCoords[Math.floor(Math.random() * demoCoords.length)];
+                    dig(user, coord);
+                }
+            }, 3000);
+        }, 2000);
+    }
+    </script>
+</body>
+</html>

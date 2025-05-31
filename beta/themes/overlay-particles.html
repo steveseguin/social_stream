@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<!-- Particle System Chat Overlay for Social Stream Ninja -->
+<!--
+This overlay creates a particle-based floating message system with:
+- Messages that float upward like bubbles or particles
+- Interactive particle effects behind messages
+- Gravitational attraction effects
+- Dynamic color-coded particles based on message type
+- Smooth continuous scrolling with particle integration
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Particle System Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+    <link rel="canonical" href="https://socialstream.ninja/">
+    <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: radial-gradient(circle at center, #1a1a2e 0%, #16213e 50%, #0f0f0f 100%);
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+/* Particle system canvas */
+#particle-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+#chat-container {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 380px;
+    height: 100vh;
+    overflow: hidden;
+    padding: 0 25px;
+    box-sizing: border-box;
+    z-index: 5;
+}
+
+#message-list-wrapper {
+    width: 100%;
+    transition: transform 0.5s ease-out;
+}
+
+.message {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 18px;
+    margin-bottom: 20px;
+    border-radius: 20px;
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.3),
+        0 0 40px rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    opacity: 0;
+    transform: translateY(60px) scale(0.8);
+    transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 500px;
+    box-sizing: border-box;
+    position: relative;
+}
+
+.message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, 
+        rgba(74, 144, 226, 0.1) 0%, 
+        rgba(80, 227, 194, 0.1) 25%, 
+        rgba(184, 115, 228, 0.1) 50%, 
+        rgba(245, 101, 101, 0.1) 75%, 
+        rgba(245, 205, 121, 0.1) 100%);
+    border-radius: 20px;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+.message:hover::before {
+    opacity: 1;
+}
+
+.message.visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.message.fading {
+    opacity: 0;
+    transform: translateY(-60px) scale(0.8);
+    transition: all 1.5s ease-out;
+}
+
+.message.hidden {
+    opacity: 0;
+    transform: translateY(60px) scale(0.5);
+    max-height: 0px !important;
+    padding: 0px !important;
+    margin-bottom: 0px !important;
+    border-width: 0px !important;
+}
+
+.message.floating {
+    animation: float-up 8s ease-out forwards;
+}
+
+@keyframes float-up {
+    0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100px) rotate(5deg);
+        opacity: 0.7;
+    }
+}
+
+.avatar-wrapper {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 15px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(135deg, #4a90e2, #50e3c2);
+    padding: 3px;
+    vertical-align: middle;
+    flex-shrink: 0;
+    animation: avatar-glow 3s ease-in-out infinite alternate;
+}
+
+@keyframes avatar-glow {
+    0% { box-shadow: 0 0 15px rgba(74, 144, 226, 0.5); }
+    100% { box-shadow: 0 0 25px rgba(80, 227, 194, 0.8); }
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+}
+
+.name {
+    color: #ffffff;
+    font-size: 1.1em;
+    font-weight: 600;
+    max-width: 200px;
+    overflow: hidden;
+    text-shadow: 0 2px 10px rgba(255, 255, 255, 0.3);
+    animation: name-shimmer 4s ease-in-out infinite;
+}
+
+@keyframes name-shimmer {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; text-shadow: 0 2px 20px rgba(255, 255, 255, 0.6); }
+}
+
+.text {
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin: 10px 0;
+    word-wrap: break-word;
+    color: #e8e8e8;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.text img {
+    max-width: 100px;
+    max-height: 24px;
+    vertical-align: bottom;
+    border-radius: 8px;
+}
+
+.donation {
+    color: #f56565;
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(245, 101, 101, 0.8);
+    animation: donation-pulse 2s ease-in-out infinite;
+}
+
+@keyframes donation-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+.name-bg {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 6px 12px;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+}
+
+.membership-status {
+    color: #f6e05e;
+    font-weight: 600;
+    font-size: 0.85em;
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px rgba(246, 224, 94, 0.6);
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 12px;
+    border-radius: 15px;
+    display: block;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.source-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-left: 5px;
+    border-radius: 4px;
+}
+
+.badge {
+    display: inline-block;
+    height: 0.9em;
+    margin-left: 4px;
+    vertical-align: middle;
+    border-radius: 4px;
+}
+
+.message-content-wrapper {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+}
+
+.message-text-meta {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#spacer {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    background: transparent;
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+
+/* Particle trail effects */
+.message-particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.particle-trail {
+    background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, transparent 70%);
+    animation: particle-float 3s ease-out forwards;
+}
+
+@keyframes particle-float {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--dx), var(--dy)) scale(0.3);
+        opacity: 0;
+    }
+}
+
+/* Special effects for different message types */
+.message.donation-message {
+    background: rgba(245, 101, 101, 0.15);
+    border-color: rgba(245, 101, 101, 0.4);
+    box-shadow: 0 0 30px rgba(245, 101, 101, 0.3);
+}
+
+.message.member-message {
+    background: rgba(246, 224, 94, 0.15);
+    border-color: rgba(246, 224, 94, 0.4);
+    box-shadow: 0 0 30px rgba(246, 224, 94, 0.3);
+}
+
+.message.special-message {
+    background: rgba(184, 115, 228, 0.15);
+    border-color: rgba(184, 115, 228, 0.4);
+    box-shadow: 0 0 30px rgba(184, 115, 228, 0.3);
+}
+
+/* Ripple effect on message appearance */
+.message.ripple::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -50%);
+    animation: ripple-expand 0.8s ease-out;
+}
+
+@keyframes ripple-expand {
+    0% {
+        width: 0;
+        height: 0;
+        opacity: 1;
+    }
+    100% {
+        width: 200px;
+        height: 200px;
+        opacity: 0;
+    }
+}
+</style>
+</head>
+<body>
+<canvas id="particle-canvas"></canvas>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        <div id="spacer" style="height: 2200px; width: 100%;"></div>
+    </div>
+</div>
+
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false";
+    var featuredMode = false;
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = 20;
+    const topSpacer = document.getElementById('spacer');
+    const messageTimestamps = new Map();
+    const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
+
+    // Particle system
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let animationId;
+
+    function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+    }
+
+    class Particle {
+        constructor(x, y, color = '#4a90e2') {
+            this.x = x;
+            this.y = y;
+            this.vx = (Math.random() - 0.5) * 2;
+            this.vy = Math.random() * -2 - 1;
+            this.life = 1;
+            this.decay = 0.01 + Math.random() * 0.02;
+            this.size = Math.random() * 4 + 2;
+            this.color = color;
+            this.gravity = 0.05;
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.vy += this.gravity;
+            this.life -= this.decay;
+            this.size *= 0.995;
+        }
+
+        draw() {
+            ctx.save();
+            ctx.globalAlpha = this.life;
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+            
+            const gradient = ctx.createRadialGradient(
+                this.x, this.y, 0,
+                this.x, this.y, this.size
+            );
+            gradient.addColorStop(0, this.color);
+            gradient.addColorStop(1, this.color + '00');
+            
+            ctx.fillStyle = gradient;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        isDead() {
+            return this.life <= 0 || this.size <= 0.1;
+        }
+    }
+
+    function createParticles(x, y, count = 15, color = '#4a90e2') {
+        for (let i = 0; i < count; i++) {
+            particles.push(new Particle(
+                x + (Math.random() - 0.5) * 50,
+                y + (Math.random() - 0.5) * 50,
+                color
+            ));
+        }
+    }
+
+    function updateParticles() {
+        particles = particles.filter(particle => {
+            particle.update();
+            particle.draw();
+            return !particle.isDead();
+        });
+    }
+
+    function animateParticles() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        updateParticles();
+        animationId = requestAnimationFrame(animateParticles);
+    }
+
+    function createMessageParticles(messageElement) {
+        const rect = messageElement.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        
+        // Determine color based on message type
+        let color = '#4a90e2';
+        if (messageElement.classList.contains('donation-message')) {
+            color = '#f56565';
+        } else if (messageElement.classList.contains('member-message')) {
+            color = '#f6e05e';
+        } else if (messageElement.classList.contains('special-message')) {
+            color = '#b873e4';
+        }
+        
+        createParticles(centerX, centerY, 20, color);
+        
+        // Create floating particles around the message
+        for (let i = 0; i < 8; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                particle.className = 'message-particle particle-trail';
+                particle.style.left = (rect.left + Math.random() * rect.width) + 'px';
+                particle.style.top = (rect.top + Math.random() * rect.height) + 'px';
+                particle.style.background = color;
+                
+                const dx = (Math.random() - 0.5) * 100;
+                const dy = -Math.random() * 100 - 50;
+                particle.style.setProperty('--dx', dx + 'px');
+                particle.style.setProperty('--dy', dy + 'px');
+                
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 3000);
+            }, i * 100);
+        }
+    }
+
+    function adjustMessageWrapperScroll() {
+        requestAnimationFrame(() => {
+            const wrapperScrollHeight = messageListWrapper.scrollHeight;
+            const containerClientHeight = chatContainer.clientHeight;
+            
+            let translateY = 0;
+            if (wrapperScrollHeight > containerClientHeight) {
+                translateY = -(wrapperScrollHeight - containerClientHeight);
+            }
+            translateY = Math.min(0, translateY);
+
+            messageListWrapper.style.transform = `translateY(${translateY}px)`;
+        });
+    }
+    
+    setInterval(() => {
+        const now = Date.now();
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message')
+        );
+        
+        messages.forEach(message => {
+            const timestamp = messageTimestamps.get(message.id);
+            if (timestamp) {
+                const age = now - timestamp;
+                
+                // After 30 seconds, start fading
+                if (age > 30000 && !message.classList.contains('fading')) {
+                    message.classList.add('fading');
+                }
+                
+                // Create occasional ambient particles
+                if (Math.random() < 0.02) {
+                    const rect = message.getBoundingClientRect();
+                    createParticles(
+                        rect.left + Math.random() * rect.width,
+                        rect.top + Math.random() * rect.height,
+                        3,
+                        '#ffffff'
+                    );
+                }
+            }
+        });
+    }, 1000);
+    
+    function addMessageToOverlay(data) {
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+            return;
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message', 'ripple');
+        
+        // Add special classes based on message type
+        if (data.hasDonation || data.donation) {
+            messageDiv.classList.add('donation-message');
+        } else if (data.membership) {
+            messageDiv.classList.add('member-message');
+        } else if (data.event || Math.random() < 0.1) {
+            messageDiv.classList.add('special-message');
+        }
+        
+        // Generate unique ID and track timestamp for aging
+        const messageId = data.mid || 'msg-' + Date.now();
+        messageDiv.id = messageId;
+        messageTimestamps.set(messageId, Date.now());
+        
+        var chatbadgesHtml = "";
+        if (data.chatbadges) {
+            data.chatbadges.forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else { 
+                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
+                }
+            });
+        }
+        
+        let avatarBorderColor = "linear-gradient(135deg, #4a90e2, #50e3c2)";
+        if (data.nameColor) {
+            avatarBorderColor = `linear-gradient(135deg, ${data.nameColor}, #50e3c2)`;
+        }
+        
+        let leftEdgeColor = null;
+        if (typeof getColorFromType === 'function' && data.type) {
+            try {
+                leftEdgeColor = getColorFromType(data.type);
+            } catch (e) {
+                console.error("Error getting color from type:", e);
+            }
+        }
+        
+        if (leftEdgeColor) {
+            messageDiv.style.borderLeft = `4px solid ${leftEdgeColor}`;
+            messageDiv.style.paddingLeft = '16px';
+        }
+        
+        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = data.chatimg ? 
+            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
+        const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="color: ${data.nameColor}; text-shadow: 0 2px 10px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
+        const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
+        const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+        
+        const contentImgHtml = data.contentimg ? 
+            `<div style="padding: 3px; border-radius: 15px; background: ${avatarBorderColor}; display: inline-block; margin-top: 12px;">
+                <img src="${data.contentimg}" alt="Content Image" class="large-image" style="margin-top: 0;" onerror="this.parentNode.style.display='none';">
+             </div>` : '';
+
+        messageDiv.innerHTML = `
+            <div class="message-content-wrapper">
+                ${avatarHtml}
+                <div class="message-text-meta">
+                    <div>
+                        ${nameHtml}
+                        ${sourceIconHtml}
+                        ${chatbadgesHtml}
+                    </div>
+                    ${membershipHtml}
+                    ${messageTextHtml}
+                    ${donationHtml}
+                </div>
+            </div>
+            ${contentImgHtml}
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+        void messageDiv.offsetWidth; 
+        messageDiv.classList.add('visible');
+        
+        // Create particles when message appears
+        setTimeout(() => {
+            createMessageParticles(messageDiv);
+        }, 200);
+        
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message') 
+        );
+        
+        if (messages.length > MAX_MESSAGES) {
+            const oldestMessage = messages[0]; 
+            
+            if (oldestMessage) {
+                const messageStyle = getComputedStyle(oldestMessage);
+                const marginBottom = parseFloat(messageStyle.marginBottom) || 0;
+                const spaceOccupiedByOldestMessage = oldestMessage.offsetHeight + marginBottom;
+                
+                const currentSpacerHeight = parseFloat(topSpacer.style.height) || 0;
+                let newPotentialSpacerHeight = currentSpacerHeight + spaceOccupiedByOldestMessage;
+
+                if (newPotentialSpacerHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) {
+                    console.log(`Spacer height (${newPotentialSpacerHeight}px) exceeded threshold (${MAX_SPACER_HEIGHT_BEFORE_RESET}px). Resetting to 0px.`);
+                    newPotentialSpacerHeight = 0;
+                }
+                
+                topSpacer.style.height = newPotentialSpacerHeight + 'px';
+
+                messageTimestamps.delete(oldestMessage.id);
+                messageListWrapper.removeChild(oldestMessage);
+            }
+        }
+        
+        adjustMessageWrapperScroll();
+    }
+
+    // Initialize
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    animateParticles();
+
+    // Standard Social Stream messaging setup
+    var iframe = document.createElement("iframe");
+    if (featuredMode){
+        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+    
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) { 
+                        addMessageToOverlay(data);
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

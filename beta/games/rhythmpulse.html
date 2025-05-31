@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rhythm Pulse - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #0f0f23 0%, #000 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: #000000;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #rhythm-stage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 80%;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .beat-circle {
+            position: absolute;
+            border-radius: 50%;
+            animation: beat-pulse 1s ease-out forwards;
+            pointer-events: none;
+        }
+        
+        @keyframes beat-pulse {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5);
+            }
+        }
+        
+        .rhythm-wave {
+            position: absolute;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            animation: wave-travel 2s ease-out forwards;
+            box-shadow: 0 0 15px currentColor;
+        }
+        
+        @keyframes wave-travel {
+            0% {
+                transform: translateX(-100%);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw);
+                opacity: 0;
+            }
+        }
+        
+        .note-particle {
+            position: absolute;
+            font-size: 32px;
+            animation: note-float 3s ease-out forwards;
+            pointer-events: none;
+            z-index: 20;
+        }
+        
+        @keyframes note-float {
+            0% {
+                opacity: 1;
+                transform: translateY(0) rotate(0deg) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-150px) rotate(360deg) scale(0.5);
+            }
+        }
+        
+        #beat-visualizer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80%;
+            height: 100px;
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            gap: 4px;
+        }
+        
+        .frequency-bar {
+            width: 8px;
+            background: linear-gradient(to top, #ff0066, #00ff88);
+            border-radius: 4px 4px 0 0;
+            transition: height 0.1s ease;
+            height: 10px;
+            animation: freq-pulse 0.5s ease-in-out infinite alternate;
+        }
+        
+        @keyframes freq-pulse {
+            0% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        #rhythm-stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #tempo-meter {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            text-align: center;
+        }
+        
+        #bpm-display {
+            font-size: 48px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 20px #00ff88;
+            margin: 10px 0;
+            animation: bpm-glow 1s ease-in-out infinite alternate;
+        }
+        
+        @keyframes bpm-glow {
+            0% { text-shadow: 0 0 20px #00ff88; }
+            100% { text-shadow: 0 0 30px #00ff88, 0 0 40px #00ff88; }
+        }
+        
+        #drum-kit {
+            position: absolute;
+            bottom: 140px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .drum-pad {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            margin: 5px;
+            border-radius: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .drum-pad:hover {
+            border-color: #fff;
+            transform: scale(1.1);
+        }
+        
+        .drum-pad.active {
+            border-color: #00ff88;
+            box-shadow: 0 0 20px #00ff88;
+            animation: drum-hit 0.2s ease-out;
+        }
+        
+        @keyframes drum-hit {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .drum-kick { background: #ff4757; }
+        .drum-snare { background: #3742fa; }
+        .drum-hihat { background: #2ed573; }
+        .drum-crash { background: #ffa502; }
+        
+        #genre-indicator {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            text-align: center;
+        }
+        
+        #current-genre {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff6b7a;
+            margin-bottom: 5px;
+        }
+        
+        #genre-emoji {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 140px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #00ff88;
+            font-size: 18px;
+        }
+        
+        .sync-burst {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 72px;
+            font-weight: bold;
+            color: #00ff88;
+            text-shadow: 0 0 30px #00ff88;
+            z-index: 60;
+            pointer-events: none;
+            animation: sync-explosion 1.5s ease-out forwards;
+        }
+        
+        @keyframes sync-explosion {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.2) rotate(180deg);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.8) rotate(360deg);
+            }
+        }
+        
+        .metronome {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            border: 4px solid #00ff88;
+            border-radius: 50%;
+            animation: metronome-tick 1s linear infinite;
+            opacity: 0.3;
+        }
+        
+        @keyframes metronome-tick {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+        
+        .beat-trail {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: #00ff88;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trail-decay 2s ease-out forwards;
+        }
+        
+        @keyframes trail-decay {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.1) translateY(-100px);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="rhythm-stats">
+            <div class="stat-line">🎵 Beats: <span id="beat-count">0</span></div>
+            <div class="stat-line">🎤 Musicians: <span id="musician-count">0</span></div>
+            <div class="stat-line">🔥 Combo: <span id="combo-count">0</span></div>
+            <div class="stat-line">🎼 Sync Level: <span id="sync-level">0</span>%</div>
+        </div>
+        
+        <div id="tempo-meter">
+            <h4 style="margin-top: 0; color: #00ff88;">Tempo</h4>
+            <div id="bpm-display">120</div>
+            <div>BPM</div>
+        </div>
+        
+        <div id="drum-kit">
+            <h4 style="margin-top: 0; color: #00ff88;">Drum Kit</h4>
+            <div class="drum-pad drum-kick" data-sound="kick">🥁</div>
+            <div class="drum-pad drum-snare" data-sound="snare">🔊</div>
+            <div class="drum-pad drum-hihat" data-sound="hihat">⚡</div>
+            <div class="drum-pad drum-crash" data-sound="crash">💥</div>
+        </div>
+        
+        <div id="genre-indicator">
+            <div id="current-genre">Electronic</div>
+            <div id="genre-emoji">🎧</div>
+        </div>
+        
+        <div id="rhythm-stage">
+            <div class="metronome" id="metronome"></div>
+        </div>
+        
+        <div id="beat-visualizer"></div>
+        
+        <div id="instructions">
+            <div><strong>🎵 Rhythm Pulse - How to Play:</strong></div>
+            <div>Chat to create beats and rhythm!</div>
+            <div>Type <strong>kick</strong>, <strong>snare</strong>, <strong>beat</strong></div>
+            <div>Emojis create musical notes!</div>
+            <div>Sync with others for combos!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            beatCount: 0,
+            musicians: new Set(),
+            comboCount: 0,
+            syncLevel: 0,
+            currentBPM: 120,
+            currentGenre: 'electronic',
+            recentBeats: [],
+            beatTimestamps: [],
+            lastBeatTime: 0
+        };
+
+        // Sound/beat keywords
+        const beatKeywords = {
+            kick: { type: 'kick', color: '#ff4757', note: '🥁' },
+            drum: { type: 'kick', color: '#ff4757', note: '🥁' },
+            bass: { type: 'kick', color: '#ff4757', note: '🔊' },
+            snare: { type: 'snare', color: '#3742fa', note: '📯' },
+            clap: { type: 'snare', color: '#3742fa', note: '👏' },
+            snap: { type: 'snare', color: '#3742fa', note: '🫰' },
+            hihat: { type: 'hihat', color: '#2ed573', note: '⚡' },
+            cymbal: { type: 'crash', color: '#ffa502', note: '💥' },
+            crash: { type: 'crash', color: '#ffa502', note: '💥' },
+            beat: { type: 'kick', color: '#ff4757', note: '🎵' },
+            rhythm: { type: 'snare', color: '#3742fa', note: '🎼' },
+            music: { type: 'hihat', color: '#2ed573', note: '🎶' },
+            sound: { type: 'kick', color: '#ff4757', note: '🔊' }
+        };
+
+        // Musical genres with BPM ranges
+        const genres = {
+            electronic: { bpm: [120, 140], emoji: '🎧', color: '#00ff88' },
+            house: { bpm: [120, 130], emoji: '🏠', color: '#ff6b7a' },
+            techno: { bpm: [130, 150], emoji: '🤖', color: '#74b9ff' },
+            dubstep: { bpm: [140, 150], emoji: '🔥', color: '#fd79a8' },
+            trap: { bpm: [70, 80], emoji: '🎪', color: '#fdcb6e' },
+            dnb: { bpm: [160, 180], emoji: '⚡', color: '#a29bfe' },
+            chill: { bpm: [80, 100], emoji: '😌', color: '#55efc4' },
+            jazz: { bpm: [90, 140], emoji: '🎷', color: '#fab1a0' },
+            rock: { bpm: [120, 140], emoji: '🎸', color: '#e17055' },
+            pop: { bpm: [100, 130], emoji: '🌟', color: '#ff7675' }
+        };
+
+        // Initialize frequency visualizer
+        function initFrequencyBars() {
+            const visualizer = document.getElementById('beat-visualizer');
+            for (let i = 0; i < 32; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'frequency-bar';
+                bar.id = `freq-bar-${i}`;
+                visualizer.appendChild(bar);
+            }
+        }
+
+        // Update frequency visualizer
+        function updateFrequencyBars(intensity) {
+            const bars = document.querySelectorAll('.frequency-bar');
+            bars.forEach((bar, index) => {
+                const baseHeight = 10;
+                const randomHeight = Math.random() * intensity * 80;
+                const heightMultiplier = Math.sin((index / bars.length) * Math.PI * 2) * 0.5 + 0.5;
+                const finalHeight = baseHeight + (randomHeight * heightMultiplier);
+                
+                bar.style.height = finalHeight + 'px';
+                bar.style.animationDelay = (index * 0.05) + 's';
+            });
+        }
+
+        // Extract beat keywords and emojis from text
+        function analyzeBeatMessage(text) {
+            const analysis = {
+                beats: [],
+                emojis: [],
+                intensity: 1
+            };
+
+            const lowerText = text.toLowerCase();
+            
+            // Find beat keywords
+            Object.entries(beatKeywords).forEach(([keyword, data]) => {
+                if (lowerText.includes(keyword)) {
+                    analysis.beats.push({ keyword, ...data });
+                }
+            });
+
+            // Extract musical emojis
+            const musicalEmojis = ['🎵', '🎶', '🎼', '🥁', '🎸', '🎹', '🎺', '🎷', '🎤', '🔊', '📯', '💥', '⚡', '🔥'];
+            const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+            const foundEmojis = text.match(emojiRegex) || [];
+            
+            foundEmojis.forEach(emoji => {
+                if (musicalEmojis.includes(emoji)) {
+                    analysis.emojis.push(emoji);
+                }
+            });
+
+            // Calculate intensity based on message length and caps
+            analysis.intensity = Math.min(3, 1 + (text.length / 20) + (text === text.toUpperCase() ? 1 : 0));
+
+            return analysis;
+        }
+
+        // Create beat circle
+        function createBeatCircle(x, y, color, size = 1) {
+            const circle = document.createElement('div');
+            circle.className = 'beat-circle';
+            circle.style.left = x + '%';
+            circle.style.top = y + '%';
+            circle.style.border = `4px solid ${color}`;
+            circle.style.boxShadow = `0 0 20px ${color}`;
+            circle.style.animationDuration = (2 / size) + 's';
+            
+            document.getElementById('rhythm-stage').appendChild(circle);
+            
+            setTimeout(() => circle.remove(), 2000);
+        }
+
+        // Create rhythm wave
+        function createRhythmWave(color, intensity) {
+            const wave = document.createElement('div');
+            wave.className = 'rhythm-wave';
+            wave.style.backgroundColor = color;
+            wave.style.top = Math.random() * 80 + '%';
+            wave.style.height = (4 + intensity * 2) + 'px';
+            wave.style.animationDuration = (3 - intensity * 0.5) + 's';
+            
+            document.getElementById('rhythm-stage').appendChild(wave);
+            
+            setTimeout(() => wave.remove(), 3000);
+        }
+
+        // Create note particle
+        function createNoteParticle(note, x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'note-particle';
+            particle.textContent = note;
+            particle.style.left = x + '%';
+            particle.style.top = y + '%';
+            particle.style.color = '#' + Math.floor(Math.random()*16777215).toString(16);
+            
+            document.getElementById('rhythm-stage').appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 3000);
+        }
+
+        // Create beat trail
+        function createBeatTrail(x, y) {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    const trail = document.createElement('div');
+                    trail.className = 'beat-trail';
+                    trail.style.left = (x + Math.random() * 10 - 5) + '%';
+                    trail.style.top = (y + Math.random() * 10 - 5) + '%';
+                    
+                    document.getElementById('rhythm-stage').appendChild(trail);
+                    
+                    setTimeout(() => trail.remove(), 2000);
+                }, i * 100);
+            }
+        }
+
+        // Trigger drum pad
+        function triggerDrumPad(soundType) {
+            const drumPad = document.querySelector(`[data-sound="${soundType}"]`);
+            if (drumPad) {
+                drumPad.classList.add('active');
+                setTimeout(() => drumPad.classList.remove('active'), 200);
+            }
+        }
+
+        // Calculate BPM from recent beats
+        function calculateBPM() {
+            const now = Date.now();
+            const recentBeats = gameState.beatTimestamps.filter(t => now - t < 10000); // Last 10 seconds
+            
+            if (recentBeats.length < 2) return gameState.currentBPM;
+            
+            const intervals = [];
+            for (let i = 1; i < recentBeats.length; i++) {
+                intervals.push(recentBeats[i] - recentBeats[i-1]);
+            }
+            
+            const avgInterval = intervals.reduce((a, b) => a + b, 0) / intervals.length;
+            const bpm = Math.round(60000 / avgInterval);
+            
+            // Smooth BPM changes
+            gameState.currentBPM = Math.round((gameState.currentBPM * 0.7) + (bpm * 0.3));
+            
+            return Math.max(60, Math.min(200, gameState.currentBPM));
+        }
+
+        // Determine genre from BPM
+        function updateGenre() {
+            const bpm = gameState.currentBPM;
+            
+            for (const [genreName, genreData] of Object.entries(genres)) {
+                if (bpm >= genreData.bpm[0] && bpm <= genreData.bpm[1]) {
+                    if (gameState.currentGenre !== genreName) {
+                        gameState.currentGenre = genreName;
+                        document.getElementById('current-genre').textContent = genreName.charAt(0).toUpperCase() + genreName.slice(1);
+                        document.getElementById('genre-emoji').textContent = genreData.emoji;
+                        document.getElementById('current-genre').style.color = genreData.color;
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Check for sync/combo
+        function checkSync() {
+            const now = Date.now();
+            const syncWindow = 1000; // 1 second window
+            
+            const recentBeats = gameState.recentBeats.filter(beat => now - beat.timestamp < syncWindow);
+            
+            if (recentBeats.length >= 3) {
+                gameState.comboCount++;
+                
+                // Create sync burst
+                const burst = document.createElement('div');
+                burst.className = 'sync-burst';
+                burst.textContent = 'SYNC!';
+                document.getElementById('game-container').appendChild(burst);
+                
+                setTimeout(() => burst.remove(), 1500);
+                
+                // Clear recent beats to avoid duplicate combos
+                gameState.recentBeats = [];
+            }
+        }
+
+        // Calculate sync level
+        function calculateSyncLevel() {
+            const now = Date.now();
+            const recentActivity = gameState.beatTimestamps.filter(t => now - t < 5000); // Last 5 seconds
+            
+            gameState.syncLevel = Math.min(100, (recentActivity.length / 10) * 100);
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('beat-count').textContent = gameState.beatCount;
+            document.getElementById('musician-count').textContent = gameState.musicians.size;
+            document.getElementById('combo-count').textContent = gameState.comboCount;
+            document.getElementById('sync-level').textContent = Math.floor(gameState.syncLevel);
+            
+            const bpm = calculateBPM();
+            document.getElementById('bpm-display').textContent = bpm;
+            
+            // Update metronome speed
+            const metronome = document.getElementById('metronome');
+            metronome.style.animationDuration = (60 / bpm) + 's';
+            
+            updateGenre();
+            calculateSyncLevel();
+            
+            // Update frequency visualizer
+            const intensity = gameState.syncLevel / 100;
+            updateFrequencyBars(intensity);
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const username = data.chatname;
+            const message = data.chatmessage;
+            
+            // Analyze message for beat content
+            const analysis = analyzeBeatMessage(message);
+            
+            // Process if beats or musical emojis found
+            if (analysis.beats.length > 0 || analysis.emojis.length > 0) {
+                gameState.musicians.add(username);
+                
+                const now = Date.now();
+                gameState.beatTimestamps.push(now);
+                gameState.lastBeatTime = now;
+                
+                // Keep timestamps manageable
+                if (gameState.beatTimestamps.length > 50) {
+                    gameState.beatTimestamps.shift();
+                }
+                
+                // Process beats
+                analysis.beats.forEach(beat => {
+                    gameState.beatCount++;
+                    
+                    // Create visual effects
+                    const x = Math.random() * 80 + 10;
+                    const y = Math.random() * 70 + 15;
+                    
+                    createBeatCircle(x, y, beat.color, analysis.intensity);
+                    createRhythmWave(beat.color, analysis.intensity);
+                    createNoteParticle(beat.note, x, y);
+                    createBeatTrail(x, y);
+                    
+                    // Trigger drum pad
+                    triggerDrumPad(beat.type);
+                    
+                    // Add to recent beats for sync detection
+                    gameState.recentBeats.push({
+                        timestamp: now,
+                        user: username,
+                        type: beat.type
+                    });
+                });
+                
+                // Process musical emojis
+                analysis.emojis.forEach(emoji => {
+                    const x = Math.random() * 80 + 10;
+                    const y = Math.random() * 70 + 15;
+                    createNoteParticle(emoji, x, y);
+                });
+                
+                // Check for sync
+                checkSync();
+            }
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoBeatWords = Object.keys(beatKeywords);
+            const demoMusicians = ['BeatMaster', 'DrumBot', 'RhythmKing', 'BassQueen', 'SyncLord'];
+            
+            setInterval(() => {
+                const beat = demoBeatWords[Math.floor(Math.random() * demoBeatWords.length)];
+                const musician = demoMusicians[Math.floor(Math.random() * demoMusicians.length)];
+                const emojis = ['🎵', '🎶', '🥁', '🔊', '💥'];
+                const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+                
+                const messages = [
+                    `${beat}!`,
+                    `${beat} ${emoji}`,
+                    `Let's ${beat}!`,
+                    `${emoji} ${beat} time!`,
+                    `Feel the ${beat}`
+                ];
+                
+                processData({
+                    chatname: musician,
+                    chatmessage: messages[Math.floor(Math.random() * messages.length)]
+                });
+            }, 600 + Math.random() * 800);
+        }
+        
+        // Drum pad click handlers
+        document.querySelectorAll('.drum-pad').forEach(pad => {
+            pad.addEventListener('click', () => {
+                const soundType = pad.dataset.sound;
+                const beatData = Object.values(beatKeywords).find(b => b.type === soundType);
+                
+                if (beatData) {
+                    // Simulate a beat message
+                    processData({
+                        chatname: 'Manual',
+                        chatmessage: soundType
+                    });
+                }
+            });
+        });
+        
+        // Initialize
+        initFrequencyBars();
+        updateDisplay();
+        
+        // Clean up old data periodically
+        setInterval(() => {
+            const now = Date.now();
+            gameState.beatTimestamps = gameState.beatTimestamps.filter(t => now - t < 30000);
+            gameState.recentBeats = gameState.recentBeats.filter(b => now - b.timestamp < 5000);
+        }, 5000);
+    </script>
+</body>
+</html>

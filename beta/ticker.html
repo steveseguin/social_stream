@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="./favicon.ico" />
+    <title>News Ticker</title>
+    <style>
+	
+	
+		:root {
+			--font-color: #FFF;
+			--font-family: Arial, sans-serif, Roboto;
+			--background-color: #001f3f;
+			--border-top: 5px solid #ff4136;
+			--font-size: 24px;
+			--electron-drag-fix: drag;
+		}
+		
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: var(--font-family);
+            background-color: #0000;
+        }
+        .ticker-container {
+            width: 100%;
+            height: 60px;
+            background-color: var(--background-color);
+            color: var(--font-color);
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            position: fixed;
+            bottom: 0;
+            border-top: var(--border-top);
+        }
+        .ticker-wrapper {
+            display: flex;
+            white-space: nowrap;
+        }
+        .ticker-item {
+            padding: 0 50px;
+            font-size: var(--font-size);
+            line-height: 60px;
+            opacity: 0;
+            transition: opacity 1s;
+        }
+        .ticker-item.show {
+            opacity: 1;
+        }
+		
+		/* Modern Style - Enhanced with better gradients */
+		body.modern .ticker-container {
+			--background-color: #1a1a1a;
+			--font-color: #fff;
+			--border-top: none;
+			background: linear-gradient(90deg, #1a1a1a, #2d2d2d, #1a1a1a);
+			box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+			height: 55px;
+		}
+
+		body.modern .ticker-item {
+			text-transform: uppercase;
+			letter-spacing: 1.2px;
+			font-weight: 500;
+			text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+		}
+
+		/* Corporate Style - Refined for better contrast */
+		body.corporate .ticker-container {
+			--background-color: #002b54;
+			--font-color: #ffffff;
+			--border-top: 2px solid #0066cc;
+			height: 50px;
+			background: linear-gradient(180deg, #003366, #002b54);
+		}
+
+		body.corporate .ticker-item {
+			font-size: 20px;
+			font-weight: 400;
+		}
+
+		/* Breaking News Style - Enhanced visibility */
+		body.breaking .ticker-container {
+			--background-color: #cc0000;
+			--font-color: #ffffff;
+			--border-top: none;
+			height: 65px;
+			background: linear-gradient(90deg, #b30000, #cc0000, #b30000);
+		}
+
+		body.breaking .ticker-item::before {
+			content: "BREAKING:";
+			font-weight: 700;
+			margin-right: 15px;
+			background: #ff0000;
+			padding: 3px 8px;
+			border-radius: 3px;
+		}
+
+		/* Minimal Style - Refined spacing */
+		body.minimal .ticker-container {
+			--background-color: #ffffff;
+			--font-color: #333333;
+			--border-top: 1px solid #e0e0e0;
+			height: 45px;
+			box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+		}
+
+		body.minimal .ticker-item {
+			font-size: 18px;
+			font-weight: 300;
+			letter-spacing: 0.3px;
+		}
+
+		/* Stock Market Style - Enhanced readability */
+		body.stock .ticker-container {
+			--background-color: #000000;
+			--font-color: #33ff33;
+			--border-top: 1px solid #333;
+			font-family: "Courier New", monospace;
+			background: linear-gradient(180deg, #111, #000);
+		}
+
+		body.stock .ticker-item {
+			font-size: 22px;
+			letter-spacing: 0.5px;
+			text-shadow: 0 0 10px rgba(51, 255, 51, 0.4);
+		}
+
+		/* CNN Style */
+		body.cnn .ticker-container {
+			--background-color: #cc0000;
+			--font-color: #ffffff;
+			--border-top: none;
+			height: 60px;
+			background: linear-gradient(90deg, #b30000, #cc0000);
+			border-bottom: 4px solid #990000;
+		}
+
+		body.cnn .ticker-item {
+			font-family: "Arial", sans-serif;
+			font-size: 22px;
+			font-weight: 700;
+			letter-spacing: 0.2px;
+		}
+
+		body.cnn .ticker-item::before {
+			content: "•";
+			margin: 0 15px;
+			color: #ffffff;
+			font-size: 24px;
+		}
+
+		/* FOX News Style */
+		body.fox .ticker-container {
+			--background-color: #183a52;
+			--font-color: #ffffff;
+			--border-top: none;
+			height: 55px;
+			background: linear-gradient(180deg, #003366, #183a52);
+			border-bottom: 3px solid #cc0000;
+		}
+
+		body.fox .ticker-item {
+			font-family: "Arial", sans-serif;
+			font-size: 21px;
+			font-weight: 500;
+			text-transform: uppercase;
+		}
+
+		body.fox .ticker-container::before {
+			content: "ALERT";
+			background: #cc0000;
+			padding: 5px 10px;
+			margin-right: 20px;
+			font-weight: 700;
+			letter-spacing: 1px;
+		}
+		
+    </style>
+</head>
+<body>
+    <div class="ticker-container">
+        <div id="ticker" class="ticker-wrapper">
+        </div>
+    </div>
+	<script>
+	(function (w) {
+		w.URLSearchParams = w.URLSearchParams || function (searchString) {
+			var self = this;
+			self.searchString = searchString;
+			self.get = function (name) {
+				var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+				if (results == null) {
+					return null;
+				} else {
+					return decodeURI(results[1]) || 0;
+				}
+			};
+		};
+
+	})(window);
+
+	var urlParams = new URLSearchParams(window.location.search);
+	var iframe = null;
+	var roomID = "test";
+	var darkmode = null;
+	var scale = 1;
+	var isOBSBrowserSource = false;
+	
+	try {
+		if ((window.ninjafy || window.electronApi)){ // fix for electron dragging.
+			document.body.style.width = "95%";
+			setTimeout(function(){
+				document.body.style.width = "100%";
+			},1000);
+
+			setTimeout(function(){
+				document.body.style.width = "98%";
+			},2000);
+
+			setTimeout(function(){
+				document.body.style.width = "100%";
+			},5000);
+		}
+	} catch(e){
+	}
+
+	
+	if (urlParams.has("session")){
+		roomID = urlParams.get("session");
+	} else if (urlParams.has("s")){
+		roomID = urlParams.get("s");
+	} else if (urlParams.has("id")){
+		roomID = urlParams.get("id");
+	} else if (window.location.protocol=="file:"){
+		roomID = prompt("Enter your session ID here, or add it to the URL.");
+		if (roomID){
+			var href = window.location.href;
+			var arr = href.split('?');
+			var newurl;
+			if (arr.length > 1 && arr[1] !== '') {
+				newurl = href + '&session=' + roomID;
+			} else {
+				newurl = href + '?session=' + roomID;
+			}
+			window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+		} else {
+			alert("You need to provide your extension's session ID for this page to work");
+		}
+	} else {
+		window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
+	}
+
+	var password = "false";
+	if (urlParams.has("password")){
+		password = urlParams.get("password") || "false";
+	}
+	
+	function loadGoogleFont(fontName) {
+		const formattedFontName = fontName.replace(/\s/g, '+');
+
+		const link = document.createElement('link');
+		link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+		link.rel = 'stylesheet';
+
+		document.head.appendChild(link);
+		var currentFont = getComputedStyle(document.documentElement).getPropertyValue('--font-family').trim();
+		document.documentElement.style.setProperty("--font-family", "'"+fontName.replaceAll("+"," ")+"', "+currentFont);
+	}
+	
+	if (urlParams.get("font")){
+		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Sora, Roboto, Avenir Next, Helvetica, Geneva, Verdana, Arial, sans-serif");
+	}
+	
+	if (urlParams.get("fontsize")){
+		document.documentElement.style.setProperty("--font-size", (parseFloat(urlParams.get("fontsize"))*140 || 140) +"%");
+	}
+	
+	if (urlParams.get("googlefont")) {
+		loadGoogleFont(urlParams.get("googlefont"));
+	}
+	
+	var style = urlParams.get('style') || 'default';
+	if (style !== 'default') {
+		document.body.classList.add(style);
+	}
+	
+	if (urlParams.has('css')){
+		var cssURL = urlParams.get('css');
+		cssURL = decodeURI(cssURL);
+
+		var cssStylesheet = document.createElement('link');
+		cssStylesheet.rel = 'stylesheet';
+		cssStylesheet.type = 'text/css';
+		cssStylesheet.media = 'screen';
+		cssStylesheet.href = cssURL;
+		document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+	}
+
+	if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+		try {
+			var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+			var css = decodeURIComponent(atob(base64Css)); // window.btoa(encodeURIComponent("#mainmenu{background-color: pink; ❤" ));
+			var cssStyleSheet = document.createElement("style");
+			cssStyleSheet.innerText = css;
+			document.querySelector("head").appendChild(cssStyleSheet);
+		} catch(e){console.error(e);}
+	}
+	
+	
+	var conCon = 1;
+	var socketserver = false;
+	var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+	function setupSocket(){
+		socketserver.onclose = function (){
+			setTimeout(function(){
+				conCon+=1;
+				socketserver = new WebSocket(serverURL);
+				setupSocket();
+			},100*conCon);
+		};
+		socketserver.onopen = function (){
+			conCon = 1;
+			socketserver.send(JSON.stringify({"join":roomID, "out":7, "in":8}));
+		};
+		socketserver.addEventListener('message', function (event) {
+			var resp = false
+			if (event.data){
+				var data = JSON.parse(event.data);
+				processInput(data);
+				if (data.get){
+					var ret = {};
+					ret.callback = {};
+					ret.callback.get = data.get
+					ret.callback.result = true;
+					socketserver.send(JSON.stringify(ret));
+				}
+			}
+		});
+	}
+	
+	if (urlParams.has("server") || urlParams.has("server2")){ // not doing anything yet.
+		serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+		socketserver = new WebSocket(serverURL);
+		setupSocket();
+	}
+
+	if (urlParams.has("chroma")){
+		var chroma = urlParams.get("chroma") || "0F0";
+		document.body.style.backgroundColor = "#"+chroma;
+	}
+	
+	var speed = 1.0;
+	if (urlParams.has("speed")){
+		speed = parseFloat(urlParams.get("speed")) || 1;
+	}
+	
+	try {
+		if (window.obsstudio){
+			window.obsstudio.getStatus(function(obsStatus){
+				isOBSBrowserSource = true;
+			});
+		}
+	} catch(e){}
+	
+
+	if (urlParams.has("transparent")){
+		document.documentElement.style.setProperty("--background-color", "#0000", "important");
+	}
+	
+	const tickerElement = document.getElementById("ticker");
+	let scrollAnimationFrame = null;
+	function processInput(data){
+		console.log(data);
+		if ("ticker" in data){
+			cancelAnimationFrame(scrollAnimationFrame);
+            tickerElement.innerHTML = ""; // Clear current items
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			data.ticker.forEach(data=>{
+				let tik = document.createElement("div");
+				tik.className = "ticker-item";
+				tik.innerHTML = data;
+				document.getElementById("ticker").appendChild(tik);
+				
+				setTimeout(() => {
+					tik.classList.add("show");
+				}, 50);
+				
+			});
+			
+			
+			startScrolling();
+		}
+	}
+	
+	function startScrolling() {
+		const ticker = document.getElementById('ticker');
+		let tickerWidth = ticker.scrollWidth / 2;
+		let containerWidth = document.querySelector('.ticker-container').clientWidth;
+		let position = 0;
+		// Remove this line as speed is already defined globally
+		// speed = 1; // Pixels per frame
+
+		function scroll() {
+			position -= speed;
+			if (position <= -tickerWidth) {
+				position = 0;
+			}
+			ticker.style.transform = `translateX(${position}px)`;
+			scrollAnimationFrame = requestAnimationFrame(scroll);
+		}
+
+		scroll();
+	}
+
+	iframe = document.createElement("iframe");
+	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&solo&view="+roomID+"&novideo&noaudio&label=ticker&cleanoutput&room="+roomID; // view only connection (data two way of course)
+	iframe.style.width = "0px";
+	iframe.style.height = "0px";
+	iframe.style.position = "fixed";
+	iframe.style.left = "-100px";
+	iframe.style.top = "-100px";
+	iframe.id = "frame1"
+	document.body.appendChild(iframe);
+
+	var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+	var eventer = window[eventMethod];
+	var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+	eventer(messageEvent, function (e) {
+		if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+		if ("dataReceived" in e.data){ // raw data
+			if ("overlayNinja" in e.data.dataReceived){
+				processInput(e.data.dataReceived.overlayNinja);
+			}
+		}
+	});
+	
+
+	if (urlParams.has('js')){  // ie: &js=https%3A%2F%2Fvdo.ninja%2Fexamples%2Ftestjs.js
+		console.warn("Third-party Javascript has been injected into the code. Security cannot be ensured.");
+		var jsURL = urlParams.get('js');
+		jsURL = decodeURI(jsURL);
+		console.log(jsURL);
+		var externalJavaascript = document.createElement('script');
+		externalJavaascript.type = 'text/javascript';
+		externalJavaascript.crossorigin = 'anonymous';
+		externalJavaascript.src = jsURL;
+		externalJavaascript.onerror = function() {
+			console.warn("Third-party Javascript failed to load");
+		};
+		externalJavaascript.onload = function() {
+			console.log("Third-party Javascript loaded");
+		};
+		document.head.appendChild(externalJavaascript);
+	}
+	
+
+
+	</script>
+</body>
+</html>

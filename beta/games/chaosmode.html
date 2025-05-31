@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chaos Mode - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: #000000;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        .chaos-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .chaos-text {
+            font-size: 24px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: chaos-fly 3s linear forwards;
+        }
+        
+        .chaos-emoji {
+            font-size: 48px;
+            animation: chaos-spin 2s ease-out forwards;
+        }
+        
+        .chaos-explosion {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            animation: chaos-explode 1s ease-out forwards;
+        }
+        
+        .chaos-wave {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: chaos-wave 2s ease-out forwards;
+        }
+        
+        .chaos-glitch {
+            font-size: 36px;
+            font-weight: bold;
+            animation: chaos-glitch 0.5s ease-in-out infinite;
+        }
+        
+        @keyframes chaos-fly {
+            0% {
+                transform: translateX(-100px) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(calc(100vw + 100px)) rotate(720deg) scale(0.5);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes chaos-spin {
+            0% {
+                transform: scale(0) rotate(0deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.5) rotate(180deg);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(0) rotate(360deg);
+                opacity: 0;
+            }
+        }
+        
+        @keyframes chaos-explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+                background: radial-gradient(circle, #ff0000, #ff9900, #ffff00);
+            }
+            50% {
+                transform: scale(3);
+                opacity: 0.8;
+                background: radial-gradient(circle, #ff9900, #ffff00, #00ff00);
+            }
+            100% {
+                transform: scale(6);
+                opacity: 0;
+                background: radial-gradient(circle, #ffff00, #00ff00, #0099ff);
+            }
+        }
+        
+        @keyframes chaos-wave {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+                border: 5px solid #00ffff;
+            }
+            100% {
+                transform: scale(20);
+                opacity: 0;
+                border: 1px solid #ff00ff;
+            }
+        }
+        
+        @keyframes chaos-glitch {
+            0% { transform: translateX(0); color: #ff0000; }
+            25% { transform: translateX(-5px); color: #00ff00; }
+            50% { transform: translateX(5px); color: #0000ff; }
+            75% { transform: translateX(-3px); color: #ffff00; }
+            100% { transform: translateX(0); color: #ff00ff; }
+        }
+        
+        #chaos-meter {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 100;
+        }
+        
+        #chaos-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #00ff00, #ffff00, #ff9900, #ff0000, #ff00ff);
+            transition: width 0.3s ease;
+            animation: chaos-pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes chaos-pulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+        }
+        
+        #chaos-level {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+            z-index: 100;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        #stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #message-feed {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            z-index: 100;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .message-item {
+            margin: 5px 0;
+            padding: 5px;
+            border-radius: 5px;
+            font-size: 14px;
+            animation: message-glow 0.5s ease-out;
+        }
+        
+        @keyframes message-glow {
+            0% {
+                background: rgba(255, 255, 255, 0.3);
+                transform: scale(1.05);
+            }
+            100% {
+                background: rgba(255, 255, 255, 0.1);
+                transform: scale(1);
+            }
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #ff00ff;
+            font-size: 18px;
+        }
+        
+        .screen-shake {
+            animation: screen-shake 0.5s ease-in-out;
+        }
+        
+        @keyframes screen-shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+        
+        .rainbow-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, #ff0000, #ff9900, #ffff00, #00ff00, #0099ff, #9900ff, #ff0000);
+            background-size: 600% 600%;
+            animation: rainbow-move 2s ease infinite;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: 1;
+        }
+        
+        @keyframes rainbow-move {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .chaos-portal {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 30%, #ff00ff 50%, transparent 70%);
+            animation: portal-spin 2s linear infinite;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        @keyframes portal-spin {
+            0% { transform: rotate(0deg) scale(0); }
+            50% { transform: rotate(180deg) scale(1); }
+            100% { transform: rotate(360deg) scale(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div class="rainbow-background" id="rainbow-bg"></div>
+        
+        <div id="chaos-meter">
+            <div id="chaos-fill"></div>
+        </div>
+        
+        <div id="chaos-level">CHAOS LEVEL: <span id="level-text">CALM</span></div>
+        
+        <div id="stats">
+            <div class="stat-line">Messages/sec: <span id="msg-rate">0</span></div>
+            <div class="stat-line">Chaos Events: <span id="chaos-events">0</span></div>
+            <div class="stat-line">Screen Shakes: <span id="shake-count">0</span></div>
+            <div class="stat-line">Max Chaos: <span id="max-chaos">0</span>%</div>
+        </div>
+        
+        <div id="message-feed">
+            <h4 style="margin-top: 0; color: #ff00ff;">💀 Chaos Feed</h4>
+            <div id="feed-content"></div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>💀 Chaos Mode - How to Play:</strong></div>
+            <div>Chat rapidly to increase chaos!</div>
+            <div>Higher chaos = more visual madness</div>
+            <div>Type <strong>!explode</strong> for explosions!</div>
+            <div>Type <strong>!glitch</strong> for glitch effects!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            chaosLevel: 0,
+            messagesPerSecond: 0,
+            chaosEvents: 0,
+            shakeCount: 0,
+            maxChaos: 0,
+            messageTimestamps: [],
+            activeElements: 0
+        };
+
+        const chaosLevels = [
+            { threshold: 0, name: 'CALM', color: '#00ff00' },
+            { threshold: 20, name: 'RESTLESS', color: '#88ff00' },
+            { threshold: 40, name: 'AGITATED', color: '#ffff00' },
+            { threshold: 60, name: 'CHAOTIC', color: '#ff9900' },
+            { threshold: 80, name: 'MAYHEM', color: '#ff0000' },
+            { threshold: 95, name: 'ABSOLUTE CHAOS', color: '#ff00ff' }
+        ];
+
+        // Get random position
+        function getRandomPosition() {
+            return {
+                x: Math.random() * (window.innerWidth - 100),
+                y: Math.random() * (window.innerHeight - 100)
+            };
+        }
+
+        // Get random color
+        function getRandomColor() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff9900', '#9900ff'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        // Create flying text effect
+        function createFlyingText(text, username) {
+            const element = document.createElement('div');
+            element.className = 'chaos-element chaos-text';
+            element.textContent = `${username}: ${text}`;
+            element.style.color = getRandomColor();
+            
+            const pos = getRandomPosition();
+            element.style.top = pos.y + 'px';
+            element.style.left = '-100px';
+            
+            // Random rotation and scaling
+            const rotation = Math.random() * 360;
+            const scale = 0.5 + Math.random() * 1;
+            element.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+            
+            document.getElementById('game-container').appendChild(element);
+            gameState.activeElements++;
+            
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    gameState.activeElements--;
+                }
+            }, 3000);
+        }
+
+        // Create emoji chaos
+        function createEmojiChaos(emoji) {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const element = document.createElement('div');
+                    element.className = 'chaos-element chaos-emoji';
+                    element.textContent = emoji;
+                    
+                    const pos = getRandomPosition();
+                    element.style.left = pos.x + 'px';
+                    element.style.top = pos.y + 'px';
+                    
+                    document.getElementById('game-container').appendChild(element);
+                    gameState.activeElements++;
+                    
+                    setTimeout(() => {
+                        if (element.parentNode) {
+                            element.parentNode.removeChild(element);
+                            gameState.activeElements--;
+                        }
+                    }, 2000);
+                }, i * 200);
+            }
+        }
+
+        // Create explosion effect
+        function createExplosion() {
+            const element = document.createElement('div');
+            element.className = 'chaos-element chaos-explosion';
+            
+            const pos = getRandomPosition();
+            element.style.left = pos.x + 'px';
+            element.style.top = pos.y + 'px';
+            
+            document.getElementById('game-container').appendChild(element);
+            gameState.chaosEvents++;
+            gameState.activeElements++;
+            
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    gameState.activeElements--;
+                }
+            }, 1000);
+        }
+
+        // Create wave effect
+        function createWave() {
+            const element = document.createElement('div');
+            element.className = 'chaos-element chaos-wave';
+            
+            const pos = getRandomPosition();
+            element.style.left = pos.x + 'px';
+            element.style.top = pos.y + 'px';
+            
+            document.getElementById('game-container').appendChild(element);
+            gameState.activeElements++;
+            
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    gameState.activeElements--;
+                }
+            }, 2000);
+        }
+
+        // Create glitch text
+        function createGlitchText(text) {
+            const element = document.createElement('div');
+            element.className = 'chaos-element chaos-glitch';
+            element.textContent = text.toUpperCase();
+            
+            const pos = getRandomPosition();
+            element.style.left = pos.x + 'px';
+            element.style.top = pos.y + 'px';
+            
+            document.getElementById('game-container').appendChild(element);
+            gameState.chaosEvents++;
+            gameState.activeElements++;
+            
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    gameState.activeElements--;
+                }
+            }, 2000);
+        }
+
+        // Create chaos portal
+        function createPortal() {
+            const element = document.createElement('div');
+            element.className = 'chaos-portal';
+            
+            const pos = getRandomPosition();
+            element.style.left = pos.x + 'px';
+            element.style.top = pos.y + 'px';
+            
+            document.getElementById('game-container').appendChild(element);
+            gameState.activeElements++;
+            
+            setTimeout(() => {
+                if (element.parentNode) {
+                    element.parentNode.removeChild(element);
+                    gameState.activeElements--;
+                }
+            }, 2000);
+        }
+
+        // Screen shake effect
+        function screenShake() {
+            document.getElementById('game-container').classList.add('screen-shake');
+            gameState.shakeCount++;
+            
+            setTimeout(() => {
+                document.getElementById('game-container').classList.remove('screen-shake');
+            }, 500);
+        }
+
+        // Update chaos level
+        function updateChaosLevel() {
+            const now = Date.now();
+            gameState.messageTimestamps = gameState.messageTimestamps.filter(t => now - t < 1000);
+            gameState.messagesPerSecond = gameState.messageTimestamps.length;
+            
+            // Calculate chaos level based on message rate and active elements
+            gameState.chaosLevel = Math.min(100, 
+                (gameState.messagesPerSecond * 5) + 
+                (gameState.activeElements * 2)
+            );
+            
+            if (gameState.chaosLevel > gameState.maxChaos) {
+                gameState.maxChaos = gameState.chaosLevel;
+            }
+            
+            // Update chaos meter
+            document.getElementById('chaos-fill').style.width = gameState.chaosLevel + '%';
+            
+            // Update chaos level text and color
+            let currentLevel = chaosLevels[0];
+            for (let level of chaosLevels) {
+                if (gameState.chaosLevel >= level.threshold) {
+                    currentLevel = level;
+                }
+            }
+            
+            const levelText = document.getElementById('level-text');
+            levelText.textContent = currentLevel.name;
+            levelText.style.color = currentLevel.color;
+            
+            // Rainbow background at high chaos
+            const rainbow = document.getElementById('rainbow-bg');
+            if (gameState.chaosLevel >= 80) {
+                rainbow.style.opacity = (gameState.chaosLevel - 80) / 20 * 0.3;
+            } else {
+                rainbow.style.opacity = 0;
+            }
+            
+            // Auto-effects based on chaos level
+            if (gameState.chaosLevel >= 90 && Math.random() < 0.1) {
+                screenShake();
+            }
+            
+            if (gameState.chaosLevel >= 70 && Math.random() < 0.05) {
+                createWave();
+            }
+            
+            if (gameState.chaosLevel >= 95 && Math.random() < 0.03) {
+                createPortal();
+            }
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('msg-rate').textContent = gameState.messagesPerSecond.toFixed(1);
+            document.getElementById('chaos-events').textContent = gameState.chaosEvents;
+            document.getElementById('shake-count').textContent = gameState.shakeCount;
+            document.getElementById('max-chaos').textContent = gameState.maxChaos.toFixed(0);
+        }
+
+        // Add message to feed
+        function addToFeed(username, message) {
+            const feed = document.getElementById('feed-content');
+            const item = document.createElement('div');
+            item.className = 'message-item';
+            item.innerHTML = `<strong>${username}:</strong> ${message}`;
+            
+            feed.insertBefore(item, feed.firstChild);
+            
+            // Keep feed manageable
+            while (feed.children.length > 20) {
+                feed.removeChild(feed.lastChild);
+            }
+        }
+
+        // Extract emojis from text
+        function extractEmojis(text) {
+            const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+            return text.match(emojiRegex) || [];
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const message = data.chatmessage.toLowerCase().trim();
+            const username = data.chatname;
+
+            // Track message for chaos calculation
+            gameState.messageTimestamps.push(Date.now());
+
+            // Add to feed
+            addToFeed(username, data.chatmessage);
+
+            // Check for special commands
+            if (message.includes('!explode')) {
+                createExplosion();
+                createFlyingText('BOOM!', username);
+            } else if (message.includes('!glitch')) {
+                createGlitchText(username + ' GLITCHED');
+            } else if (message.includes('!shake')) {
+                screenShake();
+            } else if (message.includes('!portal')) {
+                createPortal();
+            } else {
+                // Normal message processing
+                createFlyingText(data.chatmessage, username);
+                
+                // Check for emojis
+                const emojis = extractEmojis(data.chatmessage);
+                emojis.forEach(emoji => {
+                    createEmojiChaos(emoji);
+                });
+                
+                // Random chaos effects based on message rate
+                if (gameState.messagesPerSecond >= 10 && Math.random() < 0.2) {
+                    createExplosion();
+                }
+                
+                if (gameState.messagesPerSecond >= 5 && Math.random() < 0.1) {
+                    createWave();
+                }
+            }
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoMessages = [
+                'This is chaos!', '!explode', '!glitch', 'Amazing stream!', '💥💥💥',
+                'ABSOLUTE MAYHEM!', '!shake', 'Going crazy!', '🔥🔥🔥', '!portal'
+            ];
+            
+            setInterval(() => {
+                const message = demoMessages[Math.floor(Math.random() * demoMessages.length)];
+                processData({
+                    chatname: 'ChaosUser' + Math.floor(Math.random() * 5),
+                    chatmessage: message
+                });
+            }, 300 + Math.random() * 700);
+        }
+        
+        // Update chaos level periodically
+        setInterval(updateChaosLevel, 100);
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

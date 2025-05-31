@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Tower - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to bottom, #1e3c72 0%, #2a5298 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #tower-area {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: calc(100vh - 200px);
+        }
+        
+        .emoji-block {
+            position: absolute;
+            font-size: 48px;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.5s ease;
+            animation: wobble 2s ease-in-out infinite;
+        }
+        
+        @keyframes wobble {
+            0%, 100% { transform: rotate(-1deg); }
+            50% { transform: rotate(1deg); }
+        }
+        
+        .falling {
+            animation: fall 1s ease-in forwards;
+        }
+        
+        @keyframes fall {
+            from { transform: translateY(-100vh) rotate(0deg); }
+            to { transform: translateY(0) rotate(360deg); }
+        }
+        
+        #ground {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to bottom, #2ecc71 0%, #27ae60 100%);
+            border-top: 5px solid #229954;
+        }
+        
+        #current-emoji {
+            position: absolute;
+            top: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 80px;
+            text-shadow: 0 0 20px rgba(255,255,255,0.5);
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: translateX(-50%) scale(1); }
+            50% { transform: translateX(-50%) scale(1.1); }
+        }
+        
+        #height-indicator {
+            position: absolute;
+            left: 20px;
+            bottom: 120px;
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        #contributors {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            min-width: 250px;
+        }
+        
+        #contributors h3 {
+            margin-top: 0;
+            color: #FFD700;
+            text-align: center;
+        }
+        
+        .contributor-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 15px 30px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 16px;
+        }
+        
+        #instructions strong {
+            color: #FFD700;
+            font-size: 18px;
+        }
+        
+        .collapse-effect {
+            animation: collapse 1s ease-in forwards;
+        }
+        
+        @keyframes collapse {
+            0% { transform: translateY(0) rotate(0deg); }
+            100% { transform: translateY(200px) rotate(720deg); opacity: 0; }
+        }
+        
+        #combo-display {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: #FFD700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            display: none;
+        }
+        
+        .star-burst {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: radial-gradient(circle, #FFD700 0%, transparent 70%);
+            border-radius: 50%;
+            animation: starBurst 1s ease-out forwards;
+        }
+        
+        @keyframes starBurst {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(3) rotate(180deg); opacity: 0; }
+        }
+        
+        #wind-indicator {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .cloud {
+            position: absolute;
+            font-size: 48px;
+            opacity: 0.7;
+            animation: drift 20s linear infinite;
+        }
+        
+        @keyframes drift {
+            from { transform: translateX(-100px); }
+            to { transform: translateX(calc(100vw + 100px)); }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="wind-indicator">Wind: <span id="wind-strength">Calm</span></div>
+        <div id="current-emoji">🎯</div>
+        <div id="combo-display">COMBO x1</div>
+        
+        <div id="tower-area"></div>
+        
+        <div id="ground"></div>
+        
+        <div id="height-indicator">Height: 0m</div>
+        
+        <div id="contributors">
+            <h3>🏗️ Tower Builders</h3>
+            <div id="contributor-list"></div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🏗️ Emoji Tower Builder</strong></div>
+            <div>Type <b>!drop</b> to place the emoji!</div>
+            <div style="font-size: 14px; opacity: 0.8; margin-top: 5px;">
+                Work together to build the tallest tower!
+            </div>
+        </div>
+        
+        <!-- Background clouds -->
+        <div class="cloud" style="top: 100px; animation-delay: 0s;">☁️</div>
+        <div class="cloud" style="top: 200px; animation-delay: 5s;">☁️</div>
+        <div class="cloud" style="top: 150px; animation-delay: 10s;">☁️</div>
+    </div>
+    
+    <script>
+    // Game state
+    const emojis = ['😀', '😎', '🤖', '👻', '🦄', '🐸', '🐙', '🦋', '🌟', '🍕', '🍔', '🎈', '🎮', '💎', '🔥', '❄️', '🌈', '🎵', '🎸', '🏆'];
+    let currentEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+    let towerBlocks = [];
+    let towerHeight = 0;
+    let contributors = new Map();
+    let windStrength = 0;
+    let windDirection = 1;
+    let combo = 0;
+    let lastDropper = null;
+    let dropCooldown = false;
+    
+    // Physics settings
+    const BLOCK_SIZE = 60;
+    const GRAVITY = 0.5;
+    const MAX_TILT = 15; // degrees
+    
+    // URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session') || 'test';
+    const password = urlParams.get('password') || 'false';
+    
+    // Initialize
+    document.getElementById('current-emoji').textContent = currentEmoji;
+    
+    class EmojiBlock {
+        constructor(emoji, x, dropper) {
+            this.emoji = emoji;
+            this.x = x;
+            this.y = -100;
+            this.velocity = 0;
+            this.rotation = 0;
+            this.settled = false;
+            this.dropper = dropper;
+            this.element = this.createElement();
+        }
+        
+        createElement() {
+            const div = document.createElement('div');
+            div.className = 'emoji-block falling';
+            div.textContent = this.emoji;
+            div.style.left = this.x + 'px';
+            div.style.bottom = '100vh';
+            document.getElementById('tower-area').appendChild(div);
+            return div;
+        }
+        
+        update() {
+            if (this.settled) return;
+            
+            // Apply gravity
+            this.velocity += GRAVITY;
+            this.y += this.velocity;
+            
+            // Apply wind
+            this.x += windStrength * windDirection * 0.1;
+            
+            // Check collision with ground or other blocks
+            const groundY = 0;
+            let landingY = groundY;
+            
+            // Check collision with other blocks
+            for (const block of towerBlocks) {
+                if (block === this || !block.settled) continue;
+                
+                const blockTop = block.y + BLOCK_SIZE;
+                if (Math.abs(this.x - block.x) < BLOCK_SIZE * 0.8 && this.y <= blockTop) {
+                    landingY = Math.max(landingY, blockTop);
+                }
+            }
+            
+            if (this.y <= landingY) {
+                this.y = landingY;
+                this.velocity = 0;
+                this.settled = true;
+                this.element.classList.remove('falling');
+                
+                // Check if block is stable
+                if (!this.checkStability()) {
+                    this.topple();
+                }
+            }
+            
+            // Update visual position
+            this.element.style.bottom = (this.y + 100) + 'px';
+            this.element.style.left = this.x + 'px';
+            this.element.style.transform = `rotate(${this.rotation}deg)`;
+        }
+        
+        checkStability() {
+            // Check if block has enough support
+            let supportPoints = 0;
+            
+            for (const block of towerBlocks) {
+                if (block === this || !block.settled || block.y >= this.y) continue;
+                
+                const distance = Math.abs(this.x - block.x);
+                if (distance < BLOCK_SIZE * 0.6 && Math.abs(this.y - (block.y + BLOCK_SIZE)) < 5) {
+                    supportPoints++;
+                }
+            }
+            
+            return supportPoints > 0 || this.y === 0;
+        }
+        
+        topple() {
+            this.settled = false;
+            this.rotation = (Math.random() - 0.5) * 180;
+            this.velocity = -5;
+            
+            // Trigger tower collapse if this was a key block
+            const blocksAbove = towerBlocks.filter(b => b.y > this.y);
+            if (blocksAbove.length > 2) {
+                setTimeout(() => collapseTower(), 100);
+            }
+        }
+    }
+    
+    function dropEmoji(username) {
+        if (dropCooldown) {
+            sendResponse(`@${username}, wait a moment before dropping!`);
+            return;
+        }
+        
+        // Calculate drop position based on current emoji position
+        const currentEmojiElement = document.getElementById('current-emoji');
+        const rect = currentEmojiElement.getBoundingClientRect();
+        const towerArea = document.getElementById('tower-area').getBoundingClientRect();
+        const x = rect.left + rect.width / 2 - towerArea.left - BLOCK_SIZE / 2;
+        
+        // Create new block
+        const block = new EmojiBlock(currentEmoji, x, username);
+        towerBlocks.push(block);
+        
+        // Update contributor stats
+        contributors.set(username, (contributors.get(username) || 0) + 1);
+        updateContributors();
+        
+        // Check for combo
+        if (username === lastDropper) {
+            combo++;
+            if (combo > 1) {
+                showCombo(combo);
+            }
+        } else {
+            combo = 0;
+        }
+        lastDropper = username;
+        
+        // Set cooldown
+        dropCooldown = true;
+        setTimeout(() => dropCooldown = false, 1000);
+        
+        // Get new emoji
+        currentEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+        document.getElementById('current-emoji').textContent = currentEmoji;
+        
+        // Animate drop
+        animateCurrentEmoji();
+    }
+    
+    function animateCurrentEmoji() {
+        const element = document.getElementById('current-emoji');
+        element.style.animation = 'none';
+        setTimeout(() => {
+            element.style.animation = 'pulse 1s ease-in-out infinite';
+        }, 10);
+    }
+    
+    function updateTower() {
+        // Update all blocks
+        towerBlocks.forEach(block => block.update());
+        
+        // Remove blocks that fell off screen
+        towerBlocks = towerBlocks.filter(block => {
+            if (block.y < -500) {
+                block.element.remove();
+                return false;
+            }
+            return true;
+        });
+        
+        // Calculate tower height
+        let maxHeight = 0;
+        towerBlocks.forEach(block => {
+            if (block.settled && block.y > maxHeight) {
+                maxHeight = block.y;
+            }
+        });
+        
+        towerHeight = Math.floor(maxHeight / 10);
+        document.getElementById('height-indicator').textContent = `Height: ${towerHeight}m`;
+        
+        // Move current emoji horizontally
+        const currentEmojiElement = document.getElementById('current-emoji');
+        const currentX = parseFloat(currentEmojiElement.style.left || '50%');
+        const movement = Math.sin(Date.now() * 0.001) * 100;
+        currentEmojiElement.style.left = `calc(50% + ${movement}px)`;
+    }
+    
+    function updateWind() {
+        // Random wind changes
+        if (Math.random() < 0.02) {
+            windStrength = Math.random() * 3;
+            windDirection = Math.random() > 0.5 ? 1 : -1;
+            
+            const windNames = ['Calm', 'Light Breeze', 'Moderate Wind', 'Strong Wind'];
+            document.getElementById('wind-strength').textContent = windNames[Math.floor(windStrength)];
+        }
+    }
+    
+    function collapseTower() {
+        // Make all blocks fall
+        towerBlocks.forEach((block, index) => {
+            setTimeout(() => {
+                block.element.classList.add('collapse-effect');
+                setTimeout(() => block.element.remove(), 1000);
+            }, index * 50);
+        });
+        
+        // Show final height
+        sendResponse(`💥 Tower collapsed! Final height: ${towerHeight}m`);
+        
+        // Reset game after delay
+        setTimeout(() => {
+            towerBlocks = [];
+            towerHeight = 0;
+            combo = 0;
+            document.getElementById('tower-area').innerHTML = '';
+            sendResponse('🏗️ New tower started! Type !drop to build!');
+        }, 2000);
+    }
+    
+    function updateContributors() {
+        const list = document.getElementById('contributor-list');
+        list.innerHTML = '';
+        
+        const sorted = Array.from(contributors.entries())
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+        
+        sorted.forEach(([username, blocks]) => {
+            const div = document.createElement('div');
+            div.className = 'contributor-entry';
+            div.innerHTML = `
+                <span>${username}</span>
+                <span>${blocks} blocks</span>
+            `;
+            list.appendChild(div);
+        });
+    }
+    
+    function showCombo(count) {
+        const display = document.getElementById('combo-display');
+        display.textContent = `COMBO x${count}`;
+        display.style.display = 'block';
+        
+        // Create star burst effect
+        for (let i = 0; i < 5; i++) {
+            const star = document.createElement('div');
+            star.className = 'star-burst';
+            star.style.left = '50%';
+            star.style.top = '150px';
+            star.style.transform = `translateX(-50%) rotate(${i * 72}deg)`;
+            document.getElementById('game-container').appendChild(star);
+            setTimeout(() => star.remove(), 1000);
+        }
+        
+        setTimeout(() => {
+            display.style.display = 'none';
+        }, 2000);
+    }
+    
+    function sendResponse(message) {
+        const response = {
+            chatname: 'TowerBot',
+            chatmessage: message,
+            type: 'bot',
+            timestamp: Date.now()
+        };
+        
+        if (window.parent !== window) {
+            window.parent.postMessage({
+                overlay: 'emojitower',
+                response: response
+            }, '*');
+        }
+        
+        console.log('Bot response:', message);
+    }
+    
+    function processData(data) {
+        if (data.content) {
+            data = data.content;
+        }
+        
+        if (!data.chatmessage || !data.chatname) return;
+        
+        const message = data.chatmessage.trim().toLowerCase();
+        
+        if (message === '!drop') {
+            dropEmoji(data.chatname);
+        }
+    }
+    
+    // Game loop
+    setInterval(() => {
+        updateTower();
+        updateWind();
+    }, 1000 / 60); // 60 FPS
+    
+    // Setup iframe communication
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+    iframe.style.width = "0px";
+    iframe.style.height = "0px";
+    iframe.style.position = "fixed";
+    iframe.style.left = "-100px";
+    iframe.style.top = "-100px";
+    iframe.id = "frame1";
+    document.body.appendChild(iframe);
+    
+    window.addEventListener("message", function(e) {
+        if (e.source !== iframe.contentWindow) return;
+        
+        if ("dataReceived" in e.data) {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+    
+    // Handle WebSocket if server parameter provided
+    if (urlParams.has('server')) {
+        const socketserver = new WebSocket(urlParams.get('server'));
+        
+        socketserver.onopen = function() {
+            socketserver.send(JSON.stringify({ 
+                join: sessionId.split(",")[0], 
+                out: 2, 
+                in: 1 
+            }));
+        };
+        
+        socketserver.onmessage = function(event) {
+            if (event.data) {
+                try {
+                    const data = JSON.parse(event.data);
+                    processData(data);
+                } catch (e) {
+                    console.error('WebSocket parse error:', e);
+                }
+            }
+        };
+    }
+    
+    // Demo mode
+    if (urlParams.has('demo')) {
+        setInterval(() => {
+            if (Math.random() < 0.3) {
+                const demoUsers = ['Builder1', 'Builder2', 'Builder3'];
+                const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+                dropEmoji(user);
+            }
+        }, 3000);
+    }
+    </script>
+</body>
+</html>

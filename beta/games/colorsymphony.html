@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Symphony - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #0f0f23 0%, #000 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: #000000;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #symphony-stage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 70%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .color-wave {
+            position: absolute;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            animation: wave-flow 3s ease-out forwards;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        @keyframes wave-flow {
+            0% {
+                transform: translateX(-100%);
+                opacity: 1;
+                width: 50px;
+            }
+            50% {
+                opacity: 1;
+                width: 200px;
+            }
+            100% {
+                transform: translateX(100vw);
+                opacity: 0;
+                width: 50px;
+            }
+        }
+        
+        .color-burst {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: color-burst 2s ease-out forwards;
+        }
+        
+        @keyframes color-burst {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(15);
+                opacity: 0;
+            }
+        }
+        
+        .color-ripple {
+            position: absolute;
+            border: 3px solid;
+            border-radius: 50%;
+            animation: ripple-expand 2.5s ease-out forwards;
+        }
+        
+        @keyframes ripple-expand {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+            }
+            100% {
+                width: 300px;
+                height: 300px;
+                opacity: 0;
+            }
+        }
+        
+        .color-note {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            animation: note-float 4s ease-in-out infinite;
+            box-shadow: 0 0 20px currentColor;
+        }
+        
+        @keyframes note-float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-20px) rotate(90deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+            75% { transform: translateY(-30px) rotate(270deg); }
+        }
+        
+        #color-palette {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .palette-color {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            margin: 5px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: palette-pulse 2s ease-in-out infinite;
+        }
+        
+        .palette-active {
+            border-color: #fff !important;
+            box-shadow: 0 0 15px currentColor !important;
+            animation: palette-active 0.5s ease-out !important;
+        }
+        
+        @keyframes palette-active {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes palette-pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        #symphony-stats {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #harmony-meter {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #fff;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 100;
+        }
+        
+        #harmony-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff0000, #ff9900, #ffff00, #00ff00, #0099ff, #9900ff, #ff0000);
+            transition: width 0.5s ease;
+            animation: harmony-flow 3s linear infinite;
+        }
+        
+        @keyframes harmony-flow {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #ff69b4;
+            font-size: 18px;
+        }
+        
+        .composer-name {
+            position: absolute;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            animation: composer-fade 3s ease-out forwards;
+            z-index: 50;
+            pointer-events: none;
+        }
+        
+        @keyframes composer-fade {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            30% {
+                opacity: 1;
+                transform: translateY(0px);
+            }
+            70% {
+                opacity: 1;
+                transform: translateY(-10px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+        }
+        
+        .harmony-explosion {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 72px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 30px #ffd700;
+            z-index: 60;
+            pointer-events: none;
+            animation: harmony-burst 2s ease-out forwards;
+        }
+        
+        @keyframes harmony-burst {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+            }
+            50% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.2) rotate(180deg);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.8) rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="color-palette">
+            <h4 style="margin-top: 0; color: #ff69b4;">🎨 Active Colors</h4>
+            <div id="palette-display"></div>
+        </div>
+        
+        <div id="symphony-stats">
+            <div class="stat-line">Notes Played: <span id="notes-count">0</span></div>
+            <div class="stat-line">Composers: <span id="composers-count">0</span></div>
+            <div class="stat-line">Harmony Level: <span id="harmony-level">0</span>%</div>
+            <div class="stat-line">Color Diversity: <span id="color-diversity">0</span></div>
+        </div>
+        
+        <div id="symphony-stage"></div>
+        
+        <div id="harmony-meter">
+            <div id="harmony-fill"></div>
+        </div>
+        
+        <div id="instructions">
+            <div><strong>🎵 Color Symphony - How to Play:</strong></div>
+            <div>Type color names to create musical notes!</div>
+            <div><strong>red</strong>, <strong>blue</strong>, <strong>green</strong>, <strong>yellow</strong>, <strong>purple</strong>, <strong>orange</strong>, <strong>pink</strong></div>
+            <div>Combine colors for harmony effects!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            notesPlayed: 0,
+            composers: new Set(),
+            harmonyLevel: 0,
+            colorDiversity: 0,
+            activeColors: new Map(),
+            recentNotes: [],
+            harmonyStreak: 0
+        };
+
+        // Color definitions
+        const colors = {
+            red: { hex: '#ff0000', note: 'C', frequency: 261.63 },
+            orange: { hex: '#ff9900', note: 'D', frequency: 293.66 },
+            yellow: { hex: '#ffff00', note: 'E', frequency: 329.63 },
+            green: { hex: '#00ff00', note: 'F', frequency: 349.23 },
+            blue: { hex: '#0099ff', note: 'G', frequency: 392.00 },
+            purple: { hex: '#9900ff', note: 'A', frequency: 440.00 },
+            pink: { hex: '#ff69b4', note: 'B', frequency: 493.88 },
+            white: { hex: '#ffffff', note: 'C2', frequency: 523.25 },
+            black: { hex: '#000000', note: 'D2', frequency: 587.33 },
+            cyan: { hex: '#00ffff', note: 'E2', frequency: 659.25 }
+        };
+
+        // Harmony combinations
+        const harmonies = [
+            ['red', 'yellow', 'blue'],      // Primary colors
+            ['orange', 'green', 'purple'],   // Secondary colors
+            ['red', 'green'],               // Complementary
+            ['blue', 'orange'],             // Complementary
+            ['yellow', 'purple'],           // Complementary
+            ['pink', 'cyan'],               // Complementary
+            ['red', 'orange', 'yellow'],    // Warm colors
+            ['blue', 'green', 'purple'],    // Cool colors
+        ];
+
+        // Extract color names from text
+        function extractColors(text) {
+            const foundColors = [];
+            const words = text.toLowerCase().split(/\s+/);
+            
+            words.forEach(word => {
+                // Direct color matches
+                if (colors[word]) {
+                    foundColors.push(word);
+                }
+                // Color variations
+                else if (word.includes('red') && !foundColors.includes('red')) foundColors.push('red');
+                else if (word.includes('blue') && !foundColors.includes('blue')) foundColors.push('blue');
+                else if (word.includes('green') && !foundColors.includes('green')) foundColors.push('green');
+                else if (word.includes('yellow') && !foundColors.includes('yellow')) foundColors.push('yellow');
+                else if (word.includes('purple') && !foundColors.includes('purple')) foundColors.push('purple');
+                else if (word.includes('orange') && !foundColors.includes('orange')) foundColors.push('orange');
+                else if (word.includes('pink') && !foundColors.includes('pink')) foundColors.push('pink');
+                else if (word.includes('white') && !foundColors.includes('white')) foundColors.push('white');
+                else if (word.includes('black') && !foundColors.includes('black')) foundColors.push('black');
+                else if (word.includes('cyan') && !foundColors.includes('cyan')) foundColors.push('cyan');
+            });
+            
+            return foundColors;
+        }
+
+        // Create color wave
+        function createColorWave(color, username) {
+            const wave = document.createElement('div');
+            wave.className = 'color-wave';
+            wave.style.backgroundColor = colors[color].hex;
+            wave.style.top = Math.random() * 80 + '%';
+            wave.style.left = '0%';
+            
+            document.getElementById('symphony-stage').appendChild(wave);
+            
+            // Create composer name
+            const composer = document.createElement('div');
+            composer.className = 'composer-name';
+            composer.textContent = `${username} - ${colors[color].note}`;
+            composer.style.left = Math.random() * 70 + '%';
+            composer.style.top = Math.random() * 60 + 20 + '%';
+            composer.style.color = colors[color].hex;
+            
+            document.getElementById('symphony-stage').appendChild(composer);
+            
+            setTimeout(() => {
+                if (wave.parentNode) wave.remove();
+                if (composer.parentNode) composer.remove();
+            }, 3000);
+        }
+
+        // Create color burst
+        function createColorBurst(color) {
+            const burst = document.createElement('div');
+            burst.className = 'color-burst';
+            burst.style.backgroundColor = colors[color].hex;
+            burst.style.left = Math.random() * 90 + '%';
+            burst.style.top = Math.random() * 80 + '%';
+            
+            document.getElementById('symphony-stage').appendChild(burst);
+            
+            setTimeout(() => {
+                if (burst.parentNode) burst.remove();
+            }, 2000);
+        }
+
+        // Create color ripple
+        function createColorRipple(color) {
+            const ripple = document.createElement('div');
+            ripple.className = 'color-ripple';
+            ripple.style.borderColor = colors[color].hex;
+            ripple.style.left = Math.random() * 80 + '%';
+            ripple.style.top = Math.random() * 70 + '%';
+            
+            document.getElementById('symphony-stage').appendChild(ripple);
+            
+            setTimeout(() => {
+                if (ripple.parentNode) ripple.remove();
+            }, 2500);
+        }
+
+        // Create floating note
+        function createFloatingNote(color) {
+            const note = document.createElement('div');
+            note.className = 'color-note';
+            note.style.backgroundColor = colors[color].hex;
+            note.style.left = Math.random() * 85 + '%';
+            note.style.top = Math.random() * 75 + '%';
+            note.textContent = colors[color].note;
+            note.style.fontSize = '14px';
+            note.style.display = 'flex';
+            note.style.alignItems = 'center';
+            note.style.justifyContent = 'center';
+            note.style.color = color === 'yellow' || color === 'white' || color === 'cyan' ? '#000' : '#fff';
+            note.style.fontWeight = 'bold';
+            
+            document.getElementById('symphony-stage').appendChild(note);
+            
+            setTimeout(() => {
+                if (note.parentNode) note.remove();
+            }, 4000);
+        }
+
+        // Check for harmony
+        function checkHarmony(newColors) {
+            gameState.recentNotes.push(...newColors);
+            gameState.recentNotes = gameState.recentNotes.slice(-6); // Keep last 6 notes
+            
+            for (let harmony of harmonies) {
+                const hasHarmony = harmony.every(color => gameState.recentNotes.includes(color));
+                if (hasHarmony) {
+                    gameState.harmonyStreak++;
+                    createHarmonyExplosion(harmony);
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+
+        // Create harmony explosion
+        function createHarmonyExplosion(harmonyColors) {
+            const explosion = document.createElement('div');
+            explosion.className = 'harmony-explosion';
+            explosion.textContent = '🎵 HARMONY! 🎵';
+            
+            document.getElementById('game-container').appendChild(explosion);
+            
+            // Create multiple ripples for harmony
+            harmonyColors.forEach((color, index) => {
+                setTimeout(() => {
+                    createColorRipple(color);
+                    createColorBurst(color);
+                }, index * 200);
+            });
+            
+            setTimeout(() => explosion.remove(), 2000);
+        }
+
+        // Update color palette display
+        function updatePalette() {
+            const paletteDisplay = document.getElementById('palette-display');
+            paletteDisplay.innerHTML = '';
+            
+            Array.from(gameState.activeColors.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8)
+                .forEach(([color, count]) => {
+                    const colorDiv = document.createElement('div');
+                    colorDiv.className = 'palette-color';
+                    colorDiv.style.backgroundColor = colors[color].hex;
+                    colorDiv.title = `${color}: ${count} notes`;
+                    paletteDisplay.appendChild(colorDiv);
+                    
+                    // Brief activation animation
+                    if (count === gameState.activeColors.get(color)) {
+                        colorDiv.classList.add('palette-active');
+                        setTimeout(() => colorDiv.classList.remove('palette-active'), 500);
+                    }
+                });
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('notes-count').textContent = gameState.notesPlayed;
+            document.getElementById('composers-count').textContent = gameState.composers.size;
+            document.getElementById('harmony-level').textContent = Math.floor(gameState.harmonyLevel);
+            document.getElementById('color-diversity').textContent = gameState.activeColors.size;
+            
+            // Update harmony meter
+            document.getElementById('harmony-fill').style.width = gameState.harmonyLevel + '%';
+            
+            updatePalette();
+        }
+
+        // Calculate harmony level
+        function calculateHarmony() {
+            const colorCount = gameState.activeColors.size;
+            const recentHarmony = gameState.harmonyStreak * 10;
+            const diversity = Math.min(colorCount * 5, 50);
+            
+            gameState.harmonyLevel = Math.min(100, diversity + recentHarmony);
+            gameState.colorDiversity = colorCount;
+            
+            // Decay harmony over time
+            if (gameState.harmonyStreak > 0) {
+                gameState.harmonyStreak *= 0.98;
+            }
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const username = data.chatname;
+            const foundColors = extractColors(data.chatmessage);
+            
+            if (foundColors.length === 0) return;
+
+            gameState.composers.add(username);
+            
+            foundColors.forEach(color => {
+                gameState.notesPlayed++;
+                
+                // Track color usage
+                const currentCount = gameState.activeColors.get(color) || 0;
+                gameState.activeColors.set(color, currentCount + 1);
+                
+                // Create visual effects
+                createColorWave(color, username);
+                createFloatingNote(color);
+                
+                if (Math.random() < 0.3) {
+                    createColorBurst(color);
+                }
+            });
+
+            // Check for harmony
+            if (foundColors.length > 1 || Math.random() < 0.2) {
+                checkHarmony(foundColors);
+            }
+
+            calculateHarmony();
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoColors = Object.keys(colors);
+            const demoUsers = ['Artist1', 'Painter2', 'Composer3', 'Creator4', 'Designer5'];
+            
+            setInterval(() => {
+                const numColors = Math.floor(Math.random() * 3) + 1;
+                const selectedColors = [];
+                
+                for (let i = 0; i < numColors; i++) {
+                    selectedColors.push(demoColors[Math.floor(Math.random() * demoColors.length)]);
+                }
+                
+                const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+                
+                processData({
+                    chatname: user,
+                    chatmessage: selectedColors.join(' ')
+                });
+            }, 1000 + Math.random() * 2000);
+        }
+        
+        // Update harmony periodically
+        setInterval(calculateHarmony, 1000);
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>

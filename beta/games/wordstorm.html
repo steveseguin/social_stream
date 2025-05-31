@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Storm - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #0c0c0c 0%, #1a1a2e 50%, #16213e 100%);
+            overflow: hidden;
+            font-family: 'Arial', sans-serif;
+            color: white;
+        }
+        
+        body.chroma {
+            background: #00ff00;
+        }
+        
+        body.darkmode {
+            background: #000000;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+        
+        #word-cloud {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            height: 70%;
+            perspective: 1000px;
+        }
+        
+        .word-bubble {
+            position: absolute;
+            padding: 8px 16px;
+            border-radius: 25px;
+            font-weight: bold;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: float 4s ease-in-out infinite;
+            user-select: none;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        
+        .word-bubble:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        
+        .word-size-1 { font-size: 16px; }
+        .word-size-2 { font-size: 20px; }
+        .word-size-3 { font-size: 24px; }
+        .word-size-4 { font-size: 32px; }
+        .word-size-5 { font-size: 40px; }
+        .word-size-6 { font-size: 48px; }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(1deg); }
+            50% { transform: translateY(-5px) rotate(-1deg); }
+            75% { transform: translateY(-15px) rotate(1deg); }
+        }
+        
+        .word-new {
+            animation: word-spawn 0.8s ease-out;
+        }
+        
+        @keyframes word-spawn {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+            }
+            50% {
+                opacity: 0.8;
+                transform: scale(1.2) rotate(90deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+        
+        .word-popular {
+            animation: word-pulse 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+        }
+        
+        @keyframes word-pulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.6); }
+            50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.9); }
+        }
+        
+        #stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .stat-line {
+            margin: 5px 0;
+            font-size: 16px;
+        }
+        
+        #trending {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 250px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+        }
+        
+        .trending-word {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 8px 0;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        
+        .trending-rank {
+            font-weight: bold;
+            color: #ffd700;
+            margin-right: 10px;
+        }
+        
+        #word-storm-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #ffd700;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            z-index: 50;
+            pointer-events: none;
+            animation: storm-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes storm-pulse {
+            0%, 100% { 
+                transform: translate(-50%, -50%) scale(1);
+                text-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            }
+            50% { 
+                transform: translate(-50%, -50%) scale(1.1);
+                text-shadow: 0 0 50px rgba(255, 215, 0, 1);
+            }
+        }
+        
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 16px;
+            z-index: 100;
+        }
+        
+        #instructions strong {
+            color: #ffd700;
+            font-size: 18px;
+        }
+        
+        .connection-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.6), transparent);
+            animation: connection-fade 2s ease-in-out;
+            z-index: 5;
+            pointer-events: none;
+        }
+        
+        @keyframes connection-fade {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        
+        .word-combo {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 64px;
+            font-weight: bold;
+            color: #ff6b7a;
+            text-shadow: 0 0 40px rgba(255, 107, 122, 0.8);
+            z-index: 60;
+            pointer-events: none;
+            animation: combo-explosion 2s ease-out forwards;
+        }
+        
+        @keyframes combo-explosion {
+            0% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0) rotate(0deg);
+            }
+            30% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.3) rotate(180deg);
+            }
+            70% { 
+                opacity: 1; 
+                transform: translate(-50%, -50%) scale(1.1) rotate(360deg);
+            }
+            100% { 
+                opacity: 0; 
+                transform: translate(-50%, -50%) scale(0.8) rotate(540deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="stats">
+            <div class="stat-line">Active Words: <span id="word-count">0</span></div>
+            <div class="stat-line">Popular Words: <span id="popular-count">0</span></div>
+            <div class="stat-line">Word Combos: <span id="combo-count">0</span></div>
+            <div class="stat-line">Storm Level: <span id="storm-level">Calm</span></div>
+        </div>
+        
+        <div id="trending">
+            <h4 style="margin-top: 0; color: #ffd700;">🔥 Trending Words</h4>
+            <div id="trending-list"></div>
+        </div>
+        
+        <div id="word-cloud"></div>
+        
+        <div id="word-storm-center">⚡ WORD STORM ⚡</div>
+        
+        <div id="instructions">
+            <div><strong>🌪️ Word Storm - How to Play:</strong></div>
+            <div>Chat any words to add them to the storm!</div>
+            <div>Popular words grow larger and glow</div>
+            <div>Similar words create combos!</div>
+            <div>Click words to make them explode!</div>
+        </div>
+    </div>
+
+    <script>
+        // URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || urlParams.get('room') || 'test';
+        const password = urlParams.get('password') || 'false';
+
+        // Apply theme settings
+        if (urlParams.has('chroma')) {
+            document.body.classList.add('chroma');
+        } else if (urlParams.has('darkmode')) {
+            document.body.classList.add('darkmode');
+        }
+
+        // Game state
+        let gameState = {
+            words: new Map(),
+            activeWords: [],
+            totalWords: 0,
+            popularWords: 0,
+            comboCount: 0,
+            stormLevel: 0,
+            lastCleanup: Date.now()
+        };
+
+        const stormLevels = [
+            { threshold: 0, name: 'Calm', intensity: 0 },
+            { threshold: 10, name: 'Breeze', intensity: 1 },
+            { threshold: 25, name: 'Windy', intensity: 2 },
+            { threshold: 50, name: 'Strong', intensity: 3 },
+            { threshold: 100, name: 'Storm', intensity: 4 },
+            { threshold: 200, name: 'HURRICANE', intensity: 5 }
+        ];
+
+        // Common words to filter out
+        const commonWords = new Set([
+            'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+            'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+            'will', 'would', 'could', 'should', 'may', 'might', 'can', 'shall', 'must',
+            'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them',
+            'my', 'your', 'his', 'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those'
+        ]);
+
+        // Extract meaningful words from text
+        function extractWords(text) {
+            return text.toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter(word => 
+                    word.length > 2 && 
+                    word.length < 20 && 
+                    !commonWords.has(word) &&
+                    !/^\d+$/.test(word)
+                );
+        }
+
+        // Get word color based on frequency
+        function getWordColor(frequency) {
+            if (frequency >= 10) return 'linear-gradient(45deg, #ff6b7a, #ff9ff3)';
+            if (frequency >= 7) return 'linear-gradient(45deg, #ffd700, #ffed4a)';
+            if (frequency >= 5) return 'linear-gradient(45deg, #5dade2, #85c1e9)';
+            if (frequency >= 3) return 'linear-gradient(45deg, #58d68d, #82e0aa)';
+            if (frequency >= 2) return 'linear-gradient(45deg, #f7dc6f, #f9e79f)';
+            return 'linear-gradient(45deg, #aeb6bf, #d5dbdb)';
+        }
+
+        // Get word size class based on frequency
+        function getWordSize(frequency) {
+            if (frequency >= 10) return 'word-size-6';
+            if (frequency >= 7) return 'word-size-5';
+            if (frequency >= 5) return 'word-size-4';
+            if (frequency >= 3) return 'word-size-3';
+            if (frequency >= 2) return 'word-size-2';
+            return 'word-size-1';
+        }
+
+        // Create or update word bubble
+        function createWordBubble(word, frequency) {
+            const wordCloud = document.getElementById('word-cloud');
+            let bubble = document.getElementById(`word-${word}`);
+            
+            if (!bubble) {
+                bubble = document.createElement('div');
+                bubble.className = 'word-bubble word-new';
+                bubble.id = `word-${word}`;
+                bubble.textContent = word;
+                
+                // Random position
+                const x = Math.random() * 80;
+                const y = Math.random() * 80;
+                bubble.style.left = x + '%';
+                bubble.style.top = y + '%';
+                
+                // Random animation delay
+                bubble.style.animationDelay = Math.random() * 4 + 's';
+                
+                // Click handler
+                bubble.addEventListener('click', () => explodeWord(word));
+                
+                wordCloud.appendChild(bubble);
+                gameState.activeWords.push(word);
+                
+                setTimeout(() => {
+                    bubble.classList.remove('word-new');
+                }, 800);
+            }
+            
+            // Update appearance based on frequency
+            bubble.style.background = getWordColor(frequency);
+            bubble.className = `word-bubble ${getWordSize(frequency)}`;
+            
+            if (frequency >= 5) {
+                bubble.classList.add('word-popular');
+            }
+            
+            return bubble;
+        }
+
+        // Explode word when clicked
+        function explodeWord(word) {
+            const bubble = document.getElementById(`word-${word}`);
+            if (!bubble) return;
+            
+            // Create explosion effect
+            const explosion = document.createElement('div');
+            explosion.textContent = '💥';
+            explosion.style.position = 'absolute';
+            explosion.style.fontSize = '48px';
+            explosion.style.left = bubble.style.left;
+            explosion.style.top = bubble.style.top;
+            explosion.style.animation = 'word-spawn 1s ease-out';
+            explosion.style.pointerEvents = 'none';
+            explosion.style.zIndex = '100';
+            
+            document.getElementById('word-cloud').appendChild(explosion);
+            
+            // Remove word
+            bubble.remove();
+            gameState.words.delete(word);
+            gameState.activeWords = gameState.activeWords.filter(w => w !== word);
+            
+            setTimeout(() => explosion.remove(), 1000);
+            updateDisplay();
+        }
+
+        // Create connection line between similar words
+        function createConnection(word1, word2) {
+            const bubble1 = document.getElementById(`word-${word1}`);
+            const bubble2 = document.getElementById(`word-${word2}`);
+            
+            if (!bubble1 || !bubble2) return;
+            
+            const rect1 = bubble1.getBoundingClientRect();
+            const rect2 = bubble2.getBoundingClientRect();
+            const cloudRect = document.getElementById('word-cloud').getBoundingClientRect();
+            
+            const x1 = rect1.left + rect1.width / 2 - cloudRect.left;
+            const y1 = rect1.top + rect1.height / 2 - cloudRect.top;
+            const x2 = rect2.left + rect2.width / 2 - cloudRect.left;
+            const y2 = rect2.top + rect2.height / 2 - cloudRect.top;
+            
+            const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+            const angle = Math.atan2(y2 - y1, x2 - x1) * 180 / Math.PI;
+            
+            const line = document.createElement('div');
+            line.className = 'connection-line';
+            line.style.width = length + 'px';
+            line.style.left = x1 + 'px';
+            line.style.top = y1 + 'px';
+            line.style.transform = `rotate(${angle}deg)`;
+            line.style.transformOrigin = '0 50%';
+            
+            document.getElementById('word-cloud').appendChild(line);
+            
+            setTimeout(() => line.remove(), 2000);
+        }
+
+        // Check for word combos
+        function checkCombos(newWord) {
+            const similarWords = gameState.activeWords.filter(word => {
+                if (word === newWord) return false;
+                
+                // Check for similar words (simple similarity)
+                if (word.includes(newWord) || newWord.includes(word)) return true;
+                if (word.length > 3 && newWord.length > 3) {
+                    const common = word.split('').filter(char => newWord.includes(char)).length;
+                    return common >= Math.min(word.length, newWord.length) * 0.6;
+                }
+                
+                return false;
+            });
+            
+            if (similarWords.length > 0) {
+                gameState.comboCount++;
+                
+                // Create combo effect
+                const combo = document.createElement('div');
+                combo.className = 'word-combo';
+                combo.textContent = `${similarWords.length + 1}x COMBO!`;
+                document.getElementById('game-container').appendChild(combo);
+                
+                // Create connections
+                similarWords.forEach(word => {
+                    createConnection(newWord, word);
+                });
+                
+                setTimeout(() => combo.remove(), 2000);
+            }
+        }
+
+        // Update trending words
+        function updateTrending() {
+            const trending = Array.from(gameState.words.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+            
+            const trendingList = document.getElementById('trending-list');
+            trendingList.innerHTML = '';
+            
+            trending.forEach(([word, count], index) => {
+                const item = document.createElement('div');
+                item.className = 'trending-word';
+                item.innerHTML = `
+                    <span><span class="trending-rank">#${index + 1}</span>${word}</span>
+                    <span>${count}</span>
+                `;
+                trendingList.appendChild(item);
+            });
+        }
+
+        // Update display
+        function updateDisplay() {
+            document.getElementById('word-count').textContent = gameState.activeWords.length;
+            document.getElementById('popular-count').textContent = 
+                Array.from(gameState.words.values()).filter(count => count >= 5).length;
+            document.getElementById('combo-count').textContent = gameState.comboCount;
+            
+            // Update storm level
+            const totalActivity = Array.from(gameState.words.values()).reduce((sum, count) => sum + count, 0);
+            let currentLevel = stormLevels[0];
+            for (let level of stormLevels) {
+                if (totalActivity >= level.threshold) {
+                    currentLevel = level;
+                }
+            }
+            
+            document.getElementById('storm-level').textContent = currentLevel.name;
+            
+            // Update storm center based on intensity
+            const stormCenter = document.getElementById('word-storm-center');
+            stormCenter.style.fontSize = (48 + currentLevel.intensity * 8) + 'px';
+            
+            updateTrending();
+        }
+
+        // Cleanup old words
+        function cleanupWords() {
+            const now = Date.now();
+            if (now - gameState.lastCleanup < 30000) return; // Cleanup every 30 seconds
+            
+            gameState.lastCleanup = now;
+            
+            // Remove words that haven't been mentioned recently
+            const wordsToRemove = [];
+            gameState.words.forEach((count, word) => {
+                if (count === 1 && Math.random() < 0.3) { // 30% chance to remove single-use words
+                    wordsToRemove.push(word);
+                }
+            });
+            
+            wordsToRemove.forEach(word => {
+                const bubble = document.getElementById(`word-${word}`);
+                if (bubble) {
+                    bubble.style.animation = 'word-spawn 0.5s ease-in reverse';
+                    setTimeout(() => {
+                        bubble.remove();
+                        gameState.words.delete(word);
+                        gameState.activeWords = gameState.activeWords.filter(w => w !== word);
+                        updateDisplay();
+                    }, 500);
+                }
+            });
+        }
+
+        // Process incoming message
+        function processData(data) {
+            // Handle different data formats from Social Stream
+            if (data && data.content) {
+                data = data.content;
+            }
+            
+            if (!data || !data.chatmessage || !data.chatname) return;
+
+            const words = extractWords(data.chatmessage);
+            if (words.length === 0) return;
+
+            words.forEach(word => {
+                const currentCount = gameState.words.get(word) || 0;
+                const newCount = currentCount + 1;
+                gameState.words.set(word, newCount);
+                
+                const bubble = createWordBubble(word, newCount);
+                
+                // Check for combos on new words
+                if (currentCount === 0) {
+                    checkCombos(word);
+                }
+                
+                gameState.totalWords++;
+            });
+
+            updateDisplay();
+        }
+
+        // Setup iframe communication
+        const iframe = document.createElement("iframe");
+        iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${sessionId}&novideo&noaudio&label=dock&cleanoutput&room=${sessionId}`;
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+        
+        // Listen for messages
+        window.addEventListener("message", function(e) {
+            if (e.source !== iframe.contentWindow) return;
+            
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+        
+        // Handle WebSocket connection
+        if (urlParams.has('server')) {
+            const socketserver = new WebSocket(urlParams.get('server'));
+            
+            socketserver.onopen = function() {
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    out: 2, 
+                    in: 1 
+                }));
+            };
+            
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+        }
+        
+        // Demo mode
+        if (urlParams.has('demo')) {
+            const demoWords = [
+                'amazing', 'awesome', 'incredible', 'fantastic', 'wonderful', 'brilliant', 'epic', 'legendary',
+                'stream', 'chat', 'game', 'fun', 'play', 'win', 'victory', 'challenge', 'adventure',
+                'storm', 'power', 'energy', 'magic', 'spell', 'wizard', 'dragon', 'quest', 'hero'
+            ];
+            
+            setInterval(() => {
+                const numWords = Math.floor(Math.random() * 3) + 1;
+                const selectedWords = [];
+                
+                for (let i = 0; i < numWords; i++) {
+                    selectedWords.push(demoWords[Math.floor(Math.random() * demoWords.length)]);
+                }
+                
+                processData({
+                    chatname: 'DemoUser',
+                    chatmessage: selectedWords.join(' ')
+                });
+            }, 1000 + Math.random() * 2000);
+        }
+        
+        // Periodic cleanup
+        setInterval(cleanupWords, 5000);
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
