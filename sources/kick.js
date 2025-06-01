@@ -667,11 +667,7 @@
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
 			if (e && ele){
-<<<<<<< HEAD
 				ele.dataset.mid = e?.id;
-=======
-				ele.dataset.mid = e.id;
->>>>>>> 92bddbc8 (fix for delete yt/kick)
 			}
 		});
 	  } catch(e){
