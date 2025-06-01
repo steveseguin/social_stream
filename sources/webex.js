@@ -1,5 +1,7 @@
 (function () {
-	const messageHistory = new Set();
+	
+	var isExtensionOn = true;
+const messageHistory = new Set();
 	var lastName = "";
 	var lastchatimg = "";
 	var newest = 0;

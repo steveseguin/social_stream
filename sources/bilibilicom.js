@@ -1,6 +1,8 @@
 (function () {
 	 
-	async function toDataURL(url) {
+	
+	var isExtensionOn = true;
+async function toDataURL(url) {
 	  return new Promise((resolve, reject) => {
 		const xhr = new XMLHttpRequest();
 		xhr.onload = function() {

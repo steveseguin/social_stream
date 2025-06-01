@@ -78,7 +78,9 @@
 
 (function () {
 
-	var lastMessage = {};
+	
+	var isExtensionOn = true;
+var lastMessage = {};
 	var lastName = "";
 	var lastImage = "";
 	var messageHistory = [];

@@ -1,6 +1,8 @@
 (function () {
 	
-	window.addEventListener('unhandledrejection', (event) => {
+	
+	var isExtensionOn = true;
+window.addEventListener('unhandledrejection', (event) => {
 	  console.error('Unhandled promise rejection:', event.reason);
 	});
 	 

@@ -1,5 +1,7 @@
 (function() {
-	function pushMessage(data) {
+	
+	var isExtensionOn = true;
+function pushMessage(data) {
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				"message": data
