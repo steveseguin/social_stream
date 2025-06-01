@@ -6,531 +6,7 @@
     <meta content="utf-8" http-equiv="encoding" />
     <title>Social Stream - YouTube</title>
     <link rel="icon" href="https://www.youtube.com/favicon.ico" type="image/x-icon">
-    <style>
-        .hidden { display: none!important; }
-		html {
-			height: 100%;
-		}
-		body {
-			background-color: #ddd;
-			font-size: 14px;
-			margin: 0;
-			padding: 0;
-			height: 100vh;
-			overflow: hidden;
-		}
-        .auth-button, .sign-out-button, .connect-button {
-            background-color: #FF0000;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-decoration: none;
-            font-size: 14px;
-            transition: background-color 0.3s;
-        }
-        .auth-button:hover, .connect-button:hover {
-            background-color: #D30000;
-        }
-        .sign-out-button {
-            background-color: #f44336;
-        }
-        .sign-out-button:hover {
-            background-color: #d32f2f;
-        }
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr;
-        }
-        
-        /* When logged in, switch to two-column layout */
-        body:has(.socket:not(.hidden)) .container {
-            grid-template-columns: 1fr 300px;
-        }
-		.socket > div {
-			margin: 5px;
-		}
-		.main-content {
-			display: flex;
-			flex-direction: column;
-			gap: 15px;
-			height: 100%;
-			overflow-y: auto;
-		}
-        .chat-badge {
-            margin-right: 2px;
-            vertical-align: middle;
-            height: 18px;
-            width: auto;
-        }
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        .text-center { text-align: center; }
-        
-        /* Header styles */
-        .channel-header {
-            background: white;
-            padding: 12px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        .header-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-grow: 1;
-        }
-        .header-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .header-item span:first-child {
-            font-weight: bold;
-            color: #FF0000;
-        }
-        
-        /* Channel input */
-        .channel-input-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .channel-input {
-            padding: 8px;
-            font-size: 14px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            width: 150px;
-        }
-        
-        /* Stats grid */
-        .stats-container {
-            background: white;
-            padding: 12px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .stats-container h3 {
-            margin: 0 0 10px 0;
-            font-size: 16px;
-        }
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-        }
-        .stat-box {
-            background: #f8f9fa;
-            padding: 8px;
-            border-radius: 4px;
-            text-align: center;
-        }
-        .stat-value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #FF0000;
-        }
-        .stat-label {
-            font-size: 12px;
-            color: #666;
-            margin-top: 2px;
-        }
-		.container {
-			max-width: 1200px;
-			margin: 0 auto;
-			display: grid;
-			grid-template-columns: 1fr;
-			height: calc(100vh);
-		}
-		.chat-container h3 {
-			margin: 0 0 10px 0;
-			font-size: 16px;
-		}
-		#textarea {
-			flex-grow: 1;
-			min-height: 100px;
-			height: calc(100% - 80px);
-			overflow-y: auto;
-			margin-bottom: 10px;
-		}
-        .chat-input {
-            display: flex;
-            gap: 8px;
-        }
-        .chat-input input {
-            flex-grow: 1;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-        }
-        
-        /* Sidebar components */
-        .permissions-container,
-        .recent-events {
-            background: white;
-            padding: 12px;
-            border-radius: 4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        #permissions-info:empty {
-            display: none!important;
-        }
-        .permissions-header {
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 8px;
-            color: #FF0000;
-        }
-        .permission-item {
-            padding: 4px 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-        .recent-events h4 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
-        }
-        .event-item {
-            padding: 6px 0;
-            border-bottom: 1px solid #eee;
-            font-size: 13px;
-        }
-        #textarea div {
-            padding-bottom: 4px;
-        }
-		.chat-container {
-			background: white;
-			border-radius: 4px;
-			padding: 12px;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-			flex-grow: 1;
-			display: flex;
-			flex-direction: column;
-		}
-		.chat-container h3 {
-			margin: 0 0 10px 0;
-			font-size: 16px;
-		}
-		#textarea {
-			flex-grow: 1;
-			height: 400px;
-			max-height: 400px;
-			overflow-y: auto;
-			margin-bottom: 10px;
-		}
-		.header-avatar {
-			width: 32px;
-			height: 32px;
-			border-radius: 50%;
-			margin-right: 8px;
-		}
-		.user-info {
-			display: flex;
-			align-items: center;
-		}
-		.user-info-text {
-			margin-right: 12px;
-		}
-		
-		
-		/* Header styles - updated */
-		.channel-header {
-			background: white;
-			padding: 12px;
-			border-radius: 4px;
-			box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-			display: flex;
-			flex-direction: column;
-			gap: 10px;
-		}
-
-		/* Separate top row with user info and sign-out button */
-		.header-top {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			width: 100%;
-		}
-		
-		.chat-emoji {
-		  height: 1.2em;
-		  width: auto;
-		  vertical-align: middle;
-		  margin: 0 0.05em;
-		}
-		
-		.regular-emote {
-		  height: 1.5em;
-		  width: auto;
-		  vertical-align: middle;
-		  margin: 0 0.1em;
-		}
-		
-		.zero-width-emote-centered {
-		  position: absolute;
-		  height: 1.5em;
-		  width: auto;
-		  transform: translate(-50%, -50%);
-		  pointer-events: none;
-		}
-
-		/* User info styling */
-		.user-info {
-			display: flex;
-			align-items: center;
-		}
-
-		.header-info {
-			display: flex;
-			flex-wrap: wrap;
-			align-items: center;
-			gap: 15px;
-			width: 100%;
-		}
-
-		/* Style for the header items to handle overflow */
-		.header-item {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			min-width: 0;
-		}
-
-		/* Target section with overflow handling */
-		.header-target {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			overflow: hidden;
-			max-width: 100%;
-		}
-
-		.header-target span:first-child {
-			font-weight: bold;
-			color: #FF0000;
-			white-space: nowrap;
-		}
-
-		.target-text {
-			white-space: nowrap;
-			overflow: hidden;
-			text-overflow: ellipsis;
-		}
-
-		.header-item span:first-child {
-			font-weight: bold;
-			color: #FF0000;
-			white-space: nowrap;
-		}
-
-		/* Bottom row with channel input */
-		.header-bottom {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			width: 100%;
-		}
-
-		/* Channel input container */
-		.channel-input-container {
-			display: flex;
-			flex-wrap: wrap;
-			align-items: center;
-			gap: 8px;
-			flex: 1;
-		}
-
-		.channel-input {
-			padding: 8px;
-			font-size: 14px;
-			border: 1px solid #ddd;
-			border-radius: 4px;
-			flex: 1;
-			min-width: 120px;
-		}
-
-		/* Responsive adjustments */
-		@media (max-width: 768px) {
-			.header-info {
-				flex-direction: column;
-				align-items: flex-start;
-			}
-			
-			.channel-input-container {
-				margin-top: 10px;
-				width: 100%;
-			}
-		}
-		
-		@media (max-height: 800px) {
-			#textarea {
-				max-height: calc(100vh - 370px);
-			}
-		
-		}
-		@media (max-height: 600px) {
-			#textarea {
-				max-height: calc(100vh - 200px);
-			}
-		
-		}
-		@media (max-height: 600px) {
-			.chat-header, .stats-container {
-				display:none!important;
-			}
-
-		}
-		stats-container
-		
-		.poll-spinner-container {
-			display: inline-flex;
-			align-items: center;
-			margin-left: 10px;
-			font-size: 12px;
-			color: #666;
-		}
-
-		.poll-spinner {
-			width: 16px;
-			height: 16px;
-			border-radius: 50%;
-			border: 2px solid rgba(255, 0, 0, 0.1);
-			border-top-color: #FF0000;
-			margin-right: 5px;
-			transform-origin: center;
-			animation-name: spinner-rotation;
-			animation-timing-function: ease-in-out;
-			animation-iteration-count: infinite;
-		}
-
-		@keyframes spinner-rotation {
-			0% {
-				transform: rotate(0deg);
-			}
-			100% {
-				transform: rotate(360deg);
-			}
-		}
-
-		.chat-header {
-			display: flex;
-			align-items: center;
-			justify-content: space-between;
-			margin: 0 0 10px 0;
-		}
-		
-		/* Landing page styles */
-		.landing-container {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			min-height: 400px;
-			padding: 40px 20px;
-			background: white;
-			border-radius: 8px;
-			box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-			margin: 20px auto;
-			max-width: 600px;
-		}
-		
-		.youtube-logo {
-			width: 80px;
-			height: 56px;
-			margin-bottom: 20px;
-			background: url('../images/youtube.png') center/contain no-repeat;
-		}
-		
-		.landing-title {
-			font-size: 24px;
-			font-weight: bold;
-			margin-bottom: 10px;
-			color: #333;
-		}
-		
-		.landing-subtitle {
-			font-size: 16px;
-			color: #666;
-			margin-bottom: 30px;
-		}
-		
-		.auth-section {
-			text-align: center;
-			margin-bottom: 30px;
-		}
-		
-		.landing-description {
-			font-size: 14px;
-			color: #666;
-			text-align: center;
-			line-height: 1.6;
-			margin: 20px 0;
-			max-width: 500px;
-		}
-		
-		.policy-footer {
-			position: fixed;
-			bottom: 0;
-			left: 0;
-			right: 0;
-			background: white;
-			border-top: 1px solid #e0e0e0;
-			padding: 15px;
-			text-align: center;
-			font-size: 13px;
-			z-index: 100;
-		}
-		
-		.policy-footer a {
-			color: #1a73e8;
-			text-decoration: none;
-			margin: 0 10px;
-		}
-		
-		.policy-footer a:hover {
-			text-decoration: underline;
-		}
-		
-		body:has(.auth:not(.hidden)) {
-			padding-bottom: 60px; /* Make room for fixed footer only during sign-in */
-		}
-		
-		@media (max-width: 768px) {
-			.landing-container {
-				margin: 10px;
-			}
-			.policy-footer {
-				font-size: 12px;
-				padding: 12px 10px;
-			}
-			.policy-footer a {
-				margin: 0 5px;
-				display: inline-block;
-				line-height: 1.5;
-			}
-			/* Stack layout on mobile when socket is visible */
-			body:has(.socket:not(.hidden)) .container {
-				grid-template-columns: 1fr;
-			}
-			.sidebar {
-				order: 2;
-				margin-top: 20px;
-			}
-		}
-    </style>
+    <link rel="stylesheet" type="text/css" href="youtube.css" /> 
 </head>
 <body>
     <div class="container">
@@ -1448,18 +924,24 @@ try {
 		const originalMsg = msg;
 		inputElement.value = "";
 		sendChatMessage(originalMsg).then(response => {
-			if (response && response.success) {
+			// YouTube API returns the message object on success, not a success field
+			if (response && response.id) {
+				const authorDetails = response.authorDetails || {};
 				processMessage({
-					authorName: username,
+					authorName: authorDetails.displayName || username,
 					message: originalMsg,
-					profileImageUrl: response.authorDetails?.profileImageUrl || '',
-					isChatOwner: response.authorDetails?.isChatOwner || false,
-					isChatSponsor: response.authorDetails?.isChatSponsor || false,
-					isChatModerator: response.authorDetails?.isChatModerator || false
+					profileImageUrl: authorDetails.profileImageUrl || '',
+					isChatOwner: authorDetails.isChatOwner || false,
+					isChatSponsor: authorDetails.isChatSponsor || false,
+					isChatModerator: authorDetails.isChatModerator || false,
+					authorChannelId: authorDetails.channelId || ''
 				});
+			} else {
+				console.warn('Message was sent but not dispatched as event. Response:', response);
 			}
 			setTimeout(() => { handleSendMessage.isSending = false; }, 500);
-		}).catch(() => {
+		}).catch((error) => {
+			console.error('Failed to send message:', error);
 			setTimeout(() => { handleSendMessage.isSending = false; }, 500);
 		});
 	}
@@ -1670,14 +1152,16 @@ try {
 	
     async function sendChatMessage(message) {
 		const token = getStoredToken();
-		if (!token || !liveChatId) return { success: false };
+		if (!token || !liveChatId) return null;
 		try {
 			const baseUrl = 'https://www.googleapis.com/youtube/v3/liveChat/messages';
 			const url = `${baseUrl}?part=snippet,authorDetails`;
-			const response = await fetchWithTimeout(url, 10000, {
+			const response = await fetch(url, {
 				method: 'POST',
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${token}`,
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
 				body: JSON.stringify({
 					snippet: {
 						liveChatId: liveChatId,
@@ -1686,12 +1170,26 @@ try {
 					}
 				})
 			});
+			
+			if (!response.ok) {
+				const errorData = await response.json();
+				console.error('YouTube API error response:', errorData);
+				return null;
+			}
+			
 			const data = await response.json();
-			//console.log('Chat message sent successfully:', data);
+			console.log('Chat message API response:', data);
+			
+			// Check if the response has an error
+			if (data.error) {
+				console.error('YouTube API error:', data.error);
+				return null;
+			}
+			
 			return data;
 		} catch (error) {
 			console.error('Error sending chat message:', error);
-			return { success: false };
+			return null;
 		}
 	}
 

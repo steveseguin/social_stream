@@ -118,7 +118,7 @@
 	try {
 		var kickUserID = false;
 		var kickUsername = extractKickUsername(window.location.href);
-		if (kickUsername && isPopoutChat){
+		if (kickUsername){
 			kickUserID = await getKickUserIdByUsername();
 		}
 	} catch(e){}
@@ -704,27 +704,13 @@
 						settings = request.settings;
 						sendResponse(true);
 						if (settings.bttv) {
-							if (isPopoutChat) {
-								// kick_new.js had this commented out
-								// chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-							} else {
-								chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-							}
+							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
 						}
 						if (settings.seventv) {
-							if (isPopoutChat) {
-								chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-							} else {
-								chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-							}
+							chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
 						}
 						if (settings.ffz) {
-							if (isPopoutChat) {
-								// kick_new.js had this commented out
-								// chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-							} else {
-								chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-							}
+							chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
 						}
 						return;
 					}
@@ -766,27 +752,13 @@
 				settings = response.settings;
 				
 				if (settings.bttv && !BTTV) {
-					if (isPopoutChat) {
-						// kick_new.js had this commented out
-						// chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-					} else {
-						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-					}
+					chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
 				}
 				if (settings.seventv && !SEVENTV) {
-					if (isPopoutChat) {
-						chrome.runtime.sendMessage(chrome.runtime.id, {getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-					} else {
-						chrome.runtime.sendMessage(chrome.runtime.id, { getSEVENTV: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-					}
+					chrome.runtime.sendMessage(chrome.runtime.id, {getSEVENTV: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
 				}
 				if (settings.ffz && !FFZ) {
-					if (isPopoutChat) {
-						// kick_new.js had this commented out
-						// chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-					} else {
-						chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
-					}
+					chrome.runtime.sendMessage(chrome.runtime.id, { getFFZ: true, userid: kickUserID, channel: kickUsername ? kickUsername.toLowerCase() : null, type: "kick" }, function (response) {});
 				}
 			}
 		}
@@ -880,9 +852,11 @@
 						SevenTV = true;
 					}
 					var clear = document.querySelectorAll("div[data-chat-entry]");
-					onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[0], false);
+					
 					if (document.querySelectorAll("#chatroom-messages > div").length>1){
 						onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[1], true);
+					} else {
+						onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[0], false);
 					}
 				},3000);
 			}
