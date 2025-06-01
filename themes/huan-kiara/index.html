@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Chat Overlay</title>
+		<style>
+			@import url("https://fonts.googleapis.com/css2?family=Passion+One:wght@400;700&display=swap");
+			body,
+			html {
+				margin: 0;
+				padding: 0;
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				background-color: linear-gradient(135deg, rgb(104 141 197 / 90%) 0%, rgba(20, 22, 25, 0.9) 100%);
+				font-family: "Passion One", sans-serif;
+			}
+			#chat-container {
+				padding: 25px;
+				max-width: 350px;
+				height: 100%;
+				overflow-y: auto;
+				scrollbar-width: none;
+				-ms-overflow-style: none;
+				margin: auto;
+				scroll-behavior: smooth;
+			}
+			#chat-container::-webkit-scrollbar {
+				display: none;
+			}
+			.small-overlay #chat-container {
+				transform: scale(0.6);
+			}
+			.large-overlay #chat-container {
+				transform: scale(1.2);
+			}
+			.message-container {
+				position: relative;
+				margin-bottom: 15px;
+				display: flex;
+				flex-direction: column;
+			}
+			.event-message {
+				background: linear-gradient(135deg, rgb(11 5 85 / 88%) 0%, rgb(195 73 78) 100%);
+				padding: 10px;
+				border-radius: 10px;
+				color: #ffd700;
+				font-weight: bold;
+				margin-bottom: 10px;
+				opacity: 0;
+				transform: translateY(20px);
+				animation: slideFadeInEvent 0.6s ease forwards;
+				box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+			}
+			.username-box {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+				padding: 5px 10px;
+				color: #ffffff;
+				font-weight: 600;
+				border-radius: 5px;
+				z-index: 2;
+				white-space: nowrap;
+				max-width: 300px;
+				margin-bottom: 5px;
+				align-self: flex-start;
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+			}
+			.badges,
+			.badge {
+				display: inline-flex;
+				align-items: center;
+				gap: 5px;
+			}
+			.badge {
+				height: 16px;
+				width: auto;
+				vertical-align: middle;
+			}
+			.source-icon {
+				height: 16px;
+				margin-right: 5px;
+				vertical-align: middle;
+			}
+			.message {
+				display: inline-block;
+				max-width: 100%;
+				background: linear-gradient(135deg, rgba(35, 37, 40, 0.9) 0%, rgba(20, 22, 25, 0.9) 100%);
+				/* Degradado para mensajes */
+				padding: 10px;
+				border-radius: 5px;
+				color: rgba(240, 240, 240, 1);
+				opacity: 0;
+				transform: translateX(-20px);
+				animation: slideFadeIn 0.5s ease forwards;
+				position: relative;
+				word-wrap: break-word;
+				align-self: flex-start;
+				box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+			}
+			.text {
+				font-size: 16px;
+				line-height: 1.4;
+			}
+			@keyframes slideFadeIn {
+				0% {
+					opacity: 0;
+					transform: translateX(-30px);
+				}
+				100% {
+					opacity: 1;
+					transform: translateX(0);
+				}
+			}
+			@keyframes slideFadeInEvent {
+				0% {
+					opacity: 0;
+					transform: translateY(20px);
+				}
+				100% {
+					opacity: 1;
+					transform: translateY(0);
+				}
+			}
+			.text img {
+				max-width: 24px;
+				max-height: 24px;
+				vertical-align: middle;
+			}
+			.emote-container {
+				display: inline-flex;
+				align-items: center;
+				margin-right: 5px;
+			}
+			.subscription-message {
+				background: linear-gradient(135deg, #ffdd22 0%, #ffbb00 100%);
+				color: #000000;
+				padding: 10px;
+				border-radius: 5px;
+				margin-bottom: 10px;
+				text-align: center;
+				font-weight: bold;
+				box-shadow: 0 2px 10px rgba(255, 204, 0, 0.3);
+			}
+			.message-container[data-type="twitch"] .username-box {
+				background: linear-gradient(135deg, #9d5cff 0%, #7a32e6 100%);
+			}
+			.message-container[data-type="youtube"] .username-box {
+				background: linear-gradient(135deg, #ff3333 0%, #cc0000 100%);
+			}
+			.message-container[data-type="facebook"] .username-box {
+				background: linear-gradient(135deg, #3b8aff 0%, #0062e0 100%);
+			}
+			.message-container[data-type="tiktok"] .username-box {
+				background: linear-gradient(135deg, #25f4ee 0%, #00d2c6 100%);
+				color: #000000;
+			}
+			.message-container[data-type="kick"] .username-box {
+				background: linear-gradient(135deg, #53fc18 0%, #1a9c00 100%);
+				color: #000000;
+			}
+			.donation {
+				margin-top: 5px;
+				font-weight: bold;
+				color: #ffcc00;
+				text-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+			}
+			.avatar {
+				width: 24px;
+				height: 24px;
+				border-radius: 50%;
+				margin-right: 5px;
+				object-fit: cover;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="chat-container"></div>
+		<script>
+			const chatContainer = document.getElementById("chat-container");
+			let lastSender = null;
+			let lastMessageDiv = null;
+
+			const urlParams = new URLSearchParams(window.location.search);
+			const roomID = urlParams.get("session") || "7RUWtGBfz2";
+			const password = "false";
+			const featuredMode = false;
+
+			function applyOverlaySize() {
+				const size = urlParams.get("size");
+				document.body.classList.remove("small-overlay", "large-overlay");
+				if (size === "small") {
+					document.body.classList.add("small-overlay");
+				} else if (size === "large") {
+					document.body.classList.add("large-overlay");
+				}
+			}
+
+			function isFullyVisible(element) {
+				const containerRect = chatContainer.getBoundingClientRect();
+				const elementRect = element.getBoundingClientRect();
+				return elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+			}
+
+			function removeCutOffMessages() {
+				let firstMessage = chatContainer.firstElementChild;
+				while (firstMessage && !isFullyVisible(firstMessage)) {
+					chatContainer.removeChild(firstMessage);
+					firstMessage = chatContainer.firstElementChild;
+				}
+			}
+
+			function autoScroll() {
+				const lastMessage = chatContainer.lastElementChild;
+				if (lastMessage) {
+					lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
+					setTimeout(() => {
+						lastMessage.scrollIntoView({ behavior: "instant", block: "end" });
+						removeCutOffMessages();
+					}, 50);
+				}
+			}
+
+			const observer = new MutationObserver(() => {
+				autoScroll();
+			});
+			observer.observe(chatContainer, { childList: true, subtree: true });
+
+			function addEventToOverlay(data) {
+				const eventDiv = document.createElement("div");
+				eventDiv.classList.add("event-message");
+				let eventText = "";
+
+				if (data.type === "follow") {
+					eventText = `${data.chatname} just followed!`;
+				} else if (data.type === "subscription" || data.event === "membership") {
+					eventDiv.classList.add("subscription-message");
+					eventText = `${data.chatname} ${data.subtitle || "subscribed!"}`;
+				} else if (data.type === "donation" || data.hasDonation) {
+					eventText = `${data.chatname} donated ${data.amount || data.hasDonation || ""}!`;
+				}
+
+				eventDiv.innerHTML = `<div>${eventText}</div>`;
+				chatContainer.appendChild(eventDiv);
+			}
+
+			function addMessageToOverlay(data) {
+				if (!data || !data.chatname) {
+					console.error("Invalid message data", data);
+					return;
+				}
+
+				if (["follow", "subscription", "donation"].includes(data.type) || data.event === "membership" || data.hasDonation) {
+					if (!data.chatmessage) {
+						addEventToOverlay(data);
+						return;
+					}
+				}
+
+				const messageContainer = document.createElement("div");
+				messageContainer.classList.add("message-container");
+
+				if (data.type) {
+					messageContainer.setAttribute("data-type", data.type);
+				}
+
+				const usernameBox = document.createElement("div");
+				usernameBox.classList.add("username-box");
+
+				let sourceIcon = "";
+				if (data.type === "twitch") {
+					sourceIcon = `<img src="https://img.icons8.com/?size=100&id=S5wxXL23AVBm&format=png&color=FFFFFF" alt="Twitch" class="source-icon">`;
+				} else if (data.type === "tiktok") {
+					sourceIcon = `<img src="https://w7.pngwing.com/pngs/483/249/png-transparent-tiktok-icon-thumbnail.png" alt="TikTok" class="source-icon">`;
+				} else if (data.type === "youtube") {
+					sourceIcon = `<img src="https://img.icons8.com/?size=100&id=19318&format=png" alt="YouTube" class="source-icon">`;
+				} else if (data.type === "facebook") {
+					sourceIcon = `<img src="https://img.icons8.com/?size=100&id=118497&format=png" alt="Facebook" class="source-icon">`;
+				} else if (data.type === "kick") {
+					sourceIcon = `<img src="https://play-lh.googleusercontent.com/66czInHo_spTFWwLVYntxW8Fa_FHCDRPnd3y0HT14_xz6xb_lqSv005ARvdkJJE2TA=w240-h480-rw" alt="Kick" class="source-icon">`;
+				}
+
+				let chatbadges = "";
+				if (data.chatbadges) {
+					data.chatbadges.forEach(badge => {
+						if (typeof badge === "object" && badge.type === "img" && badge.src) {
+							chatbadges += `<img class='badge' src='${badge.src}' />`;
+						} else if (badge.type === "svg" && badge.html) {
+							chatbadges += `<span class='badge svg'>${badge.html}</span>`;
+						}
+					});
+				}
+
+				let nameStyle = "";
+				if (data.nameColor) {
+					nameStyle = `style="color:${data.nameColor}"`;
+				}
+
+				usernameBox.innerHTML = `
+            ${data.chatimg ? `<img src="${data.chatimg}" class="avatar" alt="${data.chatname}'s avatar">` : ""}
+            ${sourceIcon}
+            <span class="username">${data.chatname}</span>
+            <span class="badges">${chatbadges}</span>
+        `;
+
+				messageContainer.appendChild(usernameBox);
+
+				if (data.chatmessage) {
+					const messageDiv = document.createElement("div");
+					messageDiv.classList.add("message");
+
+					if (data.backgroundColor) {
+						messageDiv.style.backgroundColor = data.backgroundColor;
+					}
+
+					let textStyle = "";
+					if (data.textColor) {
+						textStyle = `style="color:${data.textColor}"`;
+					}
+
+					messageDiv.innerHTML = `
+				<div class="text" ${textStyle}>${data.chatmessage}</div>
+				${data.donation || data.hasDonation ? `<div class="donation">${data.donation || data.hasDonation}</div>` : ""}
+			`;
+
+					messageContainer.appendChild(messageDiv);
+				}
+
+				chatContainer.appendChild(messageContainer);
+				lastSender = data.chatname;
+				lastMessageDiv = messageContainer;
+			}
+
+			const iframe = document.createElement("iframe");
+			iframe.src = featuredMode ? `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}` : `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${roomID}`;
+
+			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+			document.body.appendChild(iframe);
+
+			window.addEventListener("message", event => {
+				if (event.source !== iframe.contentWindow) return;
+				if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+					addMessageToOverlay(event.data.dataReceived.overlayNinja);
+				}
+			});
+
+			document.addEventListener("DOMContentLoaded", () => {
+				applyOverlaySize();
+			});
+
+			var conCon = 1;
+			var socketserver = false;
+
+			var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+			function setupSocket() {
+				socketserver.onclose = function () {
+					setTimeout(function () {
+						conCon += 1;
+						socketserver = new WebSocket(serverURL);
+						setupSocket();
+					}, 100 * conCon);
+				};
+				socketserver.onopen = function () {
+					conCon = 1;
+					socketserver.send(JSON.stringify({ join: roomID, out: 3, in: 4 }));
+				};
+				socketserver.addEventListener("message", function (event) {
+					var resp = false;
+					if (event.data) {
+						var data = JSON.parse(event.data);
+						addMessageToOverlay(data);
+						if (data.get) {
+							var ret = {};
+							ret.callback = {};
+							ret.callback.get = data.get;
+							ret.callback.result = true;
+							socketserver.send(JSON.stringify(ret));
+						}
+					}
+				});
+			}
+
+			if (urlParams.has("server") || urlParams.has("server2")) {
+				serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+				socketserver = new WebSocket(serverURL);
+				setupSocket();
+			}
+		</script>
+	</body>
+</html>
