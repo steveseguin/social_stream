@@ -2,7 +2,9 @@
 (function () {
 	
 	
-	function checkConditions(element) {
+	
+	var isExtensionOn = true;
+function checkConditions(element) {
 	  // Get all siblings of the element
 	  const siblings = Array.from(element.parentNode.children);
 	  const index = siblings.indexOf(element);

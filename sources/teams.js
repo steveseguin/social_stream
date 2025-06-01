@@ -1,5 +1,7 @@
 (function () {
-	function toDataURL(blobUrl, callback, maxSizeKB = 10) {
+	
+	var isExtensionOn = true;
+function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		var xhr = new XMLHttpRequest;
 		xhr.responseType = 'blob';
 

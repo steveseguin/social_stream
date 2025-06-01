@@ -1,6 +1,8 @@
 (function () {
 	
-	function getAllContentNodes(element) {
+	
+	var isExtensionOn = true;
+function getAllContentNodes(element) {
 		var resp = "";
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){

@@ -1,5 +1,7 @@
 (function () {
-	try {
+	
+	var isExtensionOn = true;
+try {
 	
 	async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlutin.com/timeout-fetch-request/
 		try {

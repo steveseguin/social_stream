@@ -1,6 +1,8 @@
 (function () {
 	
-	function escapeHtml(unsafe){
+	
+	var isExtensionOn = true;
+function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
 				return unsafe;

@@ -5,9 +5,11 @@ const ProfileManager = {
 
   init() {
     document.getElementById('profilesList').addEventListener('click', (e) => {
-      const target = e.target;
-      if (target.classList.contains('delete-profile')) {
-        const profileItem = target.closest('.profile-item');
+      const deleteButton = e.target.closest('.delete-profile');
+      const activateButton = e.target.closest('.activate-profile');
+      
+      if (deleteButton) {
+        const profileItem = deleteButton.closest('.profile-item');
         const profileId = profileItem.dataset.profileId;
         if (confirm('Are you sure you want to delete this profile?')) {
           this.profiles = this.profiles.filter(p => p.id !== profileId);
@@ -17,8 +19,8 @@ const ProfileManager = {
           this.updateProfilesList();
           this.saveProfilesToStorage();
         }
-      } else if (target.classList.contains('activate-profile')) {
-        const profileItem = target.closest('.profile-item');
+      } else if (activateButton) {
+        const profileItem = activateButton.closest('.profile-item');
         const profileId = profileItem.dataset.profileId;
         this.loadProfile(profileId);
       }
@@ -174,7 +176,7 @@ const ProfileManager = {
         </div>
         <div class="profile-actions">
           ${!isActive ? `<button class="activate-profile glowingButton" style="margin-right: 5px;"><span data-translate="load-profiles">Load</span></button>` : ''}
-          <button class="delete-profile glowingButton" style="background: #ff4444;"><span data-translate="delete-profiles">Delete</button>
+          <button class="delete-profile glowingButton" style="background: #ff4444;"><span data-translate="delete-profiles">Delete</span></button>
         </div>
       `;
       container.appendChild(profileElement);

@@ -956,6 +956,13 @@ function loadSettings(item, resave = false) {
 		}
 	}
 	
+	if (settings.hypemode) {
+		// Initialize hype mode if it's enabled on startup
+		if (!hypeInterval) {
+			hypeInterval = setInterval(processHype2, 10000);
+		}
+	}
+	
 	if (settings.relaytargets && settings.relaytargets.textsetting){
 		relaytargets = settings.relaytargets.textsetting
 			.split(",")
@@ -2883,7 +2890,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "notiktokdonations") {
 				pushSettingChange();
 			}
-			if (request.setting == "twichadmute") {
+			if (request.setting == "twichadmute") { 
 				pushSettingChange();
 			} 
 			if (request.setting == "twichadannounce") {
@@ -3059,7 +3066,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 				pushSettingChange();
 			} 
-			
 			if (request.setting == "showviewercount") {
 				pushSettingChange();
 			}

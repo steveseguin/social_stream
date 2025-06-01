@@ -1,4 +1,6 @@
 
+var isExtensionOn = true;
+
 function toDataURL(url, callback) {
   var xhr = new XMLHttpRequest();
   xhr.onload = function() {

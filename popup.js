@@ -4098,14 +4098,17 @@ const PollManager = {
 };
 
 
-ProfileManager.init();
-
-document.querySelector('button[data-action="saveProfile"]').addEventListener('click', function() {
-  ProfileManager.saveCurrentProfile();
-});
-
-
 document.addEventListener("DOMContentLoaded", async function(event) {
+	// Initialize ProfileManager after DOM is ready
+	ProfileManager.init();
+	
+	// Add event listener for save profile button
+	const saveProfileBtn = document.querySelector('button[data-action="saveProfile"]');
+	if (saveProfileBtn) {
+		saveProfileBtn.addEventListener('click', function() {
+			ProfileManager.saveCurrentProfile();
+		});
+	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
 		const basePath = decodeURIComponent(urlParams.get('basePath'));

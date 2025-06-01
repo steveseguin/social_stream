@@ -380,7 +380,9 @@
 		);
 		clearInterval(keepAlive);
 		keepAlive = setInterval(function(){
-			console.log("KEEP ALIVE");
+			
+	var isExtensionOn = true;
+console.log("KEEP ALIVE");
 			chrome.runtime.sendMessage(chrome.runtime.id, { "keepAlive": true }, function(response){});
 		},3000000);
 	}
