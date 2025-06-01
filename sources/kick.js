@@ -183,8 +183,6 @@
 	setTimeout(function(){checkViewers();},2500);
 	setInterval(function(){checkViewers()},30000);
 	
-	
-	
 	function getAllContentNodes(element) {
 		var resp = "";
 		
@@ -398,10 +396,6 @@
 		  }
 	  }
 	  
-	  
-	  
-	  
-	  
 	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
@@ -462,6 +456,7 @@
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
+			console.warn(e);
 			ele.dataset.mid = e.id;
 		});
 	  } catch(e){
@@ -671,7 +666,7 @@
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
-			if (e){
+			if (e && ele){
 				ele.dataset.mid = e?.id;
 			}
 		});
