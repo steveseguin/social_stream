@@ -2679,7 +2679,7 @@ async function processIncomingMessage(message, sender=null){
 		
 		if (!message.id) {
 			messageCounter += 1;
-			message.id = messageCounter;
+			message.id = messageCounter; 
 		}
 		
 		try {
@@ -2715,7 +2715,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (sendResponseReal) {
 		  alreadySet = true;
 		  // Always include current state in responses
-		  msg.state = isExtensionOn;
+		  if (typeof msg == "object"){
+			msg.state = isExtensionOn;
+		  }
 		  sendResponseReal(msg);
 		}
 		response = msg;
@@ -2730,13 +2732,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		}
 		// add a stall here instead if this actually happens
 		if (!loadedFirst){
-			return sendResponse({"tryAgain":true});
+			sendResponse({"tryAgain":true});
+			return response;
 		}
 	}
 	
 	try {
 		if (typeof request !== "object") {
-			//sendResponse({"state": isExtensionOn});
+			sendResponse({"state": isExtensionOn});
 			return response;
 		}
 
@@ -3153,12 +3156,16 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 		} else if ("message" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			var letsGo = await processIncomingMessage(request.message, sender);
-			if (letsGo && letsGo.id){
-				sendResponse({ state: isExtensionOn, id: letsGo.id });
+			
+			if (request?.message && !request.message.id) {
+				messageCounter += 1;
+				request.message.id = messageCounter;
+				sendResponse({ state: isExtensionOn, id: request.message.id });
 			} else {
 				sendResponse({ state: isExtensionOn});
 			}
+			var letsGo = await processIncomingMessage(request.message, sender);
+			
 		} else if ("messages" in request) {
 			// Handle batch messages from YouTube
 			sendResponse({ state: isExtensionOn });
@@ -3335,6 +3342,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				messagePopup({documents: documentsRAG});
 			} catch(e){}
 		} else if (request.cmd === "deleteRAGfile") {
+			sendResponse({ state: isExtensionOn });
 			try {
 				await deleteDocument(request.docId);
 				messagePopup({documents: documentsRAG});
@@ -3445,7 +3453,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	return response;
+	return true;
 });
 
 const randomDigits = () => {
