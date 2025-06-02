@@ -1537,8 +1537,11 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 }
             }
             updateSettings(ele, sync);
-            updateUsernameList(key);
-            updateSourceTypeList(key);
+            if (userTypes.includes(key)) {
+                updateUsernameList(key);
+            } else if (sourceTypes.includes(key)) {
+                updateSourceTypeList(key);
+            }
         }
     }
 
@@ -4381,6 +4384,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		console.error("Error setting up bot reply source selection:", e);
 	}
 	
+	// Initialize existing username lists
 /* 	userTypes.forEach(type => {
 	  try {
 		updateUsernameList(type);
@@ -4388,18 +4392,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		console.error(e);
 	  }
 	});
-
-	// Add this after the sourceTypes setup and event listeners
-	sourceTypes.forEach(type => {
-	  try {
-		updateSourceTypeList(type);
-	  } catch(e) {
-		console.error(e);
-	  }
-	}); */
-	
-	//userTypes.forEach(type => updateUsernameList(type));
-    //sourceTypes.forEach(type => updateSourceTypeList(type));
 	
 	// Initialize existing source type lists
 	sourceTypes.forEach(type => {
@@ -4408,7 +4400,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		} catch(e) {
 			console.error(e);
 		}
-	});
+	}); */
 	
 	setTimeout(function(){
 		populateFontDropdown(); 
