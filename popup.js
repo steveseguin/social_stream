@@ -1,5 +1,26 @@
 // popup.js
 
+(function (w) {
+	w.URLSearchParams = w.URLSearchParams || function (searchString) {
+		var self = this;
+		self.searchString = searchString;
+		self.get = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+			if (results == null) {
+				return null;
+			} else {
+				return decodeURI(results[1]) || 0;
+			}
+		};
+	};
+
+})(window);
+
+var urlParams = new URLSearchParams(window.location.search);
+const devmode = urlParams.has("devmode");
+var sourcemode = urlParams.get("sourcemode") || false;
+ssapp = urlParams.has("ssapp") || ssapp;
+
 var isExtensionOn = false;
 var ssapp = false;
 var USERNAMES = [];
@@ -2049,26 +2070,7 @@ function processManifestData(data, manifestData) {
     }
 }
 
-(function (w) {
-	w.URLSearchParams = w.URLSearchParams || function (searchString) {
-		var self = this;
-		self.searchString = searchString;
-		self.get = function (name) {
-			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
-			if (results == null) {
-				return null;
-			} else {
-				return decodeURI(results[1]) || 0;
-			}
-		};
-	};
 
-})(window);
-
-var urlParams = new URLSearchParams(window.location.search);
-const devmode = urlParams.has("devmode");
-var sourcemode = urlParams.get("sourcemode") || false;
-ssapp = urlParams.has("ssapp") || ssapp;
 
 // Language parameter handling removed - use the translation dropdown instead
 
