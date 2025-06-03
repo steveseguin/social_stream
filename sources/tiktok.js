@@ -1082,12 +1082,54 @@
 	let observedDomElementForObserver2 = null;
 	var observer = false;
 	var observer2 = false;
-
+	var counter =0;
+	
 	function start() {
 		if (!isExtensionOn) {
 			//console.log("EXTENSION OFF?");
 			return;
 		}
+		counter+=1;
+		
+		if (settings.showviewercount || settings.hypemode) {
+			try {
+
+				if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
+					// not active
+				} else if (counter%15==1){
+					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+
+					if (viewerCount && viewerCount.textContent) {
+						let views = viewerCount.textContent;
+						let multiplier = 1;
+						if (views.includes("K")) {
+							multiplier = 1000;
+							views = views.replace("K", "");
+						} else if (views.includes("M")) {
+							multiplier = 1000000;
+							views = views.replace("M", "");
+						}
+						if (views == parseFloat(views)) {
+							views = parseFloat(views) * multiplier;
+							chrome.runtime.sendMessage(
+								chrome.runtime.id,
+								({
+									message: {
+										type: 'tiktok',
+										event: 'viewer_update',
+										meta: views
+									}
+								}),
+								function(e) {}
+							);
+						}
+					}
+				}
+			} catch (e) {
+				////console.error(e);
+			}
+		}
+		
 		if (observer && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected) {
 			//console.log("<<>");
 			return;
@@ -1197,45 +1239,6 @@
 				////console.log("Main observer NOT started or target/state became invalid before observe.", currentTargetForTimeout);
 			}
 
-
-			if (settings.showviewercount || settings.hypemode) {
-				try {
-
-					if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
-						// not active
-					} else {
-						var viewerCount = document.querySelector("[data-e2e='live-people-count']");
-
-						if (viewerCount && viewerCount.textContent) {
-							let views = viewerCount.textContent;
-							let multiplier = 1;
-							if (views.includes("K")) {
-								multiplier = 1000;
-								views = views.replace("K", "");
-							} else if (views.includes("M")) {
-								multiplier = 1000000;
-								views = views.replace("M", "");
-							}
-							if (views == parseFloat(views)) {
-								views = parseFloat(views) * multiplier;
-								chrome.runtime.sendMessage(
-									chrome.runtime.id,
-									({
-										message: {
-											type: 'tiktok',
-											event: 'viewer_update',
-											meta: views
-										}
-									}),
-									function(e) {}
-								);
-							}
-						}
-					}
-				} catch (e) {
-					////console.error(e);
-				}
-			}
 		}, 2000);
 	}
 
