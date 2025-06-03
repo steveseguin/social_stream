@@ -1422,6 +1422,26 @@ body.ssapp .wrapper.ssapp h3 {
             </button>
         </div>
         <div id="newVersion"></div>
+        <!-- Language Selector (moved from bottom) -->
+        <div id="language-selector-container" style="margin: 10px 0; text-align: right;">
+            <span data-translate="select-a-different-translation">
+                Select a different translation
+            </span>
+            <select data-optionsetting="translationlanguage">
+                <option value="">Default</option>
+                <option value="de" title="German">German</option>
+                <option value="es" title="Spanish">Spanish</option>
+                <option value="en-uk">English</option>
+                <option value="en-us">American</option>
+                <option value="pt-br">Portuguese - BR</option>
+                <option value="uk" title="Ukrainian">Ukrainian</option>
+                <option value="test">Test Translations</option>
+            </select>
+            <br />
+            <small>
+                <i><span data-translate="re-open-menu-to-apply-any-langugage-changes-to-it">*Re-open menu to apply any langugage changes to it</span></i>
+            </small>
+        </div>
         <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
@@ -1879,7 +1899,7 @@ body.ssapp .wrapper.ssapp h3 {
 										<input type="checkbox" data-param1="speech" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="text-to-speech-incoming-messages">🚦🗣️ Text-to-speech incoming messages </span>
+									<span data-translate="text-to-speech-incoming-messages">🚦🗣️ Text-to-speech all incoming messages</span>
 								</div>
 							</div>
 							
@@ -1921,6 +1941,10 @@ body.ssapp .wrapper.ssapp h3 {
 											placeholder="!say" data-translate="placeholder-tts-command" data-textparam1="ttscommand" value="!say" 
 											title="You need to include the ! if you want it" style="width:36px" /> will be read out 
 									</span>
+									<br>
+									<i>Please note, you will want to disable the top "Text-to-speech all incoming messages" option if wanting to use this option</i>
+									<br><br>
+									
 								</div>
 								
 								<div title="Only 'member' marked users will have messages read out when using the TTS chat command.">
@@ -7207,24 +7231,6 @@ body.ssapp .wrapper.ssapp h3 {
                                     </div>
                                 </div>
 
-                                <div>
-                                    <span data-translate="select-a-different-translation">
-                                        Select a different translation
-                                    </span>
-                                    <select data-optionsetting="translationlanguage">
-                                        <option value="">Default</option>
-                                        <option value="de" title="German">German</option>
-                                        <option value="es" title="Spanish">Spanish</option>
-										<option value="en-uk">English</option>
-                                        <option value="en-us">American</option>
-										<option value="pt-br">Portuguese - BR</option>
-                                        <option value="test">Test Translations</option>
-                                    </select>
-                                    <br />
-                                    <small>
-                                        <i><span data-translate="re-open-menu-to-apply-any-langugage-changes-to-it">*Re-open menu to apply any langugage changes to it</span></i>
-                                    </small>
-                                </div>
                             </div>
                         </div>
                     </div>

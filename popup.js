@@ -4114,6 +4114,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			ProfileManager.saveCurrentProfile();
 		});
 	}
+	
+	// Hide language selector if &ln parameter is present
+	if (urlParams.has("ln")) {
+		const languageSelector = document.getElementById('language-selector-container');
+		if (languageSelector) {
+			languageSelector.style.display = 'none';
+		}
+	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
 		const basePath = decodeURIComponent(urlParams.get('basePath'));

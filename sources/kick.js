@@ -693,7 +693,9 @@
 				}
 				if (typeof request === "object"){
 					if ("state" in request){
-						isExtensionOn = request.state;
+						if (request.state !== null){
+							isExtensionOn = request.state;
+						}
 					}
 					if ("settings" in request){
 						settings = request.settings;
@@ -741,7 +743,9 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if (response){
 			if ("state" in response){
-				isExtensionOn = response.state;
+				if (request.state !== null){
+					isExtensionOn = request.state;
+				}
 			}
 			if ("settings" in response){
 				settings = response.settings;
