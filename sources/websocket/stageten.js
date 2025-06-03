@@ -110,7 +110,11 @@ try {
 
     async function getChatCredentials(channelId) {
         try {
-            const response = await fetch(PLUGIN_SERVICE_URL, {
+            // Check if we should use a CORS proxy
+            const corsProxy = localStorage.getItem('stageten_cors_proxy') || '';
+            const apiUrl = corsProxy ? corsProxy + PLUGIN_SERVICE_URL : PLUGIN_SERVICE_URL;
+            
+            const response = await fetch(apiUrl, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -137,6 +141,12 @@ try {
             return data?.data?.chat_publicChatAccess;
         } catch (error) {
             console.error('Error fetching chat credentials:', error);
+            
+            // Check if it's a CORS error
+            if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+                throw new Error('CORS_ERROR');
+            }
+            
             return null;
         }
     }
@@ -337,7 +347,20 @@ try {
             console.error('Connection error:', error);
             updateUI('current-channel', 'Connection failed');
             updateConnectionStatus(false);
-            addToChat('System', `Failed to connect: ${error.message}`, true);
+            
+            if (error.message === 'CORS_ERROR') {
+                addToChat('System', 'CORS Error: Cannot connect directly from browser.', true);
+                addToChat('System', 'Options:', true);
+                addToChat('System', '1. Install the Social Stream Chrome Extension', true);
+                addToChat('System', '2. Use a CORS proxy (e.g., https://cors-anywhere.herokuapp.com/)', true);
+                addToChat('System', '3. Run this page from a local server', true);
+                
+                // Show CORS proxy input
+                showCorsProxyInput();
+            } else {
+                addToChat('System', `Failed to connect: ${error.message}`, true);
+            }
+            
             addEvent(`Connection failed: ${error.message}`);
         }
     }
@@ -590,6 +613,72 @@ try {
             });
         }
     });
+
+    // Function to show CORS proxy input
+    function showCorsProxyInput() {
+        const existingDiv = document.getElementById('cors-proxy-container');
+        if (existingDiv) return; // Already shown
+        
+        const container = document.createElement('div');
+        container.id = 'cors-proxy-container';
+        container.style.cssText = `
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            border: 2px solid #f44336;
+        `;
+        
+        container.innerHTML = `
+            <h4 style="color: #f44336; margin: 0 0 10px 0;">CORS Proxy Setup</h4>
+            <p style="color: #ccc; margin: 0 0 10px 0;">Enter a CORS proxy URL to bypass browser restrictions:</p>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="cors-proxy-input" placeholder="https://cors-anywhere.herokuapp.com/" 
+                    style="flex: 1; padding: 8px; border: 1px solid #444; border-radius: 4px; background: #333; color: #fff;">
+                <button id="cors-proxy-save" class="auth-button" style="background: #4caf50;">Save & Retry</button>
+                <button id="cors-proxy-clear" class="auth-button" style="background: #f44336;">Clear</button>
+            </div>
+            <p style="color: #999; margin: 10px 0 0 0; font-size: 12px;">
+                Note: Free CORS proxies may be unreliable. Consider running your own proxy or using the Chrome extension.
+            </p>
+        `;
+        
+        // Insert after the chat container
+        const chatContainer = document.querySelector('.chat-container');
+        if (chatContainer) {
+            chatContainer.parentNode.insertBefore(container, chatContainer.nextSibling);
+        }
+        
+        // Add event listeners
+        document.getElementById('cors-proxy-save').addEventListener('click', function() {
+            const proxyUrl = document.getElementById('cors-proxy-input').value.trim();
+            if (proxyUrl) {
+                // Ensure it ends with /
+                const normalizedUrl = proxyUrl.endsWith('/') ? proxyUrl : proxyUrl + '/';
+                localStorage.setItem('stageten_cors_proxy', normalizedUrl);
+                addToChat('System', `CORS proxy set to: ${normalizedUrl}`, true);
+                addToChat('System', 'Retrying connection...', true);
+                
+                // Retry connection
+                const channelInput = document.getElementById('channel-input') || document.getElementById('initial-channel-input');
+                if (channelInput && channelInput.value.trim()) {
+                    connect(channelInput.value.trim());
+                }
+            }
+        });
+        
+        document.getElementById('cors-proxy-clear').addEventListener('click', function() {
+            localStorage.removeItem('stageten_cors_proxy');
+            addToChat('System', 'CORS proxy cleared', true);
+            container.remove();
+        });
+        
+        // Pre-fill with saved proxy if exists
+        const savedProxy = localStorage.getItem('stageten_cors_proxy');
+        if (savedProxy) {
+            document.getElementById('cors-proxy-input').value = savedProxy;
+        }
+    }
 
     console.log("Stage TEN chat integration loaded");
 
