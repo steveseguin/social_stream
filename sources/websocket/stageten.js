@@ -1,4 +1,4 @@
-// Stage TEN Chat Integration for Social Stream Ninja
+// Stage TEN Chat Integration for Social Stream Ninja (Standalone WebSocket Version)
 try {
     // Configuration
     const ENVIRONMENT = "app";
@@ -16,69 +16,79 @@ try {
     let settings = {};
     let isExtensionOn = true;
 
-    // Listen for messages from the page/extension
-    window.addEventListener('stagetenMessage', function(e) {
-        if (e.detail) {
-            pushMessage(e.detail);
-        }
-    });
+    // Check if we're running in the extension context
+    const isExtension = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id;
 
-    // Handle extension messages
-    chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
-        try {
-            if (request === "getSource") {
-                sendResponse("stageten");
-                return;
+    // Listen for messages from the extension if running in that context
+    if (isExtension) {
+        window.addEventListener('stagetenMessage', function(e) {
+            if (e.detail) {
+                pushMessage(e.detail);
             }
-            
-            if (request === "focusChat") {
-                const inputElement = document.getElementById('input-text');
-                if (inputElement) {
-                    inputElement.focus();
-                    sendResponse(true);
-                } else {
-                    sendResponse(false);
-                }
-                return;
-            }
-            
-            if (typeof request === "object") {
-                if ("state" in request) {
-                    isExtensionOn = request.state;
-                }
-                if ("settings" in request) {
-                    settings = request.settings;
-                    sendResponse(true);
+        });
+
+        // Handle extension messages
+        chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+            try {
+                if (request === "getSource") {
+                    sendResponse("stageten");
                     return;
                 }
+                
+                if (request === "focusChat") {
+                    const inputElement = document.getElementById('input-text');
+                    if (inputElement) {
+                        inputElement.focus();
+                        sendResponse(true);
+                    } else {
+                        sendResponse(false);
+                    }
+                    return;
+                }
+                
+                if (typeof request === "object") {
+                    if ("state" in request) {
+                        isExtensionOn = request.state;
+                    }
+                    if ("settings" in request) {
+                        settings = request.settings;
+                        sendResponse(true);
+                        return;
+                    }
+                }
+            } catch(e) {
+                console.error('Error handling Chrome message:', e);
             }
-        } catch(e) {
-            console.error('Error handling Chrome message:', e);
-        }
-        sendResponse(false);
-    });
+            sendResponse(false);
+        });
 
-    // Get initial settings
-    chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
-        if (!response) return;
-        
-        if ("settings" in response) {
-            settings = response.settings;
-        }
-        if ("state" in response) {
-            isExtensionOn = response.state;
-        }
-    });
+        // Get initial settings
+        chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
+            if (!response) return;
+            
+            if ("settings" in response) {
+                settings = response.settings;
+            }
+            if ("state" in response) {
+                isExtensionOn = response.state;
+            }
+        });
+    }
 
     function pushMessage(data) {
-        try {
-            chrome.runtime.sendMessage(chrome.runtime.id, { 
-                "message": data 
-            }, function(response) {
-                // Handle response if needed
-            });
-        } catch(e) {
-            console.error('Error sending message to socialstream:', e);
+        if (isExtension) {
+            try {
+                chrome.runtime.sendMessage(chrome.runtime.id, { 
+                    "message": data 
+                }, function(response) {
+                    // Handle response if needed
+                });
+            } catch(e) {
+                console.error('Error sending message to socialstream:', e);
+            }
+        } else {
+            // In standalone mode, just log the message
+            console.log('Chat message:', data);
         }
     }
 
@@ -257,6 +267,7 @@ try {
     async function connect(channelId) {
         if (!channelId) {
             console.error('No channel ID provided');
+            addToChat('System', 'Please enter a channel ID', true);
             return;
         }
         
@@ -389,7 +400,7 @@ try {
                 
                 addToChat(messageData.displayName, messageData.text);
                 
-                // Send to extension
+                // Send to extension if available
                 pushMessage({
                     chatname: messageData.displayName,
                     chatbadges: "",
@@ -462,17 +473,46 @@ try {
 
     // Initialize UI event handlers
     document.addEventListener('DOMContentLoaded', function() {
+        // Get channel ID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlChannelId = urlParams.get('channel') || urlParams.get('channelId') || urlParams.get('id');
+        
+        // Get last saved channel ID from localStorage
+        const savedChannelId = localStorage.getItem('stageten_last_channel_id');
+        
         // Initial connect button
         const initialConnectButton = document.getElementById('initial-connect-button');
         const initialChannelInput = document.getElementById('initial-channel-input');
+        
+        if (initialChannelInput) {
+            // If URL has channel ID, use it and auto-connect
+            if (urlChannelId) {
+                initialChannelInput.value = urlChannelId;
+                // Auto-connect after a short delay to ensure UI is ready
+                setTimeout(() => {
+                    if (initialConnectButton) {
+                        initialConnectButton.click();
+                    }
+                }, 100);
+            } 
+            // Otherwise, if we have a saved channel ID, populate the field but don't auto-connect
+            else if (savedChannelId) {
+                initialChannelInput.value = savedChannelId;
+            }
+        }
         
         if (initialConnectButton) {
             initialConnectButton.addEventListener('click', function() {
                 const channelId = initialChannelInput.value.trim();
                 if (channelId) {
+                    // Save channel ID to localStorage
+                    localStorage.setItem('stageten_last_channel_id', channelId);
+                    
                     document.querySelector('.auth').classList.add('hidden');
                     document.querySelectorAll('.socket').forEach(el => el.classList.remove('hidden'));
                     connect(channelId);
+                } else {
+                    addToChat('System', 'Please enter a channel ID', true);
                 }
             });
         }
@@ -489,6 +529,15 @@ try {
         const connectButton = document.getElementById('connect-button');
         const channelInput = document.getElementById('channel-input');
         
+        if (channelInput) {
+            // Also populate the main channel input with saved or URL channel ID
+            if (urlChannelId) {
+                channelInput.value = urlChannelId;
+            } else if (savedChannelId) {
+                channelInput.value = savedChannelId;
+            }
+        }
+        
         if (connectButton) {
             connectButton.addEventListener('click', function() {
                 if (pubnubClient) {
@@ -496,7 +545,11 @@ try {
                 } else {
                     const channelId = channelInput.value.trim();
                     if (channelId) {
+                        // Save channel ID to localStorage
+                        localStorage.setItem('stageten_last_channel_id', channelId);
                         connect(channelId);
+                    } else {
+                        addToChat('System', 'Please enter a channel ID', true);
                     }
                 }
             });
