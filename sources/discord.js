@@ -1,6 +1,8 @@
 (function () {
 	 
-	function toDataURL(url, callback) {
+	
+	var isExtensionOn = true;
+function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
 		  
@@ -163,7 +165,7 @@
 				}
 				try {
 					if (!name){
-						name = getAllContentNodes(ele.querySelector("[id^='message-username-']")).trim();
+						name = getAllContentNodes(ele.querySelector("[id^='message-username-'] [class^='username']"), true).trim();
 					}
 				} catch(e){
 				}

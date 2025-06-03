@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Message - Elegant & Sophisticated</title>
+    <link rel="icon" href="../../favicon.ico" />
+    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Lato:wght@300;400;700&display=swap');
+        
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Lato', sans-serif, 'NotoColorEmojiLimited';
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Elegant floating elements */
+        .elegant-bg {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .elegant-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(215, 189, 226, 0.1) 0%, transparent 70%);
+            animation: elegantFloat 20s infinite ease-in-out;
+        }
+
+        @keyframes elegantFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-50px, 50px) scale(0.9); }
+        }
+
+        /* Base message structure */
+        .message-wrapper {
+            position: relative;
+            margin: 20px 0;
+            opacity: 0;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
+            color: #2c3e50;
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Elegant border accent */
+        .message::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 4px;
+            background: linear-gradient(180deg, #d4a574, #8b7355);
+            opacity: 0.8;
+        }
+
+        .avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 3px solid #d4a574;
+            box-shadow: 0 4px 15px rgba(212, 165, 116, 0.3);
+            position: relative;
+        }
+
+        /* Elegant ring animation */
+        .avatar::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 2px solid #d4a574;
+            opacity: 0;
+            animation: elegantRing 3s infinite;
+        }
+
+        @keyframes elegantRing {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            50% {
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(1.2);
+                opacity: 0;
+            }
+        }
+
+        .message-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .username {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 24px;
+            color: #2c3e50;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        /* Elegant underline */
+        .username::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: #d4a574;
+            transition: width 0.3s ease;
+        }
+
+        .message-wrapper.show .username::after {
+            width: 100%;
+        }
+
+        .badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .badge {
+            height: 20px;
+            filter: sepia(20%) contrast(1.1);
+        }
+
+        .source-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.7;
+            filter: grayscale(30%);
+        }
+
+        .text {
+            font-size: 18px;
+            line-height: 1.8;
+            word-wrap: break-word;
+            color: #34495e;
+            font-weight: 300;
+            letter-spacing: 0.3px;
+        }
+
+        /* Inline images/SVGs */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em;
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+        }
+
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
+        }
+
+        .donation-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            margin-top: 12px;
+            background: linear-gradient(135deg, #d4a574, #8b7355);
+            color: white;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(212, 165, 116, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Elegant shine effect */
+        .donation-info::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(255, 255, 255, 0.3) 50%,
+                transparent 70%
+            );
+            transform: rotate(45deg);
+            animation: elegantShine 3s infinite;
+        }
+
+        @keyframes elegantShine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .content-image {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 12px;
+            border: 1px solid #d4a574;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hide empty elements */
+        .badges:empty,
+        .donation-info:empty {
+            display: none;
+        }
+
+        /* Style 1: Classic */
+        .style-classic .message {
+            border-radius: 4px;
+        }
+
+        .style-classic .message-wrapper.show {
+            animation: classicFadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes classicFadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Style 2: Luxury */
+        .style-luxury .message {
+            border-radius: 0;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #f5f5f5;
+        }
+
+        .style-luxury .username {
+            color: #d4a574;
+        }
+
+        .style-luxury .text {
+            color: #e0e0e0;
+        }
+
+        .style-luxury .message::before {
+            background: linear-gradient(180deg, #ffd700, #b8860b);
+        }
+
+        .style-luxury .message-wrapper.show {
+            animation: luxuryReveal 1s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        @keyframes luxuryReveal {
+            0% {
+                opacity: 0;
+                transform: scale(0.95) translateX(-50px);
+                filter: blur(5px);
+            }
+            50% {
+                filter: blur(2px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateX(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Style 3: Minimalist */
+        .style-minimalist .message {
+            border-radius: 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .style-minimalist .message::before {
+            width: 2px;
+            background: #333;
+        }
+
+        .style-minimalist .message-wrapper.show {
+            animation: minimalistSlide 0.6s ease-out forwards;
+        }
+
+        @keyframes minimalistSlide {
+            0% {
+                opacity: 0;
+                transform: translateX(-100%);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Style 4: Royal */
+        .style-royal .message {
+            border-radius: 8px;
+            background: linear-gradient(135deg, #4a148c 0%, #7b1fa2 100%);
+            color: white;
+            border: 2px solid #ffd700;
+        }
+
+        .style-royal .username {
+            color: #ffd700;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .style-royal .text {
+            color: #f5f5f5;
+        }
+
+        .style-royal .message::before {
+            background: linear-gradient(180deg, #ffd700, #ffed4e);
+            width: 6px;
+        }
+
+        .style-royal .message-wrapper.show {
+            animation: royalEntrance 0.9s ease-out forwards;
+        }
+
+        @keyframes royalEntrance {
+            0% {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(-90deg) translateZ(100px);
+            }
+            50% {
+                transform: perspective(1000px) rotateY(-45deg) translateZ(50px);
+            }
+            100% {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0) translateZ(0);
+            }
+        }
+
+        /* Style 5: Vintage */
+        .style-vintage .message {
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f4e4c1 0%, #e8d4b0 100%);
+            color: #5d4e37;
+            border: 2px solid #8b7355;
+            position: relative;
+        }
+
+        /* Vintage paper texture effect */
+        .style-vintage .message::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(139, 115, 85, 0.03) 2px,
+                    rgba(139, 115, 85, 0.03) 4px
+                );
+            pointer-events: none;
+            border-radius: 12px;
+        }
+
+        .style-vintage .username {
+            font-family: 'Playfair Display', serif;
+            color: #8b7355;
+            font-style: italic;
+        }
+
+        .style-vintage .text {
+            color: #5d4e37;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .style-vintage .message-wrapper.show {
+            animation: vintageUnfold 1s ease-out forwards;
+        }
+
+        @keyframes vintageUnfold {
+            0% {
+                opacity: 0;
+                transform: scale(0.8) rotate(-5deg);
+                filter: sepia(1);
+            }
+            50% {
+                transform: scale(1.05) rotate(2deg);
+                filter: sepia(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                filter: sepia(0);
+            }
+        }
+
+        /* Exit animations */
+        .message-wrapper.hide {
+            animation-duration: 0.6s;
+            animation-fill-mode: forwards;
+        }
+
+        .style-classic .message-wrapper.hide,
+        .style-minimalist .message-wrapper.hide {
+            animation: elegantFadeOut 0.6s ease-in forwards;
+        }
+
+        @keyframes elegantFadeOut {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+        }
+
+        .style-luxury .message-wrapper.hide,
+        .style-royal .message-wrapper.hide,
+        .style-vintage .message-wrapper.hide {
+            animation: elegantDissolve 0.8s ease-in forwards;
+        }
+
+        @keyframes elegantDissolve {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.95);
+                filter: blur(10px);
+            }
+        }
+
+        /* Special effects for donations/memberships */
+        .has-donation .avatar::after,
+        .has-membership .avatar::after {
+            animation-duration: 1.5s;
+        }
+
+        .has-donation .message::before,
+        .has-membership .message::before {
+            background: linear-gradient(180deg, #ffd700, #ff8c00);
+            animation: goldPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes goldPulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #container {
+                width: 95%;
+            }
+            
+            .message {
+                padding: 20px;
+            }
+            
+            .text {
+                font-size: 16px;
+            }
+            
+            .username {
+                font-size: 20px;
+            }
+            
+            .avatar {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .elegant-circle,
+            .avatar::after,
+            .donation-info::before,
+            .message-wrapper {
+                animation: none !important;
+            }
+            
+            .message-wrapper.show {
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
+            
+            .message-wrapper.hide {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="elegant-bg"></div>
+    <div id="container">
+        <div id="output"></div>
+    </div>
+
+    <script src="../../tts.js"></script>
+    <script>
+        // Configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get('session') || urlParams.get('room') || urlParams.get('roomid') || 'TESTROOM';
+        const style = urlParams.get('style') || 'classic'; // classic, luxury, minimalist, royal, vintage
+        const password = urlParams.get('password') || urlParams.get('pass') || urlParams.get('pw') || "false";
+        const showtime = parseInt(urlParams.get('showtime') || urlParams.get('timer') || '30000');
+        
+        // Apply selected style
+        document.body.className = `style-${style}`;
+
+        // Create elegant background elements
+        const bgContainer = document.querySelector('.elegant-bg');
+        for (let i = 0; i < 3; i++) {
+            const circle = document.createElement('div');
+            circle.className = 'elegant-circle';
+            circle.style.width = Math.random() * 300 + 200 + 'px';
+            circle.style.height = circle.style.width;
+            circle.style.left = Math.random() * 100 + '%';
+            circle.style.top = Math.random() * 100 + '%';
+            circle.style.animationDelay = Math.random() * 20 + 's';
+            circle.style.animationDuration = (Math.random() * 10 + 20) + 's';
+            bgContainer.appendChild(circle);
+        }
+
+        // State
+        let messageTimeout = null;
+        let currentMessage = null;
+
+        // Create VDO.Ninja iframe for receiving messages
+        function createIframe() {
+            var iframe = document.createElement("iframe");
+            
+            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+            
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            iframe.allow = "microphone";
+            document.body.appendChild(iframe);
+
+            var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            var eventer = window[eventMethod];
+            var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                
+                if ("dataReceived" in e.data) {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
+                            // pass
+                        } else {
+                            processData({ contents: e.data.dataReceived.overlayNinja });
+                        }
+                    }
+                }
+            });
+        }
+
+        // Process incoming messages
+        function processData(data) {
+            // Handle clear command
+            if (!data || data === false) {
+                hideMessage();
+                return;
+            }
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                hideMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
+            if (data && data.contents) {
+                showMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processData({ contents: data.content });
+                } else {
+                    hideMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            showMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    hideMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                showMessage(data);
+            }
+        }
+
+        // Display message
+        function showMessage(content) {
+            if (!content.chatmessage && !content.chatname) return;
+
+            hideMessage(() => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                
+                // Add special classes for donations/memberships
+                if (content.hasDonation) {
+                    wrapper.classList.add('has-donation');
+                }
+                if (content.membership) {
+                    wrapper.classList.add('has-membership');
+                }
+                
+                const message = document.createElement('div');
+                message.className = 'message';
+
+                // Avatar
+                if (content.chatimg) {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = content.chatimg;
+                    avatar.onerror = () => {
+                        avatar.src = '../../sources/images/unknown.png';
+                    };
+                    message.appendChild(avatar);
+                }
+
+                // Content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'header';
+                
+                // Username
+                if (content.chatname) {
+                    const name = document.createElement('span');
+                    name.className = 'username';
+                    name.innerHTML = content.chatname;
+                    header.appendChild(name);
+                }
+
+                // Badges
+                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                    const badges = document.createElement('div');
+                    badges.className = 'badges';
+                    content.chatbadges.forEach(badge => {
+                        if (typeof badge === 'string') {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge;
+                            badges.appendChild(img);
+                        } else if (badge.src) {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge.src;
+                            badges.appendChild(img);
+                        }
+                    });
+                    header.appendChild(badges);
+                }
+
+                // Source icon
+                if (content.type) {
+                    const sourceIcon = document.createElement('img');
+                    sourceIcon.className = 'source-icon';
+                    sourceIcon.src = `../../sources/images/${content.type}.png`;
+                    sourceIcon.onerror = () => { sourceIcon.style.display = 'none'; };
+                    header.appendChild(sourceIcon);
+                }
+
+                contentDiv.appendChild(header);
+
+                // Message text
+                if (content.chatmessage) {
+                    const text = document.createElement('div');
+                    text.className = 'text';
+                    text.innerHTML = content.chatmessage;
+                    contentDiv.appendChild(text);
+                }
+
+                // Donation/Membership info
+                if (content.hasDonation || content.membership) {
+                    const donationDiv = document.createElement('div');
+                    donationDiv.className = 'donation-info';
+                    
+                    if (content.hasDonation) {
+                        const amount = content.hasDonation;
+                        const title = content.title || 'Donation';
+                        donationDiv.innerHTML = `${title}: ${amount}`;
+                    } else if (content.membership) {
+                        const memberInfo = typeof content.membership === 'string' ? 
+                            content.membership : 'New Member';
+                        donationDiv.innerHTML = memberInfo;
+                    }
+                    
+                    contentDiv.appendChild(donationDiv);
+                }
+
+                // Content image (stickers, etc)
+                if (content.contentimg) {
+                    const img = document.createElement('img');
+                    img.className = 'content-image';
+                    img.src = content.contentimg;
+                    contentDiv.appendChild(img);
+                }
+
+                message.appendChild(contentDiv);
+                wrapper.appendChild(message);
+                
+                const output = document.getElementById('output');
+                output.innerHTML = '';
+                output.appendChild(wrapper);
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    wrapper.classList.add('show');
+                });
+
+                currentMessage = wrapper;
+
+                // TTS support
+                if (window.initTTS && urlParams.has('tts')) {
+                    const ttsText = content.chatmessage ? 
+                        content.chatmessage.replace(/<[^>]*>/g, '') : '';
+                    if (ttsText) {
+                        window.speak(content.chatname + ' says ' + ttsText);
+                    }
+                }
+
+                // Auto-hide after showtime
+                if (messageTimeout) clearTimeout(messageTimeout);
+                messageTimeout = setTimeout(() => {
+                    hideMessage();
+                }, showtime);
+            });
+        }
+
+        // Hide current message
+        function hideMessage(callback) {
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+                messageTimeout = null;
+            }
+
+            if (currentMessage) {
+                currentMessage.classList.remove('show');
+                currentMessage.classList.add('hide');
+                setTimeout(() => {
+                    if (currentMessage && currentMessage.parentNode) {
+                        currentMessage.parentNode.removeChild(currentMessage);
+                    }
+                    currentMessage = null;
+                    if (callback) callback();
+                }, 800); // Match animation duration
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        // Initialize TTS if requested
+        if (urlParams.has('tts') && window.initTTS) {
+            window.initTTS({
+                lang: urlParams.get('tts') || urlParams.get('lang') || 'en-US',
+                pitch: parseFloat(urlParams.get('pitch') || '1'),
+                rate: parseFloat(urlParams.get('rate') || '1'),
+                voice: urlParams.get('voice') || null
+            });
+        }
+
+        // Initialize iframe connection
+        createIframe();
+    </script>
+</body>
+</html>

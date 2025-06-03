@@ -10,6 +10,17 @@ TTS.speech = false;
 TTS.English = true;
 TTS.voice = false;
 TTS.voices = null;
+TTS.kokoroDevice = null;
+
+// eSpeak TTS variables
+TTS.espeakLoaded = false;
+TTS.espeakInstance = null;
+TTS.espeakSettings = {
+    voice: 'en',
+    speed: 175,
+    pitch: 50,
+    variant: 0
+};
 
 // Initialize audio context
 TTS.audioContext = null;
@@ -141,12 +152,22 @@ TTS.kokoroSettings = {
     model: "kokoro-82M-v1.0"
 };
 
+TTS.piperLoaded = false;
+TTS.piperInstance = null;
+TTS.piperSettings = {
+    voice: 'en_US-hfc_female-medium',
+    speed: 1.0
+};
+
 // TTS providers
 TTS.GoogleAPIKey = false;
 TTS.ElevenLabsKey = false;
 TTS.SpeechifyAPIKey = false;
 TTS.useKokoroTTS = false;
+TTS.usePiper = false;
+TTS.useEspeak = false;
 TTS.KokoroTTS = false;
+TTS.PiperModule = null;
 TTS.TextSplitterStream = null;
 TTS.TTSProvider = "system";
 
@@ -183,6 +204,26 @@ TTS.ttsSources = false;
  */
 TTS.isSafari = function() {
     return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+};
+
+/**
+ * Check Kokoro TTS acceleration status
+ * @returns {string} - Status message about Kokoro acceleration
+ */
+TTS.checkKokoroAcceleration = function() {
+    if (!TTS.useKokoroTTS) {
+        return "Kokoro TTS is not enabled";
+    }
+    if (!TTS.kokoroTtsInstance) {
+        return "Kokoro TTS is not initialized yet";
+    }
+    if (TTS.kokoroDevice === "webgpu") {
+        return "✅ Kokoro TTS is using WebGPU acceleration (fp32 precision)";
+    } else if (TTS.kokoroDevice === "wasm") {
+        return "⚠️ Kokoro TTS is using WebAssembly (WASM) fallback (q8 quantized)";
+    } else {
+        return "❓ Kokoro TTS device type unknown";
+    }
 };
 
 /**
@@ -441,6 +482,8 @@ TTS.configure = function(urlParams) {
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
     TTS.SpeechifyAPIKey = urlParams.get("speechifykey") || false;
     TTS.useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
+    TTS.usePiper = urlParams.has("piper") || urlParams.has("pipertts") || false;
+    TTS.useEspeak = urlParams.has("espeak") || urlParams.has("espeaktts") || false;
 
     // Provider selection
     TTS.TTSProvider = urlParams.get("ttsprovider") || "system";
@@ -449,6 +492,10 @@ TTS.configure = function(urlParams) {
     if (TTS.TTSProvider !== "system") {
         if (TTS.TTSProvider === "kokoro") {
             TTS.useKokoroTTS = true;
+        } else if (TTS.TTSProvider === "piper") {
+            TTS.usePiper = true;
+        } else if (TTS.TTSProvider === "espeak") {
+            TTS.useEspeak = true;
         } else if (TTS.TTSProvider === "elevenlabs" && !TTS.ElevenLabsKey) {
             console.warn("ElevenLabs selected but no API key provided. Falling back to system TTS.");
             TTS.TTSProvider = "system";
@@ -461,7 +508,11 @@ TTS.configure = function(urlParams) {
         }
     } else {
         // Backwards compatibility
-        if (TTS.useKokoroTTS) {
+        if (TTS.useEspeak) {
+            TTS.TTSProvider = "espeak";
+        } else if (TTS.usePiper) {
+            TTS.TTSProvider = "piper";
+        } else if (TTS.useKokoroTTS) {
             TTS.TTSProvider = "kokoro";
         } else if (TTS.GoogleAPIKey) {
             TTS.TTSProvider = "google";
@@ -481,6 +532,24 @@ TTS.configure = function(urlParams) {
     // Kokoro settings
     TTS.kokoroSettings.speed = urlParams.has("korospeed") ? parseFloat(urlParams.get("korospeed")) || 1.0 : TTS.rate;
     TTS.kokoroSettings.voiceName = urlParams.get("voicekokoro") || "af_aoede";
+
+    // Piper TTS settings  
+    TTS.piperSettings.speed = urlParams.has("piperspeed") ? parseFloat(urlParams.get("piperspeed")) || 1.0 : 1.0;
+    TTS.piperSettings.voice = urlParams.get("pipervoice") || "en_US-hfc_female-medium";
+    
+    // Available Piper voices for reference:
+    // en_US-hfc_female-medium (default female voice)
+    // en_US-amy-medium (alternative female voice)
+    // en_US-danny-low (male voice, lower quality)
+    // en_US-ryan-high (male voice, high quality)
+    // en_GB-alan-low (British male)
+    // en_GB-alba-medium (British female)
+
+    // eSpeak TTS settings
+    TTS.espeakSettings.voice = urlParams.get("espeakvoice") || "en";
+    TTS.espeakSettings.speed = urlParams.has("espeakspeed") ? parseInt(urlParams.get("espeakspeed")) || 140 : 140; // Slower for clarity
+    TTS.espeakSettings.pitch = urlParams.has("espeakpitch") ? parseInt(urlParams.get("espeakpitch")) || 50 : 50;
+    TTS.espeakSettings.variant = urlParams.has("espeakvariant") ? parseInt(urlParams.get("espeakvariant")) || 0 : 0;
 
     // Google Cloud settings
     TTS.googleSettings.rate = urlParams.has("googlerate") ? parseFloat(urlParams.get("googlerate")) || 1 : TTS.rate;
@@ -647,6 +716,24 @@ TTS.configure = function(urlParams) {
             console.error("Failed to load Kokoro TTS", e);
         }
     }
+
+    // Initialize Piper TTS if needed
+    if (TTS.usePiper) {
+        try {
+            TTS.initPiper();
+        } catch(e) {
+            console.error("Failed to load Piper TTS", e);
+        }
+    }
+    
+    // Initialize eSpeak TTS if needed
+    if (TTS.useEspeak) {
+        try {
+            TTS.initEspeak();
+        } catch(e) {
+            console.error("Failed to load eSpeak TTS", e);
+        }
+    }
 	
 	if (document.getElementById("tts")) {
 		document.getElementById("tts").classList.remove("hidden");
@@ -798,6 +885,20 @@ TTS.speak = function(text, allow = false) {
 
     // Use the selected provider
 	switch (TTS.TTSProvider) {
+		case "piper":
+			if (!TTS.premiumQueueActive) {
+				TTS.piperTTS(text);
+			} else {
+				TTS.premiumQueueTTS.push(text);
+			}
+			return;
+		case "espeak":
+			if (!TTS.premiumQueueActive) {
+				TTS.espeakTTS(text);
+			} else {
+				TTS.premiumQueueTTS.push(text);
+			}
+			return;
 		case "kokoro":
 			if (!TTS.premiumQueueActive) {
 				TTS.kokoroTTS(text);
@@ -1174,7 +1275,10 @@ TTS.initKokoro = async function() {
         
         // Use the same WebGPU detection as the working version
         const device = (await detectWebGPU()) ? "webgpu" : "wasm";
-        //console.log("Using device:", device);
+        console.log("Kokoro TTS using device:", device);
+        
+        // Store the device type for checking later
+        TTS.kokoroDevice = device;
         
         // Open indexedDB to check for cached model
         async function openDB() {
@@ -1250,16 +1354,19 @@ TTS.initKokoro = async function() {
         const customLoadFn = async () => modelData;
         
         // Use the same model initialization parameters as working version
+        const dtype = device === "wasm" ? "q8" : "fp32";
+        console.log(`Kokoro TTS initializing with dtype: ${dtype} on ${device}`);
+        
         TTS.kokoroTtsInstance = await TTS.KokoroTTS.from_pretrained(
             "onnx-community/Kokoro-82M-v1.0-ONNX",
             {
-                dtype: device === "wasm" ? "q8" : "fp32", // Match working version
+                dtype: dtype,
                 device,
                 load_fn: customLoadFn
             }
         );
         
-        //console.log("Kokoro TTS ready!");
+        console.log("Kokoro TTS ready!");
         TTS.kokoroDownloadInProgress = false;
         return true;
     } catch (error) {
@@ -1631,4 +1738,201 @@ TTS.kokoroTTS = async function(text) {
     console.error("Kokoro TTS error:", e);
     TTS.finishedAudio();
   }
+};
+
+/**
+ * Initialize eSpeak TTS
+ * @returns {Promise<boolean>} - Whether initialization was successful
+ */
+TTS.initEspeak = async function() {
+    if (TTS.espeakLoaded) return true;
+    
+    try {
+        console.log("Loading real eSpeak-NG TTS module...");
+        
+        // Load real eSpeak-NG implementation
+        await new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = './thirdparty/espeak-ng-real.js';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+        
+        // Wait for RealESpeakTTS to be available
+        if (!window.RealESpeakTTS) {
+            throw new Error('RealESpeakTTS not found');
+        }
+        
+        // Create real eSpeak-NG instance
+        console.log('Creating real eSpeak-NG instance');
+        TTS.espeakInstance = new window.RealESpeakTTS();
+        await TTS.espeakInstance.init();
+        
+        TTS.espeakLoaded = true;
+        console.log("Real eSpeak-NG TTS ready!");
+        return true;
+    } catch (error) {
+        console.error('Failed to initialize real eSpeak-NG TTS:', error);
+        if (error.message && error.message.includes('Wrong version of espeak-ng-data')) {
+            console.error('eSpeak-NG data version mismatch detected. The eSpeak TTS engine requires compatible data files.');
+            console.error('Please use the browser\'s built-in TTS or another TTS provider instead.');
+        }
+        TTS.espeakLoaded = false;
+        TTS.espeakInstance = null;
+        return false;
+    }
+};
+
+/**
+ * eSpeak TTS implementation
+ * @param {string} text - Text to speak
+ */
+TTS.espeakTTS = async function(text) {
+    try {
+        // Initialize if needed
+        if (!TTS.espeakLoaded || !TTS.espeakInstance) {
+            const initialized = await TTS.initEspeak();
+            if (!initialized) {
+                console.error("Failed to initialize eSpeak TTS - please use a different TTS provider");
+                TTS.finishedAudio();
+                return;
+            }
+        }
+        
+        TTS.premiumQueueActive = true;
+        
+        // Initialize audio context if needed
+        TTS.initAudioContext();
+        
+        // Generate speech using real eSpeak-NG TTS
+        const wavArrayBuffer = await TTS.espeakInstance.speak(text, {
+            voice: TTS.espeakSettings.voice,
+            speed: TTS.espeakSettings.speed,
+            pitch: TTS.espeakSettings.pitch,
+            amplitude: 100,  // Volume 0-200
+            variant: TTS.espeakSettings.variant
+        });
+        
+        // The real eSpeak returns WAV data directly
+        const audioBlob = new Blob([wavArrayBuffer], { type: 'audio/wav' });
+        
+        // Send to NeuroSync if enabled
+        if (TTS.neuroSyncEnabled) {
+            TTS.sendToNeuroSync(audioBlob).then(result => {
+                if (result && result.blendshapes) {
+                    //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+                }
+            }).catch(err => {
+                console.error("NeuroSync error:", err);
+            });
+            TTS.finishedAudio();
+            return;
+        }
+        
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        if (!TTS.audio) {
+            TTS.audio = document.createElement("audio");
+            TTS.audio.onended = TTS.finishedAudio;
+        }
+        
+        TTS.audio.src = audioUrl;
+        if (TTS.volume) {
+            TTS.audio.volume = TTS.volume;
+        }
+        
+        // Resume audio context if suspended
+        if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
+            await TTS.audioContext.resume();
+        }
+        
+        // Play the audio
+        TTS.audio.play().catch(err => {
+            console.error("Audio play failed, user interaction required", err);
+            TTS.finishedAudio();
+        });
+        
+    } catch (e) {
+        console.error('eSpeak TTS error:', e);
+        TTS.finishedAudio();
+        if (e.message && e.message.includes('interaction')) {
+            console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+        }
+    }
+};
+
+/**
+ * Initialize Piper TTS
+ * @returns {Promise<boolean>} - Whether initialization was successful
+ */
+TTS.initPiper = async function() {
+    if (TTS.piperLoaded) return true;
+    
+    try {
+        console.log("Loading Piper TTS module...");
+        
+        // Load dependencies in order
+        const scripts = [
+            './thirdparty/ort.min.js',
+            './thirdparty/piper/piper-tts-proper.js'
+        ];
+        
+        for (const src of scripts) {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = () => reject(new Error(`Failed to load ${src}`));
+                document.head.appendChild(script);
+            });
+        }
+        
+        // Wait for ProperPiperTTS to be available
+        if (!window.ProperPiperTTS) {
+            throw new Error('ProperPiperTTS not found');
+        }
+        
+        // Create Piper instance with selected voice
+        console.log('Creating Piper instance with voice:', TTS.piperSettings.voice);
+        TTS.piperInstance = new window.ProperPiperTTS(TTS.piperSettings.voice);
+        await TTS.piperInstance.init();
+        
+        TTS.piperLoaded = true;
+        console.log("Piper TTS ready!");
+        return true;
+    } catch (error) {
+        console.error('Failed to initialize Piper TTS:', error);
+        return false;
+    }
+};
+
+/**
+ * Piper TTS implementation
+ * @param {string} text - Text to speak
+ */
+TTS.piperTTS = async function(text) {
+    try {
+        // Initialize if needed
+        if (!TTS.piperLoaded || !TTS.piperInstance) {
+            const initialized = await TTS.initPiper();
+            if (!initialized) {
+                console.error("Failed to initialize Piper TTS");
+                TTS.finishedAudio();
+                return;
+            }
+        }
+        
+        TTS.premiumQueueActive = true;
+        
+        // Use Piper TTS with speed setting
+        await TTS.piperInstance.speak(text, TTS.piperSettings.speed);
+        
+        // Finished playing
+        TTS.finishedAudio();
+        
+    } catch (e) {
+        console.error('Piper TTS error:', e);
+        TTS.finishedAudio();
+    }
 };

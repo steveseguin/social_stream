@@ -2857,6 +2857,21 @@
 			}
 
 			var blockMessageSelecting = false;
+			
+			
+			var autoPinDonations = false;
+			if (urlParams.has("autopindonations") || urlParams.has("autopindonations")) {
+				autoPinDonations = true;
+			}
+			
+			var autoPinQuestions = false;
+			if (urlParams.has("autopinquestions") || urlParams.has("autopinquestion")) {
+				autoPinQuestions = true;
+			}
+			var autoQueueQuestions = false;
+			if (urlParams.has("autoqueuequestions") || urlParams.has("autoqueuequestion")) {
+				autoQueueQuestions = true;
+			}
 			if (urlParams.has("viewonly")) {
 				blockMessageSelecting = true;
 			}
@@ -5031,11 +5046,11 @@
 			var topBarElement = getById("topbar");
 			
 			function updateMeta(data){
-				if (data && data.event && data.type && ("meta" in data)){
-					if (data.event == "follower_update"){
+				if (data && data.event && ("meta" in data)){
+					if (data.type && data.event == "follower_update"){
 						followers[data.type] = parseInt(data.meta) || 0;
 						return true;
-					} else if (data.event == "viewer_update"){
+					} else if (data.type && data.event == "viewer_update"){
 						viewers[data.type] = parseInt(data.meta) || 0;
 						
 						if (showviewercount){
@@ -5054,9 +5069,44 @@
 							clearTimeout(ele.timeout);
 							ele.timeout = setTimeout(function(ele){
 								if (ele){
-									delete ele;
+									ele.remove();
 								}
 							},130000,ele)
+						}
+						return true;
+					} else if (data.event == "viewer_updates"){
+						if (showviewercount){
+							if (data.meta && typeof data.meta == "object"){
+								// First, remove any viewer elements not in the current update
+								topBarElement.querySelectorAll(".viewerIcons").forEach(ele => {
+									if (!data.meta.hasOwnProperty(ele.dataset.type)) {
+										clearTimeout(ele.timeout);
+										ele.remove();
+									}
+								});
+								
+								// Then update or create elements for types in the current update
+								Object.keys(data.meta).forEach(type=>{
+									let ele = topBarElement.querySelector("[data-type='"+type+"']");
+									if (ele){
+										ele.innerText = data.meta[type];
+									} else {
+										ele = document.createElement("div");
+										ele.dataset.type = type;
+										ele.classList.add("viewerIcons");
+										ele.title = "Viewer count for "+type;
+										ele.innerText = data.meta[type];
+										ele.style.backgroundImage = "url(./sources/images/"+type+".png)";
+										topBarElement.prepend(ele);
+									}
+									clearTimeout(ele.timeout);
+									ele.timeout = setTimeout(function(ele){
+										if (ele){
+											ele.remove();
+										}
+									},130000,ele)
+								});
+							}
 						}
 						return true;
 					}
@@ -7787,23 +7837,27 @@
 					}
 
 					if (data.chatbadges && showbadges) {
-						data.chatbadges.forEach(badge => {
-							if (typeof badge == "object") {
-								if (badge.type && badge.type == "img" && badge.src) {
-									if (badge.bgcolor) {
-										chatbadges += "<img class='hl-badge' style='background-color:" + badge.bgcolor + ";' src='" + badge.src + "' />";
-									} else {
-										chatbadges += "<img class='hl-badge' src='" + badge.src + "' />";
+						if (typeof data.chatbadges == "string"){
+							chatbadges = data.chatbadges;
+						} else {
+							data.chatbadges.forEach(badge => {
+								if (typeof badge == "object") {
+									if (badge.type && badge.type == "img" && badge.src) {
+										if (badge.bgcolor) {
+											chatbadges += "<img class='hl-badge' style='background-color:" + badge.bgcolor + ";' src='" + badge.src + "' />";
+										} else {
+											chatbadges += "<img class='hl-badge' src='" + badge.src + "' />";
+										}
+									} else if (badge.type && badge.type == "svg" && badge.html) {
+										chatbadges += "<span class='hl-badge svg'>" + badge.html + "</span>";
+									} else if (badge.type && badge.type == "text" && badge.text) {
+										chatbadges += "<span class='hl-badge textbadge'>" + badge.text + "</span>";
 									}
-								} else if (badge.type && badge.type == "svg" && badge.html) {
-									chatbadges += "<span class='hl-badge svg'>" + badge.html + "</span>";
-								} else if (badge.type && badge.type == "text" && badge.text) {
-									chatbadges += "<span class='hl-badge textbadge'>" + badge.text + "</span>";
+								} else {
+									chatbadges += "<img class='hl-badge' src='" + badge + "' />";
 								}
-							} else {
-								chatbadges += "<img class='hl-badge' src='" + badge + "' />";
-							}
-						});
+							});
+						}
 					}
 
 					var specialMessage = false;
@@ -8390,6 +8444,20 @@
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
 						updateQueueButton(); 
+					} else if (autoQueueQuestions && data.question) {
+						// Auto-pin questions when autoQueueQuestions URL parameter is set
+						selectedQueue.push(node);
+						node.children[0].dataset.qid = selectedQueue.length;
+						node.classList.add("queued");
+						updateQueueButton();
+					}
+					
+					if (autoPinQuestions && data.question) {
+						pinIt(node);
+					}
+					
+					if (autoPinDonations && data.hasDonation) {
+						pinIt(node);
 					}
 					
 					if (data.command && doNotTTSBeep){

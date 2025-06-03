@@ -42,6 +42,7 @@
 	--wordcloud-color: #6a6bffdd;
 	--poll-color: #61b700dd;
 	--credits-color: #02a0aa;
+	--leaderboard-color: #9b59b6;
     --download-link: blue;
     --font-family: "Segoe UI", Tahoma, "Sora", Roboto, Arial, sans-serif;
 }
@@ -111,7 +112,13 @@
     align-items: center;
 }
 
+body.ssapp {
+	font-size: 115%;
+}
 
+body.ssapp .options_group > div {
+    padding-bottom: 15px;
+}
 
 .add-source-container input {
     width: 150px;
@@ -718,6 +725,10 @@ h2.credits_mode_title {
     color: var(--credits-color);
 }
 
+h2.leaderboard_mode_title {
+    color: var(--leaderboard-color);
+}
+
 .link div a {
     color: var(--link-color);
 }
@@ -1235,9 +1246,6 @@ body.ssapp .collapsible-label {
     font-size: 1.25em; /* Slightly larger labels */
 }
 
-body.ssapp .collapsible-text {
-    padding: 1em; /* Increase padding within collapsible content */
-}
 
 /* Optimize link and options group sections */
 body.ssapp .link,
@@ -1414,7 +1422,7 @@ body.ssapp .wrapper.ssapp h3 {
             </button>
         </div>
         <div id="newVersion"></div>
-        <input type="text" id="searchInput" placeholder="Search all options by keyword..." />
+        <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
         <div class="container">
@@ -1426,6 +1434,34 @@ body.ssapp .wrapper.ssapp h3 {
 					
                 </h2>
                 <div id="dock" data-raw="" class="streaming_chat"></div>
+					
+					<!-- Stream Overlay Preset Selector -->
+					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
+							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
+						</label>
+						<select id="overlay-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+							<option value="">Classic dock.html (Full Customization)</option>
+							<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
+							<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
+							<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
+							<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
+							<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
+							<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
+							<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
+							<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
+							<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
+							<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
+							<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
+							<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
+							<option value="themes/events/index.html">🎉 Events Theme - Special occasions</option>
+							<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
+							<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
+						</select>
+						<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
+							<i data-translate="overlay-note">Note: Preset styles cannot be further modified here.</i>
+						</span>
+					</div>
 				
             </div>
 
@@ -1479,7 +1515,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="make-the-font-icons-and-menu-smaller">🔎➖ Make the font, icons, and menu smaller </span>
                                 </div>
-                                <div title="Use &chroma=0000 instead if you want to have a transparent background with the scroll bar still showing">
+                                <div title="Use &chroma=0000 instead if you want to have a transparent background with the scroll bar still showing" data-keywords="alpha opacity see-through clear invisible OBS streamlabs chroma key green screen remove background">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="transparent" />
                                         <span class="slider round"></span>
@@ -1649,7 +1685,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="stream-events-fade-up-and-away-after-3s">🚬 Stream events fade up and away after 3s </span>
                                 </div>
-                                <div title="Note: You must first interact with the dock-page for any audio to be audible.">
+                                <div title="Note: You must first interact with the dock-page for any audio to be audible." data-keywords="sound audio notification alert notify bell ring chime noise">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="beep" />
                                         <span class="slider round"></span>
@@ -1664,7 +1700,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30% </span>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom beep audio file">
-                                    <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam1="custombeep" />
+                                    <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
                                 </div>
                                 <div>
@@ -1719,7 +1755,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="skip-donation-data-from-messages">🏷️🦘 Skip messages containing donations </span>
                                 </div>
-                                <div>
+                                <div data-keywords="money tip superchat super chat bits donation donate payment paid sponsor highlight">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshowdonos" />
                                         <span class="slider round"></span>
@@ -1739,6 +1775,27 @@ body.ssapp .wrapper.ssapp h3 {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="auto-feature-monthly-member-chat">👑<img src="./sources/images/youtube.png" class="icon" /> Auto-feature YouTube monthly member chat </span>																														  
+                                </div>
+								<div title="Automatically pins messages that are identified as questions" data-keywords="Q&A QA Q and A ask query queries FAQ help support queue pin sticky">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="autopinquestions" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="auto-pin-questions">❓📌 Auto-pin messages identified as questions </span>
+                                </div>
+								<div title="Automatically queues messages that are identified as questions" data-keywords="queues queue ask query queries FAQ help support queue pin sticky">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="autoqueuequestions" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="auto-queue-questions">❓⛓️ Auto-queue messages identified as questions </span>
+                                </div>
+								<div title="Automatically pins messages that are identified as donations" data-keywords="donations pin sticky">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="autopindonations" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="auto-pin-donations">💵📌 Auto-pin messages with donations</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -1797,7 +1854,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="allow-lan-only-p2p-connections">🖥️💻 P2P connections via LAN only </span>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a command that lets a guest auto-queue a message">
-                                    <input type="text" id="selfqueue" class="textInput instant" autocomplete="off" placeholder="eg: !lookie" data-textparam1="selfqueue" />
+                                    <input type="text" id="selfqueue" class="textInput instant" autocomplete="off" placeholder="eg: !lookie" data-translate="placeholder-command-example" data-textparam1="selfqueue" />
                                     <label for="selfqueue"><span data-translate="selfqueue">&gt; Chat command to auto-queue the message</span></label>
                                 </div>
                             </div>
@@ -1816,7 +1873,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<div class="options">
 							<div class="options_group streaming_chat">
 								<!-- Main TTS Toggle -->
-								<h4>Enable Text to Speech in the Dock</h4>
+								<h4 data-translate="enable-tts-dock">Enable Text to Speech in the Dock</h4>
 								<div title="Tip: You can use &amp;myname=name1,name2 to list names to exclude from TTS.">
 									<label class="switch">
 										<input type="checkbox" data-param1="speech" />
@@ -1830,7 +1887,7 @@ body.ssapp .wrapper.ssapp h3 {
 							
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
-								<h4>TTS Behaviors</h4>
+								<h4 data-translate="tts-behaviors">TTS Behaviors</h4>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param1="simpletts" />
@@ -1861,7 +1918,7 @@ body.ssapp .wrapper.ssapp h3 {
 									</label>
 									<span data-translate="ttscommand">🗣️ Any message containing 
 										<input type="text" id="ttscommandcustom" class="textInput instant" autocomplete="off" 
-											placeholder="!say" data-textparam1="ttscommand" value="!say" 
+											placeholder="!say" data-translate="placeholder-tts-command" data-textparam1="ttscommand" value="!say" 
 											title="You need to include the ! if you want it" style="width:36px" /> will be read out 
 									</span>
 								</div>
@@ -1889,7 +1946,7 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 							</div>
 							<div class="options_group tts-behavior-options">
-								<h4>Read out only specific user/messages</h4>
+								<h4 data-translate="tts-read-specific">Read out only specific user/messages</h4>
 								<div title="Only 'bot' marked users will have messages read out.">
 									<label class="switch">
 										<input type="checkbox" data-param1="bottts" />
@@ -1941,7 +1998,7 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 							</div>
 							<div class="options_group tts-behavior-options">
-								<h4>Bots, hosts and events are excluded from TTS</h4>
+								<h4 data-translate="tts-exclude-bots">Bots, hosts and events are excluded from TTS</h4>
 								<div title="Allow 'bot' marked users to have messages read out; default is to filter them out">
 									<label class="switch">
 										<input type="checkbox" data-param1="allowbottts" />
@@ -1965,7 +2022,7 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 							</div>
 							<div class="options_group tts-behavior-options">
-								<h4>More TTS options</h4>
+								<h4 data-translate="tts-more-options">More TTS options</h4>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param1="skipmessages=3" />
@@ -2010,7 +2067,7 @@ body.ssapp .wrapper.ssapp h3 {
 						
 						
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
-							<h3>Text-to-Speech Service Provider</h3>
+							<h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
 							<select id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="kokoro">Kokoro (webGPU/CPU)</option>
@@ -2023,7 +2080,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<div id="ttsButton" class="hidden"></div>
 						
 						<div class="tts-provider-options options_group" id="systemTTS">
-							<h4>Built-in System TTS Options</h4>
+							<h4 data-translate="tts-system-options">Built-in System TTS Options</h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 							<br /><br />
 							<div>
@@ -2058,7 +2115,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Kokoro TTS Options -->
 						<div class="tts-provider-options options_group" id="kokoroTTS">
-							<h4>Kokoro TTS Options</h4>
+							<h4 data-translate="tts-kokoro-options">Kokoro TTS Options</h4>
 							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
 							<br /><br />
 							<div>
@@ -2082,10 +2139,10 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- ElevenLabs TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="elevenlabsTTS">
-							<h4>ElevenLabs TTS Options</h4>
+							<h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="elevenLabsKey" class="textInput instant" autocomplete="off" 
-									placeholder="Your ElevenLabs API Key" data-textparam1="elevenlabskey" />
+									placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam1="elevenlabskey" />
 								<label for="elevenLabsKey">
 									<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
 								</label>
@@ -2177,7 +2234,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Google Cloud TTS Options -->
 						<div class="tts-provider-options options_group hidden"  id="googleTTS">
-							<h4>Google Cloud TTS Options</h4>
+							<h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="googleAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam1="ttskey" />
 								<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
@@ -2291,7 +2348,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Speechify TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="speechifyTTS">
-							<h4>Speechify TTS Options</h4>
+							<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="speechifyAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam1="speechifykey" />
 								<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
@@ -2671,7 +2728,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     ✒️<span data-translate="reduce-text-outlining">Decrease text outline by 33%</span>
                                 </div>
-								<h3>Background Shading for Messages</h3>
+								<h3 data-translate="background-shading">Background Shading for Messages</h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hideshadow" />
@@ -2715,7 +2772,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="no-background-shading-for-donations">⭕💰 No background shading for donations </span>
                                 </div>
 								<div>
-									<h3>Customize Donation Colors by Threshold 🌈💰</h3>
+									<h3 data-translate="donation-colors">Customize Donation Colors by Threshold 🌈💰</h3>
 									<div style="width: 100%; display:inline-block;">
 										<label class="switch">
 											<input type="checkbox" data-param1="t1" />
@@ -2890,7 +2947,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="messages-smoothly-scroll-in"> Messages smoothly scroll in </span>
                                 </div>
 
-                                <h3>Advanced animation options can be set below.</h3>
+                                <h3 data-translate="advanced-animation">Advanced animation options can be set below.</h3>
                                 <i>
                                     <p>
                                         These may override the basic transition options listed above.
@@ -3170,8 +3227,10 @@ body.ssapp .wrapper.ssapp h3 {
                 </div>
 				
             </div>
-			<div style="color:white;font"><i>
-				Want a different design? Check out the <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">community made styles here</a>, or quick load a <a id="sampleoverlay" class="lightblue"  target="_blank" href="#">popular sample theme here</a>! Customize it with an AI chat bot.</i> 
+			<div style="color:white;font">
+				<i>
+				Want to design your own? Check out our <a class="lightblue"  href="https://github.com/steveseguin/social_stream/tree/main/themes#custom-themes" target="_blank">AI-friendly starter templates</a>.
+				</i>
 			</div>
             <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="single_message_title">
@@ -3180,6 +3239,48 @@ body.ssapp .wrapper.ssapp h3 {
                     <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">[options]</span></a>
                 </h2>
                 <div id="overlay" data-raw="" class="single_message"></div>
+                
+                <!-- Featured Overlay Preset Selector -->
+                <div class="preset-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                    <label for="featured-preset-select" style="display: inline-block; margin-right: 10px;">
+                        <span data-translate="preset-style">🎨 Preset Style:</span>
+                    </label>
+                    <select id="featured-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+                        <option value="">Classic (Full Customization)</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=glass">Modern Glass</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=neon">Neon Glow</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=minimal">Minimal Clean</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=gaming">Gaming RGB</option>
+                        <option value="themes/featured-styles/featured-modern.html?style=twitch">Twitch Style</option>
+                        <option value="themes/featured-styles/featured-animated.html?style=bounce">Animated Bounce</option>
+                        <option value="themes/featured-styles/featured-animated.html?style=slide">Animated Slide</option>
+                        <option value="themes/featured-styles/featured-animated.html?style=typewriter">Typewriter</option>
+                        <option value="themes/featured-styles/featured-animated.html?style=comic">Comic Pop</option>
+                        <option value="themes/featured-styles/featured-animated.html?style=holo">Holographic</option>
+                        <option value="themes/featured-styles/featured-3d.html?style=cube">3D Cube</option>
+                        <option value="themes/featured-styles/featured-3d.html?style=flip">Card Flip</option>
+                        <option value="themes/featured-styles/featured-3d.html?style=float">Floating Panels</option>
+                        <option value="themes/featured-styles/featured-3d.html?style=helix">Helix Spiral</option>
+                        <option value="themes/featured-styles/featured-3d.html?style=iso">Isometric</option>
+                        <option value="themes/featured-styles/featured-particles.html?style=fireflies">Fireflies</option>
+                        <option value="themes/featured-styles/featured-particles.html?style=snow">Snow Fall</option>
+                        <option value="themes/featured-styles/featured-particles.html?style=matrix">Matrix Rain</option>
+                        <option value="themes/featured-styles/featured-particles.html?style=bubbles">Bubbles</option>
+                        <option value="themes/featured-styles/featured-particles.html?style=stars">Starfield</option>
+                        <option value="themes/featured-styles/featured-slide.html">Sliding Effects</option>
+                        <option value="themes/featured-styles/featured-gradient.html">Gradient Animations</option>
+                        <option value="themes/featured-styles/featured-retro.html">Retro/Synthwave</option>
+                        <option value="themes/featured-styles/featured-glass.html">Glassmorphism</option>
+                        <option value="themes/featured-styles/featured-cyberpunk.html">Cyberpunk</option>
+                        <option value="themes/featured-styles/featured-gaming.html">Gaming Themed</option>
+                        <option value="themes/featured-styles/featured-elegant.html">Elegant & Sophisticated</option>
+                        <option value="themes/featured-styles/featured-dynamic.html">Dynamic Physics</option>
+                        <option value="themes/featured-styles/featured-neon.html">Neon Glow</option>
+                    </select>
+                    <span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
+                        <i data-translate="preset-note">Note: Presets have limited customization options</i>
+                    </span>
+                </div>
             </div>
             <a href="" id="single-message-options"></a>
 
@@ -3273,7 +3374,7 @@ body.ssapp .wrapper.ssapp h3 {
                                 </div>
 
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom beep audio file">
-                                    <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-textparam2="custombeep" />
+                                    <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam2="custombeep" />
                                     <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>												 
                                 </div>
                                 <div>
@@ -3418,9 +3519,9 @@ body.ssapp .wrapper.ssapp h3 {
 								<br />
 								<!-- ElevenLabs TTS Options -->
 								<div class="tts-provider-options">
-									<h4>ElevenLabs TTS Options</h4>
+									<h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
 									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="elevenLabsKey2" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-textparam2="elevenlabskey" />
+										<input type="password" id="elevenLabsKey2" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam2="elevenlabskey" />
 										<label for="elevenLabsKey"><span data-translate="elevenlabs-api-key">ElevenLabs API Key</span></label>
 									</div>
 									<div class="textInputContainer" style="width: 95%;">
@@ -3441,7 +3542,7 @@ body.ssapp .wrapper.ssapp h3 {
 								<br />
 								<!-- Speechify TTS Options -->
 								<div class="tts-provider-options">
-									<h4>Speechify TTS Options</h4>
+									<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="password" id="speechifyAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam2="speechifykey" />
 										<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
@@ -3700,6 +3801,112 @@ body.ssapp .wrapper.ssapp h3 {
                 </div>
             </div>
 			
+			<!-- Preset-specific configuration sections -->
+			<div id="preset-config-modern" class="preset-config-section" style="display: none;">
+				<div class="wrapper">
+					<div class="collapsible">
+						<input type="checkbox" class="collapsible-input" id="wrapper-preset-modern-options" />
+						<label class="collapsible-label" for="wrapper-preset-modern-options"><span>🎨 Modern Preset Options</span></label>
+						<div class="collapsible-text">
+							<div class="options">
+								<div class="options_group">
+									<h3>Style Options</h3>
+									<p>The modern preset includes: Glass, Neon, Minimal, Gaming, and Twitch styles</p>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param2="showtime" />
+											<span class="slider round"></span>
+										</label>
+										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div id="preset-config-animated" class="preset-config-section" style="display: none;">
+				<div class="wrapper">
+					<div class="collapsible">
+						<input type="checkbox" class="collapsible-input" id="wrapper-preset-animated-options" />
+						<label class="collapsible-label" for="wrapper-preset-animated-options"><span>🎭 Animated Preset Options</span></label>
+						<div class="collapsible-text">
+							<div class="options">
+								<div class="options_group">
+									<h3>Animation Options</h3>
+									<p>The animated preset includes: Bounce, Slide, Typewriter, Comic, and Holographic styles</p>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param2="showtime" />
+											<span class="slider round"></span>
+										</label>
+										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+									</div>
+									<div>
+										<label>Exit Animation:</label>
+										<select data-optionparam2="exit">
+											<option value="">Default for style</option>
+											<option value="bounce">Bounce</option>
+											<option value="slide">Slide</option>
+											<option value="fade">Fade</option>
+										</select>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div id="preset-config-3d" class="preset-config-section" style="display: none;">
+				<div class="wrapper">
+					<div class="collapsible">
+						<input type="checkbox" class="collapsible-input" id="wrapper-preset-3d-options" />
+						<label class="collapsible-label" for="wrapper-preset-3d-options"><span>🎲 3D Preset Options</span></label>
+						<div class="collapsible-text">
+							<div class="options">
+								<div class="options_group">
+									<h3>3D Effect Options</h3>
+									<p>The 3D preset includes: Cube, Flip, Float, Helix, and Isometric styles</p>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param2="showtime" />
+											<span class="slider round"></span>
+										</label>
+										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div id="preset-config-particles" class="preset-config-section" style="display: none;">
+				<div class="wrapper">
+					<div class="collapsible">
+						<input type="checkbox" class="collapsible-input" id="wrapper-preset-particles-options" />
+						<label class="collapsible-label" for="wrapper-preset-particles-options"><span>✨ Particles Preset Options</span></label>
+						<div class="collapsible-text">
+							<div class="options">
+								<div class="options_group">
+									<h3>Particle Effect Options</h3>
+									<p>The particles preset includes: Fireflies, Snow, Matrix, Bubbles, and Stars effects</p>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param2="showtime" />
+											<span class="slider round"></span>
+										</label>
+										<span>⏲️ Custom display time <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="30000" size="6" data-numbersetting2="showtime" />ms</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
 			 <div class="chatbot_category_title">
                 <h2 class="chatbot_wall_title"
                     <span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span>
@@ -3722,7 +3929,7 @@ body.ssapp .wrapper.ssapp h3 {
 								<p>Using this section requires a bot service to be made available.</p>
 								<p>You can install one for free with Ollama: <a href="https://socialstream.ninja/ai" class="lightblue"  target="_blank">Installation Guide Here</a></p>
 
-								<h3>Configure LLM API 🦙</h3>
+								<h3 data-translate="configure-llm">Configure LLM API 🦙</h3>
 								
 								<div>
 									<select id="aiProvider" data-optionsetting="aiProvider" class="textInput">
@@ -3978,7 +4185,7 @@ body.ssapp .wrapper.ssapp h3 {
 										<span data-translate="ollamaprompt">&gt; Additional Bot Instructions (Optional)</span>
 									</label>
 								</div>
-								<h3>Give the above chat bot access to additional custom knowledge that you can provide</h3>
+								<h3 data-translate="chatbot-knowledge">Give the above chat bot access to additional custom knowledge that you can provide</h3>
 								<br>
 								<div style="display: inline-block;" title="Enable the RAG mode, which has the LLM bot access a local database containing additional knowledge that if may reference in its responses.">
 									<label class="switch">
@@ -3997,7 +4204,7 @@ body.ssapp .wrapper.ssapp h3 {
 											<span data-translate="clear-rag">Clear all</span>
 										</button>
 									</div>
-									<h4>Custom knowledge-base - File Management</h4>
+									<h4 data-translate="knowledge-file-management">Custom knowledge-base - File Management</h4>
 									<div id="ragFileList"></div>
 									<div>
 										<input type="checkbox" id="enhancedProcessing" checked>
@@ -4035,7 +4242,7 @@ body.ssapp .wrapper.ssapp h3 {
 							
 							<div class="options_group streaming_chat">
 								<!-- Main TTS Toggle -->
-								<h4>Enable Text to Speech</h4>
+								<h4 data-translate="enable-tts">Enable Text to Speech</h4>
 								<div style="display: inline-block;" title="Text to speech bot messages">
 									<label class="switch">
 										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
@@ -4048,7 +4255,7 @@ body.ssapp .wrapper.ssapp h3 {
 							
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
-								<h4>TTS Behaviours</h4>
+								<h4 data-translate="tts-behaviours">TTS Behaviours</h4>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param10="readouturls" />
@@ -4074,7 +4281,7 @@ body.ssapp .wrapper.ssapp h3 {
 							</div>
 							
 							<div class="options_group tts-behavior-options">
-								<h4>More bot overlay page options</h4>
+								<h4 data-translate="bot-overlay-options">More bot overlay page options</h4>
 								<div title="For the purpose of using this with neurosync. WILL NOT WORK WITH SYSTEM TTS">
 									<label class="switch">
 										<input type="checkbox" data-param10="neurosync" />
@@ -4117,25 +4324,25 @@ body.ssapp .wrapper.ssapp h3 {
 						
 						
 						<div class="tts-provider-selection" style="margin:0 10px 10px 10px">
-							<h3>Text-to-Speech Service Provider</h3>
+							<h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
 							<select id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
+								<option value="kokoro">Kokoro (webGPU/CPU)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
-								<option value="kokoro">Kokoro (webGPU/CPU)</option>
 							</select>
 						</div>
 						
 						<div id="ttsButton10" class="hidden"></div>
 						
 						<div class="tts-provider-options options_group" id="systemTTS10">
-							<h4>Built-in System TTS Options</h4>
+							<h4 data-translate="tts-system-options">Built-in System TTS Options</h4>
 							<i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue"  target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
 							<br /><br />
 							<div>
 								<label class="switch">
-									<input type="checkbox" data-param10="lang" data-del10="lang,voice"/>
+									<input type="checkbox" data-param10="lang"/>
 									<span class="slider round"></span>
 								</label>
 								<select id="systemLanguageSelect10" data-optionparam10="lang" title="Select the system TTS language"></select>
@@ -4165,10 +4372,10 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- ElevenLabs TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="elevenlabsTTS10">
-							<h4>ElevenLabs TTS Options</h4>
+							<h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="elevenLabsKey10" class="textInput instant" autocomplete="off" 
-									placeholder="Your ElevenLabs API Key" data-textparam10="elevenlabskey" />
+									placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam10="elevenlabskey" />
 								<label for="elevenLabsKey">
 									<span data-translate="elevenlabs-api-key">ElevenLabs API Key</span>
 								</label>
@@ -4256,7 +4463,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Google Cloud TTS Options -->
 						<div class="tts-provider-options options_group hidden"  id="googleTTS10">
-							<h4>Google Cloud TTS Options</h4>
+							<h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="googleAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam10="ttskey" />
 								<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
@@ -4370,7 +4577,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Speechify TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="speechifyTTS10">
-							<h4>Speechify TTS Options</h4>
+							<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
 							<div class="textInputContainer" style="width: 95%;">
 								<input type="password" id="speechifyAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam10="speechifykey" />
 								<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
@@ -4419,7 +4626,7 @@ body.ssapp .wrapper.ssapp h3 {
 						</div>
 						<!-- Kokoro TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kokoroTTS10">
-							<h4>Kokoro TTS Options</h4>
+							<h4 data-translate="tts-kokoro-options">Kokoro TTS Options</h4>
 							<i>note: this free locally-running TTS needs a powerful computer to run well.</i>
 							<br /><br />
 							<div>
@@ -4490,7 +4697,7 @@ body.ssapp .wrapper.ssapp h3 {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
-								<h2 style="margin:0;">Standalone one-on-one chat bot</h2>
+								<h2 style="margin:0;" data-translate="standalone-chatbot">Standalone one-on-one chat bot</h2>
 								
 								
 								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
@@ -4524,7 +4731,7 @@ body.ssapp .wrapper.ssapp h3 {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
-								<h3>A virtual co-host that can both listen, see, and talk back</h3>
+								<h3 data-translate="virtual-cohost">A virtual co-host that can both listen, see, and talk back</h3>
 								
 								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
 									<div id="cohost" data-raw="" class="single_message">
@@ -4867,31 +5074,17 @@ body.ssapp .wrapper.ssapp h3 {
 								<h3><span data-translate="source-combination-options">Source Combination Options</span></h3>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-setting="hypeCombineYouTube" />
+										<input type="checkbox" data-param4="combineyoutube" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="combine-youtube-and-shorts">🔄 Combine YouTube and YouTube Shorts</span>
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-setting="hypeCombineSameType" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="combine-same-types">🔄 Combine all sources of the same type</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-setting="hypeCombineAll" />
+										<input type="checkbox" data-param4="combineall" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="combine-all-sources">🔄 Combine all sources into one global count</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-setting="hypeAutoCleanup" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="auto-cleanup-inactive">🧹 Auto remove inactive sources (33 seconds)</span>
 								</div>
 								<div class="textInputContainer" style="width: 95%;" title="Assign a unique identifier for this hype meter">
 									<input type="text" id="hypeUniqueId" class="textInput instant" autocomplete="off" placeholder="empty = default" data-param4="uniqueid" />
@@ -4906,7 +5099,7 @@ body.ssapp .wrapper.ssapp h3 {
 			
 			<div class="link" title="This link shows a tally of donations recieved">
                 <h2 class="tipjar_title">
-                    <span data-translate="tipjar">Tip Jar</span>
+                    <span data-translate="tipjar">Tip Jar and Goal Meter</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#tipjarhref" title="Jump to the tip jar link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -4918,20 +5111,82 @@ body.ssapp .wrapper.ssapp h3 {
                 <div id="tipjar" data-raw="" class="tipjar"></div>
             </div>
             <a href="" id="tipjarhref"></a>
-            <div class="wrapper hidden">
+            <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-general-options" />
                     <label class="collapsible-label" for="wrapper-tipjar-general-options"><span data-translate="enable-and-customize">📊 Customize</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group tipjar">
-                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
+                                <h3><span data-translate="general-options">General Options</span></h3>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param12="alignright" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="align-overly-to-the-right-side">➡️ Align overlay to the right-side </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="persistent" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="keep-amount-between-sessions">💾 Keep amount between sessions</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="sound" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="play-sound-on-donation">🔊 Play sound on donation</span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param12="controls" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="show-control-panel">🎛️ Show control panel</span>
+                                </div>
+                                
+                                <h3><span data-translate="style-and-theme">Style and Theme</span></h3>
+                                <div>
+                                    <label><span data-translate="display-style">Display Style:</span></label>
+                                    <select data-optionparam12="style" class="textInput">
+                                        <option value="jar" selected><span data-translate="jar-style">Jar (Default)</span></option>
+                                        <option value="meter"><span data-translate="meter-style">Goal Meter</span></option>
+                                        <option value="minimal"><span data-translate="minimal-style">Minimal</span></option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label><span data-translate="theme">Theme:</span></label>
+                                    <select data-optionparam12="theme" class="textInput">
+                                        <option value="default" selected><span data-translate="default-theme">Default</span></option>
+                                        <option value="neon"><span data-translate="neon-theme">Neon</span></option>
+                                        <option value="gold"><span data-translate="gold-theme">Gold</span></option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label><span data-translate="celebration-effect">Celebration Effect:</span></label>
+                                    <select data-optionparam12="celebration" class="textInput">
+                                        <option value="hearts" selected><span data-translate="hearts-effect">Hearts (Default)</span></option>
+                                        <option value="confetti"><span data-translate="confetti-effect">Confetti</span></option>
+                                        <option value="fireworks"><span data-translate="fireworks-effect">Fireworks</span></option>
+                                        <option value="none"><span data-translate="no-effect">None</span></option>
+                                    </select>
+                                </div>
+                                
+                                <h3><span data-translate="goal-settings">Goal Settings</span></h3>
+                                <div>
+                                    <label><span data-translate="goal-amount">Goal Amount ($):</span></label>
+                                    <input type="number" data-optionparam12="goal" class="textInput" placeholder="250" value="250" min="1" step="1" />
+                                </div>
+                                <div>
+                                    <label><span data-translate="custom-title">Custom Title:</span></label>
+                                    <input type="text" data-optionparam12="title" class="textInput" placeholder="Stream Goal" />
+                                </div>
+                                <div>
+                                    <label><span data-translate="custom-jar-image">Custom Jar Image URL:</span></label>
+                                    <input type="text" data-optionparam12="jarimage" class="textInput" placeholder="https://example.com/jar.png" />
                                 </div>
 								
                             </div>
@@ -5191,7 +5446,7 @@ body.ssapp .wrapper.ssapp h3 {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group poll">
-								<h3>Poll Settings</h3>
+								<h3 data-translate="poll-settings">Poll Settings</h3>
 								<p>Enable and customize the poll:</p>
 								<br>
 								<div>
@@ -5277,59 +5532,6 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 								
 								
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div class="link" title="Battle Royal">
-                <h2 class="battle_mode_title">
-                    <span data-translate="pollmeter">Battle Royal </span>
-					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
-					<a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">[options]</span></a>
-                </h2>
-                <h3>
-                    <span data-translate="when-enabled-a-battle">
-                       A battle royal mini game. Users can enter !join to play
-                    </span>
-                </h3>
-				<div id="battle" data-raw="" class="streaming_chat"><a href="" id="battlelink"></a></div>
-			</div>
-			
-			<div class="wrapper">
-                <div class="collapsible">
-                    <input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
-                    <label class="collapsible-label" for="wrapper-battle-general-options">📊 <span data-translate="options-and-actions">Options and actions</span></label>
-                    <div class="collapsible-text">
-                        <div class="options">
-                            <div class="options_group battle">
-								<div>
-										<label class="switch">
-											<input type="checkbox" data-param8="lobby" />
-											<span class="slider round"></span>
-										</label>
-
-										🚦 <span data-translate="enable-the-battle">Host Starts</span>
-									
-										<button class="glowingButton" style="width: 170px; border: 1px solid #000; padding: 2px;" data-action="startgame">
-											<span style="font-size: 0.8em;"><span data-translate="start-game">Start the game</span></span>
-										</button>
-								</div>
-							
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param8="nocomputers" />
-										<span class="slider round"></span>
-									</label>
-									🚫🤖 <span data-translate="disable-computer-players">Disable computer players</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param8="lobbytime=30" />
-										<span class="slider round"></span>
-									</label>
-									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>
-								</div>
 							</div>
 						</div>
 					</div>
@@ -5471,6 +5673,794 @@ body.ssapp .wrapper.ssapp h3 {
 					</div>
 				</div>
 			</div>
+			
+			<div class="link" title="Interactive leaderboard display">
+				<h2 class="leaderboard_mode_title">
+					<span data-translate="leaderboardmeter">Leaderboard</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#leaderboard" title="Jump to the leaderboard link options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<h3>
+					<span data-translate="when-enabled-a-leaderboard">
+					   An interactive leaderboard overlay. Track and display top contributors, chatters, or custom scores.
+					</span>
+				</h3>
+				<div id="leaderboard" data-raw="" class="streaming_chat"><a href="" id="leaderboardlink"></a></div>
+			</div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-leaderboard-general-options" />
+					<label class="collapsible-label" for="wrapper-leaderboard-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group leaderboard">
+								<h3><span data-translate="layout-mode">Layout Mode</span></h3>
+								<div>
+									<span data-translate="display-layout-leaderboard">
+										Layout Style
+									</span>
+									<select data-optionparam19="layout">
+										<option value="corner">Corner Widget</option>
+										<option value="bar">Horizontal Bar</option>
+										<option value="full">Full Window</option>
+									</select>
+								</div>
+								<br>
+								
+								<h3><span data-translate="ranking-criteria">Ranking Criteria</span></h3>
+								<div>
+									<span data-translate="ranking-type">
+										Rank By
+									</span>
+									<select data-optionparam19="rankby">
+										<option value="donations">Total Donations</option>
+										<option value="messages">Message Count</option>
+										<option value="points">Points Score</option>
+										<option value="engagement">Engagement Score</option>
+										<option value="custom">Custom Metric</option>
+									</select>
+								</div>
+								<br>
+								
+								<h3><span data-translate="display-options">Display Options</span></h3>
+								<div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="showrank" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="show-rank-number">
+											🏆 Show rank numbers
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="showavatar" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="show-avatar-leaderboard">
+											👤 Show user avatars
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="showscore" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="show-score-value">
+											📊 Show score values
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="showsource" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="show-source-platform">
+											🌐 Show source platform
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="animated" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="enable-animations">
+											✨ Enable animations
+										</span>
+									</div>
+									<br>
+									
+									<div>
+										<span data-translate="max-entries">
+											Maximum entries to show
+										</span>
+										<input type="number" style="max-width: 8ch;" max="100" min="3" value="10" size="3" data-numbersetting19="maxentries" />
+									</div>
+									<br>
+									
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="updateinterval" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="update-interval">
+											⏱️ Update interval <input type="number" style="max-width: 8ch;" max="60" min="1" value="5" size="3" data-numbersetting19="updateinterval" /> seconds
+										</span>
+									</div>
+								</div>
+								<br>
+								
+								<h3><span data-translate="theme-options">Theme Options</span></h3>
+								<div>
+									<span data-translate="theme-style-leaderboard">
+										Theme Style
+									</span>
+									<select data-optionparam19="theme">
+										<option value="modern">Modern</option>
+										<option value="classic">Classic</option>
+										<option value="neon">Neon</option>
+										<option value="minimal">Minimal</option>
+										<option value="gaming">Gaming</option>
+										<option value="gradient">Gradient</option>
+									</select>
+								</div>
+								<br>
+								
+								<span data-translate="font-family">
+									Font Family
+								</span>
+								<select data-optionparam19="font">
+									<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
+									<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
+								</select>
+								<br><br>
+								
+								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
+									<input type="text" id="googlefont19" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam19="googlefont" />
+									<label for="googlefont19"><span data-translate="googlefont">&gt; specify a Google Font name</span></label>
+								</div>
+								<br>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param19="primarycolor" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="primary-color">
+										🎨 Primary color
+									</span>
+									<input type="text" style="width: 50px;" data-palette="primary_color_palette19" id="primary_color19" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam19="primarycolor" />
+									<input type="color" data-color="primary_color19" id="primary_color_palette19" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param19="accentcolor" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="accent-color">
+										🎨 Accent color
+									</span>
+									<input type="text" style="width: 50px;" data-palette="accent_color_palette19" id="accent_color19" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam19="accentcolor" />
+									<input type="color" data-color="accent_color19" id="accent_color_palette19" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
+								</div>
+								<br>
+								
+								<h3><span data-translate="behavior-options">Behavior Options</span></h3>
+								<div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="highlightnew" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="highlight-new-entries">
+											🌟 Highlight new entries
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="smoothtransitions" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="smooth-transitions">
+											🔄 Smooth position transitions
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="showchanges" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="show-rank-changes">
+											📈 Show rank change indicators
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="persistdata" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="persist-leaderboard-data">
+											💾 Persist data between sessions
+										</span>
+									</div>
+								</div>
+								<br>
+								
+								<div class="textInputContainer" style="width: 95%;" title="Custom title for the leaderboard">
+									<input type="text" id="title19" class="textInput instant" autocomplete="off" placeholder="eg: Top Contributors" value="Leaderboard" data-textparam19="title" />
+									<label for="title19"><span data-translate="leaderboard-title">&gt; Custom leaderboard title</span></label>
+								</div>
+								<br>
+								
+								<div class="textInputContainer" style="width: 95%;" title="Minimum score required to appear on leaderboard">
+									<input type="text" id="minscore19" class="textInput instant" autocomplete="off" placeholder="eg: 10" value="0" data-textparam19="minscore" />
+									<label for="minscore19"><span data-translate="minimum-score">&gt; Minimum score threshold</span></label>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- OVERLAY THEME CONFIGURATION SECTIONS -->
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-overlay-theme-options" />
+					<label class="collapsible-label" for="wrapper-overlay-theme-options">🎨 <span data-translate="overlay-theme-options">Overlay Theme Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<!-- Sample Overlay Options -->
+							<div class="overlay-config-section" id="sampleoverlay-overlay-config" style="display: none;">
+								<h3>📄 <span data-translate="sample-overlay-options">Sample Overlay Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="demo" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="demo-mode-overlay">
+										🤖 Enable demo mode (auto-messages)
+									</span>
+								</div>
+							</div>
+							
+							<!-- New Animated Overlay Options -->
+							<div class="overlay-config-section" id="overlay-neon-cyberpunk-overlay-config" style="display: none;">
+								<h3>⚡ <span data-translate="neon-cyberpunk-options">Neon Cyberpunk Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cyberpunk-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="intensegfx" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cyberpunk-intense">
+										🔥 Intense glitch effects mode
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-particles-overlay-config" style="display: none;">
+								<h3>✨ <span data-translate="particles-options">Particle System Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="denseparticles" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="particles-dense">
+										💫 Dense particle mode
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="particles-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-typewriter-overlay-config" style="display: none;">
+								<h3>⌨️ <span data-translate="typewriter-options">Terminal Typewriter Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="fastype" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="typewriter-fast">
+										⚡ Fast typing mode
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="nosound" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="typewriter-nosound">
+										🔇 Disable terminal sounds
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-bubbles-overlay-config" style="display: none;">
+								<h3>🫧 <span data-translate="bubbles-options">Bubble Chat Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="bigbubbles" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="bubbles-big">
+										🎈 Extra large bubbles
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="bubbles-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<div class="overlay-config-section" id="overlay-cards-overlay-config" style="display: none;">
+								<h3>🃏 <span data-translate="cards-options">Card Flip 3D Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="autoflip" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cards-autoflip">
+										🔄 Auto-flip cards periodically
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="cards-chroma">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<!-- Neutron Theme Options -->
+							<div class="overlay-config-section" id="Neutron-overlay-config" style="display: none;">
+								<h3>⚛️ <span data-translate="neutron-overlay-options">Neutron Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="darkmode" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="neutron-dark-mode">
+										🌙 Dark mode variant
+									</span>
+								</div>
+							</div>
+							
+							<!-- Pretty Theme Options -->
+							<div class="overlay-config-section" id="pretty-overlay-config" style="display: none;">
+								<h3>✨ <span data-translate="pretty-overlay-options">Pretty Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="chroma" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="pretty-chroma-key">
+										🟢 Enable chroma key background
+									</span>
+								</div>
+							</div>
+							
+							<!-- Windows 3.1 Theme Options -->
+							<div class="overlay-config-section" id="Windows3-overlay-config" style="display: none;">
+								<h3>🖥️ <span data-translate="windows31-overlay-options">Windows 3.1 Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="retro" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="windows31-retro-mode">
+										📺 Enhanced retro mode
+									</span>
+								</div>
+							</div>
+							
+							<!-- T3nk3y Theme Options -->
+							<div class="overlay-config-section" id="t3nk3y-overlay-config" style="display: none;">
+								<h3>🎮 <span data-translate="t3nk3y-overlay-options">T3nk3y Theme Options</span></h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="gaming" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="t3nk3y-gaming-mode">
+										🕹️ Enhanced gaming mode
+									</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<!-- GAMES SECTION -->
+			<div class="link" title="Interactive Games">
+				<h2 class="games_mode_title">
+					<span data-translate="interactive-games">🎮 Interactive Games</span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#games" title="Jump to the games link options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<h3>
+					<span data-translate="interactive-chat-games">
+					   Interactive chat-based games for viewer engagement. Choose from various mini-games.
+					</span>
+				</h3>
+				<div id="games" data-raw="" class="streaming_chat"><a href="" id="gameslink"></a></div>
+				
+				<!-- Games Preset Selector -->
+				<div class="games-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+					<label for="games-preset-select" style="display: inline-block; margin-right: 10px;">
+						<span data-translate="select-game">🎯 Select Game:</span>
+					</label>
+					<select id="games-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+						<option value="">Choose a game...</option>
+						<option value="games.html">⚡ Spam Power - Chat activity powered</option>
+						<option value="games/emojirain.html">🌧️ Emoji Rain - Emoji falling effects</option>
+						<option value="games/chatwars.html">⚔️ Chat Wars - Team territory battles</option>
+						<option value="games/wordstorm.html">🌪️ Word Storm - Collective word cloud</option>
+						<option value="games/chaosmode.html">💀 Chaos Mode - Visual madness</option>
+						<option value="games/colorsymphony.html">🎵 Color Symphony - Musical colors</option>
+						<option value="games/chatgarden.html">🌻 Chat Garden - Grow virtual plants</option>
+						<option value="games/pixelbattle.html">🎨 Pixel Battle - Collaborative pixel art</option>
+						<option value="games/memorylane.html">📷 Memory Lane - Nostalgic photo stories</option>
+						<option value="games/rhythmpulse.html">🎵 Rhythm Pulse - Musical beat creation</option>
+						<option value="games/petrace.html">🏁 Pet Race - Racing game</option>
+						<option value="games/wordchain.html">🔤 Word Chain - Word puzzle</option>
+						<option value="games/emojitower.html">🏗️ Emoji Tower - Stacking game</option>
+						<option value="games/colorwars.html">🎨 Color Wars - Territory painting</option>
+						<option value="games/treasurehunt.html">🏴‍☠️ Treasure Hunt - Grid exploration</option>
+						<option value="games/dancingparade.html">💃 Dancing Parade - Lower third animation</option>
+					</select>
+					<span style="margin-left: 10px; font-size: 12px; opacity: 0.7;display: block;">
+						<i data-translate="games-note">Note: Each game has unique commands and mechanics</i>
+					</span>
+				</div>
+			</div>
+			
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-games-general-options" />
+					<label class="collapsible-label" for="wrapper-games-general-options">🎮 <span data-translate="game-options">Game Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group games">
+								<!-- Spam Power Options -->
+								<div class="game-config-section" id="game-config" style="display: none;">
+									<h3>⚡ <span data-translate="spam-power-options">Spam Power Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-spampower">
+											🤖 Enable demo mode (auto-spammers)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Emoji Rain Options -->
+								<div class="game-config-section" id="emojirain-config" style="display: none;">
+									<h3>🌧️ <span data-translate="emoji-rain-options">Emoji Rain Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-emojirain">
+											🤖 Enable demo mode (auto-emojis)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Chat Wars Options -->
+								<div class="game-config-section" id="chatwars-config" style="display: none;">
+									<h3>⚔️ <span data-translate="chat-wars-options">Chat Wars Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-chatwars">
+											🤖 Enable demo mode (auto-teams)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Word Storm Options -->
+								<div class="game-config-section" id="wordstorm-config" style="display: none;">
+									<h3>🌪️ <span data-translate="word-storm-options">Word Storm Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-wordstorm">
+											🤖 Enable demo mode (auto-words)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Chaos Mode Options -->
+								<div class="game-config-section" id="chaosmode-config" style="display: none;">
+									<h3>💀 <span data-translate="chaos-mode-options">Chaos Mode Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-chaosmode">
+											🤖 Enable demo mode (auto-chaos)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Color Symphony Options -->
+								<div class="game-config-section" id="colorsymphony-config" style="display: none;">
+									<h3>🎵 <span data-translate="color-symphony-options">Color Symphony Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-colorsymphony">
+											🤖 Enable demo mode (auto-colors)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Chat Garden Options -->
+								<div class="game-config-section" id="chatgarden-config" style="display: none;">
+									<h3>🌻 <span data-translate="chat-garden-options">Chat Garden Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-chatgarden">
+											🤖 Enable demo mode (auto-garden)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Pixel Battle Options -->
+								<div class="game-config-section" id="pixelbattle-config" style="display: none;">
+									<h3>🎨 <span data-translate="pixel-battle-options">Pixel Battle Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-pixelbattle">
+											🤖 Enable demo mode (auto-artists)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Memory Lane Options -->
+								<div class="game-config-section" id="memorylane-config" style="display: none;">
+									<h3>📷 <span data-translate="memory-lane-options">Memory Lane Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-memorylane">
+											🤖 Enable demo mode (auto-memories)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Rhythm Pulse Options -->
+								<div class="game-config-section" id="rhythmpulse-config" style="display: none;">
+									<h3>🎵 <span data-translate="rhythm-pulse-options">Rhythm Pulse Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-rhythmpulse">
+											🤖 Enable demo mode (auto-beats)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Pet Race Options -->
+								<div class="game-config-section" id="petrace-config" style="display: none;">
+									<h3>🏁 <span data-translate="pet-race-options">Pet Race Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-petrace">
+											🤖 Enable demo mode (auto-racers)
+										</span>
+									</div>
+								</div>
+								
+								<!-- Word Chain Options -->
+								<div class="game-config-section" id="wordchain-config" style="display: none;">
+									<h3>🔤 <span data-translate="word-chain-options">Word Chain Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-wordchain">
+											🤖 Enable demo mode
+										</span>
+									</div>
+								</div>
+								
+								<!-- Emoji Tower Options -->
+								<div class="game-config-section" id="emojitower-config" style="display: none;">
+									<h3>🏗️ <span data-translate="emoji-tower-options">Emoji Tower Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-emojitower">
+											🤖 Enable demo builders
+										</span>
+									</div>
+								</div>
+								
+								<!-- Color Wars Options -->
+								<div class="game-config-section" id="colorwars-config" style="display: none;">
+									<h3>🎨 <span data-translate="color-wars-options">Color Wars Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-colorwars">
+											🤖 Enable demo painters
+										</span>
+									</div>
+								</div>
+								
+								<!-- Treasure Hunt Options -->
+								<div class="game-config-section" id="treasurehunt-config" style="display: none;">
+									<h3>🏴‍☠️ <span data-translate="treasure-hunt-options">Treasure Hunt Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-treasurehunt">
+											🤖 Enable demo hunters
+										</span>
+									</div>
+								</div>
+								
+								<!-- Dancing Parade Options -->
+								<div class="game-config-section" id="dancingparade-config" style="display: none;">
+									<h3>💃 <span data-translate="dancing-parade-options">Dancing Parade Options</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="demo" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="demo-mode-dancingparade">
+											🤖 Enable demo dancers
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="chroma" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="transparent-background-parade">
+											🟢 Transparent background (for overlays)
+										</span>
+									</div>
+								</div>
+								
+								<!-- General Game Options -->
+								<div class="game-config-section" id="general-game-config">
+									<h3><span data-translate="general-game-settings">General Game Settings</span></h3>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="chroma" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="green-background-games">
+											🟢 Green screen background
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param20="darkmode" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="dark-mode-games">
+											⚫ Dark mode
+										</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="link" title="Battle Royal">
+                <h2 class="battle_mode_title">
+                    <span data-translate="pollmeter">Battle Royal </span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">[options]</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-battle">
+                       A battle royal mini game. Users can enter !join to play
+                    </span>
+                </h3>
+				<div id="battle" data-raw="" class="streaming_chat"><a href="" id="battlelink"></a></div>
+			</div>
+			
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-battle-general-options" />
+                    <label class="collapsible-label" for="wrapper-battle-general-options">📊 <span data-translate="options-and-actions">Options and actions</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group battle">
+								<div>
+										<label class="switch">
+											<input type="checkbox" data-param8="lobby" />
+											<span class="slider round"></span>
+										</label>
+
+										🚦 <span data-translate="enable-the-battle">Host Starts</span>
+									
+										<button class="glowingButton" style="width: 170px; border: 1px solid #000; padding: 2px;" data-action="startgame">
+											<span style="font-size: 0.8em;"><span data-translate="start-game">Start the game</span></span>
+										</button>
+								</div>
+							
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param8="nocomputers" />
+										<span class="slider round"></span>
+									</label>
+									🚫🤖 <span data-translate="disable-computer-players">Disable computer players</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param8="lobbytime=30" />
+										<span class="slider round"></span>
+									</label>
+									⌚ <span data-translate="auto-start-lobby">Increase lobby wait time to 30s</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- END GAMES SECTION -->
 			
 			<div class="link" title="Customizable ticker banner bar">
                 <h2 class="ticker_mode_title">
@@ -6349,14 +7339,22 @@ body.ssapp .wrapper.ssapp h3 {
                                         <span><span data-translate="load-config">Load config</span></span>
                                     </button>
                                 </div>
-                                <div style="display: inline-block;">
+                                <div style="display: inline-block;" data-keywords="bot command funny humor comedy laugh fun entertainment">
                                     <label class="switch">
                                         <input type="checkbox" id="joke" data-setting="joke" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="tell-joke-on">🤪 Tell joke on </span><b><span data-translate="joke">!joke</span></b><span data-translate="message"> message </span>
                                 </div>
-								<div style="display: inline-block;" title="The user can use !dice 10 to have it out of ten; by default it is out 1 to 6">
+								
+								
+								<div>
+                                    <button class="glowingButton" data-action="tellajoke" style="width: 120px;">
+                                        <span><span data-translate="tell-a-joke-now">Tell a joke now</span></span>
+                                    </button>
+                                </div>
+								
+								<div style="display: inline-block;" title="The user can use !dice 10 to have it out of ten; by default it is out 1 to 6" data-keywords="bot command roll random RNG game gamble chance">
                                     <label class="switch">
                                         <input type="checkbox" id="dice" data-setting="dice" />
                                         <span class="slider round"></span>
@@ -6364,11 +7362,26 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="enable-dice-rolls">🎲 Respond with a random dice roll on !dice</span>
                                 </div>
 								
-                                <div>
-                                    <button class="glowingButton" data-action="tellajoke" style="width: 120px;">
-                                        <span><span data-translate="tell-a-joke-now">Tell a joke now</span></span>
-                                    </button>
+								<div style="display: inline-block;" title="Automatically identifies questions in chat messages based on keywords like ?, how, what, etc." data-keywords="Q&A QA Q and A ask query queries FAQ help support">
+                                    <label class="switch">
+                                        <input type="checkbox" id="identifyQuestions" data-setting="identifyQuestions" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="identify-questions">❓ Identify questions in chat messages</span>
                                 </div>
+								
+								<div style="display: inline-block; margin-left: 30px;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
+									<label class="switch">
+										<input type="checkbox" data-setting="questionKeywords" />
+										<span class="slider round"></span>
+									</label>
+									<div class="textInputContainer" style="display: inline-block; width: 200px;">
+										<input type="text" id="questionKeywords" class="textInput" autocomplete="off" placeholder="?,how,what,when,why" data-textsetting="questionKeywords" />
+										<label for="questionKeywords"><span data-translate="question-keywords">&gt; Custom question keywords</span></label>
+									</div>
+								</div>
+								
+
 								<h3><span data-translate="custom-javascript">Custom JavaScript</span></h3>
 								<div title="Upload custom JavaScript to extend functionality">
 									<label class="switch">

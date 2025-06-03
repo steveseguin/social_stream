@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Leaderboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet" />
+    
+    <script type="text/javascript" src="currency.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: transparent;
+            --container-bg: rgba(0, 0, 0, 0.7);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --accent-gold: #FFD700;
+            --accent-silver: #C0C0C0;
+            --accent-bronze: #CD7F32;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --item-bg: rgba(255, 255, 255, 0.05);
+            --item-bg-hover: rgba(255, 255, 255, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ========== LAYOUT MODES ========== */
+        
+        /* Default: Corner Widget Mode */
+        body:not([data-layout]) .leaderboard-container,
+        body[data-layout="corner"] .leaderboard-container {
+            width: 300px;
+            background: var(--container-bg);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            margin: 20px;
+        }
+
+        body:not([data-layout]) .leaderboard-header,
+        body[data-layout="corner"] .leaderboard-header {
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        body:not([data-layout]) .leaderboard-title,
+        body[data-layout="corner"] .leaderboard-title {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        body:not([data-layout]) .leaderboard-item,
+        body[data-layout="corner"] .leaderboard-item {
+            padding: 8px 12px;
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+
+        body:not([data-layout]) .rank-number,
+        body[data-layout="corner"] .rank-number {
+            font-size: 16px;
+            width: 24px;
+            margin-right: 12px;
+        }
+
+        body:not([data-layout]) .user-avatar,
+        body[data-layout="corner"] .user-avatar {
+            width: 32px;
+            height: 32px;
+            margin-right: 10px;
+        }
+
+        body:not([data-layout]) .score-number,
+        body[data-layout="corner"] .score-number {
+            font-size: 16px;
+        }
+
+        /* Horizontal Bar Mode */
+        body[data-layout="bar"] {
+            padding: 0;
+        }
+
+        body[data-layout="bar"] .leaderboard-container {
+            width: 100%;
+            max-width: none;
+            background: var(--container-bg);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        body[data-layout="bar"] .leaderboard-header {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            border: none;
+            flex-shrink: 0;
+        }
+
+        body[data-layout="bar"] .leaderboard-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-right: 20px;
+        }
+
+        body[data-layout="bar"] .leaderboard-subtitle,
+        body[data-layout="bar"] .live-indicator {
+            display: none;
+        }
+
+        body[data-layout="bar"] .leaderboard-list {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            flex: 1;
+        }
+
+        body[data-layout="bar"] .leaderboard-list::-webkit-scrollbar {
+            display: none;
+        }
+
+        body[data-layout="bar"] .leaderboard-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            margin: 0;
+            background: var(--item-bg);
+            border-radius: 8px;
+            flex-shrink: 0;
+            gap: 8px;
+        }
+
+        body[data-layout="bar"] .rank-number {
+            font-size: 14px;
+            width: auto;
+            margin-right: 8px;
+        }
+
+        body[data-layout="bar"] .user-avatar {
+            width: 24px;
+            height: 24px;
+            margin-right: 8px;
+        }
+
+        body[data-layout="bar"] .user-name {
+            font-size: 14px;
+            max-width: 120px;
+        }
+
+        body[data-layout="bar"] .score-number {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        body[data-layout="bar"] .score-label {
+            display: none;
+        }
+
+        body[data-layout="bar"] .user-badges {
+            font-size: 12px;
+        }
+
+        /* Full Window Mode */
+        body[data-layout="full"] {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        body[data-layout="full"] .leaderboard-container {
+            width: 90%;
+            max-width: 500px;
+            background: rgba(20, 20, 20, 0.95);
+            border-radius: 20px;
+            padding: 32px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            border: 1px solid var(--border-color);
+        }
+
+        body[data-layout="full"] .leaderboard-header {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        body[data-layout="full"] .leaderboard-title {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-silver));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        body[data-layout="full"] .leaderboard-item {
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+
+        body[data-layout="full"] .rank-number {
+            font-size: 24px;
+            width: 50px;
+        }
+
+        body[data-layout="full"] .user-avatar {
+            width: 56px;
+            height: 56px;
+            margin-right: 16px;
+        }
+
+        body[data-layout="full"] .score-number {
+            font-size: 24px;
+        }
+
+        /* ========== COMMON STYLES ========== */
+
+        .leaderboard-header {
+            position: relative;
+        }
+
+        .leaderboard-title {
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+
+        .leaderboard-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-top: 4px;
+        }
+
+        .leaderboard-list {
+            list-style: none;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            background: var(--item-bg);
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .leaderboard-item:hover {
+            background: var(--item-bg-hover);
+            transform: translateX(2px);
+        }
+
+        /* Top 3 special styling */
+        .leaderboard-item.rank-1 {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 215, 0, 0.05));
+        }
+
+        .leaderboard-item.rank-2 {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.15), rgba(192, 192, 192, 0.05));
+        }
+
+        .leaderboard-item.rank-3 {
+            background: linear-gradient(135deg, rgba(205, 127, 50, 0.15), rgba(205, 127, 50, 0.05));
+        }
+
+        .rank-number {
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .rank-1 .rank-number { color: var(--accent-gold); }
+        .rank-2 .rank-number { color: var(--accent-silver); }
+        .rank-3 .rank-number { color: var(--accent-bronze); }
+
+        .user-avatar {
+            border-radius: 50%;
+            border: 2px solid var(--border-color);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .user-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.2;
+        }
+
+        .user-badges {
+            display: flex;
+            gap: 4px;
+            margin-top: 2px;
+        }
+
+        .user-score {
+            text-align: right;
+            margin-left: 12px;
+            flex-shrink: 0;
+        }
+
+        .score-number {
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .score-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-top: 2px;
+        }
+
+        .source-icon {
+            width: 14px;
+            height: 14px;
+            margin-left: 6px;
+            vertical-align: middle;
+            opacity: 0.7;
+        }
+
+        /* Live indicator */
+        .live-indicator {
+            position: absolute;
+            top: 0;
+            right: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
+            color: #00ff00;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .live-dot {
+            width: 6px;
+            height: 6px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Animation for entries */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .leaderboard-item.new-entry {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        /* Loading & Empty states */
+        .loading-message,
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* Hide container initially */
+        .leaderboard-container {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .leaderboard-container.visible {
+            opacity: 1;
+        }
+
+        /* Minimal theme overrides */
+        body[data-theme="minimal"] {
+            --container-bg: rgba(0, 0, 0, 0.5);
+            --item-bg: transparent;
+            --item-bg-hover: rgba(255, 255, 255, 0.05);
+        }
+
+        body[data-theme="minimal"] .leaderboard-container {
+            box-shadow: none;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Glass theme */
+        body[data-theme="glass"] {
+            --container-bg: rgba(255, 255, 255, 0.1);
+            --item-bg: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        body[data-theme="glass"] .leaderboard-container {
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Dark theme (default) - already defined in root */
+
+        /* Neon theme */
+        body[data-theme="neon"] {
+            --accent-gold: #00ffff;
+            --accent-silver: #ff00ff;
+            --accent-bronze: #00ff00;
+            --text-primary: #ffffff;
+        }
+
+        body[data-theme="neon"] .leaderboard-title {
+            text-shadow: 0 0 10px var(--accent-gold);
+        }
+
+        body[data-theme="neon"] .rank-1 {
+            text-shadow: 0 0 5px var(--accent-gold);
+        }
+
+        /* Auto-hide functionality */
+        body[data-autohide="true"] .leaderboard-container {
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+
+        body[data-autohide="true"] .leaderboard-container.hidden {
+            opacity: 0;
+            transform: translateY(-20px);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="leaderboard-container" id="leaderboard-container">
+        <div class="leaderboard-header">
+            <h1 class="leaderboard-title">Leaderboard</h1>
+            <p class="leaderboard-subtitle">Top Contributors</p>
+            <div class="live-indicator">
+                <span class="live-dot"></span>
+                <span>LIVE</span>
+            </div>
+        </div>
+        <ul class="leaderboard-list" id="leaderboard-content">
+            <div class="loading-message">Waiting for chat activity...</div>
+        </ul>
+    </div>
+
+    <script>
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Layout mode: corner (default), bar, full
+        const layout = urlParams.get('layout') || 'corner';
+        document.body.setAttribute('data-layout', layout);
+        
+        // Theme: dark (default), minimal, glass, neon
+        const theme = urlParams.get('theme') || 'dark';
+        document.body.setAttribute('data-theme', theme);
+        
+        // Configuration
+        const topCount = parseInt(urlParams.get('top') || (layout === 'bar' ? '5' : '10'));
+        const resetInterval = parseInt(urlParams.get('reset') || '0'); // hours
+        const showAvatars = urlParams.has('avatars');
+        const showDonations = urlParams.has('donations');
+        const showSourceIcons = !urlParams.has('nosource');
+        const hideEmpty = urlParams.has('hideempty');
+        const autoHide = urlParams.has('autohide');
+        const autoHideDelay = parseInt(urlParams.get('hidedelay') || '10') * 1000; // seconds to ms
+        
+        // Custom styling
+        const customBg = urlParams.get('bg');
+        if (customBg) {
+            document.documentElement.style.setProperty('--container-bg', customBg);
+        }
+        
+        const customTitle = urlParams.get('title');
+        if (customTitle) {
+            document.querySelector('.leaderboard-title').textContent = decodeURIComponent(customTitle);
+        }
+        
+        const hideTitle = urlParams.has('notitle');
+        if (hideTitle) {
+            document.querySelector('.leaderboard-header').style.display = 'none';
+        }
+        
+        // Auto-hide setup
+        if (autoHide) {
+            document.body.setAttribute('data-autohide', 'true');
+        }
+
+        // User tracking
+        const users = new Map();
+        let lastResetTime = Date.now();
+        let lastActivityTime = Date.now();
+        let autoHideTimer = null;
+
+        class User {
+            constructor(name, type) {
+                this.name = name;
+                this.type = type;
+                this.messageCount = 0;
+                this.donations = 0;
+                this.isMember = false;
+                this.avatarUrl = null;
+                this.lastActivity = Date.now();
+            }
+
+            get score() {
+                return (
+                    this.messageCount * 1 +
+                    this.donations * 100 +
+                    (this.isMember ? 50 : 0)
+                );
+            }
+
+            getBadges() {
+                let badges = [];
+                if (this.isMember) badges.push('👑');
+                if (this.donations > 0) badges.push('💝');
+                if (this.messageCount > 50) badges.push('🔥');
+                else if (this.messageCount > 20) badges.push('💬');
+                return badges;
+            }
+        }
+
+        function getOrCreateUser(name, type) {
+            const key = `${name}-${type}`;
+            if (!users.has(key)) {
+                users.set(key, new User(name, type));
+            }
+            return users.get(key);
+        }
+
+        function checkReset() {
+            if (resetInterval > 0) {
+                const now = Date.now();
+                const hoursSinceReset = (now - lastResetTime) / (1000 * 60 * 60);
+                
+                if (hoursSinceReset >= resetInterval) {
+                    users.clear();
+                    lastResetTime = now;
+                    updateLeaderboard();
+                }
+            }
+        }
+
+        function processData(data) {
+            if (data.content) {
+                data = data.content;
+            }
+
+			console.log(data);
+            if (!data.chatname || !data.type) return;
+
+            const user = getOrCreateUser(data.chatname, data.type);
+            user.messageCount++;
+            user.lastActivity = Date.now();
+            lastActivityTime = Date.now();
+
+            // Store avatar URL if available
+            if (data.chatimg && showAvatars) {
+                user.avatarUrl = data.chatimg;
+            }
+
+            if (data.membership) {
+                user.isMember = true;
+            }
+
+            if (data.hasDonation && showDonations) {
+                try {
+                    const source = data.type ? data.type.toLowerCase() : '';
+                    const donationAmount = convertToUSD(data.hasDonation, source);
+                    
+                    if (!isNaN(donationAmount) && donationAmount > 0) {
+                        user.donations += donationAmount;
+                    }
+                } catch (error) {
+                    console.error(`Error processing donation:`, error);
+                }
+            }
+
+            updateLeaderboard();
+            handleAutoHide();
+        }
+
+        function updateLeaderboard() {
+            const sortedUsers = Array.from(users.values())
+                .sort((a, b) => b.score - a.score)
+                .slice(0, topCount);
+
+            const container = document.getElementById('leaderboard-container');
+            const leaderboardContent = document.getElementById('leaderboard-content');
+            
+            if (sortedUsers.length === 0) {
+                if (hideEmpty) {
+                    container.classList.remove('visible');
+                } else {
+                    if (!leaderboardContent.querySelector('.empty-state')) {
+                        leaderboardContent.innerHTML = '<div class="empty-state">No activity yet</div>';
+                    }
+                    container.classList.add('visible');
+                }
+                return;
+            }
+
+            // Get existing items
+            const existingItems = Array.from(leaderboardContent.querySelectorAll('.leaderboard-item'));
+            const existingUserMap = new Map();
+            
+            existingItems.forEach(item => {
+                const userNameEl = item.querySelector('.user-name');
+                if (userNameEl) {
+                    // Get only the text content, not including the source icon
+                    const userName = userNameEl.childNodes[0]?.textContent?.trim();
+                    if (userName) {
+                        existingUserMap.set(userName, item);
+                    }
+                }
+            });
+
+            // Clear empty state if it exists
+            const emptyState = leaderboardContent.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            // Update or create items
+            sortedUsers.forEach((user, index) => {
+                const rank = index + 1;
+                const badges = user.getBadges();
+                let listItem = existingUserMap.get(user.name);
+                
+                if (listItem) {
+                    // Update existing item
+                    existingUserMap.delete(user.name);
+                    
+                    // Update rank
+                    const rankEl = listItem.querySelector('.rank-number');
+                    if (rankEl) rankEl.textContent = rank;
+                    
+                    // Update rank class
+                    listItem.className = `leaderboard-item rank-${rank}`;
+                    
+                    // Update score
+                    const scoreEl = listItem.querySelector('.score-number');
+                    if (scoreEl) scoreEl.textContent = user.score.toLocaleString();
+                    
+                    // Update badges
+                    if (layout !== 'bar') {
+                        const badgesEl = listItem.querySelector('.user-badges');
+                        if (badges.length > 0) {
+                            if (badgesEl) {
+                                badgesEl.textContent = badges.join(' ');
+                            } else {
+                                const userInfo = listItem.querySelector('.user-info');
+                                if (userInfo) {
+                                    const newBadgesEl = document.createElement('div');
+                                    newBadgesEl.className = 'user-badges';
+                                    newBadgesEl.textContent = badges.join(' ');
+                                    userInfo.appendChild(newBadgesEl);
+                                }
+                            }
+                        } else if (badgesEl) {
+                            badgesEl.remove();
+                        }
+                    }
+                    
+                    // Move to correct position
+                    if (index < leaderboardContent.children.length - 1) {
+                        leaderboardContent.insertBefore(listItem, leaderboardContent.children[index]);
+                    } else {
+                        leaderboardContent.appendChild(listItem);
+                    }
+                } else {
+                    // Create new item
+                    const newItem = document.createElement('li');
+                    newItem.className = `leaderboard-item rank-${rank} new-entry`;
+                    
+                    newItem.innerHTML = `
+                        <div class="rank-number">${rank}</div>
+                        ${showAvatars && user.avatarUrl ? 
+                            `<img src="${user.avatarUrl}" alt="${user.name}" class="user-avatar" onerror="this.style.display='none'">` : 
+                            ''}
+                        <div class="user-info">
+                            <div class="user-name">
+                                ${user.name}
+                                ${showSourceIcons ? 
+                                    `<img src="./sources/images/${user.type}.png" alt="${user.type}" class="source-icon" onerror="this.style.display='none'">` : 
+                                    ''}
+                            </div>
+                            ${badges.length > 0 && layout !== 'bar' ? 
+                                `<div class="user-badges">${badges.join(' ')}</div>` : 
+                                ''}
+                        </div>
+                        <div class="user-score">
+                            <div class="score-number">${user.score.toLocaleString()}</div>
+                            <div class="score-label">points</div>
+                        </div>
+                    `;
+                    
+                    // Insert at correct position
+                    if (index < leaderboardContent.children.length) {
+                        leaderboardContent.insertBefore(newItem, leaderboardContent.children[index]);
+                    } else {
+                        leaderboardContent.appendChild(newItem);
+                    }
+                }
+            });
+
+            // Remove items that are no longer in top N
+            existingUserMap.forEach(item => {
+                item.remove();
+            });
+
+            container.classList.add('visible');
+
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                document.querySelectorAll('.new-entry').forEach(el => {
+                    el.classList.remove('new-entry');
+                });
+            }, 300);
+        }
+
+        function handleAutoHide() {
+            if (!autoHide) return;
+
+            const container = document.getElementById('leaderboard-container');
+            
+            // Clear existing timer
+            if (autoHideTimer) {
+                clearTimeout(autoHideTimer);
+            }
+
+            // Show the leaderboard
+            container.classList.remove('hidden');
+
+            // Set timer to hide
+            autoHideTimer = setTimeout(() => {
+                container.classList.add('hidden');
+            }, autoHideDelay);
+        }
+
+        // IFRAME setup for Social Stream Ninja
+        const iframe = document.createElement("iframe");
+		
+        const filename = "dock";
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + 
+            urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+			
+        iframe.style.width = "0px";
+        iframe.style.height = "0px";
+        iframe.style.position = "fixed";
+        iframe.style.left = "-100px";
+        iframe.style.top = "-100px";
+        iframe.id = "frame1";
+        document.body.appendChild(iframe);
+
+        // Handle message events
+        const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+        const eventer = window[eventMethod];
+        const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+        eventer(messageEvent, function (e) {
+            if (e.source != iframe.contentWindow) return;
+            if ("dataReceived" in e.data) {
+                if ("overlayNinja" in e.data.dataReceived) {
+                    processData(e.data.dataReceived.overlayNinja);
+                }
+            }
+        });
+
+        // Check for reset periodically
+        if (resetInterval > 0) {
+            setInterval(checkReset, 60000); // Check every minute
+        }
+
+        // Initial render
+        updateLeaderboard();
+
+        // If hideempty is set, don't show until we have data
+        if (hideEmpty && users.size === 0) {
+            document.getElementById('leaderboard-container').classList.remove('visible');
+        }
+    </script>
+</body>
+</html>

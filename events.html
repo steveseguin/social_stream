@@ -286,6 +286,36 @@ body.light-mode .no-events {
 body.light-mode .clickable-message:hover {
     background-color: rgba(0, 0, 0, 0.07);
 }
+
+/* Selected and active states */
+.message.selected {
+    border: 2px solid #4CAF50;
+    box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+}
+
+.message.active {
+    background: linear-gradient(145deg, #2a3a58, #223248) !important;
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.5), inset 0 0 15px rgba(76, 175, 80, 0.2);
+}
+
+body.light-mode .message.active {
+    background: linear-gradient(145deg, #e8f5e9, #d0e8d1) !important;
+    box-shadow: 0 6px 12px rgba(76, 175, 80, 0.3), inset 0 0 15px rgba(76, 175, 80, 0.1);
+}
+
+.message.active::before {
+    content: "FEATURED";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #4CAF50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.7em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
 </style>
 </head>
 <body>
@@ -447,14 +477,63 @@ body.light-mode .clickable-message:hover {
 		}
 	}
 	
+	let currentActiveMessage = null; // Track the currently active message
+	
 	chatContainer.addEventListener('click', function(event) {
         const messageDiv = event.target.closest('.message.clickable-message');
-        if (messageDiv && messageDiv.rawContents) {
-            featureEventMessage(messageDiv.rawContents);
-        }
+        if (!messageDiv || !messageDiv.rawContents) return;
+		
+		// If clicking the currently active message, toggle it off
+		if (messageDiv === currentActiveMessage) {
+			messageDiv.classList.remove('active');
+			currentActiveMessage = null;
+			// Send false to clear the featured message
+			featureEventMessage(false);
+		} else {
+			// Remove active from previous message (if any)
+			if (currentActiveMessage) {
+				currentActiveMessage.classList.remove('active');
+			}
+			
+			// Mark this message as selected and active
+			messageDiv.classList.add('selected');
+			messageDiv.classList.add('active');
+			currentActiveMessage = messageDiv;
+			
+			// Send the message data
+			featureEventMessage(messageDiv.rawContents);
+		}
     });
 
     function featureEventMessage(dataToFeature) {
+        // Handle clearing the featured message
+        if (dataToFeature === false) {
+            const payload = { overlayNinja: false };
+            
+            if (iframe && iframe.contentWindow && iframe.connectedPeers) {
+                let sentViaIframe = false;
+                const keys = Object.keys(iframe.connectedPeers);
+                for (let i = 0; i < keys.length; i++) {
+                    const uuid = keys[i];
+                    const label = iframe.connectedPeers[uuid];
+                    if (label === "overlay" || label === false || typeof label === 'undefined') {
+                        try {
+                            iframe.contentWindow.postMessage({ sendData: payload, type: "pcs", UUID: uuid }, "*");
+                            sentViaIframe = true;
+                        } catch (e) {
+                            console.error("Error sending clear message via iframe to peer:", uuid, e);
+                        }
+                    }
+                }
+                if (!sentViaIframe) {
+                    sendViaWebSocketFallback(false);
+                }
+            } else {
+                sendViaWebSocketFallback(false);
+            }
+            return;
+        }
+        
         const messageToSend = { ...dataToFeature, clicked: true, timestamp: Date.now() };
         if (messageToSend.id) {
              delete messageToSend.id;
@@ -494,10 +573,15 @@ body.light-mode .clickable-message:hover {
 
     function sendViaWebSocketFallback(messageToSend) {
         if (socketserver && socketserver.readyState === WebSocket.OPEN) {
-            socketserver.send(JSON.stringify({ content: messageToSend }));
-            console.log("Featured message sent via WebSocket as fallback.");
+            if (messageToSend === false) {
+                socketserver.send(JSON.stringify({ overlayNinja: false }));
+                console.log("Clear message sent via WebSocket as fallback.");
+            } else {
+                socketserver.send(JSON.stringify({ content: messageToSend }));
+                console.log("Featured message sent via WebSocket as fallback.");
+            }
         } else {
-            console.error('Neither iframe nor WebSocket available to feature message.');
+            console.error('Neither iframe nor WebSocket available to send message.');
         }
     }
 

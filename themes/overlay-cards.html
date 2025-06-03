@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<!-- Card Flip 3D Chat Overlay for Social Stream Ninja -->
+<!--
+This overlay creates a card-based chat experience with:
+- Messages displayed as 3D flipping cards
+- Card shuffle and flip animations
+- Depth perspective and layered effects
+- Interactive card hover and rotation
+- Smooth continuous scrolling with card physics
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Card Flip 3D Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap">
+    <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+    <link rel="canonical" href="https://socialstream.ninja/">
+    <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Source Sans Pro', sans-serif;
+    background: 
+        radial-gradient(circle at 25% 25%, #2c3e50 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, #34495e 0%, transparent 50%),
+        linear-gradient(135deg, #1a252f 0%, #2c3e50 50%, #34495e 100%);
+    overflow: hidden;
+    box-sizing: border-box;
+    perspective: 1200px;
+}
+
+/* Floating card particles background */
+#floating-cards {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.floating-card {
+    position: absolute;
+    width: 60px;
+    height: 40px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    animation: card-float linear infinite;
+    transform-style: preserve-3d;
+}
+
+@keyframes card-float {
+    0% {
+        transform: translateY(100vh) translateX(0) rotateX(0deg) rotateY(0deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 0.6;
+    }
+    90% {
+        opacity: 0.6;
+    }
+    100% {
+        transform: translateY(-100px) translateX(var(--drift)) rotateX(360deg) rotateY(180deg);
+        opacity: 0;
+    }
+}
+
+#chat-container {
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 420px;
+    height: 100vh;
+    overflow: hidden;
+    padding: 0 25px;
+    box-sizing: border-box;
+    z-index: 5;
+    perspective: 1000px;
+}
+
+#message-list-wrapper {
+    width: 100%;
+    transition: transform 0.5s ease-out;
+    transform-style: preserve-3d;
+}
+
+.message {
+    background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+    border: 1px solid rgba(0,0,0,0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    box-shadow: 
+        0 8px 32px rgba(0,0,0,0.15),
+        0 2px 8px rgba(0,0,0,0.1),
+        inset 0 1px 0 rgba(255,255,255,0.8);
+    color: #2c3e50;
+    opacity: 0;
+    transform: translateZ(-200px) rotateY(-90deg) translateX(-100px);
+    transition: all 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 500px;
+    box-sizing: border-box;
+    position: relative;
+    transform-style: preserve-3d;
+    cursor: pointer;
+}
+
+.message::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(145deg, 
+        rgba(255,255,255,0.8) 0%, 
+        rgba(255,255,255,0.4) 30%, 
+        rgba(0,0,0,0.1) 100%);
+    border-radius: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.message:hover::before {
+    opacity: 1;
+}
+
+.message:hover {
+    transform: translateZ(20px) rotateY(5deg) rotateX(2deg);
+    box-shadow: 
+        0 16px 48px rgba(0,0,0,0.25),
+        0 4px 16px rgba(0,0,0,0.15),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.message.visible {
+    opacity: 1;
+    transform: translateZ(0) rotateY(0deg) translateX(0);
+}
+
+.message.fading {
+    opacity: 0;
+    transform: translateZ(-200px) rotateY(90deg) translateX(100px);
+    transition: all 2s ease-out;
+}
+
+.message.hidden {
+    opacity: 0;
+    transform: translateZ(-300px) rotateY(-90deg) translateX(-100px) scale(0.5);
+    max-height: 0px !important;
+    padding: 0px !important;
+    margin-bottom: 0px !important;
+    border-width: 0px !important;
+}
+
+.message.flipping {
+    animation: card-flip 1s ease-in-out;
+}
+
+@keyframes card-flip {
+    0% { transform: translateZ(0) rotateY(0deg); }
+    50% { transform: translateZ(50px) rotateY(90deg); }
+    100% { transform: translateZ(0) rotateY(180deg); }
+}
+
+.message.shuffling {
+    animation: card-shuffle 0.8s ease-in-out;
+}
+
+@keyframes card-shuffle {
+    0% { transform: translateZ(0) rotateX(0deg) rotateZ(0deg); }
+    25% { transform: translateZ(30px) rotateX(15deg) rotateZ(5deg); }
+    50% { transform: translateZ(60px) rotateX(30deg) rotateZ(-5deg); }
+    75% { transform: translateZ(30px) rotateX(15deg) rotateZ(3deg); }
+    100% { transform: translateZ(0) rotateX(0deg) rotateZ(0deg); }
+}
+
+.avatar-wrapper {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    display: inline-block;
+    margin-right: 15px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(145deg, #3498db, #2980b9);
+    padding: 3px;
+    vertical-align: top;
+    flex-shrink: 0;
+    box-shadow: 
+        0 4px 12px rgba(0,0,0,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.3);
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+}
+
+.avatar-wrapper:hover {
+    transform: rotateY(15deg) rotateX(5deg);
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 5px;
+    background-size: cover;
+    background-position: center;
+}
+
+.name {
+    color: #2980b9;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1em;
+    font-weight: 600;
+    max-width: 200px;
+    overflow: hidden;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    margin-bottom: 2px;
+}
+
+.text {
+    font-size: 0.95em;
+    line-height: 1.6;
+    margin: 10px 0;
+    word-wrap: break-word;
+    color: #34495e;
+    text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+}
+
+.text img {
+    max-width: 100px;
+    max-height: 24px;
+    vertical-align: bottom;
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+.donation {
+    color: #e74c3c;
+    font-weight: 700;
+    text-shadow: 0 1px 3px rgba(231,76,60,0.3);
+    animation: donation-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes donation-glow {
+    0% { 
+        color: #e74c3c; 
+        text-shadow: 0 1px 3px rgba(231,76,60,0.3);
+    }
+    100% { 
+        color: #c0392b; 
+        text-shadow: 0 2px 8px rgba(231,76,60,0.6);
+    }
+}
+
+.name-bg {
+    background: linear-gradient(145deg, rgba(52,152,219,0.15), rgba(41,128,185,0.1));
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(52,152,219,0.2);
+    display: inline-block;
+    vertical-align: middle;
+    margin-right: 8px;
+    box-shadow: 
+        0 2px 6px rgba(0,0,0,0.05),
+        inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+.membership-status {
+    color: #f39c12;
+    font-weight: 600;
+    font-size: 0.85em;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 2px rgba(243,156,18,0.3);
+    background: linear-gradient(145deg, rgba(243,156,18,0.1), rgba(230,126,34,0.05));
+    padding: 4px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin-top: 12px;
+    border-radius: 10px;
+    display: block;
+    box-shadow: 
+        0 6px 20px rgba(0,0,0,0.2),
+        0 2px 6px rgba(0,0,0,0.1);
+    border: 2px solid rgba(255,255,255,0.8);
+}
+
+.source-icon {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
+    margin-left: 5px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.badge {
+    display: inline-block;
+    height: 0.9em;
+    margin-left: 4px;
+    vertical-align: middle;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.message-content-wrapper {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+}
+
+.message-text-meta {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+#spacer {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    background: transparent;
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+
+/* Special card types */
+.message.gold-card {
+    background: linear-gradient(145deg, #fff9c4 0%, #ffeaa7 50%, #fdcb6e 100%);
+    border-color: #f39c12;
+    box-shadow: 
+        0 8px 32px rgba(243,156,18,0.3),
+        0 2px 8px rgba(243,156,18,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.message.platinum-card {
+    background: linear-gradient(145deg, #e8e8e8 0%, #d1d1d1 50%, #c0c0c0 100%);
+    border-color: #95a5a6;
+    box-shadow: 
+        0 8px 32px rgba(149,165,166,0.3),
+        0 2px 8px rgba(149,165,166,0.2),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+.message.rainbow-card {
+    background: linear-gradient(145deg, 
+        #ff9a9e 0%, #fecfef 25%, #fecfef 50%, #85c1e9 75%, #a8e6cf 100%);
+    border-color: rgba(255,255,255,0.6);
+    animation: rainbow-shift 3s ease-in-out infinite;
+}
+
+@keyframes rainbow-shift {
+    0%, 100% { filter: hue-rotate(0deg); }
+    33% { filter: hue-rotate(120deg); }
+    66% { filter: hue-rotate(240deg); }
+}
+
+/* Card deck effects */
+.message.stacked {
+    transform: translateZ(-10px) rotateY(-2deg);
+}
+
+.message.stacked:nth-child(even) {
+    transform: translateZ(-20px) rotateY(2deg);
+}
+
+/* Paper texture overlay */
+.message::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 1px,
+            rgba(0,0,0,0.01) 1px,
+            rgba(0,0,0,0.01) 2px
+        );
+    border-radius: 12px;
+    pointer-events: none;
+    opacity: 0.3;
+}
+
+/* Corner fold effect */
+.message.corner-fold::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(-45deg, transparent 6px, rgba(0,0,0,0.1) 6px, rgba(0,0,0,0.1) 8px, transparent 8px);
+    border-top-right-radius: 12px;
+}
+
+/* Card face animations */
+.card-face {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s ease;
+}
+
+.card-face.flipped {
+    transform: rotateY(180deg);
+}
+
+/* 3D depth layers */
+.message.depth-1 { transform: translateZ(10px); }
+.message.depth-2 { transform: translateZ(20px); }
+.message.depth-3 { transform: translateZ(30px); }
+
+/* Card suit decorations for special messages */
+.message.spade::before {
+    content: '♠';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: rgba(0,0,0,0.1);
+    font-weight: bold;
+}
+
+.message.heart::before {
+    content: '♥';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: rgba(231,76,60,0.2);
+    font-weight: bold;
+}
+
+.message.diamond::before {
+    content: '♦';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: rgba(231,76,60,0.2);
+    font-weight: bold;
+}
+
+.message.club::before {
+    content: '♣';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: rgba(0,0,0,0.1);
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+<div id="floating-cards"></div>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        <div id="spacer" style="height: 2200px; width: 100%;"></div>
+    </div>
+</div>
+
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false";
+    var featuredMode = false;
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = 20;
+    const topSpacer = document.getElementById('spacer');
+    const messageTimestamps = new Map();
+    const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
+
+    // Floating cards background
+    function createFloatingCards() {
+        const container = document.getElementById('floating-cards');
+        
+        for (let i = 0; i < 12; i++) {
+            const card = document.createElement('div');
+            card.className = 'floating-card';
+            
+            card.style.left = Math.random() * 100 + '%';
+            card.style.animationDuration = (Math.random() * 15 + 15) + 's';
+            card.style.animationDelay = Math.random() * 8 + 's';
+            card.style.setProperty('--drift', (Math.random() - 0.5) * 300 + 'px');
+            
+            container.appendChild(card);
+            
+            // Remove and recreate card after animation
+            setTimeout(() => {
+                if (card.parentNode) {
+                    card.remove();
+                    createFloatingCards();
+                }
+            }, (parseFloat(card.style.animationDuration) + parseFloat(card.style.animationDelay)) * 1000);
+        }
+    }
+
+    function adjustMessageWrapperScroll() {
+        requestAnimationFrame(() => {
+            const wrapperScrollHeight = messageListWrapper.scrollHeight;
+            const containerClientHeight = chatContainer.clientHeight;
+            
+            let translateY = 0;
+            if (wrapperScrollHeight > containerClientHeight) {
+                translateY = -(wrapperScrollHeight - containerClientHeight);
+            }
+            translateY = Math.min(0, translateY);
+
+            messageListWrapper.style.transform = `translateY(${translateY}px)`;
+        });
+    }
+    
+    setInterval(() => {
+        const now = Date.now();
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message')
+        );
+        
+        messages.forEach(message => {
+            const timestamp = messageTimestamps.get(message.id);
+            if (timestamp) {
+                const age = now - timestamp;
+                
+                // After 40 seconds, start fading
+                if (age > 40000 && !message.classList.contains('fading')) {
+                    message.classList.add('fading');
+                }
+                
+                // Random card effects
+                if (Math.random() < 0.005 && !message.classList.contains('fading')) {
+                    if (Math.random() < 0.5) {
+                        message.classList.add('flipping');
+                        setTimeout(() => message.classList.remove('flipping'), 1000);
+                    } else {
+                        message.classList.add('shuffling');
+                        setTimeout(() => message.classList.remove('shuffling'), 800);
+                    }
+                }
+            }
+        });
+    }, 1000);
+    
+    function addMessageToOverlay(data) {
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+            return;
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        // Add card suits and special effects
+        const suits = ['spade', 'heart', 'diamond', 'club'];
+        if (Math.random() < 0.3) {
+            messageDiv.classList.add(suits[Math.floor(Math.random() * suits.length)]);
+        }
+        
+        // Add corner fold effect randomly
+        if (Math.random() < 0.4) {
+            messageDiv.classList.add('corner-fold');
+        }
+        
+        // Add depth layers
+        const depth = Math.floor(Math.random() * 3) + 1;
+        messageDiv.classList.add(`depth-${depth}`);
+        
+        // Add special card types based on message content
+        if (data.hasDonation || data.donation) {
+            messageDiv.classList.add('gold-card');
+        } else if (data.membership) {
+            messageDiv.classList.add('platinum-card');
+        } else if (data.event || Math.random() < 0.1) {
+            messageDiv.classList.add('rainbow-card');
+        }
+        
+        // Generate unique ID and track timestamp for aging
+        const messageId = data.mid || 'msg-' + Date.now();
+        messageDiv.id = messageId;
+        messageTimestamps.set(messageId, Date.now());
+        
+        var chatbadgesHtml = "";
+        if (data.chatbadges) {
+            data.chatbadges.forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else { 
+                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
+                }
+            });
+        }
+        
+        let avatarBorderColor = "linear-gradient(145deg, #3498db, #2980b9)";
+        if (data.nameColor) {
+            avatarBorderColor = `linear-gradient(145deg, ${data.nameColor}, #2980b9)`;
+        }
+        
+        let leftEdgeColor = null;
+        if (typeof getColorFromType === 'function' && data.type) {
+            try {
+                leftEdgeColor = getColorFromType(data.type);
+            } catch (e) {
+                console.error("Error getting color from type:", e);
+            }
+        }
+        
+        if (leftEdgeColor) {
+            messageDiv.style.borderLeft = `4px solid ${leftEdgeColor}`;
+            messageDiv.style.paddingLeft = '16px';
+        }
+        
+        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = data.chatimg ? 
+            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
+        const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="color: ${data.nameColor}; text-shadow: 0 1px 2px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+        const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
+        const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
+        const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
+        
+        const contentImgHtml = data.contentimg ? 
+            `<div style="padding: 3px; border-radius: 10px; background: ${avatarBorderColor}; display: inline-block; margin-top: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">
+                <img src="${data.contentimg}" alt="Content Image" class="large-image" style="margin-top: 0;" onerror="this.parentNode.style.display='none';">
+             </div>` : '';
+
+        messageDiv.innerHTML = `
+            <div class="card-face">
+                <div class="message-content-wrapper">
+                    ${avatarHtml}
+                    <div class="message-text-meta">
+                        <div>
+                            ${nameHtml}
+                            ${sourceIconHtml}
+                            ${chatbadgesHtml}
+                        </div>
+                        ${membershipHtml}
+                        ${messageTextHtml}
+                        ${donationHtml}
+                    </div>
+                </div>
+                ${contentImgHtml}
+            </div>
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+        void messageDiv.offsetWidth; 
+        messageDiv.classList.add('visible');
+        
+        // Add card click interaction
+        messageDiv.addEventListener('click', () => {
+            if (!messageDiv.classList.contains('flipping')) {
+                messageDiv.classList.add('flipping');
+                setTimeout(() => messageDiv.classList.remove('flipping'), 1000);
+            }
+        });
+        
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message') 
+        );
+        
+        if (messages.length > MAX_MESSAGES) {
+            const oldestMessage = messages[0]; 
+            
+            if (oldestMessage) {
+                const messageStyle = getComputedStyle(oldestMessage);
+                const marginBottom = parseFloat(messageStyle.marginBottom) || 0;
+                const spaceOccupiedByOldestMessage = oldestMessage.offsetHeight + marginBottom;
+                
+                const currentSpacerHeight = parseFloat(topSpacer.style.height) || 0;
+                let newPotentialSpacerHeight = currentSpacerHeight + spaceOccupiedByOldestMessage;
+
+                if (newPotentialSpacerHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) {
+                    console.log(`Spacer height (${newPotentialSpacerHeight}px) exceeded threshold (${MAX_SPACER_HEIGHT_BEFORE_RESET}px). Resetting to 0px.`);
+                    newPotentialSpacerHeight = 0;
+                }
+                
+                topSpacer.style.height = newPotentialSpacerHeight + 'px';
+
+                messageTimestamps.delete(oldestMessage.id);
+                messageListWrapper.removeChild(oldestMessage);
+            }
+        }
+        
+        adjustMessageWrapperScroll();
+    }
+
+    // Initialize floating cards
+    createFloatingCards();
+
+    // Standard Social Stream messaging setup
+    var iframe = document.createElement("iframe");
+    if (featuredMode){
+        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+    
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) { 
+                        addMessageToOverlay(data);
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

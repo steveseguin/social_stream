@@ -1,5 +1,26 @@
 // popup.js
 
+(function (w) {
+	w.URLSearchParams = w.URLSearchParams || function (searchString) {
+		var self = this;
+		self.searchString = searchString;
+		self.get = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+			if (results == null) {
+				return null;
+			} else {
+				return decodeURI(results[1]) || 0;
+			}
+		};
+	};
+
+})(window);
+
+var urlParams = new URLSearchParams(window.location.search);
+const devmode = urlParams.has("devmode");
+var sourcemode = urlParams.get("sourcemode") || false;
+ssapp = urlParams.has("ssapp") || ssapp;
+
 var isExtensionOn = false;
 var ssapp = false;
 var USERNAMES = [];
@@ -411,42 +432,50 @@ async function populateFontDropdown() {
 }
 
 function createUniqueVoiceIdentifiers(voices) {
-    let uniqueIdentifiersByLang = {};
+    // Helper to get a clean voice name for use in parameters
+    const getCleanVoiceName = (name) => name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replaceAll(' ', '_');
 
     // Group voices by language
-    voices.forEach(voiceObj => {
-        if (!uniqueIdentifiersByLang[voiceObj.lang]) {
-            uniqueIdentifiersByLang[voiceObj.lang] = [];
+    const voicesByLang = voices.reduce((acc, voiceObj) => {
+        if (!acc[voiceObj.lang]) {
+            acc[voiceObj.lang] = [];
         }
-        uniqueIdentifiersByLang[voiceObj.lang].push(voiceObj);
-    });
+        acc[voiceObj.lang].push(voiceObj);
+        return acc;
+    }, {});
 
-    // Find unique identifiers within each language group
-    for (let lang in uniqueIdentifiersByLang) {
-        let voicesInLang = uniqueIdentifiersByLang[lang];
+    // Assign unique identifiers within each language group
+    for (const lang in voicesByLang) {
+        const voicesInLang = voicesByLang[lang];
 
         voicesInLang.forEach(voiceObj => {
-            const words = voiceObj.name.split(' ');
+            let uniquePart = '';
+
+            // Attempt to find a unique word within the voice name for this language
+            const words = voiceObj.name.split(' ').filter(word => word.length > 0);
             for (let i = 0; i < words.length; i++) {
-                let potentialIdentifier = words[i];
+                const potentialIdentifier = words[i];
                 if (voicesInLang.filter(v => v.name.includes(potentialIdentifier)).length === 1) {
-                    voiceObj.code = `${lang}&voice=${potentialIdentifier}`;
-                    return;
+                    uniquePart = potentialIdentifier;
+                    break;
                 }
             }
-            // Fallback if no unique word is found
-            voiceObj.code = lang+"&voice="+`${voiceObj.name.replace(/[^a-zA-Z0-9]/g, '')}`;
+
+            // Fallback to a cleaned full name if no unique word is found
+            if (!uniquePart) {
+                uniquePart = getCleanVoiceName(voiceObj.name);
+            }
+
+            // Construct the code using separate lang and voice parameters
+            voiceObj.code = `lang=${voiceObj.lang}&voice=${encodeURIComponent(uniquePart)}`;
+            voiceObj.lang = voiceObj.lang; // Ensure lang is explicitly available
+            voiceObj.name = voiceObj.name; // Ensure name is explicitly available
+            voiceObj.voiceId = uniquePart; // Store just the voice identifier separately
         });
     }
 
-
-	var voicesOutput = [];
-	for (var voice in uniqueIdentifiersByLang){
-		uniqueIdentifiersByLang[voice].forEach(v=>{
-			voicesOutput.push(v);
-		});
-	}
-    return voicesOutput;
+    // Flatten the grouped voices back into a single array
+    return Object.values(voicesByLang).flat();
 }
 
 function addUsername(username, type='blacklistusers') {
@@ -519,7 +548,10 @@ function updateUsernameList(type = 'blacklistusers') {
 }
 
 function addSourceType(sourceType, type) {
-    const input = document.getElementById(type);
+    let input = document.getElementById(type);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${type}"]`);
+    }
     if (!input) return;
     
     const sources = input.value.split(',').map(t => t.trim()).filter(t => t);
@@ -533,7 +565,10 @@ function addSourceType(sourceType, type) {
 }
 
 function removeSourceType(sourceType, type) {
-    const input = document.getElementById(type);
+    let input = document.getElementById(type);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${type}"]`);
+    }
     if (!input) return;
     
     const sources = input.value.split(',').map(t => t.trim()).filter(t => t);
@@ -548,10 +583,10 @@ function removeSourceType(sourceType, type) {
 }
 
 function updateSourceTypeList(type) {
-	
-	if (!sourceTypes.includes(type)) return;
-	
-    const input = document.getElementById(type);
+    let input = document.getElementById(type);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${type}"]`);
+    }
     const list = document.getElementById(`${type}List`);
     if (!input || !list) return;
     
@@ -565,6 +600,67 @@ function updateSourceTypeList(type) {
             <button class="remove-source" data-source-type="${source}">×</button>
         </div>
     `).join('');
+}
+
+// Function to setup source selection for a given input
+function setupSourceSelection(inputId, isSettingBased = false) {
+    const input = isSettingBased ? 
+        document.querySelector(`[data-textsetting="${inputId}"]`) : 
+        document.getElementById(inputId);
+    
+    if (!input) return;
+    
+    const container = input.closest('.textInputContainer');
+    if (!container || container.querySelector('.source-list-container')) return; // Already setup
+    
+    input.classList.add('hidden');
+    
+    const listContainer = document.createElement('div');
+    listContainer.className = 'source-list-container';
+    listContainer.id = `${inputId}List`;
+    
+    const addContainer = document.createElement('div');
+    addContainer.className = 'add-source-container';
+    
+    if (sourcesList && sourcesList.size > 0) {
+        addContainer.innerHTML = `
+            <select id="new${inputId}Type">
+                <option value="" selected>All sources</option>
+                ${Array.from(sourcesList).sort().map(source => 
+                    `<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+                ).join('')}
+            </select>
+            <button id="add${inputId}">Add</button>
+        `;
+    } else {
+        addContainer.innerHTML = `
+            <input type="text" id="new${inputId}Type" placeholder="Source type">
+            <button id="add${inputId}">Add</button>
+        `;
+    }
+    
+    container.parentNode.classList.add("isolate");
+    container.parentNode.insertBefore(listContainer, container.nextSibling);
+    container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+    
+    // Add event listeners
+    listContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-source')) {
+            removeSourceType(e.target.dataset.sourceType, inputId);
+        }
+    });
+    
+    document.getElementById(`add${inputId}`).addEventListener('click', () => {
+        const selectInput = document.getElementById(`new${inputId}Type`);
+        const sourceType = selectInput.value.trim();
+        if (sourceType) {
+            addSourceType(sourceType, inputId);
+            selectInput.value = '';
+        }
+    });
+    
+    // Update the list with existing values
+    updateSourceTypeList(inputId);
 }
 
 // Templates for different event types
@@ -992,691 +1088,9 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 	  }
 }
 
-const sourceTypes = ['relaytargets','eventsSources'];
+const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
-
-document.addEventListener("DOMContentLoaded", async function(event) {
-	if (ssapp){
-		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
-		const basePath = decodeURIComponent(urlParams.get('basePath'));
- 		if (basePath){
- 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
- 		}
-	} else {
-		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
-	}
-	
-	if (ssapp && urlParams.get("ssapp")){
-		document.body.classList.add('ssapp');
-	}
-	if (ssapp){
-		const style = document.createElement('style');
-		style.textContent = 'body .ssapp { display: none !important; }';
-		style.id = 'hide-ssapp-style';
-		document.head.appendChild(style);
-	}
-
-	
-	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
-	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
-
-	if (uploadCustomJsButton) {
-	  uploadCustomJsButton.addEventListener('click', uploadCustomJsFile);
-	}
-
-	if (deleteCustomJsButton) {
-	  deleteCustomJsButton.addEventListener('click', deleteCustomJsFile);
-	}
-	
-	//document.body.className = "extension-disabled";
-	document.getElementById("disableButton").style.display = "";
-	//chrome.browserAction.setIcon({path: "/icons/off.png"});
-	document.getElementById("extensionState").checked = null;
-	
-	document.getElementById("disableButton").onclick = function(event){
-		event.stopPropagation()
-		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
-			chrome.runtime.lastError;
-			update(response);
-		});
-		return false;
-	};
-	if (!ssapp) {
-		// Get reference to the select element first
-		const sourceSelector = document.getElementById('source-selector');
-		
-		// Check if the element exists
-		if (!sourceSelector) {
-		  console.error("Could not find source-selector element");
-		  return;
-		}
-		
-		const manifestData = chrome.runtime.getManifest();
-		
-		if (manifestData && manifestData.content_scripts) {
-		  // Set to store unique source files
-		  
-		  
-		  // Extract source filenames from content_scripts
-		  manifestData.content_scripts.forEach(script => {
-			if (script.js && script.js.length > 0) {
-			  script.js.forEach(jsFile => {
-				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-				  // Extract just the filename without path and extension
-				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-				  sourcesList.add(sourceName);
-				}
-			  });
-			}
-		  });
-		  
-		  // Create and add options for each source
-		  Array.from(sourcesList).sort().forEach(source => {
-			const option = document.createElement('option');
-			option.value = source;
-			// Capitalize first letter for display
-			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
-			sourceSelector.appendChild(option);
-		  });
-		}
-		
-		document.getElementById("custominject").classList.remove("hidden");
-		document.getElementById('inject-button').addEventListener('click', function() {
-		  const source = document.getElementById('source-selector').value;
-		  
-		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-			chrome.runtime.sendMessage({
-			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
-			  source: source,
-			  tabId: tabs[0].id
-			});
-		  });
-		});
-	}
-	
-	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
-		const commandsList = document.getElementById('customGifCommandsList');
-		const newCommandEntry = createCommandEntry();
-		commandsList.appendChild(newCommandEntry);
-		updateSettings(newCommandEntry, true);
-	});
-	
-	document.querySelectorAll("[data-copy]").forEach(ele=>{
-		ele.onclick = copyToClipboard;
-	});
-	
-	
-	try {
-		
-		
-		const textInputs = document.querySelectorAll('.textInputContainer');
-		textInputs.forEach(container => {
-		  const input = container.querySelector('.textInput');
-		  if (!input) return;
-		  
-		  const id = input.id;
-		  if (userTypes.includes(id)) {
-			input.classList.add('hidden');
-			
-			const listContainer = document.createElement('div');
-			listContainer.className = 'username-list-container';
-			listContainer.id = `${id}List`;
-			
-			const addContainer = document.createElement('div');
-			addContainer.className = 'add-username-container';
-			
-			// Replace text input with select dropdown if sourcesList is available
-			if (sourcesList && sourcesList.size > 0) {
-			  addContainer.innerHTML = `
-				<input type="text" id="new${id}" placeholder="Add username">
-				<select id="new${id}Type">
-				  <option value="" selected>All sources</option>
-				  ${Array.from(sourcesList).sort().map(source => 
-					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-				  ).join('')}
-				</select>
-				<button id="add${id}">Add</button>
-			  `;
-			} else {
-			  addContainer.innerHTML = `
-				<input type="text" id="new${id}" placeholder="Add username">
-				<input type="text" id="new${id}Type" placeholder="Source type (optional)">
-				<button id="add${id}">Add</button>
-			  `;
-			}
-			
-			container.parentNode.classList.add("isolate");
-			container.parentNode.insertBefore(listContainer, container.nextSibling);
-			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
-		  }
-		});
-		
-		userTypes.forEach(type => {
-		  try {
-			document.getElementById(`${type}List`).addEventListener('click', (e) => {
-			  if (e.target.classList.contains('remove-username')) {
-				removeUsername(
-				  e.target.dataset.username,
-				  e.target.dataset.sourceType,
-				  type
-				);
-			  }
-			});
-
-			document.getElementById(`add${type}`).addEventListener('click', () => {
-			  const input = document.getElementById(`new${type}`);
-			  const username = input.value.trim();
-			  if (username) {
-				addUsername(username, type);
-				input.value = '';
-				const sourceInput = document.getElementById(`new${type}Type`);
-				if (sourceInput) {
-				  sourceInput.value = '';
-				}
-			  }
-			});
-		  } catch(e) {
-			console.error(e);
-		  }
-		});
-		
-	} catch(e){
-		console.error(e);
-	}
-
-	try {
-		
-		const textInputs = document.querySelectorAll('.textInputContainer');
-		textInputs.forEach(container => {
-			const input = container.querySelector('.textInput');
-			if (!input) return;
-			
-			const id = input.id;
-			if (sourceTypes.includes(id)) {
-				input.classList.add('hidden');
-				
-				const listContainer = document.createElement('div');
-				listContainer.className = 'source-list-container';
-				listContainer.id = `${id}List`;
-				
-				const addContainer = document.createElement('div');
-				addContainer.className = 'add-source-container';
-				
-				// Replace text input with select dropdown if sourcesList is available
-				if (sourcesList && sourcesList.size > 0) {
-				  addContainer.innerHTML = `
-					<select id="new${id}Type">
-					  <option value="" selected>All sources</option>
-					  ${Array.from(sourcesList).sort().map(source => 
-						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
-					  ).join('')}
-					</select>
-					<button id="add${id}">Add</button>
-				  `;
-				} else {
-				  addContainer.innerHTML = `
-					<input type="text" id="new${id}Type" placeholder="Source type">
-					<button id="add${id}">Add</button>
-				  `;
-				}
-				
-				container.parentNode.classList.add("isolate");
-				container.parentNode.insertBefore(listContainer, container.nextSibling);
-				container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
-			}
-		});
-		
-		sourceTypes.forEach(type => {
-			try {
-				document.getElementById(`${type}List`).addEventListener('click', (e) => {
-					if (e.target.classList.contains('remove-source')) {
-						removeSourceType(
-							e.target.dataset.sourceType,
-							type
-						);
-					}
-				});
-				document.getElementById(`add${type}`).addEventListener('click', () => {
-					const input = document.getElementById(`new${type}Type`);
-					const sourceType = input.value.trim();
-					if (sourceType) {
-						addSourceType(sourceType, type);
-						input.value = '';
-					}
-				});
-			} catch(e) {
-				console.error(e);
-			}
-		});
-		
-	} catch(e){
-		console.error(e);
-	}
-	
-/* 	userTypes.forEach(type => {
-	  try {
-		updateUsernameList(type);
-	  } catch(e) {
-		console.error(e);
-	  }
-	});
-
-	// Add this after the sourceTypes setup and event listeners
-	sourceTypes.forEach(type => {
-	  try {
-		updateSourceTypeList(type);
-	  } catch(e) {
-		console.error(e);
-	  }
-	}); */
-	
-	//userTypes.forEach(type => updateUsernameList(type));
-    //sourceTypes.forEach(type => updateSourceTypeList(type));
-	
-	setTimeout(function(){
-		populateFontDropdown(); 
-		PollManager.init();
-	},1000);
-	
-	// populate language drop down
-	if (speechSynthesis){
-		async function populateVoices() {
-			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
-			
-			voices.sort((a, b) => {
-				if (a.default) {
-					return -1; // a is the default, move a to the front
-				} else if (b.default) {
-					return 1; // b is the default, move b to the front
-				} else {
-					return 0; // neither a nor b is the default, keep original order
-				}
-			});
-			
-			var voicesDropdown = document.getElementById('systemLanguageSelect');
-			var existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
-
-			voices.forEach(voice => {
-				const voiceText = voice.name + ' (' + voice.lang + ')';
-
-				if (!existingOptions.includes(voiceText)) {
-					const option = document.createElement('option');
-					option.textContent = voiceText;
-					option.value = voice.code;
-					option.setAttribute('data-lang', voice.lang);
-					option.setAttribute('data-name', voice.name);
-					voicesDropdown.appendChild(option);
-				}
-			});
-			
-			voicesDropdown = document.getElementById('languageSelect2');
-			existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
-
-			voices.forEach(voice => {
-				const voiceText = voice.name + ' (' + voice.lang + ')';
-
-				if (!existingOptions.includes(voiceText)) {
-					const option = document.createElement('option');
-					option.textContent = voiceText;
-					option.value = voice.code;
-					option.setAttribute('data-lang', voice.lang);
-					option.setAttribute('data-name', voice.name);
-					voicesDropdown.appendChild(option);
-				}
-			});
-			
-			voicesDropdown = document.getElementById('systemLanguageSelect10');
-			existingOptions = Array.from(voicesDropdown.options).map(option => option.textContent);
-
-			voices.forEach(voice => {
-				const voiceText = voice.name + ' (' + voice.lang + ')';
-
-				if (!existingOptions.includes(voiceText)) {
-					const option = document.createElement('option');
-					option.textContent = voiceText;
-					option.value = voice.code;
-					option.setAttribute('data-lang', voice.lang);
-					option.setAttribute('data-name', voice.name);
-					voicesDropdown.appendChild(option);
-				}
-			});
-			
-			try {
-				TTSManager.init(voices)
-			} catch(e){
-				console.error(e);
-			}
-			
-		}
-		speechSynthesis.onvoiceschanged = populateVoices;
-		
-		document.getElementById('searchInput').addEventListener('keyup', function() {
-			var searchQuery = this.value.toLowerCase();
-			
-			if (searchQuery){
-				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
-					ele.checked = true
-				});
-				document.querySelectorAll('.wrapper').forEach(w=>{
-					var menuItems = w.querySelectorAll('.options_group > div');
-					var matches = 0;
-					menuItems.forEach(function(item) {
-						var text = item.textContent.toLowerCase();
-						
-						if (item.querySelector("[title]")){
-							text += " " + item.querySelector("[title]").title.toLowerCase();
-						}
-						
-						if (item.querySelector("input")){
-							[...item.querySelector("input").attributes].forEach(att=>{
-								if (att.name.startsWith("data-")){
-									text += " " + att.value.toLowerCase();
-								}
-							});
-						}
-						if (text.includes(searchQuery)) {
-							item.style.display = '';
-							matches += 1;
-						} else {
-							item.style.display = 'none';
-						}
-					});
-					if (!matches){
-						w.style.display = "none";
-					} else {
-						w.style.display = "";
-					}
-				});
-			} else {
-				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
-					ele.checked = null
-				});
-				document.querySelectorAll('.wrapper').forEach(ele=>{
-					ele.style.display = "";
-				});
-				document.querySelectorAll('.options_group > div').forEach(ele=>{
-					ele.style.display = "";
-				});
-			}
-		});
-	}
-	
-	document.getElementById('searchIcon').addEventListener('click', function() {
-		var searchInput = document.getElementById('searchInput');
-		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
-			searchInput.style.display = 'block';
-			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
-			searchInput.focus(); // Optional: Focus on the input field when it's shown
-		} else {
-			searchInput.style.display = 'none';
-			searchInput.style.width = '0';
-		}
-	});
-	
-	var activeToggle = false;
-	document.getElementById('activeIcon').addEventListener('click', function() {
-		activeToggle = !activeToggle;
-		if (activeToggle) {
-			// Open all collapsible sections
-			document.querySelectorAll('input.collapsible-input').forEach(ele => {
-				ele.checked = true;
-			});
-			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = 'none';
-			});
-
-			document.querySelectorAll('.wrapper').forEach(w => {
-				var menuItems = w.querySelectorAll('.options_group > div');
-				var matches = 0;
-				menuItems.forEach(function(item) {
-					var checkbox = item.querySelector('input[type="checkbox"]');
-					var textInput = item.querySelector('input[type="text"], input[type="password"], input[type="number"]');
-					
-					var isActive = false;
-
-					if (checkbox && checkbox.checked) {
-						isActive = true;
-					} else if (textInput) {
-						var associatedToggle = item.querySelector('input[type="checkbox"]');
-						if (associatedToggle && associatedToggle.checked && textInput.value.trim() !== '') {
-							isActive = true;
-						} else if (!associatedToggle && textInput.value.trim() !== '') {
-							isActive = true;
-						}
-					}
-
-					if (isActive) {
-						matches += 1;
-						item.style.display = '';
-					} else {
-						item.style.display = 'none';
-					}
-				});
-				
-				if (!matches) {
-					w.style.display = "none";
-				} else {
-					w.style.display = "";
-				}
-			});
-		} else {
-			
-			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
-				item.style.display = '';
-			});
-			// Reset to original state
-			document.querySelectorAll('input.collapsible-input').forEach(ele => {
-				ele.checked = false;
-			});
-			document.querySelectorAll('.wrapper').forEach(ele => {
-				ele.style.display = "";
-			});
-			document.querySelectorAll('.options_group > div').forEach(ele => {
-				ele.style.display = "";
-			});
-		}
-	});
-	
-	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
-	const deleteBadwordsButton = document.getElementById('deleteBadwordsButton');
-	if (uploadBadwordsButton) {
-		uploadBadwordsButton.addEventListener('click', uploadBadwordsFile);
-	}
-	if (deleteBadwordsButton) {
-		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
-	}
-	
-	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
-	const ragFileManagement = document.getElementById('ragFileManagement');
-
-	ragEnabledCheckbox.addEventListener('change', function() {
-		ragFileManagement.style.display = this.checked ? 'block' : 'none';
-	});
-
-	let initialSetup = setInterval(()=>{
-		log("pop up asking main for settings yet again..");
-		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-			chrome.runtime.lastError;
-			log("getSettings response",response);
-			if ((response == undefined) || (!response.streamID)){
-				
-			} else {
-				clearInterval(initialSetup);
-				update(response, false); // we dont want to sync things
-			}
-		});
-	}, 500);
-	
-	log("pop up asking main for settings");
-	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-		chrome.runtime.lastError;
-		log("getSettings response",response);
-		if ((response == undefined) || (!response.streamID)){
-			
-		} else {
-			clearInterval(initialSetup);
-			update(response, false); // we dont want to sync things
-		}
-	});
-
-	//botReplyAll
-	var iii = document.querySelectorAll("input[type='checkbox']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-
-	var iii = document.querySelectorAll("input[type='text'],textarea");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-	var iii = document.querySelectorAll("input[type='text'][class*='instant']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].oninput = updateSettings;
-	}
-	
-	var iii = document.querySelectorAll("input[type='number']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-	var iii = document.querySelectorAll("input[type='password']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-	var iii = document.querySelectorAll("input[type='color']");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings; 
-	}
-	
-	var iii = document.querySelectorAll("select");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onchange = updateSettings;
-	}
-
-	var iii = document.querySelectorAll("button[data-action]");
-	for (var i=0;i<iii.length;i++){
-		iii[i].onclick = function(e){
-			var msg = {};
-			msg.cmd = this.dataset.action;
-			msg.ctrl = e.ctrlKey || false;
-			
-			if (this.dataset.target){
-				msg.target = this.dataset.target;
-			}
-			
-			msg.value = this.dataset.value || null;
-			if (msg.cmd == "fakemsg"){
-				chrome.runtime.sendMessage(msg, function (response) {
-					// actions have callbacks? maybe
-				});
-			} else if (msg.cmd == "uploadRAGfile"){
-				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
-				});
-			} else if (msg.cmd == "savePoll"){
-				
-				PollManager.saveCurrentPoll();
-			} else if (msg.cmd == "createNewPoll"){
-				
-				PollManager.createNewPoll();
-			} else if (msg.cmd == "bigwipe"){
-				var confirmit = confirm("Are you sure you want to reset all your settings?");
-				if (confirmit){
-					chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-						setTimeout(function(){
-							window.location.reload();
-						},100);
-					});
-				}
-			} else {
-				//console.log(msg);
-				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
-					log("ignore callback for this action");
-					// update(response);  
-				});
-			}
-		};
-	}
-
-
-	document.getElementById("ytcopy").onclick = async function(){
-		document.getElementById("ytcopy").innerHTML = "📎";
-		var YoutubeChannel = document.querySelector('input[data-textsetting="youtube_username"]').value;
-		if (!YoutubeChannel){return;}
-
-		if (!YoutubeChannel.startsWith("@")){
-			YoutubeChannel = "@"+YoutubeChannel;
-		}
-
-		fetch("https://www.youtube.com/c/"+YoutubeChannel+"/live").then((response) => response.text()).then((data) => {
-			document.getElementById("ytcopy").innerHTML = "🔄";
-			try{
-				var videoID = data.split('{"videoId":"')[1].split('"')[0];
-				log(videoID);
-				if (videoID){
-					navigator.clipboard.writeText(videoID).then(() => {
-						document.getElementById("ytcopy").innerHTML = "✔️"; // Video ID copied to clipboard
-						setTimeout(function(){
-							document.getElementById("ytcopy").innerHTML = "📎";
-						},1000);
-					}, () => {
-						document.getElementById("ytcopy").innerHTML = "❌"; // Failed to copy to clipboard
-					});
-				}
-			} catch(e){
-				document.getElementById("ytcopy").innerHTML = "❓"; // Video not found
-			}
-		});
-	};
-
-	checkVersion(); 
-	
-	let hideLinks = false;
-	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
-		if (x.checked){
-			hideLinks = true;
-		}
-	});
-	
-	if (hideLinks){
-		document.body.classList.add("hidelinks");
-	} 
-	
-	// Function to dynamically load the WebMidi script
-    async function loadWebMidiScript(callback) {
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = "./thirdparty/webmidi3.js";
-        script.onload = callback; // Run the callback once the script loads
-        script.onerror = () => {
-            console.error("Failed to load WebMidi script.");
-        };
-        document.body.appendChild(script);
-    }
-    // Function to initialize the MIDI dropdown logic
-    async function initializeMIDIDropdown() {
-	  try {
-		await WebMidi.enable();
-		console.log("WebMidi enabled!");
-		
-		// Initial population of all MIDI selects
-		updateAllMidiSelects();
-		
-		// Handle device changes
-		WebMidi.addListener("connected", updateAllMidiSelects);
-		WebMidi.addListener("disconnected", updateAllMidiSelects);
-		
-	  } catch(e) {
-		console.log("Failed to initialize WebMidi:", e);
-	  }
-	}
-    // Dynamically load the WebMidi script and initialize the dropdown logic
-	try {
-		setTimeout(function(){
-			loadWebMidiScript(initializeMIDIDropdown);
-		},3000);
-	} catch(e){ console.error(e);}
-});
 
 
 // Function to handle custom JS file upload
@@ -1851,9 +1265,9 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     // Add all custom parameters that are not in the ignore list
     //currentUrl.searchParams.forEach((value, key) => {
-   //   if (!allIgnoreParams.includes(key)) {
+    //  if (!allIgnoreParams.includes(key)) {
    //     customParams += `&${key}=${encodeURIComponent(value)}`;
-    //  }
+   //   }
    // });
   } catch (e) {
     console.error("Error getting custom params:", e);
@@ -1877,6 +1291,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "hypemeter", path: "hype.html" },
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
+	{ id: "leaderboard", path: "leaderboard.html" },
+	{ id: "games", path: "games.html" },
     { id: "ticker", path: "ticker.html" },
     { id: "wordcloud", path: "wordcloud.html" },
     { id: "poll", path: "poll.html" },
@@ -1924,7 +1340,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
   // Map of all provider-specific parameters
   const providerParams = {
     system: ['lang', 'voice', 'rate', 'pitch'],
-    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate'],
+    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
     google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
     speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
     kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed']
@@ -2035,11 +1451,25 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
         if (optionParamKey in settingObj) {
             const ele = document.querySelector(`select[data-${optionParamKey}='${key}']`);
             if (ele) {
-                ele.value = settingObj[optionParamKey];
+                let storedValue = settingObj[optionParamKey];
+                
+                // Backward compatibility: if stored value doesn't have 'lang=' prefix but contains '&voice=',
+                // it's likely an old format. Try to find a matching option.
+                if (storedValue && storedValue.includes('&voice=') && !storedValue.includes('lang=')) {
+                    // Try to find an option that matches when we add the 'lang=' prefix
+                    const compatValue = `lang=${storedValue}`;
+                    // Check if this value exists in the options
+                    const hasCompatOption = Array.from(ele.options).some(opt => opt.value === compatValue);
+                    if (hasCompatOption) {
+                        storedValue = compatValue;
+                    }
+                }
+                
+                ele.value = storedValue;
                 updateSettings(ele, sync);
 
                 if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
-                    handleTTSProvider10Visibility(ele.value);
+                    handleTTSProvider10Visibility(ele.value); 
                 }
 
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
@@ -2128,8 +1558,11 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 }
             }
             updateSettings(ele, sync);
-            updateUsernameList(key);
-            updateSourceTypeList(key);
+            if (userTypes.includes(key)) {
+                updateUsernameList(key);
+            } else if (sourceTypes.includes(key)) {
+                updateSourceTypeList(key);
+            }
         }
     }
 
@@ -2292,7 +1725,7 @@ function update(response, sync = true) {
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
-                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink'
+                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink',
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -2637,29 +2070,18 @@ function processManifestData(data, manifestData) {
     }
 }
 
-(function (w) {
-	w.URLSearchParams = w.URLSearchParams || function (searchString) {
-		var self = this;
-		self.searchString = searchString;
-		self.get = function (name) {
-			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
-			if (results == null) {
-				return null;
-			} else {
-				return decodeURI(results[1]) || 0;
-			}
-		};
-	};
 
-})(window);
 
-var urlParams = new URLSearchParams(window.location.search);
-const devmode = urlParams.has("devmode");
-var sourcemode = urlParams.get("sourcemode") || false;
-ssapp = urlParams.has("ssapp") || ssapp;
+// Language parameter handling removed - use the translation dropdown instead
 
 
 var baseURL = "https://socialstream.ninja/";
+
+// First check if we're on a beta URL (either subdomain or path)
+if (location.href.includes("/beta/") || location.hostname === "beta.socialstream.ninja"){
+    Beta = true;
+    baseURL = "https://beta.socialstream.ninja/";
+}
 
 if (sourcemode){
 	baseURL = sourcemode;
@@ -2669,13 +2091,9 @@ if (sourcemode){
     } else {
         baseURL = "file:///C:/Users/steve/Code/social_stream/";
     }
-} else if (location.protocol !== "chrome-extension:") {
+} else if (location.protocol !== "chrome-extension:" && !Beta) {
+    // Only set baseURL from location if we're not already in beta mode
     baseURL = `${location.protocol}//${location.host}/`;
-	if (Beta){
-		if (baseURL == "https://socialstream.ninja/"){
-			baseURL = "https://beta.socialstream.ninja/"
-		}
-	}
 }
 
 
@@ -2730,6 +2148,8 @@ function getTargetMap() {
         'tipjar': 12,
         'credits': 13,
         'giveaway': 14,
+		'leaderboard': 19,
+		'games': 20,
         'privatechatbot': 15,
 		'poll': 16,
 		'eventsdashboard': 17,
@@ -2774,13 +2194,62 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
 			const associatedInput = associatedNumberInput || associatedOptionInput || associatedTextInput;
 
-
-             if (associatedInput && associatedInput.value !== undefined && associatedInput.value !== '') {
-                  targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
-             } else {
-                 // Simple flag parameter
-                 targetElement.raw = updateURL(keyOnly, targetElement.raw);
-             }
+            // Check if this is a select element with language/voice options
+            if (associatedInput && associatedInput.tagName === 'SELECT' && associatedInput.selectedOptions.length > 0) {
+                const selectedOption = associatedInput.selectedOptions[0];
+                
+                // Check if this is a language dropdown with voice data
+                if (selectedOption.hasAttribute('data-lang') && selectedOption.value && selectedOption.value.includes('=')) {
+                    // Parse the value to extract language and voice
+                    const params = new URLSearchParams(selectedOption.value);
+                    const langValue = params.get('lang') || selectedOption.getAttribute('data-lang');
+                    const voiceValue = params.get('voice');
+                    
+                    // Handle language parameters specially
+                    if (keyOnly === 'googlelang') {
+                        // Remove existing parameters first to avoid duplicates
+                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'googlelang');
+                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicegoogle');
+                        // Add new parameters
+                        targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
+                    } else if (keyOnly === 'lang' || keyOnly === 'systemlang') {
+                        // Remove existing parameters first to avoid duplicates
+                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'lang');
+                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
+                        // Add new parameters
+                        targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+                    } else if (keyOnly === 'speechifylang') {
+                        // Remove existing parameter first
+                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
+                        // Speechify only uses voice parameter
+                        targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                    } else if (keyOnly.endsWith('lang')) {
+                        // Generic handling for other *lang parameters
+                        const prefix = keyOnly.slice(0, -4);
+                        // Remove existing parameters first
+                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
+                        targetElement.raw = removeQueryParamWithValue(targetElement.raw, `voice${prefix}`);
+                        // Add new parameters
+                        targetElement.raw = updateURL(`${keyOnly}=${langValue}`, targetElement.raw);
+                        targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
+                    } else {
+                        // Not a language parameter, use standard handling
+                        targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
+                    }
+                } else {
+                    // Standard select without language/voice data
+                    targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
+                }
+            } else if (associatedInput && associatedInput.code !== undefined && associatedInput.code !== '') {
+                targetElement.raw = updateURL(`${keyOnly}=${associatedInput.code}`, targetElement.raw);
+            } else if (associatedInput && associatedInput.value !== undefined && associatedInput.value !== '') {
+                targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
+            } else {
+                // Simple flag parameter
+                targetElement.raw = updateURL(keyOnly, targetElement.raw);
+            }
         }
 
         // Handle special case exclusions
@@ -2788,6 +2257,19 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     } else { // ele.checked is false
         // If checkbox is unchecked, remove the parameter from URL based on the key part
         targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
+        
+        // Special handling for language parameters - also remove associated voice parameter
+        if (keyOnly === 'googlelang') {
+            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicegoogle');
+        } else if (keyOnly === 'lang' || keyOnly === 'systemlang') {
+            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voice');
+        } else if (keyOnly === 'speechifylang') {
+            targetElement.raw = removeQueryParamWithValue(targetElement.raw, 'voicespeechify');
+        } else if (keyOnly.endsWith('lang')) {
+            // Generic handling for other *lang parameters
+            const prefix = keyOnly.slice(0, -4);
+            targetElement.raw = removeQueryParamWithValue(targetElement.raw, `voice${prefix}`);
+        }
     }
 
     targetElement.raw = cleanURL(targetElement.raw);
@@ -2804,14 +2286,14 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
         // Save associated text/number/option value if applicable, using the key part
         const associatedInput = document.querySelector(`[data-numbersetting${paramNum}='${keyOnly}'], [data-optionparam${paramNum}='${keyOnly}'], [data-textparam${paramNum}='${keyOnly}']`);
-        if (associatedInput && associatedInput.value !== undefined) {
+        if (associatedInput && (associatedInput.value !== undefined || associatedInput.code !== undefined)) {
              const inputType = associatedInput.dataset.numbersetting ? `numbersetting${paramNum}` : associatedInput.dataset.optionparam ? `optionparam${paramNum}` : `textparam${paramNum}`;
              chrome.runtime.sendMessage({
                  cmd: "saveSetting",
                  type: inputType,
                  target: ele.dataset.target || null,
                  setting: keyOnly,
-                 value: associatedInput.value
+                 value: associatedInput.code || associatedInput.value
              }, function (response) {});
         }
     }
@@ -2928,7 +2410,9 @@ function handleOptionParam(ele, targetId, paramType, sync) {
     targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
     
     // Check if this option should be active based on its related checkbox
-    const preEleSelector = `[data-param${paramType.slice(-1)}='${paramValue}']`;
+    // Extract the number from paramType (e.g., "10" from "optionparam10")
+    const paramNum = paramType.match(/\d+$/) ? paramType.match(/\d+$/)[0] : '';
+    const preEleSelector = `[data-param${paramNum}='${paramValue}']`;
     const preEle = document.querySelector(preEleSelector);
     
     if (ele.value && (!preEle || preEle.checked)) {
@@ -2945,7 +2429,45 @@ function handleOptionParam(ele, targetId, paramType, sync) {
             targetElement.raw = removeTTSProviderParams(targetElement.raw, ele.value);
         }
         
-        targetElement.raw = updateURL(`${paramValue}=${encodeURIComponent(ele.value).replace(/%26/g, '&').replace(/%3D/g, '=')}`, targetElement.raw);
+        // Check if this is a select element with language/voice options
+        if (ele.tagName === 'SELECT' && ele.selectedOptions.length > 0) {
+            const selectedOption = ele.selectedOptions[0];
+            
+            // Check if this is a language dropdown with voice data
+            if (selectedOption.hasAttribute('data-lang') && selectedOption.value && selectedOption.value.includes('=')) {
+                // Parse the value to extract language and voice
+                const params = new URLSearchParams(selectedOption.value);
+                const langValue = params.get('lang') || selectedOption.getAttribute('data-lang');
+                const voiceValue = params.get('voice');
+            
+                // Determine the correct parameter names based on the paramValue
+                if (paramValue === 'googlelang') {
+                    targetElement.raw = updateURL(`googlelang=${langValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`voicegoogle=${voiceValue}`, targetElement.raw);
+                } else if (paramValue === 'speechifylang') {
+                    // Speechify doesn't use separate lang param, just voice
+                    targetElement.raw = updateURL(`voicespeechify=${voiceValue}`, targetElement.raw);
+                } else if (paramValue === 'lang' || paramValue === 'systemlang') {
+                    // System TTS uses generic lang and voice
+                    targetElement.raw = updateURL(`lang=${langValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`voice=${voiceValue}`, targetElement.raw);
+                } else if (paramValue.endsWith('lang')) {
+                    // Generic handling for other *lang parameters
+                    const prefix = paramValue.slice(0, -4);
+                    targetElement.raw = updateURL(`${paramValue}=${langValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
+                } else {
+                    // Not a language parameter, use standard value
+                    targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+                }
+            } else {
+                // Standard select without language/voice data
+                targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+            }
+        } else {
+            // Not a select element, use standard value
+            targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+        }
     }
     
     targetElement.raw = cleanURL(targetElement.raw);
@@ -3485,6 +3007,8 @@ function refreshLinks(){
       'hypemeterlink': 'hypemeter',
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
+	  'leaderboardlink': 'leaderboard',
+	  'gameslink': 'games',
       'tickerlink': 'ticker',
       'wordcloudlink': 'wordcloud',
       'polllink': 'poll',
@@ -3507,7 +3031,7 @@ function refreshLinks(){
       const divId = linkIdToDivIdMap[linkId];
       const divElement = document.getElementById(divId);
 
-      if (linkElement && divElement && typeof divElement.raw === 'string' && divElement.raw.startsWith('http')) {
+      if (linkElement && divElement && typeof divElement.raw === 'string' && (divElement.raw.startsWith('http') || divElement.raw.startsWith('file://'))) {
         const urlToClean = divElement.raw; // Use .raw as the source of truth
         const cleanedUrl = removeTTSProviderParams(urlToClean);
 
@@ -3868,7 +3392,12 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 	
     getServiceName() {
         const settings = this.getSettings();
-		if (settings.service) return document.getElementById('ttsProvider').options[document.getElementById('ttsProvider').selectedIndex].innerText;
+		if (settings.service) {
+            const provider = document.getElementById('ttsProvider');
+            if (provider && provider.selectedIndex >= 0) {
+                return provider.options[provider.selectedIndex].innerText;
+            }
+        }
         if (settings.google.key) return 'Google Cloud TTS';
         if (settings.elevenLabs.key) return 'ElevenLabs TTS';
         if (settings.speechify.key) return 'Speechify TTS';
@@ -4574,8 +4103,946 @@ const PollManager = {
 };
 
 
-ProfileManager.init();
+document.addEventListener("DOMContentLoaded", async function(event) {
+	// Initialize ProfileManager after DOM is ready
+	ProfileManager.init();
+	
+	// Add event listener for save profile button
+	const saveProfileBtn = document.querySelector('button[data-action="saveProfile"]');
+	if (saveProfileBtn) {
+		saveProfileBtn.addEventListener('click', function() {
+			ProfileManager.saveCurrentProfile();
+		});
+	}
+	if (ssapp){
+		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
+		const basePath = decodeURIComponent(urlParams.get('basePath'));
+ 		if (basePath){
+ 			document.getElementById("chathistory").href = basePath  + "/chathistory.html?href="+encodeURIComponent(window.location.href);
+ 		}
+	} else {
+		document.getElementById("disableButtonText").innerHTML = "🔌 Extension Loading";
+	}
+	
+	if (ssapp && urlParams.get("ssapp")){
+		document.body.classList.add('ssapp');
+	}
+	if (ssapp){
+		const style = document.createElement('style');
+		style.textContent = 'body .ssapp { display: none !important; }';
+		style.id = 'hide-ssapp-style';
+		document.head.appendChild(style);
+	}
 
-document.querySelector('button[data-action="saveProfile"]').addEventListener('click', function() {
-  ProfileManager.saveCurrentProfile();
+	
+	const uploadCustomJsButton = document.getElementById('uploadCustomJsButton');
+	const deleteCustomJsButton = document.getElementById('deleteCustomJsButton');
+
+	if (uploadCustomJsButton) {
+	  uploadCustomJsButton.addEventListener('click', uploadCustomJsFile);
+	}
+
+	if (deleteCustomJsButton) {
+	  deleteCustomJsButton.addEventListener('click', deleteCustomJsFile);
+	}
+	
+	//document.body.className = "extension-disabled";
+	document.getElementById("disableButton").style.display = "";
+	//chrome.browserAction.setIcon({path: "/icons/off.png"});
+	document.getElementById("extensionState").checked = null;
+	
+	document.getElementById("disableButton").onclick = function(event){
+		event.stopPropagation()
+		chrome.runtime.sendMessage({cmd: "setOnOffState", data: {value: !isExtensionOn}}, function (response) {
+			chrome.runtime.lastError;
+			update(response);
+		});
+		return false;
+	};
+	if (!ssapp) {
+		// Get reference to the select element first
+		const sourceSelector = document.getElementById('source-selector');
+		
+		// Check if the element exists
+		if (!sourceSelector) {
+		  console.error("Could not find source-selector element");
+		  return;
+		}
+		
+		const manifestData = chrome.runtime.getManifest();
+		
+		if (manifestData && manifestData.content_scripts) {
+		  // Set to store unique source files
+		  
+		  
+		  // Extract source filenames from content_scripts
+		  manifestData.content_scripts.forEach(script => {
+			if (script.js && script.js.length > 0) {
+			  script.js.forEach(jsFile => {
+				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
+				  // Extract just the filename without path and extension
+				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
+				  sourcesList.add(sourceName);
+				}
+			  });
+			}
+		  });
+		  
+		  // Create and add options for each source
+		  Array.from(sourcesList).sort().forEach(source => {
+			const option = document.createElement('option');
+			option.value = source;
+			// Capitalize first letter for display
+			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
+			sourceSelector.appendChild(option);
+		  });
+		}
+		
+		document.getElementById("custominject").classList.remove("hidden");
+		document.getElementById('inject-button').addEventListener('click', function() {
+		  const source = document.getElementById('source-selector').value;
+		  
+		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+			chrome.runtime.sendMessage({
+			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
+			  source: source,
+			  tabId: tabs[0].id
+			});
+		  });
+		});
+	}
+	
+	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
+		const commandsList = document.getElementById('customGifCommandsList');
+		const newCommandEntry = createCommandEntry();
+		commandsList.appendChild(newCommandEntry);
+		updateSettings(newCommandEntry, true);
+	});
+	
+	document.querySelectorAll("[data-copy]").forEach(ele=>{
+		ele.onclick = copyToClipboard;
+	});
+	
+	
+	try {
+		
+		
+		const textInputs = document.querySelectorAll('.textInputContainer');
+		textInputs.forEach(container => {
+		  const input = container.querySelector('.textInput');
+		  if (!input) return;
+		  
+		  const id = input.id;
+		  if (userTypes.includes(id)) {
+			input.classList.add('hidden');
+			
+			const listContainer = document.createElement('div');
+			listContainer.className = 'username-list-container';
+			listContainer.id = `${id}List`;
+			
+			const addContainer = document.createElement('div');
+			addContainer.className = 'add-username-container';
+			
+			// Replace text input with select dropdown if sourcesList is available
+			if (sourcesList && sourcesList.size > 0) {
+			  addContainer.innerHTML = `
+				<input type="text" id="new${id}" placeholder="Add username">
+				<select id="new${id}Type">
+				  <option value="" selected>All sources</option>
+				  ${Array.from(sourcesList).sort().map(source => 
+					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+				  ).join('')}
+				</select>
+				<button id="add${id}">Add</button>
+			  `;
+			} else {
+			  addContainer.innerHTML = `
+				<input type="text" id="new${id}" placeholder="Add username">
+				<input type="text" id="new${id}Type" placeholder="Source type (optional)">
+				<button id="add${id}">Add</button>
+			  `;
+			}
+			
+			container.parentNode.classList.add("isolate");
+			container.parentNode.insertBefore(listContainer, container.nextSibling);
+			container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+		  }
+		});
+		
+		userTypes.forEach(type => {
+		  try {
+			document.getElementById(`${type}List`).addEventListener('click', (e) => {
+			  if (e.target.classList.contains('remove-username')) {
+				removeUsername(
+				  e.target.dataset.username,
+				  e.target.dataset.sourceType,
+				  type
+				);
+			  }
+			});
+
+			document.getElementById(`add${type}`).addEventListener('click', () => {
+			  const input = document.getElementById(`new${type}`);
+			  const username = input.value.trim();
+			  if (username) {
+				addUsername(username, type);
+				input.value = '';
+				const sourceInput = document.getElementById(`new${type}Type`);
+				if (sourceInput) {
+				  sourceInput.value = '';
+				}
+			  }
+			});
+		  } catch(e) {
+			console.error(e);
+		  }
+		});
+		
+	} catch(e){
+		console.error(e);
+	}
+
+	try {
+		
+		const textInputs = document.querySelectorAll('.textInputContainer');
+		textInputs.forEach(container => {
+			const input = container.querySelector('.textInput');
+			if (!input) return;
+			
+			const id = input.id;
+			if (sourceTypes.includes(id)) {
+				input.classList.add('hidden');
+				
+				const listContainer = document.createElement('div');
+				listContainer.className = 'source-list-container';
+				listContainer.id = `${id}List`;
+				
+				const addContainer = document.createElement('div');
+				addContainer.className = 'add-source-container';
+				
+				// Replace text input with select dropdown if sourcesList is available
+				if (sourcesList && sourcesList.size > 0) {
+				  addContainer.innerHTML = `
+					<select id="new${id}Type">
+					  <option value="" selected>All sources</option>
+					  ${Array.from(sourcesList).sort().map(source => 
+						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
+					  ).join('')}
+					</select>
+					<button id="add${id}">Add</button>
+				  `;
+				} else {
+				  addContainer.innerHTML = `
+					<input type="text" id="new${id}Type" placeholder="Source type">
+					<button id="add${id}">Add</button>
+				  `;
+				}
+				
+				container.parentNode.classList.add("isolate");
+				container.parentNode.insertBefore(listContainer, container.nextSibling);
+				container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+			}
+		});
+		
+		sourceTypes.forEach(type => {
+			try {
+				document.getElementById(`${type}List`).addEventListener('click', (e) => {
+					if (e.target.classList.contains('remove-source')) {
+						removeSourceType(
+							e.target.dataset.sourceType,
+							type
+						);
+					}
+				});
+				document.getElementById(`add${type}`).addEventListener('click', () => {
+					const input = document.getElementById(`new${type}Type`);
+					const sourceType = input.value.trim();
+					if (sourceType) {
+						addSourceType(sourceType, type);
+						input.value = '';
+					}
+				});
+			} catch(e) {
+				console.error(e);
+			}
+		});
+		
+	} catch(e){
+		console.error(e);
+	}
+	
+	// Setup source selection for bot reply inputs - simple approach without MutationObserver
+	try {
+		// Just setup any existing bot reply source inputs on page load
+		setTimeout(() => {
+			document.querySelectorAll('[id^="botReplyMessageSource"]').forEach(input => {
+				if (input.id) {
+					setupSourceSelection(input.id);
+				}
+			});
+		}, 200);
+		
+	} catch(e) {
+		console.error("Error setting up bot reply source selection:", e);
+	}
+	
+	// Initialize existing username lists
+/* 	userTypes.forEach(type => {
+	  try {
+		updateUsernameList(type);
+	  } catch(e) {
+		console.error(e);
+	  }
+	});
+	
+	// Initialize existing source type lists
+	sourceTypes.forEach(type => {
+		try {
+			updateSourceTypeList(type);
+		} catch(e) {
+			console.error(e);
+		}
+	}); */
+	
+	setTimeout(function(){
+		populateFontDropdown(); 
+		if (typeof PollManager !== 'undefined') {
+			PollManager.init();
+		}
+	},1000);
+	
+	// populate language drop down
+	if (speechSynthesis){
+		async function populateVoices() {
+			const voices = createUniqueVoiceIdentifiers(speechSynthesis.getVoices());
+
+			voices.sort((a, b) => {
+				if (a.default) {
+					return -1; // a is the default, move a to the front
+				} else if (b.default) {
+					return 1; // b is the default, move b to the front
+				} else {
+					return 0; // neither a nor b is the default, keep original order
+				}
+			});
+
+			const populateDropdown = (dropdownId) => {
+				const dropdown = document.getElementById(dropdownId);
+				if (!dropdown) return;
+
+				const existingOptions = new Set(Array.from(dropdown.options).map(option => option.textContent));
+
+				voices.forEach(voice => {
+					const voiceText = `${voice.name} (${voice.lang})`;
+					if (!existingOptions.has(voiceText)) {
+						const option = document.createElement('option');
+						option.textContent = voiceText;
+						option.value = voice.code; // This sets the value attribute
+						option.code = voice.code;   // <--- THIS IS THE CRUCIAL LINE THAT WAS MISSING
+						option.setAttribute('data-lang', voice.lang);
+						option.setAttribute('data-name', voice.name);
+						dropdown.appendChild(option);
+					}
+				});
+			};
+
+			populateDropdown('systemLanguageSelect');
+			populateDropdown('languageSelect2');
+			populateDropdown('systemLanguageSelect10');
+
+			if (typeof TTSManager !== 'undefined') {
+				try {
+					TTSManager.init(voices)
+				} catch(e){
+					console.error(e);
+				}
+			}
+		}
+		speechSynthesis.onvoiceschanged = populateVoices;
+		
+		document.getElementById('searchInput').addEventListener('keyup', function(e) {
+			// Handle escape key to close search
+			if (e.key === 'Escape') {
+				this.value = '';
+				this.style.display = 'none';
+				this.style.width = '0';
+				// Reset all visibility
+				document.querySelectorAll('input.collapsible-input').forEach(ele => {
+					ele.checked = null;
+				});
+				document.querySelectorAll('.wrapper').forEach(ele => {
+					ele.style.display = "";
+				});
+				document.querySelectorAll('.options_group > div').forEach(ele => {
+					ele.style.display = "";
+				});
+				return;
+			}
+			
+			var searchQuery = this.value.toLowerCase();
+			
+			if (searchQuery){
+				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
+					ele.checked = true
+				});
+				document.querySelectorAll('.wrapper').forEach(w=>{
+					var menuItems = w.querySelectorAll('.options_group > div');
+					var matches = 0;
+					menuItems.forEach(function(item) {
+						var text = item.textContent.toLowerCase();
+						
+						if (item.querySelector("[title]")){
+							text += " " + item.querySelector("[title]").title.toLowerCase();
+						}
+						
+						// Include data-keywords for better searchability
+						if (item.dataset.keywords) {
+							text += " " + item.dataset.keywords.toLowerCase();
+						}
+						
+						if (item.querySelector("input")){
+							[...item.querySelector("input").attributes].forEach(att=>{
+								if (att.name.startsWith("data-")){
+									text += " " + att.value.toLowerCase();
+								}
+							});
+						}
+						if (text.includes(searchQuery)) {
+							item.style.display = '';
+							matches += 1;
+						} else {
+							item.style.display = 'none';
+						}
+					});
+					if (!matches){
+						w.style.display = "none";
+					} else {
+						w.style.display = "";
+					}
+				});
+			} else {
+				document.querySelectorAll('input.collapsible-input').forEach(ele=>{
+					ele.checked = null
+				});
+				document.querySelectorAll('.wrapper').forEach(ele=>{
+					ele.style.display = "";
+				});
+				document.querySelectorAll('.options_group > div').forEach(ele=>{
+					ele.style.display = "";
+				});
+			}
+		});
+	}
+	
+	document.getElementById('searchIcon').addEventListener('click', function() {
+		var searchInput = document.getElementById('searchInput');
+		if (searchInput.style.display === 'none' || searchInput.style.display === '') {
+			searchInput.style.display = 'block';
+			searchInput.style.width = 'calc(100% - 35px)'; // Match this with your CSS width
+			searchInput.focus(); // Optional: Focus on the input field when it's shown
+		} else {
+			searchInput.style.display = 'none';
+			searchInput.style.width = '0';
+		}
+	});
+	
+	var activeToggle = false;
+	document.getElementById('activeIcon').addEventListener('click', function() {
+		activeToggle = !activeToggle;
+		if (activeToggle) {
+			// Open all collapsible sections
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = true;
+			});
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = 'none';
+			});
+
+			document.querySelectorAll('.wrapper').forEach(w => {
+				var menuItems = w.querySelectorAll('.options_group > div');
+				var matches = 0;
+				menuItems.forEach(function(item) {
+					var checkbox = item.querySelector('input[type="checkbox"]');
+					var textInput = item.querySelector('input[type="text"], input[type="password"], input[type="number"]');
+					
+					var isActive = false;
+
+					if (checkbox && checkbox.checked) {
+						isActive = true;
+					} else if (textInput) {
+						var associatedToggle = item.querySelector('input[type="checkbox"]');
+						if (associatedToggle && associatedToggle.checked && textInput.value.trim() !== '') {
+							isActive = true;
+						} else if (!associatedToggle && textInput.value.trim() !== '') {
+							isActive = true;
+						}
+					}
+
+					if (isActive) {
+						matches += 1;
+						item.style.display = '';
+					} else {
+						item.style.display = 'none';
+					}
+				});
+				
+				if (!matches) {
+					w.style.display = "none";
+				} else {
+					w.style.display = "";
+				}
+			});
+		} else {
+			
+			document.querySelectorAll('button:not(.showalways)').forEach(function(item) {
+				item.style.display = '';
+			});
+			// Reset to original state
+			document.querySelectorAll('input.collapsible-input').forEach(ele => {
+				ele.checked = false;
+			});
+			document.querySelectorAll('.wrapper').forEach(ele => {
+				ele.style.display = "";
+			});
+			document.querySelectorAll('.options_group > div').forEach(ele => {
+				ele.style.display = "";
+			});
+		}
+	});
+	
+	const uploadBadwordsButton = document.getElementById('uploadBadwordsButton');
+	const deleteBadwordsButton = document.getElementById('deleteBadwordsButton');
+	if (uploadBadwordsButton) {
+		uploadBadwordsButton.addEventListener('click', uploadBadwordsFile);
+	}
+	if (deleteBadwordsButton) {
+		deleteBadwordsButton.addEventListener('click', deleteBadwordsFile);
+	}
+	
+	const ragEnabledCheckbox = document.getElementById('ollamaRagEnabled');
+	const ragFileManagement = document.getElementById('ragFileManagement');
+
+	ragEnabledCheckbox.addEventListener('change', function() {
+		ragFileManagement.style.display = this.checked ? 'block' : 'none';
+	});
+
+	let initialSetup = setInterval(()=>{
+		log("pop up asking main for settings yet again..");
+		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+			chrome.runtime.lastError;
+			log("getSettings response",response);
+			if ((response == undefined) || (!response.streamID)){
+				
+			} else {
+				clearInterval(initialSetup);
+				update(response, false); // we dont want to sync things
+			}
+		});
+	}, 500);
+	
+	log("pop up asking main for settings");
+	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+		chrome.runtime.lastError;
+		log("getSettings response",response);
+		if ((response == undefined) || (!response.streamID)){
+			
+		} else {
+			clearInterval(initialSetup);
+			update(response, false); // we dont want to sync things
+		}
+	});
+
+	//botReplyAll
+	var iii = document.querySelectorAll("input[type='checkbox']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+
+	var iii = document.querySelectorAll("input[type='text'],textarea");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	var iii = document.querySelectorAll("input[type='text'][class*='instant']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].oninput = updateSettings;
+	}
+	
+	var iii = document.querySelectorAll("input[type='number']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	var iii = document.querySelectorAll("input[type='password']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	var iii = document.querySelectorAll("input[type='color']");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings; 
+	}
+	
+	var iii = document.querySelectorAll("select");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onchange = updateSettings;
+	}
+	
+	// Handle featured preset selector
+	const presetSelector = document.getElementById('featured-preset-select');
+	if (presetSelector) {
+		presetSelector.addEventListener('change', function() {
+			const overlayDiv = document.getElementById('overlay');
+			const overlayLink = document.getElementById('overlaylink');
+			
+			if (!overlayDiv || !overlayLink) return;
+			
+			// Hide all preset configuration sections first
+			document.querySelectorAll('.preset-config-section').forEach(section => {
+				section.style.display = 'none';
+			});
+			
+			if (this.value) {
+				// A preset is selected - use the preset URL
+				const presetUrl = baseURL + this.value;
+				
+				// Get the current parameters from the classic featured.html
+				const currentParams = overlayDiv.raw?.split('?')[1] || '';
+				
+				// Extract session/room parameter
+				const urlParams = new URLSearchParams(currentParams);
+				const session = urlParams.get('session') || urlParams.get('room') || '';
+				
+				// Build the new URL with session parameter
+				let newUrl = presetUrl;
+				if (session) {
+					newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
+				}
+				
+				// Update the display
+				overlayDiv.raw = newUrl;
+				overlayLink.href = newUrl;
+				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+				
+				// Hide classic customization options
+				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
+					wrapper.style.display = 'none';
+				});
+				
+				// Show the specific preset configuration based on selection
+				const presetType = this.value.match(/featured-(\w+)\.html/)?.[1];
+				if (presetType) {
+					const presetConfigSection = document.getElementById(`preset-config-${presetType}`);
+					if (presetConfigSection) {
+						presetConfigSection.style.display = 'block';
+					}
+				}
+			} else {
+				// Classic mode selected - restore featured.html
+				const currentParams = overlayDiv.raw?.split('?')[1] || '';
+				const classicUrl = baseURL + 'featured.html' + (currentParams ? '?' + currentParams : '');
+				
+				overlayDiv.raw = classicUrl;
+				overlayLink.href = classicUrl;
+				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : classicUrl;
+				
+				// Show classic customization options
+				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
+					wrapper.style.display = '';
+				});
+			}
+		});
+	}
+
+	// Games preset selector handler
+	const gamesSelector = document.getElementById('games-preset-select');
+	if (gamesSelector) {
+		gamesSelector.addEventListener('change', function() {
+			const overlayDiv = document.getElementById('games');
+			const overlayLink = document.getElementById('gameslink');
+			
+			if (!overlayDiv || !overlayLink) return;
+			
+			// Hide all game config sections
+			document.querySelectorAll('.game-config-section').forEach(section => {
+				section.style.display = 'none';
+			});
+			
+			if (this.value) {
+				// A game was selected
+				const gameUrl = baseURL + this.value;
+				
+				// Extract existing parameters from current URL
+				let existingParams = '';
+				if (overlayDiv.raw && overlayDiv.raw.includes('?')) {
+					existingParams = overlayDiv.raw.split('?')[1];
+				}
+				
+				// Extract session parameter to preserve it
+				let sessionParam = '';
+				if (existingParams) {
+					const params = new URLSearchParams(existingParams);
+					const session = params.get('session') || params.get('s');
+					if (session) {
+						sessionParam = session;
+					}
+				}
+				
+				// Construct new URL with game
+				let newUrl = gameUrl;
+				if (sessionParam) {
+					newUrl += '?session=' + sessionParam;
+				}
+				
+				// Update the overlay URL
+				overlayDiv.raw = newUrl;
+				overlayLink.href = newUrl;
+				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+				
+				// Show game-specific config section
+				const gameType = this.value.match(/games\/(\w+)\.html/);
+				if (gameType && gameType[1]) {
+					const configSection = document.getElementById(gameType[1] + '-config');
+					if (configSection) {
+						configSection.style.display = 'block';
+					}
+				}
+				
+				// Hide general game config when a specific game is selected
+				const generalConfig = document.getElementById('general-game-config');
+				if (generalConfig) {
+					generalConfig.style.display = 'none';
+				}
+			} else {
+				// No game selected - show general options
+				const generalConfig = document.getElementById('general-game-config');
+				if (generalConfig) {
+					generalConfig.style.display = 'block';
+				}
+				
+				// Reset URL to basic games.html (or remove the games parameter)
+				// This would need to be implemented based on how you want to handle "no game selected"
+			}
+		});
+	}
+
+	// Overlay preset selector handler
+	const overlaySelector = document.getElementById('overlay-preset-select');
+	if (overlaySelector) {
+		overlaySelector.addEventListener('change', function() {
+			const dockDiv = document.getElementById('dock');
+			const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
+			
+			if (!dockDiv) return;
+			
+			// Hide all overlay config sections (if we add them later)
+			document.querySelectorAll('.overlay-config-section').forEach(section => {
+				section.style.display = 'none';
+			});
+			
+			if (this.value) {
+				// An overlay theme was selected
+				const overlayUrl = baseURL + this.value;
+				
+				// Extract existing parameters from current dock URL
+				let existingParams = '';
+				if (dockDiv.raw && dockDiv.raw.includes('?')) {
+					existingParams = dockDiv.raw.split('?')[1];
+				}
+				
+				// Preserve ALL parameters, not just session
+				let newUrl = overlayUrl;
+				if (existingParams) {
+					newUrl += '?' + existingParams;
+				}
+				
+				// Update the dock URL
+				dockDiv.raw = newUrl;
+				if (dockLink) {
+					dockLink.href = newUrl;
+					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+				}
+				
+				// Show overlay-specific config section (for future use)
+				let overlayType = '';
+				if (this.value.includes('themes/overlay-')) {
+					// Handle new animated overlays in themes folder
+					overlayType = this.value.replace('themes/', '').replace('.html', '');
+				} else if (this.value.match(/themes\/(\w+)\//)) {
+					// Handle theme folders like themes/Neutron/
+					overlayType = this.value.match(/themes\/(\w+)\//)[1];
+				} else {
+					// Handle other files
+					overlayType = this.value.replace('.html', '');
+				}
+				
+				const configSection = document.getElementById(overlayType + '-overlay-config');
+				if (configSection) {
+					configSection.style.display = 'block';
+				}
+				
+				// Hide classic dock options when an overlay theme is selected
+				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+					wrapper.style.display = 'none';
+				});
+			} else {
+				// Classic dock.html selected - restore all parameters
+				let existingParams = '';
+				if (dockDiv.raw && dockDiv.raw.includes('?')) {
+					existingParams = dockDiv.raw.split('?')[1];
+				}
+				
+				let newUrl = baseURL + 'dock.html';
+				if (existingParams) {
+					newUrl += '?' + existingParams;
+				}
+				
+				// Update the dock URL back to classic
+				dockDiv.raw = newUrl;
+				if (dockLink) {
+					dockLink.href = newUrl;
+					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+				}
+				
+				// Show classic dock customization options
+				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+					wrapper.style.display = '';
+				});
+			}
+		});
+	}
+
+	var iii = document.querySelectorAll("button[data-action]");
+	for (var i=0;i<iii.length;i++){
+		iii[i].onclick = function(e){
+			var msg = {};
+			msg.cmd = this.dataset.action;
+			msg.ctrl = e.ctrlKey || false;
+			
+			if (this.dataset.target){
+				msg.target = this.dataset.target;
+			}
+			
+			msg.value = this.dataset.value || null;
+			if (msg.cmd == "fakemsg"){
+				chrome.runtime.sendMessage(msg, function (response) {
+					// actions have callbacks? maybe
+				});
+			} else if (msg.cmd == "uploadRAGfile"){
+				chrome.runtime.sendMessage({cmd: "uploadRAGfile", enhancedProcessing: document.getElementById('enhancedProcessing').checked}, function (response) {
+				});
+			} else if (msg.cmd == "savePoll"){
+				
+				PollManager.saveCurrentPoll();
+			} else if (msg.cmd == "createNewPoll"){
+				
+				PollManager.createNewPoll();
+			} else if (msg.cmd == "bigwipe"){
+				var confirmit = confirm("Are you sure you want to reset all your settings?");
+				if (confirmit){
+					chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+						setTimeout(function(){
+							window.location.reload();
+						},100);
+					});
+				}
+			} else {
+				//console.log(msg);
+				chrome.runtime.sendMessage(msg, function (response) { // actions have callbacks? maybe
+					log("ignore callback for this action");
+					// update(response);  
+				});
+			}
+		};
+	}
+
+
+	document.getElementById("ytcopy").onclick = async function(){
+		document.getElementById("ytcopy").innerHTML = "📎";
+		var YoutubeChannel = document.querySelector('input[data-textsetting="youtube_username"]').value;
+		if (!YoutubeChannel){return;}
+
+		if (!YoutubeChannel.startsWith("@")){
+			YoutubeChannel = "@"+YoutubeChannel;
+		}
+
+		fetch("https://www.youtube.com/c/"+YoutubeChannel+"/live").then((response) => response.text()).then((data) => {
+			document.getElementById("ytcopy").innerHTML = "🔄";
+			try{
+				var videoID = data.split('{"videoId":"')[1].split('"')[0];
+				log(videoID);
+				if (videoID){
+					navigator.clipboard.writeText(videoID).then(() => {
+						document.getElementById("ytcopy").innerHTML = "✔️"; // Video ID copied to clipboard
+						setTimeout(function(){
+							document.getElementById("ytcopy").innerHTML = "📎";
+						},1000);
+					}, () => {
+						document.getElementById("ytcopy").innerHTML = "❌"; // Failed to copy to clipboard
+					});
+				}
+			} catch(e){
+				document.getElementById("ytcopy").innerHTML = "❓"; // Video not found
+			}
+		});
+	};
+
+	checkVersion(); 
+	
+	let hideLinks = false;
+	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
+		if (x.checked){
+			hideLinks = true;
+		}
+	});
+	
+	if (hideLinks){
+		document.body.classList.add("hidelinks");
+	} 
+	
+	// Function to dynamically load the WebMidi script
+    async function loadWebMidiScript(callback) {
+        const script = document.createElement("script");
+        script.type = "text/javascript";
+        script.src = "./thirdparty/webmidi3.js";
+        script.onload = callback; // Run the callback once the script loads
+        script.onerror = () => {
+            console.error("Failed to load WebMidi script.");
+        };
+        document.body.appendChild(script);
+    }
+    // Function to initialize the MIDI dropdown logic
+    async function initializeMIDIDropdown() {
+	  try {
+		await WebMidi.enable();
+		console.log("WebMidi enabled!");
+		
+		// Initial population of all MIDI selects
+		updateAllMidiSelects();
+		
+		// Handle device changes
+		WebMidi.addListener("connected", updateAllMidiSelects);
+		WebMidi.addListener("disconnected", updateAllMidiSelects);
+		
+	  } catch(e) {
+		console.log("Failed to initialize WebMidi:", e);
+	  }
+	}
+    // Dynamically load the WebMidi script and initialize the dropdown logic
+	try {
+		setTimeout(function(){
+			loadWebMidiScript(initializeMIDIDropdown);
+		},3000);
+	} catch(e){ console.error(e);}
+	
+	// Handle games selector initial state
+	const gamesSelectorInit = document.getElementById('games-preset-select');
+	if (gamesSelectorInit && gamesSelectorInit.value) {
+		// Trigger change event to show correct config
+		gamesSelectorInit.dispatchEvent(new Event('change'));
+	} else {
+		// Show general config by default
+		const generalConfig = document.getElementById('general-game-config');
+		if (generalConfig) {
+			generalConfig.style.display = 'block';
+		}
+	}
 });

@@ -956,6 +956,13 @@ function loadSettings(item, resave = false) {
 		}
 	}
 	
+	if (settings.hypemode) {
+		// Initialize hype mode if it's enabled on startup
+		if (!hypeInterval) {
+			hypeInterval = setInterval(processHype2, 10000);
+		}
+	}
+	
 	if (settings.relaytargets && settings.relaytargets.textsetting){
 		relaytargets = settings.relaytargets.textsetting
 			.split(",")
@@ -1806,24 +1813,31 @@ async function getBTTVEmotes(url = false, type=null, channel=null) {
 			}
 
 			if (vid) {
+				console.log("YouTube video ID extracted:", vid);
 				userID = localStorage.getItem("vid2uid:" + vid);
 				
 				if (!userID) {
+					console.log("Fetching user ID for video:", vid);
 					userID = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
 						.then(result => {
 							return result.text();
 						})
 						.then(result => {
+							console.log("User ID received:", result);
 							return result;
 						})
 						.catch(err => {
+							console.error("Error fetching user ID:", err);
 							//	log(err);
 						});
 					if (userID) {
 						localStorage.setItem("vid2uid:" + vid, userID);
 					} else {
+						console.log("No user ID found for video:", vid);
 						return false;
 					}
+				} else {
+					console.log("User ID from cache:", userID);
 				}
 				if (userID) {
 					bttv = getItemWithExpiry("uid2bttv2.youtube:" + userID);
@@ -1840,14 +1854,18 @@ async function getBTTVEmotes(url = false, type=null, channel=null) {
 								//	log(err);
 							});
 						if (bttv) {
+							console.log("BTTV raw response for YouTube channel:", bttv);
 							if (bttv.channelEmotes) {
+								console.log("BTTV channel emotes found:", bttv.channelEmotes.length);
 								bttv.channelEmotes = bttv.channelEmotes.reduce((acc, emote) => {
 									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 									acc[emote.code] = imageUrl;
+									console.log("Added channel emote:", emote.code);
 									return acc;
 								}, {});
 							}
 							if (bttv.sharedEmotes) {
+								console.log("BTTV shared emotes found:", bttv.sharedEmotes.length);
 								bttv.sharedEmotes = bttv.sharedEmotes.reduce((acc, emote) => {
 									const imageUrl = `https://cdn.betterttv.net/emote/${emote.id}/2x`;
 									acc[emote.code] = imageUrl;
@@ -2668,7 +2686,7 @@ async function processIncomingMessage(message, sender=null){
 		
 		if (!message.id) {
 			messageCounter += 1;
-			message.id = messageCounter;
+			message.id = messageCounter; 
 		}
 		
 		try {
@@ -2704,7 +2722,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (sendResponseReal) {
 		  alreadySet = true;
 		  // Always include current state in responses
-		  msg.state = isExtensionOn;
+		  if (typeof msg == "object"){
+			msg.state = isExtensionOn;
+		  }
 		  sendResponseReal(msg);
 		}
 		response = msg;
@@ -2719,13 +2739,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		}
 		// add a stall here instead if this actually happens
 		if (!loadedFirst){
-			return sendResponse({"tryAgain":true});
+			sendResponse({"tryAgain":true});
+			return response;
 		}
 	}
 	
 	try {
 		if (typeof request !== "object") {
-			//sendResponse({"state": isExtensionOn});
+			sendResponse({"state": isExtensionOn});
 			return response;
 		}
 
@@ -2869,7 +2890,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "notiktokdonations") {
 				pushSettingChange();
 			}
-			if (request.setting == "twichadmute") {
+			if (request.setting == "twichadmute") { 
 				pushSettingChange();
 			} 
 			if (request.setting == "twichadannounce") {
@@ -3039,19 +3060,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 			}
 			
-			if (request.setting === "hypeCombineAll" || 
-				  request.setting === "hypeCombineYouTube" || 
-				  request.setting === "hypeCombineSameType") {
-				clearAndRefreshHypeSources();
-			}
-
 			if (request.setting == "hypemode") {
 				if (!request.value) {
 					processHype2(); // stop hype and clear old hype
 				}
 				pushSettingChange();
 			} 
-			
 			if (request.setting == "showviewercount") {
 				pushSettingChange();
 			}
@@ -3148,32 +3162,51 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 		} else if ("message" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			var letsGo = await processIncomingMessage(request.message, sender);
-			if (letsGo && letsGo.id){
-				sendResponse({ state: isExtensionOn, id: letsGo.id });
+			
+			if (request?.message && !request.message.id) {
+				messageCounter += 1;
+				request.message.id = messageCounter;
+				sendResponse({ state: isExtensionOn, id: request.message.id });
 			} else {
 				sendResponse({ state: isExtensionOn});
 			}
+			var letsGo = await processIncomingMessage(request.message, sender);
+			
+		} else if ("messages" in request) {
+			// Handle batch messages from YouTube
+			sendResponse({ state: isExtensionOn });
+			if (Array.isArray(request.messages)) {
+				for (const message of request.messages) {
+					await processIncomingMessage(message, sender);
+				}
+			}
 		} else if ("getBTTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
-			//console.log(JSON.stringify(request));
+			console.log("BTTV request received:", JSON.stringify(request));
 			sendResponse({ state: isExtensionOn });
-			if (sender.tab.url) {
-				var BTTV2 = await getBTTVEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+			if (sender.tab.url || request.url) {
+				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+				var urlToUse = request.url || sender.tab.url;
+				console.log("Using URL for BTTV:", urlToUse);
+				var BTTV2 = await getBTTVEmotes(urlToUse, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (BTTV2) {
-					//console.log(sender);
+					console.log("BTTV emotes found, sending to tab:", sender.tab.id);
 					//console.log(BTTV2);
 					chrome.tabs.sendMessage(sender.tab.id, { BTTV: BTTV2 }, function (response = false) {
 						chrome.runtime.lastError;
 					});
+				} else {
+					console.log("No BTTV emotes found");
 				}
 			}
 		} else if ("getSEVENTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			//console.log("getSEVENTV");
 			sendResponse({ state: isExtensionOn });
-			if (sender.tab.url) {
-				var SEVENTV2 = await getSEVENTVEmotes(sender.tab.url, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
+			if (sender.tab.url || request.url) {
+				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+				var urlToUse = request.url || sender.tab.url;
+				var SEVENTV2 = await getSEVENTVEmotes(urlToUse, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
 					//	//console.logsender);
 					//	//console.logSEVENTV2);
@@ -3186,8 +3219,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			////console.log"getFFZ");
 			sendResponse({ state: isExtensionOn });
-			if (sender.tab.url) {
-				var FFZ2 = await getFFZEmotes(sender.tab.url, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
+			if (sender.tab.url || request.url) {
+				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
+				var urlToUse = request.url || sender.tab.url;
+				var FFZ2 = await getFFZEmotes(urlToUse, request.type, request.channel); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (FFZ2) {
 					//	//console.logsender);
 					//	//console.logFFZ2);
@@ -3313,6 +3348,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				messagePopup({documents: documentsRAG});
 			} catch(e){}
 		} else if (request.cmd === "deleteRAGfile") {
+			sendResponse({ state: isExtensionOn });
 			try {
 				await deleteDocument(request.docId);
 				messagePopup({documents: documentsRAG});
@@ -3423,7 +3459,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	return response;
+	return true;
 });
 
 const randomDigits = () => {
@@ -3647,34 +3683,24 @@ async function sendToDestinations(message) {
 						}
 					  }
 					});
-				  }, 600000); 
+				  }, 610000); 
 				}
 				
-				if (settings.hypemode) {
-					// ONLY update viewer counts if it's a viewer_update
-					if (message.event === 'viewer_update') {
-						updateViewerCount(message); // updateViewerCount already calls combineHypeData and sends
-					} else if (message.event === 'follower_update') {
+				if (message.event === 'viewer_update') {
+					var viewerCounts = {};
+					for (const [tid, tabData] of metaDataStore) {
+						if (tabData.viewer_update && tabData.viewer_update.type){
+							const count = parseInt(tabData.viewer_update.meta) || 0;
+							viewerCounts[tabData.viewer_update.type] = (viewerCounts[tabData.viewer_update.type] || 0) + count;
+						}
 					}
+					if (settings.hypemode) {
+						updateViewerCount({event: "viewer_updates", meta: viewerCounts}); // updateViewerCount already calls combineHypeData and sends
+					}
+					
+					sendDataP2P({event: "viewer_updates", meta: viewerCounts});
 				}
-			
-				try {
-				  // Only send data to P2P for non-hype targets
-				  const peersToSend = [];
-				  for (const UUID in connectedPeers) {
-					if (connectedPeers[UUID] !== "hype") {
-					  peersToSend.push(UUID);
-					}
-				  }
-				  
-				  if (peersToSend.length > 0) {
-					for (const UUID of peersToSend) {
-					  iframe.contentWindow.postMessage({ sendData: { overlayNinja: message }, type: "pcs", UUID: UUID }, "*");
-					}
-				  }
-				} catch (e) {
-				  console.error(e);
-				}
+				
 				return true;
 			}
 		}
@@ -5955,38 +5981,9 @@ var users = {};
 var hype = {};
 var viewerCounts = {};
 var lastUpdated = {};
+var activeViewerSources = {}; // Track sources that have received viewer updates
 var hypeInterval = null;
 
-function clearAndRefreshHypeSources() {
-  // Don't do anything if hype mode is disabled
-  if (!settings.hypemode) return;
-
-  // Reset data structures
-  users = {};
-  hype = {};
-  viewerCounts = {};
-  lastUpdated = {}; // Important to clear this too
-
-  // Create a clear action object
-  let clearAction = {
-    action: "refreshSources",
-    combineAll: settings.hypeCombineAll,
-    combineYouTube: settings.hypeCombineYouTube,
-    combineSameType: settings.hypeCombineSameType,
-    timestamp: Date.now()
-  };
-
-  // Add uniqueId if set
-  if (settings.hypeUniqueId) {
-    clearAction.uniqueId = settings.hypeUniqueId;
-  }
-
-  // Send the clear action to hype.html
-  sendHypeP2P({ clear: clearAction });
-
-  // Force an immediate update with the now cleared data and new settings
-  processHype2();
-}
 
 function processHype(data) { // data here should be a chat message
     if (!settings.hypemode) {
@@ -6000,11 +5997,11 @@ function processHype(data) { // data here should be a chat message
     // Handle viewer count updates separately
     if (data.event === 'viewer_update' && data.meta) {
         updateViewerCount(data); // This updates viewers and sends combined data via its own path
-        // return; // Return here so it doesn't process as a chatter
+        return; // Return here so it doesn't process as a chatter
     }
 	
     // If it's not a viewer_update, proceed to process as a chatter
-    const sourceType = getEffectiveSourceType(data);
+    const sourceType = data.type;
 	
     let newSource = false;
 	
@@ -6037,33 +6034,35 @@ function processHype(data) { // data here should be a chat message
 
 
 function updateViewerCount(data) {
-    // Store the viewer count with the tab ID
-    const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
-    viewerCounts[sourceKey] = data.meta;
-    lastUpdated[sourceKey] = Date.now();
+    // Handle new aggregated viewer_updates format
+    if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+        // Clear old viewer counts since we're getting aggregated data
+        viewerCounts = {};
+        lastUpdated = {};
+        activeViewerSources = {};
+        
+        // Process each platform's viewer count
+        Object.keys(data.meta).forEach(type => {
+            viewerCounts[type] = parseInt(data.meta[type]) || 0;
+            lastUpdated[type] = Date.now();
+            if (viewerCounts[type] > 0) {
+                activeViewerSources[type] = true;
+            }
+        });
+    } 
+    // Handle legacy single viewer_update format
+    else if (data.type && ("meta" in data)) {
+        const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
+        viewerCounts[sourceKey] = parseInt(data.meta) || 0;
+        lastUpdated[sourceKey] = Date.now();
+        if (viewerCounts[sourceKey] > 0) {
+            activeViewerSources[sourceKey] = true;
+        }
+    }
     
     // Combine and send the updated counts
     const combinedData = combineHypeData();
     sendHypeP2P(combinedData);
-}
-
-function getEffectiveSourceType(data) {
-    // Apply source combination logic
-    if (settings.hypeCombineAll) {
-        return "global";
-    }
-    
-    if (settings.hypeCombineYouTube && (data.type === "youtube" || data.type === "youtubeshorts")) {
-        return "youtube-combined";
-    }
-    
-    if (settings.hypeCombineSameType && data.tid) {
-        // When combining same types, we return just the type without the tab ID
-        return data.type;
-    }
-    
-    // Default: return type-tabid as the unique source identifier
-    return data.tid ? `${data.type}-${data.tid}` : data.type;
 }
 
 function processHype2() {
@@ -6076,46 +6075,11 @@ function processHype2() {
     hype = {}; // Reset active chatters counts for this interval's calculation
     var now = Date.now();
 
-    if (typeof metaDataStore !== 'undefined' && metaDataStore.forEach) {
-		metaDataStore.forEach((tabData, tabId) => {
-			if (tabData && tabData.type) {
-				const rawSourceKey = tabData.tid ? `${tabData.type}-${tabData.tid}` : tabData.type;
-				if (viewerCounts[rawSourceKey] === undefined) {
-					viewerCounts[rawSourceKey] = 0; // Initialize with 0 viewers
-				}
-				if (lastUpdated[rawSourceKey] === undefined) {
-					lastUpdated[rawSourceKey] = now;
-				}
-			}
-		});
-	}
-
     // Track sources with actual viewer data (>0)
     var sourcesWithActualViewers = {};
     for (const sourceKey in viewerCounts) {
         if (viewerCounts[sourceKey] > 0) {
             sourcesWithActualViewers[sourceKey] = true;
-        }
-    }
-
-    // Clean up inactive sources
-    if (settings.hypeAutoCleanup) {
-        for (const sourceKey in lastUpdated) {
-            let shouldDelete = false;
-            if (sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 33000)) { // Has actual viewers, short timeout
-                shouldDelete = true;
-            } else if (!sourcesWithActualViewers[sourceKey] && (now - lastUpdated[sourceKey] > 300000)) { // No actual viewers (or just chatters), long timeout
-                shouldDelete = true;
-            }
-
-            if (shouldDelete) {
-                delete viewerCounts[sourceKey];
-                delete lastUpdated[sourceKey];
-                // Also remove from users if this source is only tracked via lastUpdated/viewerCounts
-                // Note: `users` are cleaned based on their own chatter activity timeout.
-                // If a sourceKey from lastUpdated/viewerCounts represents an effective type (e.g. "global"),
-                // be careful deleting from `users` which might use different keys.
-            }
         }
     }
 
@@ -6153,84 +6117,23 @@ function processHype2() {
 
 function combineHypeData() {
     const result = { chatters: {}, viewers: {}, combined: {} };
-    for (const sourceType in hype) { // If hype[sourceType] was not set (0 chatters), it's not in this loop.
+    
+    // Copy active chatters data
+    for (const sourceType in hype) {
         result.chatters[sourceType] = hype[sourceType];
         if (!result.combined[sourceType]) result.combined[sourceType] = { chatters: 0, viewers: 0 };
         result.combined[sourceType].chatters = hype[sourceType];
     }
-
-    // Copy active chatters data
-    for (const sourceType in hype) { // `hype` here is from processHype2's calculation
-        result.chatters[sourceType] = hype[sourceType];
-        // Initialize combined structure for this source
-        if (!result.combined[sourceType]) result.combined[sourceType] = { chatters: 0, viewers: 0};
-        result.combined[sourceType].chatters = hype[sourceType];
-    }
     
-    // Process viewer counts with combination logic
-    if (settings.hypeCombineAll) {
-        let totalViewers = 0;
-        for (const sourceKey in viewerCounts) {
-            totalViewers += viewerCounts[sourceKey];
-        }
-        result.viewers["global"] = totalViewers;
-        if (result.combined["global"]) {
-            result.combined["global"].viewers = totalViewers;
-        } else {
-            result.combined["global"] = { chatters: 0, viewers: totalViewers };
-        }
-    } else if (settings.hypeCombineYouTube) {
-        // Combine YouTube and YouTube Shorts
-        let youtubeViewers = 0;
-        for (const sourceKey in viewerCounts) {
-            if (sourceKey.startsWith("youtube-") || sourceKey.startsWith("youtubeshorts-") || 
-                sourceKey === "youtube" || sourceKey === "youtubeshorts") {
-                youtubeViewers += viewerCounts[sourceKey];
-            } else {
-                result.viewers[sourceKey] = viewerCounts[sourceKey];
-                if (result.combined[sourceKey]) {
-                    result.combined[sourceKey].viewers = viewerCounts[sourceKey];
-                } else {
-                    result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
-                }
-            }
-        }
-        result.viewers["youtube-combined"] = youtubeViewers;
-        if (result.combined["youtube-combined"]) {
-            result.combined["youtube-combined"].viewers = youtubeViewers;
-        } else {
-            result.combined["youtube-combined"] = { chatters: 0, viewers: youtubeViewers };
-        }
-    } else if (settings.hypeCombineSameType) {
-        // Combine by type
-        const typeViewers = {};
-        for (const sourceKey in viewerCounts) {
-            const type = sourceKey.split('-')[0];
-            if (!typeViewers[type]) {
-                typeViewers[type] = 0;
-            }
-            typeViewers[type] += viewerCounts[sourceKey];
-        }
-        
-        for (const type in typeViewers) {
-            result.viewers[type] = typeViewers[type];
-            if (result.combined[type]) {
-                result.combined[type].viewers = typeViewers[type];
-            } else {
-                result.combined[type] = { chatters: 0, viewers: typeViewers[type] };
-            }
-        }
-    } else {
-        // No combination, use raw data
-        for (const sourceKey in viewerCounts) {
-            result.viewers[sourceKey] = viewerCounts[sourceKey];
-            if (result.combined[sourceKey]) {
-                result.combined[sourceKey].viewers = viewerCounts[sourceKey];
-            } else {
-                result.combined[sourceKey] = { chatters: 0, viewers: viewerCounts[sourceKey] };
-            }
-        }
-    }
+	for (const sourceType in viewerCounts) {
+		// Include all sources that have viewer data, even if 0
+		result.viewers[sourceType] = viewerCounts[sourceType];
+		if (!result.combined[sourceType]) {
+			result.combined[sourceType] = { chatters: 0, viewers: 0 };
+		}
+		result.combined[sourceType].viewers = viewerCounts[sourceType];
+	}
+
     
     // Add unique ID if specified
     if (settings.hypeUniqueId) {
@@ -6781,7 +6684,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			openchat(request.value || null);
 		} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type) {
 			if (isExtensionOn) {
-				getMessagesDB(request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {
+				getMessagesDB(request.value.userid || request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {
 					if (isExtensionOn) {
 						sendDataP2P({ userHistory: response }, UUID);
 					}
@@ -7042,36 +6945,7 @@ eventer(messageEvent, async function (e) {
 		if ("dataReceived" in e.data && "overlayNinja" in e.data.dataReceived) {
 			processIncomingRequest(e.data.dataReceived.overlayNinja, e.data.UUID);
 		} else if ("action" in e.data) {
-			// this is from vdo.ninja, not socialstream.
-			if (e.data.action === "YoutubeChat") {
-				// I never got around to completing this, so ignore it
-				if (e.data.value && data.value.snippet && data.value.authorDetails) {
-					var data = {};
-					data.chatname = e.data.value.authorDetails.displayName || "";
-					data.chatimg = e.data.value.authorDetails.profileImageUrl || "";
-					data.nameColor = "";
-					data.chatbadges = "";
-					data.backgroundColor = "";
-					data.textColor = "";
-					data.chatmessage = data.value.snippet.displayMessage || "";
-					data.hasDonation = "";
-					data.membership = "";
-					data.type = "youtube";
-
-					data = await applyBotActions(data); // perform any immediate (custom) actions, including modifying the message before sending it out
-					
-					if (data) {
-						try {
-							data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
-						} catch (e) {
-							console.warn(e);
-						}
-						if (data) {
-							sendToDestinations(data);
-						}
-					}
-				}
-			} else if (e.data.action == "view-stats-updated") {
+			if (e.data.action == "view-stats-updated") {
 				return;
 			} else if (e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 				// flip this
@@ -7386,11 +7260,24 @@ function delayedDetach(tabid) {
 }
 
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 3500) {
+    console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
+        data: data,
+        reverse: reverse,
+        metadata: metadata,
+        relayMode: relayMode,
+        antispam: antispam,
+        overrideTimeout: overrideTimeout,
+        isExtensionOn: isExtensionOn,
+        disablehost: settings.disablehost
+    });
+    
     if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
+        console.log('[RELAY DEBUG - sendMessageToTabs] Early return - Extension off or host disabled');
         return false;
     }
 
 	if (!data.response){
+		console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
 		return false;
 	}
     if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
@@ -7425,6 +7312,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     try {
 		
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
+        console.log(`[RELAY DEBUG - sendMessageToTabs] Found ${tabs.length} tabs`);
         var published = {};
 		
         
@@ -7433,8 +7321,10 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 // Skip invalid tabs
 				let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
                 if (!isValid) {
+                    console.log(`[RELAY DEBUG - sendMessageToTabs] Tab ${tab.id} (${tab.url?.substring(0, 50)}...) is invalid, skipping`);
                     continue;
                 }
+                console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
 
                 // Handle message store
                 if (msg2Save) {  
@@ -8279,11 +8169,23 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.firsttimers && data.chatname && data.type){
-			let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
-			if (!exists){
-				data.firsttime = true;
-				console.log("First timer");
+			console.log("Checking first timer:", data.chatname, data.type, data.userid);
+			try {
+				let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
+				console.log("User exists:", exists);
+				if (!exists){
+					data.firsttime = true;
+					console.log("First timer marked:", data.chatname);
+				}
+			} catch (e) {
+				console.error("Error checking first timer:", e);
 			}
+		} else {
+			console.log("First timer check skipped:", {
+				setting: settings.firsttimers,
+				chatname: data.chatname,
+				type: data.type
+			});
 		}
 		
 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {
@@ -8379,6 +8281,28 @@ async function applyBotActions(data, tab = false) {
 				data.queueme = true;
 			} catch (e) {
 				errorlog(e);
+			}
+		}
+		
+		// Question identification logic
+		if (settings.identifyQuestions && data.chatmessage) {
+			// Default keywords to identify questions
+			const questionKeywords = settings.questionKeywords?.textsetting?.split(",").map(k => k.trim()) || ["?", "Q:", "question:", "Question:", "how", "what", "when", "where", "why", "who", "which", "could", "would", "should", "can", "will"];
+			
+			// Check if message contains any question keywords
+			const messageText = data.chatmessage.toLowerCase();
+			const isQuestion = questionKeywords.some(keyword => {
+				const keywordLower = keyword.toLowerCase();
+				if (keywordLower === "?") {
+					return messageText.includes(keywordLower);
+				}
+				// For word-based keywords, check word boundaries
+				const wordRegex = new RegExp(`\\b${keywordLower}\\b`);
+				return wordRegex.test(messageText);
+			});
+			
+			if (isQuestion) {
+				data.question = true;
 			}
 		}
 		
@@ -9567,6 +9491,8 @@ function isEqualMessage(message1, message2) {
 		   message1.membership === message2.membership;
 }
 
+console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
+
 let tmp = new EventFlowSystem({
 	sendMessageToTabs: window.sendMessageToTabs || null,
 	sendToDestinations: window.sendToDestinations || null,
@@ -9576,6 +9502,8 @@ let tmp = new EventFlowSystem({
 
 tmp.initPromise.then(() => {
 	window.eventFlowSystem = tmp;
+	console.log('[EventFlow Init] EventFlowSystem initialized successfully');
+	console.log('[EventFlow Init] sendMessageToTabs in system:', typeof tmp.sendMessageToTabs, tmp.sendMessageToTabs ? 'Function present' : 'Function missing');
 }).catch(error => {
 	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });

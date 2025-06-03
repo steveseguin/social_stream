@@ -727,8 +727,23 @@ document.getElementById("hypetitle").textContent = titleText;
 let style = "default";
 if (urlParams.has("style")) {
     style = urlParams.get("style");
-    document.getElementById("parentHolder").classList.add("style-" + style);
 }
+
+// Combination settings from URL parameters
+var combineYouTube = false;
+var combineAll = false;
+
+if (urlParams.has("combineyoutube")) {
+    combineYouTube = true;
+}
+
+if (urlParams.has("combineall")) {
+    combineAll = true;
+}
+
+// Apply the style to the parent holder
+document.getElementById("parentHolder").classList.add("style-" + style);
+
 let scale = 1;
 if (urlParams.has("scale")) {
     scale = parseFloat(urlParams.get("scale")) || 3.0;
@@ -765,7 +780,6 @@ document.body.style.height = `${100/scale}%`;
 
 function getSourceImage(type) {
     if (type === "global") return "global";
-    if (type === "youtube-combined") return "youtube";
     if (type.includes('-')) {
         return type.split('-')[0];
     }
@@ -809,7 +823,62 @@ function processInput(data) {
         console.error("hype.html: 'parentHolder' element not found!");
         return;
     }
-    const combinedData = data.hype.combined || {};
+    let combinedData = data.hype.combined || {};
+    
+    // Apply combination logic based on URL parameters
+    if (combineAll) {
+        // Combine all sources into one global count
+        let globalChatters = 0;
+        let globalViewers = 0;
+        
+        for (const sourceType in combinedData) {
+            if (typeof combinedData[sourceType] === 'object') {
+                globalChatters += parseInt(combinedData[sourceType].chatters) || 0;
+                globalViewers += parseInt(combinedData[sourceType].viewers) || 0;
+            }
+        }
+        
+        combinedData = {
+            global: {
+                chatters: globalChatters,
+                viewers: globalViewers
+            }
+        };
+    } else if (combineYouTube) {
+        // Combine YouTube and YouTube Shorts
+        let youtubeChatters = 0;
+        let youtubeViewers = 0;
+        let hasYouTube = false;
+        
+        const newCombinedData = {};
+        
+        for (const sourceType in combinedData) {
+            if (sourceType === "youtube" || sourceType === "youtubeshorts") {
+                if (typeof combinedData[sourceType] === 'object') {
+                    youtubeChatters += parseInt(combinedData[sourceType].chatters) || 0;
+                    youtubeViewers += parseInt(combinedData[sourceType].viewers) || 0;
+                    hasYouTube = true;
+                }
+            } else if (typeof combinedData[sourceType] === 'object') {
+                newCombinedData[sourceType] = combinedData[sourceType];
+            }
+        }
+        
+        if (hasYouTube) {
+            newCombinedData["youtube"] = {
+                chatters: youtubeChatters,
+                viewers: youtubeViewers
+            };
+            
+            // Clean up tracking for youtubeshorts since it's now combined
+            delete lastUpdated["youtubeshorts"];
+            delete hasViewerCount["youtubeshorts"];
+            delete activeChatters["youtubeshorts"];
+        }
+        
+        combinedData = newCombinedData;
+    }
+    
     const sourceKeys = Object.keys(combinedData);
 	sourceKeys.sort();
     let hasContentToDisplay = false;
@@ -822,16 +891,20 @@ function processInput(data) {
         const sourceData = combinedData[sourceType];
         const chatterCount = (sourceData && sourceData.chatters !== undefined) ? parseInt(sourceData.chatters) : 0;
         const viewerCount = (sourceData && sourceData.viewers !== undefined) ? parseInt(sourceData.viewers) : 0;
-        lastUpdated[sourceType] = now;
+        // Update tracking for this source
+        if (viewerCount > 0 || chatterCount > 0) {
+            lastUpdated[sourceType] = now;
+        }
         if (viewerCount > 0) {
             hasViewerCount[sourceType] = true;
         }
         if (chatterCount > 0) {
             activeChatters[sourceType] = true;
         }
-        let displayThisSpecificSourceItem = true;
-        if (hasViewerCount[sourceType] && (now - lastUpdated[sourceType] > 33000) && viewerCount === 0) {} else if (!hasViewerCount[sourceType] && activeChatters[sourceType] && (now - lastUpdated[sourceType] > 300000) && chatterCount === 0) {}
-        if (displayThisSpecificSourceItem && (showChatters || showViewers)) {
+        
+        // Always display sources that are sent from background.js
+        // (background.js handles cleanup of stale sources)
+        if (showChatters || showViewers) {
             hasContentToDisplay = true;
             const sourceImgName = getSourceImage(sourceType);
             const sourceImgSrc = "./sources/images/" + sourceImgName + ".png";
@@ -883,7 +956,35 @@ eventer(messageEvent, function(e) {
     }
     if ("dataReceived" in e.data) {
         if ("overlayNinja" in e.data.dataReceived) {
-            processInput(e.data.dataReceived.overlayNinja);
+            var data = e.data.dataReceived.overlayNinja;
+            
+            // Handle new viewer_updates format by converting to hype format
+            if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
+                // Since viewer counts are now handled upstream, we just need to update our local tracking
+                // The actual hype data will come through the regular hype updates
+                console.log("Received aggregated viewer updates:", data.meta);
+                
+                // Update lastUpdated to prevent sources from being hidden prematurely
+                const now = Date.now();
+                Object.keys(data.meta).forEach(function(platform) {
+                    if (data.meta[platform] > 0) {
+                        // If combining YouTube, only track "youtube" not "youtubeshorts"
+                        if (combineYouTube && platform === "youtubeshorts") {
+                            lastUpdated["youtube"] = now;
+                            hasViewerCount["youtube"] = true;
+                        } else {
+                            lastUpdated[platform] = now;
+                            hasViewerCount[platform] = true;
+                        }
+                    }
+                });
+                
+                // Don't process this as hype data, wait for the actual hype update
+                return;
+            }
+            
+            // Process regular hype data
+            processInput(data);
         }
     }
 });

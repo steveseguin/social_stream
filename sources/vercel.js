@@ -1,7 +1,9 @@
 (function () {
 	
 	
-	function removeStorage(cname){
+	
+	var isExtensionOn = true;
+function removeStorage(cname){
 		localStorage.removeItem(cname);
 	}
 

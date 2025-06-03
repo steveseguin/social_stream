@@ -126,7 +126,7 @@ function addLogMessage(message, isError = false) {
     debugOutput.scrollTop = debugOutput.scrollHeight;
     
     // Keep only the last 10 messages
-    while (debugOutput.children.length > 10) {
+    while (debugOutput.children.length > 30) {
         debugOutput.removeChild(debugOutput.firstChild);
     }
 }
@@ -192,17 +192,45 @@ function setupPeriodicUpdates() {
 
 // Intercept console logs
 function setupConsoleHook() {
-    const originalConsoleLog = console.warn;
-    const originalConsoleError = console.error;
+    const MAX_MESSAGE_LENGTH = 500; // Maximum characters per message
     
-    console.log = function() {
-        const message = Array.from(arguments).join(' ');
+    // Helper function to stringify and trim arguments
+    function formatArguments(args) {
+        return Array.from(args).map(arg => {
+            let str;
+            if (typeof arg === 'object') {
+                try {
+                    // Pretty print objects with 2-space indentation
+                    str = JSON.stringify(arg, null, 2);
+                } catch (e) {
+                    // Handle circular references or other stringify errors
+                    str = String(arg);
+                }
+            } else {
+                str = String(arg);
+            }
+            
+            // Trim to max length if needed
+            if (str.length > MAX_MESSAGE_LENGTH) {
+                str = str.substring(0, MAX_MESSAGE_LENGTH) + '... (truncated)';
+            }
+            return str;
+        }).join(' ');
+    }
+    
+    // Create new methods that preserve the call stack
+    const originalLog = console.log.bind(console);
+    const originalError = console.error.bind(console);
+    
+    console.log = (...args) => {
+        originalLog(...args);
+        const message = formatArguments(args);
         addLogMessage(message);
     };
     
-    console.error = function() {
-        originalConsoleError.apply(console, arguments);
-        const message = Array.from(arguments).join(' ');
+    console.error = (...args) => {
+        originalError(...args);
+        const message = formatArguments(args);
         addLogMessage(message, true);
     };
 }

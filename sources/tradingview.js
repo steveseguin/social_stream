@@ -1,6 +1,8 @@
 (function () {
 	
-	var cachedUserProfiles = {};
+	
+	var isExtensionOn = true;
+var cachedUserProfiles = {};
 	
 	
 	function escapeHtml(unsafe){

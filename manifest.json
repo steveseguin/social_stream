@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.21.13",
+  "version": "3.22.5",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -558,11 +558,7 @@
     },
     {
       "js": [ "./sources/kick.js" ],
-      "matches": [ "https://kick.com/*/chatroom"]
-    },
-	{
-      "js": [ "./sources/kick_new.js" ],
-      "matches": [ "https://kick.com/popout/*/chat"]
+      "matches": [ "https://kick.com/*/chatroom", "https://kick.com/popout/*/chat"]
     },
     {
       "js": [ "./sources/cloudhub.js" ],
@@ -621,6 +617,16 @@
 		"https://beta.socialstream.ninja/sources/websocket/irc*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/irc.html*",
 		"http://localhost:8080/irc.html*"
+      ]
+    },
+	{
+      "js": [ "./sources/websocket/stageten.js" ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/stageten*",
+		"https://socialstream.ninja/beta/sources/websocket/stageten*",
+		"https://beta.socialstream.ninja/sources/websocket/stageten*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/stageten.html*",
+		"http://localhost:8080/stageten.html*"
       ]
     },
     {

@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<!-- Typewriter Terminal Chat Overlay for Social Stream Ninja -->
+<!--
+This overlay creates a retro terminal/typewriter experience with:
+- Messages that type out character by character
+- Terminal cursor effects and green screen aesthetic
+- ASCII art borders and decorations
+- Retro CRT monitor effects with scanlines
+- Smooth continuous scrolling with terminal theming
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typewriter Terminal Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap">
+    <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+    <link rel="canonical" href="https://socialstream.ninja/">
+    <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Source Code Pro', 'Courier New', monospace;
+    background: #0d1117;
+    overflow: hidden;
+    box-sizing: border-box;
+    color: #00ff00;
+}
+
+/* CRT monitor effect */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.9) 100%),
+        repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 2px,
+            rgba(0, 255, 0, 0.02) 2px,
+            rgba(0, 255, 0, 0.02) 4px
+        );
+    pointer-events: none;
+    z-index: 15;
+    animation: crt-flicker 0.15s infinite linear alternate;
+}
+
+@keyframes crt-flicker {
+    0% { opacity: 1; }
+    100% { opacity: 0.98; }
+}
+
+/* Terminal header */
+#terminal-header {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    height: 40px;
+    background: rgba(0, 255, 0, 0.1);
+    border: 2px solid #00ff00;
+    border-radius: 0;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    font-size: 14px;
+    z-index: 10;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+}
+
+#terminal-header::before {
+    content: '> SOCIAL_STREAM_NINJA_CHAT_v2.1.0 | CONNECTED | ';
+    color: #00ff00;
+    animation: header-blink 2s infinite;
+}
+
+#terminal-header::after {
+    content: '█';
+    animation: cursor-blink 1s infinite;
+    margin-left: 5px;
+}
+
+@keyframes header-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0.7; }
+}
+
+@keyframes cursor-blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+#chat-container {
+    position: absolute;
+    top: 80px;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px;
+    overflow: hidden;
+    padding: 0 30px;
+    box-sizing: border-box;
+    z-index: 5;
+}
+
+#message-list-wrapper {
+    width: 100%;
+    transition: transform 0.3s ease-out;
+}
+
+.message {
+    background: rgba(0, 255, 0, 0.03);
+    border: 1px solid rgba(0, 255, 0, 0.2);
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 0;
+    color: #00ff00;
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.5s ease-out;
+    flex-shrink: 0;
+    overflow: hidden;
+    max-height: 500px;
+    box-sizing: border-box;
+    position: relative;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+.message::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #00ff00;
+    opacity: 0.8;
+}
+
+.message.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.message.fading {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 1.5s ease-out;
+}
+
+.message.hidden {
+    opacity: 0;
+    transform: translateX(-20px);
+    max-height: 0px !important;
+    padding: 0px !important;
+    margin-bottom: 0px !important;
+    border-width: 0px !important;
+}
+
+.message.typing .text {
+    border-right: 2px solid #00ff00;
+    animation: typing-cursor 1s infinite;
+}
+
+@keyframes typing-cursor {
+    0%, 50% { border-color: #00ff00; }
+    51%, 100% { border-color: transparent; }
+}
+
+.avatar-wrapper {
+    display: none; /* Hide avatars in terminal mode */
+}
+
+.name {
+    color: #00ff41;
+    font-size: 1em;
+    font-weight: 600;
+    max-width: 200px;
+    overflow: hidden;
+    text-shadow: 0 0 5px #00ff41;
+    display: inline;
+}
+
+.name::before {
+    content: '[';
+    color: #888;
+}
+
+.name::after {
+    content: ']$ ';
+    color: #888;
+}
+
+.text {
+    font-size: 1em;
+    line-height: 1.4;
+    margin: 5px 0;
+    word-wrap: break-word;
+    color: #ffffff;
+    display: inline;
+    font-family: inherit;
+}
+
+.text img {
+    max-width: 80px;
+    max-height: 20px;
+    vertical-align: bottom;
+    filter: green;
+}
+
+.donation {
+    color: #ffff00;
+    font-weight: 600;
+    text-shadow: 0 0 10px #ffff00;
+    animation: donation-flash 0.5s ease-in-out 3;
+}
+
+@keyframes donation-flash {
+    0%, 100% { background: transparent; }
+    50% { background: rgba(255, 255, 0, 0.2); }
+}
+
+.name-bg {
+    background: transparent;
+    padding: 0;
+    border: none;
+    display: inline;
+    margin: 0;
+}
+
+.membership-status {
+    color: #ff8800;
+    font-weight: 600;
+    font-size: 0.9em;
+    display: inline;
+    margin-right: 5px;
+}
+
+.membership-status::before {
+    content: '[MEMBER] ';
+}
+
+.large-image {
+    max-width: 100%;
+    height: auto;
+    margin: 10px 0;
+    border: 1px solid #00ff00;
+    display: block;
+    filter: contrast(1.2) brightness(0.9);
+}
+
+.source-icon {
+    display: none; /* Hide source icons in terminal mode */
+}
+
+.badge {
+    display: none; /* Hide badges in terminal mode */
+}
+
+.message-content-wrapper {
+    display: block;
+}
+
+.message-text-meta {
+    width: 100%;
+}
+
+#spacer {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: none;
+    box-sizing: border-box;
+    background: transparent;
+    opacity: 1;
+    transform: none;
+    transition: none;
+}
+
+/* Special formatting for different message types */
+.message.system-message {
+    border-color: #ffff00;
+    color: #ffff00;
+}
+
+.message.system-message::before {
+    background: #ffff00;
+}
+
+.message.error-message {
+    border-color: #ff0000;
+    color: #ff4444;
+}
+
+.message.error-message::before {
+    background: #ff0000;
+}
+
+.message.donation-message {
+    border-color: #ffff00;
+    background: rgba(255, 255, 0, 0.05);
+    animation: donation-glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes donation-glow {
+    0% { box-shadow: 0 0 5px rgba(255, 255, 0, 0.3); }
+    100% { box-shadow: 0 0 15px rgba(255, 255, 0, 0.6); }
+}
+
+/* ASCII decorations */
+.message.special::after {
+    content: '\A────────────────────────────────────────';
+    white-space: pre;
+    color: #333;
+    font-size: 10px;
+    display: block;
+    margin-top: 10px;
+}
+
+/* Terminal prompt styling */
+.terminal-prompt {
+    color: #888;
+    margin-right: 5px;
+}
+
+.timestamp {
+    color: #666;
+    font-size: 11px;
+    float: right;
+}
+
+.timestamp::before {
+    content: '[';
+}
+
+.timestamp::after {
+    content: ']';
+}
+
+/* Typewriter effect */
+.typewriter {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typewriter-effect 2s steps(40, end);
+}
+
+@keyframes typewriter-effect {
+    from { width: 0; }
+    to { width: 100%; }
+}
+
+/* Terminal status indicators */
+.status-online::before {
+    content: '● ';
+    color: #00ff00;
+}
+
+.status-offline::before {
+    content: '● ';
+    color: #ff0000;
+}
+
+.status-away::before {
+    content: '● ';
+    color: #ffff00;
+}
+
+/* Matrix-style text effects */
+.matrix-effect {
+    animation: matrix-rain 0.1s linear infinite;
+}
+
+@keyframes matrix-rain {
+    0% { opacity: 1; }
+    100% { opacity: 0.7; text-shadow: 0 0 3px #00ff00; }
+}
+
+/* ASCII art borders for special messages */
+.ascii-border::before {
+    content: '╔═══════════════════════════════════════╗\A║ ';
+    white-space: pre;
+    color: #00ff00;
+    font-size: 12px;
+}
+
+.ascii-border::after {
+    content: '\A╚═══════════════════════════════════════╝';
+    white-space: pre;
+    color: #00ff00;
+    font-size: 12px;
+}
+</style>
+</head>
+<body>
+<div id="terminal-header"></div>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        <div id="spacer" style="height: 2200px; width: 100%;"></div>
+    </div>
+</div>
+
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false";
+    var featuredMode = false;
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = 25; // More messages for terminal feel
+    const topSpacer = document.getElementById('spacer');
+    const messageTimestamps = new Map();
+    const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
+
+    // Terminal sound effect simulation
+    function playTerminalSound() {
+        // Create a simple beep sound using Web Audio API
+        if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
+            const AudioCtx = AudioContext || webkitAudioContext;
+            const audioCtx = new AudioCtx();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'square';
+            
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+            
+            oscillator.start(audioCtx.currentTime);
+            oscillator.stop(audioCtx.currentTime + 0.1);
+        }
+    }
+
+    // Typewriter effect for text
+    function typewriterEffect(element, text, speed = 30) {
+        element.innerHTML = '';
+        element.classList.add('typing');
+        let i = 0;
+        
+        function type() {
+            if (i < text.length) {
+                element.innerHTML += text.charAt(i);
+                i++;
+                setTimeout(type, speed + Math.random() * 20); // Slight randomness
+            } else {
+                element.classList.remove('typing');
+            }
+        }
+        
+        type();
+    }
+
+    function adjustMessageWrapperScroll() {
+        requestAnimationFrame(() => {
+            const wrapperScrollHeight = messageListWrapper.scrollHeight;
+            const containerClientHeight = chatContainer.clientHeight;
+            
+            let translateY = 0;
+            if (wrapperScrollHeight > containerClientHeight) {
+                translateY = -(wrapperScrollHeight - containerClientHeight);
+            }
+            translateY = Math.min(0, translateY);
+
+            messageListWrapper.style.transform = `translateY(${translateY}px)`;
+        });
+    }
+    
+    setInterval(() => {
+        const now = Date.now();
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message')
+        );
+        
+        messages.forEach(message => {
+            const timestamp = messageTimestamps.get(message.id);
+            if (timestamp) {
+                const age = now - timestamp;
+                
+                // After 45 seconds, start fading (longer for terminal feel)
+                if (age > 45000 && !message.classList.contains('fading')) {
+                    message.classList.add('fading');
+                }
+            }
+        });
+    }, 1000);
+    
+    function addMessageToOverlay(data) {
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+            return;
+        }
+        
+        // Play terminal sound
+        if (Math.random() < 0.3) { // Only sometimes to avoid spam
+            setTimeout(playTerminalSound, Math.random() * 200);
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        // Add special classes based on message type
+        if (data.hasDonation || data.donation) {
+            messageDiv.classList.add('donation-message', 'ascii-border');
+        } else if (data.event) {
+            messageDiv.classList.add('system-message');
+        } else if (Math.random() < 0.1) {
+            messageDiv.classList.add('special');
+        }
+        
+        // Generate unique ID and track timestamp for aging
+        const messageId = data.mid || 'msg-' + Date.now();
+        messageDiv.id = messageId;
+        messageTimestamps.set(messageId, Date.now());
+        
+        // Create timestamp
+        const now = new Date();
+        const timestamp = now.toTimeString().split(' ')[0];
+        
+        var chatbadgesHtml = ""; // Not displayed in terminal mode
+        
+        let statusIndicator = '';
+        if (data.membership) {
+            statusIndicator = '<span class="status-online"></span>';
+        } else if (data.hasDonation) {
+            statusIndicator = '<span class="status-away"></span>';
+        }
+        
+        const nameHtml = data.chatname ? `<span class="terminal-prompt">${statusIndicator}</span><span class="name">${data.chatname}</span>` : '';
+        const membershipHtml = data.membership ? `<span class="membership-status">${data.membership}</span>` : '';
+        const messageTextHtml = `<span class="text">${data.chatmessage ? data.chatmessage : ''}</span>`;
+        const donationHtml = data.hasDonation ? `<span class="donation"> [DONATION: ${data.hasDonation}]</span>` : '';
+        const timestampHtml = `<span class="timestamp">${timestamp}</span>`;
+        
+        const contentImgHtml = data.contentimg ? 
+            `<div style="margin: 10px 0;">
+                <img src="${data.contentimg}" alt="Content Image" class="large-image" onerror="this.parentNode.style.display='none';">
+             </div>` : '';
+
+        messageDiv.innerHTML = `
+            <div class="message-content-wrapper">
+                <div class="message-text-meta">
+                    ${timestampHtml}
+                    <div>
+                        ${nameHtml}${membershipHtml}${messageTextHtml}${donationHtml}
+                    </div>
+                    ${contentImgHtml}
+                </div>
+            </div>
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+        void messageDiv.offsetWidth; 
+        messageDiv.classList.add('visible');
+        
+        // Apply typewriter effect to the text
+        const textElement = messageDiv.querySelector('.text');
+        if (textElement && data.chatmessage) {
+            typewriterEffect(textElement, data.chatmessage, 20);
+        }
+        
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message') 
+        );
+        
+        if (messages.length > MAX_MESSAGES) {
+            const oldestMessage = messages[0]; 
+            
+            if (oldestMessage) {
+                const messageStyle = getComputedStyle(oldestMessage);
+                const marginBottom = parseFloat(messageStyle.marginBottom) || 0;
+                const spaceOccupiedByOldestMessage = oldestMessage.offsetHeight + marginBottom;
+                
+                const currentSpacerHeight = parseFloat(topSpacer.style.height) || 0;
+                let newPotentialSpacerHeight = currentSpacerHeight + spaceOccupiedByOldestMessage;
+
+                if (newPotentialSpacerHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) {
+                    console.log(`Spacer height (${newPotentialSpacerHeight}px) exceeded threshold (${MAX_SPACER_HEIGHT_BEFORE_RESET}px). Resetting to 0px.`);
+                    newPotentialSpacerHeight = 0;
+                }
+                
+                topSpacer.style.height = newPotentialSpacerHeight + 'px';
+
+                messageTimestamps.delete(oldestMessage.id);
+                messageListWrapper.removeChild(oldestMessage);
+            }
+        }
+        
+        adjustMessageWrapperScroll();
+    }
+
+    // Update terminal header with session info
+    function updateTerminalHeader() {
+        const header = document.getElementById('terminal-header');
+        const sessionText = roomID !== "iWWnKL28tQ" ? `SESSION: ${roomID} | ` : '';
+        header.style.setProperty('--session-text', `"${sessionText}"`);
+    }
+
+    // Initialize terminal
+    updateTerminalHeader();
+
+    // Standard Social Stream messaging setup
+    var iframe = document.createElement("iframe");
+    if (featuredMode){
+        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+    
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) { 
+                        addMessageToOverlay(data);
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>

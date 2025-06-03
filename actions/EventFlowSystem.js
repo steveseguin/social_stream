@@ -8,6 +8,12 @@ class EventFlowSystem {
         this.sendMessageToTabs = options.sendMessageToTabs || null;
         this.sendToDestinations = options.sendToDestinations || null;
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
+        
+        console.log('[EventFlowSystem Constructor] Initialized with:');
+        console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
+        console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
+        console.log('  - pointsSystem:', this.pointsSystem ? 'System provided' : 'NULL');
+        
         this.initPromise = this.initDatabase();
     }
 	
@@ -321,16 +327,25 @@ class EventFlowSystem {
     }
     
 	async processMessage(message) {
-      //console.log("[ProcessMessage] Received message:", JSON.stringify(message)); // Log: Start of processing
+        console.log("[RELAY DEBUG - ProcessMessage] Received message:", {
+            type: message?.type,
+            chatname: message?.chatname,
+            chatmessage: message?.chatmessage?.substring(0, 50) + '...',
+            hasEventFlowSystem: !!this.sendMessageToTabs
+        });
+        
         if (!message) {
-          //console.log("[ProcessMessage] Message is null/undefined at start.");
+            console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
             return message;
         }
         
         let processed = { ...message };
         let blocked = false;
         
-      //console.log(`[ProcessMessage] Processing ${this.flows.filter(f => f.active).length} active flows.`);
+        const activeFlows = this.flows.filter(f => f.active);
+        console.log(`[RELAY DEBUG - ProcessMessage] Processing ${activeFlows.length} active flows`);
+        console.log(`[RELAY DEBUG - ProcessMessage] Active flow names:`, activeFlows.map(f => f.name));
+        
         for (const flow of this.flows) {
             if (!flow.active) {
                 // console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
@@ -432,10 +447,10 @@ class EventFlowSystem {
                     return activation;
                 });
 
-              //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
+                console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
 
                 if (shouldExecute) {
-                  //console.log(`[EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
+                    console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
                     const actionResult = await this.executeAction(node, overallResult.message);
                   //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} Result:`, JSON.stringify(actionResult));
                     if (actionResult) { 
@@ -496,8 +511,12 @@ class EventFlowSystem {
                 }
                 
             case 'fromSource':
-                match = message && message.type === config.source;
-              //console.log(`[EvaluateTrigger - fromSource] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
+                if (config.source === '*') {
+                    match = true; // Match any source
+                } else {
+                    match = message && message.type === config.source;
+                }
+                console.log(`[RELAY DEBUG - fromSource Trigger] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
                 return match;
                 
             case 'fromUser':
@@ -618,9 +637,14 @@ class EventFlowSystem {
                 break;
                 
             case 'relay':
+                console.log('[RELAY DEBUG - Action] Starting relay action execution');
+                console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
+                console.log('[RELAY DEBUG - Action] sendMessageToTabs type:', typeof this.sendMessageToTabs);
+                
                 if (this.sendMessageToTabs) {
                     const relayMessage = {
                         response: config.template
+                            .replace('{source}', message.type || '')
                             .replace('{username}', message.chatname || '')
                             .replace('{message}', message.chatmessage || '')
                     };
@@ -629,11 +653,26 @@ class EventFlowSystem {
                         relayMessage.tid = message.tid;
                     }
                     
-                    if (config.destination) {
-                        relayMessage.destination = config.destination;
+                    if (config.destination && config.destination.trim()) {
+                        relayMessage.destination = config.destination.trim();
                     }
                     
-                    this.sendMessageToTabs(relayMessage, config.toAll, null, false, false, config.timeout || 0);
+                    console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
+                    console.log('[RELAY DEBUG - Action] Config:', config);
+                    console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with params:');
+                    console.log('  - message:', relayMessage);
+                    console.log('  - reverse:', false);
+                    console.log('  - metadata:', null);
+                    console.log('  - relayMode:', true);
+                    console.log('  - antispam:', false);
+                    console.log('  - timeout:', config.timeout || 5100);
+                    
+                    // Use relayMode=true to mark this as a relayed message and prevent circular relaying
+                    const result = this.sendMessageToTabs(relayMessage, config.toAll === true, null, true, false, config.timeout || 5100);
+                    console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
+                } else {
+                    console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
+                    console.error('[RELAY DEBUG - Action] This EventFlowSystem instance:', this);
                 }
                 break;
                 
