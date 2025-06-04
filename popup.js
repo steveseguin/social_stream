@@ -333,9 +333,11 @@ function miniTranslate(ele, ident = false, direct=false) {
 	if (translation.placeholders){
 		var allPlaceholders = ele.querySelectorAll('[placeholder]');
 		allPlaceholders.forEach(function(ele2) {
-			var key = ele2.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.placeholders) {
-				ele2.placeholder = translation.placeholders[key];
+			if (ele2.placeholder) {
+				var key = ele2.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
+				if (key in translation.placeholders) {
+					ele2.placeholder = translation.placeholders[key];
+				}
 			}
 		});
 		
@@ -3408,6 +3410,15 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const testPhrase = "The quick brown fox jumps over the lazy dog";
         const serviceName = this.getServiceName();
         
+        // Check if the provider supports testing
+        const provider = document.getElementById('ttsProvider').value || "system";
+        if (provider === 'piper' || provider === 'espeak') {
+            let warningMsg = getTranslation("tts-test-not-available") || "Testing is not available for {provider}. This TTS provider works during streaming only.";
+            warningMsg = warningMsg.replace('{provider}', serviceName);
+            this.showFeedback(warningMsg, 'error');
+            return;
+        }
+        
         this.showFeedback(`Testing ${serviceName}...`, 'info');
         
         const originalOnEnded = this.audio?.onended;
@@ -4114,6 +4125,39 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			ProfileManager.saveCurrentProfile();
 		});
 	}
+	
+	// Language selector handling
+	const languageIcon = document.getElementById('languageIcon');
+	const languageSelector = document.getElementById('language-selector-container');
+	
+	// Hide language icon if &ln parameter is present
+	if (urlParams.has("ln")) {
+		if (languageIcon) {
+			languageIcon.style.display = 'none';
+		}
+		if (languageSelector) {
+			languageSelector.style.display = 'none';
+		}
+	} else {
+		// Add click handler for language icon
+		if (languageIcon) {
+			languageIcon.addEventListener('click', function(e) {
+				e.stopPropagation();
+				if (languageSelector.style.display === 'none' || languageSelector.style.display === '') {
+					languageSelector.style.display = 'block';
+				} else {
+					languageSelector.style.display = 'none';
+				}
+			});
+		}
+		
+		// Hide language selector when clicking outside
+		document.addEventListener('click', function(e) {
+			if (languageSelector && !languageSelector.contains(e.target) && e.target !== languageIcon) {
+				languageSelector.style.display = 'none';
+			}
+		});
+	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
 		const basePath = decodeURIComponent(urlParams.get('basePath'));
@@ -4686,6 +4730,34 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		iii[i].onchange = updateSettings;
 	}
 	
+	// Override the language selector handler to reload the page
+	const languageSelectOverride = document.querySelector('select[data-optionsetting="translationlanguage"]');
+	if (languageSelectOverride) {
+		console.log("Language selector found, attaching handler");
+		languageSelectOverride.onchange = function(e) {
+			console.log("Language changed to:", this.value);
+			// Show a message that the page needs to reload
+			const small = this.parentElement.querySelector('small');
+			if (small) {
+				small.style.color = '#ff0';
+				small.style.fontWeight = 'bold';
+			}
+			// Save the setting directly
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: "optionsetting",
+				setting: "translationlanguage",
+				value: this.value
+			}, function(response) {
+				console.log("Setting saved, reloading page");
+				// Reload after the setting is saved
+				window.location.reload();
+			});
+		};
+	} else {
+		console.log("Language selector NOT found!");
+	}
+	
 	// Handle featured preset selector
 	const presetSelector = document.getElementById('featured-preset-select');
 	if (presetSelector) {
@@ -5026,6 +5098,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		console.log("Failed to initialize WebMidi:", e);
 	  }
 	}
+	
+	
+	document.body.classList.add('loaded');
+
     // Dynamically load the WebMidi script and initialize the dropdown logic
 	try {
 		setTimeout(function(){

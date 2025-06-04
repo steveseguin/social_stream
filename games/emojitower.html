@@ -5,13 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emoji Tower - Social Stream Ninja</title>
     <link rel="icon" href="../favicon.ico" />
+    <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../thirdparty/NotoColorEmoji.ttf);
+        }
+        
         body {
             margin: 0;
             padding: 0;
             background: linear-gradient(to bottom, #1e3c72 0%, #2a5298 100%);
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: 'NotoColorEmojiLimited', 'Arial', sans-serif;
             color: white;
         }
         
@@ -33,6 +50,7 @@
         .emoji-block {
             position: absolute;
             font-size: 48px;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
             width: 60px;
             height: 60px;
             display: flex;

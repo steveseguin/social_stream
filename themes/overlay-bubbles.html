@@ -20,7 +20,16 @@ This overlay creates a floating bubble chat experience with:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;600;700&display=swap');
 
-body, html {
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -96,7 +105,7 @@ body, html {
     width: 100%;
     max-width: 400px;
     height: 100vh;
-    overflow: hidden;
+    overflow: visible;
     padding: 0 30px;
     box-sizing: border-box;
     z-index: 5;
@@ -243,12 +252,14 @@ body, html {
 }
 
 .text {
-    font-size: 0.9em;
-    line-height: 1.5;
+    font-size: 1.1em;
+    line-height: 1.6;
     margin: 8px 0;
     word-wrap: break-word;
-    color: #34495e;
-    text-shadow: 0 1px 1px rgba(255,255,255,0.5);
+    color: #1a1a1a;
+    text-shadow: none;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
 .text img {
@@ -370,6 +381,11 @@ body, html {
     color: #ffffff;
 }
 
+.message.member-bubble .text {
+    color: #ffffff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
 .message.special-bubble {
     background: radial-gradient(ellipse at 20% 20%, rgba(255,105,180,0.9), rgba(255,182,193,0.8));
     border-color: rgba(255,105,180,0.6);
@@ -457,35 +473,67 @@ body, html {
     const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
 
     // Background bubble generation
-    function createBackgroundBubbles() {
+    const MAX_BACKGROUND_BUBBLES = 16;
+    let bubbleCreationInProgress = false;
+    
+    function createSingleBackgroundBubble() {
         const container = document.getElementById('background-bubbles');
+        const currentBubbles = container.querySelectorAll('.bg-bubble').length;
         
-        for (let i = 0; i < 15; i++) {
-            const bubble = document.createElement('div');
-            bubble.className = 'bg-bubble';
-            
-            const size = Math.random() * 30 + 10;
-            bubble.style.width = size + 'px';
-            bubble.style.height = size + 'px';
-            bubble.style.left = Math.random() * 100 + '%';
-            bubble.style.animationDuration = (Math.random() * 10 + 10) + 's';
-            bubble.style.animationDelay = Math.random() * 5 + 's';
-            bubble.style.setProperty('--drift', (Math.random() - 0.5) * 200 + 'px');
-            
-            container.appendChild(bubble);
-            
-            // Remove and recreate bubble after animation
-            setTimeout(() => {
-                if (bubble.parentNode) {
-                    bubble.remove();
-                    createBackgroundBubbles();
-                }
-            }, (parseFloat(bubble.style.animationDuration) + parseFloat(bubble.style.animationDelay)) * 1000);
+        // Only create new bubble if we're below the limit
+        if (currentBubbles >= MAX_BACKGROUND_BUBBLES) {
+            return;
         }
+        
+        const bubble = document.createElement('div');
+        bubble.className = 'bg-bubble';
+        
+        const size = Math.random() * 30 + 10;
+        bubble.style.width = size + 'px';
+        bubble.style.height = size + 'px';
+        bubble.style.left = Math.random() * 100 + '%';
+        bubble.style.animationDuration = (Math.random() * 10 + 10) + 's';
+        bubble.style.animationDelay = Math.random() * 5 + 's';
+        bubble.style.setProperty('--drift', (Math.random() - 0.5) * 200 + 'px');
+        
+        container.appendChild(bubble);
+        
+        // Remove bubble after animation completes
+        const animationTime = (parseFloat(bubble.style.animationDuration) + parseFloat(bubble.style.animationDelay)) * 1000;
+        setTimeout(() => {
+            if (bubble.parentNode) {
+                bubble.remove();
+            }
+        }, animationTime);
+    }
+    
+    function createBackgroundBubbles() {
+        // Initial creation of bubbles
+        for (let i = 0; i < MAX_BACKGROUND_BUBBLES; i++) {
+            createSingleBackgroundBubble();
+        }
+        
+        // Set up interval to maintain bubble count
+        setInterval(() => {
+            const container = document.getElementById('background-bubbles');
+            const currentBubbles = container.querySelectorAll('.bg-bubble').length;
+            
+            // Create new bubbles to maintain the count
+            const needed = MAX_BACKGROUND_BUBBLES - currentBubbles;
+            for (let i = 0; i < needed; i++) {
+                createSingleBackgroundBubble();
+            }
+        }, 2000); // Check every 2 seconds
     }
 
     function createBubbleTrail(x, y) {
-        for (let i = 0; i < 5; i++) {
+        // Limit the number of trail bubbles on screen
+        const existingTrails = document.querySelectorAll('.bubble-trail').length;
+        if (existingTrails > 20) {
+            return;
+        }
+        
+        for (let i = 0; i < 3; i++) { // Reduced from 5 to 3
             setTimeout(() => {
                 const trail = document.createElement('div');
                 trail.className = 'bubble-trail';
@@ -529,8 +577,8 @@ body, html {
                     message.classList.add('fading', 'popping');
                 }
                 
-                // Create occasional bubble trails
-                if (Math.random() < 0.03 && !message.classList.contains('fading')) {
+                // Create occasional bubble trails (reduced frequency)
+                if (Math.random() < 0.01 && !message.classList.contains('fading')) {
                     const rect = message.getBoundingClientRect();
                     createBubbleTrail(
                         rect.left + Math.random() * rect.width,

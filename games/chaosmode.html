@@ -5,13 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Mode - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
+    <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../thirdparty/NotoColorEmoji.ttf);
+        }
+        
         body {
             margin: 0;
             padding: 0;
             background: #000;
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: 'NotoColorEmojiLimited', 'Arial', sans-serif;
             color: white;
         }
         
@@ -44,6 +61,7 @@
         
         .chaos-emoji {
             font-size: 48px;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
             animation: chaos-spin 2s ease-out forwards;
         }
         
@@ -588,7 +606,7 @@
 
         // Extract emojis from text
         function extractEmojis(text) {
-            const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+            const emojiRegex = /(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu;
             return text.match(emojiRegex) || [];
         }
 
@@ -601,7 +619,16 @@
             
             if (!data || !data.chatmessage || !data.chatname) return;
 
-            const message = data.chatmessage.toLowerCase().trim();
+            let messageText = data.chatmessage;
+            
+            // If textonly is not set, extract text from HTML
+            if (!data.textonly) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = data.chatmessage;
+                messageText = tmp.textContent || tmp.innerText || '';
+            }
+            
+            const message = messageText.toLowerCase().trim();
             const username = data.chatname;
 
             // Track message for chaos calculation
@@ -622,10 +649,10 @@
                 createPortal();
             } else {
                 // Normal message processing
-                createFlyingText(data.chatmessage, username);
+                createFlyingText(messageText, username);
                 
                 // Check for emojis
-                const emojis = extractEmojis(data.chatmessage);
+                const emojis = extractEmojis(messageText);
                 emojis.forEach(emoji => {
                     createEmojiChaos(emoji);
                 });

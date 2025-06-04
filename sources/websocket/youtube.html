@@ -926,16 +926,16 @@ try {
 		sendChatMessage(originalMsg).then(response => {
 			// YouTube API returns the message object on success, not a success field
 			if (response && response.id) {
-				const authorDetails = response.authorDetails || {};
-				processMessage({
-					authorName: authorDetails.displayName || username,
-					message: originalMsg,
-					profileImageUrl: authorDetails.profileImageUrl || '',
-					isChatOwner: authorDetails.isChatOwner || false,
-					isChatSponsor: authorDetails.isChatSponsor || false,
-					isChatModerator: authorDetails.isChatModerator || false,
-					authorChannelId: authorDetails.channelId || ''
-				});
+				<!-- const authorDetails = response.authorDetails || {}; -->
+				<!-- processMessage({ -->
+					<!-- authorName: authorDetails.displayName || username, -->
+					<!-- message: originalMsg, -->
+					<!-- profileImageUrl: authorDetails.profileImageUrl || '', -->
+					<!-- isChatOwner: authorDetails.isChatOwner || false, -->
+					<!-- isChatSponsor: authorDetails.isChatSponsor || false, -->
+					<!-- isChatModerator: authorDetails.isChatModerator || false, -->
+					<!-- authorChannelId: authorDetails.channelId || '' -->
+				<!-- }); -->
 			} else {
 				console.warn('Message was sent but not dispatched as event. Response:', response);
 			}

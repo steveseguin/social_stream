@@ -5,13 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Rhythm Pulse - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
+    <link rel="preload" href="../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
     <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../thirdparty/NotoColorEmoji.ttf);
+        }
+        
         body {
             margin: 0;
             padding: 0;
             background: radial-gradient(circle at center, #0f0f23 0%, #000 100%);
             overflow: hidden;
-            font-family: 'Arial', sans-serif;
+            font-family: 'NotoColorEmojiLimited', 'Arial', sans-serif;
             color: white;
         }
         
@@ -88,6 +105,7 @@
         .note-particle {
             position: absolute;
             font-size: 32px;
+            font-family: 'NotoColorEmojiLimited', 'Segoe UI Emoji', 'Apple Color Emoji', sans-serif;
             animation: note-float 3s ease-out forwards;
             pointer-events: none;
             z-index: 20;
@@ -481,7 +499,7 @@
 
             // Extract musical emojis
             const musicalEmojis = ['🎵', '🎶', '🎼', '🥁', '🎸', '🎹', '🎺', '🎷', '🎤', '🔊', '📯', '💥', '⚡', '🔥'];
-            const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+            const emojiRegex = /(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu;
             const foundEmojis = text.match(emojiRegex) || [];
             
             foundEmojis.forEach(emoji => {
@@ -665,7 +683,14 @@
             if (!data || !data.chatmessage || !data.chatname) return;
 
             const username = data.chatname;
-            const message = data.chatmessage;
+            let message = data.chatmessage;
+            
+            // If textonly is not set, extract text from HTML
+            if (!data.textonly) {
+                const tmp = document.createElement('div');
+                tmp.innerHTML = data.chatmessage;
+                message = tmp.textContent || tmp.innerText || '';
+            }
             
             // Analyze message for beat content
             const analysis = analyzeBeatMessage(message);
