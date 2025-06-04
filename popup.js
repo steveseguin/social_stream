@@ -4115,12 +4115,37 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 	
-	// Hide language selector if &ln parameter is present
+	// Language selector handling
+	const languageIcon = document.getElementById('languageIcon');
+	const languageSelector = document.getElementById('language-selector-container');
+	
+	// Hide language icon if &ln parameter is present
 	if (urlParams.has("ln")) {
-		const languageSelector = document.getElementById('language-selector-container');
+		if (languageIcon) {
+			languageIcon.style.display = 'none';
+		}
 		if (languageSelector) {
 			languageSelector.style.display = 'none';
 		}
+	} else {
+		// Add click handler for language icon
+		if (languageIcon) {
+			languageIcon.addEventListener('click', function(e) {
+				e.stopPropagation();
+				if (languageSelector.style.display === 'none' || languageSelector.style.display === '') {
+					languageSelector.style.display = 'block';
+				} else {
+					languageSelector.style.display = 'none';
+				}
+			});
+		}
+		
+		// Hide language selector when clicking outside
+		document.addEventListener('click', function(e) {
+			if (languageSelector && !languageSelector.contains(e.target) && e.target !== languageIcon) {
+				languageSelector.style.display = 'none';
+			}
+		});
 	}
 	if (ssapp){
 		document.getElementById("disableButtonText").innerHTML = "🔌 Services Loading";
@@ -4692,6 +4717,34 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var iii = document.querySelectorAll("select");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
+	}
+	
+	// Override the language selector handler to reload the page
+	const languageSelectOverride = document.querySelector('select[data-optionsetting="translationlanguage"]');
+	if (languageSelectOverride) {
+		console.log("Language selector found, attaching handler");
+		languageSelectOverride.onchange = function(e) {
+			console.log("Language changed to:", this.value);
+			// Show a message that the page needs to reload
+			const small = this.parentElement.querySelector('small');
+			if (small) {
+				small.style.color = '#ff0';
+				small.style.fontWeight = 'bold';
+			}
+			// Save the setting directly
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: "optionsetting",
+				setting: "translationlanguage",
+				value: this.value
+			}, function(response) {
+				console.log("Setting saved, reloading page");
+				// Reload after the setting is saved
+				window.location.reload();
+			});
+		};
+	} else {
+		console.log("Language selector NOT found!");
 	}
 	
 	// Handle featured preset selector

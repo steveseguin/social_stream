@@ -274,6 +274,15 @@ hr {
     height: 0;
 	font-size: 150%;
 }
+#languageIcon {
+	position: absolute;
+    top: 60px;
+    right: 50px;
+    cursor: pointer;
+    display: block;
+    height: 0;
+	font-size: 150%;
+}
 .tts-test-button {
 	display: inline-block;
     margin: 0 9px;
@@ -1422,12 +1431,16 @@ body.ssapp .wrapper.ssapp h3 {
             </button>
         </div>
         <div id="newVersion"></div>
-        <!-- Language Selector (moved from bottom) -->
-        <div id="language-selector-container" style="margin: 10px 0; text-align: right;">
-            <span data-translate="select-a-different-translation">
+        <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
+        <div id="searchIcon" title="Search all options by keyword">🔍</div>
+		<div id="activeIcon" title="Show only enabled options">🔰</div>
+        <div id="languageIcon" title="Select language">🌐</div>
+        <!-- Language Selector (hidden by default) -->
+        <div id="language-selector-container" style="display: none; position: absolute; right: 10px; top: 100px; background: var(--options-group-background-color); color: var(--options-group-text-color); padding: 10px; border-radius: 4px; border: 1px solid var(--collapsible-border-color); box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000;">
+            <span data-translate="select-a-different-translation" style="display: block; margin-bottom: 5px; color: var(--options-group-text-color);">
                 Select a different translation
             </span>
-            <select data-optionsetting="translationlanguage">
+            <select data-optionsetting="translationlanguage" class="textInput" style="width: 200px;">
                 <option value="">Default</option>
                 <option value="de" title="German">German</option>
                 <option value="es" title="Spanish">Spanish</option>
@@ -1438,13 +1451,10 @@ body.ssapp .wrapper.ssapp h3 {
                 <option value="test">Test Translations</option>
             </select>
             <br />
-            <small>
+            <small style="display: block; margin-top: 5px; color: var(--options-group-text-color); opacity: 0.8;">
                 <i><span data-translate="re-open-menu-to-apply-any-langugage-changes-to-it">*Re-open menu to apply any langugage changes to it</span></i>
             </small>
         </div>
-        <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
-        <div id="searchIcon" title="Search all options by keyword">🔍</div>
-		<div id="activeIcon" title="Show only enabled options">🔰</div>
         <div class="container">
             <div class="link" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
@@ -1794,7 +1804,7 @@ body.ssapp .wrapper.ssapp h3 {
                                         <input type="checkbox" data-param1="autoyoutubememberchat" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="auto-feature-monthly-member-chat">👑<img src="./sources/images/youtube.png" class="icon" /> Auto-feature YouTube monthly member chat </span>																														  
+                                    <span data-translate="auto-feature-monthly-member-chat">👑 Auto-feature YouTube monthly member chat </span><img src="./sources/images/youtube.png" class="icon" />																														  
                                 </div>
 								<div title="Automatically pins messages that are identified as questions" data-keywords="Q&A QA Q and A ask query queries FAQ help support queue pin sticky">
                                     <label class="switch">
@@ -2442,43 +2452,42 @@ body.ssapp .wrapper.ssapp h3 {
                                         <input type="checkbox" data-param1="hidesource" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-source-icon-eg">🛈 Hide source icon (e.g, </span><img src="./sources/images/twitch.png" class="icon" /><img src="./sources/images/youtube.png" class="icon" />
-                                    <img src="./sources/images/instagramlive.png" class="icon" />)
+                                    <span data-translate="hide-source-icon-eg">🛈 Hide source icon (e.g, </span><img src="./sources/images/twitch.png" class="icon" /><img src="./sources/images/youtube.png" class="icon" /><img src="./sources/images/instagramlive.png" class="icon" />)
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidetwitch" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-twitch">🚫<img src="./sources/images/twitch.png" class="icon" /> Hide Twitch messages (other sources allowed)</span>
+                                    <span data-translate="hide-twitch">🚫 Hide Twitch messages (other sources allowed)</span><img src="./sources/images/twitch.png" class="icon" />
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="onlytwitch" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="show-twitch-only">✅<img src="./sources/images/twitch.png" class="icon" /> Only show Twitch messages (no other sources)</span>
+                                    <span data-translate="show-twitch-only">✅ Only show Twitch messages (no other sources)</span><img src="./sources/images/twitch.png" class="icon" />
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="exclude=kick" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-kick">🚫<img src="./sources/images/kick.png" class="icon" /> Hide messages from Kick</span>
+                                    <span data-translate="hide-kick">🚫 Hide messages from Kick</span><img src="./sources/images/kick.png" class="icon" />
                                 </div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="exclude=kofi" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-kofi">🚫<img src="./sources/images/kofi.png" class="icon" /> Hide messages from Kofi</span>
+                                    <span data-translate="hide-kofi">🚫 Hide messages from Kofi</span><img src="./sources/images/kofi.png" class="icon" />
                                 </div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="exclude=youtube" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-youtube">🚫<img src="./sources/images/youtube.png" class="icon" /> Hide messages from YouTube</span>
+                                    <span data-translate="hide-youtube">🚫 Hide messages from YouTube</span><img src="./sources/images/youtube.png" class="icon" />
                                 </div>
 								<div>
                                     <label class="switch">
@@ -3594,22 +3603,21 @@ body.ssapp .wrapper.ssapp h3 {
                                         <input type="checkbox" data-param2="showsource" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="show-source-icon-eg">🛈 Show source icon (e.g, </span><img src="./sources/images/twitch.png" class="icon" /><img src="./sources/images/youtube.png" class="icon" />
-                                    <img src="./sources/images/instagramlive.png" class="icon" />)
+                                    <span data-translate="show-source-icon-eg">🛈 Show source icon (e.g, </span><img src="./sources/images/twitch.png" class="icon" /><img src="./sources/images/youtube.png" class="icon" /><img src="./sources/images/instagramlive.png" class="icon" />)
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="hidetwitch" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-twitch">🚫<img src="./sources/images/twitch.png" class="icon" /> Hide Twitch messages (other sources allowed)</span>
+                                    <span data-translate="hide-twitch">🚫 Hide Twitch messages (other sources allowed)</span><img src="./sources/images/twitch.png" class="icon" />
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="onlytwitch" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="show-twitch-only">✅<img src="./sources/images/twitch.png" class="icon" /> Only show Twitch messages (no other sources)</span>
+                                    <span data-translate="show-twitch-only">✅ Only show Twitch messages (no other sources)</span><img src="./sources/images/twitch.png" class="icon" />
                                 </div>
                                 <div>
                                     <label class="switch">

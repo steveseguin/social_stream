@@ -3091,7 +3091,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 
 			if (request.setting == "translationlanguage") {
-				changeLg(request.value);
+				// After saving, the value is stored in settings[translationlanguage].optionsetting
+				if (settings.translationlanguage && settings.translationlanguage.optionsetting) {
+					changeLg(settings.translationlanguage.optionsetting);
+				} else {
+					changeLg(request.value);
+				}
 			}
 
 			if (request.setting.startsWith("timemessage")) {
