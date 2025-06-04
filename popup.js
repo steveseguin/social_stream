@@ -333,9 +333,11 @@ function miniTranslate(ele, ident = false, direct=false) {
 	if (translation.placeholders){
 		var allPlaceholders = ele.querySelectorAll('[placeholder]');
 		allPlaceholders.forEach(function(ele2) {
-			var key = ele2.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
-			if (key in translation.placeholders) {
-				ele2.placeholder = translation.placeholders[key];
+			if (ele2.placeholder) {
+				var key = ele2.placeholder.toLowerCase().replace(/[^a-zA-Z0-9\s\-]/g, '').replace(/[\n\t\r]/g, '').trim().replaceAll(" ","-");;
+				if (key in translation.placeholders) {
+					ele2.placeholder = translation.placeholders[key];
+				}
 			}
 		});
 		
@@ -3408,6 +3410,15 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         const testPhrase = "The quick brown fox jumps over the lazy dog";
         const serviceName = this.getServiceName();
         
+        // Check if the provider supports testing
+        const provider = document.getElementById('ttsProvider').value || "system";
+        if (provider === 'piper' || provider === 'espeak') {
+            let warningMsg = getTranslation("tts-test-not-available") || "Testing is not available for {provider}. This TTS provider works during streaming only.";
+            warningMsg = warningMsg.replace('{provider}', serviceName);
+            this.showFeedback(warningMsg, 'error');
+            return;
+        }
+        
         this.showFeedback(`Testing ${serviceName}...`, 'info');
         
         const originalOnEnded = this.audio?.onended;
@@ -5087,6 +5098,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		console.log("Failed to initialize WebMidi:", e);
 	  }
 	}
+	
+	
+	document.body.classList.add('loaded');
+
     // Dynamically load the WebMidi script and initialize the dropdown logic
 	try {
 		setTimeout(function(){
