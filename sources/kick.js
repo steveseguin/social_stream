@@ -1,5 +1,54 @@
 (async function () {
 	
+	// Function to rewrite old Kick URLs to new format
+	function rewriteKickUrl(url) {
+		// Check if it's an old Kick chatroom URL (case-insensitive)
+		const oldKickPattern = /^https:\/\/kick\.com\/([^\/]+)\/chatroom$/i;
+		const match = url.match(oldKickPattern);
+		
+		if (match) {
+			// Validate and sanitize username
+			const username = match[1];
+			if (!username || username.length === 0) {
+				return url; // Invalid username, don't redirect
+			}
+			
+			// Rewrite to new format
+			const newUrl = `https://kick.com/popout/${encodeURIComponent(username)}/chat`;
+			console.log(`[Social Stream] Rewriting old Kick URL: ${url} -> ${newUrl}`);
+			return newUrl;
+		}
+		
+		// Return original URL if no rewriting needed
+		return url;
+	}
+	
+	// Check and redirect if needed, but only once
+	try {
+		const currentUrl = window.location.href;
+		const rewrittenUrl = rewriteKickUrl(currentUrl);
+		
+		// Only redirect if URL needs rewriting and we haven't already tried
+		if (rewrittenUrl !== currentUrl && !sessionStorage.getItem('kick_redirect_attempted')) {
+			// Mark that we've attempted a redirect to prevent loops
+			sessionStorage.setItem('kick_redirect_attempted', 'true');
+			window.location.replace(rewrittenUrl); // Use replace to avoid history issues
+			// Stop all execution
+			throw new Error('Redirecting to new Kick URL format');
+		}
+		
+		// Clear the flag if we're on the correct URL
+		if (currentUrl.includes('/popout/') && currentUrl.includes('/chat')) {
+			sessionStorage.removeItem('kick_redirect_attempted');
+		}
+	} catch (e) {
+		if (e.message !== 'Redirecting to new Kick URL format') {
+			console.error('[Social Stream] Error in URL rewrite:', e);
+		} else {
+			return; // Stop execution for redirect
+		}
+	}
+	
 	var EMOTELIST = false;
 	var BTTV = false;
 	var SEVENTV = false;
@@ -81,7 +130,9 @@
 		});
 	}
 	
-	var cachedUserProfiles = {};
+	// Implement LRU cache for user profiles to prevent memory leaks
+	var cachedUserProfiles = new Map();
+	var maxCachedProfiles = 10000; // Limit to 10,000 profiles
 	var processedMessages = new Set();
 	var maxTrackedMessages = 40;
 	var pastMessages = [];
@@ -257,22 +308,36 @@
 			clearTimeout(timeout_id);
 			return response;
 		} catch(e){
-			errorlog(e);
+			console.error(e);
 			return await fetch(URL);
 		}
 	}
 	
 	async function getKickAvatarImage(username, channelname){
 		
-		if (username in cachedUserProfiles){
-			return cachedUserProfiles[username];
-		} 
-		cachedUserProfiles[username] = "";
+		// Check if username exists in cache
+		if (cachedUserProfiles.has(username)){
+			// Move to end (most recently used)
+			const value = cachedUserProfiles.get(username);
+			cachedUserProfiles.delete(username);
+			cachedUserProfiles.set(username, value);
+			return value;
+		}
+		
+		// Evict oldest entry if cache is full
+		if (cachedUserProfiles.size >= maxCachedProfiles) {
+			const firstKey = cachedUserProfiles.keys().next().value;
+			cachedUserProfiles.delete(firstKey);
+		}
+		
+		// Add placeholder immediately to prevent duplicate requests
+		cachedUserProfiles.set(username, "");
 		
 		return await fetchWithTimeout("https://kick.com/channels/"+encodeURIComponent(channelname)+"/"+encodeURIComponent(username)).then(async response => {
 			return await response.json().then(function (data) {
 				if (data && data.profilepic){
-					cachedUserProfiles[username] = data.profilepic;
+					// Update cache with actual profile pic
+					cachedUserProfiles.set(username, data.profilepic);
 					return data.profilepic;
 				}
 			});
@@ -296,11 +361,16 @@
 		  try {
 				var data = {};
 				data.chatname = escapeHtml(ele.querySelector(".chat-entry-username").innerText);
-				chatname = chatname.replace("Channel Host", "");
-				chatname = chatname.replace(":", "");
-				chatname = chatname.trim();
+				data.chatname = data.chatname.replace("Channel Host", "");
+				data.chatname = data.chatname.replace(":", "");
+				data.chatname = data.chatname.trim();
 
-				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
+				if (ele.dataset.mid) {
+					const parsedId = parseInt(ele.dataset.mid);
+					if (!isNaN(parsedId)) {
+						data.id = parsedId;
+					}
+				}
 				data.type = "kick";
 				chrome.runtime.sendMessage(
 					chrome.runtime.id,
@@ -457,7 +527,9 @@
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
 			console.warn(e);
-			ele.dataset.mid = e.id;
+			if (ele && e && e.id){
+				ele.dataset.mid = e.id;
+			}
 		});
 	  } catch(e){
 		  //
@@ -743,8 +815,8 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if (response){
 			if ("state" in response){
-				if (request.state !== null){
-					isExtensionOn = request.state;
+				if (response.state !== null){
+					isExtensionOn = response.state;
 				}
 			}
 			if ("settings" in response){
