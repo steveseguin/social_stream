@@ -20,7 +20,16 @@ This overlay creates a card-based chat experience with:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+Pro:wght@400;600&display=swap');
 
-body, html {
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -82,7 +91,7 @@ body, html {
     width: 100%;
     max-width: 420px;
     height: 100vh;
-    overflow: hidden;
+    overflow: visible;
     padding: 0 25px;
     box-sizing: border-box;
     z-index: 5;
@@ -232,12 +241,14 @@ body, html {
 }
 
 .text {
-    font-size: 0.95em;
-    line-height: 1.6;
+    font-size: 1.1em;
+    line-height: 1.7;
     margin: 10px 0;
     word-wrap: break-word;
-    color: #34495e;
-    text-shadow: 0 1px 1px rgba(255,255,255,0.8);
+    color: #1a1a1a;
+    text-shadow: none;
+    font-weight: 500;
+    letter-spacing: 0.02em;
 }
 
 .text img {
@@ -502,28 +513,51 @@ body, html {
     const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
 
     // Floating cards background
-    function createFloatingCards() {
+    const MAX_FLOATING_CARDS = 8;
+    
+    function createSingleFloatingCard() {
         const container = document.getElementById('floating-cards');
+        const currentCards = container.querySelectorAll('.floating-card').length;
         
-        for (let i = 0; i < 12; i++) {
-            const card = document.createElement('div');
-            card.className = 'floating-card';
-            
-            card.style.left = Math.random() * 100 + '%';
-            card.style.animationDuration = (Math.random() * 15 + 15) + 's';
-            card.style.animationDelay = Math.random() * 8 + 's';
-            card.style.setProperty('--drift', (Math.random() - 0.5) * 300 + 'px');
-            
-            container.appendChild(card);
-            
-            // Remove and recreate card after animation
-            setTimeout(() => {
-                if (card.parentNode) {
-                    card.remove();
-                    createFloatingCards();
-                }
-            }, (parseFloat(card.style.animationDuration) + parseFloat(card.style.animationDelay)) * 1000);
+        if (currentCards >= MAX_FLOATING_CARDS) {
+            return;
         }
+        
+        const card = document.createElement('div');
+        card.className = 'floating-card';
+        
+        card.style.left = Math.random() * 100 + '%';
+        card.style.animationDuration = (Math.random() * 15 + 15) + 's';
+        card.style.animationDelay = Math.random() * 8 + 's';
+        card.style.setProperty('--drift', (Math.random() - 0.5) * 300 + 'px');
+        
+        container.appendChild(card);
+        
+        // Remove card after animation
+        const animationTime = (parseFloat(card.style.animationDuration) + parseFloat(card.style.animationDelay)) * 1000;
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.remove();
+            }
+        }, animationTime);
+    }
+    
+    function createFloatingCards() {
+        // Initial creation
+        for (let i = 0; i < MAX_FLOATING_CARDS; i++) {
+            createSingleFloatingCard();
+        }
+        
+        // Maintain card count
+        setInterval(() => {
+            const container = document.getElementById('floating-cards');
+            const currentCards = container.querySelectorAll('.floating-card').length;
+            const needed = MAX_FLOATING_CARDS - currentCards;
+            
+            for (let i = 0; i < needed; i++) {
+                createSingleFloatingCard();
+            }
+        }, 3000);
     }
 
     function adjustMessageWrapperScroll() {

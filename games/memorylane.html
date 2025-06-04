@@ -41,15 +41,16 @@
         
         .memory-photo {
             position: absolute;
-            width: 200px;
-            height: 150px;
-            background: #fff;
+            width: 220px;
+            height: 180px;
+            background: rgba(255, 255, 255, 0.85);
             border-radius: 10px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             cursor: pointer;
             transition: all 0.5s ease;
             animation: photo-float 8s ease-in-out infinite;
+            z-index: 1;
         }
         
         .memory-photo:hover {
@@ -86,26 +87,31 @@
             background: linear-gradient(45deg, #ffeaa7, #fab1a0, #fd79a8, #e17055);
             border-radius: 5px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: center;
-            font-size: 48px;
+            font-size: 40px;
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
             overflow: hidden;
             position: relative;
+            padding-top: 15px;
         }
         
         .photo-text {
             position: absolute;
-            bottom: 10px;
-            left: 10px;
-            right: 10px;
-            font-size: 12px;
-            background: rgba(0, 0, 0, 0.7);
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+            font-size: 11px;
+            line-height: 1.3;
+            background: rgba(0, 0, 0, 0.75);
             color: white;
-            padding: 5px;
+            padding: 6px 8px;
             border-radius: 3px;
             text-align: center;
+            max-height: 65px;
+            overflow-y: auto;
+            word-wrap: break-word;
         }
         
         .photo-caption {
@@ -155,12 +161,12 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             padding: 15px 20px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
+            z-index: 1000;
         }
         
         .stat-line {
@@ -174,12 +180,12 @@
             right: 20px;
             width: 250px;
             max-height: 400px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             padding: 15px 20px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
+            z-index: 1000;
             overflow-y: auto;
         }
         
@@ -220,12 +226,12 @@
             position: absolute;
             bottom: 20px;
             right: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             padding: 15px 20px;
             border-radius: 10px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            z-index: 100;
+            z-index: 1000;
             text-align: center;
         }
         
@@ -244,13 +250,13 @@
             position: absolute;
             bottom: 20px;
             left: 20px;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.6);
             color: white;
             padding: 15px 20px;
             border-radius: 10px;
             text-align: left;
             font-size: 16px;
-            z-index: 100;
+            z-index: 1000;
         }
         
         #instructions strong {
@@ -350,7 +356,6 @@
             <div>Share memories and stories in chat!</div>
             <div>Keywords: <strong>remember</strong>, <strong>childhood</strong>, <strong>nostalgia</strong></div>
             <div>Emojis become photo themes!</div>
-            <div>Click photos to make them sparkle!</div>
         </div>
     </div>
 
@@ -469,10 +474,42 @@
 
         // Get random position for photo
         function getPhotoPosition() {
-            return {
-                left: Math.random() * 80 + 5, // 5% to 85%
-                top: Math.random() * 70 + 10   // 10% to 80%
-            };
+            // Try to find a position that doesn't overlap too much with existing photos
+            let attempts = 0;
+            let position;
+            
+            do {
+                position = {
+                    left: Math.random() * 70 + 5,  // 5% to 75% (reduced range)
+                    top: Math.random() * 60 + 10    // 10% to 70% (reduced range)
+                };
+                
+                attempts++;
+                
+                // Check if position is far enough from existing photos
+                let tooClose = false;
+                for (let photo of gameState.photos) {
+                    if (!photo.element.parentNode) continue; // Skip removed photos
+                    
+                    const existingLeft = parseFloat(photo.element.style.left);
+                    const existingTop = parseFloat(photo.element.style.top);
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(position.left - existingLeft, 2) + 
+                        Math.pow(position.top - existingTop, 2)
+                    );
+                    
+                    if (distance < 15) { // Minimum 15% distance between photos
+                        tooClose = true;
+                        break;
+                    }
+                }
+                
+                if (!tooClose) break;
+                
+            } while (attempts < 10); // Try up to 10 times to find a good position
+            
+            return position;
         }
 
         // Create memory photo
@@ -507,7 +544,7 @@
             // Add message text overlay
             const textOverlay = document.createElement('div');
             textOverlay.className = 'photo-text';
-            textOverlay.textContent = message.length > 30 ? message.substring(0, 30) + '...' : message;
+            textOverlay.textContent = message.length > 80 ? message.substring(0, 80) + '...' : message;
             imageDiv.appendChild(textOverlay);
             
             const caption = document.createElement('div');
@@ -676,7 +713,27 @@
             if (!data || !data.chatmessage || !data.chatname) return;
 
             const username = data.chatname;
-            const message = data.chatmessage;
+            let message = data.chatmessage;
+            
+            // Check if textonly is set, if not we need to extract text from HTML
+            if (!data.textonly) {
+                // Create a temporary element to parse HTML
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = message;
+                
+                // Replace images with their alt text
+                const images = tempDiv.querySelectorAll('img');
+                images.forEach(img => {
+                    const altText = img.getAttribute('alt') || '';
+                    if (altText) {
+                        const textNode = document.createTextNode(altText);
+                        img.parentNode.replaceChild(textNode, img);
+                    }
+                });
+                
+                // Get the text content
+                message = tempDiv.textContent || tempDiv.innerText || '';
+            }
             
             // Analyze message for memory content
             const analysis = analyzeMessage(message);
@@ -791,6 +848,18 @@
         
         // Initialize display
         updateDisplay();
+        
+        // Auto-hide instructions after 30 seconds
+        setTimeout(() => {
+            const instructions = document.getElementById('instructions');
+            if (instructions) {
+                instructions.style.transition = 'opacity 1s ease-out';
+                instructions.style.opacity = '0';
+                setTimeout(() => {
+                    instructions.style.display = 'none';
+                }, 1000);
+            }
+        }, 30000);
     </script>
 </body>
 </html>

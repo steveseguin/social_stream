@@ -20,7 +20,16 @@ This overlay creates a futuristic cyberpunk atmosphere with:
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
 
-body, html {
+html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+body {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -406,6 +415,7 @@ body, html {
     function createDigitalRain() {
         const rainContainer = document.getElementById('digital-rain');
         const characters = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        const rainDrops = [];
         
         for (let i = 0; i < 50; i++) {
             const drop = document.createElement('div');
@@ -415,12 +425,20 @@ body, html {
             drop.style.animationDuration = (Math.random() * 3 + 2) + 's';
             drop.style.animationDelay = Math.random() * 2 + 's';
             rainContainer.appendChild(drop);
-            
-            // Replace character periodically
-            setInterval(() => {
-                drop.textContent = characters[Math.floor(Math.random() * characters.length)];
-            }, 100 + Math.random() * 500);
+            rainDrops.push(drop);
         }
+        
+        // Single interval to update all drops
+        const updateInterval = setInterval(() => {
+            rainDrops.forEach(drop => {
+                if (drop.parentNode) {
+                    drop.textContent = characters[Math.floor(Math.random() * characters.length)];
+                }
+            });
+        }, 300);
+        
+        // Store interval ID for potential cleanup
+        rainContainer.dataset.updateInterval = updateInterval;
     }
 
     function adjustMessageWrapperScroll() {
