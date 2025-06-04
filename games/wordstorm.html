@@ -6,6 +6,16 @@
     <title>Word Storm - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
     <style>
+        /* Hide scrollbars */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        * {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
         body {
             margin: 0;
             padding: 0;
@@ -288,7 +298,8 @@
             popularWords: 0,
             comboCount: 0,
             stormLevel: 0,
-            lastCleanup: Date.now()
+            lastCleanup: Date.now(),
+            maxWords: 50 // Maximum words on screen to prevent lag
         };
 
         const stormLevels = [
@@ -341,6 +352,42 @@
             if (frequency >= 2) return 'word-size-2';
             return 'word-size-1';
         }
+        
+        // Remove the oldest word with lowest frequency
+        function removeOldestWord() {
+            if (gameState.activeWords.length === 0) return;
+            
+            // Find word with lowest frequency
+            let wordToRemove = null;
+            let lowestFreq = Infinity;
+            
+            gameState.activeWords.forEach(word => {
+                const freq = gameState.words.get(word) || 0;
+                if (freq < lowestFreq) {
+                    lowestFreq = freq;
+                    wordToRemove = word;
+                }
+            });
+            
+            // If all words have high frequency, remove the first (oldest) word
+            if (wordToRemove === null || lowestFreq > 3) {
+                wordToRemove = gameState.activeWords[0];
+            }
+            
+            // Remove the word
+            if (wordToRemove) {
+                const bubble = document.getElementById(`word-${wordToRemove}`);
+                if (bubble) {
+                    bubble.style.animation = 'word-spawn 0.3s ease-in reverse';
+                    setTimeout(() => {
+                        bubble.remove();
+                        gameState.words.delete(wordToRemove);
+                        gameState.activeWords = gameState.activeWords.filter(w => w !== wordToRemove);
+                        updateDisplay();
+                    }, 300);
+                }
+            }
+        }
 
         // Create or update word bubble
         function createWordBubble(word, frequency) {
@@ -348,6 +395,12 @@
             let bubble = document.getElementById(`word-${word}`);
             
             if (!bubble) {
+                // Check if we've reached the word limit
+                if (gameState.activeWords.length >= gameState.maxWords) {
+                    // Remove the oldest word with lowest frequency
+                    removeOldestWord();
+                }
+                
                 bubble = document.createElement('div');
                 bubble.className = 'word-bubble word-new';
                 bubble.id = `word-${word}`;
@@ -528,13 +581,28 @@
             
             gameState.lastCleanup = now;
             
+            // More aggressive cleanup when approaching limit
+            const cleanupThreshold = gameState.activeWords.length > (gameState.maxWords * 0.8) ? 0.5 : 0.3;
+            const isNearLimit = gameState.activeWords.length > (gameState.maxWords * 0.9);
+            
             // Remove words that haven't been mentioned recently
             const wordsToRemove = [];
             gameState.words.forEach((count, word) => {
-                if (count === 1 && Math.random() < 0.3) { // 30% chance to remove single-use words
+                if (count === 1 && Math.random() < cleanupThreshold) { // Remove single-use words
+                    wordsToRemove.push(word);
+                } else if (count === 2 && isNearLimit && Math.random() < 0.2) {
+                    // Also remove some 2-count words when very full
                     wordsToRemove.push(word);
                 }
             });
+            
+            // If still over limit after normal cleanup, force remove oldest words
+            if (gameState.activeWords.length > gameState.maxWords) {
+                const forceRemoveCount = gameState.activeWords.length - gameState.maxWords + 5;
+                for (let i = 0; i < forceRemoveCount && gameState.activeWords.length > 0; i++) {
+                    removeOldestWord();
+                }
+            }
             
             wordsToRemove.forEach(word => {
                 const bubble = document.getElementById(`word-${word}`);
