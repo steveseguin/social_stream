@@ -34,19 +34,19 @@ TTS.initAudioContext = function() {
     try {
         if (!TTS.audioContext) {
             TTS.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            //console.log("New AudioContext created:", TTS.audioContext.state);
+            console.log("New AudioContext created:", TTS.audioContext.state);
         }
         
         // Resume context if suspended
         if (TTS.audioContext.state === 'suspended') {
-            //console.log("Attempting to resume suspended AudioContext");
+            console.log("Attempting to resume suspended AudioContext");
             TTS.audioContext.resume().then(() => {
-                //console.log("AudioContext resumed successfully");
+                console.log("AudioContext resumed successfully");
             }).catch(err => {
                 console.warn("Could not resume audio context:", err);
             });
         } else {
-            //console.log("AudioContext state:", TTS.audioContext.state);
+            console.log("AudioContext state:", TTS.audioContext.state);
         }
         
         return TTS.audioContext;
@@ -57,7 +57,7 @@ TTS.initAudioContext = function() {
 };
 
 document.addEventListener('click', function() {
-    //console.log("Document clicked, initializing AudioContext");
+    console.log("Document clicked, initializing AudioContext");
     TTS.initAudioContext();
     // Try to play a silent sound to unblock audio
     try {
@@ -67,14 +67,14 @@ document.addEventListener('click', function() {
         source.buffer = audioBuffer;
         source.connect(TTS.audioContext.destination);
         source.start(0);
-        //console.log("Silent sound played to unblock audio");
+        console.log("Silent sound played to unblock audio");
     } catch (e) {
         console.warn("Failed to play silent sound:", e);
     }
 }, { once: true });
 
 document.addEventListener('keydown', function() {
-    //console.log("Key pressed, initializing AudioContext");
+    console.log("Key pressed, initializing AudioContext");
     TTS.initAudioContext();
 }, { once: true });
 
@@ -98,7 +98,7 @@ try {
 		if (window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = function() {
                 TTS.voices = window.speechSynthesis.getVoices();
-                //console.log("Voices loaded:", TTS.voices.length);
+                console.log("Voices loaded:", TTS.voices.length);
             };
         }
     }
@@ -851,27 +851,27 @@ TTS.updateButtonState = function(state) {
  * @param {boolean} allow - Whether to allow speech even if speech is disabled
  */
 TTS.speak = function(text, allow = false) {
-    //console.log("TTS.speak called with:", text, "Allow:", allow, "TTS.speech:", TTS.speech);
+    console.log("TTS.speak called with:", text, "Allow:", allow, "TTS.speech:", TTS.speech);
     
     if (!TTS.speech && !allow) {
-        //console.log("Speech is disabled and not forced, aborting");
+        console.log("Speech is disabled and not forced, aborting");
         return;
     }
 	
 	if (TTS.disableTTS){
-		//console.log("TTS is disabled globally, aborting");
+		console.log("TTS is disabled globally, aborting");
 		return;
 	}
     
     text = TTS.cleanPunctuation(text);
     
     if (!text) {
-        //console.log("No text to speak after cleaning");
+        console.log("No text to speak after cleaning");
         return;
     }
     
     if (text.startsWith("!")) {
-        //console.log("Text starts with !, aborting");
+        console.log("Text starts with !, aborting");
         return;
     } // do not TTS commands.
 
@@ -879,7 +879,7 @@ TTS.speak = function(text, allow = false) {
         text = TTS.replaceURLsWithSubstring(text, "Link");
     }
     
-    //console.log("About to speak:", text);
+    console.log("About to speak:", text);
 	
 	TTS.initAudioContext();
 
@@ -1068,7 +1068,7 @@ TTS.toggle = function() {
  * @param {boolean} allow - Whether to allow speech even if speech is disabled
  */
 TTS.speechMeta = function(data, allow = false) {
-    //console.log("TTS.speechMeta called with data:", data, "Allow:", allow);
+    console.log("TTS.speechMeta called with data:", data, "Allow:", allow);
     
     if (!data) {
         console.error("TTS.speechMeta: No data provided");
@@ -1077,82 +1077,82 @@ TTS.speechMeta = function(data, allow = false) {
     
     if (TTS.skipTTSMessages && !data.hasDonation) {
         if (parseInt(data.id||0) % TTS.skipTTSMessages !== 0) {
-            //console.log("Message skipped due to skipTTSMessages filter");
+            console.log("Message skipped due to skipTTSMessages filter");
             return;
         }
     }
 	
 	if (TTS.disableTTS){
-		//console.log("TTS is disabled globally, aborting");
+		console.log("TTS is disabled globally, aborting");
 		return;
 	}
 	
     if (!data.bot && TTS.bottts) {
-        //console.log("Filter: Only bot messages allowed and this is not a bot message");
+        console.log("Filter: Only bot messages allowed and this is not a bot message");
         return;
     } 
     else if (!data.host && TTS.hosttts) {
-        //console.log("Filter: Only host messages allowed and this is not a host message");
+        console.log("Filter: Only host messages allowed and this is not a host message");
         return;
     } 
     else if (!data.mod && TTS.modtts) {
-        //console.log("Filter: Only mod messages allowed and this is not a mod message");
+        console.log("Filter: Only mod messages allowed and this is not a mod message");
         return;
     }
     else if (!data.vip && TTS.viptts) {
-        //console.log("Filter: Only VIP messages allowed and this is not a VIP message");
+        console.log("Filter: Only VIP messages allowed and this is not a VIP message");
         return;
     } 
 	else if (!(data.membership || data.hasMembership) && TTS.membertts) {
-        //console.log("Filter: Only Member messages allowed and this is not a member message");
+        console.log("Filter: Only Member messages allowed and this is not a member message");
         return;
     } 
     else if (!data.admin && TTS.admintts) {
-        //console.log("Filter: Only admin messages allowed and this is not an admin message");
+        console.log("Filter: Only admin messages allowed and this is not an admin message");
         return;
     }
     
     else if (data.bot && !(TTS.allowbottts || TTS.bottts)) {
-        //console.log("Filter: Bot messages not allowed");
+        console.log("Filter: Bot messages not allowed");
         return;
     } 
     else if (data.host && !(TTS.allowhosttts || TTS.hosttts)) {
-        //console.log("Filter: Host messages not allowed");
+        console.log("Filter: Host messages not allowed");
         return;
     }
 //	else if (data.mod && !(TTS.allowmodtts || TTS.modtts)) {  // enabling this will prevent these from working.
  //       return;
  //   }
 //	else if (data.admin && !(TTS.allowadmintts || TTS.admintts)) {
- //       //console.log("Filter: Host messages not allowed");
+ //       console.log("Filter: Host messages not allowed");
  //       return;
  //   }
 //	else if (data.vip && !(TTS.allowviptts || TTS.viptts)) {
- //       //console.log("Filter: Host messages not allowed");
+ //       console.log("Filter: Host messages not allowed");
  //       return;
  //   }
 //	else if ((data.membership || data.hasMembership) && !(TTS.allowmembertts || TTS.membertts)) {
- //       //console.log("Filter: Host messages not allowed");
+ //       console.log("Filter: Host messages not allowed");
  //       return;
  //   } 
     
     else if (data.reflection && TTS.norelfectionstts) {
-        //console.log("Filter: Reflection messages not allowed");
+        console.log("Filter: Reflection messages not allowed");
         return;
     }
     
     else if (TTS.ttsSources && !TTS.ttsSources.includes(data.type)) {
-        //console.log(`Filter: Source type ${data.type} not in allowed sources list`);
+        console.log(`Filter: Source type ${data.type} not in allowed sources list`);
         return;
     }
     
     if (TTS.readDonos && !(data.hasDonation || data.donation)) {
-        //console.log("Filter: Only donations allowed and this is not a donation");
+        console.log("Filter: Only donations allowed and this is not a donation");
         return;
     }
 
     if (TTS.doNotReadEvents && data.event) {
-        //console.log("Filter: Events not allowed and this is an event");
+        console.log("Filter: Events not allowed and this is an event");
         return;
     }
     try {
@@ -1260,7 +1260,7 @@ TTS.initKokoro = async function() {
     
     try {
         TTS.kokoroDownloadInProgress = true;
-        //console.log("Loading Kokoro dependencies...");
+        console.log("Loading Kokoro dependencies...");
         
         // Import the module using the same path pattern as the working version
         const relativePath = window.location.href.startsWith("chrome-extension://") 
@@ -1317,11 +1317,11 @@ TTS.initKokoro = async function() {
             });
         }
         
-        //console.log("Checking cache for model...");
+        console.log("Checking cache for model...");
         let modelData = await getCachedModel();
         
         if (!modelData) {
-            //console.log("Downloading model...");
+            console.log("Downloading model...");
             const modelUrl = 'https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/main/onnx/model.onnx';
             const response = await fetch(modelUrl);
             const total = +response.headers.get('Content-Length');
@@ -1338,19 +1338,19 @@ TTS.initKokoro = async function() {
                 loaded += value.length;
                 
                 const percentage = (loaded / total) * 100;
-                //console.log(`Downloading model: ${percentage.toFixed(1)}%`);
+                console.log(`Downloading model: ${percentage.toFixed(1)}%`);
             }
             
             const modelBlob = new Blob(chunks);
             modelData = new Uint8Array(await modelBlob.arrayBuffer());
             
-            //console.log("Caching model...");
+            console.log("Caching model...");
             await cacheModel(modelData);
         } else {
-            //console.log("Loading model from cache");
+            console.log("Loading model from cache");
         }
         
-        //console.log("Initializing Kokoro TTS...");
+        console.log("Initializing Kokoro TTS...");
         const customLoadFn = async () => modelData;
         
         // Use the same model initialization parameters as working version
@@ -1417,7 +1417,7 @@ TTS.ElevenLabsTTS = function(tts) {
                 if (TTS.neuroSyncEnabled) {
                   TTS.sendToNeuroSync(newBlob).then(result => {
                     if (result && result.blendshapes) {
-                      //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+                      console.log(`Received ${result.blendshapes.length} blendshape frames`);
                     }
                   }).catch(err => {
                     console.error("NeuroSync error:", err);
@@ -1512,7 +1512,7 @@ TTS.googleTTS = function(tts) {
                   TTS.sendToNeuroSync(audioBlob).then(result => {
                     if (result && result.blendshapes) {
                       // Do something with the blendshapes
-                      //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+                      console.log(`Received ${result.blendshapes.length} blendshape frames`);
                     }
                   }).catch(err => {
                     console.error("NeuroSync error:", err);
@@ -1635,11 +1635,11 @@ TTS.kokoroTTS = async function(text) {
           TTS.sendToNeuroSync(audioBlob, { 
             isKokoroAudio: true,
             onProgress: (progress) => {
-              //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+              console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
             }
           }).then(result => {
             if (result && result.blendshapes) {
-              //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+              console.log(`Received ${result.blendshapes.length} blendshape frames`);
             }
           }).catch(err => {
             console.error("NeuroSync error:", err);
@@ -1703,11 +1703,11 @@ TTS.kokoroTTS = async function(text) {
           TTS.sendToNeuroSync(audio, { 
             isKokoroAudio: true,
             onProgress: (progress) => {
-              //console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
+              console.log(`NeuroSync processing: ${Math.round(progress * 100)}%`);
             }
           }).then(result => {
             if (result && result.blendshapes) {
-              //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+              console.log(`Received ${result.blendshapes.length} blendshape frames`);
             }
           }).catch(err => {
             console.error("NeuroSync error:", err);
@@ -1821,7 +1821,7 @@ TTS.espeakTTS = async function(text) {
         if (TTS.neuroSyncEnabled) {
             TTS.sendToNeuroSync(audioBlob).then(result => {
                 if (result && result.blendshapes) {
-                    //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+                    console.log(`Received ${result.blendshapes.length} blendshape frames`);
                 }
             }).catch(err => {
                 console.error("NeuroSync error:", err);
