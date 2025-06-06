@@ -119,7 +119,8 @@ window.customUserFunction = function(data) {
   // Track messages containing specific keywords and trigger actions
   if (data.chatmessage) {
     // Track questions for later follow-up
-    if (data.chatmessage.includes("?") && !data.bot) {
+    const messageText = data.textContent || data.chatmessage;
+    if (messageText.includes("?") && !data.bot) {
       // You could store these questions in a global array
       if (!window.pendingQuestions) window.pendingQuestions = [];
       window.pendingQuestions.push({

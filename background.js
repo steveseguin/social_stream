@@ -3656,7 +3656,8 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event) {
-			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && message.chatmessage.includes(v)))) {
+			const messageText = message.textContent || message.chatmessage;
+			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && messageText.includes(v)))) {
 				return false;
 			}
 		}
@@ -4074,7 +4075,8 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				return;
 			}
 			
-			if (data.chatmessage.includes(miscTranslations.said)){
+			const checkMessage = data.textContent || data.chatmessage;
+			if (checkMessage.includes(miscTranslations.said)){
 				return null;
 			}
 
@@ -4088,6 +4090,9 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			if (!cleaned){
 				return;
 			}
+			
+			// Store the cleaned text content for reuse elsewhere
+			data.textContent = cleaned;
 			
 			if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
 				if (data.bot) {
@@ -4681,8 +4686,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
     }
 
     // Skip messages that contain certain translations or empty messages
+    const checkMessage = data.textContent || data.chatmessage;
     if (!data.chatmessage ||
-        (data.chatmessage.includes && data.chatmessage.includes(miscTranslations.said))) {
+        (checkMessage.includes && checkMessage.includes(miscTranslations.said))) {
       return null;
     }
 
@@ -4698,6 +4704,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
     if (!cleaned) {
       return;
     }
+    
+    // Store the cleaned text content for reuse elsewhere
+    data.textContent = cleaned;
 
     // Duplicate message handling logic (assuming functions are defined elsewhere)
     if (relayed && typeof verifyOriginalNewIncomingMessage === 'function' && !verifyOriginalNewIncomingMessage(cleaned, true)) {
@@ -7843,7 +7852,7 @@ class HostMessageFilter {
     // Determine message content based on available fields
     let messageContent = '';
     if (message.textonly) {
-      messageContent = message.textonly;
+      messageContent = message.chatmessage;
     } else if (message.chatmessage !== undefined) {
       messageContent = this.sanitizeMessage(message.chatmessage);
     } else if (message.hasDonation || (message.membership && message.event)) {
@@ -8359,7 +8368,8 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		
-		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(miscTranslations.said)){
+		const messageToCheck = data.textContent || data.chatmessage;
+		if (settings.relayall && data.chatmessage && !data.event && tab && messageToCheck.includes(miscTranslations.said)){
 			//console.log("1");
 			return null;
 			
@@ -8447,9 +8457,10 @@ async function applyBotActions(data, tab = false) {
 				if (!event?.setting || !command || !response) continue;
 				
 				const isFullMatch = settings.botReplyMessageFull;
+				const messageText = data.textContent || data.chatmessage;
 				const messageMatches = isFullMatch ? 
-				  data.chatmessage === command :
-				  data.chatmessage.includes(command);
+				  messageText === command :
+				  messageText.includes(command);
 				  
 				if (!messageMatches) continue;
 				
@@ -8519,14 +8530,16 @@ async function applyBotActions(data, tab = false) {
 		
 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
 			const eventTexts = settings.highlightevent.textsetting.split(',').map(text => text.trim());
-			if (eventTexts.some(text => data.chatmessage.includes(text))) {
+			const messageText = data.textContent || data.chatmessage;
+			if (eventTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
 			}
 		}
 
 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
 			const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
-			if (wordTexts.some(text => data.chatmessage.includes(text))) {
+			const messageText = data.textContent || data.chatmessage;
+			if (wordTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
 			}
 		}
@@ -8535,7 +8548,8 @@ async function applyBotActions(data, tab = false) {
 			//if (Date.now() - messageTimeout > 100) {
 				// respond to "1" with a "1" automatically; at most 1 time per 100ms.
 
-				if (data.chatmessage.includes(". Thank you") && data.chatmessage.includes(" donated ")) {
+				const messageText = data.textContent || data.chatmessage;
+				if (messageText.includes(". Thank you") && messageText.includes(" donated ")) {
 					return null;
 				} // probably a reply
 
@@ -8582,7 +8596,8 @@ async function applyBotActions(data, tab = false) {
 				}
 			}
 		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			var xx = data.chatmessage.split(" ");
+			const messageText = data.textContent || data.chatmessage;
+			var xx = messageText.split(" ");
 			for (var i = 0; i < xx.length; i++) {
 				var word = xx[i];
 				if (!word.startsWith("#")) {
@@ -8596,9 +8611,9 @@ async function applyBotActions(data, tab = false) {
 					}
 
 					if (settings.hidegiphytrigger) {
-						if (data.chatmessage.includes("#" + word + " " + order)) {
+						if (messageText.includes("#" + word + " " + order)) {
 							data.chatmessage = data.chatmessage.replace("#" + word + " " + order, "");
-						} else if (data.chatmessage.includes("#" + word + " ")) {
+						} else if (messageText.includes("#" + word + " ")) {
 							data.chatmessage = data.chatmessage.replace("#" + word + " ", "");
 						} else {
 							data.chatmessage = data.chatmessage.replace("#" + word, "");

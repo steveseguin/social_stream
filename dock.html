@@ -7455,7 +7455,8 @@
 						} else if (eventsOnly !== true) {
 						
 							if (data.chatmessage) {
-								if (eventsOnly.some(v => !data.chatmessage.includes(v))) {
+								const messageText = data.textContent || data.chatmessage;
+								if (eventsOnly.some(v => !messageText.includes(v))) {
 									return;
 								}
 							} else {
@@ -7526,7 +7527,8 @@
 					}
 
 					if (filterEvents && data.event && data.chatmessage) {
-						if (filterEvents.some(v => data.chatmessage.includes(v))) {
+						const messageText = data.textContent || data.chatmessage;
+						if (filterEvents.some(v => messageText.includes(v))) {
 							return;
 						}
 					}
@@ -8462,7 +8464,7 @@
 					
 					if (data.command && doNotTTSBeep){
 						// skipp TTS
-					} else if (TTS.ttscommand && data.chatmessage && data.chatmessage.includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
+					} else if (TTS.ttscommand && data.chatmessage && (data.textContent || data.chatmessage).includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
 							TTS.speechMeta(data);
 						}
@@ -8478,11 +8480,12 @@
 
 			function applyBotActions(data) {
 				// this can be customized to create bot-like auto-responses/actions.
-				if (triggerState && data.chatmessage.includes("!highlight")) {
+				const messageText = data.textContent || data.chatmessage;
+				if (triggerState && messageText.includes("!highlight")) {
 					getById("msg_" + data.id).classList.add("highlight"); // sample method of highlighting
 				}
 
-				if ((passTTS || passTTSMod) && data.chatmessage.includes("!pass")) {
+				if ((passTTS || passTTSMod) && messageText.includes("!pass")) {
 					if (data.mod){
 						if (window.speechSynthesis.pending || window.speechSynthesis.speaking) {
 							window.speechSynthesis.cancel();

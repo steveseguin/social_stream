@@ -481,38 +481,71 @@ class EventFlowSystem {
         return overallResult;
     }
     
+    stripHtml(html) {
+        // Simple HTML stripping function that preserves emoji alt text
+        if (!html || typeof html !== 'string') return html;
+        
+        // Create a temporary element to use browser's HTML parsing
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        
+        // Replace img tags with their alt text (especially for emojis)
+        tmp.querySelectorAll('img[alt]').forEach(img => {
+            const alt = img.getAttribute('alt');
+            img.replaceWith(document.createTextNode(alt));
+        });
+        
+        // Get text content and clean up extra whitespace
+        const text = tmp.textContent || tmp.innerText || '';
+        return text.replace(/\s\s+/g, ' ').trim();
+    }
+    
     async evaluateTrigger(triggerNode, message) {
         const { triggerType, config } = triggerNode;
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
+        
+        // Get the message text for comparison
+        let messageText = message.chatmessage;
+        if (message && messageText && typeof messageText === 'string') {
+            // If textonly flag is set, the message is already plain text
+            if (!message.textonly) {
+                // Check if we've already cleaned this message (cache the result)
+                if (!message.textContent) {
+                    message.textContent = this.stripHtml(messageText);
+                }
+                messageText = message.textContent;
+            }
+        }
+        
         switch (triggerType) {
             case 'messageContains':
                 // Ensure properties exist before trying to access them
-                match = message && message.chatmessage && typeof message.chatmessage === 'string' &&
+                match = message && messageText && typeof messageText === 'string' &&
                            config && typeof config.text === 'string' &&
-                           message.chatmessage.includes(config.text);
-              //console.log(`[EvaluateTrigger - messageContains] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+                           messageText.includes(config.text);
+              //console.log(`[EvaluateTrigger - messageContains] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
                 return match;
                 
             case 'messageStartsWith':
-                match = message && message.chatmessage && typeof message.chatmessage === 'string' &&
+                match = message && messageText && typeof messageText === 'string' &&
                            config && typeof config.text === 'string' &&
-                           message.chatmessage.startsWith(config.text);
-              //console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+                           messageText.startsWith(config.text);
+              //console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
                 return match;
                 
             case 'messageEquals':
-                match = message && typeof message.chatmessage === 'string' &&
+                match = message && typeof messageText === 'string' &&
                            config && typeof config.text === 'string' &&
-                           message.chatmessage === config.text;
-              //console.log(`[EvaluateTrigger - messageEquals] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+                           messageText === config.text;
+              //console.log(`[EvaluateTrigger - messageEquals] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
                 return match;
                 
             case 'messageRegex':
                 try {
                     const regex = new RegExp(config.pattern, config.flags || '');
-                    match = regex.test(message.chatmessage);
-                  //console.log(`[EvaluateTrigger - messageRegex] Pattern: "${config.pattern}", Flags: "${config.flags}", Message: "${message.chatmessage}", Match: ${match}`);
+                    match = regex.test(messageText);
+                  //console.log(`[EvaluateTrigger - messageRegex] Pattern: "${config.pattern}", Flags: "${config.flags}", Message: "${messageText}", Match: ${match}`);
                     return match;
                 } catch (e) {
                     console.error('[EvaluateTrigger - messageRegex] Invalid regex:', e);

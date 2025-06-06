@@ -394,7 +394,7 @@ body.light-mode .message.active {
 		if (!data.chatname && !data.chatmessage && !data.hasDonation){return;}
 		
 		
-		if (giftSubsOnly && (!data.event || !data.chatmessage.includes("gifted"))){
+		if (giftSubsOnly && (!data.event || !(data.textContent || data.chatmessage).includes("gifted"))){
 			return;
 		}
 		

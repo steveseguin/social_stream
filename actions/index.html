@@ -23,9 +23,12 @@
     </div>
 
     <!-- Test Panel -->
-    <div class="test-overlay" id="test-overlay"></div>
-    <div class="test-panel" id="test-panel">
-        <h3>Test Flow</h3>
+    <div class="test-overlay" style="display:none;" id="test-overlay"></div>
+    <div class="test-panel" style="display:none;" id="test-panel">
+        <div class="test-panel-header">
+            <h3>Test Flow</h3>
+        </div>
+        <div class="test-panel-content">
         <div class="test-group">
             <label for="test-source">Source Platform:</label>
             <select id="test-source">
@@ -77,8 +80,20 @@
             <input type="text" id="test-donation-amount" value="$5.00">
         </div>
         
+        <div class="test-options">
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-all-active-flows">
+                Test against all active flows (not just current flow)
+            </label>
+        </div>
+
+        <div class="test-warning" id="unsaved-flow-warning" style="display: none; color: #e76f51; margin: 10px 0;">
+            <strong>Warning:</strong> The current flow has unsaved changes. Test results may not reflect the latest changes.
+        </div>
+        
         <div class="test-results" id="test-results">
             <p>Test results will appear here after running a test.</p>
+        </div>
         </div>
         
         <div class="test-buttons">

@@ -4671,6 +4671,44 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';
 	});
 
+	// Points System button handlers
+	const manageUserPointsBtn = document.getElementById('manageUserPoints');
+	if (manageUserPointsBtn) {
+		manageUserPointsBtn.addEventListener('click', function() {
+			// Open points management in new tab
+			chrome.tabs.create({
+				url: chrome.runtime.getURL('leaderboard.html')
+			});
+		});
+	}
+
+	const viewPointsLeaderboardBtn = document.getElementById('viewPointsLeaderboard');
+	if (viewPointsLeaderboardBtn) {
+		viewPointsLeaderboardBtn.addEventListener('click', function() {
+			// Open leaderboard in new tab
+			chrome.tabs.create({
+				url: chrome.runtime.getURL('leaderboard.html')
+			});
+		});
+	}
+
+	const resetPointsBtn = document.getElementById('resetPoints');
+	if (resetPointsBtn) {
+		resetPointsBtn.addEventListener('click', async function() {
+			if (confirm('Are you sure you want to reset all user points? This cannot be undone.')) {
+				chrome.runtime.sendMessage({
+					cmd: "resetAllPoints"
+				}, function(response) {
+					if (response && response.success) {
+						alert('All user points have been reset.');
+					} else {
+						alert('Failed to reset points. Please try again.');
+					}
+				});
+			}
+		});
+	}
+
 	let initialSetup = setInterval(()=>{
 		log("pop up asking main for settings yet again..");
 		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
