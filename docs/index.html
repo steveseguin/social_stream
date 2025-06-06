@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
     <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <script>
         window.location.href = '../index.html' + window.location.search;
     </script>
     <meta charset="UTF-8">

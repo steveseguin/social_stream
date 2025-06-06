@@ -502,6 +502,12 @@ class EventFlowEditor {
            // alert('Flow saved successfully!');
             await this.loadFlowList(); // Refresh list
             
+            // Notify background instance to reload flows
+            if (window.parent && window.parent.eventFlowSystem && window.parent.eventFlowSystem !== this.eventFlowSystem) {
+                console.log('[EventFlowEditor] Notifying parent window to reload flows after save');
+                window.parent.eventFlowSystem.reloadFlows();
+            }
+            
             // Re-select the current flow in the list
             document.querySelectorAll('.flow-item').forEach(item => {
                 item.classList.toggle('selected-flow', item.dataset.id === this.currentFlow.id);
@@ -545,6 +551,12 @@ class EventFlowEditor {
             }
             this.loadFlowList();
            // alert('Flow deleted successfully.');
+           
+            // Notify background instance to reload flows
+            if (window.parent && window.parent.eventFlowSystem && window.parent.eventFlowSystem !== this.eventFlowSystem) {
+                console.log('[EventFlowEditor] Notifying parent window to reload flows');
+                window.parent.eventFlowSystem.reloadFlows();
+            }
         } catch (error) {
             console.error('Error deleting flow:', error);
             alert('Failed to delete flow. Check console for details.');

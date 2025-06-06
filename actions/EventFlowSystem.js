@@ -324,6 +324,13 @@ class EventFlowSystem {
         return this.flows;
     }
     
+    async reloadFlows() {
+        // Force reload flows from database
+        console.log('[EventFlowSystem] Reloading flows from database');
+        await this.loadFlows();
+        return this.flows;
+    }
+    
     async getFlowById(flowId) {
         return this.flows.find(flow => flow.id === flowId) || null;
     }
