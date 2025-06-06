@@ -1275,7 +1275,7 @@ TTS.initKokoro = async function() {
         
         // Use the same WebGPU detection as the working version
         const device = (await detectWebGPU()) ? "webgpu" : "wasm";
-        console.log("Kokoro TTS using device:", device);
+        //console.log("Kokoro TTS using device:", device);
         
         // Store the device type for checking later
         TTS.kokoroDevice = device;
@@ -1355,7 +1355,7 @@ TTS.initKokoro = async function() {
         
         // Use the same model initialization parameters as working version
         const dtype = device === "wasm" ? "q8" : "fp32";
-        console.log(`Kokoro TTS initializing with dtype: ${dtype} on ${device}`);
+        //console.log(`Kokoro TTS initializing with dtype: ${dtype} on ${device}`);
         
         TTS.kokoroTtsInstance = await TTS.KokoroTTS.from_pretrained(
             "onnx-community/Kokoro-82M-v1.0-ONNX",
@@ -1366,7 +1366,7 @@ TTS.initKokoro = async function() {
             }
         );
         
-        console.log("Kokoro TTS ready!");
+        //console.log("Kokoro TTS ready!");
         TTS.kokoroDownloadInProgress = false;
         return true;
     } catch (error) {
@@ -1748,7 +1748,7 @@ TTS.initEspeak = async function() {
     if (TTS.espeakLoaded) return true;
     
     try {
-        console.log("Loading real eSpeak-NG TTS module...");
+        //console.log("Loading real eSpeak-NG TTS module...");
         
         // Load real eSpeak-NG implementation
         await new Promise((resolve, reject) => {
@@ -1765,12 +1765,12 @@ TTS.initEspeak = async function() {
         }
         
         // Create real eSpeak-NG instance
-        console.log('Creating real eSpeak-NG instance');
+        //console.log('Creating real eSpeak-NG instance');
         TTS.espeakInstance = new window.RealESpeakTTS();
         await TTS.espeakInstance.init();
         
         TTS.espeakLoaded = true;
-        console.log("Real eSpeak-NG TTS ready!");
+        //console.log("Real eSpeak-NG TTS ready!");
         return true;
     } catch (error) {
         console.error('Failed to initialize real eSpeak-NG TTS:', error);
@@ -1870,7 +1870,7 @@ TTS.initPiper = async function() {
     if (TTS.piperLoaded) return true;
     
     try {
-        console.log("Loading Piper TTS module...");
+        //console.log("Loading Piper TTS module...");
         
         // Load dependencies in order
         const scripts = [
@@ -1894,12 +1894,12 @@ TTS.initPiper = async function() {
         }
         
         // Create Piper instance with selected voice
-        console.log('Creating Piper instance with voice:', TTS.piperSettings.voice);
+        //console.log('Creating Piper instance with voice:', TTS.piperSettings.voice);
         TTS.piperInstance = new window.ProperPiperTTS(TTS.piperSettings.voice);
         await TTS.piperInstance.init();
         
         TTS.piperLoaded = true;
-        console.log("Piper TTS ready!");
+        //console.log("Piper TTS ready!");
         return true;
     } catch (error) {
         console.error('Failed to initialize Piper TTS:', error);

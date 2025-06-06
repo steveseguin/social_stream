@@ -3679,7 +3679,7 @@ async function sendToDestinations(message) {
 						tabs
 						  .map(tab => tab.id)
 						  .filter(Boolean)
-					  );
+					  );61000
 
 					  // Cleanup closed tabs
 					  for (const [tabId] of metaDataStore) {
@@ -3688,7 +3688,7 @@ async function sendToDestinations(message) {
 						}
 					  }
 					});
-				  }, 610000); 
+				  }, 61000); 
 				}
 				
 				if (message.event === 'viewer_update') {
@@ -5945,6 +5945,9 @@ function sendDataP2P(data, UUID = false) {
 
 	if (!UUID && settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
 		try {
+			if (data.out){
+				delete data.out;
+			}
 			socketserverDock.send(JSON.stringify(data));
 			return;
 		} catch (e) {
@@ -6734,59 +6737,58 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 				sendToDestinations({ vipUser: userToVIP });
 			}
 		} else if (request.action === "markUser" && request.value && request.value.chatname && request.value.type && request.value.role) {
-    
-		if (request.value.role=="bot"){
-			if (!settings.botnamesext) {
-				settings.botnamesext = { textsetting: "" };
-			}
-			const markedlist = settings.botnamesext.textsetting.split(",").map(user => {
-				const parts = user.split(":").map(part => part.trim());
-				return { username: parts[0], type: parts[1] || "" };
-			}); 
-			
-			var altSourceType = request.value.type || "";
-			if (altSourceType == "youtubeshorts"){
-				altSourceType = "youtube";
-			}
-			
-			const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
-			const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
-			
-			if (!isAlreadyMarked) {
-				settings.botnamesext.textsetting += (settings.botnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
-				chrome.storage.local.set({ settings: settings });
-				// Check for errors in chrome storage operations
-				if (chrome.runtime.lastError) {
-					console.error("Error updating settings:", chrome.runtime.lastError.message);
+			if (request.value.role=="bot"){
+				if (!settings.botnamesext) {
+					settings.botnamesext = { textsetting: "" };
+				}
+				const markedlist = settings.botnamesext.textsetting.split(",").map(user => {
+					const parts = user.split(":").map(part => part.trim());
+					return { username: parts[0], type: parts[1] || "" };
+				}); 
+				
+				var altSourceType = request.value.type || "";
+				if (altSourceType == "youtubeshorts"){
+					altSourceType = "youtube";
+				}
+				
+				const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
+				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
+				
+				if (!isAlreadyMarked) {
+					settings.botnamesext.textsetting += (settings.botnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+					chrome.storage.local.set({ settings: settings });
+					// Check for errors in chrome storage operations
+					if (chrome.runtime.lastError) {
+						console.error("Error updating settings:", chrome.runtime.lastError.message);
+					}
+				}
+			} else if (request.value.role=="mod"){
+				if (!settings.modnamesext) {
+					settings.modnamesext = { textsetting: "" };
+				}
+				const markedlist = settings.modnamesext.textsetting.split(",").map(user => {
+					const parts = user.split(":").map(part => part.trim());
+					return { username: parts[0], type: parts[1] || "" };
+				}); 
+				
+				var altSourceType = request.value.type || "";
+				if (altSourceType == "youtubeshorts"){
+					altSourceType = "youtube";
+				}
+				
+				const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
+				const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
+				
+				if (!isAlreadyMarked) {
+					settings.modnamesext.textsetting += (settings.modnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
+					chrome.storage.local.set({ settings: settings });
+					// Check for errors in chrome storage operations
+					if (chrome.runtime.lastError) {
+						console.error("Error updating settings:", chrome.runtime.lastError.message);
+					}
 				}
 			}
-		} else if (request.value.role=="mod"){
-			if (!settings.modnamesext) {
-				settings.modnamesext = { textsetting: "" };
-			}
-			const markedlist = settings.modnamesext.textsetting.split(",").map(user => {
-				const parts = user.split(":").map(part => part.trim());
-				return { username: parts[0], type: parts[1] || "" };
-			}); 
-			
-			var altSourceType = request.value.type || "";
-			if (altSourceType == "youtubeshorts"){
-				altSourceType = "youtube";
-			}
-			
-			const userToMark = { username: (request.value.userid || request.value.chatname), type: altSourceType };
-			const isAlreadyMarked = markedlist.some(({ username, type }) => userToMark.username === username && (userToMark.type === type || type === ""));
-			
-			if (!isAlreadyMarked) {
-				settings.modnamesext.textsetting += (settings.modnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
-				chrome.storage.local.set({ settings: settings });
-				// Check for errors in chrome storage operations
-				if (chrome.runtime.lastError) {
-					console.error("Error updating settings:", chrome.runtime.lastError.message);
-				}
-			}
-		}
-	} else if (request.action === "getChatSources") {
+		} else if (request.action === "getChatSources") {
 			if (isExtensionOn && chrome.debugger) {
 				chrome.tabs.query({}, function (tabs) {
 					chrome.runtime.lastError;
@@ -8358,17 +8360,17 @@ async function applyBotActions(data, tab = false) {
 		
 		
 		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(miscTranslations.said)){
-			console.log("1");
+			//console.log("1");
 			return null;
 			
 		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab) {
-			console.log("2");
+			//console.log("2");
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
 			}
 			
 			if (!data.bot && (!settings.relayhostonly || data.host)) {
-				console.log("3");
+				//console.log("3");
 				//messageTimeout = Date.now();
 				var msg = {};
 				
@@ -9495,6 +9497,11 @@ function isEqualMessage(message1, message2) {
 		   message1.hasDonation === message2.hasDonation &&
 		   message1.membership === message2.membership;
 }
+
+// Expose functions to window for EventFlowSystem
+window.sendMessageToTabs = sendMessageToTabs;
+window.sendToDestinations = sendToDestinations;
+window.fetchWithTimeout = fetchWithTimeout;
 
 console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
 

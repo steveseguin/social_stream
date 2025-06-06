@@ -8549,6 +8549,9 @@
 
 				if (socketserverExtension && server3) {
 					try {
+						if (data.out){
+							delete data.out;
+						}
 						socketserverExtension.send(JSON.stringify(data));
 						return;
 					} catch (e) {
@@ -8633,6 +8636,9 @@
 				try {
 					if (socketserver) {
 						// send a copy to the remote API
+						if (data.out){
+							delete data.out;
+						}
 						socketserver.send(JSON.stringify(data));
 					}
 					iframes.forEach(iframe => {
