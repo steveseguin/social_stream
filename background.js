@@ -3679,7 +3679,7 @@ async function sendToDestinations(message) {
 						tabs
 						  .map(tab => tab.id)
 						  .filter(Boolean)
-					  );
+					  );61000
 
 					  // Cleanup closed tabs
 					  for (const [tabId] of metaDataStore) {
@@ -3688,7 +3688,7 @@ async function sendToDestinations(message) {
 						}
 					  }
 					});
-				  }, 610000); 
+				  }, 61000); 
 				}
 				
 				if (message.event === 'viewer_update') {
@@ -8358,17 +8358,17 @@ async function applyBotActions(data, tab = false) {
 		
 		
 		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(miscTranslations.said)){
-			console.log("1");
+			//console.log("1");
 			return null;
 			
 		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab) {
-			console.log("2");
+			//console.log("2");
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
 			}
 			
 			if (!data.bot && (!settings.relayhostonly || data.host)) {
-				console.log("3");
+				//console.log("3");
 				//messageTimeout = Date.now();
 				var msg = {};
 				
@@ -9495,6 +9495,11 @@ function isEqualMessage(message1, message2) {
 		   message1.hasDonation === message2.hasDonation &&
 		   message1.membership === message2.membership;
 }
+
+// Expose functions to window for EventFlowSystem
+window.sendMessageToTabs = sendMessageToTabs;
+window.sendToDestinations = sendToDestinations;
+window.fetchWithTimeout = fetchWithTimeout;
 
 console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
 
