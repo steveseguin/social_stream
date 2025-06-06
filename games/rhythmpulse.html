@@ -15,6 +15,10 @@
         * {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
+            -webkit-user-select: none;  /* Safari */
+            -moz-user-select: none;  /* Firefox */
+            -ms-user-select: none;  /* IE10+/Edge */
+            user-select: none;  /* Standard */
         }
 
         @font-face {
@@ -270,7 +274,7 @@
         
         #instructions {
             position: absolute;
-            bottom: 140px;
+            bottom: 240px;
             left: 20px;
             background: rgba(0, 0, 0, 0.8);
             color: white;
@@ -279,6 +283,12 @@
             text-align: left;
             font-size: 16px;
             z-index: 100;
+            transition: opacity 1s ease-out;
+        }
+        
+        #instructions.fade-out {
+            opacity: 0;
+            pointer-events: none;
         }
         
         #instructions strong {
@@ -1043,6 +1053,14 @@
         initFrequencyBars();
         updateDisplay();
         initAudio();
+        
+        // Fade out instructions after 30 seconds
+        setTimeout(() => {
+            const instructions = document.getElementById('instructions');
+            if (instructions) {
+                instructions.classList.add('fade-out');
+            }
+        }, 30000);
         
         // Audio control event listeners
         const volumeSlider = document.getElementById('volume-slider');
