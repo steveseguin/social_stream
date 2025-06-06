@@ -9502,6 +9502,8 @@ function isEqualMessage(message1, message2) {
 window.sendMessageToTabs = sendMessageToTabs;
 window.sendToDestinations = sendToDestinations;
 window.fetchWithTimeout = fetchWithTimeout;
+window.sanitizeRelay = sanitizeRelay;
+window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
 
 console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
 
@@ -9509,7 +9511,9 @@ let tmp = new EventFlowSystem({
 	sendMessageToTabs: window.sendMessageToTabs || null,
 	sendToDestinations: window.sendToDestinations || null,
 	pointsSystem: window.pointsSystem || null,
-	fetchWithTimeout: window.fetchWithTimeout // Assuming fetchWithTimeout is on window from background.js
+	fetchWithTimeout: window.fetchWithTimeout || null, // Assuming fetchWithTimeout is on window from background.js
+	sanitizeRelay: window.sanitizeRelay || null,
+	checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
 });
 
 tmp.initPromise.then(() => {

@@ -8,7 +8,9 @@ class EventFlowSystem {
         this.sendMessageToTabs = options.sendMessageToTabs || null;
         this.sendToDestinations = options.sendToDestinations || null;
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
-        
+        this.sanitizeRelay = options.sanitizeRelay || null;
+		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || null;
+		
         console.log('[EventFlowSystem Constructor] Initialized with:');
         console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
         console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
@@ -641,7 +643,7 @@ class EventFlowSystem {
                 console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
                 console.log('[RELAY DEBUG - Action] sendMessageToTabs type:', typeof this.sendMessageToTabs);
                 
-                if (this.sendMessageToTabs) {
+                if (this.sendMessageToTabs && message && !message.reflection) {
                     const relayMessage = {
                         response: config.template
                             .replace('{source}', message.type || '')
@@ -653,10 +655,6 @@ class EventFlowSystem {
                         relayMessage.tid = message.tid;
                     }
                     
-                    if (config.destination && config.destination.trim()) {
-                        relayMessage.destination = config.destination.trim();
-                    }
-                    
                     console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
                     console.log('[RELAY DEBUG - Action] Config:', config);
                     console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with params:');
@@ -666,9 +664,15 @@ class EventFlowSystem {
                     console.log('  - relayMode:', true);
                     console.log('  - antispam:', false);
                     console.log('  - timeout:', config.timeout || 5100);
-                    
-                    // Use relayMode=true to mark this as a relayed message and prevent circular relaying
-                    const result = this.sendMessageToTabs(relayMessage, config.toAll === true, null, true, false, config.timeout || 5100);
+					
+					let result = false;
+					relayMessage.response = this.sanitizeRelay(relayMessage.response, false).trim();
+					if (relayMessage.response) {
+						if (!this.checkExactDuplicateAlreadyRelayed(relayMessage.response, false, relayMessage.tid, false)){
+							result = this.sendMessageToTabs(relayMessage, true, message, true, false, 1000);
+						}
+					}
+					
                     console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
                 } else {
                     console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
