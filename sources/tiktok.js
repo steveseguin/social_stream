@@ -806,33 +806,51 @@
 						if (donation.isValid && donation.imageSrc) {
 							var giftid = getIdFromUrl(donation.imageSrc);
 							if (giftid) {
-								if (giftMapping[giftid]) {
-									var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
-								} else {
-									try {
-										var valuea = document.querySelector("img[src*='" + giftid + "']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
-										if (parseInt(valuea) == valuea) {
-											giftMapping[giftid] = {
-												coins: parseInt(valuea)
-											};
-										}
-									} catch (e) {
-										if (donation.quantity > 1) {
-											var valuea = "gifts";
-										} else {
-											var valuea = "gift";
-										}
-									}
-								}
-								if (parseInt(valuea) == valuea) {
-									valuea = (donation.quantity * parseInt(valuea));
-									if (valuea > 1) {
-										hasdonation = valuea + " coins";
+								var giftData = giftMapping[giftid];
+								
+								if (giftData && giftData.coins) {
+									// Calculate total coins
+									var totalCoins = donation.quantity * giftData.coins;
+									if (totalCoins > 1) {
+										hasdonation = totalCoins + " coins";
 									} else {
-										hasdonation = valuea + " coin";
+										hasdonation = totalCoins + " coin";
+									}
+								} else if (giftData && giftData.name) {
+									// Use gift name if no coin value
+									if (donation.quantity > 1) {
+										hasdonation = donation.quantity + " " + giftData.name + "s";
+									} else {
+										hasdonation = donation.quantity + " " + giftData.name;
 									}
 								} else {
-									hasdonation = donation.quantity + " " + valuea;
+									// Gift not in mapping - try to find in DOM or use generic
+									try {
+										var imgElement = document.querySelector("img[src*='" + giftid + "']");
+										if (imgElement) {
+											var svgSibling = imgElement.parentNode.querySelector("svg");
+											if (svgSibling && svgSibling.nextElementSibling) {
+												var valuea = svgSibling.nextElementSibling.textContent.trim();
+												if (parseInt(valuea) == valuea) {
+													// Add to mapping for future use
+													giftMapping[giftid] = {
+														coins: parseInt(valuea)
+													};
+													valuea = donation.quantity * parseInt(valuea);
+													hasdonation = valuea + (valuea > 1 ? " coins" : " coin");
+												}
+											}
+										}
+									} catch (e) {}
+									
+									// Final fallback
+									if (!hasdonation) {
+										if (donation.quantity > 1) {
+											hasdonation = donation.quantity + " gifts";
+										} else {
+											hasdonation = donation.quantity + " gift";
+										}
+									}
 								}
 							}
 						}
@@ -906,6 +924,9 @@
 				return;
 			}
 		}
+		
+		
+		
 		if (messageLog?.isDuplicate(chatname, chatmessage)) {
 			////console.log("duplicate message; skipping",chatname, chatmessage);
 			return;
@@ -1174,6 +1195,8 @@
 		if (!subtree) {
 			start2(target);
 		}
+		
+		console.log("subtree: "+subtree);
 		////console.log("Attempting to start social stream on target:", target);
 		observer = new MutationObserver((mutations) => {
 			if (!isExtensionOn) return;
@@ -1249,12 +1272,12 @@
 		if (observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected) {
 			return;
 		}
-		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"], [class="w-full h-auto overflow-hidden flex-shrink-0 max-h-[200px] min-h-32"]');
 		if (!target2 && other && other.isConnected && other.nextElementSibling) {
 			target2 = other.nextElementSibling;
 		}
 		if (!target2) {
-			////console.log("Start2: No target found for secondary observer.");
+			console.log("Start2: No target found for secondary observer.");
 			return;
 		}
 		if (!window.location.href.includes("livecenter") &&
@@ -1266,7 +1289,7 @@
 			observer2 = false;
 			observedDomElementForObserver2 = null;
 		}
-		////console.log("Attempting to start secondary event stream on target:", target2);
+		console.log("Attempting to start secondary event stream on target:", target2);
 		observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents || !isExtensionOn) return;
 			mutations.forEach((mutation) => {
