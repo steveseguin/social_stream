@@ -800,39 +800,42 @@
 				chatmessage = chatmessage.replace("<img src=", " <img src=");
 				chatmessage = chatmessage.replace('.png">x', '.png"> x');
 				chatmessage = chatmessage.replace(".png'>x", ".png'> x");
+				
 				if (settings.tiktokdonations || !settings.notiktokdonations) {
-					if (validateTikTokDonationMessage(chatmessage)) {
-						var donation = parseDonationMessage(chatmessage);
-						if (donation.isValid && donation.imageSrc) {
-							var giftid = getIdFromUrl(donation.imageSrc);
-							if (giftid) {
-								if (giftMapping[giftid]) {
-									var valuea = giftMapping[giftid].coins || giftMapping[giftid].name;
+					// Extract image URL and quantity directly
+					var imgMatch = chatmessage.match(/<img src="([^"]+\.tiktokcdn\.com\/img\/[^"]+)"[^>]*>\s*x(\d+)/i);
+					if (!imgMatch) {
+						imgMatch = chatmessage.match(/<img src='([^']+\.tiktokcdn\.com\/img\/[^']+)'[^>]*>\s*x(\d+)/i);
+					}
+					
+					if (imgMatch) {
+						var imageSrc = imgMatch[1];
+						var quantity = parseInt(imgMatch[2]) || 1;
+						
+						// Extract gift ID from URL
+						var giftidMatch = imageSrc.match(/\/([a-f0-9]{32})(?:~|\.)/);
+						if (giftidMatch) {
+							var giftid = giftidMatch[1];
+							var giftData = giftMapping[giftid];
+							
+							if (giftData && giftData.coins) {
+								var totalCoins = quantity * giftData.coins;
+								if (totalCoins > 1) {
+									hasdonation = totalCoins + " coins";
 								} else {
-									try {
-										var valuea = document.querySelector("img[src*='" + giftid + "']").parentNode.querySelector("svg").nextElementSibling.textContent.trim();
-										if (parseInt(valuea) == valuea) {
-											giftMapping[giftid] = {
-												coins: parseInt(valuea)
-											};
-										}
-									} catch (e) {
-										if (donation.quantity > 1) {
-											var valuea = "gifts";
-										} else {
-											var valuea = "gift";
-										}
-									}
+									hasdonation = totalCoins + " coin";
 								}
-								if (parseInt(valuea) == valuea) {
-									valuea = (donation.quantity * parseInt(valuea));
-									if (valuea > 1) {
-										hasdonation = valuea + " coins";
-									} else {
-										hasdonation = valuea + " coin";
-									}
+							} else if (giftData && giftData.name) {
+								if (quantity > 1) {
+									hasdonation = quantity + " " + giftData.name + "s";
 								} else {
-									hasdonation = donation.quantity + " " + valuea;
+									hasdonation = quantity + " " + giftData.name;
+								}
+							} else {
+								if (quantity > 1) {
+									hasdonation = quantity + " gifts";
+								} else {
+									hasdonation = quantity + " gift";
 								}
 							}
 						}
@@ -841,7 +844,9 @@
 			} else if (!settings.captureevents && ital) {
 				return;
 			}
-		} catch (e) {}
+		} catch (e) {
+			console.error("Donation parsing error:", e);
+		}
 		if (!chatmessage && !chatbadges) {
 			return;
 		} else if (chatmessage) {
@@ -906,6 +911,9 @@
 				return;
 			}
 		}
+		
+		
+		
 		if (messageLog?.isDuplicate(chatname, chatmessage)) {
 			////console.log("duplicate message; skipping",chatname, chatmessage);
 			return;
@@ -1174,6 +1182,8 @@
 		if (!subtree) {
 			start2(target);
 		}
+		
+		console.log("subtree: "+subtree);
 		////console.log("Attempting to start social stream on target:", target);
 		observer = new MutationObserver((mutations) => {
 			if (!isExtensionOn) return;
@@ -1249,12 +1259,12 @@
 		if (observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected) {
 			return;
 		}
-		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"]');
+		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"], [class="w-full h-auto overflow-hidden flex-shrink-0 max-h-[200px] min-h-32"]');
 		if (!target2 && other && other.isConnected && other.nextElementSibling) {
 			target2 = other.nextElementSibling;
 		}
 		if (!target2) {
-			////console.log("Start2: No target found for secondary observer.");
+			console.log("Start2: No target found for secondary observer.");
 			return;
 		}
 		if (!window.location.href.includes("livecenter") &&
@@ -1266,7 +1276,7 @@
 			observer2 = false;
 			observedDomElementForObserver2 = null;
 		}
-		////console.log("Attempting to start secondary event stream on target:", target2);
+		console.log("Attempting to start secondary event stream on target:", target2);
 		observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents || !isExtensionOn) return;
 			mutations.forEach((mutation) => {
