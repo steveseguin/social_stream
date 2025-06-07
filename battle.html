@@ -7,11 +7,14 @@
 	<meta name="title" content="Battle Royale - Social Stream Ninja" />
 	<link rel="icon" href="./favicon.ico" />
    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
     body {
         margin: 0;
         padding: 0;
-        background-color: green;
+        background-color: #1a1a1a;
         overflow: hidden;
+        font-family: 'Press Start 2P', cursive;
     }
     #game-container {
         position: relative;
@@ -26,32 +29,119 @@
         height: 100%;
         image-rendering: pixelated;
     }
+    #particles-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+    }
     #ui-overlay {
         position: absolute;
         top: 10px;
         left: 10px;
-        font-family: 'Courier New', monospace;
-        font-size: 24px;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 16px;
         color: #fff;
         text-shadow: 2px 2px #000;
+        z-index: 20;
     }
     #timer {
-        font-size: 36px;
+        font-size: 24px;
         font-weight: bold;
+        color: #ff6b6b;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    #player-count {
+        color: #4ecdc4;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    #rules {
+        color: #ffe66d;
+        font-size: 12px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    #killstreak {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 32px;
+        color: #ff0000;
+        text-shadow: 4px 4px 8px rgba(0,0,0,0.9);
+        opacity: 0;
+        transition: opacity 0.5s;
+        z-index: 30;
+        text-align: center;
+    }
+    #killstreak.show {
+        opacity: 1;
+    }
+    #sound-controls {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 25;
+        background: rgba(0,0,0,0.7);
+        padding: 10px;
+        border-radius: 5px;
+    }
+    #sound-controls button {
+        background: #4ecdc4;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        margin: 2px;
+        cursor: pointer;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 10px;
+        border-radius: 3px;
+    }
+    #sound-controls button:hover {
+        background: #45b3ad;
+    }
+    #sound-controls button.muted {
+        background: #ff6b6b;
     }
 	.hidden {
 		opacity:0!important;
 		display:none!important;
 	}
+    .floating-text {
+        position: absolute;
+        font-size: 14px;
+        font-weight: bold;
+        pointer-events: none;
+        z-index: 15;
+        animation: floatUp 2s ease-out forwards;
+    }
+    @keyframes floatUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+    }
 </style>
 </head>
 <body>
     <div id="game-container">
         <canvas id="game-canvas"></canvas>
+        <canvas id="particles-canvas"></canvas>
         <div id="ui-overlay">
             <div id="timer">--</div>
             <div id="player-count">Players: 0</div>
 			<div id="rules">Type !join to play</div>
+        </div>
+        <div id="killstreak"></div>
+        <div id="sound-controls">
+            <button id="toggle-music" title="Toggle Music">🎵</button>
+            <button id="toggle-sfx" title="Toggle Sound Effects">🔊</button>
         </div>
     </div>
 <script>
@@ -177,7 +267,9 @@ function drawLobby() {
     
     // Draw title
     ctx.font = `bold ${titleFontSize}px Arial`;
-    ctx.fillText('Waiting for players', canvas.width / 2, canvas.height * 0.3);
+    ctx.fillText('BATTLE ROYALE', canvas.width / 2, canvas.height * 0.25);
+    ctx.font = `${titleFontSize * 0.8}px Arial`;
+    ctx.fillText('Waiting for players...', canvas.width / 2, canvas.height * 0.35);
     
     // Draw player count
     ctx.font = `${textFontSizeSmall}px Arial`;
@@ -186,6 +278,8 @@ function drawLobby() {
     // Draw instructions
 	ctx.font = `${textFontSize}px Arial`; 
     ctx.fillText('Type !join to enter the game', canvas.width / 2, canvas.height * 0.6);
+    ctx.font = `${textFontSizeSmall}px Arial`;
+    ctx.fillText('Commands: !left !right !up !down !say !emote !taunt', canvas.width / 2, canvas.height * 0.65);
     
     // Draw countdown if not host controlled
     if (!hostControlled) {
@@ -233,6 +327,7 @@ function startLobbyCountdown() {
 function processData(data) {
 	if (data && data.chatmessage && data.chatname) {
         if (data.chatmessage.toLowerCase().startsWith("!join")) {
+            soundManager.play('join');
             if (!players.get(data.chatname)) {
                 const parts = data.chatmessage.toLowerCase().split(" ");
                 let weaponType = null;
@@ -539,6 +634,18 @@ function checkPowerUpCollisions() {
             if (playerX === powerUp.x && playerY === powerUp.y) {
                 applyPowerUp(player, powerUp.type);
                 powerUps.splice(i, 1);
+                
+                // Power-up effects
+                particleSystem.emit(powerUp.x * TILE_SIZE + TILE_SIZE/2, powerUp.y * TILE_SIZE + TILE_SIZE/2, 'spark', 20);
+                soundManager.play('powerup');
+                
+                const powerUpNames = {
+                    'speed': 'SPEED BOOST!',
+                    'invincibility': 'INVINCIBLE!',
+                    'regen': 'REGENERATION!',
+                    'damage': 'DAMAGE UP!'
+                };
+                showFloatingText(powerUp.x * TILE_SIZE, powerUp.y * TILE_SIZE, powerUpNames[powerUp.type]);
             }
         }
     });
@@ -691,6 +798,9 @@ class Player {
 		this.invincible = false;
         this.damageMultiplier = 1;
 		this.damageEffects = [];
+        this.emote = null;
+        this.emoteTimer = 0;
+        this.spectating = false;
     }
 	
 	setAvatar(imageUrl) {
@@ -714,6 +824,11 @@ class Player {
             this.message = msg;
             this.messageTimer = 10000; // Message will display for 5 seconds
         }
+    }
+    
+    showEmote(emote) {
+        this.emote = emote;
+        this.emoteTimer = 3000; // 3 seconds
     }
 
     update() {
@@ -749,6 +864,13 @@ class Player {
             this.messageTimer -= 16; // Assuming 60 FPS, each frame is about 16ms
             if (this.messageTimer <= 0) {
                 this.message = null;
+            }
+        }
+        
+        if (this.emoteTimer > 0) {
+            this.emoteTimer -= 16;
+            if (this.emoteTimer <= 0) {
+                this.emote = null;
             }
         }
 		
@@ -847,6 +969,14 @@ class Player {
             ctx.lineWidth = 3;
             ctx.strokeText(this.message, x + TILE_SIZE / 2, y - 25);
             ctx.fillText(this.message, x + TILE_SIZE / 2, y - 25);
+        }
+        
+        if (this.emote) {
+            const x = this.x * TILE_SIZE;
+            const y = this.y * TILE_SIZE;
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.emote, x + TILE_SIZE / 2, y - 40);
         }
 		
 		ctx.globalAlpha = 1;
@@ -957,6 +1087,8 @@ class Player {
             source: this,
             target: target
         });
+        
+        soundManager.play('arrow');
     }
 
     meleeAttack(target) {
@@ -1167,10 +1299,12 @@ function update() {
         players.forEach(player => player.update());
         updateArrows();
         checkCombat();
-       // spawnPowerUps();
-       // spawnObstacles();
-       // checkPowerUpCollisions();
-      //  checkObstacleCollisions();
+        spawnPowerUps();
+        spawnObstacles();
+        checkPowerUpCollisions();
+        checkObstacleCollisions();
+        particleSystem.update();
+        weatherSystem.update();
     }
 }
 
@@ -1194,9 +1328,19 @@ function updateArrows() {
 }
 
 function draw() {
+    // Clear canvases
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+    
     // Draw grass background
     ctx.fillStyle = grassPattern;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Apply time of day lighting
+    if (weatherSystem.timeOfDay === 'night') {
+        ctx.fillStyle = 'rgba(0, 0, 50, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Draw obstacles
     ctx.fillStyle = 'brown';
@@ -1220,9 +1364,29 @@ function draw() {
     // Draw arrows
     ctx.fillStyle = '#000000';
     arrows.forEach(arrow => {
-        ctx.fillRect(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE, 2, 2);
+        ctx.save();
+        const angle = Math.atan2(arrow.dy, arrow.dx);
+        ctx.translate(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE);
+        ctx.rotate(angle);
+        
+        // Arrow body
+        ctx.fillRect(-5, -1, 10, 2);
+        
+        // Arrow head
+        ctx.beginPath();
+        ctx.moveTo(5, 0);
+        ctx.lineTo(2, -3);
+        ctx.lineTo(2, 3);
+        ctx.fill();
+        
+        ctx.restore();
     });
- 
+    
+    // Draw weather effects
+    weatherSystem.draw(ctx);
+    
+    // Draw particles
+    particleSystem.draw(particlesCtx);
 }
 
 function getPowerUpColor(type) {
@@ -1276,6 +1440,40 @@ function endGame() {
     countdownTimer = setInterval(updateCountdown, 1000); 
 }
 
+function showKillStreak(playerName, streak) {
+    const messages = {
+        3: "TRIPLE KILL!",
+        4: "QUADRA KILL!",
+        5: "PENTA KILL!",
+        6: "HEXA KILL!",
+        7: "LEGENDARY!",
+        8: "GODLIKE!"
+    };
+    
+    const message = messages[Math.min(streak, 8)] || `${streak}x KILL STREAK!`;
+    const killstreakEl = document.getElementById('killstreak');
+    killstreakEl.textContent = `${playerName}: ${message}`;
+    killstreakEl.classList.add('show');
+    
+    soundManager.play('victory');
+    
+    setTimeout(() => {
+        killstreakEl.classList.remove('show');
+    }, 3000);
+}
+
+function showFloatingText(x, y, text, color = '#ffff00') {
+    const div = document.createElement('div');
+    div.className = 'floating-text';
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
+    div.style.color = color;
+    div.textContent = text;
+    document.getElementById('game-container').appendChild(div);
+    
+    setTimeout(() => div.remove(), 2000);
+}
+
 function startGame() {
     // Reset game state
 	console.warn("StartGame");
@@ -1283,6 +1481,9 @@ function startGame() {
     timeLeft = 60; // first match 100s; more matches 60s
 	gameOver = false;
 	document.getElementById("ui-overlay").classList.remove("hidden");
+    killStreaks.clear();
+    lastKillTime.clear();
+    particleSystem.clear();
 }
 
 function displayScoreboard() { 
@@ -1438,6 +1639,8 @@ function handleChatMessage(playerName, message) {
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    particlesCanvas.width = window.innerWidth;
+    particlesCanvas.height = window.innerHeight;
     // Redraw the current state (lobby or game)
     if (gameOver && (countdownSeconds<=0)) {
         drawLobby();

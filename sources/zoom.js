@@ -459,11 +459,29 @@ var lastMessage = {};
 		} else if (node.nodeType === 1) {
 		  if (!settings.textonlymode) {
 			if ((node.nodeName == "IMG") && node.src) {
-				node.src = node.src + "";
-				resp += node.outerHTML;
-				if (node.nodeName == "IMG") {
-				  resp += " ";
+				// Create a clean image element with only necessary attributes
+				let imgHtml = '<img';
+				
+				// Always include src (we already checked it exists)
+				imgHtml += ` src="${escapeHtml(node.src)}"`;
+				
+				// Include alt if present (for accessibility and emoji equivalents)
+				if (node.alt) {
+					imgHtml += ` alt="${escapeHtml(node.alt)}" title="${escapeHtml(node.alt)}"`;
 				}
+				
+				// Include srcset if present (for responsive images)
+				if (node.srcset) {
+					imgHtml += ` srcset="${escapeHtml(node.srcset)}"`;
+				}
+				
+				imgHtml += '>';
+				resp += imgHtml + " ";
+			}
+		  } else {
+			// In text-only mode, just use the alt text if available
+			if ((node.nodeName == "IMG") && node.alt) {
+				resp += escapeHtml(node.alt) + " ";
 			}
 		  }
 		}

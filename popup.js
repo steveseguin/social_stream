@@ -4674,11 +4674,37 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Points System button handlers
 	const manageUserPointsBtn = document.getElementById('manageUserPoints');
 	if (manageUserPointsBtn) {
-		manageUserPointsBtn.addEventListener('click', function() {
-			// Open points management in new tab
-			chrome.tabs.create({
-				url: chrome.runtime.getURL('leaderboard.html')
-			});
+		manageUserPointsBtn.addEventListener('click', async function() {
+			const username = await prompt("Enter username to manage points for:");
+			if (!username) return;
+			
+			const action = await prompt("Enter action (add/subtract/set):");
+			if (!action || !['add', 'subtract', 'set'].includes(action.toLowerCase())) {
+				alert("Invalid action. Please use 'add', 'subtract', or 'set'.");
+				return;
+			}
+			
+			const pointsStr = await prompt(`Enter points to ${action}:`);
+			const points = parseInt(pointsStr);
+			if (isNaN(points)) {
+				alert("Invalid points value. Please enter a number.");
+				return;
+			}
+			
+			if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username}?`)) {
+				chrome.runtime.sendMessage({
+					cmd: "manageUserPoints",
+					username: username,
+					action: action.toLowerCase(),
+					points: points
+				}, function(response) {
+					if (response && response.success) {
+						alert(`Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username}. New balance: ${response.newBalance}`);
+					} else {
+						alert(response.error || 'Failed to manage points. Please try again.');
+					}
+				});
+			}
 		});
 	}
 
