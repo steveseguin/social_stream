@@ -800,57 +800,42 @@
 				chatmessage = chatmessage.replace("<img src=", " <img src=");
 				chatmessage = chatmessage.replace('.png">x', '.png"> x');
 				chatmessage = chatmessage.replace(".png'>x", ".png'> x");
+				
 				if (settings.tiktokdonations || !settings.notiktokdonations) {
-					if (validateTikTokDonationMessage(chatmessage)) {
-						var donation = parseDonationMessage(chatmessage);
-						if (donation.isValid && donation.imageSrc) {
-							var giftid = getIdFromUrl(donation.imageSrc);
-							if (giftid) {
-								var giftData = giftMapping[giftid];
-								
-								if (giftData && giftData.coins) {
-									// Calculate total coins
-									var totalCoins = donation.quantity * giftData.coins;
-									if (totalCoins > 1) {
-										hasdonation = totalCoins + " coins";
-									} else {
-										hasdonation = totalCoins + " coin";
-									}
-								} else if (giftData && giftData.name) {
-									// Use gift name if no coin value
-									if (donation.quantity > 1) {
-										hasdonation = donation.quantity + " " + giftData.name + "s";
-									} else {
-										hasdonation = donation.quantity + " " + giftData.name;
-									}
+					// Extract image URL and quantity directly
+					var imgMatch = chatmessage.match(/<img src="([^"]+\.tiktokcdn\.com\/img\/[^"]+)"[^>]*>\s*x(\d+)/i);
+					if (!imgMatch) {
+						imgMatch = chatmessage.match(/<img src='([^']+\.tiktokcdn\.com\/img\/[^']+)'[^>]*>\s*x(\d+)/i);
+					}
+					
+					if (imgMatch) {
+						var imageSrc = imgMatch[1];
+						var quantity = parseInt(imgMatch[2]) || 1;
+						
+						// Extract gift ID from URL
+						var giftidMatch = imageSrc.match(/\/([a-f0-9]{32})(?:~|\.)/);
+						if (giftidMatch) {
+							var giftid = giftidMatch[1];
+							var giftData = giftMapping[giftid];
+							
+							if (giftData && giftData.coins) {
+								var totalCoins = quantity * giftData.coins;
+								if (totalCoins > 1) {
+									hasdonation = totalCoins + " coins";
 								} else {
-									// Gift not in mapping - try to find in DOM or use generic
-									try {
-										var imgElement = document.querySelector("img[src*='" + giftid + "']");
-										if (imgElement) {
-											var svgSibling = imgElement.parentNode.querySelector("svg");
-											if (svgSibling && svgSibling.nextElementSibling) {
-												var valuea = svgSibling.nextElementSibling.textContent.trim();
-												if (parseInt(valuea) == valuea) {
-													// Add to mapping for future use
-													giftMapping[giftid] = {
-														coins: parseInt(valuea)
-													};
-													valuea = donation.quantity * parseInt(valuea);
-													hasdonation = valuea + (valuea > 1 ? " coins" : " coin");
-												}
-											}
-										}
-									} catch (e) {}
-									
-									// Final fallback
-									if (!hasdonation) {
-										if (donation.quantity > 1) {
-											hasdonation = donation.quantity + " gifts";
-										} else {
-											hasdonation = donation.quantity + " gift";
-										}
-									}
+									hasdonation = totalCoins + " coin";
+								}
+							} else if (giftData && giftData.name) {
+								if (quantity > 1) {
+									hasdonation = quantity + " " + giftData.name + "s";
+								} else {
+									hasdonation = quantity + " " + giftData.name;
+								}
+							} else {
+								if (quantity > 1) {
+									hasdonation = quantity + " gifts";
+								} else {
+									hasdonation = quantity + " gift";
 								}
 							}
 						}
@@ -859,7 +844,9 @@
 			} else if (!settings.captureevents && ital) {
 				return;
 			}
-		} catch (e) {}
+		} catch (e) {
+			console.error("Donation parsing error:", e);
+		}
 		if (!chatmessage && !chatbadges) {
 			return;
 		} else if (chatmessage) {
