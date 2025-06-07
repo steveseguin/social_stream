@@ -683,8 +683,58 @@
 			  }
 			} else if (eventType === "membershiprenewal") {
 				try {
+				  // First check #header-subtext (for upgraded memberships)
+				  const headerSubtext = ele.querySelector("#header-subtext");
 				  const headerText = ele.querySelector("#header-primary-text");
-				  if (headerText) {
+				  
+				  if (headerSubtext) {
+					const subtextContent = getAllContentNodes(headerSubtext);
+					
+					// Check if this is an upgrade message
+					if (subtextContent.toLowerCase().includes("upgraded")) {
+					  chatmessage = subtextContent;
+					  hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+					  eventType = "upgraded-membership";
+					  
+					  // Extract tier name if present
+					  const tierMatch = subtextContent.match(/to\s+(.+?)(?:\s*!)?$/i);
+					  if (tierMatch && tierMatch[1]) {
+						subtitle = tierMatch[1].trim();
+					  }
+					} else if (subtextContent.toLowerCase().includes("welcome to")) {
+					  // New member welcome message
+					  chatmessage = subtextContent;
+					  hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+					  eventType = "new-membership";
+					  
+					  // Extract tier name from "Welcome to [tier name]"
+					  const tierMatch = subtextContent.match(/welcome to\s+(.+?)(?:\s*!)?$/i);
+					  if (tierMatch && tierMatch[1]) {
+						subtitle = tierMatch[1].trim();
+					  }
+					} else if (headerText) {
+					  // Regular membership renewal with primary text
+					  chatmessage = getAllContentNodes(headerText);
+					  hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+					  
+					  // Extract the month count from "Member for X months"
+					  const monthMatch = chatmessage.match(/(\d+)\s+month/);
+					  if (monthMatch && monthMatch[1]) {
+						const months = parseInt(monthMatch[1]);
+						if (months === 1) {
+						  subtitle = months + " " + getTranslation("month", "month");
+						} else {
+						  subtitle = months + " " + getTranslation("months", "months");
+						}
+					  }
+					  
+					  // Also include the subtext as additional info
+					  if (subtextContent) {
+						subtitle = (subtitle ? subtitle + " - " : "") + subtextContent;
+					  }
+					}
+				  } else if (headerText) {
+					// Fallback to just header-primary-text
 					chatmessage = getAllContentNodes(headerText);
 					hasMembership = getTranslation("member-chat", "MEMBERSHIP");
 					
@@ -697,15 +747,6 @@
 						subtitle = months + " " + getTranslation("month", "month");
 					  } else {
 						subtitle = months + " " + getTranslation("months", "months");
-					  }
-					}
-					
-					// Get tier information if available
-					const subText = ele.querySelector("#header-subtext");
-					if (subText) {
-					  const tierInfo = getAllContentNodes(subText);
-					  if (tierInfo) {
-						subtitle = (subtitle ? subtitle + " - " : "") + tierInfo;
 					  }
 					}
 				  }
