@@ -4,6 +4,8 @@
 	//var channelName = "";
 	var isExtensionOn = true;
 	var videoId = urlParams.get("v") || false;
+	
+	var debugmode = urlParams.has("debug") || false;
 	try {
 		if (!videoId){
 			const parentUrl = window.top.location.href;
@@ -400,7 +402,6 @@
 	}
 
 	async function processMessage(ele, eventType=false) {
-		//console.log(ele);
 		if (!ele || !ele.isConnected){
 			return 1;
 		}
@@ -681,82 +682,55 @@
 			  } catch (e) {
 				console.error("Error processing gift redemption:", e);
 			  }
-			} else if (eventType === "membershiprenewal") {
+			} else {
+				// Consolidated handler for new members, renewals, and upgrades.
 				try {
-				  // First check #header-subtext (for upgraded memberships)
-				  const headerSubtext = ele.querySelector("#header-subtext");
-				  const headerText = ele.querySelector("#header-primary-text");
-				  
-				  if (headerSubtext) {
-					const subtextContent = getAllContentNodes(headerSubtext);
-					
-					// Check if this is an upgrade message
-					if (subtextContent.toLowerCase().includes("upgraded")) {
-					  chatmessage = subtextContent;
-					  hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-					  eventType = "upgraded-membership";
-					  
-					  // Extract tier name if present
-					  const tierMatch = subtextContent.match(/to\s+(.+?)(?:\s*!)?$/i);
-					  if (tierMatch && tierMatch[1]) {
-						subtitle = tierMatch[1].trim();
-					  }
-					} else if (subtextContent.toLowerCase().includes("welcome to")) {
-					  // New member welcome message
-					  chatmessage = subtextContent;
-					  hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-					  eventType = "new-membership";
-					  
-					  // Extract tier name from "Welcome to [tier name]"
-					  const tierMatch = subtextContent.match(/welcome to\s+(.+?)(?:\s*!)?$/i);
-					  if (tierMatch && tierMatch[1]) {
-						subtitle = tierMatch[1].trim();
-					  }
-					} else if (headerText) {
-					  // Regular membership renewal with primary text
-					  chatmessage = getAllContentNodes(headerText);
-					  hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-					  
-					  // Extract the month count from "Member for X months"
-					  const monthMatch = chatmessage.match(/(\d+)\s+month/);
-					  if (monthMatch && monthMatch[1]) {
-						const months = parseInt(monthMatch[1]);
-						if (months === 1) {
-						  subtitle = months + " " + getTranslation("month", "month");
-						} else {
-						  subtitle = months + " " + getTranslation("months", "months");
+					const headerSubtext = ele.querySelector("#header-subtext");
+					const headerText = ele.querySelector("#header-primary-text");
+
+					if (headerSubtext) {
+						const subtextContent = getAllContentNodes(headerSubtext);
+
+						if (subtextContent.toLowerCase().includes("upgraded")) {
+							chatmessage = subtextContent;
+							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+							eventType = "upgraded-membership";
+							const tierMatch = subtextContent.match(/to\s+(.+?)(?:\s*!)?$/i);
+							if (tierMatch && tierMatch[1]) {
+								subtitle = tierMatch[1].trim();
+							}
+						} else if (subtextContent.toLowerCase().includes("welcome to")) {
+							chatmessage = subtextContent;
+							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+							eventType = "new-membership";
+							const tierMatch = subtextContent.match(/welcome to\s+(.+?)(?:\s*!)?$/i);
+							if (tierMatch && tierMatch[1]) {
+								subtitle = tierMatch[1].trim();
+							}
+						} else if (headerText) {
+							chatmessage = getAllContentNodes(headerText);
+							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+							const monthMatch = chatmessage.match(/(\d+)\s+month/);
+							if (monthMatch && monthMatch[1]) {
+								const months = parseInt(monthMatch[1]);
+								subtitle = months === 1 ? `${months} ${getTranslation("month", "month")}` : `${months} ${getTranslation("months", "months")}`;
+							}
+							if (subtextContent) {
+								subtitle = (subtitle ? subtitle + " - " : "") + subtextContent;
+							}
 						}
-					  }
-					  
-					  // Also include the subtext as additional info
-					  if (subtextContent) {
-						subtitle = (subtitle ? subtitle + " - " : "") + subtextContent;
-					  }
+					} else if (headerText) {
+						chatmessage = getAllContentNodes(headerText);
+						hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+						const monthMatch = chatmessage.match(/(\d+)\s+month/);
+						if (monthMatch && monthMatch[1]) {
+							const months = parseInt(monthMatch[1]);
+							subtitle = months === 1 ? `${months} ${getTranslation("month", "month")}` : `${months} ${getTranslation("months", "months")}`;
+						}
 					}
-				  } else if (headerText) {
-					// Fallback to just header-primary-text
-					chatmessage = getAllContentNodes(headerText);
-					hasMembership = getTranslation("member-chat", "MEMBERSHIP");
-					
-					// Extract the month count from "Member for X months"
-					const membershipText = chatmessage;
-					const monthMatch = membershipText.match(/(\d+)\s+month/);
-					if (monthMatch && monthMatch[1]) {
-					  const months = parseInt(monthMatch[1]);
-					  if (months === 1) {
-						subtitle = months + " " + getTranslation("month", "month");
-					  } else {
-						subtitle = months + " " + getTranslation("months", "months");
-					  }
-					}
-				  }
 				} catch (e) {
-				  console.error("Error processing membership renewal:", e);
+					console.error("Error processing membership item:", e);
 				}
-			
-			} else if (ele.querySelector("#header-primary-text")) {
-				chatmessage = getAllContentNodes(ele.querySelector("#header-primary-text"));
-				hasMembership = getTranslation("member-chat", "MEMBERSHIP");
 			}
 
 			if (!hasMembership) {
@@ -1094,6 +1068,7 @@
 	});
 	
 	function checkType(ele, callback) {
+		console.log(ele);
 	  if (ele && ele.classList && ele.classList.contains("yt-live-chat-banner-renderer")) {
 		return;
 	  } else if (ele.tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
@@ -1161,7 +1136,10 @@
 		ele.skip = true;
 		setupDeletionObserver(ele);
 		try {
-			ele.querySelectorAll("yt-live-chat-text-message-renderer").forEach(ele4 => {
+			[...document.querySelector("#items.yt-live-chat-item-list-renderer").children].forEach(ele4 => {
+				if (debugmode){
+					checkType(ele4,processMessage);
+				}
 				ele4.skip = true;
 				cleared = true;
 				if (ele4.id) {
