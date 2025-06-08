@@ -18,20 +18,67 @@ const dateFilterTo = document.getElementById('date-filter-to');
 
 function initDatabase() {
     return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, 3); // Add version number to match db.js
-        request.onerror = event => reject(event.target.error);
-        request.onsuccess = event => {
-            db = event.target.result;
-            resolve(db);
+        // First, try to open without version to detect current version
+        const detectRequest = indexedDB.open(DB_NAME);
+        
+        detectRequest.onsuccess = event => {
+            const detectedDb = event.target.result;
+            const currentVersion = detectedDb.version;
+            detectedDb.close();
+            
+            // Now open with the detected version (3 or 4)
+            const request = indexedDB.open(DB_NAME, currentVersion);
+            request.onerror = event => reject(event.target.error);
+            request.onsuccess = event => {
+                db = event.target.result;
+                console.log(`Opened database version ${db.version}`);
+                resolve(db);
+            };
+            request.onupgradeneeded = event => {
+                const db = event.target.result;
+                let store;
+                
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('timestamp', 'timestamp');
+                    store.createIndex('user_timestamp', ['chatname', 'timestamp']);
+                    store.createIndex('user_type_timestamp', ['chatname', 'type', 'timestamp']);
+                } else {
+                    // Get existing store for upgrades
+                    const transaction = event.currentTarget.transaction;
+                    store = transaction.objectStore(STORE_NAME);
+                }
+                
+                // Add userid indexes only for version 4
+                if (event.oldVersion < 4 && currentVersion >= 4 && store) {
+                    if (!store.indexNames.contains('user_id_timestamp')) {
+                        store.createIndex('user_id_timestamp', ['userid', 'timestamp']);
+                    }
+                    if (!store.indexNames.contains('user_id_type_timestamp')) {
+                        store.createIndex('user_id_type_timestamp', ['userid', 'type', 'timestamp']);
+                    }
+                }
+            };
         };
-        request.onupgradeneeded = event => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains(STORE_NAME)) {
-                const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
-                store.createIndex('timestamp', 'timestamp');
-                store.createIndex('user_timestamp', ['chatname', 'timestamp']);
-                store.createIndex('user_type_timestamp', ['chatname', 'type', 'timestamp']);
-            }
+        
+        detectRequest.onerror = event => {
+            // If detection fails, try opening with version 3 as fallback
+            const request = indexedDB.open(DB_NAME, 3);
+            request.onerror = event => reject(event.target.error);
+            request.onsuccess = event => {
+                db = event.target.result;
+                console.log(`Opened database version ${db.version} (fallback)`);
+                resolve(db);
+            };
+            request.onupgradeneeded = event => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('timestamp', 'timestamp');
+                    store.createIndex('user_timestamp', ['chatname', 'timestamp']);
+                    store.createIndex('user_type_timestamp', ['chatname', 'type', 'timestamp']);
+                }
+            };
         };
     });
 }
@@ -131,6 +178,7 @@ function renderMessages() {
         ? messages.filter(message => {
             if (!message) return false;
             return (message.chatname || '').toLowerCase().includes(searchTerm) ||
+                   (message.userid || '').toLowerCase().includes(searchTerm) ||
                    (message.type || '').toLowerCase().includes(searchTerm) ||
                    (message.chatmessage || '').toLowerCase().includes(searchTerm);
         })
@@ -273,6 +321,7 @@ function exportMessages(format) {
             const filteredMessages = searchTerm 
                 ? allMessages.filter(message => 
                     (message.chatname || '').toLowerCase().includes(searchTerm) ||
+                    (message.userid || '').toLowerCase().includes(searchTerm) ||
                     (message.type || '').toLowerCase().includes(searchTerm) ||
                     (message.chatmessage || '').toLowerCase().includes(searchTerm))
                 : allMessages;
@@ -285,9 +334,9 @@ function exportMessages(format) {
                     content = JSON.stringify(filteredMessages, null, 2);
                     break;
                 case 'tsv':
-                    content = 'ID\tTimestamp\tUsername\tType\tMessage\tDonation\n' +
+                    content = 'ID\tTimestamp\tUsername\tUserID\tType\tMessage\tDonation\n' +
                         filteredMessages.map(m =>
-                            `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`
+                            `${m.id}\t${m.timestamp}\t${m.chatname}\t${m.userid || ''}\t${m.type}\t${m.chatmessage}\t${m.hasDonation || ''}`
                         ).join('\n');
                     break;
                 case 'html':
