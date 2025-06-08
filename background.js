@@ -3365,6 +3365,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
+			console.log('Received startReplay request:', request);
+			
+			// Check if extension is on
+			if (!isExtensionOn) {
+				sendResponse({ error: 'Social Stream is not enabled. Please turn it on first.' });
+				return;
+			}
+			
 			handleReplayMessages(request, sendResponse);
 			return true; // async response
 		} else if (request.action === "pauseReplay") {
@@ -3804,7 +3812,10 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
                 }
 
                 messages.sort((a, b) => a.timestamp - b.timestamp);
-                const baseTime = messages[0].timestamp;
+                
+                // Calculate when replay should start relative to now
+                const replayStartTime = Date.now();
+                const originalStartTime = startTimestamp;
                 
                 // Store session info for control
                 if (sessionId) {
@@ -3814,12 +3825,38 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
                         isPaused: false,
                         speed: speed,
                         timeouts: [],
-                        startTime: Date.now()
+                        startTime: replayStartTime,
+                        originalStartTime: originalStartTime
                     };
                 }
 
+                // Log first and last message times for debugging
+                if (messages.length > 0) {
+                    console.log('Replay timeline:', {
+                        requestedStart: new Date(originalStartTime).toLocaleString(),
+                        firstMessage: new Date(messages[0].timestamp).toLocaleString(),
+                        lastMessage: new Date(messages[messages.length - 1].timestamp).toLocaleString(),
+                        totalDuration: ((messages[messages.length - 1].timestamp - originalStartTime) / 1000 / 60).toFixed(1) + ' minutes',
+                        messageCount: messages.length
+                    });
+                }
+
                 messages.forEach((message, index) => {
-                    const relativeDelay = (message.timestamp - baseTime) / speed;
+                    // Calculate delay from the requested start time, not from first message
+                    const messageOffsetFromStart = message.timestamp - originalStartTime;
+                    const scaledDelay = messageOffsetFromStart / speed;
+                    
+                    // Skip messages that would have negative delay (shouldn't happen with proper range query)
+                    if (scaledDelay < 0) {
+                        console.warn('Skipping message with negative delay:', message);
+                        return;
+                    }
+                    
+                    // Log timing for first few messages
+                    if (index < 3) {
+                        console.log(`Message ${index + 1} will play after ${(scaledDelay / 1000).toFixed(1)}s - "${message.chatmessage?.substring(0, 50)}..."`);
+                    }
+                    
                     delete message.mid; // only found in messages restored from db.
                     
                     const timeoutId = setTimeout(() => {
@@ -3854,7 +3891,7 @@ async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, 
                         } else {
                             sendDataP2P(message);
                         }
-                    }, relativeDelay);
+                    }, scaledDelay);
                     
                     if (sessionId && replaySessions[sessionId]) {
                         replaySessions[sessionId].timeouts.push(timeoutId);
@@ -3874,18 +3911,30 @@ const replaySessions = {};
 
 async function handleReplayMessages(request, sendResponse) {
     try {
-        console.log('Replay request received:', request);
+        console.log('Starting replay with params:', {
+            start: new Date(request.startTimestamp),
+            end: request.endTimestamp ? new Date(request.endTimestamp) : 'none',
+            speed: request.speed
+        });
+        
+        // Make sure we have the database
+        if (!messageStoreDB) {
+            sendResponse({ error: 'Database not initialized' });
+            return;
+        }
+        
         const result = await replayMessagesFromTimestamp(
             request.startTimestamp,
             request.endTimestamp || null,
             request.speed || 1,
             request.sessionId
         );
-        console.log('Replay result:', result);
+        
+        console.log('Replay started successfully:', result);
         sendResponse(result);
     } catch (error) {
-        console.error('Error replaying messages:', error);
-        sendResponse({ error: error.message });
+        console.error('Error in handleReplayMessages:', error);
+        sendResponse({ error: error.message || 'Unknown error occurred' });
     }
 }
 

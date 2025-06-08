@@ -81,8 +81,17 @@ playBtn.addEventListener('click', async () => {
     isPlaying = true;
     isPaused = false;
 
-    // Send message to background script
-    debugInfo.textContent = `Sending replay request - Start: ${new Date(startTimestamp).toLocaleString()}, End: ${endTimestamp ? new Date(endTimestamp).toLocaleString() : 'None'}`;
+    // Clear debug info when starting
+    debugInfo.style.display = 'none';
+    
+    // Store start and end times for timer display
+    window.replayStartTime = startTimestamp;
+    window.replayEndTime = endTimestamp || Date.now();
+    window.replayStartedAt = Date.now();
+    
+    // Start the timer immediately for user feedback
+    statusText.textContent = 'Starting replay...';
+    startPlaybackTimer();
     
     chrome.runtime.sendMessage({
         action: 'startReplay',
@@ -91,31 +100,30 @@ playBtn.addEventListener('click', async () => {
         endTimestamp: endTimestamp,
         speed: playbackSpeed
     }, (response) => {
-        console.log('Replay response:', response);
-        debugInfo.textContent += ` | Response received`;
-        
         if (chrome.runtime.lastError) {
-            statusText.textContent = 'Error: ' + chrome.runtime.lastError.message;
-            debugInfo.textContent = 'Chrome runtime error: ' + chrome.runtime.lastError.message;
-            resetControls();
+            console.error('Chrome runtime error:', chrome.runtime.lastError);
+            // Check if it's just the extension being off
+            statusText.textContent = 'Please ensure Social Stream is ON';
+            messageCountDiv.textContent = 'Enable the extension in the popup menu';
+            // Don't reset controls - let the timer keep running
         } else if (response && response.error) {
-            statusText.textContent = 'Error: ' + response.error;
-            debugInfo.textContent = 'Response error: ' + response.error;
+            statusText.textContent = response.error;
+            messageCountDiv.textContent = '';
             resetControls();
         } else if (response && response.messageCount !== undefined) {
             if (response.messageCount === 0) {
-                statusText.textContent = 'No messages found in the selected time range';
-                debugInfo.textContent = `No messages between ${new Date(startTimestamp).toLocaleString()} and ${endTimestamp ? new Date(endTimestamp).toLocaleString() : 'now'}`;
+                statusText.textContent = 'No messages found';
+                currentTimeDiv.textContent = 'Selected time range is empty';
                 resetControls();
             } else {
-                statusText.textContent = `Replaying ${response.messageCount} messages...`;
-                messageCountDiv.textContent = `Total messages: ${response.messageCount}`;
-                currentTimeDiv.textContent = `Starting from: ${new Date(startTimestamp).toLocaleString()}`;
+                statusText.textContent = `Replaying ${response.messageCount} messages`;
+                messageCountDiv.textContent = `${response.messageCount} messages queued`;
+                // Timer is already running
             }
         } else {
-            statusText.textContent = 'Unexpected response from background script';
-            debugInfo.textContent = 'Response: ' + JSON.stringify(response);
-            resetControls();
+            // Response received but no specific data
+            statusText.textContent = 'Replay started';
+            // Timer is already running
         }
     });
 });
@@ -127,12 +135,22 @@ pauseBtn.addEventListener('click', () => {
     isPaused = !isPaused;
     pauseBtn.textContent = isPaused ? 'Resume' : 'Pause';
     
+    if (isPaused) {
+        // Store where we paused
+        window.pausedAtElapsed = (Date.now() - window.replayStartedAt) * playbackSpeed;
+        clearInterval(playbackTimer);
+        statusText.textContent = 'Paused';
+    } else {
+        // Resume from where we paused
+        window.replayStartedAt = Date.now() - (window.pausedAtElapsed / playbackSpeed);
+        startPlaybackTimer();
+        statusText.textContent = `Replaying`;
+    }
+    
     chrome.runtime.sendMessage({
         action: isPaused ? 'pauseReplay' : 'resumeReplay',
         sessionId: replaySessionId
     });
-
-    statusText.textContent = isPaused ? 'Replay paused' : 'Replay resumed';
 });
 
 // Stop button
@@ -148,6 +166,51 @@ stopBtn.addEventListener('click', () => {
     resetControls();
 });
 
+// Timer functionality
+let playbackTimer = null;
+
+function startPlaybackTimer() {
+    // Clear any existing timer
+    if (playbackTimer) {
+        clearInterval(playbackTimer);
+    }
+    
+    // Update timer every 100ms for smooth display
+    playbackTimer = setInterval(updatePlaybackTime, 100);
+    updatePlaybackTime(); // Initial update
+}
+
+function updatePlaybackTime() {
+    if (!window.replayStartTime || !isPlaying) return;
+    
+    const elapsed = (Date.now() - window.replayStartedAt) * playbackSpeed;
+    const currentTimestamp = window.replayStartTime + elapsed;
+    
+    // Don't go past end time
+    const effectiveEndTime = window.replayEndTime;
+    if (currentTimestamp > effectiveEndTime) {
+        currentTimeDiv.textContent = `Playback complete`;
+        clearInterval(playbackTimer);
+        return;
+    }
+    
+    // Format the current playback time
+    const currentDate = new Date(currentTimestamp);
+    const timeStr = currentDate.toLocaleTimeString();
+    const dateStr = currentDate.toLocaleDateString();
+    
+    // Calculate progress percentage based on time
+    const totalDuration = effectiveEndTime - window.replayStartTime;
+    const progress = Math.min(100, (elapsed / totalDuration) * 100);
+    
+    currentTimeDiv.textContent = `Playback time: ${dateStr} ${timeStr}`;
+    
+    // Update progress bar based on time if we don't have message-based progress
+    if (!window.messageBasedProgress) {
+        progressFill.style.width = progress + '%';
+    }
+}
+
 // Reset UI controls
 function resetControls() {
     playBtn.disabled = false;
@@ -160,33 +223,42 @@ function resetControls() {
     isPaused = false;
     replaySessionId = null;
     currentTimeDiv.textContent = '';
+    
+    // Clear timer
+    if (playbackTimer) {
+        clearInterval(playbackTimer);
+        playbackTimer = null;
+    }
+    
+    // Clear stored times
+    window.replayStartTime = null;
+    window.replayEndTime = null;
+    window.replayStartedAt = null;
+    window.messageBasedProgress = false;
 }
 
 // Listen for progress updates from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'replayProgress' && message.sessionId === replaySessionId) {
+        // Use message-based progress when available
+        window.messageBasedProgress = true;
         progressFill.style.width = message.progress + '%';
-        messageCountDiv.textContent = `Messages sent: ${message.currentMessage} / ${message.totalMessages}`;
+        messageCountDiv.textContent = `Sent: ${message.currentMessage} / ${message.totalMessages}`;
         
-        // Update current timestamp display
+        // Update the stored current timestamp for more accurate timer
         if (message.currentTimestamp) {
-            const currentDate = new Date(message.currentTimestamp);
-            currentTimeDiv.textContent = `Current message time: ${currentDate.toLocaleString()}`;
-            
-            // Show last message details in debug
-            if (message.messageDetails && message.messageDetails.chatname) {
-                debugInfo.textContent = `Last: ${message.messageDetails.chatname}: ${(message.messageDetails.chatmessage || '').substring(0, 50)}...`;
-            }
+            window.replayStartTime = message.currentTimestamp;
+            window.replayStartedAt = Date.now();
         }
         
         if (message.progress >= 100) {
             statusText.textContent = 'Replay completed!';
-            currentTimeDiv.textContent = 'Finished replaying all messages';
+            currentTimeDiv.textContent = 'All messages sent';
             resetControls();
         }
     } else if (message.action === 'replayError' && message.sessionId === replaySessionId) {
-        statusText.textContent = 'Error: ' + message.error;
-        debugInfo.textContent = 'Error details: ' + message.error;
+        statusText.textContent = 'Error occurred';
+        currentTimeDiv.textContent = '';
         resetControls();
     }
 });
