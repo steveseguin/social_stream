@@ -3363,6 +3363,22 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			
 			triggerFakeRandomMessage();
 			
+		} else if (request.action === "startReplay") {
+			// Handle replay messages from timestamp
+			handleReplayMessages(request, sendResponse);
+			return true; // async response
+		} else if (request.action === "pauseReplay") {
+			pauseReplay(request.sessionId);
+			sendResponse({success: true, state: isExtensionOn});
+		} else if (request.action === "resumeReplay") {
+			resumeReplay(request.sessionId);
+			sendResponse({success: true, state: isExtensionOn});
+		} else if (request.action === "stopReplay") {
+			stopReplay(request.sessionId);
+			sendResponse({success: true, state: isExtensionOn});
+		} else if (request.action === "updateReplaySpeed") {
+			updateReplaySpeed(request.sessionId, request.speed);
+			sendResponse({success: true, state: isExtensionOn});
 		} else if (request.cmd && request.cmd === "sidUpdated") {
 			if (request.streamID) {
 				streamID = request.streamID;
@@ -3758,7 +3774,7 @@ async function sendToDestinations(message) {
 	return true;
 }
 
-async function replayMessagesFromTimestamp(startTimestamp) {
+async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, speed = 1, sessionId = null) {
     const db = await messageStoreDB.ensureDB();
     
     return new Promise((resolve, reject) => {
@@ -3767,7 +3783,13 @@ async function replayMessagesFromTimestamp(startTimestamp) {
         const index = store.index("timestamp");
         const messages = [];
         
-        const range = IDBKeyRange.lowerBound(startTimestamp);
+        let range;
+        if (endTimestamp) {
+            range = IDBKeyRange.bound(startTimestamp, endTimestamp);
+        } else {
+            range = IDBKeyRange.lowerBound(startTimestamp);
+        }
+        
         const cursorRequest = index.openCursor(range);
         
         cursorRequest.onsuccess = (event) => {
@@ -3777,29 +3799,122 @@ async function replayMessagesFromTimestamp(startTimestamp) {
                 cursor.continue();
             } else {
                 if (messages.length === 0) {
-                    resolve(0);
+                    resolve({ messageCount: 0, messages: [] });
                     return;
                 }
 
                 messages.sort((a, b) => a.timestamp - b.timestamp);
                 const baseTime = messages[0].timestamp;
+                
+                // Store session info for control
+                if (sessionId) {
+                    replaySessions[sessionId] = {
+                        messages: messages,
+                        currentIndex: 0,
+                        isPaused: false,
+                        speed: speed,
+                        timeouts: [],
+                        startTime: Date.now()
+                    };
+                }
 
-                messages.forEach(message => {
-					
-                    const relativeDelay = message.timestamp - baseTime;
-					delete message.mid; // only found in messages restored from db.
-					
-                    setTimeout(() => {
-                        sendDataP2P(message);
+                messages.forEach((message, index) => {
+                    const relativeDelay = (message.timestamp - baseTime) / speed;
+                    delete message.mid; // only found in messages restored from db.
+                    
+                    const timeoutId = setTimeout(() => {
+                        if (sessionId && replaySessions[sessionId]) {
+                            if (!replaySessions[sessionId].isPaused) {
+                                sendDataP2P(message);
+                                replaySessions[sessionId].currentIndex = index + 1;
+                                
+                                // Send progress update
+                                const progress = ((index + 1) / messages.length) * 100;
+                                // Send to all extension pages
+                                chrome.runtime.sendMessage({
+                                    action: 'replayProgress',
+                                    sessionId: sessionId,
+                                    progress: progress,
+                                    currentMessage: index + 1,
+                                    totalMessages: messages.length,
+                                    currentTimestamp: message.timestamp,
+                                    messageDetails: {
+                                        chatname: message.chatname,
+                                        chatmessage: message.chatmessage
+                                    }
+                                }).catch(() => {
+                                    // Ignore errors if no listeners
+                                });
+                                
+                                // Clean up if this was the last message
+                                if (index === messages.length - 1) {
+                                    delete replaySessions[sessionId];
+                                }
+                            }
+                        } else {
+                            sendDataP2P(message);
+                        }
                     }, relativeDelay);
+                    
+                    if (sessionId && replaySessions[sessionId]) {
+                        replaySessions[sessionId].timeouts.push(timeoutId);
+                    }
                 });
 
-                resolve(messages.length);
+                resolve({ messageCount: messages.length, messages: messages });
             }
         };
         
         cursorRequest.onerror = (event) => reject(event.target.error);
     });
+}
+
+// Replay session management
+const replaySessions = {};
+
+async function handleReplayMessages(request, sendResponse) {
+    try {
+        console.log('Replay request received:', request);
+        const result = await replayMessagesFromTimestamp(
+            request.startTimestamp,
+            request.endTimestamp || null,
+            request.speed || 1,
+            request.sessionId
+        );
+        console.log('Replay result:', result);
+        sendResponse(result);
+    } catch (error) {
+        console.error('Error replaying messages:', error);
+        sendResponse({ error: error.message });
+    }
+}
+
+function pauseReplay(sessionId) {
+    if (replaySessions[sessionId]) {
+        replaySessions[sessionId].isPaused = true;
+    }
+}
+
+function resumeReplay(sessionId) {
+    if (replaySessions[sessionId]) {
+        replaySessions[sessionId].isPaused = false;
+    }
+}
+
+function stopReplay(sessionId) {
+    if (replaySessions[sessionId]) {
+        // Clear all pending timeouts
+        replaySessions[sessionId].timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+        delete replaySessions[sessionId];
+    }
+}
+
+function updateReplaySpeed(sessionId, newSpeed) {
+    if (replaySessions[sessionId]) {
+        // This would require re-calculating timeouts, which is complex
+        // For now, just update the speed for future reference
+        replaySessions[sessionId].speed = newSpeed;
+    }
 }
 
 
