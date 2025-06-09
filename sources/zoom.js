@@ -129,44 +129,6 @@ var lastMessage = {};
 		}
 	}
 
-	function getAllContentNodes(element) { // takes an element.
-		var resp = "";
-		
-		if (!element){return resp;}
-		
-		if (!element.childNodes || !element.childNodes.length){
-			if (element.textContent){
-				return escapeHtml(element.textContent) || "";
-			} else {
-				return "";
-			}
-		}
-		
-		element.childNodes.forEach(node=>{
-			
-			if (node.nodeName == "BUTTON"){
-				return;
-			}
-			
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent.trim())+" ";
-			} else if (node.nodeType === 1){
-				if (!settings.textonlymode){
-					if ((node.nodeName == "IMG") && node.src){
-						node.src = node.src+"";
-					}
-					resp += node.outerHTML;
-					if (node.nodeName == "IMG"){
-						resp += " ";
-					}
-				}
-			}
-		});
-		return resp;
-	}
-	
 
 	function pushMessage(data){
 		try{
@@ -483,36 +445,12 @@ var lastMessage = {};
 		return resp;
 	  }
 	  
-	  if (!element.childNodes || !element.childNodes.length) {
-		if (element.textContent) {
-		  return escapeHtml(element.textContent) || "";
-		} else {
-		  return "";
-		}
-	  }
-	  
-	  // Special handling for rtfEditor elements
-	  if (element.className && typeof element.className === 'string' && element.className.includes('_rtfEditor_')) {
-		// Extract all paragraphs from rtfEditor
-		const paragraphs = element.querySelectorAll('p');
-		if (paragraphs && paragraphs.length > 0) {
-		  paragraphs.forEach(p => {
-			resp += escapeHtml(p.textContent.trim()) + " ";
-		  });
-		  return resp.trim();
-		}
-	  }
 	  
 	  element.childNodes.forEach(node => {
 		if (node.nodeName == "BUTTON") {
 		  return;
 		}
 		
-		// Special handling for rtfEditor components
-		if (node.className && typeof node.className === 'string' && node.className.includes('_rtfEditor_')) {
-		  resp += getAllContentNodes(node);
-		  return;
-		}
 		
 		if (node.childNodes.length) {
 		  resp += getAllContentNodes(node);
@@ -521,11 +459,29 @@ var lastMessage = {};
 		} else if (node.nodeType === 1) {
 		  if (!settings.textonlymode) {
 			if ((node.nodeName == "IMG") && node.src) {
-			  node.src = node.src + "";
+				// Create a clean image element with only necessary attributes
+				let imgHtml = '<img';
+				
+				// Always include src (we already checked it exists)
+				imgHtml += ` src="${escapeHtml(node.src)}"`;
+				
+				// Include alt if present (for accessibility and emoji equivalents)
+				if (node.alt) {
+					imgHtml += ` alt="${escapeHtml(node.alt)}" title="${escapeHtml(node.alt)}"`;
+				}
+				
+				// Include srcset if present (for responsive images)
+				if (node.srcset) {
+					imgHtml += ` srcset="${escapeHtml(node.srcset)}"`;
+				}
+				
+				imgHtml += '>';
+				resp += imgHtml + " ";
 			}
-			resp += node.outerHTML;
-			if (node.nodeName == "IMG") {
-			  resp += " ";
+		  } else {
+			// In text-only mode, just use the alt text if available
+			if ((node.nodeName == "IMG") && node.alt) {
+				resp += escapeHtml(node.alt) + " ";
 			}
 		  }
 		}
