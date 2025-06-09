@@ -77,6 +77,15 @@ if (typeof(chrome.runtime)=='undefined'){
 			sender.tab = {};
 			sender.tab.id = null;
 
+			// Check if this is a callback response
+			if (args[0] && args[0].callbackId && pendingCallbacks.has(args[0].callbackId)) {
+				const { callback, timeoutId } = pendingCallbacks.get(args[0].callbackId);
+				clearTimeout(timeoutId);
+				pendingCallbacks.delete(args[0].callbackId);
+				callback(args[0]);
+				return;
+			}
+
 			if (args[0] && args[0].forPopup) {
 				log("for pop up");
 				onMessageCallback(args[0], sender, function (response) {
@@ -112,10 +121,40 @@ if (typeof(chrome.runtime)=='undefined'){
 		console.error(e);
 	}
 	
+	// Store callbacks with unique IDs
+	const pendingCallbacks = new Map();
+	let callbackIdCounter = 0;
+	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
-		let response = await ipcRenderer.sendSync('fromPopup',data);
-		if (typeof(callback) == "function"){
+		if (typeof(callback) == "function") {
+			// Generate unique callback ID
+			const callbackId = ++callbackIdCounter;
+			
+			// Create promise with timeout
+			const promise = new Promise((resolve) => {
+				// Store callback with timeout
+				const timeoutId = setTimeout(() => {
+					pendingCallbacks.delete(callbackId);
+					// If timeout, get sync response as fallback
+					const response = ipcRenderer.sendSync('fromPopup', data);
+					resolve(response);
+				}, 500);
+				
+				pendingCallbacks.set(callbackId, { 
+					callback: resolve, 
+					timeoutId 
+				});
+			});
+			
+			// Send message with callback ID
+			ipcRenderer.send('fromPopup', { ...data, callbackId });
+			
+			// Wait for response
+			const response = await promise;
 			callback(response);
+		} else {
+			// No callback, use sync as before
+			let response = await ipcRenderer.sendSync('fromPopup',data);
 		}
 	};
 	chrome.runtime.getManifest = function(){
@@ -1634,6 +1673,13 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 
 function update(response, sync = true) {
     log("update-> response: ", response);
+    
+    // Skip update if we're loading a poll
+    if (window.isLoadingPoll) {
+        log("Skipping update during poll load");
+        return;
+    }
+    
     if (response !== undefined) {
         if (response.documents) {
             updateDocumentList(response.documents);
@@ -4053,6 +4099,9 @@ const PollManager = {
         const poll = this.savedPolls.find(p => p.id === pollId);
         if (!poll) return;
 
+        // Set flag to prevent update() from reverting values
+        window.isLoadingPoll = true;
+
         // Update all form elements with the poll's settings
         const elements = {
             '[data-optionsetting="pollType"]': poll.settings.pollType,
@@ -4079,6 +4128,11 @@ const PollManager = {
 
         this.currentPollId = pollId;
         this.updatePollsList();
+        
+        // Clear flag after a short delay to ensure all updates have been processed
+        setTimeout(() => {
+            window.isLoadingPoll = false;
+        }, 500);
     },
 
     updatePollsList() {

@@ -236,9 +236,16 @@ if (typeof chrome.runtime == "undefined") {
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
-		onMessageCallback(args[0], sender, function (response) {
+		const request = args[0];
+		const callbackId = request ? request.callbackId : null;
+		
+		onMessageCallback(request, sender, function (response) {
 			// (request, sender, sendResponse)
 			//log("sending response to pop up:",response);
+			// Preserve callbackId in response if it exists
+			if (callbackId && response) {
+				response.callbackId = callbackId;
+			}
 			ipcRenderer.send("fromBackgroundPopupResponse", response);
 		});
 	});
