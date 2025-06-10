@@ -5457,6 +5457,36 @@ function setupSocket() {
 			} else if (data.action && data.action === "closepoll") {
 				sendTargetP2P({cmd:"closepoll"},"poll");
 				resp = true;
+			} else if (data.action && data.action === "loadpoll") {
+				// Load a saved poll preset by ID
+				if (data.value && data.value.pollId) {
+					loadPollPreset(data.value.pollId);
+					resp = true;
+				}
+			} else if (data.action && data.action === "setpollsettings") {
+				// Directly set poll settings via API
+				if (data.value && typeof data.value === 'object') {
+					updatePollSettings(data.value);
+					resp = true;
+				}
+			} else if (data.action && data.action === "getpollpresets") {
+				// Return list of saved poll presets
+				getPollPresets(function(presets) {
+					if (data.get && e.data.UUID) {
+						var ret = {};
+						ret.callback = {};
+						ret.callback.get = data.get;
+						ret.callback.result = presets;
+						socketserver.send(JSON.stringify(ret));
+					}
+				});
+				resp = true;
+			} else if (data.action && data.action === "createpoll") {
+				// Create a new poll with specific settings
+				if (data.value && data.value.settings) {
+					createNewPoll(data.value.settings);
+					resp = true;
+				}
 			} else if (data.action && data.action === "stopentries") {
 				toggleEntries(false);
 				resp = true;
@@ -6472,6 +6502,95 @@ function initializePoll() {
 			sendTargetP2P({settings:settings}, "poll");
 		}
 	} catch (e) {}
+}
+
+function loadPollPreset(pollId) {
+	chrome.storage.local.get(['savedPolls'], function(result) {
+		if (result.savedPolls) {
+			try {
+				const savedPolls = JSON.parse(result.savedPolls);
+				const poll = savedPolls.find(p => p.id === pollId);
+				if (poll && poll.settings) {
+					// Update settings with the loaded poll
+					Object.keys(poll.settings).forEach(key => {
+						if (settings.hasOwnProperty(key)) {
+							settings[key] = poll.settings[key];
+						}
+					});
+					// Send updated settings to poll overlay
+					sendTargetP2P({settings:settings}, "poll");
+					// Save updated settings
+					chrome.storage.local.set({settings: settings});
+				}
+			} catch (e) {
+				log("Error loading poll preset: " + e.message);
+			}
+		}
+	});
+}
+
+function updatePollSettings(newSettings) {
+	try {
+		// Update poll-related settings
+		const pollKeys = ['pollType', 'pollQuestion', 'multipleChoiceOptions', 
+						 'pollStyle', 'pollTimer', 'pollTimerState', 'pollTally', 'pollSpam'];
+		
+		pollKeys.forEach(key => {
+			if (newSettings.hasOwnProperty(key)) {
+				settings[key] = newSettings[key];
+			}
+		});
+		
+		// Send updated settings to poll overlay
+		sendTargetP2P({settings:settings}, "poll");
+		// Save settings
+		chrome.storage.local.set({settings: settings});
+	} catch (e) {
+		log("Error updating poll settings: " + e.message);
+	}
+}
+
+function getPollPresets(callback) {
+	chrome.storage.local.get(['savedPolls'], function(result) {
+		try {
+			if (result.savedPolls) {
+				const savedPolls = JSON.parse(result.savedPolls);
+				// Return simplified list with id and name
+				const presets = savedPolls.map(poll => ({
+					id: poll.id,
+					name: poll.name
+				}));
+				callback(presets);
+			} else {
+				callback([]);
+			}
+		} catch (e) {
+			log("Error getting poll presets: " + e.message);
+			callback([]);
+		}
+	});
+}
+
+function createNewPoll(pollSettings) {
+	try {
+		// Reset to default poll settings
+		const defaultSettings = {
+			pollType: 'freeform',
+			pollQuestion: '',
+			multipleChoiceOptions: '',
+			pollStyle: 'default',
+			pollTimer: '60',
+			pollTimerState: false,
+			pollTally: true,
+			pollSpam: false
+		};
+		
+		// Merge with provided settings
+		const finalSettings = {...defaultSettings, ...pollSettings};
+		updatePollSettings(finalSettings);
+	} catch (e) {
+		log("Error creating new poll: " + e.message);
+	}
 }
 
 function initializeWaitlist() {

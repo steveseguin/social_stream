@@ -182,6 +182,14 @@ When a message is sent, it goes to the specified output channel. Those who have 
 14. **Draw Mode**
     - `{"action": "drawmode", "value": true}`
 
+15. **Poll Operations**
+    - Reset: `{"action": "resetpoll"}`
+    - Close: `{"action": "closepoll"}`
+    - Load Preset: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}`
+    - Set Settings: `{"action": "setpollsettings", "value": {"pollQuestion": "What's your favorite color?", "pollType": "multiple", "multipleChoiceOptions": "Red\nBlue\nGreen"}}`
+    - Get Presets: `{"action": "getpollpresets"}`
+    - Create New: `{"action": "createpoll", "value": {"settings": {"pollQuestion": "New Poll", "pollType": "freeform"}}}`
+
 ### Channel-Specific Messaging
 
 You can send messages to specific channels using the `content` action with a channel number:
@@ -762,7 +770,7 @@ This integration allows streamers or moderators to manage waitlists or giveaways
 
 These pages may lack API support directly, however in some cases they can be controlled via the extension's API.
 
-For example the waitlist has some functions that can be controlled via the extensiion:
+For example the waitlist has some functions that can be controlled via the extension:
 
 ```
 removefromwaitlist
@@ -771,6 +779,44 @@ resetwaitlist
 stopentries
 downloadwaitlist
 selectwinner
+```
+
+## Poll Control via API
+
+The poll system can now be controlled through the API with the following actions:
+
+### Basic Poll Controls
+- **Reset Poll**: `{"action": "resetpoll"}` - Resets the current poll, clearing all votes
+- **Close Poll**: `{"action": "closepoll"}` - Closes the current poll, preventing new votes
+
+### Advanced Poll Controls
+- **Load Poll Preset**: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}` - Loads a previously saved poll preset by its ID
+- **Get Poll Presets**: `{"action": "getpollpresets"}` - Returns a list of all saved poll presets with their IDs and names
+- **Set Poll Settings**: `{"action": "setpollsettings", "value": {...}}` - Updates the current poll settings
+  - Available settings: `pollType`, `pollQuestion`, `multipleChoiceOptions`, `pollStyle`, `pollTimer`, `pollTimerState`, `pollTally`, `pollSpam`
+- **Create New Poll**: `{"action": "createpoll", "value": {"settings": {...}}}` - Creates a new poll with specified settings
+
+### Example Usage
+```javascript
+// Create a multiple choice poll
+ws.send(JSON.stringify({
+    action: "createpoll",
+    value: {
+        settings: {
+            pollType: "multiple",
+            pollQuestion: "What's your favorite streaming platform?",
+            multipleChoiceOptions: "Twitch\nYouTube\nFacebook\nOther",
+            pollTimer: "120",
+            pollTimerState: true
+        }
+    }
+}));
+
+// Load a saved poll preset
+ws.send(JSON.stringify({
+    action: "loadpoll",
+    value: { pollId: "poll-1234567890" }
+}));
 ```
 
 Just to touch on the Battle Royal game though,
