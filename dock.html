@@ -3131,9 +3131,51 @@
 			}
 
 			var scrolltype = "instant";
+			var smoothScrolling = false;
 			if (urlParams.has("smooth")) {
-				scrolltype = "smooth";
-				autoScrollCatch = autoScrollCatch * 2;
+				// Check if smooth is for scrolling or message buffering
+				const smoothValue = urlParams.get("smooth");
+				if (smoothValue === "scroll" || smoothValue === "" || smoothValue === null) {
+					smoothScrolling = true;
+					scrolltype = "smooth";
+					autoScrollCatch = autoScrollCatch * 2;
+				}
+			}
+			
+			// Smooth message buffering system
+			var smoothMessageBuffer = false;
+			var messageBuffer = [];
+			var smoothPlaybackTimer = null;
+			var messageRate = {
+				baseDelay: 250, // Base delay between messages in ms
+				minDelay: 25,   // Minimum delay between messages (40 messages/second max)
+				maxDelay: 1000, // Maximum delay to prevent excessive buffering
+				adaptiveRate: true,
+				lastProcessed: Date.now(),
+				avgArrivalRate: 250,
+				arrivalTimes: [],
+				// Track platform-specific patterns
+				platformStats: {
+					twitch: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 5000 },
+					youtube: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 3000 },
+					facebook: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 4000 },
+					default: { burstSize: 0, lastBurstTime: 0, avgBurstInterval: 4000 }
+				}
+			};
+			
+			// Enable smooth message buffering with &buffer
+			if (urlParams.has("buffer")) {
+				smoothMessageBuffer = true;
+				// Allow customization of timing parameters
+				if (urlParams.get("bufferdelay")) {
+					messageRate.baseDelay = parseInt(urlParams.get("bufferdelay")) || 250;
+				}
+				if (urlParams.get("buffermin")) {
+					messageRate.minDelay = parseInt(urlParams.get("buffermin")) || 100;
+				}
+				if (urlParams.get("buffermax")) {
+					messageRate.maxDelay = parseInt(urlParams.get("buffermax")) || 2000;
+				}
 			}
 			
 			var autofeaturepriv = false;
@@ -4826,8 +4868,19 @@
 					ele.title = "Main — ⏸ Pause incoming chat messages";
 					//var queueR = queue.reverse();
 					if (!pauseState) {
-						for (var i = 0; i < queue.length; i++) {
-							processData(queue[i]);
+						if (smoothMessageBuffer) {
+							// Add paused messages to the smooth buffer
+							for (var i = 0; i < queue.length; i++) {
+								messageBuffer.push(queue[i]);
+							}
+							// Restart the smooth playback if needed
+							if (!smoothPlaybackTimer && messageBuffer.length > 0) {
+								smoothPlaybackTimer = setTimeout(processSmoothMessageBuffer, messageRate.baseDelay);
+							}
+						} else {
+							for (var i = 0; i < queue.length; i++) {
+								processData(queue[i]);
+							}
 						}
 					}
 					queue = [];
@@ -6132,7 +6185,34 @@
 							//let content = decodeURI(data.value);
 							let content = JSON.parse(data.value);
 							if (!pauseState) {
-								processData({ contents: content });
+								if (smoothMessageBuffer) {
+									// Track platform burst patterns
+									const platform = content.type || 'default';
+									const now = Date.now();
+									const platformInfo = messageRate.platformStats[platform] || messageRate.platformStats.default;
+									
+									if (now - platformInfo.lastBurstTime > 1000) {
+										// New burst detected
+										if (platformInfo.lastBurstTime > 0) {
+											// Update average burst interval
+											const interval = now - platformInfo.lastBurstTime;
+											platformInfo.avgBurstInterval = (platformInfo.avgBurstInterval * 0.7) + (interval * 0.3);
+										}
+										platformInfo.lastBurstTime = now;
+										platformInfo.burstSize = 1;
+									} else {
+										// Part of current burst
+										platformInfo.burstSize++;
+									}
+									
+									messageBuffer.push({ contents: content });
+									// Start the playback timer if not already running
+									if (!smoothPlaybackTimer) {
+										smoothPlaybackTimer = setTimeout(processSmoothMessageBuffer, messageRate.baseDelay);
+									}
+								} else {
+									processData({ contents: content });
+								}
 							} else {
 								queue.push({ contents: content });
 								if (queue.length > 100) {
@@ -6193,7 +6273,34 @@
 					return true;
 				} else if (data.content) {
 					if (!pauseState) {
-						processData({ contents: data.content });
+						if (smoothMessageBuffer) {
+							// Track platform burst patterns
+							const platform = data.content.type || 'default';
+							const now = Date.now();
+							const platformInfo = messageRate.platformStats[platform] || messageRate.platformStats.default;
+							
+							if (now - platformInfo.lastBurstTime > 1000) {
+								// New burst detected
+								if (platformInfo.lastBurstTime > 0) {
+									// Update average burst interval
+									const interval = now - platformInfo.lastBurstTime;
+									platformInfo.avgBurstInterval = (platformInfo.avgBurstInterval * 0.7) + (interval * 0.3);
+								}
+								platformInfo.lastBurstTime = now;
+								platformInfo.burstSize = 1;
+							} else {
+								// Part of current burst
+								platformInfo.burstSize++;
+							}
+							
+							messageBuffer.push({ contents: data.content });
+							// Start the playback timer if not already running
+							if (!smoothPlaybackTimer) {
+								smoothPlaybackTimer = setTimeout(processSmoothMessageBuffer, messageRate.baseDelay);
+							}
+						} else {
+							processData({ contents: data.content });
+						}
 					} else {
 						queue.push({ contents: data.content });
 						if (queue.length > 100) {
@@ -6208,7 +6315,35 @@
 							return true;
 						}
 					}
-					return processData({ contents: data });
+					if (smoothMessageBuffer) {
+						// Track platform burst patterns
+						const platform = data.type || 'default';
+						const now = Date.now();
+						const platformInfo = messageRate.platformStats[platform] || messageRate.platformStats.default;
+						
+						if (now - platformInfo.lastBurstTime > 1000) {
+							// New burst detected
+							if (platformInfo.lastBurstTime > 0) {
+								// Update average burst interval
+								const interval = now - platformInfo.lastBurstTime;
+								platformInfo.avgBurstInterval = (platformInfo.avgBurstInterval * 0.7) + (interval * 0.3);
+							}
+							platformInfo.lastBurstTime = now;
+							platformInfo.burstSize = 1;
+						} else {
+							// Part of current burst
+							platformInfo.burstSize++;
+						}
+						
+						messageBuffer.push({ contents: data });
+						// Start the playback timer if not already running
+						if (!smoothPlaybackTimer) {
+							smoothPlaybackTimer = setTimeout(processSmoothMessageBuffer, messageRate.baseDelay);
+						}
+						return true;
+					} else {
+						return processData({ contents: data });
+					}
 				} else {
 					if (data && ("meta" in data)){
 						if (updateMeta(data)){
@@ -7371,6 +7506,83 @@
 				});
 				
 				return text;
+			}
+			
+			function calculateAdaptiveDelay() {
+				const bufferSize = messageBuffer.length;
+				const now = Date.now();
+				
+				// If we have a burst of messages, we need to play them out quickly
+				if (bufferSize > 0) {
+					// Analyze platform composition of current buffer
+					const platformCounts = {};
+					let dominantPlatform = 'default';
+					let maxCount = 0;
+					
+					messageBuffer.forEach(msg => {
+						const platform = msg.contents?.type || 'default';
+						platformCounts[platform] = (platformCounts[platform] || 0) + 1;
+						if (platformCounts[platform] > maxCount) {
+							maxCount = platformCounts[platform];
+							dominantPlatform = platform;
+						}
+					});
+					
+					// Get platform-specific burst interval
+					const platformInfo = messageRate.platformStats[dominantPlatform] || messageRate.platformStats.default;
+					const expectedBurstInterval = platformInfo.avgBurstInterval;
+					
+					// Calculate target clear time based on platform patterns
+					// Clear buffer before next expected burst (with 20% safety margin)
+					const targetClearTime = Math.min(2000, expectedBurstInterval * 0.8);
+					const targetDelay = targetClearTime / (bufferSize + 1);
+					
+					// Apply smoothing based on buffer size
+					let delay;
+					if (bufferSize > 50) {
+						// Very large burst - play as fast as possible
+						delay = messageRate.minDelay;
+					} else if (bufferSize > 20) {
+						// Large burst - play quickly but not at minimum
+						delay = Math.max(messageRate.minDelay, Math.min(targetDelay, messageRate.minDelay * 1.5));
+					} else if (bufferSize > 10) {
+						// Medium burst - balanced speed
+						delay = Math.max(messageRate.minDelay, Math.min(targetDelay, messageRate.baseDelay * 0.5));
+					} else if (bufferSize > 5) {
+						// Small burst - slightly faster than normal
+						delay = Math.max(targetDelay, messageRate.baseDelay * 0.7);
+					} else {
+						// Very few messages - normal speed but not too slow
+						delay = Math.min(messageRate.baseDelay, targetDelay);
+					}
+					
+					// Ensure delay is within bounds
+					delay = Math.max(messageRate.minDelay, Math.min(messageRate.maxDelay, delay));
+					return Math.round(delay);
+				} else {
+					// No messages in buffer, use base delay
+					return messageRate.baseDelay;
+				}
+			}
+			
+			function processSmoothMessageBuffer() {
+				if (messageBuffer.length === 0) {
+					// No messages to process, check again later
+					smoothPlaybackTimer = setTimeout(processSmoothMessageBuffer, messageRate.baseDelay);
+					return;
+				}
+				
+				// Get next message from buffer
+				const messageData = messageBuffer.shift();
+				
+				// Process the message normally
+				processData(messageData, messageData.reloaded || false);
+				
+				// Calculate next delay
+				const nextDelay = messageRate.adaptiveRate ? calculateAdaptiveDelay() : messageRate.baseDelay;
+				
+				// Schedule next message processing
+				smoothPlaybackTimer = setTimeout(processSmoothMessageBuffer, nextDelay);
 			}
 
 			function processData(data, reloaded = false) {
