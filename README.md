@@ -79,7 +79,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
   - [Random other commands not documented elsewhere](#random-other-commands-not-documented-elsewhere)
   - [Known issues or solutions](#known-issues-or-solutions)
     - [Chat stops when put in the background or minimized](#chat-stops-when-put-in-the-background-or-minimized)
-  - [How to set up Zoom with Social Stream Ninja Desktop App](#how-to-set-up-zoom-with-social-stream-ninja-desktop-app)
     - [Blue bar appears or chat responder not working](#blue-bar-appears-or-chat-responder-not-working)
     - [Can't export settings or save files](#cant-export-settings-or-save-files)
     - [Other issues](#other-issues)
@@ -979,12 +978,12 @@ There is a toggle that lets you show the source of the chat messages.
 
 7. **Open dock.html** (found under Links and Settings in SSN) to see captured messages
 
-**Key troubleshooting tips:**
+#### Key troubleshooting tips with Zoom
 - Don't use the regular Zoom desktop app - everything must be done through SSN
 - If direct meeting links give you a blank screen, start from zoom.com instead
 - If you're having authentication issues as the meeting host, try logging out and joining anonymously
 
-#### Blue bar appears or chat responder not working
+### Blue bar appears or chat responder not working
 
 If the auto responder doesn't work -- you see a blue bar, but nothing happens, there's a couple things to do.
 - make sure if using Youtube/Twitch that the pop out window is open
