@@ -79,6 +79,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
   - [Random other commands not documented elsewhere](#random-other-commands-not-documented-elsewhere)
   - [Known issues or solutions](#known-issues-or-solutions)
     - [Chat stops when put in the background or minimized](#chat-stops-when-put-in-the-background-or-minimized)
+  - [How to set up Zoom with Social Stream Ninja Desktop App](#how-to-set-up-zoom-with-social-stream-ninja-desktop-app)
     - [Blue bar appears or chat responder not working](#blue-bar-appears-or-chat-responder-not-working)
     - [Can't export settings or save files](#cant-export-settings-or-save-files)
     - [Other issues](#other-issues)
