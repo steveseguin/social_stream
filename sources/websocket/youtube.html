@@ -223,6 +223,12 @@ try {
 	  unicodeMap.clear();
 	  
 	  data.forEach(emoji => {
+		// Skip if essential data is missing
+		if (!emoji.emojiId || !emoji.image || !emoji.image.thumbnails || !emoji.image.thumbnails[0] || !emoji.image.thumbnails[0].url) {
+		  console.warn('Skipping emoji with incomplete data:', emoji);
+		  return;
+		}
+		
 		// Map the Unicode emoji with its data
 		unicodeMap.set(emoji.emojiId, {
 		  url: emoji.image.thumbnails[0].url,
@@ -241,7 +247,10 @@ try {
 	  });
 	}
 	function setTrackedTimeout(callback, delay, isBackground = false) {
-		const timeoutHandle = setTimeout(callback, delay);
+		const timeoutHandle = setTimeout(() => {
+			activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
+			callback();
+		}, delay);
 		activeTimeouts.add(timeoutHandle);
 		return timeoutHandle;
 	}
@@ -1546,14 +1555,15 @@ try {
             if (pollInterval) clearInterval(pollInterval);
             if (channelStatsInterval) clearInterval(channelStatsInterval);
             
-            // Stream stats (viewers & likes) - every 30 seconds to reduce quota usage
+            // Stream stats (viewers & likes) - interval based on settings
             if (currentStream && currentStream.id && liveChatId) {
                 // Get stream stats immediately
                 getStreamStats();
-                // Then update every 30 seconds (reduced from 10s to save quota)
+                // Update interval: 30 seconds if showing viewer count, 2 minutes otherwise
+                const statsInterval = (settings.showviewercount || settings.hypemode) ? 30000 : 120000;
                 pollInterval = setInterval(() => {
                     getStreamStats();
-                }, 30000);
+                }, statsInterval);
             }
             
             // Channel stats (subscribers) - every 30 minutes
