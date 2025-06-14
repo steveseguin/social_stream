@@ -1251,10 +1251,45 @@
 	}
 	
 	
+	var viewerCheckInterval = null;
+	var isInFallbackMode = false;
+	
 	function checkViewers(){
 		if (videoId && isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			fetch('https://api.socialstream.ninja/youtube/viewers?video='+videoId)
-			  .then(response => response.json())
+			  .then(response => {
+				// Check if response is not ok (including 400 errors)
+				if (!response.ok) {
+					return response.json().then(errorData => {
+						// Check if it's a quota error
+						if (errorData && errorData.error && errorData.error.includes("quota")) {
+							console.log("API quota exceeded, falling back to page scraping");
+							// Switch to fallback mode with slower interval
+							if (!isInFallbackMode) {
+								isInFallbackMode = true;
+								// Clear existing interval and set new one for 2 minutes
+								if (viewerCheckInterval) {
+									clearInterval(viewerCheckInterval);
+								}
+								viewerCheckInterval = setInterval(function(){checkViewers()}, 120000); // 2 minutes
+							}
+							// Fallback to scraping the YouTube page
+							return fetchViewerCountFromPage(videoId);
+						}
+						throw new Error('API request failed');
+					});
+				}
+				// API call successful, ensure we're in normal mode
+				if (isInFallbackMode) {
+					isInFallbackMode = false;
+					// Reset to normal 30-second interval
+					if (viewerCheckInterval) {
+						clearInterval(viewerCheckInterval);
+					}
+					viewerCheckInterval = setInterval(function(){checkViewers()}, 30000);
+				}
+				return response.json();
+			  })
 			  .then(data => {
 				try {
 					if (data && ("viewers" in data)){
@@ -1273,12 +1308,72 @@
 				} catch (e) {
 					//console.log(e);
 				}
+			  })
+			  .catch(error => {
+				console.log("Error checking viewers:", error);
+				// Switch to fallback mode on any error
+				if (!isInFallbackMode) {
+					isInFallbackMode = true;
+					// Clear existing interval and set new one for 2 minutes
+					if (viewerCheckInterval) {
+						clearInterval(viewerCheckInterval);
+					}
+					viewerCheckInterval = setInterval(function(){checkViewers()}, 120000); // 2 minutes
+				}
+				// Try fallback method on any error
+				fetchViewerCountFromPage(videoId);
 			  });
 		}
 	}
 	
+	function fetchViewerCountFromPage(videoId) {
+		return fetch('https://www.youtube.com/watch?v=' + videoId)
+			.then(response => response.text())
+			.then(html => {
+				try {
+					// Look for the pattern in the HTML - matches any number in originalViewCount
+					const viewerMatch = html.match(/"isLive"\s*:\s*true\s*,\s*"originalViewCount"\s*:\s*"(\d+)"/);
+					
+					if (viewerMatch && viewerMatch[1]) {
+						const viewerCount = parseInt(viewerMatch[1]);
+						
+						// Validate the viewer count is reasonable
+						if (!isNaN(viewerCount) && viewerCount >= 0 && viewerCount < 1000000000) {
+							console.log("Successfully scraped viewer count:", viewerCount);
+							
+							// Send the viewer count update
+							chrome.runtime.sendMessage(
+								chrome.runtime.id,
+								({message:{
+										type: (youtubeShorts ? "youtubeshorts" : "youtube"),
+										event: 'viewer_update',
+										meta: viewerCount
+									}
+								}),
+								function (e) {}
+							);
+							
+							return { viewers: viewerCount };
+						} else {
+							console.log("Invalid viewer count scraped:", viewerCount);
+						}
+					} else {
+						console.log("Could not find viewer count in page HTML");
+					}
+				} catch (e) {
+					console.error("Error parsing viewer count from page:", e);
+				}
+				
+				return null;
+			})
+			.catch(error => {
+				console.error("Error fetching YouTube page for viewer count:", error);
+				return null;
+			});
+	}
+	
 	setTimeout(function(){checkViewers();},2500);
-	setInterval(function(){checkViewers()},30000);
+	viewerCheckInterval = setInterval(function(){checkViewers()},30000);
 	
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
