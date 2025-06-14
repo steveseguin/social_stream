@@ -821,6 +821,20 @@
 				vertical-align: baseline;
 				top: 1px;
 			}
+			.source-name {
+				font-size: 10px;
+				display: inline-block;
+				margin: auto 1px;
+				margin-left: 4px;
+				position: relative;
+				white-space: nowrap;
+				vertical-align: middle;
+				color: inherit;
+				opacity: 0.8;
+			}
+			.icon.hl-source-type {
+				vertical-align: middle;
+			}
 			.hl-righttopline .hl-badge {
 				max-height: 16px;
 				vertical-align: middle;
@@ -966,6 +980,11 @@
 				margin: auto 0;
 			}
 			
+			.horizontal .compactmode.source-name {
+				margin: auto 0;
+				margin-left: 4px;
+			}
+			
 
 			.horizontal .highlight-chat.larger-emojis:not(.compactmode) {
 				line-height: 30px; 
@@ -1032,6 +1051,10 @@
 			}
 
 			.notcompactmode .larger-emojis > .time-arrived {
+				margin: 12px 2px auto 1px;
+			}
+			
+			.notcompactmode .larger-emojis > .source-name {
 				margin: 12px 2px auto 1px;
 			}
 
@@ -1110,7 +1133,15 @@
 				margin: 9.5px 2px auto 1px;
 			}
 			
+			.notcompactmode div:not(.expand) > .source-name {
+				margin: 9.5px 2px auto 1px;
+			}
+			
 			.notcompactmode .hl-righttopline > div.time-arrived {
+				margin: auto 2px auto 1px;
+			}
+			
+			.notcompactmode .hl-righttopline > div.source-name {
 				margin: auto 2px auto 1px;
 			}
 			
@@ -3063,6 +3094,11 @@
 
 			if (urlParams.has("hidesource")) {
 				showsource = false;
+			}
+			
+			var showSourceName = false;
+			if (urlParams.has("showsourcename")) {
+				showSourceName = true;
 			}
 			
 			var passTTS = false;
@@ -7966,9 +8002,11 @@
 					}
 
 					if (largeavatar && showType && showsource) {
-						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+						var sourceNameText = showSourceName ? '<span class="source-name">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';
+						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type avatar-badge" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
 					} else if (showType && showsource) {
-						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
+						var sourceNameText = showSourceName ? '<span class="source-name">' + showType.charAt(0).toUpperCase() + showType.slice(1) + '</span>' : '';
+						showType = '<img src="./sources/images/' + showType + '.png" class="icon hl-source-type" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />' + sourceNameText;
 					} else {
 						showType = "";
 					}
