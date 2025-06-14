@@ -139,6 +139,7 @@ try {
 	}
 	
 	slowerPollingMode = true; // temporary
+	var consecutiveMaxMessages = 0; // Track consecutive polls with max messages
 	
 	var initialBacklogProcessing = true;
 	var initialBacklogTimestamp = null;
@@ -734,6 +735,17 @@ try {
 			if (initialBacklogProcessing && data.items.length < 200) {
 				initialBacklogProcessing = false;
 				console.log('Initial backlog processing complete');
+			}
+			
+			// Track consecutive max message polls
+			if (data.items && data.items.length >= 200) {
+				consecutiveMaxMessages++;
+				if (consecutiveMaxMessages >= 3 && slowerPollingMode) {
+					slowerPollingMode = false;
+					console.log('High chat activity detected - disabling slower polling mode');
+				}
+			} else {
+				consecutiveMaxMessages = 0; // Reset counter if not maxed
 			}
 			
 			// Reset quick poll count on successful request
@@ -1347,6 +1359,7 @@ try {
 		currentStream = null;
 		messageQueue = [];
 		quickPollCount = 0;
+		consecutiveMaxMessages = 0; // Reset consecutive max message counter
 		lastSuccessfulPollTime = 0;
 		youtubeRecommendedInterval = 5000; // Reset to default
 		
