@@ -1,6 +1,4 @@
-Based on the new information, here's the updated guide:
-
-**How to set up Zoom with Social Stream Ninja Desktop App:**
+# How to set up Zoom with Social Stream Ninja Desktop App:
 
 1. **Download the latest version** from https://socialstream.ninja/ (not the Chrome web store version)
 
