@@ -130,6 +130,16 @@ try {
 	var quickPollCount = 0
     var urlParams = new URLSearchParams(window.location.search);
     var hashParams = new URLSearchParams(window.location.hash.slice(1));
+	var slowerPollingMode = false; // Flag for slower polling mode (1.5x slower)
+	
+	// Check for slower polling mode from URL parameters
+	if (urlParams.has('slowerpoll') || hashParams.has('slowerpoll')) {
+		slowerPollingMode = true;
+		console.log('Slower polling mode enabled (1.5x slower)');
+	}
+	
+	slowerPollingMode = true; // temporary
+	
 	var initialBacklogProcessing = true;
 	var initialBacklogTimestamp = null;
 	var lastPollingTime = Date.now();
@@ -142,6 +152,7 @@ try {
 	var lastVisibilityChange = Date.now();
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
+	
 
 	var emojiData = [];
 	var customEmoteData = [];
@@ -212,6 +223,12 @@ try {
 	  unicodeMap.clear();
 	  
 	  data.forEach(emoji => {
+		// Skip if essential data is missing
+		if (!emoji.emojiId || !emoji.image || !emoji.image.thumbnails || !emoji.image.thumbnails[0] || !emoji.image.thumbnails[0].url) {
+		  console.warn('Skipping emoji with incomplete data:', emoji);
+		  return;
+		}
+		
 		// Map the Unicode emoji with its data
 		unicodeMap.set(emoji.emojiId, {
 		  url: emoji.image.thumbnails[0].url,
@@ -230,7 +247,10 @@ try {
 	  });
 	}
 	function setTrackedTimeout(callback, delay, isBackground = false) {
-		const timeoutHandle = setTimeout(callback, delay);
+		const timeoutHandle = setTimeout(() => {
+			activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
+			callback();
+		}, delay);
 		activeTimeouts.add(timeoutHandle);
 		return timeoutHandle;
 	}
@@ -602,6 +622,29 @@ try {
 					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
 					return;
 				} else if (status === 403) {
+					// Check if it's a quota error
+					try {
+						const errorData = await response.json();
+						if (errorData.error && errorData.error.errors && errorData.error.errors[0].reason === 'quotaExceeded') {
+							console.error('YouTube API quota exceeded');
+							isPolling = false;
+							// Show quota error in chat with alternative
+							const textarea = document.querySelector("#textarea");
+							if (textarea) {
+								var span = document.createElement("div");
+								span.style.color = "red";
+								span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
+								textarea.appendChild(span);
+							}
+							// Update header to show quota exceeded
+							updateHeaderInfo(username, 'Quota Exceeded');
+							// Try again in 5 minutes in case it's temporary
+							fetchTimeout = setTrackedTimeout(fetchChatMessages, 300000, !isPageVisible);
+							return;
+						}
+					} catch (e) {
+						// If we can't parse the error, treat as regular 403
+					}
 					console.warn('Access forbidden - chat may be disabled or restricted');
 					isPolling = false;
 					fetchTimeout = setTrackedTimeout(fetchChatMessages, 30000, !isPageVisible);
@@ -698,6 +741,11 @@ try {
 			
 			// Calculate next poll interval
 			let nextPollInterval = recommendedInterval;
+			
+			// Apply slower polling mode if enabled (1.5x slower)
+			if (slowerPollingMode) {
+				nextPollInterval = Math.floor(nextPollInterval * 1.5);
+			}
 			
 			// Only adjust for background, never go below recommended interval
 			if (!isPageVisible) {
@@ -1019,12 +1067,26 @@ try {
 				data = await response.json();
 			}
 			
-			// Third try: search query if previous attempts failed
+			// Third try: handle @username format using forHandle parameter
+			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+				// Try with @handle format
+				const handleToTry = channelIdentifier.startsWith('@') ? 
+					channelIdentifier : '@' + channelIdentifier;
+					
+				response = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handleToTry}`, 5000,
+					{ 'Authorization': `Bearer ${token}` }
+				);
+				data = await response.json();
+			}
+			
+			// Fourth try: search query as last resort (uses 100 quota units)
 			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
 				// Handle @username format by removing @ if present
 				const searchQuery = channelIdentifier.startsWith('@') ? 
 					channelIdentifier.substring(1) : channelIdentifier;
 					
+				console.warn('Using search API as fallback - this costs 100 quota units');
 				response = await fetchWithTimeout(
 					`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=channel&maxResults=1`, 5000,
 					{ 'Authorization': `Bearer ${token}` }
@@ -1493,14 +1555,15 @@ try {
             if (pollInterval) clearInterval(pollInterval);
             if (channelStatsInterval) clearInterval(channelStatsInterval);
             
-            // Stream stats (viewers & likes) - every 10 seconds
+            // Stream stats (viewers & likes) - interval based on settings
             if (currentStream && currentStream.id && liveChatId) {
                 // Get stream stats immediately
                 getStreamStats();
-                // Then update every 10 seconds
+                // Update interval: 30 seconds if showing viewer count, 2 minutes otherwise
+                const statsInterval = (settings.showviewercount || settings.hypemode) ? 30000 : 120000;
                 pollInterval = setInterval(() => {
                     getStreamStats();
-                }, 10000);
+                }, statsInterval);
             }
             
             // Channel stats (subscribers) - every 30 minutes
@@ -1770,6 +1833,13 @@ try {
 		
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
+		
+		// Re-check slower polling mode on page init
+		if (urlParams.has('slowerpoll') || hashParams.has('slowerpoll')) {
+			slowerPollingMode = true;
+			console.log('Slower polling mode enabled (1.5x slower)');
+		}
+		
 		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || urlParams.get("v") || hashParams.get("videoId");
 		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || urlParams.get("c") || hashParams.get("channel");
 		if (urlVideoIdParam || urlChannelParam) {
