@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stable Word Cloud Overlay - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <script src="./thirdparty/d3.min.js"></script>
+    <style>
+        body {
+            font-family: 'Sora', Arial, sans-serif;
+            background-color: rgba(0, 0, 0, 0);
+            margin: 0;
+            overflow: hidden;
+        }
+        #word-cloud {
+            width: 100vw;
+            height: 100vh;
+        }
+        .word {
+            transition: all 2.5s ease;
+        }
+        .word-inner {
+            fill: white;
+            font-weight: 700;
+        }
+        .word-outline {
+            stroke: #000;
+            stroke-width: 3px;
+            stroke-linejoin: round;
+            font-weight: 700;
+        }
+        .word-glow {
+            fill: none;
+            stroke: rgba(255,255,255,0.5);
+            stroke-width: 2px;
+            filter: url(#glow);
+            font-weight: 700;
+        }
+		
+		/* latin-ext */
+		@font-face {
+		  font-family: 'Sora';
+		  font-style: normal;
+		  font-weight: 400;
+		  font-display: swap;
+		  src: url(https://fonts.gstatic.com/s/sora/v12/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwWa-xsaQ.woff2) format('woff2');
+		  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+		  font-family: 'Sora';
+		  font-style: normal;
+		  font-weight: 400;
+		  font-display: swap;
+		  src: url(https://fonts.gstatic.com/s/sora/v12/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwV6-x.woff2) format('woff2');
+		  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+		/* latin-ext */
+		@font-face {
+		  font-family: 'Sora';
+		  font-style: normal;
+		  font-weight: 700;
+		  font-display: swap;
+		  src: url(https://fonts.gstatic.com/s/sora/v12/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwWa-xsaQ.woff2) format('woff2');
+		  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+		}
+		/* latin */
+		@font-face {
+		  font-family: 'Sora';
+		  font-style: normal;
+		  font-weight: 700;
+		  font-display: swap;
+		  src: url(https://fonts.gstatic.com/s/sora/v12/xMQ9uFFYT72X5wkB_18qmnndmSdSnh2BAfO5mnuyOo1lfiQwV6-x.woff2) format('woff2');
+		  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+		}
+    </style>
+</head>
+<body>
+    <div id="word-cloud"></div>
+    <script>
+    (function() {
+        const urlParams = new URLSearchParams(window.location.search);
+		
+		const styles = {
+			default: {
+				fontSizes: { base: 18, maxIncrease: 16 },
+				colors: d3.schemeCategory10,
+				glow: { stdDeviation: 2.5 },
+				rotate: d => (~~(Math.random() * 6) - 3) * 10,
+				forces: {
+					collide: 1.2,  // Increased from 0.6
+					charge: -150,  // Strengthened repulsion
+					xStrength: 0.1,
+					yStrength: 0.1
+				}
+			},
+			neon: {
+				fontSizes: { base: 20, maxIncrease: 20 },
+				colors: ['#ff00ff', '#00ffff', '#ff3377', '#00ff88'],
+				glow: { stdDeviation: 5 },
+				rotate: () => 0,
+				forces: {
+					collide: 1.2,
+					charge: -180,
+					xStrength: 0.1,
+					yStrength: 0.1
+				}
+			},
+			minimal: {
+				fontSizes: { base: 16, maxIncrease: 12 },
+				colors: ['#000000'],
+				glow: { stdDeviation: 0 },
+				rotate: () => 0,
+				forces: {
+					collide: 1.2,
+					charge: -130,
+					xStrength: 0.12,
+					yStrength: 0.12
+				}
+			},
+			retro: {
+				fontSizes: { base: 18, maxIncrease: 18 },
+				colors: ['#E94F37', '#1C77C3', '#39A9DB', '#40BCD8'],
+				glow: { stdDeviation: 1 },
+				rotate: d => (~~(Math.random() * 4) - 2) * 15,
+				forces: {
+					collide: 1.2,
+					charge: -160,
+					xStrength: 0.11,
+					yStrength: 0.11
+				}
+			}
+		};
+
+		function getTextWidth(text, fontSize) {
+			const canvas = getTextWidth.canvas || (getTextWidth.canvas = document.createElement("canvas"));
+			const context = canvas.getContext("2d");
+			context.font = `${fontSize}px Sora`;
+			return context.measureText(text).width;
+		}
+
+		const activeStyle = styles[urlParams.get('style')] || styles.default;
+		const scale = parseFloat(urlParams.get('scale')) || 1;
+
+		
+		
+		function loadGoogleFont(fontName) {
+			const formattedFontName = fontName.replace(/\s/g, "+");
+
+			const link = document.createElement("link");
+			link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
+			link.rel = "stylesheet";
+
+			document.head.appendChild(link);
+			var currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
+			document.documentElement.style.setProperty("--font-family", "'" + fontName.replaceAll("+", " ") + "', " + currentFont);
+		}
+
+		if (urlParams.get("font")) {
+			document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif");
+		}
+
+		if (urlParams.get("googlefont")) {
+			loadGoogleFont(urlParams.get("googlefont"));
+		}
+		
+        const maxWords = 100;
+        const colors = d3.schemeCategory10;
+
+        let words = {};
+        let svg, wordGroup, simulation;
+        let nodes = [];
+
+        let width, height;
+
+		function initializeWordCloud() {
+			width = window.innerWidth;
+			height = window.innerHeight;
+
+			svg = d3.select("#word-cloud")
+				.append("svg")
+				.attr("width", width)
+				.attr("height", height);
+
+			svg.append("defs")
+				.append("filter")
+				.attr("id", "glow")
+				.append("feGaussianBlur")
+				.attr("stdDeviation", activeStyle.glow.stdDeviation)
+				.attr("result", "coloredBlur");
+
+			wordGroup = svg.append("g")
+				.attr("transform", `translate(${width / 2},${height / 2})`);
+
+			simulation = d3.forceSimulation()
+				.force("collide", d3.forceCollide().radius(d => {
+					// Calculate actual text dimensions for more accurate collision
+					const textWidth = getTextWidth(d.text, d.size);
+					const textHeight = d.size;
+					return Math.max(textWidth, textHeight) / 2 + 15; // Added padding
+				}).iterations(3)) // Increased iterations for better collision detection
+				.force("charge", d3.forceManyBody().strength(activeStyle.forces.charge))
+				.force("center", d3.forceCenter(0, 0))
+				.force("x", d3.forceX(0).strength(activeStyle.forces.xStrength))
+				.force("y", d3.forceY(0).strength(activeStyle.forces.yStrength))
+				.alphaDecay(0.005) // Slower decay for better settling
+				.velocityDecay(0.4) // Increased for more stability
+				.on("tick", ticked);
+		}
+
+        function updateWordCloud() {
+			const wordEntries = Object.entries(words)
+				.sort((a, b) => b[1] - a[1])
+				.slice(0, maxWords);
+
+			const maxFrequency = d3.max(wordEntries, d => d[1]);
+			const minFrequency = d3.min(wordEntries, d => d[1]);
+
+			const fontSize = d => {
+				const baseSize = activeStyle.fontSizes.base * scale;
+				const maxSizeIncrease = activeStyle.fontSizes.maxIncrease * scale;
+				const normalizedFrequency = (d - minFrequency) / (maxFrequency - minFrequency || 1);
+				const sizeIncrease = Math.log1p(normalizedFrequency) / Math.log1p(1) * maxSizeIncrease;
+				return baseSize + sizeIncrease;
+			};
+
+			// Update collision detection for existing nodes
+			nodes.forEach(node => {
+				const entry = wordEntries.find(([text]) => text === node.text);
+				if (entry) {
+					node.size = fontSize(entry[1]);
+					node.frequency = entry[1];
+					node.width = getTextWidth(node.text, node.size);
+					node.height = node.size;
+				}
+			});
+
+			// Create new nodes with proper dimensions
+			const newNodes = wordEntries
+				.filter(([text]) => !nodes.some(node => node.text === text))
+				.map(([text, frequency]) => {
+					const size = fontSize(frequency);
+					return {
+						text,
+						size,
+						frequency,
+						rotate: activeStyle.rotate(),
+						x: (Math.random() - 0.5) * width * 0.6, // Reduced spread for initial placement
+						y: (Math.random() - 0.5) * height * 0.6,
+						width: getTextWidth(text, size),
+						height: size,
+						opacity: 0
+					};
+				});
+
+			nodes = nodes.concat(newNodes);
+
+			// Update force simulation with new collision parameters
+			simulation.force("collide").radius(d => Math.max(d.width, d.height) / 2 + 15);
+			simulation.nodes(nodes);
+			simulation.alpha(1).restart();
+
+
+			const wordElements = wordGroup.selectAll("g.word")
+				.data(nodes, d => d.text);
+
+			const enter = wordElements.enter()
+				.append("g")
+				.attr("class", "word")
+				.attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`)
+				.style("opacity", d => d.opacity);
+
+			enter.append("text")
+				.attr("class", "word-outline")
+				.style("font-size", d => `${d.size}px`)
+				.style("font-family", "'Sora', sans-serif")
+				.attr("text-anchor", "middle")
+				.text(d => d.text);
+
+			enter.append("text")
+				.attr("class", "word-inner")
+				.style("font-size", d => `${d.size}px`)
+				.style("font-family", "'Sora', sans-serif")
+				.style("fill", (d, i) => activeStyle.colors[i % activeStyle.colors.length])
+				.attr("text-anchor", "middle")
+				.text(d => d.text);
+
+			enter.append("text")
+				.attr("class", "word-glow")
+				.style("font-size", d => `${d.size}px`)
+				.style("font-family", "'Sora', sans-serif")
+				.attr("text-anchor", "middle")
+				.text(d => d.text);
+
+			wordElements.merge(enter)
+				.transition()
+				.duration(500)
+				.attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`)
+				.style("opacity", 1)
+				.selectAll("text")
+				.style("font-size", d => `${d.size}px`);
+
+			wordElements.exit().remove();
+		}
+
+		function ticked() {
+			// Add padding to the bounds to prevent words from touching the edges
+			const padding = 20;
+			const boundedNodes = nodes.map(d => {
+				const halfWidth = d.width / 2;
+				const halfHeight = d.height / 2;
+				
+				d.x = Math.max(-width / 2 + halfWidth + padding, 
+							  Math.min(width / 2 - halfWidth - padding, d.x || 0));
+				d.y = Math.max(-height / 2 + halfHeight + padding, 
+							  Math.min(height / 2 - halfHeight - padding, d.y || 0));
+				return d;
+			});
+
+			wordGroup.selectAll("g.word")
+				.data(boundedNodes)
+				.attr("transform", d => `translate(${d.x || 0},${d.y || 0})rotate(${d.rotate || 0})`);
+		}
+		
+        function handleResize() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            svg.attr("width", width).attr("height", height);
+            wordGroup.attr("transform", `translate(${width / 2},${height / 2})`);
+            simulation.force("x", d3.forceX(0).strength(0.05));
+            simulation.force("y", d3.forceY(0).strength(0.05));
+            simulation.alpha(1).restart();
+        }
+		
+		function clearWordCloud() {
+			words = {};
+
+			nodes = [];
+
+			wordGroup.selectAll("g.word").remove();
+
+			simulation.nodes(nodes);
+			simulation.alpha(1).restart();
+
+			console.log("Word cloud cleared");
+		}
+
+        function processData(data) {
+            if (data.content) {
+                data = data.content;
+            }
+            if (data.chatmessage) {
+                const message = data.chatmessage.trim().toLowerCase();
+                if (/^\w+$/.test(message) && !message.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/u)) {
+                    words[message] = (words[message] || 0) + 1;
+                    updateWordCloud();
+                }
+            }
+			if ("state" in data) {
+				clearWordCloud();
+			}
+        }
+
+        function setupIframe() {
+            const iframe = document.createElement("iframe");
+            const filename = new URL(window.location.href).pathname.split('/').pop().split('.')[0] || "dock";
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=wordcloud&cleanoutput&room=" + urlParams.get('session');
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+
+            const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            const eventer = window[eventMethod];
+            const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                if ("dataReceived" in e.data) {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
+                }
+            });
+        }
+
+        // Initialize everything
+        initializeWordCloud();
+        setupIframe();
+        window.addEventListener('resize', handleResize);
+    })();
+    </script>
+</body>
+</html>
