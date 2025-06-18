@@ -53,6 +53,8 @@
 	var BTTV = false;
 	var SEVENTV = false;
 	var FFZ = false;
+	
+
 
 	function mergeEmotes() { // BTTV takes priority over 7TV in this all.
 		EMOTELIST = {};
@@ -175,6 +177,14 @@
 	} catch(e){}
 
 	var isExtensionOn = true;
+	
+	var channelImg = "";
+	  
+	if (kickUsername){
+		channelImg = await getKickAvatarImage(kickUsername, kickUsername) || "https://kick.com/img/default-profile-pictures/default2.jpeg";
+	}
+	
+	//console.log(channelImg, kickUsername);
 	
 	async function getKickViewerCount(username) {
 		try {
@@ -491,10 +501,9 @@
 	  chatname = chatname.trim();
 	  
 	  var chatimg = "";
-	  var channelName = window.location.pathname.split("/")[1];
 	  
-	  if (channelName && chatname){
-		  chatimg = await getKickAvatarImage(chatname, channelName) || "";
+	  if (kickUsername && chatname){
+		  chatimg = await getKickAvatarImage(chatname, kickUsername) || "";
 	  }
 	  
 	  var data = {};
@@ -519,6 +528,14 @@
 	  if (!chatmessage && !hasDonation){
 		return;
 	  }
+	  
+	  if (kickUsername){
+		  data.sourceName = kickUsername;
+	  }
+	  if (channelImg){
+		  data.sourceImg = channelImg;
+	  }
+	//	console.log(data);
 	  
 	  //if (brandedImageURL){
 	  //  data.sourceImg = brandedImageURL;
@@ -705,10 +722,9 @@
 	  chatname = chatname.trim();
 	  
 	  var chatimg = "";
-	  var channelName = window.location.pathname.split("/")[2];
 	  
-	  if (channelName && chatname){
-		  chatimg = await getKickAvatarImage(chatname, channelName) || "";
+	  if (kickUsername && chatname){
+		  chatimg = await getKickAvatarImage(chatname, kickUsername) || "";
 	  }
 	  
 	  var data = {};
@@ -733,6 +749,14 @@
 	  if (!chatmessage && !hasDonation){
 		return;
 	  }
+	  if (kickUsername){
+		  data.sourceName = kickUsername;
+	  }
+	  if (channelImg){
+		  data.sourceImg = channelImg;
+	  }
+	  
+	  //console.log(data);
 	  
 	  //if (brandedImageURL){
 	  //  data.sourceImg = brandedImageURL;

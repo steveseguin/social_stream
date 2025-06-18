@@ -899,6 +899,8 @@
 		if (ele.querySelector("[class*='channel-points-reward']")){
 			data.event = "reward";
 		}
+		
+		
 
 		if (!data.chatmessage) {
 			return;
@@ -906,6 +908,9 @@
 
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
+		}
+		if (channelName){
+			data.sourceName = channelName;
 		}
 
 		try {

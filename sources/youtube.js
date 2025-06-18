@@ -15,6 +15,25 @@
 			}
 		}
 	} catch(e){}
+	
+	var channelName = "";
+	var channelThumbnail = "";
+	
+	const getChannelInfo = async (videoId) => {
+		const response = await fetch(`https://api.socialstream.ninja/youtube/channel_info?video=${videoId}`);
+		const data = await response.json();
+
+		if (data.error) {
+		  throw new Error(data.error);
+		}
+		
+		channelName = data.channelName,
+		channelThumbnail =  data.channelThumbnail
+	};
+	
+	if (videoId){
+		setTimeout(function(videoId){getChannelInfo(videoId)},1000,videoId);
+	}
 
  	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
@@ -879,6 +898,13 @@
 		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "youtube"; 
+		
+		if (channelName){
+			data.sourceName = channelName;
+		}
+		if (channelThumbnail){
+			data.sourceImg = channelThumbnail;
+		}
 		
 		if (youtubeShorts){
 			data.type = "youtubeshorts";
