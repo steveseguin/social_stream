@@ -425,6 +425,13 @@
         const showControls = urlParams.has('controls'); // Show control panel
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
         
+        // Socket server parameters
+        const hasServerParam = urlParams.has('server') || urlParams.has('server2');
+        const serverURL = urlParams.get('server') || urlParams.get('server2') || (hasServerParam ? "wss://io.socialstream.ninja" : null);
+        const useLocalServer = urlParams.has('localserver');
+        const roomID = urlParams.get('session') || urlParams.get('room') || 'tipjar';
+        const password = urlParams.get('password') || false;
+        
         // Apply theme
         if (theme !== 'default') {
             document.body.classList.add(theme);
@@ -455,6 +462,10 @@
         const recentTips = [];
         const maxRecentTips = 5;
         const donationHistory = persistent ? (JSON.parse(localStorage.getItem('tipjar_history') || '[]')) : [];
+        
+        // Socket server variables
+        let socketserver = null;
+        let conCon = 1;
 
         // Matter.js setup for jar style
         let engine, world, render;
@@ -711,6 +722,56 @@
                 processTip(parseFloat(amount), currency, data.chatname || 'Anonymous');
             }
         }
+        
+        // Socket server setup
+        function setupSocket() {
+            socketserver.onclose = function() {
+                setTimeout(function() {
+                    conCon += 1;
+                    const finalServerURL = useLocalServer ? "ws://127.0.0.1:3000" : (serverURL || "wss://io.socialstream.ninja");
+                    socketserver = new WebSocket(finalServerURL);
+                    setupSocket();
+                }, 100 * conCon);
+            };
+            
+            socketserver.onerror = function(error) {
+                console.error("WebSocket error:", error);
+                if (socketserver) socketserver.close();
+            };
+            
+            socketserver.onopen = function() {
+                conCon = 1;
+                socketserver.send(JSON.stringify({
+                    "join": roomID,
+                    "out": 3,
+                    "in": 4
+                }));
+            };
+            
+            socketserver.addEventListener('message', function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.overlayNinja) {
+                            processData(data.overlayNinja);
+                        } else if (data.content) {
+                            processData(data.content);
+                        } else {
+                            processData(data);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing socket message:", e);
+                    }
+                }
+            });
+        }
+        
+        // Initialize socket server if enabled
+        if (serverURL || useLocalServer) {
+            const finalServerURL = useLocalServer ? "ws://127.0.0.1:3000" : (serverURL || "wss://io.socialstream.ninja");
+            socketserver = new WebSocket(finalServerURL);
+            setupSocket();
+        }
 
         // Initialize display
         updateAmount(0);
@@ -929,9 +990,10 @@
 
         // IFRAME setup for Social Stream Ninja
         const iframe = document.createElement("iframe");
-        const filename = "dock";
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + 
-            urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+        const filename = "tipjar";
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + 
+            (password || "false") + "&solo&view=" + roomID + "&novideo&noaudio&label=" + 
+            filename + "&cleanoutput&room=" + roomID;
         iframe.style.width = "0px";
         iframe.style.height = "0px";
         iframe.style.position = "fixed";
