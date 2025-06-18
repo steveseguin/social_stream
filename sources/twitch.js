@@ -566,19 +566,31 @@
 		
 		var originalMessage = "";
 	    var ReplyMessage = "";
+		var replyMessage = "";
 
 		try {
 			if (settings.replyingto && chatmessage) {
 				try {
-					var replyMessage = getAllContentNodes(ele.querySelector(".chat-line__message-container [title], .seventv-reply-message-part"));
-					replyMessage = replyMessage.trim();
-					if (!replyMessage) {
+					var t = ele.querySelector(".chat-line__message-container [title], .seventv-reply-message-part");
+					if (t){
+						replyMessage = getAllContentNodes(t);
+						replyMessage = replyMessage.trim();
+						
+					}
+					if (!replyMessage && ele.querySelector(".reply-line--mentioned")) {
 						replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
 						replyMessage = replyMessage.trim();
 					}
+					if (!replyMessage) {
+						let l = ele.querySelector('path[d="M11 8h2v2h-2V8zM9 8H7v2h2V8z"]');
+						if (l){
+							replyMessage = getAllContentNodes(l.parentNode.parentNode.parentNode);
+							replyMessage = replyMessage.trim();
+						}
+					}
 				} catch (e) {
 					try {
-						var replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
+						replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
 						replyMessage = replyMessage.trim();
 					} catch (ee) {
 					}
