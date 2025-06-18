@@ -208,6 +208,79 @@ tr:hover {
        <button id="loadBtn" onclick="populateVoices();">Load Voice List</button>
        <select id="languageSelect"></select>
        <div id="status"></div>
+       
+       <!-- TTS Test Controls -->
+       <div id="ttsControls" style="display: none; margin: 20px auto; padding: 20px; background-color: #2a2a2a; border-radius: 8px; max-width: 600px;">
+           <h3 style="color: #fff; margin-bottom: 15px;">Test TTS Settings</h3>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Voice:</label>
+               <select id="voiceSelect" style="width: calc(100% - 90px); padding: 5px; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px;">
+                   <option value="">Select a voice...</option>
+               </select>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Rate:</label>
+               <input type="range" id="rateSlider" min="0.25" max="4" step="0.1" value="1" style="width: calc(100% - 140px);">
+               <span id="rateValue" style="color: #e0e0e0; margin-left: 10px;">1.0</span>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Pitch:</label>
+               <input type="range" id="pitchSlider" min="0" max="2" step="0.1" value="1" style="width: calc(100% - 140px);">
+               <span id="pitchValue" style="color: #e0e0e0; margin-left: 10px;">1.0</span>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0;">Volume:</label>
+               <input type="range" id="volumeSlider" min="0" max="1" step="0.1" value="1" style="width: calc(100% - 140px);">
+               <span id="volumeValue" style="color: #e0e0e0; margin-left: 10px;">1.0</span>
+           </div>
+           
+           <div style="margin-bottom: 15px;">
+               <label style="display: inline-block; width: 80px; color: #e0e0e0; vertical-align: top;">Test Text:</label>
+               <textarea id="testText" style="width: calc(100% - 90px); padding: 5px; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; resize: vertical;" rows="3">Hello, this is a test of the text-to-speech system.</textarea>
+           </div>
+           
+           <button id="testButton" onclick="testCustomSettings();" style="width: 100%; padding: 10px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Test Voice</button>
+       </div>
+       
+       <!-- URL Parameter Guide -->
+       <div style="margin: 30px auto; padding: 20px; background-color: #2a2a2a; border-radius: 8px; max-width: 800px;">
+           <h3 style="color: #fff; margin-bottom: 15px;">📋 TTS URL Parameters for Social Stream Ninja</h3>
+           <p style="color: #e0e0e0; margin-bottom: 15px;">To use specific TTS voices in your Social Stream Ninja overlays (dock.html, featured.html, etc.), remove any existing TTS parameters and add the following:</p>
+           
+           <div style="background-color: #333; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+               <h4 style="color: #fff; margin-top: 0;">Basic TTS Parameters:</h4>
+               <ul style="color: #e0e0e0; list-style: none; padding-left: 0;">
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&speech=en-US</code> - Enable TTS with language code</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&voice=Google US English</code> - Specific voice name</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&rate=1.2</code> - Speaking rate (0.25 to 4)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&pitch=1.1</code> - Voice pitch (0 to 2)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&volume=0.8</code> - Volume level (0 to 1)</li>
+               </ul>
+           </div>
+           
+           <div style="background-color: #333; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
+               <h4 style="color: #fff; margin-top: 0;">Generated URL:</h4>
+               <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                   <code id="generatedUrl" style="color: #4caf50;">https://socialstream.ninja/dock.html?session=YOUR_SESSION&speech=en-US</code>
+               </div>
+               <button onclick="copyUrl();" style="margin-top: 10px; padding: 8px 15px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Copy URL</button>
+           </div>
+           
+           <div style="background-color: #d32f2f; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
+               <h4 style="color: #fff; margin-top: 0;">⚠️ Important Notes:</h4>
+               <ul style="color: #fff; margin: 0;">
+                   <li>Remove existing TTS parameters before adding new ones</li>
+                   <li>Voice names must match exactly (case-sensitive)</li>
+                   <li>Not all voices work in all browsers/contexts</li>
+                   <li>Google online voices require internet connection</li>
+               </ul>
+           </div>
+       </div>
+       
        <div class="table-container">
            <table id="voicesTable">
                <tr>
@@ -222,6 +295,7 @@ tr:hover {
    </div>
    <script>
        let englishPhraseIndex = 0;
+       let allVoices = [];
        
        document.addEventListener('DOMContentLoaded', () => {
            const select = document.getElementById('languageSelect');
@@ -235,6 +309,24 @@ tr:hover {
            window.addEventListener('online', updateConnectionStatus);
            window.addEventListener('offline', updateConnectionStatus);
            updateConnectionStatus();
+           
+           // Setup slider listeners
+           document.getElementById('rateSlider').addEventListener('input', function() {
+               document.getElementById('rateValue').textContent = this.value;
+               updateGeneratedUrl();
+           });
+           
+           document.getElementById('pitchSlider').addEventListener('input', function() {
+               document.getElementById('pitchValue').textContent = this.value;
+               updateGeneratedUrl();
+           });
+           
+           document.getElementById('volumeSlider').addEventListener('input', function() {
+               document.getElementById('volumeValue').textContent = this.value;
+               updateGeneratedUrl();
+           });
+           
+           document.getElementById('voiceSelect').addEventListener('change', updateGeneratedUrl);
        });
 
        function updateConnectionStatus() {
@@ -255,8 +347,10 @@ tr:hover {
    		table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local</th><th>Default</th><th>Test</th></tr>";
 
    		document.getElementById('loadBtn').style.display = 'none';
+   		document.getElementById('ttsControls').style.display = 'block';
 
    		const voices = speechSynthesis.getVoices();
+   		allVoices = voices;
    		
    		const sortedVoices = voices.sort((a, b) => {
    			const aIsEnglish = a.lang.toLowerCase().startsWith('en');
@@ -267,10 +361,21 @@ tr:hover {
    			return 0;
    		});
    		
+   		// Populate voice select dropdown
+   		const voiceSelect = document.getElementById('voiceSelect');
+   		voiceSelect.innerHTML = '<option value="">Select a voice...</option>';
+   		
    		sortedVoices.forEach((voice, index) => {
    			const option = document.createElement('option');
    			option.textContent = `${voice.name} (${voice.lang})`;
    			select.appendChild(option);
+   			
+   			// Add to voice select dropdown
+   			const voiceOption = document.createElement('option');
+   			voiceOption.value = index;
+   			voiceOption.textContent = `${voice.name} (${voice.lang})`;
+   			voiceSelect.appendChild(voiceOption);
+   			
    			const row = table.insertRow();
    			row.insertCell().textContent = voice.name;
    			row.insertCell().textContent = voice.lang;
@@ -298,6 +403,8 @@ tr:hover {
    			testBtn.onclick = function() { testVoice(index, sortedVoices); };
    			testCell.appendChild(testBtn);
    		});
+   		
+   		updateGeneratedUrl();
    	}
 
    	function testVoice(voiceIndex, voicesList = null) {
@@ -315,6 +422,8 @@ tr:hover {
 
    		let timeout;
    		let speechStarted = false;
+   		let speechEnded = false;
+   		let hasError = false;
 
    		message.onstart = function() {
    			speechStarted = true;
@@ -322,20 +431,22 @@ tr:hover {
    		};
 
    		message.onerror = function(event) {
+   			hasError = true;
    			clearTimeout(timeout);
    			showError(`Error playing voice: ${event.error}. This voice may require an internet connection.`);
    		};
 
    		message.onend = function() {
+   			speechEnded = true;
    			clearTimeout(timeout);
    		};
 
    		timeout = setTimeout(() => {
-   			if (!speechStarted) {
+   			if (!speechStarted && !speechEnded && !hasError) {
    				speechSynthesis.cancel();
    				showError('Voice test timed out. This voice may not be available offline.');
    			}
-   		}, 5000);
+   		}, 8000);
 
    		speechSynthesis.speak(message);
    	}
@@ -401,6 +512,113 @@ tr:hover {
            }
 
            return 'This is a test of the speech synthesis system.';
+       }
+       
+       function updateGeneratedUrl() {
+           const voiceSelect = document.getElementById('voiceSelect');
+           const rateSlider = document.getElementById('rateSlider');
+           const pitchSlider = document.getElementById('pitchSlider');
+           const volumeSlider = document.getElementById('volumeSlider');
+           const urlDiv = document.getElementById('generatedUrl');
+           
+           let url = 'https://socialstream.ninja/dock.html?session=YOUR_SESSION';
+           
+           // Add speech parameter with language
+           if (voiceSelect.value && allVoices[voiceSelect.value]) {
+               const voice = allVoices[voiceSelect.value];
+               url += `&speech=${voice.lang}`;
+               url += `&voice=${encodeURIComponent(voice.name)}`;
+           } else {
+               url += '&speech=en-US';
+           }
+           
+           // Add rate if not default
+           if (rateSlider.value !== '1') {
+               url += `&rate=${rateSlider.value}`;
+           }
+           
+           // Add pitch if not default
+           if (pitchSlider.value !== '1') {
+               url += `&pitch=${pitchSlider.value}`;
+           }
+           
+           // Add volume if not default
+           if (volumeSlider.value !== '1') {
+               url += `&volume=${volumeSlider.value}`;
+           }
+           
+           urlDiv.textContent = url;
+       }
+       
+       function copyUrl() {
+           const urlText = document.getElementById('generatedUrl').textContent;
+           navigator.clipboard.writeText(urlText).then(() => {
+               const button = event.target;
+               const originalText = button.textContent;
+               button.textContent = 'Copied!';
+               button.style.backgroundColor = '#2e7d32';
+               setTimeout(() => {
+                   button.textContent = originalText;
+                   button.style.backgroundColor = '#4caf50';
+               }, 2000);
+           }).catch(err => {
+               console.error('Failed to copy:', err);
+               alert('Failed to copy URL');
+           });
+       }
+       
+       function testCustomSettings() {
+           const voiceSelect = document.getElementById('voiceSelect');
+           const rateSlider = document.getElementById('rateSlider');
+           const pitchSlider = document.getElementById('pitchSlider');
+           const volumeSlider = document.getElementById('volumeSlider');
+           const testText = document.getElementById('testText').value;
+           
+           if (!voiceSelect.value) {
+               showError('Please select a voice first');
+               return;
+           }
+           
+           const selectedVoice = allVoices[voiceSelect.value];
+           
+           speechSynthesis.cancel();
+           
+           const message = new SpeechSynthesisUtterance(testText);
+           message.voice = selectedVoice;
+           message.lang = selectedVoice.lang;
+           message.rate = parseFloat(rateSlider.value);
+           message.pitch = parseFloat(pitchSlider.value);
+           message.volume = parseFloat(volumeSlider.value);
+           
+           let timeout;
+           let speechStarted = false;
+           let speechEnded = false;
+           let hasError = false;
+           
+           message.onstart = function() {
+               speechStarted = true;
+               clearTimeout(timeout);
+           };
+           
+           message.onerror = function(event) {
+               hasError = true;
+               clearTimeout(timeout);
+               showError(`Error playing voice: ${event.error}. This voice may require an internet connection.`);
+           };
+           
+           message.onend = function() {
+               speechEnded = true;
+               clearTimeout(timeout);
+           };
+           
+           timeout = setTimeout(() => {
+               if (!speechStarted && !speechEnded && !hasError) {
+                   speechSynthesis.cancel();
+                   showError('Voice test timed out. This voice may not be available offline.');
+               }
+           }, 8000);
+           
+           speechSynthesis.speak(message);
        }
    </script>
 </body>
