@@ -575,8 +575,9 @@
 	  
 	  let messageId = "";
 	  try {
-		  const content = ele.textContent || "";
-		  messageId = `${content.slice(0, 100)}`;
+		const content = ele.textContent || "";
+		const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
+		messageId = `${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
 		
 		if (processedMessages.has(messageId)) return;
 		
@@ -591,6 +592,7 @@
 		}
 		
 	  } catch(e) {
+		  console.error(e);
 		return;
 	  }
 		
