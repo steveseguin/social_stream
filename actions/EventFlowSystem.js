@@ -561,6 +561,16 @@ class EventFlowSystem {
                 console.log(`[RELAY DEBUG - fromSource Trigger] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
                 return match;
                 
+            case 'fromChannelName':
+                if (!config.channelName || config.channelName.trim() === '') {
+                    match = true; // Match any channel if no name specified
+                } else {
+                    const channelName = (message.sourceName || '').toLowerCase();
+                    match = channelName === config.channelName.toLowerCase();
+                }
+                console.log(`[RELAY DEBUG - fromChannelName Trigger] Config Channel: "${config.channelName}", Message Channel: "${message.sourceName}", Match: ${match}`);
+                return match;
+                
             case 'fromUser':
                 const identifier = (message.userid || message.chatname || '').toLowerCase();
                 match = config && typeof config.username === 'string' && identifier === config.username.toLowerCase();

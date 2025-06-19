@@ -139,6 +139,136 @@
 	var maxTrackedMessages = 40;
 	var pastMessages = [];
 	
+	// Persistent cache configuration
+	const CACHE_KEY = 'kick_user_profiles_cache';
+	const CACHE_EXPIRY_DAYS = 30;
+	const CACHE_EXPIRY_MS = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+	
+	// Load cached profiles from localStorage on startup
+	function loadCachedProfiles() {
+		try {
+			const stored = localStorage.getItem(CACHE_KEY);
+			if (stored) {
+				const data = JSON.parse(stored);
+				const now = Date.now();
+				
+				// Filter out expired entries and convert back to Map
+				Object.entries(data).forEach(([username, entry]) => {
+					if (entry.timestamp && (now - entry.timestamp) < CACHE_EXPIRY_MS) {
+						cachedUserProfiles.set(username, entry.profilePic);
+					}
+				});
+				
+				console.log(`[Social Stream] Loaded ${cachedUserProfiles.size} cached user profiles from localStorage`);
+			}
+		} catch (e) {
+			console.error('[Social Stream] Error loading cached profiles:', e);
+		}
+	}
+	
+	// Save cached profiles to localStorage
+	function saveCachedProfiles() {
+		try {
+			const data = {};
+			const now = Date.now();
+			
+			// Convert Map to object with timestamps
+			cachedUserProfiles.forEach((profilePic, username) => {
+				data[username] = {
+					profilePic: profilePic,
+					timestamp: now
+				};
+			});
+			
+			localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+		} catch (e) {
+			console.error('[Social Stream] Error saving cached profiles:', e);
+			// If storage is full, clear old cache and try again
+			if (e.name === 'QuotaExceededError') {
+				localStorage.removeItem(CACHE_KEY);
+				try {
+					localStorage.setItem(CACHE_KEY, JSON.stringify({}));
+				} catch (e2) {
+					console.error('[Social Stream] Failed to clear cache:', e2);
+				}
+			}
+		}
+	}
+	
+	// Debounce saving to localStorage to avoid excessive writes
+	let saveTimeout = null;
+	let lastSaveTime = Date.now();
+	const DEBOUNCE_DELAY = 5000; // 5 seconds of inactivity
+	const MAX_SAVE_INTERVAL = 5 * 60 * 1000; // 5 minutes max between saves
+	
+	function debouncedSaveCachedProfiles() {
+		const now = Date.now();
+		const timeSinceLastSave = now - lastSaveTime;
+		
+		// Clear existing timeout
+		if (saveTimeout) {
+			clearTimeout(saveTimeout);
+		}
+		
+		// If it's been more than 5 minutes, save immediately
+		if (timeSinceLastSave >= MAX_SAVE_INTERVAL) {
+			saveCachedProfiles();
+			lastSaveTime = now;
+		} else {
+			// Otherwise, save after 5 seconds of inactivity
+			saveTimeout = setTimeout(() => {
+				saveCachedProfiles();
+				lastSaveTime = Date.now();
+			}, DEBOUNCE_DELAY);
+		}
+	}
+	
+	// Load cached profiles on startup
+	loadCachedProfiles();
+	
+	// Periodic cleanup of expired cache entries
+	function cleanupExpiredCache() {
+		try {
+			const stored = localStorage.getItem(CACHE_KEY);
+			if (stored) {
+				const data = JSON.parse(stored);
+				const now = Date.now();
+				let hasExpired = false;
+				
+				// Remove expired entries
+				Object.entries(data).forEach(([username, entry]) => {
+					if (!entry.timestamp || (now - entry.timestamp) >= CACHE_EXPIRY_MS) {
+						delete data[username];
+						hasExpired = true;
+						// Also remove from memory cache if present
+						cachedUserProfiles.delete(username);
+					}
+				});
+				
+				// Save cleaned data if any entries were removed
+				if (hasExpired) {
+					localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+					console.log('[Social Stream] Cleaned up expired cache entries');
+				}
+			}
+		} catch (e) {
+			console.error('[Social Stream] Error cleaning up cache:', e);
+		}
+	}
+	
+	// Run cleanup on startup and periodically (every hour)
+	cleanupExpiredCache();
+	setInterval(cleanupExpiredCache, 60 * 60 * 1000);
+	
+	// Also ensure periodic saves every 5 minutes in case of continuous activity
+	setInterval(() => {
+		const now = Date.now();
+		if (now - lastSaveTime >= MAX_SAVE_INTERVAL) {
+			saveCachedProfiles();
+			lastSaveTime = now;
+		}
+	}, 60 * 1000); // Check every minute
+	
 	function escapeHtml(unsafe){
 		try {
 			if (settings.textonlymode){ // we can escape things later, as needed instead I guess.
@@ -338,6 +468,7 @@
 		if (cachedUserProfiles.size >= maxCachedProfiles) {
 			const firstKey = cachedUserProfiles.keys().next().value;
 			cachedUserProfiles.delete(firstKey);
+			debouncedSaveCachedProfiles(); // Save after eviction
 		}
 		
 		// Add placeholder immediately to prevent duplicate requests
@@ -348,6 +479,7 @@
 				if (data && data.profilepic){
 					// Update cache with actual profile pic
 					cachedUserProfiles.set(username, data.profilepic);
+					debouncedSaveCachedProfiles(); // Save after adding new profile
 					return data.profilepic;
 				}
 			});
@@ -476,17 +608,25 @@
 		  }
 	  }
 	  
+	  var member = false;
+	  var mod = false;
 	  ele.querySelector(".chat-message-identity").querySelectorAll(".badge-tooltip img[src], .badge-tooltip svg, .base-badge img[src], .base-badge svg, .badge img[src], .badge svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
 				tmp.src = badge.src;
 				tmp.type = "img";
+				if (badge.src.includes("subscriber")){
+					member = badge.getAttribute("alt") || "Subscriber";
+				}
 				chatbadges.push(tmp);
 			} else if (badge && badge.nodeName.toLowerCase() == "svg"){
 				var tmp = {};
 				tmp.html = badge.outerHTML;
 				tmp.type = "svg";
+				if (badge.querySelector('[d="M23.5 2.5v3h-3v3h-3v3h-3v3h-3v-3h-6v6h3v3h-3v3h-3v6h6v-3h3v-3h3v3h6v-6h-3v-3h3v-3h3v-3h3v-3h3v-6h-6Z"]')){
+					mod = true;
+				}
 				chatbadges.push(tmp);
 			}
 		} catch(e){  }
@@ -527,6 +667,13 @@
 	  
 	  if (!chatmessage && !hasDonation){
 		return;
+	  }
+	  
+	  if (member){
+		data.membership = membership;
+	  }
+	  if (mod){
+		  data.mod = true;
 	  }
 	  
 	  if (kickUsername){
@@ -696,18 +843,25 @@
 		  }
 	  }
 	  
-	  
+	  var member = false;
+	  var mod = false;
 	  ele.querySelectorAll("div > div > div > div > div > div[data-state] img[src], div > div > div > div > div > div[data-state] svg").forEach(badge=>{
 		try {
 			if (badge && badge.nodeName == "IMG"){
 				var tmp = {};
 				tmp.src = badge.src;
 				tmp.type = "img";
+				if (badge.src.includes("subscriber")){
+					member = badge.getAttribute("alt") || "Subscriber";
+				}
 				chatbadges.push(tmp);
 			} else if (badge && badge.nodeName.toLowerCase() == "svg"){
 				var tmp = {};
 				tmp.html = badge.outerHTML;
 				tmp.type = "svg";
+				if (badge.querySelector('[d="M23.5 2.5v3h-3v3h-3v3h-3v3h-3v-3h-6v6h3v3h-3v3h-3v6h6v-3h3v-3h3v3h6v-6h-3v-3h3v-3h3v-3h3v-3h3v-6h-6Z"]')){
+					mod = true;
+				}
 				chatbadges.push(tmp);
 			}
 		} catch(e){  }
@@ -742,9 +896,16 @@
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
-	  data.membership = "";
+	  if (member){
+		data.membership = member;
+	  }
+	  if (mod){
+		  data.mod = true;
+	  }
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "kick";
+	  
+	  
 	  
 	  if (!chatmessage && !hasDonation){
 		return;
@@ -761,6 +922,9 @@
 	  //if (brandedImageURL){
 	  //  data.sourceImg = brandedImageURL;
 	  //}
+	  if (mod){
+		console.log(data);
+	  }
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{

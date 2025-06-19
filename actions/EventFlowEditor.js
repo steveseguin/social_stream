@@ -24,6 +24,7 @@ class EventFlowEditor {
             { id: 'messageEquals', name: 'Message Equals' },
             { id: 'messageRegex', name: 'Message Regex' },
             { id: 'fromSource', name: 'From Source' },
+            { id: 'fromChannelName', name: 'From Channel Name' },
             { id: 'fromUser', name: 'From User' },
             { id: 'userRole', name: 'User Role' },
             { id: 'hasDonation', name: 'Has Donation' },
@@ -687,6 +688,7 @@ class EventFlowEditor {
                 case 'messageEquals': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageRegex': return `Pattern: "${(node.config.pattern || '').substring(0,15)}${(node.config.pattern || '').length > 15 ? '...' : ''}"`;
                 case 'fromSource': return `Source: ${node.config.source || 'Any'}`;
+                case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
                 case 'userRole': return `Role: ${node.config.role || 'Any'}`;
                 case 'hasDonation': return 'Has donation';
@@ -958,6 +960,7 @@ class EventFlowEditor {
                 case 'messageEquals': node.config = { text: 'hello' }; break;
                 case 'messageRegex': node.config = { pattern: 'pattern', flags: 'i' }; break;
                 case 'fromSource': node.config = { source: '*' }; break;
+                case 'fromChannelName': node.config = { channelName: '' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
                 case 'hasDonation': node.config = {}; break;
@@ -1182,6 +1185,10 @@ class EventFlowEditor {
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
 						   ${['twitch', 'youtube', 'facebook', 'kick', 'tiktok', 'instagram', 'discord', 'slack', 'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`).join('')}
 						 </select></div>`;
+				break;
+			case 'fromChannelName':
+				html += `<div class="property-group"><label class="property-label">Channel Name</label><input type="text" class="property-input" id="prop-channelName" value="${node.config.channelName || ''}" placeholder="Enter channel name"></div>
+						 <div class="property-help">Match messages from a specific channel name or host username</div>`;
 				break;
 			case 'fromUser':
 				html += `<div class="property-group"><label class="property-label">Username</label><input type="text" class="property-input" id="prop-username" value="${node.config.username || ''}"></div>`;
