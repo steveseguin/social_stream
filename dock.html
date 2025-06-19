@@ -3119,6 +3119,11 @@
 					document.documentElement.style.setProperty("--profile-pic-border", "3px solid black");
 				}
 			}
+			
+			var nocolon = false;
+			if (urlParams.has("nocolon")) {
+				nocolon = true;
+			}
 
 			var twoLines = false;
 			var largeavatar = false;
@@ -8188,6 +8193,9 @@
 
 					var afterName = ":";
 					if (twoLines) {
+						afterName = "";
+					}
+					if (nocolon) {
 						afterName = "";
 					}
 					
