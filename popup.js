@@ -2348,12 +2348,15 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
     // Handle "siblings" with the same param prefix
     const paramPrefix = paramValue.split('=')[0];
-    document.querySelectorAll(`input[data-${paramType}^='${paramPrefix}']:not([data-${paramType}='${paramValue}'])`).forEach(ele1 => {
-        if (ele1 && ele1.checked) {
-            ele1.checked = false;
-            updateSettings(ele1, sync);
-        }
-    });
+    // Only handle siblings if the param contains '=' (like scale=2, scale=0.77)
+    if (paramValue.includes('=')) {
+        document.querySelectorAll(`input[data-${paramType}^='${paramPrefix}=']:not([data-${paramType}='${paramValue}'])`).forEach(ele1 => {
+            if (ele1 && ele1.checked) {
+                ele1.checked = false;
+                updateSettings(ele1, sync);
+            }
+        });
+    }
 
     return true;
 }

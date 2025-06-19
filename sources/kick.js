@@ -922,9 +922,6 @@
 	  //if (brandedImageURL){
 	  //  data.sourceImg = brandedImageURL;
 	  //}
-	  if (mod){
-		console.log(data);
-	  }
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
