@@ -242,47 +242,26 @@ function copyToClipboard(event) {
 	//console.log(event);
    
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	if (event.target.parentNode.parentNode.querySelector("a[href]")){
-		const targetElement = event.target.parentNode.parentNode; // div containing the link and button
-		const linkOwnerDiv = document.getElementById(targetElement.id);
-		if (linkOwnerDiv && linkOwnerDiv.raw){
-			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-				event.target.classList.add("flashing");
-				setTimeout(()=>{
-					event.target.classList.remove("flashing");
-				},500);
-			}, function(err) {
-				console.error('Could not copy text: ', err);
-			});
-		}
-	// } else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	} else if (event.target.parentNode.parentNode.parentNode.querySelector("a[href]")){
-		const targetElement = event.target.parentNode.parentNode.parentNode;
-		const linkOwnerDiv = document.getElementById(targetElement.id);
-		if (linkOwnerDiv && linkOwnerDiv.raw){
-			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-				event.target.classList.add("flashing");
-				setTimeout(()=>{
-					event.target.classList.remove("flashing");
-				},500);
-			}, function(err) {
-				console.error('Could not copy text: ', err);
-			});
-		}
-	// } else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("a[href]")){
-		const targetElement = event.target.parentNode.parentNode.parentNode.parentNode;
-		const linkOwnerDiv = document.getElementById(targetElement.id);
-		if (linkOwnerDiv && linkOwnerDiv.raw){
-			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-				event.target.classList.add("flashing");
-				setTimeout(()=>{
-					event.target.classList.remove("flashing");
-				},500);
-			}, function(err) {
-				console.error('Could not copy text: ', err);
-			});
-		}
+	// Find the closest .link container
+	const linkContainer = event.target.closest('.link');
+	if (!linkContainer) {
+		console.error('Could not find .link container');
+		return;
+	}
+	
+	// Find the div with the .raw property within this container
+	const linkOwnerDiv = linkContainer.querySelector('[data-raw]');
+	if (linkOwnerDiv && linkOwnerDiv.raw) {
+		navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			}, 500);
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	} else {
+		console.error('Could not find element with raw URL to copy');
 	}
 }
 var translation = {};
@@ -666,7 +645,7 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     if (sourcesList && sourcesList.size > 0) {
         addContainer.innerHTML = `
             <select id="new${inputId}Type">
-                <option value="" selected>All sources</option>
+                <option value="" selected>Select Sources</option>
                 ${Array.from(sourcesList).sort().map(source => 
                     `<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
                 ).join('')}
@@ -1589,7 +1568,13 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 
         const ele = document.querySelector(`input[data-textsetting='${key}'],textarea[data-textsetting='${key}']`);
         if (ele) {
-            ele.value = valueToSet; // valueToSet is settingObj.textsetting
+            // For fields that default to "all/none" when empty, don't load saved values
+            const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
+            if (defaultToEmptyFields.includes(key)) {
+                ele.value = ''; // Always start with empty for these fields
+            } else {
+                ele.value = valueToSet; // valueToSet is settingObj.textsetting
+            }
 
             if (ele.dataset.palette) {
                 try {
@@ -2966,6 +2951,13 @@ function updateSettings(ele, sync = true, value = null) {
     
     // Handle text settings
     if (ele.dataset.textsetting && sync) {
+        // For fields that default to "all/none" when empty, don't save empty values
+        const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
+        if (defaultToEmptyFields.includes(ele.dataset.textsetting) && !ele.value.trim()) {
+            // Don't save empty values for these fields
+            return;
+        }
+        
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
             type: "textsetting",
@@ -3462,7 +3454,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         // Check if the provider supports testing
         const provider = document.getElementById('ttsProvider').value || "system";
         if (provider === 'piper' || provider === 'espeak') {
-            let warningMsg = getTranslation("tts-test-not-available") || "Testing is not available for {provider}. This TTS provider works during streaming only.";
+            let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
             this.showFeedback(warningMsg, 'error');
             return;
@@ -4349,7 +4341,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			  addContainer.innerHTML = `
 				<input type="text" id="new${id}" placeholder="Add username">
 				<select id="new${id}Type">
-				  <option value="" selected>All sources</option>
+				  <option value="" selected>Select Sources</option>
 				  ${Array.from(sourcesList).sort().map(source => 
 					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
 				  ).join('')}
@@ -4425,7 +4417,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (sourcesList && sourcesList.size > 0) {
 				  addContainer.innerHTML = `
 					<select id="new${id}Type">
-					  <option value="" selected>All sources</option>
+					  <option value="" selected>Select Sources</option>
 					  ${Array.from(sourcesList).sort().map(source => 
 						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
 					  ).join('')}
