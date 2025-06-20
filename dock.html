@@ -7969,7 +7969,7 @@
 						return;
 					}
 					
-					if (filterEmojiOnly && data.chatmessage && !data.hasDonation && !(data.hasMembership || data.membership) && !data.contentimg) {
+					if (filterEmojiOnly && data.chatmessage && !data.hasDonation && !data.contentimg) {
 						if (isEmojiOnly(data.chatmessage)) {
 							return; // Skip this message as it contains only emojis or empty HTML tags
 						}
