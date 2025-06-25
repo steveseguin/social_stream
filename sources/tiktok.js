@@ -1264,7 +1264,6 @@
 			target2 = other.nextElementSibling;
 		}
 		if (!target2) {
-			// console.log("Start2: No target found for secondary observer.");
 			return;
 		}
 		if (!window.location.href.includes("livecenter") &&
@@ -1276,7 +1275,6 @@
 			observer2 = false;
 			observedDomElementForObserver2 = null;
 		}
-		/// console.log("Attempting to start secondary event stream on target:", target2);
 		observer2 = new MutationObserver((mutations) => {
 			if (!settings.captureevents || !isExtensionOn) return;
 			mutations.forEach((mutation) => {
