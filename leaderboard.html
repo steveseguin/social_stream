@@ -463,6 +463,83 @@
             transform: translateY(-20px);
             pointer-events: none;
         }
+
+        /* Modern theme */
+        body[data-theme="modern"] {
+            --container-bg: linear-gradient(135deg, rgba(30, 30, 30, 0.95), rgba(50, 50, 50, 0.95));
+            --item-bg: rgba(255, 255, 255, 0.08);
+            --border-color: rgba(255, 255, 255, 0.15);
+            --accent-gold: #ffc107;
+            --accent-silver: #9e9e9e;
+            --accent-bronze: #ff6f00;
+        }
+
+        body[data-theme="modern"] .leaderboard-container {
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Classic theme */
+        body[data-theme="classic"] {
+            --container-bg: #f5f5dc;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --item-bg: rgba(0, 0, 0, 0.05);
+            --border-color: rgba(0, 0, 0, 0.1);
+            --accent-gold: #d4af37;
+            --accent-silver: #71706e;
+            --accent-bronze: #824a02;
+        }
+
+        body[data-theme="classic"] .leaderboard-container {
+            border: 2px solid var(--border-color);
+        }
+
+        /* Gaming theme */
+        body[data-theme="gaming"] {
+            --container-bg: linear-gradient(135deg, #1a1a2e, #16213e);
+            --item-bg: rgba(255, 255, 255, 0.05);
+            --border-color: #e94560;
+            --accent-gold: #f39c12;
+            --accent-silver: #bdc3c7;
+            --accent-bronze: #e67e22;
+            --text-primary: #ffffff;
+        }
+
+        body[data-theme="gaming"] .leaderboard-container {
+            border: 2px solid var(--border-color);
+            box-shadow: 0 0 20px rgba(233, 69, 96, 0.3);
+        }
+
+        body[data-theme="gaming"] .leaderboard-title {
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Gradient theme */
+        body[data-theme="gradient"] {
+            --container-bg: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+            --item-bg: rgba(255, 255, 255, 0.1);
+            --border-color: rgba(255, 255, 255, 0.3);
+            --text-primary: #ffffff;
+        }
+
+        body[data-theme="gradient"] .leaderboard-container {
+            backdrop-filter: blur(15px);
+        }
+
+        /* Disable animations when not enabled */
+        body:not([data-animated="true"]) * {
+            animation: none !important;
+            transition: none !important;
+        }
+
+        body[data-animated="true"] .leaderboard-item {
+            transition: all 0.3s ease;
+        }
+
+        body[data-animated="true"] .new-entry {
+            animation: slideIn 0.5s ease-out;
+        }
     </style>
 </head>
 <body>
@@ -488,19 +565,29 @@
         const layout = urlParams.get('layout') || 'corner';
         document.body.setAttribute('data-layout', layout);
         
-        // Theme: dark (default), minimal, glass, neon
+        // Theme: dark (default), minimal, glass, neon, modern, classic, gaming, gradient
         const theme = urlParams.get('theme') || 'dark';
         document.body.setAttribute('data-theme', theme);
         
         // Configuration
-        const topCount = parseInt(urlParams.get('top') || (layout === 'bar' ? '5' : '10'));
+        const topCount = parseInt(urlParams.get('maxentries') || urlParams.get('top') || (layout === 'bar' ? '5' : '10'));
         const resetInterval = parseInt(urlParams.get('reset') || '0'); // hours
-        const showAvatars = urlParams.has('avatars');
+        const showAvatars = urlParams.has('showavatar') || urlParams.has('avatars');
         const showDonations = urlParams.has('donations');
-        const showSourceIcons = !urlParams.has('nosource');
+        const showSourceIcons = urlParams.has('showsource'); // default false - only show when checkbox is checked
         const hideEmpty = urlParams.has('hideempty');
         const autoHide = urlParams.has('autohide');
         const autoHideDelay = parseInt(urlParams.get('hidedelay') || '10') * 1000; // seconds to ms
+        
+        // New parameters from popup.html
+        const rankingType = urlParams.get('rankby') || 'combined';
+        // Default to showing rank and score (essential for leaderboard)
+        const showRank = true; // Always show rank numbers
+        const showScore = true; // Always show scores
+        const enableAnimations = urlParams.has('animated');
+        const updateIntervalSeconds = parseInt(urlParams.get('updateinterval') || '0');
+        const updateInterval = updateIntervalSeconds > 0 ? updateIntervalSeconds * 1000 : null;
+        const persistData = urlParams.has('persistdata');
         
         // Custom styling
         const customBg = urlParams.get('bg');
@@ -522,6 +609,11 @@
         if (autoHide) {
             document.body.setAttribute('data-autohide', 'true');
         }
+        
+        // Animations setup
+        if (enableAnimations) {
+            document.body.setAttribute('data-animated', 'true');
+        }
 
         // User tracking
         const users = new Map();
@@ -538,20 +630,51 @@
                 this.isMember = false;
                 this.avatarUrl = null;
                 this.lastActivity = Date.now();
+                // Engagement metrics
+                this.eventCount = 0; // raids, hosts, follows, etc
+                this.giftCount = 0; // gift subs, stickers, etc
+                this.bitsOrCoins = 0; // Twitch bits or TikTok coins
+                this.isMod = false;
+                this.isVip = false;
+                this.isVerified = false;
             }
 
             get score() {
-                return (
-                    this.messageCount * 1 +
-                    this.donations * 100 +
-                    (this.isMember ? 50 : 0)
-                );
+                switch(rankingType) {
+                    case 'donations':
+                        return this.donations;
+                    case 'messages':
+                        return this.messageCount;
+                    case 'combined':
+                        // Combined engagement + donations score
+                        const baseScore = this.messageCount * 1; // 1 point per message
+                        const donationScore = this.donations * 100; // $1 = 100 points
+                        const membershipScore = this.isMember ? 50 : 0; // 50 points for members
+                        const eventScore = this.eventCount * 25; // 25 points per event (raid, host, follow)
+                        const giftScore = this.giftCount * 50; // 50 points per gift
+                        const bitsCoinsScore = this.bitsOrCoins * 0.5; // 0.5 points per bit/coin
+                        const statusScore = (this.isMod ? 100 : 0) + (this.isVip ? 75 : 0) + (this.isVerified ? 50 : 0);
+                        
+                        return baseScore + donationScore + membershipScore + eventScore + giftScore + bitsCoinsScore + statusScore;
+                    default:
+                        // Default to simple combined scoring
+                        return (
+                            this.messageCount * 1 +
+                            this.donations * 100 +
+                            (this.isMember ? 50 : 0)
+                        );
+                }
             }
 
             getBadges() {
                 let badges = [];
+                if (this.isMod) badges.push('🛡️');
+                if (this.isVip) badges.push('⭐');
+                if (this.isVerified) badges.push('✓');
                 if (this.isMember) badges.push('👑');
                 if (this.donations > 0) badges.push('💝');
+                if (this.giftCount > 0) badges.push('🎁');
+                if (this.eventCount > 0) badges.push('🎉');
                 if (this.messageCount > 50) badges.push('🔥');
                 else if (this.messageCount > 20) badges.push('💬');
                 return badges;
@@ -565,6 +688,92 @@
             }
             return users.get(key);
         }
+        
+        // Persistence functions
+        function getStorageKey() {
+            // Create a unique key based on session and ranking type
+            const session = urlParams.get('session') || 'default';
+            return `leaderboard_${session}_${rankingType}`;
+        }
+        
+        function saveToLocalStorage() {
+            if (!persistData) return;
+            
+            try {
+                const dataToSave = {
+                    timestamp: Date.now(),
+                    users: Array.from(users.entries()).map(([key, user]) => ({
+                        key,
+                        name: user.name,
+                        type: user.type,
+                        messageCount: user.messageCount,
+                        donations: user.donations,
+                        isMember: user.isMember,
+                        avatarUrl: user.avatarUrl,
+                        eventCount: user.eventCount,
+                        giftCount: user.giftCount,
+                        bitsOrCoins: user.bitsOrCoins,
+                        isMod: user.isMod,
+                        isVip: user.isVip,
+                        isVerified: user.isVerified
+                    })),
+                    lastResetTime
+                };
+                
+                localStorage.setItem(getStorageKey(), JSON.stringify(dataToSave));
+            } catch (error) {
+                console.error('Error saving leaderboard data:', error);
+            }
+        }
+        
+        function loadFromLocalStorage() {
+            if (!persistData) return false;
+            
+            try {
+                const stored = localStorage.getItem(getStorageKey());
+                if (!stored) return false;
+                
+                const data = JSON.parse(stored);
+                
+                // Check if data is too old (optional: implement expiry)
+                const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+                if (Date.now() - data.timestamp > maxAge) {
+                    localStorage.removeItem(getStorageKey());
+                    return false;
+                }
+                
+                // Restore users
+                users.clear();
+                data.users.forEach(userData => {
+                    const user = new User(userData.name, userData.type);
+                    Object.assign(user, userData);
+                    users.set(userData.key, user);
+                });
+                
+                // Restore reset time
+                if (data.lastResetTime) {
+                    lastResetTime = data.lastResetTime;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading leaderboard data:', error);
+                return false;
+            }
+        }
+
+        function getScoreLabel() {
+            switch(rankingType) {
+                case 'donations':
+                    return 'donated';
+                case 'messages':
+                    return 'messages';
+                case 'combined':
+                    return 'points';
+                default:
+                    return 'points';
+            }
+        }
 
         function checkReset() {
             if (resetInterval > 0) {
@@ -574,6 +783,9 @@
                 if (hoursSinceReset >= resetInterval) {
                     users.clear();
                     lastResetTime = now;
+                    if (persistData) {
+                        localStorage.removeItem(getStorageKey());
+                    }
                     updateLeaderboard();
                 }
             }
@@ -600,6 +812,35 @@
             if (data.membership) {
                 user.isMember = true;
             }
+            
+            // Track engagement metrics
+            if (data.event) {
+                // Track special events (raid, host, follow, etc)
+                if (['raid', 'host', 'follow', 'joined', 'liked'].includes(data.event)) {
+                    user.eventCount++;
+                }
+                // Track gifts
+                if (['gift', 'reward', 'sponsorship'].includes(data.event)) {
+                    user.giftCount++;
+                    if (data.giftCount) {
+                        user.giftCount += (data.giftCount - 1); // Add additional gifts if bulk gifting
+                    }
+                }
+            }
+            
+            // Track bits and coins
+            if (data.bits) {
+                user.bitsOrCoins += parseInt(data.bits) || 0;
+            }
+            if (data.coins) {
+                user.bitsOrCoins += parseInt(data.coins) || 0;
+            }
+            
+            // Track special statuses
+            if (data.mod) user.isMod = true;
+            if (data.vip) user.isVip = true;
+            if (data.verified) user.isVerified = true;
+
 
             if (data.hasDonation && showDonations) {
                 try {
@@ -616,6 +857,7 @@
 
             updateLeaderboard();
             handleAutoHide();
+            saveToLocalStorage();
         }
 
         function updateLeaderboard() {
@@ -678,7 +920,11 @@
                     
                     // Update score
                     const scoreEl = listItem.querySelector('.score-number');
-                    if (scoreEl) scoreEl.textContent = user.score.toLocaleString();
+                    if (scoreEl && showScore) scoreEl.textContent = user.score.toLocaleString();
+                    
+                    // Update score label
+                    const scoreLabelEl = listItem.querySelector('.score-label');
+                    if (scoreLabelEl && showScore) scoreLabelEl.textContent = getScoreLabel();
                     
                     // Update badges
                     if (layout !== 'bar') {
@@ -712,7 +958,7 @@
                     newItem.className = `leaderboard-item rank-${rank} new-entry`;
                     
                     newItem.innerHTML = `
-                        <div class="rank-number">${rank}</div>
+                        ${showRank ? `<div class="rank-number">${rank}</div>` : ''}
                         ${showAvatars && user.avatarUrl ? 
                             `<img src="${user.avatarUrl}" alt="${user.name}" class="user-avatar" onerror="this.style.display='none'">` : 
                             ''}
@@ -727,10 +973,10 @@
                                 `<div class="user-badges">${badges.join(' ')}</div>` : 
                                 ''}
                         </div>
-                        <div class="user-score">
+                        ${showScore ? `<div class="user-score">
                             <div class="score-number">${user.score.toLocaleString()}</div>
-                            <div class="score-label">points</div>
-                        </div>
+                            <div class="score-label">${getScoreLabel()}</div>
+                        </div>` : ''}
                     `;
                     
                     // Insert at correct position
@@ -804,9 +1050,20 @@
             }
         });
 
+        // Load persisted data if enabled
+        const dataLoaded = loadFromLocalStorage();
+        
         // Check for reset periodically
         if (resetInterval > 0) {
             setInterval(checkReset, 60000); // Check every minute
+        }
+        
+        // Update leaderboard periodically if interval is set
+        if (updateInterval) {
+            setInterval(() => {
+                updateLeaderboard();
+                saveToLocalStorage();
+            }, updateInterval);
         }
 
         // Initial render
@@ -815,6 +1072,18 @@
         // If hideempty is set, don't show until we have data
         if (hideEmpty && users.size === 0) {
             document.getElementById('leaderboard-container').classList.remove('visible');
+        }
+        
+        // If we loaded persisted data, show a subtle indicator
+        if (dataLoaded && users.size > 0) {
+            console.log('Leaderboard data restored from previous session');
+        }
+        
+        // Save data periodically if persistence is enabled
+        if (persistData) {
+            setInterval(() => {
+                saveToLocalStorage();
+            }, 30000); // Save every 30 seconds
         }
     </script>
 </body>
