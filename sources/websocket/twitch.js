@@ -365,6 +365,12 @@ try{
 			case 'PRIVMSG':
 			  processMessage(parsedMessage);
 			  break;
+			case 'USERNOTICE':
+			  // Handle raids and other user notices
+			  if (settings.captureevents) {
+				processUserNotice(parsedMessage);
+			  }
+			  break;
 			case '366': // End of NAMES list
 			case 'CAP': // Capability acknowledgment
 			case '001': // Welcome message
@@ -896,46 +902,221 @@ try{
 		const user = parsedMessage.prefix.split('!')[0];
 		const message = parsedMessage.trailing;
 		channel = parsedMessage.params[0] || channel;
-		const userInfo = await getUserInfo(user); 
+		const userInfo = await getUserInfo(user);
+		
+		// Parse subscriber info from badge tags
+		let subscriber = "";
+		let subtitle = "";
+		let mod = false;
+		const badgeList = parseBadges(parsedMessage);
+		
+		if (parsedMessage.tags && parsedMessage.tags.badges) {
+			const badges = parsedMessage.tags.badges.split(',');
+			badges.forEach(badge => {
+				if (badge.startsWith('subscriber/')) {
+					subscriber = "Subscriber";
+					const months = badge.split('/')[1];
+					if (months && months !== "0") {
+						subtitle = months + (months === "1" ? "-Month" : "-Months");
+					}
+				} else if (badge.startsWith('moderator/') || badge.startsWith('broadcaster/')) {
+					mod = true;
+				}
+			});
+		}
+		
+		// Apply member chat only filter if enabled
+		if (settings.memberchatonly && !subscriber) {
+			return;
+		}
+		
+		// Apply custom twitch state filter if enabled
+		if (channel && settings.customtwitchstate) {
+			if (settings.customtwitchaccount && settings.customtwitchaccount.textsetting && 
+				settings.customtwitchaccount.textsetting.toLowerCase() !== channel.toLowerCase()) {
+				return;
+			} else if (!settings.customtwitchaccount) {
+				return;
+			}
+		}
+		
+		// Apply delay if enabled
+		if (settings.delaytwitch) {
+			await new Promise(resolve => setTimeout(resolve, 3000));
+		}
+		
+		// Parse bits/cheers from message
+		let hasDonation = "";
+		if (parsedMessage.tags && parsedMessage.tags.bits) {
+			const bits = parseInt(parsedMessage.tags.bits);
+			if (bits === 1) {
+				hasDonation = bits + " bit";
+			} else if (bits > 1) {
+				hasDonation = bits + " bits";
+			}
+		}
+		
+		// Parse reply if enabled
+		let replyMessage = "";
+		let originalMessage = "";
+		if (settings.replyingto && parsedMessage.tags && parsedMessage.tags['reply-parent-msg-body']) {
+			replyMessage = parsedMessage.tags['reply-parent-msg-body'];
+			originalMessage = message;
+		}
 
 		// Add the message to the UI
 		var span = document.createElement("div");
-		span.innerText = `${(userInfo ? userInfo.display_name : user)}: ${message}`;
+		let badgeHtml = '';
+		badgeList.forEach(badgeUrl => {
+			badgeHtml += `<img class="chat-badge" src="${badgeUrl}" alt="">`;
+		});
+		
+		let displayMessage = escapeHtml(message);
+		if (replyMessage) {
+			displayMessage = `<i><small>${escapeHtml(replyMessage)}:</small></i> ${displayMessage}`;
+		}
+		
+		span.innerHTML = `${badgeHtml}${escapeHtml((userInfo ? userInfo.display_name : user))}: ${displayMessage}`;
 		document.querySelector("#textarea").appendChild(span);
 		if (document.querySelector("#textarea").childNodes.length > 10) {
 			document.querySelector("#textarea").childNodes[0].remove();
 		}
 
-		// Process badges before creating the data object
-		const badgeHTML = parseBadges(parsedMessage);
-
 		var data = {};
 		data.chatname = userInfo ? userInfo.display_name : user;
-		data.chatbadges = badgeHTML || "";  // Ensure badges are included
+		data.username = user;
+		
+		// Convert badge URLs to badge objects
+		data.chatbadges = badgeList.map(url => ({ type: "img", src: url }));
+		
 		data.backgroundColor = "";
-		data.textColor = userInfo ? userInfo.color : "";
-		data.chatmessage = replaceEmotesWithImages(message);
+		data.textColor = parsedMessage.tags?.color || "";
+		data.nameColor = parsedMessage.tags?.color || "";
+		
+		// Handle reply messages
+		if (replyMessage) {
+			data.initial = replyMessage;
+			data.reply = originalMessage;
+			if (settings.textonlymode) {
+				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message);
+			} else {
+				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message);
+			}
+		} else {
+			data.chatmessage = replaceEmotesWithImages(message);
+		}
+		
+		data.membership = subscriber;
+		data.subtitle = subtitle;
+		data.mod = mod;
 
 		try {
 			data.chatimg = userInfo ? userInfo.profile_image_url : "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
 		} catch (e) {
 			data.chatimg = "";
 		}
-		data.hasDonation = "";
-		data.membership = "";
+		data.hasDonation = hasDonation;
 		if (channel) {
 			data.sourceImg = getTwitchAvatarImage(channel);
+			data.sourceName = channel;
 		}
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
+		
+		if (hasDonation) {
+			data.title = "CHEERS";
+		}
+		
+		// Message ID for deduplication
+		if (parsedMessage.tags && parsedMessage.tags.id) {
+			data.id = parsedMessage.tags.id;
+		}
+		
 		} catch(e){
 			console.error(e);
-			
 		}
 		//console.log(data);
 		pushMessage(data);
 	}
 
+	function addEvent(description) {
+		const eventsList = document.getElementById('events-list');
+		if (!eventsList) return;
+		
+		const eventItem = document.createElement('div');
+		eventItem.className = 'event-item';
+		eventItem.textContent = description;
+		
+		// Add to top of list
+		eventsList.insertBefore(eventItem, eventsList.firstChild);
+		
+		// Keep only last 10 events
+		while (eventsList.children.length > 10) {
+			eventsList.removeChild(eventsList.lastChild);
+		}
+	}
+	
+	function processUserNotice(parsedMessage) {
+		// Handle various USERNOTICE types (raids, subs, etc)
+		const msgId = parsedMessage.tags['msg-id'];
+		const displayName = parsedMessage.tags['display-name'] || '';
+		const systemMsg = parsedMessage.tags['system-msg'] || '';
+		
+		let eventData = {
+			type: "twitch",
+			event: true,
+			textonly: settings.textonlymode || false
+		};
+		
+		switch(msgId) {
+			case 'raid':
+				const raidViewerCount = parsedMessage.tags['msg-param-viewerCount'] || '0';
+				eventData.chatmessage = systemMsg || `${displayName} is raiding with ${raidViewerCount} viewers!`;
+				eventData.event = 'raid';
+				addEvent(`Raid: ${displayName} with ${raidViewerCount} viewers`);
+				break;
+				
+			case 'sub':
+			case 'resub':
+				eventData.chatmessage = systemMsg;
+				eventData.event = msgId === 'sub' ? 'new_subscriber' : 'resub';
+				if (parsedMessage.trailing) {
+					eventData.chatmessage += " - " + parsedMessage.trailing;
+				}
+				addEvent(`${msgId === 'sub' ? 'Subscribe' : 'Resub'}: ${displayName}`);
+				break;
+				
+			case 'subgift':
+				eventData.chatmessage = systemMsg;
+				eventData.event = 'subscription_gift';
+				addEvent(`Gift Sub: ${displayName}`);
+				break;
+				
+			default:
+				// Generic event message
+				eventData.chatmessage = systemMsg || parsedMessage.trailing || '';
+				eventData.event = msgId || 'notification';
+				if (msgId) {
+					addEvent(`${msgId}: ${displayName}`);
+				}
+		}
+		
+		eventData.chatname = displayName;
+		
+		// Add to UI
+		if (eventData.chatmessage) {
+			var span = document.createElement("div");
+			span.style.fontStyle = "italic";
+			span.innerHTML = escapeHtml(eventData.chatmessage);
+			document.querySelector("#textarea").appendChild(span);
+			if (document.querySelector("#textarea").childNodes.length > 10) {
+				document.querySelector("#textarea").childNodes[0].remove();
+			}
+			
+			pushMessage(eventData);
+		}
+	}
+	
 	function updateStats(type, data) {
 		switch(type) {
 			case 'viewer_update':
@@ -1002,13 +1183,13 @@ try{
 	
 	function parseBadges(parsedMessage) {
 		// Early return if no valid badges data
-		if (!parsedMessage?.tags?.badges || typeof parsedMessage.tags.badges !== 'string' || !globalBadges || !channelBadges) {
-			return "";
+		if (!parsedMessage?.tags?.badges || typeof parsedMessage.tags.badges !== 'string') {
+			return [];
 		}
 
 		// Skip empty badge strings
 		if (parsedMessage.tags.badges.trim() === '') {
-			return "";
+			return [];
 		}
 
 		try {
@@ -1023,18 +1204,20 @@ try{
 				if (!badgeType || !badgeVersion) return;
 
 				// Check channel badges first, then fall back to global badges
-				const badgeData = (channelBadges?.[badgeType]?.[badgeVersion]) || 
-								(globalBadges?.[badgeType]?.[badgeVersion]);
-				
-				if (badgeData) {
-					badgeList.push(badgeData.image_url_2x);
+				if (globalBadges && channelBadges) {
+					const badgeData = (channelBadges?.[badgeType]?.[badgeVersion]) || 
+									(globalBadges?.[badgeType]?.[badgeVersion]);
+					
+					if (badgeData && badgeData.image_url_2x) {
+						badgeList.push(badgeData.image_url_2x);
+					}
 				}
 			});
 
 			return badgeList;
 		} catch (error) {
 			console.error('Error parsing badges:', error);
-			return "";
+			return [];
 		}
 	}
 
@@ -1054,6 +1237,10 @@ try{
 
 	function pushMessage(data) {
 		try {
+			// Show viewer count updates if enabled
+			if (data.event === 'viewer_update' && !(settings.showviewercount || settings.hypemode)) {
+				return; // Skip viewer updates if not enabled
+			}
 			
 			if (data.type && data.event) {
 				updateStats(data.event, data);
@@ -1424,6 +1611,11 @@ try{
 	function handleEventSubNotification(payload) {
 		const event = payload.event;
 		const subscription = payload.subscription;
+		
+		// Skip if captureevents is disabled
+		if (!settings.captureevents) {
+			return;
+		}
 
 		switch (subscription.type) {
 			case 'channel.follow':
@@ -1433,8 +1625,11 @@ try{
 					chatmessage: `${event.user_name} has started following`,
 					chatname: event.user_name,
 					userid: event.user_id,
-					timestamp: event.followed_at
+					timestamp: event.followed_at,
+					textonly: settings.textonlymode || false
 				});
+				// Add to recent events
+				addEvent(`Follow: ${event.user_name}`);
 				break;
 
 			case 'channel.subscribe':
@@ -1445,8 +1640,11 @@ try{
 					chatname: event.user_name,
 					userid: event.user_id,
 					tier: event.tier,
-					isGift: event.is_gift
+					isGift: event.is_gift,
+					textonly: settings.textonlymode || false
 				});
+				// Add to recent events
+				addEvent(`Subscribe: ${event.user_name} (Tier ${event.tier})`);
 				break;
 
 			case 'channel.subscription.gift':
@@ -1457,8 +1655,11 @@ try{
 					chatmessage: `${event.user_name} has gifted ${event.total} tier ${event.tier} subs!`,
 					userid: event.user_id,
 					total: event.total,
-					tier: event.tier
+					tier: event.tier,
+					textonly: settings.textonlymode || false
 				});
+				// Add to recent events
+				addEvent(`Gift Subs: ${event.user_name} gifted ${event.total} subs`);
 				break;
 
 			case 'channel.cheer':
@@ -1469,15 +1670,19 @@ try{
 					userid: event.user_id,
 					bits: event.bits,
 					chatmessage: event.message,
-					hasDonation: event.bits + " bits"
+					hasDonation: event.bits + " bits",
+					title: "CHEERS",
+					textonly: settings.textonlymode || false
 				});
+				// Add to recent events
+				addEvent(`Cheer: ${event.user_name || 'Anonymous'} cheered ${event.bits} bits`);
 				break;
 			case 'channel.channel_points_custom_reward_redemption.add':
-				const rewardTitle = data.reward.title;
-				const rewardCost = data.reward.cost;
-				const userInput = data.user_input || '';
+				const rewardTitle = event.reward.title;
+				const rewardCost = event.reward.cost;
+				const userInput = event.user_input || '';
 				
-				let rewardMessage = `${data.user_name} redeemed ${rewardTitle} (${rewardCost} points)`;
+				let rewardMessage = `${event.user_name} redeemed ${rewardTitle} (${rewardCost} points)`;
 				if (userInput) {
 					rewardMessage += `: ${userInput}`;
 				}
@@ -1485,24 +1690,25 @@ try{
 				pushMessage({
 					type: "twitch",
 					event: 'channel_points',
-					chatname: data.user_name,
-					userid: data.user_id,
+					chatname: event.user_name,
+					userid: event.user_id,
 					chatmessage: rewardMessage,
 					reward: {
-						id: data.reward.id,
+						id: event.reward.id,
 						title: rewardTitle,
 						cost: rewardCost,
-						prompt: data.reward.prompt,
+						prompt: event.reward.prompt,
 						userInput: userInput,
-						backgroundColor: data.reward.background_color,
-						redemptionId: data.id,
-						status: data.status
+						backgroundColor: event.reward.background_color,
+						redemptionId: event.id,
+						status: event.status
 					},
-					timestamp: data.redeemed_at
+					timestamp: event.redeemed_at,
+					textonly: settings.textonlymode || false
 				});
 				
 				// Add to recent events
-				addEvent(`Channel Points: ${data.user_name} redeemed ${rewardTitle}`);
+				addEvent(`Channel Points: ${event.user_name} redeemed ${rewardTitle}`);
 				break;
 		}
 	}
