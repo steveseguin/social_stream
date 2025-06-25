@@ -697,28 +697,62 @@ try {
 								isChatModerator: item.authorDetails.isChatModerator,
 								authorChannelId: item.authorDetails.channelId,
 								publishedAt,
-								skipEvent: isBacklogMessage
+								skipEvent: isBacklogMessage,
+								isMembershipMessage: false // Regular messages are not membership messages
 							});
 						}
 						
 						// Process special message types
 						if (item.snippet.superChatDetails) {
+							// Build badges for super chat author
+							let superChatBadges = [];
+							if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "👑"});
+							if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "🛡️"});
+							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
+							
 							processSuperChat({
 								authorName: item.authorDetails.displayName,
 								amount: item.snippet.superChatDetails.amountDisplayString,
 								message: item.snippet.superChatDetails.userComment,
 								tier: item.snippet.superChatDetails.tier,
 								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId
+								authorChannelId: item.authorDetails.channelId,
+								badges: superChatBadges.length > 0 ? superChatBadges : ""
 							});
 						}
 						if (item.snippet.membershipDetails) {
-							processMembership({
-								authorName: item.authorDetails.displayName,
-								level: item.snippet.membershipDetails.memberLevelName,
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								authorChannelId: item.authorDetails.channelId
-							});
+							// Process membership events with the isMembershipMessage flag
+							const membershipMessage = item.snippet.displayMessage || '';
+							if (membershipMessage && !isBacklogMessage) {
+								// This is a monthly featured message from a member
+								queueMessage({
+									authorName: item.authorDetails.displayName,
+									message: membershipMessage,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									isChatOwner: item.authorDetails.isChatOwner,
+									isChatSponsor: item.authorDetails.isChatSponsor,
+									isChatModerator: item.authorDetails.isChatModerator,
+									authorChannelId: item.authorDetails.channelId,
+									publishedAt,
+									skipEvent: isBacklogMessage,
+									isMembershipMessage: true // This is a special membership message
+								});
+							} else {
+								// Build badges for membership author
+								let membershipBadges = [];
+								if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "👑"});
+								if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "🛡️"});
+								membershipBadges.push({"type": "text", "text": "⭐"}); // Always add member badge
+								
+								// New membership, renewal, or upgrade without a message
+								processMembership({
+									authorName: item.authorDetails.displayName,
+									level: item.snippet.membershipDetails.memberLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									badges: membershipBadges
+								});
+							}
 						}
 						
 						// Update timestamp once for all message types
@@ -1382,10 +1416,14 @@ try {
 				const stats = data.items[0].statistics;
 				if (stats.subscriberCount) {
 					updateStats('subscriber_update', { meta: stats.subscriberCount });
-					pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'subscriber_update', meta: stats.subscriberCount });
+					if (settings.showsubscount !== false) { // Only skip if explicitly false
+						pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'subscriber_update', meta: stats.subscriberCount });
+					}
 				}
 				if (stats.viewCount) {
-					pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount });
+					if (settings.showviewcount || settings.hypemode) {
+						pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount });
+					}
 				}
 			}
 		} catch (error) {
@@ -1630,11 +1668,30 @@ try {
 
 	function processMessage(messageData) {
 		try {
-			let badgeText = '';
+			// Apply member chat only filter if enabled
+			if (settings.memberchatonly && !messageData.isChatSponsor && !messageData.membership && !messageData.event) {
+				return; // Skip non-member messages
+			}
 			
-			if (messageData.isChatOwner) { badgeText = "👑"; }
-			if (messageData.isChatModerator) { badgeText = "🛡️"; }
-			if (messageData.isChatSponsor) { badgeText = "⭐"; }
+			let chatbadges = [];
+			let nameColor = '';
+			
+			// Build badges array - order matters (owner > mod > member)
+			if (messageData.isChatOwner) { 
+				chatbadges.push({"type": "text", "text": "👑"}); // Crown for owner
+			}
+			if (messageData.isChatModerator) { 
+				chatbadges.push({"type": "text", "text": "🛡️"}); // Shield for moderator
+				if (!settings.nosubcolor) {
+					nameColor = "#5e84f1";
+				}
+			}
+			if (messageData.isChatSponsor) { 
+				chatbadges.push({"type": "text", "text": "⭐"}); // Star for member/sponsor
+				if (!settings.nosubcolor && !nameColor) { // Don't override mod color
+					nameColor = "#107516";
+				}
+			}
 
 			//console.log("Processing message:", messageData.message, "EMOTELIST available:", !!EMOTELIST);
 			if (!messageData.message && messageData.message !== '') {
@@ -1649,6 +1706,7 @@ try {
 				if (textarea) {
 					var span = document.createElement("div");
 					let badgeHtml = '';
+					// Display badges in the same order as they're sent
 					if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
 					if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
 					if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
@@ -1667,16 +1725,27 @@ try {
 				}
 			}
 			if (!messageData.skipEvent && messageWithEmojis) {
+				// Determine membership status based on settings
+				let membershipStatus = "";
+				if (messageData.isChatSponsor) {
+					// If limitedyoutubememberchat is enabled, only mark as member if it's a special membership message
+					if (!settings.limitedyoutubememberchat || messageData.isMembershipMessage) {
+						membershipStatus = "member";
+					}
+				}
+				
 				pushMessage({
 					chatname: messageData.authorName,
-					chatbadges: (badgeText ? [{"type":"text", "text": badgeText}] : ""),
+					chatbadges: chatbadges.length > 0 ? chatbadges : "",
 					userid: messageData.authorChannelId,
+					nameColor: nameColor,
 					backgroundColor: "",
 					textColor: "",
 					chatmessage: messageWithEmojis, // Use the version with emojis replaced
 					chatimg: messageData.profileImageUrl || "",
 					hasDonation: "",
-					membership: messageData.isChatSponsor ? "member" : "",
+					membership: membershipStatus,
+					mod: messageData.isChatModerator || false,
 					type: youtubeShorts ? "youtubeshorts" : "youtube",
 					textonly: settings.textonlymode || false // Pass the setting to the extension
 				});
@@ -1710,7 +1779,7 @@ try {
 			}
 			pushMessage({
 				chatname: superChatData.authorName,
-				chatbadges: "",
+				chatbadges: superChatData.badges || "", // Use any badges passed in
 				userid: superChatData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
@@ -1719,7 +1788,8 @@ try {
 				hasDonation: superChatData.amount,
 				membership: "",
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
-				event: "donation"
+				event: "donation",
+				textonly: settings.textonlymode || false
 			});
 		} catch (e) {
 			console.error('Error processing super chat:', e);
@@ -1728,14 +1798,27 @@ try {
 	
 	function processMembership(membershipData) {
 		try {
-			addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
+			let eventType = membershipData.eventType || "new_member";
+			let displayMessage = '';
+			let nameColor = !settings.nosubcolor ? "#107516" : "";
+			
+			if (eventType === "renewal") {
+				displayMessage = `renewed membership (${membershipData.level})`;
+				addEvent(`Member Renewal: ${membershipData.authorName} - ${membershipData.level}`);
+			} else if (eventType === "upgrade") {
+				displayMessage = `upgraded membership to ${membershipData.level}`;
+				addEvent(`Member Upgrade: ${membershipData.authorName} - ${membershipData.level}`);
+			} else {
+				displayMessage = `joined as a member (${membershipData.level})`;
+				addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
+			}
 			
 			// Only update DOM if page is visible
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>joined as a member (${membershipData.level})</span>`;
+					span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>${displayMessage}</span>`;
 					textarea.appendChild(span);
 					
 					// Use same cleanup limit as regular messages
@@ -1752,17 +1835,18 @@ try {
 			
 			pushMessage({
 				chatname: escapeHtml(membershipData.authorName),
-				chatbadges: [{"type":"text", "text": "⭐"}],
+				chatbadges: membershipData.badges || [{"type":"text", "text": "⭐"}], // Use passed badges or default to star
 				userid: membershipData.authorChannelId,
+				nameColor: nameColor,
 				backgroundColor: "",
 				textColor: "",
-				chatmessage: `joined as a member (${membershipData.level})`,
+				chatmessage: displayMessage,
 				chatimg: membershipData.profileImageUrl || "",
 				hasDonation: "",
-				membership: "new_member",
+				membership: eventType === "renewal" ? "renewed_member" : eventType === "upgrade" ? "upgraded_member" : "new_member",
 				subtitle: membershipData.level,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
-				event: "new_member",
+				event: eventType,
 				textonly: settings.textonlymode || false
 			});
 		} catch (e) {
