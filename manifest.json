@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.22.7",
+  "version": "3.25.1",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -21,7 +21,8 @@
     "debugger",
     "tabs",
 	"scripting",
-	"activeTab"
+	"activeTab",
+	"tabCapture"
   ],
   "host_permissions": [
 	"http://localhost:8080/*",
@@ -146,9 +147,11 @@
     "https://play.rozy.tv/*",
     "https://www.crowdcast.io/e/*",
     "https://*.zoom.us/*",
+	"https://*.zoom.com/*",
     "https://watch.owncast.online/*",
     "https://live.simontv.org/*",
     "https://discord.com/*",
+	"https://discord.gg/*",
     "https://www.mixcloud.com/live/*/chat/",
     "https://vimeo.com/live*",
     "https://www.vimeo.com/live*",
@@ -247,7 +250,7 @@
       "js": [ "./sources/chzzk.js" ],
       "matches": [ "https://chzzk.naver.com/live/*/chat" ]
     },
-	 {
+	{
       "js": [ "./sources/parti.js" ],
       "matches": [ "https://parti.com/popout-chat?id=*" ]
     },
@@ -708,7 +711,7 @@
     },
     {
       "js": [ "./sources/zoom.js" ],
-      "matches": [ "https://*.zoom.us/*" ]
+      "matches": [ "https://*.zoom.us/*" , "https://*.zoom.com/*" ]
     },
     {
       "js": [ "./sources/crowdcast.js" ],
@@ -716,7 +719,11 @@
     },
     {
       "js": [ "./sources/discord.js" ],
-      "matches": [ "https://discord.com/*" ]
+      "matches": [ "https://discord.com/*" , "https://discord.gg/*" ]
+    },
+	{
+      "js": [ "./sources/capturevideo.js" ],
+      "matches": [ "https://discord.com/channels/*" ]
     },
     {
       "js": [ "./sources/mixcloud.js" ],

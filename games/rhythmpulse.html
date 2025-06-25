@@ -15,6 +15,10 @@
         * {
             -ms-overflow-style: none;  /* IE and Edge */
             scrollbar-width: none;  /* Firefox */
+            -webkit-user-select: none;  /* Safari */
+            -moz-user-select: none;  /* Firefox */
+            -ms-user-select: none;  /* IE10+/Edge */
+            user-select: none;  /* Standard */
         }
 
         @font-face {
@@ -270,7 +274,7 @@
         
         #instructions {
             position: absolute;
-            bottom: 140px;
+            bottom: 240px;
             left: 20px;
             background: rgba(0, 0, 0, 0.8);
             color: white;
@@ -279,11 +283,55 @@
             text-align: left;
             font-size: 16px;
             z-index: 100;
+            transition: opacity 1s ease-out;
+        }
+        
+        #instructions.fade-out {
+            opacity: 0;
+            pointer-events: none;
         }
         
         #instructions strong {
             color: #00ff88;
             font-size: 18px;
+        }
+        
+        #audio-controls {
+            position: absolute;
+            top: 120px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            text-align: center;
+        }
+        
+        #volume-slider {
+            width: 150px;
+            margin: 10px 0;
+        }
+        
+        #mute-button {
+            background: #00ff88;
+            color: #000;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+        
+        #mute-button:hover {
+            background: #00cc70;
+            transform: scale(1.05);
+        }
+        
+        #mute-button.muted {
+            background: #ff4757;
         }
         
         .sync-burst {
@@ -370,6 +418,13 @@
             <div>BPM</div>
         </div>
         
+        <div id="audio-controls">
+            <h4 style="margin-top: 0; color: #00ff88;">Audio</h4>
+            <input type="range" id="volume-slider" min="0" max="100" value="50">
+            <div id="volume-display">50%</div>
+            <button id="mute-button">🔊 Sound ON</button>
+        </div>
+        
         <div id="drum-kit">
             <h4 style="margin-top: 0; color: #00ff88;">Drum Kit</h4>
             <div class="drum-pad drum-kick" data-sound="kick">🥁</div>
@@ -423,6 +478,163 @@
             beatTimestamps: [],
             lastBeatTime: 0
         };
+
+        // Audio context and settings
+        let audioContext = null;
+        let masterGain = null;
+        let audioEnabled = true;
+        const DEFAULT_VOLUME = 0.5;
+
+        // Initialize Web Audio API
+        function initAudio() {
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                masterGain = audioContext.createGain();
+                masterGain.gain.value = DEFAULT_VOLUME;
+                masterGain.connect(audioContext.destination);
+                
+                // Resume audio context on user interaction if needed
+                if (audioContext.state === 'suspended') {
+                    document.addEventListener('click', () => {
+                        audioContext.resume();
+                    }, { once: true });
+                }
+            } catch (error) {
+                console.error('Failed to initialize Web Audio API:', error);
+                audioEnabled = false;
+            }
+        }
+
+        // Sound synthesizers
+        const drumSounds = {
+            kick: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                const osc = audioContext.createOscillator();
+                const gain = audioContext.createGain();
+                
+                osc.frequency.setValueAtTime(150, time);
+                osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+                
+                gain.gain.setValueAtTime(1, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+                
+                osc.connect(gain);
+                gain.connect(masterGain);
+                
+                osc.start(time);
+                osc.stop(time + 0.5);
+            },
+            
+            snare: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                // Noise for snare
+                const bufferSize = audioContext.sampleRate * 0.2;
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const noiseFilter = audioContext.createBiquadFilter();
+                noiseFilter.type = 'highpass';
+                noiseFilter.frequency.value = 1000;
+                
+                const noiseGain = audioContext.createGain();
+                noiseGain.gain.setValueAtTime(0.5, time);
+                noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+                
+                // Tone for body
+                const osc = audioContext.createOscillator();
+                osc.frequency.value = 200;
+                
+                const oscGain = audioContext.createGain();
+                oscGain.gain.setValueAtTime(0.7, time);
+                oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.1);
+                
+                noise.connect(noiseFilter);
+                noiseFilter.connect(noiseGain);
+                noiseGain.connect(masterGain);
+                
+                osc.connect(oscGain);
+                oscGain.connect(masterGain);
+                
+                noise.start(time);
+                osc.start(time);
+                osc.stop(time + 0.1);
+            },
+            
+            hihat: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                const bufferSize = audioContext.sampleRate * 0.05;
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'bandpass';
+                filter.frequency.value = 10000;
+                
+                const gain = audioContext.createGain();
+                gain.gain.setValueAtTime(0.3, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 0.05);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                noise.start(time);
+            },
+            
+            crash: function(time = 0) {
+                if (!audioEnabled || !audioContext) return;
+                
+                const bufferSize = audioContext.sampleRate * 2;
+                const buffer = audioContext.createBuffer(1, bufferSize, audioContext.sampleRate);
+                const output = buffer.getChannelData(0);
+                
+                for (let i = 0; i < bufferSize; i++) {
+                    output[i] = Math.random() * 2 - 1;
+                }
+                
+                const noise = audioContext.createBufferSource();
+                noise.buffer = buffer;
+                
+                const filter = audioContext.createBiquadFilter();
+                filter.type = 'highpass';
+                filter.frequency.value = 1000;
+                filter.Q.value = 10;
+                
+                const gain = audioContext.createGain();
+                gain.gain.setValueAtTime(0.8, time);
+                gain.gain.exponentialRampToValueAtTime(0.01, time + 2);
+                
+                noise.connect(filter);
+                filter.connect(gain);
+                gain.connect(masterGain);
+                
+                noise.start(time);
+            }
+        };
+
+        // Play drum sound
+        function playDrumSound(soundType) {
+            if (drumSounds[soundType]) {
+                drumSounds[soundType](audioContext.currentTime);
+            }
+        }
 
         // Sound/beat keywords
         const beatKeywords = {
@@ -580,6 +792,9 @@
                 drumPad.classList.add('active');
                 setTimeout(() => drumPad.classList.remove('active'), 200);
             }
+            
+            // Play the sound
+            playDrumSound(soundType);
         }
 
         // Calculate BPM from recent beats
@@ -837,6 +1052,45 @@
         // Initialize
         initFrequencyBars();
         updateDisplay();
+        initAudio();
+        
+        // Fade out instructions after 30 seconds
+        setTimeout(() => {
+            const instructions = document.getElementById('instructions');
+            if (instructions) {
+                instructions.classList.add('fade-out');
+            }
+        }, 30000);
+        
+        // Audio control event listeners
+        const volumeSlider = document.getElementById('volume-slider');
+        const volumeDisplay = document.getElementById('volume-display');
+        const muteButton = document.getElementById('mute-button');
+        
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = e.target.value / 100;
+            if (masterGain) {
+                masterGain.gain.value = volume;
+            }
+            volumeDisplay.textContent = e.target.value + '%';
+        });
+        
+        muteButton.addEventListener('click', () => {
+            audioEnabled = !audioEnabled;
+            if (audioEnabled) {
+                muteButton.textContent = '🔊 Sound ON';
+                muteButton.classList.remove('muted');
+                if (masterGain) {
+                    masterGain.gain.value = volumeSlider.value / 100;
+                }
+            } else {
+                muteButton.textContent = '🔇 Sound OFF';
+                muteButton.classList.add('muted');
+                if (masterGain) {
+                    masterGain.gain.value = 0;
+                }
+            }
+        });
         
         // Clean up old data periodically
         setInterval(() => {

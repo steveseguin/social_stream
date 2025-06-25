@@ -58,6 +58,10 @@ There is an easy to use sandbox to play with some of the common API commands and
     - [Best Practices and Improvements](#best-practices-and-improvements-3)
     - [Integration with Other Components](#integration-with-other-components-1)
 - [Battle royale, Polls, etc](#battle-royale-polls-etc)
+  - [Poll Control via API](#poll-control-via-api)
+    - [Basic Poll Controls](#basic-poll-controls)
+    - [Advanced Poll Controls](#advanced-poll-controls)
+    - [Example Usage](#example-usage)
   - [Battle Page (battle.html)](#battle-page-battlehtml)
     - [Communication Method](#communication-method)
     - [Game Features](#game-features)
@@ -181,6 +185,14 @@ When a message is sent, it goes to the specified output channel. Those who have 
 
 14. **Draw Mode**
     - `{"action": "drawmode", "value": true}`
+
+15. **Poll Operations**
+    - Reset: `{"action": "resetpoll"}`
+    - Close: `{"action": "closepoll"}`
+    - Load Preset: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}`
+    - Set Settings: `{"action": "setpollsettings", "value": {"pollQuestion": "What's your favorite color?", "pollType": "multiple", "multipleChoiceOptions": "Red\nBlue\nGreen"}}`
+    - Get Presets: `{"action": "getpollpresets"}`
+    - Create New: `{"action": "createpoll", "value": {"settings": {"pollQuestion": "New Poll", "pollType": "freeform"}}}`
 
 ### Channel-Specific Messaging
 
@@ -387,6 +399,7 @@ chatmessage | string | Chat message
 chatimg | string | URL or DataBlob (under ~55KB) of the user's avatar image
 type | lower-case string | the pre-qualified name of the source, eg: `twitch`, also used as the source png image
 sourceImg | string | an alternative URL to the source image; relative or absolute
+sourceName | string | the channel's name or the username of the host for the channel
 textonly | boolean | Whether the chat message is only plain text; or does it contain HTML, etc.
 hasDonation | string | The donation amount with its units.  eg: "3 roses" or "$50 USD".
 chatbadges | array | An array of URLs/Objects. If an object, it may define itself as an img/svg and other attributes
@@ -762,7 +775,7 @@ This integration allows streamers or moderators to manage waitlists or giveaways
 
 These pages may lack API support directly, however in some cases they can be controlled via the extension's API.
 
-For example the waitlist has some functions that can be controlled via the extensiion:
+For example the waitlist has some functions that can be controlled via the extension:
 
 ```
 removefromwaitlist
@@ -771,6 +784,44 @@ resetwaitlist
 stopentries
 downloadwaitlist
 selectwinner
+```
+
+## Poll Control via API
+
+The poll system can now be controlled through the API with the following actions:
+
+### Basic Poll Controls
+- **Reset Poll**: `{"action": "resetpoll"}` - Resets the current poll, clearing all votes
+- **Close Poll**: `{"action": "closepoll"}` - Closes the current poll, preventing new votes
+
+### Advanced Poll Controls
+- **Load Poll Preset**: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}` - Loads a previously saved poll preset by its ID
+- **Get Poll Presets**: `{"action": "getpollpresets"}` - Returns a list of all saved poll presets with their IDs and names
+- **Set Poll Settings**: `{"action": "setpollsettings", "value": {...}}` - Updates the current poll settings
+  - Available settings: `pollType`, `pollQuestion`, `multipleChoiceOptions`, `pollStyle`, `pollTimer`, `pollTimerState`, `pollTally`, `pollSpam`
+- **Create New Poll**: `{"action": "createpoll", "value": {"settings": {...}}}` - Creates a new poll with specified settings
+
+### Example Usage
+```javascript
+// Create a multiple choice poll
+ws.send(JSON.stringify({
+    action: "createpoll",
+    value: {
+        settings: {
+            pollType: "multiple",
+            pollQuestion: "What's your favorite streaming platform?",
+            multipleChoiceOptions: "Twitch\nYouTube\nFacebook\nOther",
+            pollTimer: "120",
+            pollTimerState: true
+        }
+    }
+}));
+
+// Load a saved poll preset
+ws.send(JSON.stringify({
+    action: "loadpoll",
+    value: { pollId: "poll-1234567890" }
+}));
 ```
 
 Just to touch on the Battle Royal game though,

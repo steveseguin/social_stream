@@ -236,9 +236,16 @@ if (typeof chrome.runtime == "undefined") {
 		var sender = {};
 		sender.tab = {};
 		sender.tab.id = null;
-		onMessageCallback(args[0], sender, function (response) {
+		const request = args[0];
+		const callbackId = request ? request.callbackId : null;
+		
+		onMessageCallback(request, sender, function (response) {
 			// (request, sender, sendResponse)
 			//log("sending response to pop up:",response);
+			// Preserve callbackId in response if it exists
+			if (callbackId && response) {
+				response.callbackId = callbackId;
+			}
 			ipcRenderer.send("fromBackgroundPopupResponse", response);
 		});
 	});
@@ -2881,6 +2888,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "textonlymode") { 
 				pushSettingChange();
 			}
+			if (request.setting == "vdoninjadiscord") { 
+				pushSettingChange();
+			}
 			if (request.setting == "ignorealternatives") {
 				pushSettingChange();
 			}
@@ -3363,6 +3373,30 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			
 			triggerFakeRandomMessage();
 			
+		} else if (request.action === "startReplay") {
+			// Handle replay messages from timestamp
+			console.log('Received startReplay request:', request);
+			
+			// Check if extension is on
+			if (!isExtensionOn) {
+				sendResponse({ error: 'Social Stream is not enabled. Please turn it on first.' });
+				return;
+			}
+			
+			handleReplayMessages(request, sendResponse);
+			return true; // async response
+		} else if (request.action === "pauseReplay") {
+			pauseReplay(request.sessionId);
+			sendResponse({success: true, state: isExtensionOn});
+		} else if (request.action === "resumeReplay") {
+			resumeReplay(request.sessionId);
+			sendResponse({success: true, state: isExtensionOn});
+		} else if (request.action === "stopReplay") {
+			stopReplay(request.sessionId);
+			sendResponse({success: true, state: isExtensionOn});
+		} else if (request.action === "updateReplaySpeed") {
+			updateReplaySpeed(request.sessionId, request.speed);
+			sendResponse({success: true, state: isExtensionOn});
 		} else if (request.cmd && request.cmd === "sidUpdated") {
 			if (request.streamID) {
 				streamID = request.streamID;
@@ -3656,7 +3690,8 @@ async function sendToDestinations(message) {
 		}
 
 		if (settings.filtereventstoggle && settings.filterevents && settings.filterevents.textsetting && message.chatmessage && message.event) {
-			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && message.chatmessage.includes(v)))) {
+			const messageText = message.textContent || message.chatmessage;
+			if (settings.filterevents.textsetting.split(",").some(v => (v.trim() && messageText.includes(v)))) {
 				return false;
 			}
 		}
@@ -3757,7 +3792,7 @@ async function sendToDestinations(message) {
 	return true;
 }
 
-async function replayMessagesFromTimestamp(startTimestamp) {
+async function replayMessagesFromTimestamp(startTimestamp, endTimestamp = null, speed = 1, sessionId = null) {
     const db = await messageStoreDB.ensureDB();
     
     return new Promise((resolve, reject) => {
@@ -3766,7 +3801,13 @@ async function replayMessagesFromTimestamp(startTimestamp) {
         const index = store.index("timestamp");
         const messages = [];
         
-        const range = IDBKeyRange.lowerBound(startTimestamp);
+        let range;
+        if (endTimestamp) {
+            range = IDBKeyRange.bound(startTimestamp, endTimestamp);
+        } else {
+            range = IDBKeyRange.lowerBound(startTimestamp);
+        }
+        
         const cursorRequest = index.openCursor(range);
         
         cursorRequest.onsuccess = (event) => {
@@ -3776,29 +3817,163 @@ async function replayMessagesFromTimestamp(startTimestamp) {
                 cursor.continue();
             } else {
                 if (messages.length === 0) {
-                    resolve(0);
+                    resolve({ messageCount: 0, messages: [] });
                     return;
                 }
 
                 messages.sort((a, b) => a.timestamp - b.timestamp);
-                const baseTime = messages[0].timestamp;
+                
+                // Calculate when replay should start relative to now
+                const replayStartTime = Date.now();
+                const originalStartTime = startTimestamp;
+                
+                // Store session info for control
+                if (sessionId) {
+                    replaySessions[sessionId] = {
+                        messages: messages,
+                        currentIndex: 0,
+                        isPaused: false,
+                        speed: speed,
+                        timeouts: [],
+                        startTime: replayStartTime,
+                        originalStartTime: originalStartTime
+                    };
+                }
 
-                messages.forEach(message => {
-					
-                    const relativeDelay = message.timestamp - baseTime;
-					delete message.mid; // only found in messages restored from db.
-					
-                    setTimeout(() => {
-                        sendDataP2P(message);
-                    }, relativeDelay);
+                // Log first and last message times for debugging
+                if (messages.length > 0) {
+                    console.log('Replay timeline:', {
+                        requestedStart: new Date(originalStartTime).toLocaleString(),
+                        firstMessage: new Date(messages[0].timestamp).toLocaleString(),
+                        lastMessage: new Date(messages[messages.length - 1].timestamp).toLocaleString(),
+                        totalDuration: ((messages[messages.length - 1].timestamp - originalStartTime) / 1000 / 60).toFixed(1) + ' minutes',
+                        messageCount: messages.length
+                    });
+                }
+
+                messages.forEach((message, index) => {
+                    // Calculate delay from the requested start time, not from first message
+                    const messageOffsetFromStart = message.timestamp - originalStartTime;
+                    const scaledDelay = messageOffsetFromStart / speed;
+                    
+                    // Skip messages that would have negative delay (shouldn't happen with proper range query)
+                    if (scaledDelay < 0) {
+                        console.warn('Skipping message with negative delay:', message);
+                        return;
+                    }
+                    
+                    // Log timing for first few messages
+                    if (index < 3) {
+                        console.log(`Message ${index + 1} will play after ${(scaledDelay / 1000).toFixed(1)}s - "${message.chatmessage?.substring(0, 50)}..."`);
+                    }
+                    
+                    delete message.mid; // only found in messages restored from db.
+                    
+                    const timeoutId = setTimeout(() => {
+                        if (sessionId && replaySessions[sessionId]) {
+                            if (!replaySessions[sessionId].isPaused) {
+                                sendDataP2P(message);
+                                replaySessions[sessionId].currentIndex = index + 1;
+                                
+                                // Send progress update
+                                const progress = ((index + 1) / messages.length) * 100;
+                                // Send to all extension pages
+                                chrome.runtime.sendMessage({
+                                    action: 'replayProgress',
+                                    sessionId: sessionId,
+                                    progress: progress,
+                                    currentMessage: index + 1,
+                                    totalMessages: messages.length,
+                                    currentTimestamp: message.timestamp,
+                                    messageDetails: {
+                                        chatname: message.chatname,
+                                        chatmessage: message.chatmessage
+                                    }
+                                }).catch(() => {
+                                    // Ignore errors if no listeners
+                                });
+                                
+                                // Clean up if this was the last message
+                                if (index === messages.length - 1) {
+                                    delete replaySessions[sessionId];
+                                }
+                            }
+                        } else {
+                            sendDataP2P(message);
+                        }
+                    }, scaledDelay);
+                    
+                    if (sessionId && replaySessions[sessionId]) {
+                        replaySessions[sessionId].timeouts.push(timeoutId);
+                    }
                 });
 
-                resolve(messages.length);
+                resolve({ messageCount: messages.length, messages: messages });
             }
         };
         
         cursorRequest.onerror = (event) => reject(event.target.error);
     });
+}
+
+// Replay session management
+const replaySessions = {};
+
+async function handleReplayMessages(request, sendResponse) {
+    try {
+        console.log('Starting replay with params:', {
+            start: new Date(request.startTimestamp),
+            end: request.endTimestamp ? new Date(request.endTimestamp) : 'none',
+            speed: request.speed
+        });
+        
+        // Make sure we have the database
+        if (!messageStoreDB) {
+            sendResponse({ error: 'Database not initialized' });
+            return;
+        }
+        
+        const result = await replayMessagesFromTimestamp(
+            request.startTimestamp,
+            request.endTimestamp || null,
+            request.speed || 1,
+            request.sessionId
+        );
+        
+        console.log('Replay started successfully:', result);
+        sendResponse(result);
+    } catch (error) {
+        console.error('Error in handleReplayMessages:', error);
+        sendResponse({ error: error.message || 'Unknown error occurred' });
+    }
+}
+
+function pauseReplay(sessionId) {
+    if (replaySessions[sessionId]) {
+        replaySessions[sessionId].isPaused = true;
+    }
+}
+
+function resumeReplay(sessionId) {
+    if (replaySessions[sessionId]) {
+        replaySessions[sessionId].isPaused = false;
+    }
+}
+
+function stopReplay(sessionId) {
+    if (replaySessions[sessionId]) {
+        // Clear all pending timeouts
+        replaySessions[sessionId].timeouts.forEach(timeoutId => clearTimeout(timeoutId));
+        delete replaySessions[sessionId];
+    }
+}
+
+function updateReplaySpeed(sessionId, newSpeed) {
+    if (replaySessions[sessionId]) {
+        // This would require re-calculating timeouts, which is complex
+        // For now, just update the speed for future reference
+        replaySessions[sessionId].speed = newSpeed;
+    }
 }
 
 
@@ -4074,7 +4249,8 @@ function sendToS10(data, fakechat=false, relayed=false) {
 				return;
 			}
 			
-			if (data.chatmessage.includes(miscTranslations.said)){
+			const checkMessage = data.textContent || data.chatmessage;
+			if (checkMessage.includes(miscTranslations.said)){
 				return null;
 			}
 
@@ -4088,6 +4264,9 @@ function sendToS10(data, fakechat=false, relayed=false) {
 			if (!cleaned){
 				return;
 			}
+			
+			// Store the cleaned text content for reuse elsewhere
+			data.textContent = cleaned;
 			
 			if (relayed && !verifyOriginalNewIncomingMessage(cleaned, true)){
 				if (data.bot) {
@@ -4681,8 +4860,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
     }
 
     // Skip messages that contain certain translations or empty messages
+    const checkMessage = data.textContent || data.chatmessage;
     if (!data.chatmessage ||
-        (data.chatmessage.includes && data.chatmessage.includes(miscTranslations.said))) {
+        (checkMessage.includes && checkMessage.includes(miscTranslations.said))) {
       return null;
     }
 
@@ -4698,6 +4878,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
     if (!cleaned) {
       return;
     }
+    
+    // Store the cleaned text content for reuse elsewhere
+    data.textContent = cleaned;
 
     // Duplicate message handling logic (assuming functions are defined elsewhere)
     if (relayed && typeof verifyOriginalNewIncomingMessage === 'function' && !verifyOriginalNewIncomingMessage(cleaned, true)) {
@@ -5277,6 +5460,36 @@ function setupSocket() {
 			} else if (data.action && data.action === "closepoll") {
 				sendTargetP2P({cmd:"closepoll"},"poll");
 				resp = true;
+			} else if (data.action && data.action === "loadpoll") {
+				// Load a saved poll preset by ID
+				if (data.value && data.value.pollId) {
+					loadPollPreset(data.value.pollId);
+					resp = true;
+				}
+			} else if (data.action && data.action === "setpollsettings") {
+				// Directly set poll settings via API
+				if (data.value && typeof data.value === 'object') {
+					updatePollSettings(data.value);
+					resp = true;
+				}
+			} else if (data.action && data.action === "getpollpresets") {
+				// Return list of saved poll presets
+				getPollPresets(function(presets) {
+					if (data.get && e.data.UUID) {
+						var ret = {};
+						ret.callback = {};
+						ret.callback.get = data.get;
+						ret.callback.result = presets;
+						socketserver.send(JSON.stringify(ret));
+					}
+				});
+				resp = true;
+			} else if (data.action && data.action === "createpoll") {
+				// Create a new poll with specific settings
+				if (data.value && data.value.settings) {
+					createNewPoll(data.value.settings);
+					resp = true;
+				}
 			} else if (data.action && data.action === "stopentries") {
 				toggleEntries(false);
 				resp = true;
@@ -6292,6 +6505,95 @@ function initializePoll() {
 			sendTargetP2P({settings:settings}, "poll");
 		}
 	} catch (e) {}
+}
+
+function loadPollPreset(pollId) {
+	chrome.storage.local.get(['savedPolls'], function(result) {
+		if (result.savedPolls) {
+			try {
+				const savedPolls = JSON.parse(result.savedPolls);
+				const poll = savedPolls.find(p => p.id === pollId);
+				if (poll && poll.settings) {
+					// Update settings with the loaded poll
+					Object.keys(poll.settings).forEach(key => {
+						if (settings.hasOwnProperty(key)) {
+							settings[key] = poll.settings[key];
+						}
+					});
+					// Send updated settings to poll overlay
+					sendTargetP2P({settings:settings}, "poll");
+					// Save updated settings
+					chrome.storage.local.set({settings: settings});
+				}
+			} catch (e) {
+				log("Error loading poll preset: " + e.message);
+			}
+		}
+	});
+}
+
+function updatePollSettings(newSettings) {
+	try {
+		// Update poll-related settings
+		const pollKeys = ['pollType', 'pollQuestion', 'multipleChoiceOptions', 
+						 'pollStyle', 'pollTimer', 'pollTimerState', 'pollTally', 'pollSpam'];
+		
+		pollKeys.forEach(key => {
+			if (newSettings.hasOwnProperty(key)) {
+				settings[key] = newSettings[key];
+			}
+		});
+		
+		// Send updated settings to poll overlay
+		sendTargetP2P({settings:settings}, "poll");
+		// Save settings
+		chrome.storage.local.set({settings: settings});
+	} catch (e) {
+		log("Error updating poll settings: " + e.message);
+	}
+}
+
+function getPollPresets(callback) {
+	chrome.storage.local.get(['savedPolls'], function(result) {
+		try {
+			if (result.savedPolls) {
+				const savedPolls = JSON.parse(result.savedPolls);
+				// Return simplified list with id and name
+				const presets = savedPolls.map(poll => ({
+					id: poll.id,
+					name: poll.name
+				}));
+				callback(presets);
+			} else {
+				callback([]);
+			}
+		} catch (e) {
+			log("Error getting poll presets: " + e.message);
+			callback([]);
+		}
+	});
+}
+
+function createNewPoll(pollSettings) {
+	try {
+		// Reset to default poll settings
+		const defaultSettings = {
+			pollType: 'freeform',
+			pollQuestion: '',
+			multipleChoiceOptions: '',
+			pollStyle: 'default',
+			pollTimer: '60',
+			pollTimerState: false,
+			pollTally: true,
+			pollSpam: false
+		};
+		
+		// Merge with provided settings
+		const finalSettings = {...defaultSettings, ...pollSettings};
+		updatePollSettings(finalSettings);
+	} catch (e) {
+		log("Error creating new poll: " + e.message);
+	}
 }
 
 function initializeWaitlist() {
@@ -7843,7 +8145,7 @@ class HostMessageFilter {
     // Determine message content based on available fields
     let messageContent = '';
     if (message.textonly) {
-      messageContent = message.textonly;
+      messageContent = message.chatmessage;
     } else if (message.chatmessage !== undefined) {
       messageContent = this.sanitizeMessage(message.chatmessage);
     } else if (message.hasDonation || (message.membership && message.event)) {
@@ -8359,7 +8661,8 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		
-		if (settings.relayall && data.chatmessage && !data.event && tab && data.chatmessage.includes(miscTranslations.said)){
+		const messageToCheck = data.textContent || data.chatmessage;
+		if (settings.relayall && data.chatmessage && !data.event && tab && messageToCheck.includes(miscTranslations.said)){
 			//console.log("1");
 			return null;
 			
@@ -8447,9 +8750,10 @@ async function applyBotActions(data, tab = false) {
 				if (!event?.setting || !command || !response) continue;
 				
 				const isFullMatch = settings.botReplyMessageFull;
+				const messageText = data.textContent || data.chatmessage;
 				const messageMatches = isFullMatch ? 
-				  data.chatmessage === command :
-				  data.chatmessage.includes(command);
+				  messageText === command :
+				  messageText.includes(command);
 				  
 				if (!messageMatches) continue;
 				
@@ -8519,14 +8823,16 @@ async function applyBotActions(data, tab = false) {
 		
 		if (settings.highlightevent && settings.highlightevent.textsetting.trim() && data.chatmessage && data.event) {
 			const eventTexts = settings.highlightevent.textsetting.split(',').map(text => text.trim());
-			if (eventTexts.some(text => data.chatmessage.includes(text))) {
+			const messageText = data.textContent || data.chatmessage;
+			if (eventTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
 			}
 		}
 
 		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
 			const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
-			if (wordTexts.some(text => data.chatmessage.includes(text))) {
+			const messageText = data.textContent || data.chatmessage;
+			if (wordTexts.some(text => messageText.includes(text))) {
 				data.highlightColor = "#fff387";
 			}
 		}
@@ -8535,7 +8841,8 @@ async function applyBotActions(data, tab = false) {
 			//if (Date.now() - messageTimeout > 100) {
 				// respond to "1" with a "1" automatically; at most 1 time per 100ms.
 
-				if (data.chatmessage.includes(". Thank you") && data.chatmessage.includes(" donated ")) {
+				const messageText = data.textContent || data.chatmessage;
+				if (messageText.includes(". Thank you") && messageText.includes(" donated ")) {
 					return null;
 				} // probably a reply
 
@@ -8582,7 +8889,8 @@ async function applyBotActions(data, tab = false) {
 				}
 			}
 		} else if (settings.giphyKey && settings.giphyKey.textsetting && settings.giphy2 && data.chatmessage && data.chatmessage.indexOf("#") != -1 && !data.contentimg) {
-			var xx = data.chatmessage.split(" ");
+			const messageText = data.textContent || data.chatmessage;
+			var xx = messageText.split(" ");
 			for (var i = 0; i < xx.length; i++) {
 				var word = xx[i];
 				if (!word.startsWith("#")) {
@@ -8596,9 +8904,9 @@ async function applyBotActions(data, tab = false) {
 					}
 
 					if (settings.hidegiphytrigger) {
-						if (data.chatmessage.includes("#" + word + " " + order)) {
+						if (messageText.includes("#" + word + " " + order)) {
 							data.chatmessage = data.chatmessage.replace("#" + word + " " + order, "");
-						} else if (data.chatmessage.includes("#" + word + " ")) {
+						} else if (messageText.includes("#" + word + " ")) {
 							data.chatmessage = data.chatmessage.replace("#" + word + " ", "");
 						} else {
 							data.chatmessage = data.chatmessage.replace("#" + word, "");
@@ -9502,6 +9810,8 @@ function isEqualMessage(message1, message2) {
 window.sendMessageToTabs = sendMessageToTabs;
 window.sendToDestinations = sendToDestinations;
 window.fetchWithTimeout = fetchWithTimeout;
+window.sanitizeRelay = sanitizeRelay;
+window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
 
 console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
 
@@ -9509,7 +9819,9 @@ let tmp = new EventFlowSystem({
 	sendMessageToTabs: window.sendMessageToTabs || null,
 	sendToDestinations: window.sendToDestinations || null,
 	pointsSystem: window.pointsSystem || null,
-	fetchWithTimeout: window.fetchWithTimeout // Assuming fetchWithTimeout is on window from background.js
+	fetchWithTimeout: window.fetchWithTimeout || null, // Assuming fetchWithTimeout is on window from background.js
+	sanitizeRelay: window.sanitizeRelay || null,
+	checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
 });
 
 tmp.initPromise.then(() => {

@@ -363,10 +363,27 @@
 		
 		<div class="section">
             <h2>Poll Commands</h2>
+            <div class="mb-3">
+                <select id="pollPresetSelect" class="form-control">
+                    <option value="">Select a poll preset...</option>
+                </select>
+                <button class="btn btn-info btn-sm mt-2" onclick="refreshPollPresets()">Refresh Presets</button>
+            </div>
+            <div class="mb-3">
+                <input type="text" id="pollQuestion" class="form-control" placeholder="Poll question">
+                <select id="pollType" class="form-control mt-2">
+                    <option value="freeform">Freeform</option>
+                    <option value="multiple">Multiple Choice</option>
+                </select>
+                <textarea id="pollOptions" class="form-control mt-2" placeholder="Enter options (one per line)" rows="4" style="display:none;"></textarea>
+            </div>
             <div class="btn-group" role="group">
                 <button class="btn btn-warning" onclick="sendCommand('resetpoll')">Reset Poll</button>
                 <button class="btn btn-warning" onclick="sendCommand('closepoll')">Close Poll</button>
+                <button class="btn btn-warning" onclick="loadPollPreset()">Load Preset</button>
+                <button class="btn btn-warning" onclick="createCustomPoll()">Create Custom Poll</button>
             </div>
+            <p class="note">Extended poll controls allow you to load saved presets, create custom polls, and manage poll settings via the API.</p>
         </div>
 
         <div class="section">
@@ -771,6 +788,96 @@ Developer Notes:
 			log.textContent = JSON.stringify(requestData, null, 2);
 			log.style.display = 'block';
 		}
+		
+		// Poll-specific functions
+		function refreshPollPresets() {
+			if (!socket || socket.readyState !== WebSocket.OPEN) {
+				alert('Please connect first');
+				return;
+			}
+			
+			// Generate a unique callback ID
+			const callbackId = 'cb_' + Date.now();
+			
+			// Send request with callback
+			socket.send(JSON.stringify({
+				action: 'getpollpresets',
+				apiid: sessionID,
+				get: callbackId
+			}));
+			
+			// Listen for response
+			socket.addEventListener('message', function handlePresets(event) {
+				try {
+					const data = JSON.parse(event.data);
+					if (data.callback && data.callback.get === callbackId) {
+						// Remove this listener
+						socket.removeEventListener('message', handlePresets);
+						
+						// Update the select dropdown
+						const select = document.getElementById('pollPresetSelect');
+						select.innerHTML = '<option value="">Select a poll preset...</option>';
+						
+						if (data.callback.result && Array.isArray(data.callback.result)) {
+							data.callback.result.forEach(preset => {
+								const option = document.createElement('option');
+								option.value = preset.id;
+								option.textContent = preset.name;
+								select.appendChild(option);
+							});
+						}
+					}
+				} catch (e) {
+					console.error('Error parsing preset response:', e);
+				}
+			});
+		}
+		
+		function loadPollPreset() {
+			const presetId = document.getElementById('pollPresetSelect').value;
+			if (!presetId) {
+				alert('Please select a poll preset');
+				return;
+			}
+			
+			sendCommand('loadpoll', { pollId: presetId });
+		}
+		
+		function createCustomPoll() {
+			const question = document.getElementById('pollQuestion').value;
+			const type = document.getElementById('pollType').value;
+			const optionsText = document.getElementById('pollOptions').value;
+			
+			if (!question) {
+				alert('Please enter a poll question');
+				return;
+			}
+			
+			const settings = {
+				pollQuestion: question,
+				pollType: type,
+				pollTimer: '120',
+				pollTimerState: true,
+				pollTally: true,
+				pollSpam: false
+			};
+			
+			if (type === 'multiple' && optionsText) {
+				settings.multipleChoiceOptions = optionsText;
+			}
+			
+			sendCommand('createpoll', { settings });
+		}
+		
+		// Show/hide options textarea based on poll type
+		document.getElementById('pollType').addEventListener('change', function() {
+			const optionsTextarea = document.getElementById('pollOptions');
+			if (this.value === 'multiple') {
+				optionsTextarea.style.display = 'block';
+			} else {
+				optionsTextarea.style.display = 'none';
+			}
+		});
 		</script>
 		</body>
 		</html>

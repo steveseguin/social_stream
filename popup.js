@@ -77,6 +77,15 @@ if (typeof(chrome.runtime)=='undefined'){
 			sender.tab = {};
 			sender.tab.id = null;
 
+			// Check if this is a callback response
+			if (args[0] && args[0].callbackId && pendingCallbacks.has(args[0].callbackId)) {
+				const { callback, timeoutId } = pendingCallbacks.get(args[0].callbackId);
+				clearTimeout(timeoutId);
+				pendingCallbacks.delete(args[0].callbackId);
+				callback(args[0]);
+				return;
+			}
+
 			if (args[0] && args[0].forPopup) {
 				log("for pop up");
 				onMessageCallback(args[0], sender, function (response) {
@@ -112,10 +121,40 @@ if (typeof(chrome.runtime)=='undefined'){
 		console.error(e);
 	}
 	
+	// Store callbacks with unique IDs
+	const pendingCallbacks = new Map();
+	let callbackIdCounter = 0;
+	
 	chrome.runtime.sendMessage = async function(data, callback){ // every single response, is either nothing, or update()
-		let response = await ipcRenderer.sendSync('fromPopup',data);
-		if (typeof(callback) == "function"){
+		if (typeof(callback) == "function") {
+			// Generate unique callback ID
+			const callbackId = ++callbackIdCounter;
+			
+			// Create promise with timeout
+			const promise = new Promise((resolve) => {
+				// Store callback with timeout
+				const timeoutId = setTimeout(() => {
+					pendingCallbacks.delete(callbackId);
+					// If timeout, get sync response as fallback
+					const response = ipcRenderer.sendSync('fromPopup', data);
+					resolve(response);
+				}, 500);
+				
+				pendingCallbacks.set(callbackId, { 
+					callback: resolve, 
+					timeoutId 
+				});
+			});
+			
+			// Send message with callback ID
+			ipcRenderer.send('fromPopup', { ...data, callbackId });
+			
+			// Wait for response
+			const response = await promise;
 			callback(response);
+		} else {
+			// No callback, use sync as before
+			let response = await ipcRenderer.sendSync('fromPopup',data);
 		}
 	};
 	chrome.runtime.getManifest = function(){
@@ -203,47 +242,26 @@ function copyToClipboard(event) {
 	//console.log(event);
    
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	if (event.target.parentNode.parentNode.querySelector("a[href]")){
-		const targetElement = event.target.parentNode.parentNode; // div containing the link and button
-		const linkOwnerDiv = document.getElementById(targetElement.id);
-		if (linkOwnerDiv && linkOwnerDiv.raw){
-			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-				event.target.classList.add("flashing");
-				setTimeout(()=>{
-					event.target.classList.remove("flashing");
-				},500);
-			}, function(err) {
-				console.error('Could not copy text: ', err);
-			});
-		}
-	// } else if (event.target.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	} else if (event.target.parentNode.parentNode.parentNode.querySelector("a[href]")){
-		const targetElement = event.target.parentNode.parentNode.parentNode;
-		const linkOwnerDiv = document.getElementById(targetElement.id);
-		if (linkOwnerDiv && linkOwnerDiv.raw){
-			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-				event.target.classList.add("flashing");
-				setTimeout(()=>{
-					event.target.classList.remove("flashing");
-				},500);
-			}, function(err) {
-				console.error('Could not copy text: ', err);
-			});
-		}
-	// } else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
-	} else if (event.target.parentNode.parentNode.parentNode.parentNode.querySelector("a[href]")){
-		const targetElement = event.target.parentNode.parentNode.parentNode.parentNode;
-		const linkOwnerDiv = document.getElementById(targetElement.id);
-		if (linkOwnerDiv && linkOwnerDiv.raw){
-			navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
-				event.target.classList.add("flashing");
-				setTimeout(()=>{
-					event.target.classList.remove("flashing");
-				},500);
-			}, function(err) {
-				console.error('Could not copy text: ', err);
-			});
-		}
+	// Find the closest .link container
+	const linkContainer = event.target.closest('.link');
+	if (!linkContainer) {
+		console.error('Could not find .link container');
+		return;
+	}
+	
+	// Find the div with the .raw property within this container
+	const linkOwnerDiv = linkContainer.querySelector('[data-raw]');
+	if (linkOwnerDiv && linkOwnerDiv.raw) {
+		navigator.clipboard.writeText(linkOwnerDiv.raw).then(function() {
+			event.target.classList.add("flashing");
+			setTimeout(()=>{
+				event.target.classList.remove("flashing");
+			}, 500);
+		}, function(err) {
+			console.error('Could not copy text: ', err);
+		});
+	} else {
+		console.error('Could not find element with raw URL to copy');
 	}
 }
 var translation = {};
@@ -627,7 +645,7 @@ function setupSourceSelection(inputId, isSettingBased = false) {
     if (sourcesList && sourcesList.size > 0) {
         addContainer.innerHTML = `
             <select id="new${inputId}Type">
-                <option value="" selected>All sources</option>
+                <option value="" selected>Select Sources</option>
                 ${Array.from(sourcesList).sort().map(source => 
                     `<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
                 ).join('')}
@@ -1550,7 +1568,13 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 
         const ele = document.querySelector(`input[data-textsetting='${key}'],textarea[data-textsetting='${key}']`);
         if (ele) {
-            ele.value = valueToSet; // valueToSet is settingObj.textsetting
+            // For fields that default to "all/none" when empty, don't load saved values
+            const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
+            if (defaultToEmptyFields.includes(key)) {
+                ele.value = ''; // Always start with empty for these fields
+            } else {
+                ele.value = valueToSet; // valueToSet is settingObj.textsetting
+            }
 
             if (ele.dataset.palette) {
                 try {
@@ -1634,6 +1658,13 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 
 function update(response, sync = true) {
     log("update-> response: ", response);
+    
+    // Skip update if we're loading a poll
+    if (window.isLoadingPoll) {
+        log("Skipping update during poll load");
+        return;
+    }
+    
     if (response !== undefined) {
         if (response.documents) {
             updateDocumentList(response.documents);
@@ -2302,12 +2333,15 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
     // Handle "siblings" with the same param prefix
     const paramPrefix = paramValue.split('=')[0];
-    document.querySelectorAll(`input[data-${paramType}^='${paramPrefix}']:not([data-${paramType}='${paramValue}'])`).forEach(ele1 => {
-        if (ele1 && ele1.checked) {
-            ele1.checked = false;
-            updateSettings(ele1, sync);
-        }
-    });
+    // Only handle siblings if the param contains '=' (like scale=2, scale=0.77)
+    if (paramValue.includes('=')) {
+        document.querySelectorAll(`input[data-${paramType}^='${paramPrefix}=']:not([data-${paramType}='${paramValue}'])`).forEach(ele1 => {
+            if (ele1 && ele1.checked) {
+                ele1.checked = false;
+                updateSettings(ele1, sync);
+            }
+        });
+    }
 
     return true;
 }
@@ -2917,6 +2951,13 @@ function updateSettings(ele, sync = true, value = null) {
     
     // Handle text settings
     if (ele.dataset.textsetting && sync) {
+        // For fields that default to "all/none" when empty, don't save empty values
+        const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
+        if (defaultToEmptyFields.includes(ele.dataset.textsetting) && !ele.value.trim()) {
+            // Don't save empty values for these fields
+            return;
+        }
+        
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
             type: "textsetting",
@@ -3413,7 +3454,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         // Check if the provider supports testing
         const provider = document.getElementById('ttsProvider').value || "system";
         if (provider === 'piper' || provider === 'espeak') {
-            let warningMsg = getTranslation("tts-test-not-available") || "Testing is not available for {provider}. This TTS provider works during streaming only.";
+            let warningMsg = getTranslation("tts-test-not-available", "Testing is not available for {provider}. This TTS provider works during streaming only.");
             warningMsg = warningMsg.replace('{provider}', serviceName);
             this.showFeedback(warningMsg, 'error');
             return;
@@ -4053,6 +4094,9 @@ const PollManager = {
         const poll = this.savedPolls.find(p => p.id === pollId);
         if (!poll) return;
 
+        // Set flag to prevent update() from reverting values
+        window.isLoadingPoll = true;
+
         // Update all form elements with the poll's settings
         const elements = {
             '[data-optionsetting="pollType"]': poll.settings.pollType,
@@ -4079,6 +4123,11 @@ const PollManager = {
 
         this.currentPollId = pollId;
         this.updatePollsList();
+        
+        // Clear flag after a short delay to ensure all updates have been processed
+        setTimeout(() => {
+            window.isLoadingPoll = false;
+        }, 500);
     },
 
     updatePollsList() {
@@ -4292,7 +4341,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			  addContainer.innerHTML = `
 				<input type="text" id="new${id}" placeholder="Add username">
 				<select id="new${id}Type">
-				  <option value="" selected>All sources</option>
+				  <option value="" selected>Select Sources</option>
 				  ${Array.from(sourcesList).sort().map(source => 
 					`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
 				  ).join('')}
@@ -4368,7 +4417,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (sourcesList && sourcesList.size > 0) {
 				  addContainer.innerHTML = `
 					<select id="new${id}Type">
-					  <option value="" selected>All sources</option>
+					  <option value="" selected>Select Sources</option>
 					  ${Array.from(sourcesList).sort().map(source => 
 						`<option value="${source}">${source.charAt(0).toUpperCase() + source.slice(1)}</option>`
 					  ).join('')}
@@ -4670,6 +4719,70 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	ragEnabledCheckbox.addEventListener('change', function() {
 		ragFileManagement.style.display = this.checked ? 'block' : 'none';
 	});
+
+	// Points System button handlers
+	const manageUserPointsBtn = document.getElementById('manageUserPoints');
+	if (manageUserPointsBtn) {
+		manageUserPointsBtn.addEventListener('click', async function() {
+			const username = await prompt("Enter username to manage points for:");
+			if (!username) return;
+			
+			const action = await prompt("Enter action (add/subtract/set):");
+			if (!action || !['add', 'subtract', 'set'].includes(action.toLowerCase())) {
+				alert("Invalid action. Please use 'add', 'subtract', or 'set'.");
+				return;
+			}
+			
+			const pointsStr = await prompt(`Enter points to ${action}:`);
+			const points = parseInt(pointsStr);
+			if (isNaN(points)) {
+				alert("Invalid points value. Please enter a number.");
+				return;
+			}
+			
+			if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username}?`)) {
+				chrome.runtime.sendMessage({
+					cmd: "manageUserPoints",
+					username: username,
+					action: action.toLowerCase(),
+					points: points
+				}, function(response) {
+					if (response && response.success) {
+						alert(`Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username}. New balance: ${response.newBalance}`);
+					} else {
+						alert(response.error || 'Failed to manage points. Please try again.');
+					}
+				});
+			}
+		});
+	}
+
+	const viewPointsLeaderboardBtn = document.getElementById('viewPointsLeaderboard');
+	if (viewPointsLeaderboardBtn) {
+		viewPointsLeaderboardBtn.addEventListener('click', function() {
+			// Open leaderboard in new tab
+			chrome.tabs.create({
+				url: chrome.runtime.getURL('leaderboard.html')
+			});
+		});
+	}
+
+	const resetPointsBtn = document.getElementById('resetPoints');
+	if (resetPointsBtn) {
+		resetPointsBtn.addEventListener('click', async function() {
+			if (confirm('Are you sure you want to reset all user points? This cannot be undone.')) {
+				chrome.runtime.sendMessage({
+					cmd: "resetAllPoints"
+				}, function(response) {
+					if (response && response.success) {
+						alert('All user points have been reset.');
+					} else {
+						alert('Failed to reset points. Please try again.');
+					}
+				});
+			}
+		});
+	}
 
 	let initialSetup = setInterval(()=>{
 		log("pop up asking main for settings yet again..");

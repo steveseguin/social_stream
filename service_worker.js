@@ -214,12 +214,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       }
     });
     return true; // Indicates that the response will be sent asynchronously
-  }// else if (request.type === 'getAuthToken') {
-  //  chrome.storage.local.get(['authToken'], function(result) {
-  //    sendResponse({token: result.authToken});
-  //  });
-  //  return true; // Important! Keeps the message channel open for async response
- // }
+  } else if (message.type === 'captureTabAudio') {
+	  chrome.tabCapture.capture({
+		  audio: true,
+		  video: false
+	  }, (stream) => {
+		  if (chrome.runtime.lastError) {
+			  sendResponse({ error: chrome.runtime.lastError.message });
+		  } else {
+			  // Create a stream ID to track this capture
+			  const streamId = stream.id;
+			  sendResponse({ streamId: streamId });
+
+			  // You can't directly pass the MediaStream to content script
+			  // Instead, you'd need to use it in the background or
+			  // inject it into the page context
+		  }
+	  });
+	  return true; // Will respond asynchronously
+  }
+  
 });
 
 // Ensure the background page is opened when the extension starts

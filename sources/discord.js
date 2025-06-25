@@ -247,7 +247,7 @@ function toDataURL(url, callback) {
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
-			if (settings.customdiscordchannel.textsetting) {
+			if (settings?.customdiscordchannel?.textsetting) {
 				textSettingsArray = settings.customdiscordchannel.textsetting
 					.split(",")
 					.map(value => {

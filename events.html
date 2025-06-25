@@ -394,7 +394,7 @@ body.light-mode .message.active {
 		if (!data.chatname && !data.chatmessage && !data.hasDonation){return;}
 		
 		
-		if (giftSubsOnly && (!data.event || !data.chatmessage.includes("gifted"))){
+		if (giftSubsOnly && (!data.event || !(data.textContent || data.chatmessage).includes("gifted"))){
 			return;
 		}
 		
@@ -600,16 +600,13 @@ body.light-mode .message.active {
 		}
 		iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
 	
-        /* Add this here */
         iframe.connectedPeers = {}; // Initialize connectedPeers for this iframe instance
-        /* End Add this here */
 
 		document.body.appendChild(iframe);
 
 		window.addEventListener("message", function (e) {
 			if (e.source != iframe.contentWindow) return;
-
-            /* Add this here */
+			
             // Logic to populate iframe.connectedPeers, similar to dock.html
             if ("action" in e.data && e.data.UUID && "value" in e.data) {
                 const peerUUID = e.data.UUID;
@@ -634,7 +631,6 @@ body.light-mode .message.active {
                     }
                 }
             }
-            /* End Add this here */
 
 			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
 				addMessageToOverlay(e.data.dataReceived.overlayNinja);

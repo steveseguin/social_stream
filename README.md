@@ -646,6 +646,7 @@ chatmessage | string | Chat message
 chatimg | string | URL or DataBlob (under ~55KB) of the user's avatar image
 type | lower-case string | the pre-qualified name of the source, eg: `twitch`, also used as the source png image
 sourceImg | string | an alternative URL to the source image; relative or absolute
+sourceName | string | the channel's name or the username of the host for the channel
 textonly | boolean | Whether the chat message is only plain text; or does it contain HTML, etc.
 hasDonation | string | The donation amount with its units.  eg: "3 roses" or "$50 USD".
 chatbadges | array | An array of URLs/Objects. If an object, it may define itself as an img/svg and other attributes

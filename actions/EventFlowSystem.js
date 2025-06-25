@@ -8,7 +8,9 @@ class EventFlowSystem {
         this.sendMessageToTabs = options.sendMessageToTabs || null;
         this.sendToDestinations = options.sendToDestinations || null;
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
-        
+        this.sanitizeRelay = options.sanitizeRelay || null;
+		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || null;
+		
         console.log('[EventFlowSystem Constructor] Initialized with:');
         console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
         console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
@@ -322,6 +324,13 @@ class EventFlowSystem {
         return this.flows;
     }
     
+    async reloadFlows() {
+        // Force reload flows from database
+        console.log('[EventFlowSystem] Reloading flows from database');
+        await this.loadFlows();
+        return this.flows;
+    }
+    
     async getFlowById(flowId) {
         return this.flows.find(flow => flow.id === flowId) || null;
     }
@@ -472,38 +481,71 @@ class EventFlowSystem {
         return overallResult;
     }
     
+    stripHtml(html) {
+        // Simple HTML stripping function that preserves emoji alt text
+        if (!html || typeof html !== 'string') return html;
+        
+        // Create a temporary element to use browser's HTML parsing
+        const tmp = document.createElement('div');
+        tmp.innerHTML = html;
+        
+        // Replace img tags with their alt text (especially for emojis)
+        tmp.querySelectorAll('img[alt]').forEach(img => {
+            const alt = img.getAttribute('alt');
+            img.replaceWith(document.createTextNode(alt));
+        });
+        
+        // Get text content and clean up extra whitespace
+        const text = tmp.textContent || tmp.innerText || '';
+        return text.replace(/\s\s+/g, ' ').trim();
+    }
+    
     async evaluateTrigger(triggerNode, message) {
         const { triggerType, config } = triggerNode;
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
+        
+        // Get the message text for comparison
+        let messageText = message.chatmessage;
+        if (message && messageText && typeof messageText === 'string') {
+            // If textonly flag is set, the message is already plain text
+            if (!message.textonly) {
+                // Check if we've already cleaned this message (cache the result)
+                if (!message.textContent) {
+                    message.textContent = this.stripHtml(messageText);
+                }
+                messageText = message.textContent;
+            }
+        }
+        
         switch (triggerType) {
             case 'messageContains':
                 // Ensure properties exist before trying to access them
-                match = message && message.chatmessage && typeof message.chatmessage === 'string' &&
+                match = message && messageText && typeof messageText === 'string' &&
                            config && typeof config.text === 'string' &&
-                           message.chatmessage.includes(config.text);
-              //console.log(`[EvaluateTrigger - messageContains] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+                           messageText.includes(config.text);
+              //console.log(`[EvaluateTrigger - messageContains] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
                 return match;
                 
             case 'messageStartsWith':
-                match = message && message.chatmessage && typeof message.chatmessage === 'string' &&
+                match = message && messageText && typeof messageText === 'string' &&
                            config && typeof config.text === 'string' &&
-                           message.chatmessage.startsWith(config.text);
-              //console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+                           messageText.startsWith(config.text);
+              //console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
                 return match;
                 
             case 'messageEquals':
-                match = message && typeof message.chatmessage === 'string' &&
+                match = message && typeof messageText === 'string' &&
                            config && typeof config.text === 'string' &&
-                           message.chatmessage === config.text;
-              //console.log(`[EvaluateTrigger - messageEquals] Config Text: "${config.text}", Message Chatmessage: "${message.chatmessage}", Match: ${match}`);
+                           messageText === config.text;
+              //console.log(`[EvaluateTrigger - messageEquals] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
                 return match;
                 
             case 'messageRegex':
                 try {
                     const regex = new RegExp(config.pattern, config.flags || '');
-                    match = regex.test(message.chatmessage);
-                  //console.log(`[EvaluateTrigger - messageRegex] Pattern: "${config.pattern}", Flags: "${config.flags}", Message: "${message.chatmessage}", Match: ${match}`);
+                    match = regex.test(messageText);
+                  //console.log(`[EvaluateTrigger - messageRegex] Pattern: "${config.pattern}", Flags: "${config.flags}", Message: "${messageText}", Match: ${match}`);
                     return match;
                 } catch (e) {
                     console.error('[EvaluateTrigger - messageRegex] Invalid regex:', e);
@@ -517,6 +559,16 @@ class EventFlowSystem {
                     match = message && message.type === config.source;
                 }
                 console.log(`[RELAY DEBUG - fromSource Trigger] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
+                return match;
+                
+            case 'fromChannelName':
+                if (!config.channelName || config.channelName.trim() === '') {
+                    match = true; // Match any channel if no name specified
+                } else {
+                    const channelName = (message.sourceName || '').toLowerCase();
+                    match = channelName === config.channelName.toLowerCase();
+                }
+                console.log(`[RELAY DEBUG - fromChannelName Trigger] Config Channel: "${config.channelName}", Message Channel: "${message.sourceName}", Match: ${match}`);
                 return match;
                 
             case 'fromUser':
@@ -641,7 +693,7 @@ class EventFlowSystem {
                 console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
                 console.log('[RELAY DEBUG - Action] sendMessageToTabs type:', typeof this.sendMessageToTabs);
                 
-                if (this.sendMessageToTabs) {
+                if (this.sendMessageToTabs && message && !message.reflection) {
                     const relayMessage = {
                         response: config.template
                             .replace('{source}', message.type || '')
@@ -653,10 +705,6 @@ class EventFlowSystem {
                         relayMessage.tid = message.tid;
                     }
                     
-                    if (config.destination && config.destination.trim()) {
-                        relayMessage.destination = config.destination.trim();
-                    }
-                    
                     console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
                     console.log('[RELAY DEBUG - Action] Config:', config);
                     console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with params:');
@@ -666,9 +714,15 @@ class EventFlowSystem {
                     console.log('  - relayMode:', true);
                     console.log('  - antispam:', false);
                     console.log('  - timeout:', config.timeout || 5100);
-                    
-                    // Use relayMode=true to mark this as a relayed message and prevent circular relaying
-                    const result = this.sendMessageToTabs(relayMessage, config.toAll === true, null, true, false, config.timeout || 5100);
+					
+					let result = false;
+					relayMessage.response = this.sanitizeRelay(relayMessage.response, false).trim();
+					if (relayMessage.response) {
+						if (!this.checkExactDuplicateAlreadyRelayed(relayMessage.response, false, relayMessage.tid, false)){
+							result = this.sendMessageToTabs(relayMessage, true, message, true, false, 1000);
+						}
+					}
+					
                     console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
                 } else {
                     console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
