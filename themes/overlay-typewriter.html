@@ -222,11 +222,42 @@ body::before {
     font-family: inherit;
 }
 
+/* Hide empty text spans */
+.text:empty {
+    display: none;
+}
+
+/* Hide messages that only have empty content */
+.message:has(.text:empty):not(:has(.donation)):not(:has(.large-image)) {
+    display: none;
+}
+
 .text img {
-    max-width: 80px;
-    max-height: 20px;
-    vertical-align: bottom;
-    filter: green;
+    max-width: 200px;
+    max-height: 100px;
+    vertical-align: middle;
+    margin: 5px;
+    filter: brightness(0.9) contrast(1.2);
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    display: inline-block;
+}
+
+.text svg {
+    max-width: 200px;
+    max-height: 100px;
+    vertical-align: middle;
+    margin: 5px;
+    filter: brightness(0.9) contrast(1.2);
+    display: inline-block;
+}
+
+.text iframe,
+.text video {
+    max-width: 300px;
+    max-height: 200px;
+    border: 1px solid rgba(0, 255, 0, 0.3);
+    margin: 5px 0;
+    display: block;
 }
 
 .donation {
@@ -436,26 +467,76 @@ body::before {
     const messageTimestamps = new Map();
     const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000;
 
+    // Create a single, reusable AudioContext to avoid resource exhaustion
+    let audioContext = null;
+    let soundEnabled = true;
+    let waitingForUserGesture = false;
+
+    function initAudioContext() {
+        if (!audioContext && (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined')) {
+            try {
+                const AudioCtx = AudioContext || webkitAudioContext;
+                audioContext = new AudioCtx();
+            } catch (e) {
+                // Don't warn about user gesture errors
+                if (!e.message || !e.message.includes('user gesture')) {
+                    console.warn('Failed to create AudioContext:', e);
+                }
+                soundEnabled = false;
+            }
+        }
+    }
+
     // Terminal sound effect simulation
     function playTerminalSound() {
-        // Create a simple beep sound using Web Audio API
-        if (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined') {
-            const AudioCtx = AudioContext || webkitAudioContext;
-            const audioCtx = new AudioCtx();
-            const oscillator = audioCtx.createOscillator();
-            const gainNode = audioCtx.createGain();
+        if (!soundEnabled) return;
+        
+        try {
+            // Initialize audio context on first use
+            if (!audioContext) {
+                initAudioContext();
+            }
             
-            oscillator.connect(gainNode);
-            gainNode.connect(audioCtx.destination);
-            
-            oscillator.frequency.value = 800;
-            oscillator.type = 'square';
-            
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-            
-            oscillator.start(audioCtx.currentTime);
-            oscillator.stop(audioCtx.currentTime + 0.1);
+            if (audioContext && audioContext.state !== 'closed') {
+                // Create and play sound
+                const playSound = () => {
+                    const oscillator = audioContext.createOscillator();
+                    const gainNode = audioContext.createGain();
+                    
+                    oscillator.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+                    
+                    oscillator.frequency.value = 800;
+                    oscillator.type = 'square';
+                    
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                };
+                
+                // If context is suspended, try to resume it first
+                if (audioContext.state === 'suspended') {
+                    audioContext.resume().then(() => {
+                        playSound();
+                        waitingForUserGesture = false;
+                    }).catch(() => {
+                        // Can't resume without user gesture, set flag to wait
+                        if (!waitingForUserGesture) {
+                            waitingForUserGesture = true;
+                            console.log('Audio requires user interaction. Sound will play after first click.');
+                        }
+                    });
+                } else {
+                    playSound();
+                }
+            }
+        } catch (e) {
+            // Only log if it's not the autoplay policy error
+            if (!e.message.includes('user gesture')) {
+                console.warn('Error playing terminal sound:', e);
+            }
         }
     }
 
@@ -579,10 +660,15 @@ body::before {
         void messageDiv.offsetWidth; 
         messageDiv.classList.add('visible');
         
-        // Apply typewriter effect to the text
+        // Apply typewriter effect to the text or set HTML directly
         const textElement = messageDiv.querySelector('.text');
         if (textElement && data.chatmessage) {
-            typewriterEffect(textElement, data.chatmessage, 20);
+            if (data.textonly) {
+                typewriterEffect(textElement, data.chatmessage, 20);
+            } else {
+                // For HTML content, set it directly without typewriter effect
+                textElement.innerHTML = data.chatmessage;
+            }
         }
         
         const messages = Array.from(messageListWrapper.children).filter(
@@ -676,6 +762,42 @@ body::before {
         socketserver = new WebSocket(serverURL);
         setupSocket();
     }
+    
+    // Clean up audio context when page unloads
+    window.addEventListener('beforeunload', function() {
+        if (audioContext && audioContext.state !== 'closed') {
+            audioContext.close();
+        }
+    });
+    
+    // Resume audio context on user interaction if needed
+    function setupUserInteractionHandler() {
+        const handler = function() {
+            if (audioContext && audioContext.state === 'suspended') {
+                audioContext.resume().then(() => {
+                    waitingForUserGesture = false;
+                    console.log('Audio context resumed after user interaction');
+                });
+            }
+            document.removeEventListener('click', handler);
+            document.removeEventListener('touchstart', handler);
+            document.removeEventListener('keydown', handler);
+        };
+        
+        // Only add listeners if we're waiting for user gesture
+        if (waitingForUserGesture) {
+            document.addEventListener('click', handler);
+            document.addEventListener('touchstart', handler);
+            document.addEventListener('keydown', handler);
+        }
+    }
+    
+    // Check periodically if we need to set up user interaction handlers
+    setInterval(() => {
+        if (waitingForUserGesture && audioContext) {
+            setupUserInteractionHandler();
+        }
+    }, 1000);
 </script>
 </body>
 </html>
