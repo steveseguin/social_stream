@@ -916,6 +916,31 @@
 					return await fetch(URL);
 				}
 			}
+			// Avatar cache Map and helper functions
+			const avatarCache = new Map();
+			
+			function getCachedAvatar(username) {
+				if (!username) return null;
+				const cached = avatarCache.get(username.toLowerCase());
+				if (cached) {
+					// Check if cache is still valid (24 hours)
+					if (Date.now() - cached.timestamp < 24 * 60 * 60 * 1000) {
+						return cached.url;
+					}
+					// Cache expired, remove it
+					avatarCache.delete(username.toLowerCase());
+				}
+				return null;
+			}
+			
+			function setCachedAvatar(username, url) {
+				if (!username || !url) return;
+				avatarCache.set(username.toLowerCase(), {
+					url: url,
+					timestamp: Date.now()
+				});
+			}
+			
 			var translation = {};
 			async function changeLg(lang="en", retry=false) {
 				log("changeLg: " + lang);
@@ -1058,7 +1083,13 @@
 
 							if (data.type && (data.type == "twitch") && data.chatname) {
 								if (!data.chatimg || data.chatimg.startsWith("https://api.socialstream.ninja")){
-									data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+									// Check cache first
+									const cachedUrl = getCachedAvatar(data.chatname);
+									if (cachedUrl) {
+										data.chatimg = cachedUrl;
+									} else {
+										data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+									}
 								}
 							}
 
@@ -1489,8 +1520,24 @@
 				document.documentElement.style.setProperty("--author-left", "20px");
 			}
 
-			var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+			// Lazy initialize audioContext to handle autoplay policy
+			let audioContext = null;
+			let waitingForUserGesture = false;
 			var timeoutTone = null;
+			
+			function initAudioContext() {
+				if (!audioContext && (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined')) {
+					try {
+						const AudioCtx = window.AudioContext || window.webkitAudioContext;
+						audioContext = new AudioCtx();
+					} catch (e) {
+						// Don't warn about user gesture errors
+						if (!e.message || !e.message.includes('user gesture')) {
+							console.warn('Failed to create AudioContext:', e);
+						}
+					}
+				}
+			}
 
 			async function playtone(tonename = "testtone") {
 				if (timeoutTone) {
@@ -1502,10 +1549,25 @@
 					timeoutTone = false;
 				}, 500);
 
-				if (audioContext.state == "suspended") {
-					await audioContext.resume();
+				// Initialize audio context on first use
+				if (!audioContext) {
+					initAudioContext();
 				}
-				if (audioContext.state == "suspended") {
+				
+				if (audioContext && audioContext.state == "suspended") {
+					try {
+						await audioContext.resume();
+						waitingForUserGesture = false;
+					} catch (e) {
+						// Can't resume without user gesture, set flag to wait
+						if (!waitingForUserGesture) {
+							waitingForUserGesture = true;
+							console.log('Audio requires user interaction. Sound will play after first click.');
+						}
+						return;
+					}
+				}
+				if (!audioContext || audioContext.state == "suspended") {
 					return;
 				}
 				var toneEle = document.getElementById(tonename);
@@ -2502,6 +2564,13 @@
 					ele.style.display = "none";
 				}
 			}
+			
+			function handleAvatarLoad(img) {
+				// Cache the redirected URL when the image loads
+				if (img.dataset.username && img.src && img.src.includes("static-cdn.jtvnw.net")) {
+					setCachedAvatar(img.dataset.username, img.src);
+				}
+			}
 
 			var iframeTimeout = null;
 			var lastMessageId = null
@@ -2900,7 +2969,7 @@
 					var avatarImg = "";
 					if (avatar) {
 					  if (data.backupChatimg) {
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '"onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  } else {
 						let chatimg = "";
 						if (!data.chatimg){
@@ -2912,7 +2981,7 @@
 						} else {
 						  chatimg = data.chatimg
 						}
-						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" onerror="errorImage(this);"></div>';
+						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + chatimg + '" class="hl-profile-pic" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  }
 					} 
 
@@ -3064,14 +3133,23 @@
 					var username = data.username || data.chatname;
 					if ((data.type == "twitch") && avatar && username) {
 					  if (!data.chatimg || data.chatimg.startsWith("https://api.socialstream.ninja")){
-						var twitchImage = new Image();
-						data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(username);
-						twitchImage.onload = function () {
+						// Check cache first
+						const cachedUrl = getCachedAvatar(username);
+						if (cachedUrl) {
+						  data.chatimg = cachedUrl;
 						  try {
 							document.getElementById("img_" + data.id).src = data.chatimg;
 						  } catch (e) {}
-						}.bind(data);
-						twitchImage.src = data.chatimg;
+						} else {
+						  var twitchImage = new Image();
+						  data.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(username);
+						  twitchImage.onload = function () {
+							try {
+							  document.getElementById("img_" + data.id).src = data.chatimg;
+							} catch (e) {}
+						  }.bind(data);
+						  twitchImage.src = data.chatimg;
+						}
 					  }
 					}
 
@@ -3217,7 +3295,13 @@
 				  }
 				  if (contents.type && (contents.type == "twitch") && contents.chatname) {
 					if (!contents.chatimg  || contents.chatimg.startsWith("https://api.socialstream.ninja")){
-					  contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname);
+					  // Check cache first
+					  const cachedUrl = getCachedAvatar(contents.chatname);
+					  if (cachedUrl) {
+						contents.chatimg = cachedUrl;
+					  } else {
+						contents.chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(contents.chatname);
+					  }
 					}
 				  }
 				  overwriteImage(contents.chatimg);
@@ -3246,6 +3330,39 @@
 				};
 				document.head.appendChild(externalJavaascript);
 			}*/
+			
+			// Clean up audio context when page unloads
+			window.addEventListener('beforeunload', function() {
+				if (audioContext && audioContext.state !== 'closed') {
+					audioContext.close();
+				}
+			});
+			
+			// Resume audio context on user interaction if needed
+			function setupUserInteractionHandler() {
+				const handler = function() {
+					if (audioContext && audioContext.state === 'suspended') {
+						audioContext.resume().then(() => {
+							waitingForUserGesture = false;
+							console.log('Audio context resumed after user interaction');
+						});
+					}
+					document.removeEventListener('click', handler);
+					document.removeEventListener('touchstart', handler);
+					document.removeEventListener('keydown', handler);
+				};
+				
+				document.addEventListener('click', handler);
+				document.addEventListener('touchstart', handler);
+				document.addEventListener('keydown', handler);
+			}
+			
+			// Set up user interaction handlers
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', setupUserInteractionHandler);
+			} else {
+				setupUserInteractionHandler();
+			}
 		</script>
 	</body>
 </html>

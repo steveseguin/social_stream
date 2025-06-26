@@ -181,6 +181,19 @@ body, html {
     vertical-align: bottom; 
 }
 
+/* Hide empty text elements */
+.text:empty {
+    display: none;
+}
+
+.text svg {
+    max-width: 100px;
+    max-height: 24px;
+    vertical-align: middle;
+    margin: 0 3px;
+    display: inline-block;
+}
+
 .donation { 
     color: #4cd137; 
     font-weight: 600; 
@@ -340,7 +353,9 @@ body, html {
 			`<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
 		const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
 		const membershipHtml = data.membership ? `<div class="membership-status">${data.membership}</div>` : '';
-		const messageTextHtml = `<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
+		const messageTextHtml = data.textonly ? 
+			`<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage.replace(/</g, '&lt;').replace(/>/g, '&gt;') : ''}</div>` :
+			`<div class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage ? data.chatmessage : ''}</div>`;
 		const donationHtml = data.hasDonation ? `<div class="donation">${data.hasDonation}</div>` : '';
 		
 		const contentImgHtml = data.contentimg ? 

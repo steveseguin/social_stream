@@ -1,7 +1,8 @@
 (function () {
   
+  //console.log("Social stream injected");
 	var isExtensionOn = true;
-function pushMessage(data) {
+	function pushMessage(data) {
     try {
       chrome.runtime.sendMessage(
         chrome.runtime.id,
@@ -71,9 +72,13 @@ function pushMessage(data) {
   var lastMessageID = 0;
   var lastMessage = "";
   var lastChatName = "";
-  
+  function extractFloat(str) {
+    const match = str.match(/-?\d+\.?\d*/);
+    return match ? parseFloat(match[0]) : null;
+}
   function processMessage(ele) {
 	 
+	//console.log(ele);
     var chatimg = "";
     var chatname = "";
     var chatmessage = "";
@@ -96,6 +101,7 @@ function pushMessage(data) {
       // chatmessage = getAllContentNodes(ele.querySelector('[data-qa="message-text"]'));
 	  
     if (!chatmessage) {
+		//console.log(" no mesasge");
       return;
     }
 
@@ -122,28 +128,39 @@ function pushMessage(data) {
         }
       }
 	  if (!prev){
+		  //console.log(" 22");
 		  return;
 	  }
     }
 	
 	
+	
 	if (ele.id){
-		if (messageHistory.includes(ele.id)){
+		let idv = extractFloat(ele.id);
+		if (!idv){
 			return;
-		} else if (isNaN(parseFloat(ele.id))){
+		}
+		if (messageHistory.includes(idv)){
+			//console.log(" 33");
 			return;
-		} else if (lastMessageID && (lastMessageID>parseFloat(ele.id))){
+		} else if (isNaN(idv)){
+			//console.log(" 34");
 			return;
-		} else if (lastMessageID && (parseFloat(ele.id) - lastMessageID<3)){
+		} else if (lastMessageID && (lastMessageID>idv)){
+			//console.log(" 36");
+			return;
+		} else if (lastMessageID && (idv - lastMessageID<3)){
 			if ((lastMessage == chatmessage) && (lastChatName == chatname)){
+				//console.log(" 37");
 				return
 			}
 		}
 		lastMessage = chatmessage;
 		lastChatName = chatname;
-		lastMessageID = parseFloat(ele.id);
+		lastMessageID = idv;
 		messageHistory.push(ele.id);
 	} else {
+		//console.log("no id");
 		return;
 	}
 	
@@ -165,6 +182,7 @@ function pushMessage(data) {
     }
 	
 	if (!chatname){
+		//console.log("nonmae");
 		return;
 	}
 
@@ -185,6 +203,8 @@ function pushMessage(data) {
     data.textonly = settings.textonlymode || false;
 	data.type = "slack";
 
+	//console.log(data);
+	
     pushMessage(data);
     return;
   }
@@ -227,31 +247,31 @@ function pushMessage(data) {
 	);
   
 	var giveItAtry = setInterval(function(){ // allow pre load
-	  if (document.querySelector('[data-qa="slack_kit_list"]')){
+		if (document.querySelector('#message-list [data-qa="slack_kit_list"]')){
 			clearTimeout(giveItAtry);
-      } else {
+		} else {
 			return;
 		} 
 		setTimeout(function(){
-			var xxx = document.querySelectorAll('[data-qa="virtual-list-item"]');
+			var xxx = document.querySelectorAll('#message-list [data-qa="slack_kit_list"] [data-qa="virtual-list-item"]');
 			for (var j = 0; j < xxx.length; j++) {
-			  if (xxx[j].marked) {
-				continue;
-			  }
-			  xxx[j].marked = true;
+				if (xxx[j].marked) {
+					continue;
+				}
+				xxx[j].marked = true;
 			}
-		  setInterval(function () {
-			var xxx = document.querySelectorAll('[data-qa="virtual-list-item"]');
-			for (var j = 0; j < xxx.length; j++) {
-			  if (xxx[j].marked) {
-				continue;
-			  }
-			  xxx[j].marked = true;
-			  processMessage(xxx[j]);
-			}
-		  }, 500);
-	},3000);
-  },1000);
+			setInterval(function () {
+				var xxx = document.querySelectorAll('#message-list [data-qa="slack_kit_list"] [data-qa="virtual-list-item"]');
+				for (var j = 0; j < xxx.length; j++) {
+				  if (xxx[j].marked) {
+					continue;
+				  }
+				  xxx[j].marked = true;
+				  processMessage(xxx[j]);
+				}
+			}, 500);
+		},3000);
+	},1000);
 
   // Does not support sending messages in Slack
 })();

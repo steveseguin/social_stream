@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline Animation Editor - Social Stream</title>
+    <style>
+        :root {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #1a1a1a;
+            --bg-tertiary: #252525;
+            --text-primary: #ffffff;
+            --text-secondary: #b0b0b0;
+            --accent-primary: #4a9eff;
+            --accent-secondary: #ff6b6b;
+            --border-color: #333;
+            --grid-color: #2a2a2a;
+            --handle-size: 8px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--bg-secondary);
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-left: auto;
+        }
+
+        button {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button.secondary {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-section h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Property Controls */
+        .property-group {
+            margin-bottom: 15px;
+        }
+
+        .property-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            display: block;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 6px 10px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-size: 13px;
+        }
+
+        .color-input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="color"] {
+            width: 40px;
+            height: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            cursor: pointer;
+            background: none;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 20px;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 40px;
+            text-align: right;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            background: var(--bg-primary);
+            overflow: hidden;
+        }
+
+        #animationCanvas {
+            position: absolute;
+            background: var(--bg-tertiary);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Timeline */
+        .timeline-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .timeline-header {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border-color);
+            gap: 20px;
+        }
+
+        .timeline-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .timeline-canvas-wrapper {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #timelineCanvas {
+            position: absolute;
+            cursor: pointer;
+        }
+
+        /* Playback Controls */
+        .playback-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .play-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-primary);
+        }
+
+        .time-display {
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-family: monospace;
+            min-width: 100px;
+        }
+
+        /* Sample Animations */
+        .sample-list {
+            list-style: none;
+        }
+
+        .sample-item {
+            padding: 10px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 14px;
+        }
+
+        .sample-item:hover {
+            background: var(--accent-primary);
+            background: rgba(74, 158, 255, 0.2);
+        }
+
+        .sample-item.active {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Keyframe Indicators */
+        .keyframe {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--accent-primary);
+            border: 2px solid white;
+            border-radius: 2px;
+            transform: rotate(45deg) translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .keyframe.selected {
+            background: var(--accent-secondary);
+            box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.3);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 4px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            display: none;
+            z-index: 1000;
+        }
+
+        .context-menu-item {
+            padding: 8px 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        /* Curve Path */
+        .curve-path {
+            stroke: var(--accent-primary);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .curve-handle {
+            fill: white;
+            stroke: var(--accent-primary);
+            stroke-width: 2;
+            cursor: pointer;
+        }
+
+        /* Export Dialog */
+        .export-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 2000;
+            min-width: 400px;
+        }
+
+        .export-dialog h2 {
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        .export-code {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            color: var(--text-secondary);
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .dialog-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            display: none;
+        }
+
+        .loader {
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--bg-tertiary);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Timeline Animation Editor</h1>
+        <div class="controls">
+            <button class="secondary" onclick="editor.newAnimation()">New</button>
+            <button class="secondary" onclick="editor.loadAnimation()">Load</button>
+            <button class="secondary" onclick="editor.saveAnimation()">Save</button>
+            <button onclick="editor.exportAnimation()">Export</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <h3>Object Properties</h3>
+                <div class="property-group">
+                    <label class="property-label">Fill Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="fillColor" value="#4a9eff">
+                        <input type="text" class="property-input" id="fillColorText" value="#4a9eff">
+                    </div>
+                </div>
+                <div class="property-group">
+                    <label class="property-label">Stroke Color</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="strokeColor" value="#ffffff">
+                        <input type="text" class="property-input" id="strokeColorText" value="#ffffff">
+                    </div>
+                </div>
+                <div class="property-group">
+                    <label class="property-label">Stroke Width</label>
+                    <div class="slider-container">
+                        <input type="range" id="strokeWidth" min="0" max="20" value="2" step="0.5">
+                        <span class="slider-value">2</span>
+                    </div>
+                </div>
+                <div class="property-group">
+                    <label class="property-label">Opacity</label>
+                    <div class="slider-container">
+                        <input type="range" id="opacity" min="0" max="100" value="100">
+                        <span class="slider-value">100%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Animation Type</h3>
+                <div class="property-group">
+                    <select class="property-input" id="animationType">
+                        <option value="linear">Linear</option>
+                        <option value="ease">Ease</option>
+                        <option value="ease-in">Ease In</option>
+                        <option value="ease-out">Ease Out</option>
+                        <option value="ease-in-out">Ease In Out</option>
+                        <option value="cubic-bezier">Cubic Bezier</option>
+                        <option value="spring">Spring</option>
+                    </select>
+                </div>
+                <div class="property-group" id="bezierControls" style="display: none;">
+                    <label class="property-label">Bezier Controls</label>
+                    <canvas id="bezierEditor" width="200" height="200" style="background: var(--bg-tertiary); border-radius: 4px; margin-top: 10px;"></canvas>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <h3>Sample Animations</h3>
+                <ul class="sample-list">
+                    <li class="sample-item" onclick="editor.loadSample('bounce')">Bounce</li>
+                    <li class="sample-item" onclick="editor.loadSample('rotate')">Rotate 360°</li>
+                    <li class="sample-item" onclick="editor.loadSample('fade')">Fade In/Out</li>
+                    <li class="sample-item" onclick="editor.loadSample('slide')">Slide</li>
+                    <li class="sample-item" onclick="editor.loadSample('scale')">Scale Pulse</li>
+                    <li class="sample-item" onclick="editor.loadSample('path')">Follow Path</li>
+                    <li class="sample-item" onclick="editor.loadSample('morph')">Shape Morph</li>
+                    <li class="sample-item" onclick="editor.loadSample('color')">Color Wave</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="animationCanvas"></canvas>
+            
+            <div class="timeline-container">
+                <div class="timeline-header">
+                    <div class="playback-controls">
+                        <button class="play-button" onclick="editor.togglePlayback()">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="white">
+                                <path d="M3 2l10 6-10 6V2z"/>
+                            </svg>
+                        </button>
+                        <button class="secondary" style="width: 36px; height: 36px;" onclick="editor.stop()">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <rect x="3" y="3" width="10" height="10"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="time-display">
+                        <span id="currentTime">0:00.00</span> / <span id="totalTime">5:00.00</span>
+                    </div>
+                    <div class="timeline-controls">
+                        <button class="secondary" onclick="editor.addKeyframe()">Add Keyframe</button>
+                        <button class="secondary" onclick="editor.deleteKeyframe()">Delete</button>
+                        <select class="property-input" id="propertySelect" style="width: 120px;">
+                            <option value="x">Position X</option>
+                            <option value="y">Position Y</option>
+                            <option value="rotation">Rotation</option>
+                            <option value="scale">Scale</option>
+                            <option value="opacity">Opacity</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="timeline-canvas-wrapper">
+                    <canvas id="timelineCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" onclick="editor.duplicateKeyframe()">Duplicate</div>
+        <div class="context-menu-item" onclick="editor.copyKeyframe()">Copy</div>
+        <div class="context-menu-item" onclick="editor.pasteKeyframe()">Paste</div>
+        <div class="context-menu-item" onclick="editor.deleteKeyframe()">Delete</div>
+    </div>
+
+    <!-- Export Dialog -->
+    <div class="export-dialog" id="exportDialog">
+        <h2>Export Animation</h2>
+        <div class="export-code" id="exportCode"></div>
+        <div class="dialog-buttons">
+            <button class="secondary" onclick="editor.copyExportCode()">Copy to Clipboard</button>
+            <button onclick="editor.closeExportDialog()">Close</button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+    </div>
+
+    <script src="timeline-editor.js"></script>
+</body>
+</html>

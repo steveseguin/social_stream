@@ -478,8 +478,24 @@
 		document.documentElement.style.setProperty("--y-speed",  (7*speedxy)+"%"); // not used
 	}
 	
-	var audioContext = new AudioContext();
+	// Lazy initialize audioContext to handle autoplay policy
+	let audioContext = null;
+	let waitingForUserGesture = false;
 	var timeoutTone = null;
+	
+	function initAudioContext() {
+		if (!audioContext && (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined')) {
+			try {
+				const AudioCtx = window.AudioContext || window.webkitAudioContext;
+				audioContext = new AudioCtx();
+			} catch (e) {
+				// Don't warn about user gesture errors
+				if (!e.message || !e.message.includes('user gesture')) {
+					console.warn('Failed to create AudioContext:', e);
+				}
+			}
+		}
+	}
 	async function playtone(tonename="sound") {
 		if (timeoutTone){return;}
 		timeoutTone = true;
@@ -488,11 +504,25 @@
 			timeoutTone = false;
 		},500);
 		
-		
-		if (audioContext.state == "suspended"){
-			await audioContext.resume();
+		// Initialize audio context on first use
+		if (!audioContext) {
+			initAudioContext();
 		}
-		if (audioContext.state == "suspended"){
+		
+		if (audioContext && audioContext.state == "suspended"){
+			try {
+				await audioContext.resume();
+				waitingForUserGesture = false;
+			} catch (e) {
+				// Can't resume without user gesture, set flag to wait
+				if (!waitingForUserGesture) {
+					waitingForUserGesture = true;
+					console.log('Audio requires user interaction. Sound will play after first click.');
+				}
+				return;
+			}
+		}
+		if (!audioContext || audioContext.state == "suspended"){
 			return
 		}
 		var toneEle = document.getElementById(tonename);
@@ -927,6 +957,39 @@
 		}).onfinish = () => {
 			confetti.remove();
 		};
+	}
+	
+	// Clean up audio context when page unloads
+	window.addEventListener('beforeunload', function() {
+		if (audioContext && audioContext.state !== 'closed') {
+			audioContext.close();
+		}
+	});
+	
+	// Resume audio context on user interaction if needed
+	function setupUserInteractionHandler() {
+		const handler = function() {
+			if (audioContext && audioContext.state === 'suspended') {
+				audioContext.resume().then(() => {
+					waitingForUserGesture = false;
+					console.log('Audio context resumed after user interaction');
+				});
+			}
+			document.removeEventListener('click', handler);
+			document.removeEventListener('touchstart', handler);
+			document.removeEventListener('keydown', handler);
+		};
+		
+		document.addEventListener('click', handler);
+		document.addEventListener('touchstart', handler);
+		document.addEventListener('keydown', handler);
+	}
+	
+	// Set up user interaction handlers
+	if (document.readyState === 'loading') {
+		document.addEventListener('DOMContentLoaded', setupUserInteractionHandler);
+	} else {
+		setupUserInteractionHandler();
 	}
 
 	</script>
