@@ -154,7 +154,7 @@
 				//console.log(" 37");
 				return
 			}
-		}
+		} 
 		lastMessage = chatmessage;
 		lastChatName = chatname;
 		lastMessageID = idv;
