@@ -221,13 +221,48 @@
         
         <div class="section">
             <h2>Connection Settings</h2>
-            <div class="mb-3">
-                <label for="sessionID" class="form-label">Session ID:</label>
-                <input type="text" id="sessionID" class="form-control" placeholder="Enter session ID">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="sessionID" class="form-label">Session ID:</label>
+                    <input type="text" id="sessionID" class="form-control" placeholder="Enter session ID">
+                </div>
+                <div class="col-md-3">
+                    <label for="channelOut" class="form-label">Out Channel:</label>
+                    <select id="channelOut" class="form-control">
+                        <option value="">Default (1)</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="channelIn" class="form-label">In Channel:</label>
+                    <select id="channelIn" class="form-control">
+                        <option value="">Default (2)</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
             </div>
             <button id="connectButton" class="btn btn-primary">Connect to API via Websocket</button>
             <button id="disconnectButton" class="btn btn-danger">Disconnect</button>
             <span id="connectionStatus" class="ms-3"></span>
+            <span id="channelInfo" class="ms-3 text-info"></span>
             <p class="note">Note: The connection will automatically attempt to reconnect if disconnected. The session ID for the API needs to match the session ID provided by the extension; this should correspond to the ?session value found on the dock.html and featured.html links. Simply sending messages to the API using GET/POST messaging doesn't require a websocket connection.</p>
         </div>
 
@@ -426,14 +461,24 @@
                 alert('Please enter a session ID');
                 return;
             }
+            
+            // Get channel values from input fields, URL params, or use defaults
+            const channelOutInput = document.getElementById('channelOut').value;
+            const channelInInput = document.getElementById('channelIn').value;
+            const channelOut = channelOutInput ? parseInt(channelOutInput) : 
+                              (parseInt(urlParams.get('channelout')) || 1);
+            const channelIn = channelInInput ? parseInt(channelInInput) : 
+                             (parseInt(urlParams.get('channelin')) || 2);
+            
             socket = new WebSocket(urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443');
             socket.onopen = function() {
-                  socket.send(JSON.stringify({
-					join: sessionID,
-					out: parseInt(new URLSearchParams(window.location.search).get('channelout')) || 1,
-					in: parseInt(new URLSearchParams(window.location.search).get('channelin')) || 2
-				  }));
+                socket.send(JSON.stringify({
+                    join: sessionID,
+                    out: channelOut,
+                    in: channelIn
+                }));
                 updateConnectionStatus('Connected');
+                document.getElementById('channelInfo').textContent = `(out: ${channelOut}, in: ${channelIn})`;
                 document.getElementById('connectButton').disabled = true;
                 document.getElementById('disconnectButton').disabled = false;
                 quick = true;
