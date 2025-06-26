@@ -87,6 +87,7 @@
         background: rgba(0,0,0,0.7);
         padding: 10px;
         border-radius: 5px;
+        display: none;
     }
     #sound-controls button {
         background: #4ecdc4;
@@ -574,6 +575,91 @@ if (urlParams.has("server2")) {
 
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
+
+const particlesCanvas = document.getElementById('particles-canvas');
+const particlesCtx = particlesCanvas.getContext('2d');
+
+// Initialize missing systems
+const particleSystem = {
+    particles: [],
+    emit(x, y, type, count) {
+        for (let i = 0; i < count; i++) {
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                life: 1.0,
+                type: type
+            });
+        }
+    },
+    update() {
+        this.particles = this.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            return p.life > 0;
+        });
+    },
+    draw(ctx) {
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.type === 'spark' ? '#ffff00' : '#ff0000';
+            ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+        });
+        ctx.globalAlpha = 1;
+    },
+    clear() {
+        this.particles = [];
+    }
+};
+
+const weatherSystem = {
+    timeOfDay: 'day',
+    weather: 'clear',
+    particles: [],
+    
+    update() {
+        // Update weather particles (rain, snow, etc.)
+        if (this.weather === 'rain') {
+            // Add new rain drops
+            if (Math.random() < 0.3) {
+                this.particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -10,
+                    vy: 5 + Math.random() * 3,
+                    life: 1.0
+                });
+            }
+        }
+        
+        // Update existing particles
+        this.particles = this.particles.filter(p => {
+            p.y += p.vy;
+            p.life -= 0.01;
+            return p.y < canvas.height && p.life > 0;
+        });
+    },
+    
+    draw(ctx) {
+        if (this.weather === 'rain') {
+            ctx.strokeStyle = 'rgba(100, 150, 255, 0.5)';
+            ctx.lineWidth = 1;
+            this.particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x, p.y + 10);
+                ctx.stroke();
+            });
+            ctx.globalAlpha = 1;
+        }
+    }
+};
+
+const killStreaks = new Map();
+const lastKillTime = new Map();
 
 let timeLeft = 20;
 
@@ -1659,5 +1745,6 @@ gameLoop();
 
 setInterval(updateTimer, 1000);
 </script>
+<script src="js/soundManager.js"></script>
 </body>
 </html>
