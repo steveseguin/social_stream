@@ -117,7 +117,9 @@ try {
      * Key Limitations:
      * - Badge images (member badges, moderator badges, etc.) are not available through the API
      * - We use text emoji fallbacks: 👑 (owner), 🛡️ (moderator), ⭐ (member)
-     * - For actual badge images, use the YouTube scraping mode in Social Stream instead
+     * - Channel-specific emotes (like :_ted2:, :_ted:, etc.) are not available through the API
+     * - Super sticker images are not available, only the alt text description
+     * - For actual badge images, custom emotes, and sticker images, use the YouTube scraping mode in Social Stream instead
      * 
      * The badge format matches youtube.js for consistency:
      * {"type": "img", "src": badgeUrl} when images are available
@@ -473,7 +475,9 @@ try {
 					  `/${baseCode}_${skinToneCode}/`
 					);
 					
-					return `<img class="regular-emote" src="${combinedUrl}" alt="${match}" title="${match}" />`;
+					// Properly escape the match for HTML attributes
+					const escapedMatch = match.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+					return `<img class="regular-emote" src="${combinedUrl}" alt="${escapedMatch}" title="${escapedMatch}" />`;
 				  }
 				}
 				
@@ -487,7 +491,9 @@ try {
 			// Then handle remaining standalone Unicode emoji characters
 			for (const [unicodeChar, emojiInfo] of unicodeMap.entries()) {
 			  if (result.includes(unicodeChar)) {
-				const imgTag = `<img src="${emojiInfo.url}" alt="${unicodeChar}" class="chat-emoji" title="${unicodeChar}" />`;
+				// Properly escape the unicode character for HTML attributes
+				const escapedChar = unicodeChar.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+				const imgTag = `<img src="${emojiInfo.url}" alt="${escapedChar}" class="chat-emoji" title="${escapedChar}" />`;
 				result = result.replace(new RegExp(unicodeChar, 'g'), imgTag);
 			  }
 			}
@@ -704,7 +710,8 @@ try {
 						const isSpecialEvent = item.snippet.type === 'giftMembershipReceivedEvent' ||
 											  item.snippet.type === 'newSponsorEvent' ||
 											  item.snippet.type === 'membershipGiftingEvent' ||
-											  item.snippet.type === 'memberMilestoneChatEvent';
+											  item.snippet.type === 'memberMilestoneChatEvent' ||
+											  item.snippet.type === 'superStickerEvent';
 						
 						// Process regular messages (skip if it's a special event)
 						if (!isBacklogMessage && !isSpecialEvent) {
@@ -781,6 +788,29 @@ try {
 									isChatOwner: item.authorDetails.isChatOwner,
 									isChatModerator: item.authorDetails.isChatModerator,
 									isChatSponsor: item.authorDetails.isChatSponsor
+								});
+							}
+						}
+						
+						// Handle super sticker events
+						if (item.snippet.type === 'superStickerEvent' && item.snippet.superStickerDetails) {
+							const stickerDetails = item.snippet.superStickerDetails;
+							if (!isBacklogMessage) {
+								// Build badges for super sticker author
+								let stickerBadges = [];
+								if (item.authorDetails.isChatOwner) stickerBadges.push({"type": "text", "text": "👑"});
+								if (item.authorDetails.isChatModerator) stickerBadges.push({"type": "text", "text": "🛡️"});
+								if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
+								
+								processSuperSticker({
+									authorName: item.authorDetails.displayName,
+									amount: stickerDetails.amountDisplayString,
+									stickerId: stickerDetails.superStickerMetadata?.stickerId,
+									altText: stickerDetails.superStickerMetadata?.altText,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									badges: stickerBadges.length > 0 ? stickerBadges : "",
+									displayMessage: item.snippet.displayMessage
 								});
 							}
 						}
@@ -2124,6 +2154,54 @@ try {
 			});
 		} catch (e) {
 			console.error('Error processing member milestone:', e);
+		}
+	}
+	
+	function processSuperSticker(stickerData) {
+		try {
+			addEvent(`Super Sticker: ${stickerData.authorName} - ${stickerData.amount}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					// Display the sticker alt text since we can't show the actual sticker image
+					const stickerText = stickerData.altText || stickerData.displayMessage || 'Super Sticker';
+					span.innerHTML = `<strong>${escapeHtml(stickerData.authorName)}</strong> <span>${stickerData.amount}</span>: 🎨 ${escapeHtml(stickerText)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			// Note: YouTube API doesn't provide sticker image URLs
+			// In youtube.js, sticker images are captured from the rendered chat
+			const stickerMessage = stickerData.altText || stickerData.displayMessage || 'Super Sticker';
+			
+			pushMessage({
+				chatname: escapeHtml(stickerData.authorName),
+				chatbadges: stickerData.badges || "",
+				userid: stickerData.authorChannelId,
+				backgroundColor: "",
+				textColor: "#111",
+				chatmessage: `🎨 ${escapeHtml(stickerMessage)}`, // Use emoji to indicate sticker
+				chatimg: stickerData.profileImageUrl || "",
+				hasDonation: stickerData.amount,
+				membership: "",
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "supersticker",
+				textonly: settings.textonlymode || false
+			});
+		} catch (e) {
+			console.error('Error processing super sticker:', e);
 		}
 	}
 	
