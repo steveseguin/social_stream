@@ -110,6 +110,20 @@
 
 
 try {
+    /*
+     * YouTube API Integration Note:
+     * This integration uses the YouTube Data API which has limitations compared to scraping the live chat directly.
+     * 
+     * Key Limitations:
+     * - Badge images (member badges, moderator badges, etc.) are not available through the API
+     * - We use text emoji fallbacks: 👑 (owner), 🛡️ (moderator), ⭐ (member)
+     * - For actual badge images, use the YouTube scraping mode in Social Stream instead
+     * 
+     * The badge format matches youtube.js for consistency:
+     * {"type": "img", "src": badgeUrl} when images are available
+     * {"type": "text", "text": emoji} as fallback
+     */
+    
     var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
     var scope = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl';
@@ -703,6 +717,68 @@ try {
 						}
 						
 						// Process special message types
+						
+						// Handle gift membership received events
+						if (item.snippet.type === 'giftMembershipReceivedEvent' && item.snippet.giftMembershipReceivedDetails) {
+							const giftDetails = item.snippet.giftMembershipReceivedDetails;
+							if (!isBacklogMessage) {
+								processGiftRedemption({
+									authorName: item.authorDetails.displayName,
+									gifterChannelId: giftDetails.gifterChannelId,
+									memberLevelName: giftDetails.memberLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage
+								});
+							}
+						}
+						
+						// Handle new sponsor events (new memberships)
+						if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
+							if (!isBacklogMessage) {
+								processNewSponsorship({
+									authorName: item.authorDetails.displayName,
+									memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage
+								});
+							}
+						}
+						
+						// Handle membership gift purchase events
+						if (item.snippet.type === 'membershipGiftingEvent' && item.snippet.membershipGiftingDetails) {
+							const giftingDetails = item.snippet.membershipGiftingDetails;
+							if (!isBacklogMessage) {
+								processGiftPurchase({
+									authorName: item.authorDetails.displayName,
+									giftCount: giftingDetails.giftMembershipsCount || 1,
+									memberLevelName: giftingDetails.giftMembershipsLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage
+								});
+							}
+						}
+						
+						// Handle member milestone events
+						if (item.snippet.type === 'memberMilestoneChatEvent' && item.snippet.memberMilestoneChatDetails) {
+							const milestoneDetails = item.snippet.memberMilestoneChatDetails;
+							if (!isBacklogMessage) {
+								processMemberMilestone({
+									authorName: item.authorDetails.displayName,
+									memberMonth: milestoneDetails.memberMonth,
+									memberLevelName: milestoneDetails.memberLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage,
+									isChatOwner: item.authorDetails.isChatOwner,
+									isChatModerator: item.authorDetails.isChatModerator,
+									isChatSponsor: item.authorDetails.isChatSponsor
+								});
+							}
+						}
+						
 						if (item.snippet.superChatDetails) {
 							// Build badges for super chat author
 							let superChatBadges = [];
@@ -1678,15 +1754,19 @@ try {
 			
 			// Build badges array - order matters (owner > mod > member)
 			if (messageData.isChatOwner) { 
+				// Note: YouTube API doesn't provide badge images, using text emoji as fallback
 				chatbadges.push({"type": "text", "text": "👑"}); // Crown for owner
 			}
 			if (messageData.isChatModerator) { 
+				// Note: YouTube API doesn't provide badge images, using text emoji as fallback
 				chatbadges.push({"type": "text", "text": "🛡️"}); // Shield for moderator
 				if (!settings.nosubcolor) {
 					nameColor = "#5e84f1";
 				}
 			}
 			if (messageData.isChatSponsor) { 
+				// Note: YouTube API doesn't provide member badge images
+				// In the future, if we can get badge URLs, use: {"type": "img", "src": badgeUrl}
 				chatbadges.push({"type": "text", "text": "⭐"}); // Star for member/sponsor
 				if (!settings.nosubcolor && !nameColor) { // Don't override mod color
 					nameColor = "#107516";
@@ -1853,6 +1933,194 @@ try {
 			console.error('Error processing membership:', e);
 		}
 	}
+	
+	function processGiftRedemption(giftData) {
+		try {
+			const displayMessage = giftData.displayMessage || `received a gift membership`;
+			addEvent(`Gift Redeemed: ${giftData.authorName} - ${giftData.memberLevelName}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${escapeHtml(giftData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage({
+				chatname: escapeHtml(giftData.authorName),
+				chatbadges: [{"type": "text", "text": "🎁"}], // Gift emoji for received gifts
+				userid: giftData.authorChannelId,
+				nameColor: !settings.nosubcolor ? "#107516" : "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: giftData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "gift_recipient",
+				subtitle: giftData.memberLevelName,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "giftredemption",
+				textonly: settings.textonlymode || false
+			});
+		} catch (e) {
+			console.error('Error processing gift redemption:', e);
+		}
+	}
+	
+	function processGiftPurchase(giftData) {
+		try {
+			const giftCount = giftData.giftCount || 1;
+			const displayMessage = giftData.displayMessage || `gifted ${giftCount} membership${giftCount > 1 ? 's' : ''} (${giftData.memberLevelName})`;
+			addEvent(`Gift Purchase: ${giftData.authorName} - ${giftCount} x ${giftData.memberLevelName}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${escapeHtml(giftData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage({
+				chatname: escapeHtml(giftData.authorName),
+				chatbadges: [{"type": "text", "text": "💝"}], // Gift giving emoji
+				userid: giftData.authorChannelId,
+				nameColor: "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: giftData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "gift_giver",
+				subtitle: `${giftCount} x ${giftData.memberLevelName}`,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "giftpurchase",
+				textonly: settings.textonlymode || false
+			});
+		} catch (e) {
+			console.error('Error processing gift purchase:', e);
+		}
+	}
+	
+	function processNewSponsorship(sponsorData) {
+		try {
+			const displayMessage = sponsorData.displayMessage || `just became a member!`;
+			addEvent(`New Sponsor: ${sponsorData.authorName} - ${sponsorData.memberLevelName}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${escapeHtml(sponsorData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage({
+				chatname: escapeHtml(sponsorData.authorName),
+				chatbadges: [{"type": "text", "text": "⭐"}], // Star for new members
+				userid: sponsorData.authorChannelId,
+				nameColor: !settings.nosubcolor ? "#107516" : "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: sponsorData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "new_sponsor",
+				subtitle: sponsorData.memberLevelName,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "sponsorship",
+				textonly: settings.textonlymode || false
+			});
+		} catch (e) {
+			console.error('Error processing new sponsorship:', e);
+		}
+	}
+	
+	function processMemberMilestone(milestoneData) {
+		try {
+			const displayMessage = milestoneData.displayMessage || `celebrates ${milestoneData.memberMonth} month${milestoneData.memberMonth > 1 ? 's' : ''} of membership`;
+			addEvent(`Member Milestone: ${milestoneData.authorName} - ${milestoneData.memberMonth} months`);
+			
+			// Build badges for milestone author
+			let milestoneBadges = [];
+			if (milestoneData.isChatOwner) milestoneBadges.push({"type": "text", "text": "👑"});
+			if (milestoneData.isChatModerator) milestoneBadges.push({"type": "text", "text": "🛡️"});
+			milestoneBadges.push({"type": "text", "text": "🏅"}); // Medal for milestone
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${escapeHtml(milestoneData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user is near bottom
+					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage({
+				chatname: escapeHtml(milestoneData.authorName),
+				chatbadges: milestoneBadges,
+				userid: milestoneData.authorChannelId,
+				nameColor: !settings.nosubcolor ? "#107516" : "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: milestoneData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "member_milestone",
+				subtitle: `${milestoneData.memberMonth} months - ${milestoneData.memberLevelName}`,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "membermilestone",
+				textonly: settings.textonlymode || false
+			});
+		} catch (e) {
+			console.error('Error processing member milestone:', e);
+		}
+	}
+	
 	function updateStats(type, data) {
 		switch(type) {
 			case 'viewer_update':
