@@ -197,6 +197,7 @@ TTS.beepwords = false;
 TTS.readDonos = false;
 TTS.disableTTS = false;
 TTS.ttsSources = false;
+TTS.ttsQuick = false;
 
 /**
  * Check if the browser is Safari
@@ -472,6 +473,11 @@ TTS.configure = function(urlParams) {
 	if (urlParams.get("ttssources")) {
 		TTS.ttsSources = urlParams.get("ttssources").toLowerCase().split(",").map(element => element.trim());
 	}
+	
+	if (urlParams.has("ttsquick")) {
+		TTS.ttsQuick = parseInt(urlParams.get("ttsquick")) || 80;
+	}
+	
 	
 	if (urlParams.has("ttsdonos")) {
         TTS.readDonos  = urlParams.get("ttsdonos").trim() || "en-US";;
@@ -878,6 +884,12 @@ TTS.speak = function(text, allow = false) {
     if (TTS.replaceURLInLink) { 
         text = TTS.replaceURLsWithSubstring(text, "Link");
     }
+	
+	if (TTS.ttsQuick){
+		if (text.length > TTS.ttsQuick){
+			text = text.substring(0, TTS.ttsQuick);
+		}
+	}
     
     //console.log("About to speak:", text);
 	
