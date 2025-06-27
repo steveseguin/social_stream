@@ -716,7 +716,7 @@ try {
 						// Process regular messages (skip if it's a special event)
 						if (!isBacklogMessage && !isSpecialEvent) {
 							queueMessage({
-								authorName: item.authorDetails.displayName,
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
 								profileImageUrl: item.authorDetails.profileImageUrl,
 								isChatOwner: item.authorDetails.isChatOwner,
@@ -736,7 +736,7 @@ try {
 							const giftDetails = item.snippet.giftMembershipReceivedDetails;
 							if (!isBacklogMessage) {
 								processGiftRedemption({
-									authorName: item.authorDetails.displayName,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
 									gifterChannelId: giftDetails.gifterChannelId,
 									memberLevelName: giftDetails.memberLevelName,
 									profileImageUrl: item.authorDetails.profileImageUrl,
@@ -750,7 +750,7 @@ try {
 						if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
 							if (!isBacklogMessage) {
 								processNewSponsorship({
-									authorName: item.authorDetails.displayName,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
 									memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
 									profileImageUrl: item.authorDetails.profileImageUrl,
 									authorChannelId: item.authorDetails.channelId,
@@ -764,7 +764,7 @@ try {
 							const giftingDetails = item.snippet.membershipGiftingDetails;
 							if (!isBacklogMessage) {
 								processGiftPurchase({
-									authorName: item.authorDetails.displayName,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
 									giftCount: giftingDetails.giftMembershipsCount || 1,
 									memberLevelName: giftingDetails.giftMembershipsLevelName,
 									profileImageUrl: item.authorDetails.profileImageUrl,
@@ -779,7 +779,7 @@ try {
 							const milestoneDetails = item.snippet.memberMilestoneChatDetails;
 							if (!isBacklogMessage) {
 								processMemberMilestone({
-									authorName: item.authorDetails.displayName,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
 									memberMonth: milestoneDetails.memberMonth,
 									memberLevelName: milestoneDetails.memberLevelName,
 									profileImageUrl: item.authorDetails.profileImageUrl,
@@ -803,7 +803,7 @@ try {
 								if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
 								
 								processSuperSticker({
-									authorName: item.authorDetails.displayName,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''), // Remove @ prefix if present
 									amount: stickerDetails.amountDisplayString,
 									stickerId: stickerDetails.superStickerMetadata?.stickerId,
 									altText: stickerDetails.superStickerMetadata?.altText,
@@ -823,7 +823,7 @@ try {
 							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
 							
 							processSuperChat({
-								authorName: item.authorDetails.displayName,
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
 								amount: item.snippet.superChatDetails.amountDisplayString,
 								message: item.snippet.superChatDetails.userComment,
 								tier: item.snippet.superChatDetails.tier,
@@ -838,7 +838,7 @@ try {
 							if (membershipMessage && !isBacklogMessage) {
 								// This is a monthly featured message from a member
 								queueMessage({
-									authorName: item.authorDetails.displayName,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
 									message: membershipMessage,
 									profileImageUrl: item.authorDetails.profileImageUrl,
 									isChatOwner: item.authorDetails.isChatOwner,
@@ -858,7 +858,7 @@ try {
 								
 								// New membership, renewal, or upgrade without a message
 								processMembership({
-									authorName: item.authorDetails.displayName,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
 									level: item.snippet.membershipDetails.memberLevelName,
 									profileImageUrl: item.authorDetails.profileImageUrl,
 									authorChannelId: item.authorDetails.channelId,
