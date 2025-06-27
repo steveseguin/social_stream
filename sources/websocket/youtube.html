@@ -2161,13 +2161,21 @@ try {
 		try {
 			addEvent(`Super Sticker: ${stickerData.authorName} - ${stickerData.amount}`);
 			
+			// Extract the actual message from displayMessage
+			// Format is typically: "£10.00 from @username: "actual message""
+			let actualMessage = stickerData.displayMessage || '';
+			const messageMatch = actualMessage.match(/:\s*"(.+)"$/);
+			if (messageMatch) {
+				actualMessage = messageMatch[1];
+			}
+			
 			// Only update DOM if page is visible
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
 					var span = document.createElement("div");
-					// Display the sticker alt text since we can't show the actual sticker image
-					const stickerText = stickerData.altText || stickerData.displayMessage || 'Super Sticker';
+					// Use the actual message or alt text for display
+					const stickerText = actualMessage || stickerData.altText || 'Super Sticker';
 					span.innerHTML = `<strong>${escapeHtml(stickerData.authorName)}</strong> <span>${stickerData.amount}</span>: 🎨 ${escapeHtml(stickerText)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
@@ -2184,7 +2192,7 @@ try {
 			
 			// Note: YouTube API doesn't provide sticker image URLs
 			// In youtube.js, sticker images are captured from the rendered chat
-			const stickerMessage = stickerData.altText || stickerData.displayMessage || 'Super Sticker';
+			const stickerMessage = actualMessage || stickerData.altText || 'Super Sticker';
 			
 			pushMessage({
 				chatname: escapeHtml(stickerData.authorName),
@@ -2192,7 +2200,7 @@ try {
 				userid: stickerData.authorChannelId,
 				backgroundColor: "",
 				textColor: "#111",
-				chatmessage: `🎨 ${escapeHtml(stickerMessage)}`, // Use emoji to indicate sticker
+				chatmessage: escapeHtml(stickerMessage), // Just the message, no emoji prefix
 				chatimg: stickerData.profileImageUrl || "",
 				hasDonation: stickerData.amount,
 				membership: "",
