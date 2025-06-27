@@ -700,8 +700,14 @@ try {
 					if (!lastMessageTime || publishedAt > lastMessageTime) {
 						const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
 						
-						// Process regular messages
-						if (!isBacklogMessage) {
+						// Check if this is a special event type that should not be processed as a regular message
+						const isSpecialEvent = item.snippet.type === 'giftMembershipReceivedEvent' ||
+											  item.snippet.type === 'newSponsorEvent' ||
+											  item.snippet.type === 'membershipGiftingEvent' ||
+											  item.snippet.type === 'memberMilestoneChatEvent';
+						
+						// Process regular messages (skip if it's a special event)
+						if (!isBacklogMessage && !isSpecialEvent) {
 							queueMessage({
 								authorName: item.authorDetails.displayName,
 								message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
