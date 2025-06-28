@@ -401,19 +401,6 @@
 			return resp;
 		}
 		
-		// Handle emotes if they exist
-		if (EMOTELIST) {
-			let textContent = "";
-			element.childNodes.forEach(node => {
-				if (node.nodeType === 3 && node.textContent && node.textContent.trim().length > 0) {
-					textContent += escapeHtml(node.textContent);
-				}
-			});
-			
-			if (textContent) {
-				return replaceEmotesWithImages(textContent);
-			}
-		}
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
@@ -425,7 +412,11 @@
 					resp += getAllContentNodes(node);
 				}
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent);
+				if (EMOTELIST) {
+					resp += replaceEmotesWithImages(escapeHtml(node.textContent));
+				} else {
+					resp += escapeHtml(node.textContent);
+				}
 			} else if (node.nodeType === 1){
 				if (node && node.classList && node.classList.contains("zero-width-emote")){
 					resp += "<span class='zero-width-parent'>"+node.outerHTML+"</span>";
