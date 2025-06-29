@@ -136,7 +136,7 @@
 	var cachedUserProfiles = new Map();
 	var maxCachedProfiles = 10000; // Limit to 10,000 profiles
 	var processedMessages = new Set();
-	var maxTrackedMessages = 40;
+	var maxTrackedMessages = 3;
 	var pastMessages = [];
 	
 	// Persistent cache configuration
@@ -691,6 +691,41 @@
 	  }
 	}
 	
+	var signedInUser = false;
+	
+	
+	function getAuthenticatedUsername() {
+		try {
+			const scripts = document.querySelectorAll('script');
+			
+			for (const script of scripts) {
+				const content = script.textContent || '';
+				
+				// Check if this script contains Next.js push data
+				if (content.includes('self.__next_f.push') && content.includes('authenticated')) {
+					
+					let splitit = content.split("channelId").pop();
+					// Look for username pattern - simpler regex that handles escaped content
+					const usernameMatch = splitit.match(/username\\":\\"([^"\\]+)\\"/);
+					
+					if (usernameMatch && usernameMatch[1]) {
+						return usernameMatch[1];
+					}
+					
+					// Fallback: try without escaping
+					const fallbackMatch = splitit.match(/username":"([^"]+)"/);
+					if (fallbackMatch && fallbackMatch[1]) {
+						return fallbackMatch[1];
+					}
+				}
+			}
+		} catch (e) {
+			console.error('[Social Stream] Error extracting authenticated username:', e);
+		}
+		
+		return null;
+	}
+	
 	async function processMessageNew(ele){	// new popout format
 	
 	  if (!ele || !ele.isConnected) return;
@@ -728,24 +763,36 @@
 		sibling = sibling.nextElementSibling;
 	  }
 	  
+	  var chatname = "";
 	  let messageId = "";
+	  
 	  try {
-		const content = ele.textContent || "";
-		const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
-		messageId = `${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
+		chatname = escapeHtml(ele.querySelector("button[title]").innerText);
 		
-		if (processedMessages.has(messageId)) return;
-		
-		processedMessages.add(messageId);
-		
-		if (processedMessages.size > maxTrackedMessages) {
-		  const entriesToRemove = processedMessages.size - maxTrackedMessages;
-		  const entries = Array.from(processedMessages);
-		  for (let i = 0; i < entriesToRemove; i++) {
-			processedMessages.delete(entries[i]);
-		  }
+	  } catch(e){
+		  return;
+	  }
+	  
+	  
+	  try {
+		 console.log(signedInUser);
+		if (signedInUser && signedInUser==chatname){
+			const content = ele.textContent || "";
+			const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
+			messageId = `${content.slice(0, 100)}${imgSrcs ? ' ' + imgSrcs : ''}`;
+			
+			if (processedMessages.has(messageId)) return;
+			
+			processedMessages.add(messageId);
+			
+			if (processedMessages.size > maxTrackedMessages) {
+			  const entriesToRemove = processedMessages.size - maxTrackedMessages;
+			  const entries = Array.from(processedMessages);
+			  for (let i = 0; i < entriesToRemove; i++) {
+				processedMessages.delete(entries[i]);
+			  }
+			}
 		}
-		
 	  } catch(e) {
 		  console.error(e);
 		return;
@@ -762,17 +809,10 @@
 	  var chatsticker = false;
 	  var chatmessage = "";
 	  var nameColor = "";
-	  var chatname = "";
 	  var name ="";
 	  var chatbadges = [];
 	  
 	  
-	  try {
-		chatname = escapeHtml(ele.querySelector("button[title]").innerText);
-		
-	  } catch(e){
-		  return;
-	  }
 	  try {
 		nameColor = ele.querySelector("button[title]").style.color;
 	  } catch(e){}
@@ -1108,6 +1148,9 @@
 						onElementInsertedNew(document.querySelectorAll("#chatroom-messages > div")[0], false);
 					}
 				},3000);
+			}
+			if (!signedInUser){
+				signedInUser = getAuthenticatedUsername();
 			}
 		} else {
 			// Old chatroom
