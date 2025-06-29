@@ -203,6 +203,9 @@ span:empty,
                 }
             });
         }
+		
+		let valid = data.chatname || data.chatmessage || data.donation || data.hasDonation || '';
+		if (!valid){return;}
 
         // Construct the HTML for each message
         messageDiv.innerHTML = `
@@ -212,7 +215,7 @@ span:empty,
                 <div class="badges">${chatbadges}</div>
             </div>
 			<div class="message" style="background: linear-gradient(90deg, ${chroma(data.nameColor || "#555").desaturate(4).darken(1).alpha(0.8)}, ${chroma(data.nameColor || "#555").desaturate(3).darken(1).alpha(0.8)})">
-				<div class="text">${data.chatmessage || ''}${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation)}</div>` : ''}
+				<div class="text">${data.chatmessage || ''}${(data.donation||data.hasDonation) ? `<div class="donation">${(data.donation||data.hasDonation||"")}</div>` : ''}
 			</div>
         `;
 
