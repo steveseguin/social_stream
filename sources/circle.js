@@ -1,4 +1,8 @@
 (function () {
+
+setInterval(() => {
+    lastMessage = {}
+}, 3000)
 	
 	
 	var isExtensionOn = true;
