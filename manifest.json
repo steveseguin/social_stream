@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.25.7",
+  "version": "3.25.8",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -147,7 +147,9 @@
     "https://play.rozy.tv/*",
     "https://www.crowdcast.io/e/*",
     "https://*.zoom.us/*",
+	"https://zoom.us/*",
 	"https://*.zoom.com/*",
+	"https://zoom.com/*",
     "https://watch.owncast.online/*",
     "https://live.simontv.org/*",
     "https://discord.com/*",
@@ -712,7 +714,7 @@
     },
     {
       "js": [ "./sources/zoom.js" ],
-      "matches": [ "https://*.zoom.us/*" , "https://*.zoom.com/*" ]
+      "matches": [ "https://*.zoom.us/*" , "https://zoom.us/*" , "https://*.zoom.com/*", "https://zoom.com/*" ]
     },
     {
       "js": [ "./sources/crowdcast.js" ],

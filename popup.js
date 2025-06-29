@@ -5234,4 +5234,64 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			generalConfig.style.display = 'block';
 		}
 	}
+
+	// Handle custom beep upload buttons
+	const uploadBeepBtn = document.getElementById('uploadBeepBtn');
+	if (uploadBeepBtn) {
+		uploadBeepBtn.onclick = function() {
+			// Open the media hosting service in a popup window
+			const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadBeep', 'width=640,height=640');
+			
+			// Listen for message from the popup
+			window.addEventListener('message', function handleMessage(event) {
+				// Verify the origin for security
+				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+				
+				// Check if this is our media upload message
+				if (event.data && event.data.type === 'media-uploaded') {
+					// Fill the custom beep input with the uploaded URL
+					const customBeepInput = document.getElementById('custombeep');
+					if (customBeepInput) {
+						customBeepInput.value = event.data.url;
+						// Trigger change event to save the value
+						customBeepInput.dispatchEvent(new Event('input', { bubbles: true }));
+						customBeepInput.dispatchEvent(new Event('change', { bubbles: true }));
+					}
+					
+					// Remove this specific listener
+					window.removeEventListener('message', handleMessage);
+				}
+			});
+		};
+	}
+
+	// Handle second custom beep upload button
+	const uploadBeepBtn2 = document.getElementById('uploadBeepBtn2');
+	if (uploadBeepBtn2) {
+		uploadBeepBtn2.onclick = function() {
+			// Open the media hosting service in a popup window
+			const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadBeep2', 'width=640,height=640');
+			
+			// Listen for message from the popup
+			window.addEventListener('message', function handleMessage(event) {
+				// Verify the origin for security
+				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+				
+				// Check if this is our media upload message
+				if (event.data && event.data.type === 'media-uploaded') {
+					// Fill the second custom beep input with the uploaded URL
+					const customBeepInput2 = document.getElementById('custombeep2');
+					if (customBeepInput2) {
+						customBeepInput2.value = event.data.url;
+						// Trigger change event to save the value
+						customBeepInput2.dispatchEvent(new Event('input', { bubbles: true }));
+						customBeepInput2.dispatchEvent(new Event('change', { bubbles: true }));
+					}
+					
+					// Remove this specific listener
+					window.removeEventListener('message', handleMessage);
+				}
+			});
+		};
+	}
 });

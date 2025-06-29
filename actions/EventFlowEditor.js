@@ -1255,7 +1255,10 @@ class EventFlowEditor {
 			case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
 				html += `<div class="property-group">
 							 <label class="property-label">Media URL (TENOR/GIPHY)</label>
-							 <input type="url" class="property-input" id="prop-mediaUrl" value="${node.config.mediaUrl || ''}">
+							 <div style="display: flex; gap: 5px;">
+								 <input type="url" class="property-input" id="prop-mediaUrl" value="${node.config.mediaUrl || ''}" style="flex: 1;">
+								 <button type="button" id="uploadMediaBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
+							 </div>
 							 <div class="property-help">Direct URL to the GIF or video. For GIPHY, use the embed link or direct GIF link.</div>
 						 </div>
 						 <div class="property-group">
@@ -1283,7 +1286,10 @@ class EventFlowEditor {
 			case 'playAudioClip':
 				html += `<div class="property-group">
 							 <label class="property-label">Audio File URL</label>
-							 <input type="url" class="property-input" id="prop-audioUrl" value="${node.config.audioUrl || ''}">
+							 <div style="display: flex; gap: 5px;">
+								 <input type="url" class="property-input" id="prop-audioUrl" value="${node.config.audioUrl || ''}" style="flex: 1;">
+								 <button type="button" id="uploadAudioBtn" style="padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Upload</button>
+							 </div>
 						 </div>
 						 <div class="property-group">
 							<label class="property-label">Volume (0.0 to 1.0)</label>
@@ -1348,6 +1354,53 @@ class EventFlowEditor {
                 });
             }
         });
+
+        // Add upload button handlers
+        const uploadMediaBtn = document.getElementById('uploadMediaBtn');
+        if (uploadMediaBtn) {
+            uploadMediaBtn.addEventListener('click', () => {
+                const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadMedia', 'width=640,height=640');
+                
+                window.addEventListener('message', function handleMessage(event) {
+                    if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+                    
+                    if (event.data && event.data.type === 'media-uploaded') {
+                        const mediaUrlInput = document.getElementById('prop-mediaUrl');
+                        if (mediaUrlInput) {
+                            mediaUrlInput.value = event.data.url;
+                            mediaUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            nodeData.config.mediaUrl = event.data.url;
+                            this.markUnsavedChanges(true);
+                            this.renderNodeOnCanvas(nodeData.id);
+                        }
+                        window.removeEventListener('message', handleMessage);
+                    }
+                }.bind(this));
+            });
+        }
+
+        const uploadAudioBtn = document.getElementById('uploadAudioBtn');
+        if (uploadAudioBtn) {
+            uploadAudioBtn.addEventListener('click', () => {
+                const popup = window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadAudio', 'width=640,height=640');
+                
+                window.addEventListener('message', function handleMessage(event) {
+                    if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+                    
+                    if (event.data && event.data.type === 'media-uploaded') {
+                        const audioUrlInput = document.getElementById('prop-audioUrl');
+                        if (audioUrlInput) {
+                            audioUrlInput.value = event.data.url;
+                            audioUrlInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            nodeData.config.audioUrl = event.data.url;
+                            this.markUnsavedChanges(true);
+                            this.renderNodeOnCanvas(nodeData.id);
+                        }
+                        window.removeEventListener('message', handleMessage);
+                    }
+                }.bind(this));
+            });
+        }
     }
     
     renderNodeOnCanvas(nodeId) {
