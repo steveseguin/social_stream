@@ -763,6 +763,8 @@
 			eventType = "sponsorship";
 			chatmessage = getAllContentNodes(giftedmemembership);
 			hasMembership = getTranslation("sponsorship", "SPONSORSHIP");
+		} else if (!chatmessage && chatmembership) {
+			chatmessage = chatmembership;
 		} else if (chatmessage && eventType === "jeweldonation") {
 			try {
 				const jewelMatch = chatmessage.match(/sent\s+(.*?)\s+for\s+([0-9,]+)\s+Jewels/i);
