@@ -706,6 +706,12 @@
 				try {
 					const headerSubtext = ele.querySelector("#header-subtext");
 					const headerText = ele.querySelector("#header-primary-text");
+					
+					// Check if this is specifically a new member welcome (has subtext but no message content)
+					const hasEmptyMessage = !ele.querySelector("#message")?.textContent?.trim();
+					const isNewMemberStructure = headerSubtext && hasEmptyMessage && 
+					                            ele.hasAttribute("show-only-header") && 
+					                            ele.hasAttribute("modern");
 
 					if (headerSubtext) {
 						const subtextContent = getAllContentNodes(headerSubtext);
@@ -718,11 +724,23 @@
 							if (tierMatch && tierMatch[1]) {
 								subtitle = tierMatch[1].trim();
 							}
-						} else if (subtextContent.toLowerCase().includes("welcome to")) {
+						} else if (subtextContent.toLowerCase().includes("welcome to") || subtextContent.toLowerCase().includes("willkommen bei")) {
 							chatmessage = subtextContent;
 							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
 							eventType = "new-membership";
-							const tierMatch = subtextContent.match(/welcome to\s+(.+?)(?:\s*!)?$/i);
+							// Updated regex to handle both English and German patterns
+							const tierMatch = subtextContent.match(/(?:welcome to|willkommen bei)\s+(.+?)(?:\s*!)?$/i);
+							if (tierMatch && tierMatch[1]) {
+								subtitle = tierMatch[1].trim();
+							}
+						} else if (isNewMemberStructure && subtextContent) {
+							// Structure-based detection for new members in any language
+							// Only triggers for membership items with the specific structure
+							chatmessage = subtextContent;
+							hasMembership = getTranslation("member-chat", "MEMBERSHIP");
+							eventType = "new-membership";
+							// Try to extract channel/tier name - look for text after common prepositions
+							const tierMatch = subtextContent.match(/(?:to|bei|à|a|para|для|へ|に|에|у|na|في|में)\s+(.+?)(?:\s*[!.。！])?$/i);
 							if (tierMatch && tierMatch[1]) {
 								subtitle = tierMatch[1].trim();
 							}
