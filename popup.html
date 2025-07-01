@@ -5787,6 +5787,7 @@ body.ssapp .wrapper.ssapp h3 {
 									<select data-optionparam19="layout">
 										<option value="corner">Corner Widget</option>
 										<option value="bar">Horizontal Bar</option>
+										<option value="topbar">Top Header Bar (Twitch-style)</option>
 										<option value="full">Full Window</option>
 									</select>
 								</div>
@@ -5834,6 +5835,15 @@ body.ssapp .wrapper.ssapp h3 {
 											✨ Enable animations
 										</span>
 									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="donations" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="track-donations">
+											💵 Track donation amounts
+										</span>
+									</div>
 									<br>
 									
 									<div>
@@ -5848,6 +5858,82 @@ body.ssapp .wrapper.ssapp h3 {
 										<span data-translate="update-interval">
 											⏱️ Update interval <input type="number" style="max-width: 8ch;" max="60" min="1" value="5" size="3" data-numbersetting19="updateinterval" /> seconds (0 = disabled)
 										</span>
+									</div>
+								</div>
+								<br>
+								
+								<h3><span data-translate="topbar-options">Top Bar Options</span> <span style="font-size: 0.8em; opacity: 0.7;">(when using Top Header Bar layout)</span></h3>
+								<div>
+									<span data-translate="topbar-category">
+										Display Category
+									</span>
+									<select data-optionparam19="category">
+										<option value="rotate">🔄 Rotate All (Gifts → Donations)</option>
+										<option value="combined">Combined (Gifts + Donations)</option>
+										<option value="gifts">Top Gifters Only</option>
+										<option value="donations">Top Donors Only</option>
+										<option value="engagement">Most Active Users</option>
+									</select>
+								</div>
+								<br>
+								
+								<div>
+									<span data-translate="topbar-period">
+										Time Period
+									</span>
+									<select data-optionparam19="period">
+										<option value="rotate">🔄 Rotate (Day → Week)</option>
+										<option value="session">Current Session</option>
+										<option value="day">Today</option>
+										<option value="week">This Week</option>
+									</select>
+								</div>
+								<br>
+								
+								<div>
+									<span data-translate="rotation-interval">
+										🔄 Rotation interval <input type="number" style="max-width: 8ch;" max="60" min="3" value="10" size="3" data-numbersetting19="rotateinterval" /> seconds
+									</span>
+								</div>
+								<br>
+								
+								<div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="showvalue" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="show-gift-value">
+											💰 Show monetary value for gifts (instead of count)
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="compact" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="compact-topbar">
+											📐 Compact mode (smaller height)
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="tickerscroll" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-scroll-mode">
+											📜 Ticker scroll mode (continuous scrolling)
+										</span>
+									</div>
+									<div style="margin-left: 30px;">
+										<span data-translate="ticker-scroll-speed">
+											Scroll Speed
+										</span>
+										<select data-optionparam19="scrollspeed">
+											<option value="slow">Slow</option>
+											<option value="normal">Normal</option>
+											<option value="fast">Fast</option>
+										</select>
 									</div>
 								</div>
 								<br>
