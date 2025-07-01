@@ -410,6 +410,12 @@
         .leaderboard-container.visible {
             opacity: 1;
         }
+        
+        /* For ticker mode, ensure container is always visible without transitions */
+        body[data-layout="topbar"][data-tickerscroll="true"] .leaderboard-container {
+            opacity: 1 !important;
+            transition: none !important;
+        }
 
         /* Minimal theme overrides */
         body[data-theme="minimal"] {
@@ -528,10 +534,13 @@
         }
 
         /* Disable animations when not enabled */
-        body:not([data-animated="true"]) * {
+        /* Disable animations only for leaderboard items when not animated */
+        body:not([data-animated="true"]) .leaderboard-item {
             animation: none !important;
             transition: none !important;
         }
+        
+        /* Ticker animation handled by JavaScript */
 
         body[data-animated="true"] .leaderboard-item {
             transition: all 0.3s ease;
@@ -705,62 +714,128 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         
-        /* Smooth transitions for rotation */
-        body[data-layout="topbar"] .leaderboard-container {
+        /* Smooth transitions for rotation - but not for ticker mode */
+        body[data-layout="topbar"]:not([data-tickerscroll="true"]) .leaderboard-container {
             transition: opacity 0.5s ease-in-out;
         }
         
         /* ========== TICKER MODE FOR TOPBAR ========== */
-        body[data-layout="topbar"][data-ticker="true"] .leaderboard-list {
-            display: flex;
-            animation: ticker-scroll 30s linear infinite;
-            width: max-content;
-            gap: 40px;
-            padding-right: 100vw; /* Ensures smooth loop */
-        }
-        
-        @keyframes ticker-scroll {
-            0% {
-                transform: translateX(100%);
-            }
-            100% {
-                transform: translateX(-100%);
-            }
-        }
-        
-        /* Duplicate content for seamless loop */
-        body[data-layout="topbar"][data-ticker="true"] .ticker-duplicate {
-            display: flex;
-            gap: 40px;
-        }
-        
-        /* Ticker container needs overflow hidden */
-        body[data-layout="topbar"][data-ticker="true"] .leaderboard-container {
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-wrapper {
             overflow: hidden;
+            width: 100%;
+            position: relative;
+            background-color: transparent;
+            /* Ensure no white flashing */
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translateZ(0);
         }
         
-        /* Adjust ticker speed based on parameter */
-        body[data-layout="topbar"][data-ticker="true"][data-ticker-speed="slow"] .leaderboard-list {
-            animation-duration: 60s;
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-content {
+            display: flex;
+            width: max-content;
+            will-change: transform;
+            position: relative;
+            /* Prevent white flashes */
+            background-color: transparent;
+            flex-shrink: 0;
         }
         
-        body[data-layout="topbar"][data-ticker="true"][data-ticker-speed="fast"] .leaderboard-list {
-            animation-duration: 20s;
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-container-inner {
+            display: flex;
+            width: max-content;
+            position: relative;
+            will-change: transform;
         }
         
-        /* Pause on hover */
-        body[data-layout="topbar"][data-ticker="true"] .leaderboard-list:hover {
-            animation-play-state: paused;
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-segment {
+            display: flex;
+            align-items: center;
+            padding: 0 40px;
+            white-space: nowrap;
         }
+        
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-view-label {
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-right: 20px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 30px;
+            gap: 10px;
+        }
+        
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-rank {
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.85em;
+        }
+        
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-score {
+            font-weight: 700;
+            color: var(--accent-gold);
+            font-size: 0.95em;
+        }
+        
+        body[data-layout="topbar"][data-tickerscroll="true"] .ticker-source-icon {
+            width: 16px;
+            height: 16px;
+            vertical-align: middle;
+        }
+        
+        /* Create a wrapper for the ticker animation */
+        body[data-layout="topbar"][data-tickerscroll="true"] .leaderboard-container {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        /* Remove CSS animation - will use continuous JavaScript transform */
+        
+        
+        /* Ticker speed now controlled by JavaScript */
+        
+        /* Hover pause handled by JavaScript */
         
         /* Hide title in ticker mode for more space */
-        body[data-layout="topbar"][data-ticker="true"] .leaderboard-title {
+        body[data-layout="topbar"][data-tickerscroll="true"] .leaderboard-title {
             display: none;
         }
         
+        /* Adjust header in ticker mode */
+        body[data-layout="topbar"][data-tickerscroll="true"] .leaderboard-header {
+            display: none; /* Hide entire header for maximum space */
+        }
+        
+        /* Center content vertically in ticker mode */
+        body[data-layout="topbar"][data-tickerscroll="true"] .leaderboard-container {
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+        
+        
         /* Adjust item styling for ticker */
-        body[data-layout="topbar"][data-ticker="true"] .leaderboard-item {
+        body[data-layout="topbar"][data-tickerscroll="true"] .leaderboard-item {
             white-space: nowrap;
+            flex-shrink: 0;
+        }
+        
+        /* Ensure smooth animation */
+        body[data-layout="topbar"][data-tickerscroll="true"] .leaderboard-list {
+            will-change: transform;
+            backface-visibility: hidden;
+            perspective: 1000;
         }
         
     </style>
@@ -794,21 +869,108 @@
         
         // New topbar-specific parameters (moved up to fix initialization error)
         const categoryParam = urlParams.get('category') || 'combined'; // gifts, donations, combined, engagement, rotate
-        const periodParam = urlParams.get('period') || 'session'; // day, week, session, rotate
+        const periodParam = urlParams.get('period') || 'day'; // Default to daily instead of session
         const compact = urlParams.has('compact');
         const showGiftValue = urlParams.has('showvalue'); // Show monetary value for gifts
         const rotateInterval = parseInt(urlParams.get('rotateinterval') || '10') * 1000; // rotation interval in ms
         const tickerMode = urlParams.has('tickerscroll'); // Enable ticker scrolling
-        const tickerSpeed = urlParams.get('scrollspeed') || 'normal'; // slow, normal, fast
         
         // Rotation state
         let currentCategory = categoryParam === 'rotate' ? 'gifts' : categoryParam;
         let currentPeriod = periodParam === 'rotate' ? 'day' : periodParam;
         let rotationTimer = null;
         
-        // Define rotation sequences
-        const categoryRotation = ['gifts', 'donations'];
-        const periodRotation = ['day', 'week'];
+        // Ticker state management
+        let tickerInitialized = false;
+        let lastTickerUpdate = 0;
+        let tickerPosition = 0;
+        let tickerAnimationId = null;
+        let tickerContainer = null;
+        
+        // Start endless ticker animation
+        function startEndlessTicker() {
+            const wrapper = document.querySelector('.ticker-wrapper');
+            if (!wrapper || tickerAnimationId) return;
+            
+            tickerContainer = wrapper.querySelector('.ticker-container-inner');
+            if (!tickerContainer) return;
+            
+            // Get speed
+            const speedParam = urlParams.get('scrollspeed') || 'normal';
+            let speed = 1;
+            switch(speedParam) {
+                case 'slow': speed = 0.5; break;
+                case 'fast': speed = 2; break;
+            }
+            
+            let isPaused = false;
+            
+            // Hover handlers
+            wrapper.addEventListener('mouseenter', () => isPaused = true);
+            wrapper.addEventListener('mouseleave', () => isPaused = false);
+            
+            function animate() {
+                if (!isPaused) {
+                    tickerPosition -= speed;
+                    
+                    // Get the width of the first ticker content
+                    const firstTicker = tickerContainer.querySelector('.ticker-content');
+                    if (firstTicker) {
+                        const tickerWidth = firstTicker.offsetWidth;
+                        
+                        // When we've scrolled past the first ticker, shift it to the end
+                        if (Math.abs(tickerPosition) >= tickerWidth) {
+                            // Move the first ticker to the end
+                            tickerContainer.appendChild(firstTicker);
+                            // Adjust position to account for the shift
+                            tickerPosition += tickerWidth;
+                        }
+                    }
+                    
+                    tickerContainer.style.transform = `translateX(${tickerPosition}px)`;
+                }
+                
+                tickerAnimationId = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+        
+        // Simplified rotation views - just daily and weekly for combined, gifts, and donations
+        const rotationViews = [
+            { category: 'combined', period: 'day', label: 'Top Contributors Today' },
+            { category: 'combined', period: 'week', label: 'Top Contributors This Week' },
+            { category: 'gifts', period: 'day', label: 'Top Gifters Today' },
+            { category: 'donations', period: 'day', label: 'Top Donors Today' }
+        ];
+        
+        // Filter rotation views based on URL parameters
+        let activeRotationViews = [];
+        const includeWeekly = urlParams.has('includeweekly'); // Only include weekly if explicitly requested
+        
+        // Build active rotation views based on preferences
+        // Enable rotation if includeweekly is set OR category is rotate
+        if (categoryParam === 'rotate' || (layout === 'topbar' && includeWeekly)) {
+            // Always include daily combined view
+            activeRotationViews.push({ category: 'combined', period: 'day', label: 'Top Contributors Today' });
+            
+            // Add weekly if requested
+            if (includeWeekly) {
+                activeRotationViews.push({ category: 'combined', period: 'week', label: 'Top Contributors This Week' });
+            }
+            
+            // Add gifts and donations daily views
+            activeRotationViews.push({ category: 'gifts', period: 'day', label: 'Top Gifters Today' });
+            activeRotationViews.push({ category: 'donations', period: 'day', label: 'Top Donors Today' });
+            
+            // If we built rotation views, set category to rotate
+            if (activeRotationViews.length > 0) {
+                currentCategory = 'rotate';
+            }
+        }
+        
+        // Current rotation index
+        let currentRotationIndex = 0;
         
         // For body attribute, use current values
         let category = currentCategory;
@@ -821,13 +983,14 @@
                 document.body.setAttribute('data-compact', 'true');
             }
             if (tickerMode) {
-                document.body.setAttribute('data-ticker', 'true');
-                document.body.setAttribute('data-ticker-speed', tickerSpeed);
+                document.body.setAttribute('data-tickerscroll', 'true');
+                const scrollSpeed = urlParams.get('scrollspeed') || 'normal';
+                document.body.setAttribute('data-scrollspeed', scrollSpeed);
             }
         }
         
         // Configuration
-        const topCount = parseInt(urlParams.get('maxentries') || urlParams.get('top') || (layout === 'bar' ? '5' : (layout === 'topbar' ? '3' : '10')));
+        const topCount = parseInt(urlParams.get('maxentries') || urlParams.get('top') || (layout === 'topbar' ? '5' : '10'));
         const resetInterval = parseInt(urlParams.get('reset') || '0'); // hours
         const showAvatars = urlParams.has('showavatar') || urlParams.has('avatars');
         const showDonations = urlParams.has('donations');
@@ -852,33 +1015,46 @@
             document.documentElement.style.setProperty('--container-bg', customBg);
         }
         
-        // Function to update topbar title
+        // Function to update topbar title 
         function updateTopbarTitle() {
-            if (layout === 'topbar' && !urlParams.get('title')) {
-                const titleEl = document.querySelector('.leaderboard-title');
-                const subtitleEl = document.querySelector('.leaderboard-subtitle');
+            if (layout === 'topbar') {
+                // View indicator has been removed per user request
                 
-                switch(category) {
-                    case 'gifts':
-                        titleEl.textContent = period === 'day' ? 'Top Gifters Today' : 
-                                            (period === 'week' ? 'Top Gifters This Week' : 'Top Gifters');
-                        subtitleEl.textContent = showGiftValue ? 'By Gift Value' : 'By Gift Count';
-                        break;
-                    case 'donations':
-                        titleEl.textContent = period === 'day' ? 'Top Donors Today' : 
-                                            (period === 'week' ? 'Top Donors This Week' : 'Top Donors');
-                        subtitleEl.textContent = 'By Donation Amount';
-                        break;
-                    case 'engagement':
-                        titleEl.textContent = 'Most Active';
-                        subtitleEl.textContent = 'Chat & Events';
-                        break;
-                    case 'combined':
-                    default:
-                        titleEl.textContent = period === 'day' ? 'Top Contributors Today' : 
-                                            (period === 'week' ? 'Top Contributors This Week' : 'Top Contributors');
-                        subtitleEl.textContent = 'Gifts & Donations';
-                        break;
+                // Update title if not using custom title
+                if (!urlParams.get('title')) {
+                    const titleEl = document.querySelector('.leaderboard-title');
+                    const subtitleEl = document.querySelector('.leaderboard-subtitle');
+                    
+                    switch(category) {
+                        case 'gifts':
+                            titleEl.textContent = period === 'day' ? 'Top Gifters Today' : 
+                                                (period === 'week' ? 'Top Gifters This Week' : 'Top Gifters');
+                            subtitleEl.textContent = showGiftValue ? 'By Gift Value' : 'By Gift Count';
+                            break;
+                        case 'donations':
+                            titleEl.textContent = period === 'day' ? 'Top Donors Today' : 
+                                                (period === 'week' ? 'Top Donors This Week' : 'Top Donors');
+                            subtitleEl.textContent = 'By Donation Amount';
+                            break;
+                        case 'recent_gifts':
+                            titleEl.textContent = 'Recent Gifters';
+                            subtitleEl.textContent = 'Most Recent First';
+                            break;
+                        case 'recent_donations':
+                            titleEl.textContent = 'Recent Donors';
+                            subtitleEl.textContent = 'Most Recent First';
+                            break;
+                        case 'engagement':
+                            titleEl.textContent = 'Most Active';
+                            subtitleEl.textContent = 'Chat & Events';
+                            break;
+                        case 'combined':
+                        default:
+                            titleEl.textContent = period === 'day' ? 'Top Contributors Today' : 
+                                                (period === 'week' ? 'Top Contributors This Week' : 'Top Contributors');
+                            subtitleEl.textContent = 'Gifts & Donations';
+                            break;
+                    }
                 }
             }
         }
@@ -901,7 +1077,8 @@
         }
         
         // Animations setup
-        if (enableAnimations) {
+        // Enable animations by default for topbar layout or if explicitly requested
+        if (enableAnimations || layout === 'topbar') {
             document.body.setAttribute('data-animated', 'true');
         }
 
@@ -944,6 +1121,10 @@
                 this.firstSeen = Date.now();
                 this.lastDailyReset = Date.now();
                 this.lastWeeklyReset = Date.now();
+                
+                // Recent activity tracking
+                this.lastGiftTime = 0;
+                this.lastDonationTime = 0;
             }
 
             checkTimeResets() {
@@ -990,6 +1171,14 @@
                         case 'engagement':
                             // Score based on activity
                             return this.messageCount + (this.eventCount * 10) + (this.bitsOrCoins * 0.1);
+                            
+                        case 'recent_gifts':
+                            // For recent gifts, use timestamp as score (most recent = highest)
+                            return this.lastGiftTime;
+                            
+                        case 'recent_donations':
+                            // For recent donations, use timestamp as score (most recent = highest)
+                            return this.lastDonationTime;
                             
                         case 'combined':
                         default:
@@ -1095,7 +1284,9 @@
                         // Timestamps
                         firstSeen: user.firstSeen,
                         lastDailyReset: user.lastDailyReset,
-                        lastWeeklyReset: user.lastWeeklyReset
+                        lastWeeklyReset: user.lastWeeklyReset,
+                        lastGiftTime: user.lastGiftTime,
+                        lastDonationTime: user.lastDonationTime
                     })),
                     lastResetTime
                 };
@@ -1153,6 +1344,10 @@
                         return period === 'day' ? 'donated today' : (period === 'week' ? 'this week' : 'donated');
                     case 'engagement':
                         return 'activity';
+                    case 'recent_gifts':
+                        return 'recent gift';
+                    case 'recent_donations':
+                        return 'recent donation';
                     case 'combined':
                         return period === 'day' ? 'today' : (period === 'week' ? 'this week' : 'total');
                     default:
@@ -1249,6 +1444,9 @@
                     user.giftValue += giftValue;
                     user.dailyGiftValue += giftValue;
                     user.weeklyGiftValue += giftValue;
+                    
+                    // Update last gift time
+                    user.lastGiftTime = Date.now();
                 }
             }
             
@@ -1266,7 +1464,8 @@
             if (data.verified) user.isVerified = true;
 
 
-            if (data.hasDonation && showDonations) {
+            // Always process donations for topbar layout or when explicitly enabled
+            if (data.hasDonation && (showDonations || layout === 'topbar')) {
                 try {
                     const source = data.type ? data.type.toLowerCase() : '';
                     const donationAmount = convertToUSD(data.hasDonation, source);
@@ -1275,6 +1474,9 @@
                         user.donations += donationAmount;
                         user.dailyDonations += donationAmount;
                         user.weeklyDonations += donationAmount;
+                        
+                        // Update last donation time
+                        user.lastDonationTime = Date.now();
                     }
                 } catch (error) {
                     console.error(`Error processing donation:`, error);
@@ -1287,13 +1489,65 @@
         }
 
         function updateLeaderboard() {
-            let sortedUsers = Array.from(users.values())
-                .sort((a, b) => b.score - a.score);
+            let sortedUsers = Array.from(users.values());
+            
+            // Filter and sort based on category
+            if (layout === 'topbar' && category === 'recent_gifts') {
+                // Only show users who have given gifts, sorted by most recent
+                sortedUsers = sortedUsers
+                    .filter(user => user.lastGiftTime > 0)
+                    .sort((a, b) => b.lastGiftTime - a.lastGiftTime);
+            } else if (layout === 'topbar' && category === 'recent_donations') {
+                // Only show users who have donated, sorted by most recent
+                sortedUsers = sortedUsers
+                    .filter(user => user.lastDonationTime > 0)
+                    .sort((a, b) => b.lastDonationTime - a.lastDonationTime);
+            } else {
+                // Normal score-based sorting
+                sortedUsers = sortedUsers
+                    .filter(user => {
+                        // For topbar layout, filter based on the category
+                        if (layout === 'topbar') {
+                            switch(category) {
+                                case 'donations':
+                                    // Only show users who have actually donated
+                                    return period === 'day' ? user.dailyDonations > 0 : 
+                                           period === 'week' ? user.weeklyDonations > 0 : 
+                                           user.donations > 0;
+                                case 'gifts':
+                                    // Only show users who have given gifts
+                                    return period === 'day' ? user.dailyGifts > 0 : 
+                                           period === 'week' ? user.weeklyGifts > 0 : 
+                                           user.giftsGiven > 0;
+                                case 'combined':
+                                    // Show users who have donated OR given gifts
+                                    if (period === 'day') {
+                                        return user.dailyDonations > 0 || user.dailyGifts > 0;
+                                    } else if (period === 'week') {
+                                        return user.weeklyDonations > 0 || user.weeklyGifts > 0;
+                                    }
+                                    return user.donations > 0 || user.giftsGiven > 0;
+                                case 'engagement':
+                                    // For engagement, show active users
+                                    return user.messageCount > 0 || user.eventCount > 0;
+                                default:
+                                    return user.score > 0;
+                            }
+                        }
+                        // For other layouts, only show users with positive score
+                        return user.score > 0;
+                    })
+                    .sort((a, b) => b.score - a.score);
+            }
             
             // In ticker mode, show all users; otherwise limit to topCount
             if (!(layout === 'topbar' && tickerMode)) {
                 sortedUsers = sortedUsers.slice(0, topCount);
             }
+            
+            // Debug logging
+            console.log(`Showing top ${topCount} users out of ${users.size} total users`);
+            console.log('Sorted users:', sortedUsers.map((u, i) => `${i+1}. ${u.name} (score: ${u.score})`));
 
             const container = document.getElementById('leaderboard-container');
             const leaderboardContent = document.getElementById('leaderboard-content');
@@ -1331,41 +1585,46 @@
                 emptyState.remove();
             }
 
-            // Update or create items
-            sortedUsers.forEach((user, index) => {
-                const rank = index + 1;
-                const badges = user.getBadges();
-                let listItem = existingUserMap.get(user.name);
+            // Skip regular leaderboard item creation if in ticker mode
+            if (!(layout === 'topbar' && tickerMode)) {
+                // Show the regular leaderboard list
+                leaderboardContent.style.display = '';
                 
-                if (listItem) {
-                    // Update existing item
-                    existingUserMap.delete(user.name);
+                // Update or create items
+                sortedUsers.forEach((user, index) => {
+                    const rank = index + 1;
+                    const badges = user.getBadges();
+                    let listItem = existingUserMap.get(user.name);
                     
-                    // Update rank
-                    const rankEl = listItem.querySelector('.rank-number');
-                    if (rankEl) rankEl.textContent = rank;
-                    
-                    // Update rank class
-                    listItem.className = `leaderboard-item rank-${rank}`;
-                    
-                    // Update score
-                    const scoreEl = listItem.querySelector('.score-number');
-                    if (scoreEl && showScore) {
-                        const scoreValue = user.score;
-                        // Format as currency for donation/gift values
-                        if (layout === 'topbar' && (category === 'donations' || (category === 'gifts' && showGiftValue) || category === 'combined')) {
-                            scoreEl.textContent = scoreValue > 0 ? `$${scoreValue.toFixed(2)}` : '$0.00';
-                        } else {
-                            scoreEl.textContent = scoreValue.toLocaleString();
+                    if (listItem) {
+                        // Update existing item
+                        existingUserMap.delete(user.name);
+                        
+                        // Update rank
+                        const rankEl = listItem.querySelector('.rank-number');
+                        if (rankEl) rankEl.textContent = rank;
+                        
+                        // Update rank class
+                        listItem.className = `leaderboard-item rank-${rank}`;
+                        
+                        // Update score
+                        const scoreEl = listItem.querySelector('.score-number');
+                        if (scoreEl && showScore) {
+                            const scoreValue = user.score;
+                            // Format as currency for donation/gift values
+                            if (layout === 'topbar' && (category === 'donations' || (category === 'gifts' && showGiftValue) || category === 'combined')) {
+                                scoreEl.textContent = scoreValue > 0 ? `$${scoreValue.toFixed(2)}` : '$0.00';
+                            } else {
+                                scoreEl.textContent = scoreValue.toLocaleString();
+                            }
                         }
-                    }
-                    
-                    // Update score label
-                    const scoreLabelEl = listItem.querySelector('.score-label');
-                    if (scoreLabelEl && showScore) scoreLabelEl.textContent = getScoreLabel();
-                    
-                    // Update badges
-                    if (layout !== 'bar') {
+                        
+                        // Update score label
+                        const scoreLabelEl = listItem.querySelector('.score-label');
+                        if (scoreLabelEl && showScore) scoreLabelEl.textContent = getScoreLabel();
+                        
+                        // Update badges
+                        if (layout !== 'bar') {
                         const badgesEl = listItem.querySelector('.user-badges');
                         if (badges.length > 0) {
                             if (badgesEl) {
@@ -1413,8 +1672,18 @@
                         </div>
                         ${showScore ? `<div class="user-score">
                             <div class="score-number">${
-                                layout === 'topbar' && (category === 'donations' || (category === 'gifts' && showGiftValue) || category === 'combined')
-                                    ? (user.score > 0 ? `$${user.score.toFixed(2)}` : '$0.00')
+                                layout === 'topbar' && category === 'donations'
+                                    ? (period === 'day' ? `$${user.dailyDonations.toFixed(2)}` : 
+                                       period === 'week' ? `$${user.weeklyDonations.toFixed(2)}` : 
+                                       `$${user.donations.toFixed(2)}`)
+                                    : layout === 'topbar' && category === 'gifts' && showGiftValue
+                                    ? (period === 'day' ? `$${user.dailyGiftValue.toFixed(2)}` : 
+                                       period === 'week' ? `$${user.weeklyGiftValue.toFixed(2)}` : 
+                                       `$${user.giftValue.toFixed(2)}`)
+                                    : layout === 'topbar' && category === 'combined'
+                                    ? (period === 'day' ? `$${(user.dailyDonations + user.dailyGiftValue).toFixed(2)}` : 
+                                       period === 'week' ? `$${(user.weeklyDonations + user.weeklyGiftValue).toFixed(2)}` : 
+                                       `$${(user.donations + user.giftValue).toFixed(2)}`)
                                     : user.score.toLocaleString()
                             }</div>
                             <div class="score-label">${getScoreLabel()}</div>
@@ -1430,10 +1699,11 @@
                 }
             });
 
-            // Remove items that are no longer in top N
-            existingUserMap.forEach(item => {
-                item.remove();
-            });
+                // Remove items that are no longer in top N
+                existingUserMap.forEach(item => {
+                    item.remove();
+                });
+            } // End of regular leaderboard item creation
 
             container.classList.add('visible');
 
@@ -1444,20 +1714,182 @@
                 });
             }, 300);
             
-            // For ticker mode, duplicate content for seamless loop
-            if (layout === 'topbar' && tickerMode && sortedUsers.length > 0) {
-                // Remove any existing duplicates
-                const existingDuplicates = leaderboardContent.querySelectorAll('.ticker-duplicate');
-                existingDuplicates.forEach(el => el.remove());
+            // For ticker mode, create a comprehensive ticker with all views
+            if (layout === 'topbar' && tickerMode) {
+                // Hide the regular leaderboard list
+                leaderboardContent.style.display = 'none';
                 
-                // Clone all items and add them as duplicates
-                const allItems = Array.from(leaderboardContent.querySelectorAll('.leaderboard-item'));
-                allItems.forEach(item => {
-                    const clone = item.cloneNode(true);
-                    clone.classList.add('ticker-duplicate');
-                    clone.classList.remove('new-entry'); // Remove animation class from clones
-                    leaderboardContent.appendChild(clone);
+                // Create ticker wrapper if it doesn't exist
+                let tickerWrapper = container.querySelector('.ticker-wrapper');
+                if (!tickerWrapper) {
+                    tickerWrapper = document.createElement('div');
+                    tickerWrapper.className = 'ticker-wrapper';
+                    container.appendChild(tickerWrapper);
+                }
+                
+                // Get existing ticker content or create new
+                let tickerContent = tickerWrapper.querySelector('.ticker-content');
+                const isNewTicker = !tickerContent;
+                
+                if (isNewTicker) {
+                    tickerContent = document.createElement('div');
+                    tickerContent.className = 'ticker-content';
+                } else {
+                    // If ticker exists, preserve animation state
+                    const computedStyle = window.getComputedStyle(tickerContent);
+                    const currentTransform = computedStyle.transform;
+                    
+                    // Pause animation while updating
+                    tickerContent.style.animationPlayState = 'paused';
+                    
+                    // Store the current position
+                    if (currentTransform && currentTransform !== 'none') {
+                        tickerContent.dataset.lastTransform = currentTransform;
+                    }
+                }
+                
+                // Helper function to create a view segment
+                function createViewSegment(viewUsers, label) {
+                    if (viewUsers.length === 0) return null;
+                    
+                    const segment = document.createElement('div');
+                    segment.className = 'ticker-segment';
+                    
+                    // Add view label
+                    const viewLabel = document.createElement('span');
+                    viewLabel.className = 'ticker-view-label';
+                    viewLabel.textContent = `【${label}】`;
+                    segment.appendChild(viewLabel);
+                    
+                    // Add users
+                    viewUsers.forEach((user, index) => {
+                        const rank = index + 1;
+                        const userItem = document.createElement('span');
+                        userItem.className = 'ticker-item';
+                        
+                        let scoreDisplay = '';
+                        if (label.includes('Donations') || label.includes('Today') || label.includes('Week')) {
+                            const amount = label.includes('Week') ? 
+                                (user.weeklyDonations + user.weeklyGiftValue) : 
+                                (user.dailyDonations + user.dailyGiftValue);
+                            scoreDisplay = `$${amount.toFixed(2)}`;
+                        } else if (label.includes('Gifts')) {
+                            const gifts = label.includes('Week') ? user.weeklyGifts : user.dailyGifts;
+                            scoreDisplay = `${gifts} gifts`;
+                        }
+                        
+                        userItem.innerHTML = `
+                            <span class="ticker-rank">#${rank}</span>
+                            <span class="ticker-name">${user.name}</span>
+                            ${showSourceIcons ? 
+                                `<img src="./sources/images/${user.type}.png" alt="${user.type}" class="ticker-source-icon" onerror="this.style.display='none'">` : 
+                                ''}
+                            <span class="ticker-score">${scoreDisplay}</span>
+                        `;
+                        segment.appendChild(userItem);
+                    });
+                    
+                    return segment;
+                }
+                
+                // Get users for different views
+                const allUsers = Array.from(users.values());
+                
+                // Today's combined top contributors
+                const todayUsers = allUsers
+                    .filter(u => u.dailyDonations > 0 || u.dailyGifts > 0)
+                    .sort((a, b) => (b.dailyDonations + b.dailyGiftValue) - (a.dailyDonations + a.dailyGiftValue))
+                    .slice(0, topCount);
+                    
+                // This week's combined top contributors
+                const weekUsers = includeWeekly ? allUsers
+                    .filter(u => u.weeklyDonations > 0 || u.weeklyGifts > 0)
+                    .sort((a, b) => (b.weeklyDonations + b.weeklyGiftValue) - (a.weeklyDonations + a.weeklyGiftValue))
+                    .slice(0, topCount) : [];
+                    
+                // Today's top donors
+                const todayDonors = allUsers
+                    .filter(u => u.dailyDonations > 0)
+                    .sort((a, b) => b.dailyDonations - a.dailyDonations)
+                    .slice(0, topCount);
+                    
+                // Today's top gifters
+                const todayGifters = allUsers
+                    .filter(u => u.dailyGifts > 0)
+                    .sort((a, b) => b.dailyGifts - a.dailyGifts)
+                    .slice(0, topCount);
+                
+                // Debug logging for ticker entries
+                console.log('Ticker Debug - maxentries:', topCount);
+                console.log('Ticker Debug - Total users:', allUsers.length);
+                console.log('Ticker Debug - Today users:', todayUsers.length, todayUsers.map(u => u.name));
+                console.log('Ticker Debug - Today donors:', todayDonors.length, todayDonors.map(u => u.name));
+                console.log('Ticker Debug - Today gifters:', todayGifters.length, todayGifters.map(u => u.name));
+                
+                // Create segments
+                const segments = [
+                    createViewSegment(todayUsers, 'Top Today'),
+                    includeWeekly ? createViewSegment(weekUsers, 'Top This Week') : null,
+                    createViewSegment(todayDonors, 'Donations Today'),
+                    createViewSegment(todayGifters, 'Gifts Today')
+                ].filter(Boolean);
+                
+                // Create new ticker segments
+                const newContent = document.createElement('div');
+                newContent.style.display = 'flex';
+                
+                // Debug: Check segment contents
+                segments.forEach((segment, idx) => {
+                    if (segment) {
+                        console.log(`Segment ${idx} has ${segment.querySelectorAll('.ticker-item').length} items`);
+                    }
                 });
+                
+                // Create ticker HTML with proper structure for seamless scrolling
+                let tickerHTML = '';
+                segments.forEach(segment => {
+                    if (segment) {
+                        tickerHTML += segment.outerHTML;
+                    }
+                });
+                
+                if (isNewTicker) {
+                    // Create container for endless scrolling
+                    const containerInner = document.createElement('div');
+                    containerInner.className = 'ticker-container-inner';
+                    
+                    // Create multiple ticker copies for truly endless scrolling
+                    // We need enough copies to ensure smooth endless scroll
+                    for (let i = 0; i < 3; i++) {
+                        const ticker = document.createElement('div');
+                        ticker.className = 'ticker-content';
+                        ticker.innerHTML = tickerHTML;
+                        containerInner.appendChild(ticker);
+                    }
+                    
+                    tickerWrapper.appendChild(containerInner);
+                    tickerInitialized = true;
+                    
+                    // Start the endless animation
+                    setTimeout(() => startEndlessTicker(), 100);
+                } else {
+                    // For updates, we need to be careful not to disrupt the animation
+                    const currentTime = Date.now();
+                    if (currentTime - lastTickerUpdate < 10000) {
+                        return; // Throttle updates to every 10 seconds
+                    }
+                    lastTickerUpdate = currentTime;
+                    
+                    // Update the ticker content without disrupting animation
+                    const containerInner = tickerWrapper.querySelector('.ticker-container-inner');
+                    if (containerInner) {
+                        // Update all ticker copies
+                        const tickerContents = containerInner.querySelectorAll('.ticker-content');
+                        tickerContents.forEach(ticker => {
+                            ticker.innerHTML = tickerHTML;
+                        });
+                    }
+                }
             }
         }
 
@@ -1532,6 +1964,49 @@
             document.getElementById('leaderboard-container').classList.remove('visible');
         }
         
+        // For ticker mode, ensure animation starts immediately if we have data
+        if (layout === 'topbar' && tickerMode) {
+            // Force a reflow to ensure animation starts
+            const list = document.getElementById('leaderboard-content');
+            void list.offsetWidth;
+            
+            // Add some demo data if empty and in demo mode
+            if (users.size === 0 && urlParams.has('demo')) {
+                // Add demo users
+                const demoUsers = [
+                    { name: 'DemoUser1', type: 'youtube', donations: 50, gifts: 5 },
+                    { name: 'TestGifter', type: 'twitch', donations: 0, gifts: 10 },
+                    { name: 'BigDonor', type: 'kick', donations: 100, gifts: 2 },
+                    { name: 'RecentGift', type: 'tiktok', donations: 0, gifts: 1 },
+                    { name: 'SmallDonor', type: 'facebook', donations: 10, gifts: 0 },
+                    { name: 'JustChatter', type: 'youtube', donations: 0, gifts: 0 }, // This user should NOT appear
+                    { name: 'MediumDonor', type: 'twitch', donations: 25.50, gifts: 3 }
+                ];
+                
+                demoUsers.forEach((userData, index) => {
+                    const user = getOrCreateUser(userData.name, userData.type);
+                    user.donations = userData.donations;
+                    user.dailyDonations = userData.donations; // Full amount for demo
+                    user.weeklyDonations = userData.donations;
+                    user.giftsGiven = userData.gifts;
+                    user.dailyGifts = userData.gifts;
+                    user.weeklyGifts = userData.gifts;
+                    user.giftValue = userData.gifts * 4.99;
+                    user.dailyGiftValue = userData.gifts * 4.99;
+                    user.weeklyGiftValue = userData.gifts * 4.99;
+                    user.lastGiftTime = Date.now() - (index * 60000); // Stagger times
+                    user.lastDonationTime = Date.now() - (index * 120000);
+                    user.messageCount = 10 + (index * 5);
+                    
+                    // Set the reset times to ensure daily/weekly values aren't cleared
+                    user.lastDailyReset = Date.now();
+                    user.lastWeeklyReset = Date.now();
+                });
+                
+                updateLeaderboard();
+            }
+        }
+        
         // If we loaded persisted data, show a subtle indicator
         if (dataLoaded && users.size > 0) {
             console.log('Leaderboard data restored from previous session');
@@ -1545,30 +2020,48 @@
         }
         
         // Set up rotation for topbar layout
-        if (layout === 'topbar' && (categoryParam === 'rotate' || periodParam === 'rotate')) {
+        if (layout === 'topbar' && activeRotationViews.length > 0) {
+            // Initialize with first view
+            if (activeRotationViews.length > 0) {
+                category = activeRotationViews[0].category;
+                period = activeRotationViews[0].period;
+                document.body.setAttribute('data-category', category);
+            }
+            
             // Function to advance rotation
             function rotateView() {
-                let changed = false;
+                // Move to next view
+                currentRotationIndex = (currentRotationIndex + 1) % activeRotationViews.length;
+                const nextView = activeRotationViews[currentRotationIndex];
                 
-                // Rotate category if enabled
-                if (categoryParam === 'rotate') {
-                    const currentIndex = categoryRotation.indexOf(category);
-                    const nextIndex = (currentIndex + 1) % categoryRotation.length;
-                    category = categoryRotation[nextIndex];
-                    changed = true;
+                category = nextView.category;
+                period = nextView.period;
+                
+                // Skip fade transitions in ticker mode to prevent flashing
+                if (tickerMode) {
+                    // Update body attributes
+                    document.body.setAttribute('data-category', category);
+                    
+                    // Update title with view label
+                    const titleEl = document.querySelector('.leaderboard-title');
+                    if (titleEl && !urlParams.get('title')) {
+                        titleEl.textContent = nextView.label;
+                    }
+                    
+                    // Update topbar title and view indicator
+                    updateTopbarTitle();
+                    
+                    // Update leaderboard
+                    updateLeaderboard();
+                    return;
                 }
                 
-                // Rotate period if enabled
-                if (periodParam === 'rotate') {
-                    const currentIndex = periodRotation.indexOf(period);
-                    const nextIndex = (currentIndex + 1) % periodRotation.length;
-                    period = periodRotation[nextIndex];
-                    changed = true;
-                }
+                // Get transition style
+                const transitionStyle = urlParams.get('transitionstyle') || 'fade';
+                const container = document.getElementById('leaderboard-container');
                 
-                if (changed) {
-                    // Add fade effect
-                    const container = document.getElementById('leaderboard-container');
+                if (transitionStyle === 'fade') {
+                    // Fade transition
                     container.style.transition = 'opacity 0.5s ease-in-out';
                     container.style.opacity = '0';
                     
@@ -1576,7 +2069,13 @@
                         // Update body attributes
                         document.body.setAttribute('data-category', category);
                         
-                        // Update title
+                        // Update title with view label
+                        const titleEl = document.querySelector('.leaderboard-title');
+                        if (titleEl && !urlParams.get('title')) {
+                            titleEl.textContent = nextView.label;
+                        }
+                        
+                        // Update topbar title and view indicator
                         updateTopbarTitle();
                         
                         // Update leaderboard
@@ -1585,6 +2084,30 @@
                         // Fade back in
                         container.style.opacity = '1';
                     }, 500);
+                } else {
+                    // For slide or any other transition, just use fade for now
+                    container.style.transition = 'opacity 0.3s ease-in-out';
+                    container.style.opacity = '0';
+                    
+                    setTimeout(() => {
+                        // Update body attributes
+                        document.body.setAttribute('data-category', category);
+                        
+                        // Update title with view label
+                        const titleEl = document.querySelector('.leaderboard-title');
+                        if (titleEl && !urlParams.get('title')) {
+                            titleEl.textContent = nextView.label;
+                        }
+                        
+                        // Update topbar title and view indicator
+                        updateTopbarTitle();
+                        
+                        // Update leaderboard
+                        updateLeaderboard();
+                        
+                        // Fade back in
+                        container.style.opacity = '1';
+                    }, 300);
                 }
             }
             

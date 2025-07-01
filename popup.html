@@ -5793,18 +5793,6 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 								<br>
 								
-								<h3><span data-translate="ranking-criteria">Ranking Criteria</span></h3>
-								<div>
-									<span data-translate="ranking-type">
-										Rank By
-									</span>
-									<select data-optionparam19="rankby">
-										<option value="combined">Combined Score (Engagement + Donations)</option>
-										<option value="donations">Total Donations Only</option>
-										<option value="messages">Message Count Only</option>
-									</select>
-								</div>
-								<br>
 								
 								<h3><span data-translate="display-options">Display Options</span></h3>
 								<div>
@@ -5826,27 +5814,14 @@ body.ssapp .wrapper.ssapp h3 {
 											🌐 Show source platform
 										</span>
 									</div>
+								</div>
+								
+								<div style="margin-top: 15px;">
 									<div>
 										<label class="switch">
-											<input type="checkbox" data-param19="animated" />
+											<input type="checkbox" data-param19="maxentries" checked />
 											<span class="slider round"></span>
 										</label>
-										<span data-translate="enable-animations">
-											✨ Enable animations
-										</span>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param19="donations" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="track-donations">
-											💵 Track donation amounts
-										</span>
-									</div>
-									<br>
-									
-									<div>
 										<span data-translate="max-entries">
 											Maximum entries to show
 										</span>
@@ -5862,38 +5837,54 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 								<br>
 								
-								<h3><span data-translate="topbar-options">Top Bar Options</span> <span style="font-size: 0.8em; opacity: 0.7;">(when using Top Header Bar layout)</span></h3>
+								<h3><span data-translate="rotation-and-display">Top Bar Settings</span></h3>
+								<div style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px;">
+									<span data-translate="topbar-note">These settings only apply when using the "Top Header Bar" layout</span><br>
+									<span style="opacity: 0.8;">ℹ️ Animations and donation tracking are automatically enabled for this layout</span>
+								</div>
 								<div>
 									<span data-translate="topbar-category">
-										Display Category
+										Display Mode
 									</span>
 									<select data-optionparam19="category">
-										<option value="rotate">🔄 Rotate All (Gifts → Donations)</option>
+										<option value="rotate">🔄 Rotate through selected views</option>
 										<option value="combined">Combined (Gifts + Donations)</option>
 										<option value="gifts">Top Gifters Only</option>
 										<option value="donations">Top Donors Only</option>
 										<option value="engagement">Most Active Users</option>
+										<option value="recent_gifts">Recent Gifters</option>
+										<option value="recent_donations">Recent Donors</option>
 									</select>
 								</div>
 								<br>
 								
-								<div>
-									<span data-translate="topbar-period">
-										Time Period
-									</span>
-									<select data-optionparam19="period">
-										<option value="rotate">🔄 Rotate (Day → Week)</option>
-										<option value="session">Current Session</option>
-										<option value="day">Today</option>
-										<option value="week">This Week</option>
-									</select>
+								<div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">
+									<span style="font-size: 0.9em;"><span data-translate="rotation-includes">When rotating, include:</span></span>
+									<div style="margin-top: 10px;">
+										<label class="switch">
+											<input type="checkbox" data-param19="includeweekly" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="include-weekly">
+											📆 Include weekly stats (default: daily only)
+										</span>
+									</div>
 								</div>
-								<br>
 								
 								<div>
 									<span data-translate="rotation-interval">
 										🔄 Rotation interval <input type="number" style="max-width: 8ch;" max="60" min="3" value="10" size="3" data-numbersetting19="rotateinterval" /> seconds
 									</span>
+								</div>
+								
+								<div>
+									<span data-translate="transition-style">
+										Transition Style
+									</span>
+									<select data-optionparam19="transitionstyle">
+										<option value="fade">Fade</option>
+										<option value="slide">Slide</option>
+									</select>
 								</div>
 								<br>
 								
@@ -5938,7 +5929,7 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 								<br>
 								
-								<h3><span data-translate="theme-options">Theme Options</span></h3>
+								<h3><span data-translate="theme-and-data">Theme & Data Settings</span></h3>
 								<div>
 									<span data-translate="theme-style-leaderboard">
 										Theme Style
@@ -5952,19 +5943,14 @@ body.ssapp .wrapper.ssapp h3 {
 										<option value="gradient">Gradient</option>
 									</select>
 								</div>
-								<br>
-								
-								<h3><span data-translate="data-options">Data Options</span></h3>
-								<div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param19="persistdata" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="persist-leaderboard-data">
-											💾 Persist data between sessions (7 days max)
-										</span>
-									</div>
+								<div style="margin-top: 10px;">
+									<label class="switch">
+										<input type="checkbox" data-param19="persistdata" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="persist-leaderboard-data">
+										💾 Persist data between sessions (7 days max)
+									</span>
 								</div>
 								<br>
 								
