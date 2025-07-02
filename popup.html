@@ -1481,7 +1481,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
 							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
 						</label>
-						<select id="overlay-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+						<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
 							<option value="">Classic dock.html (Full Customization)</option>
 							<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
 							<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
@@ -3322,7 +3322,7 @@ body.ssapp .wrapper.ssapp h3 {
                     <label for="featured-preset-select" style="display: inline-block; margin-right: 10px;">
                         <span data-translate="preset-style">🎨 Preset Style:</span>
                     </label>
-                    <select id="featured-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+                    <select id="featured-preset-select" data-optionsetting="featuredOverlayStyle" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
                         <option value="">Classic (Full Customization)</option>
                         <option value="themes/featured-styles/featured-modern.html?style=glass">Modern Glass</option>
                         <option value="themes/featured-styles/featured-modern.html?style=neon">Neon Glow</option>
@@ -3440,7 +3440,14 @@ body.ssapp .wrapper.ssapp h3 {
                                         <input type="checkbox" data-param2="beep" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>		
+                                    <span data-translate="beep-when-there-is-a-new-message">🔔💬 Beep when there is a new message </span>		
+                                </div>
+								<div title="Note: You must first interact with the dock-page for any audio to be audible.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="beepdono" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="beep-when-there-is-a-new-donation">🔔💵 Beep when there is a new donation </span>		
                                 </div>
                                 <div title="Lower the beep's volume by 50%">
                                     <label class="switch">
@@ -3449,7 +3456,6 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30% </span>
                                 </div>
-
                                 <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam2="custombeep" />
                                     <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>

@@ -1649,11 +1649,18 @@
 			}
 
 			var beep = false;
+			var beepdono = false;
 			if (urlParams.has("beep")) {
 				// removes HTML from messages, donations, and names.
 				beep = true;
 				playtone();
-			}
+			} else if (urlParams.has("beepdono")) {
+				// removes HTML from messages, donations, and names.
+				beepdono = true;
+				playtone();
+			} else 
+			
+			
 
 			try {
 				if (window.location.host !== "socialstream.ninja") {
@@ -3292,7 +3299,9 @@
 				sendToDisk(contents);
 
 				if (beep) {
-				  playtone();
+				    playtone();
+				} else if (beepdono && contents.hasDonation){
+					playtone();
 				}
 
 				if (newImageHandle && contents && contents.chatimg) {

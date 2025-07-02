@@ -5235,6 +5235,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		}
 	}
 
+	// Handle featured preset selector initial state
+	const featuredSelectorInit = document.getElementById('featured-preset-select');
+	if (featuredSelectorInit && featuredSelectorInit.value) {
+		// Trigger change event to show/hide appropriate sections
+		featuredSelectorInit.dispatchEvent(new Event('change'));
+	}
+
+	// Handle overlay preset selector initial state
+	const overlaySelectorInit = document.getElementById('overlay-preset-select');
+	if (overlaySelectorInit && overlaySelectorInit.value) {
+		// Trigger change event to show/hide appropriate sections
+		overlaySelectorInit.dispatchEvent(new Event('change'));
+	}
+
 	// Handle custom beep upload buttons
 	const uploadBeepBtn = document.getElementById('uploadBeepBtn');
 	if (uploadBeepBtn) {
