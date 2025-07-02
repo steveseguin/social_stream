@@ -8763,11 +8763,29 @@
 						// skipp TTS
 					} else if (TTS.ttscommand && data.chatmessage && (data.textContent || data.chatmessage).includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
-							TTS.speechMeta(data);
+							if (waitToReveal) {
+								setTimeout(function() {
+									// Check if node still exists and is connected to DOM
+									if (node && node.isConnected && !node.classList.contains("hide")) {
+										TTS.speechMeta(data);
+									}
+								}, waitToReveal);
+							} else {
+								TTS.speechMeta(data);
+							}
 						}
 					} else if (TTS.speech) {
 						if (!node.classList.contains("hide")) {
-							TTS.speechMeta(data);
+							if (waitToReveal) {
+								setTimeout(function() {
+									// Check if node still exists and is connected to DOM
+									if (node && node.isConnected && !node.classList.contains("hide")) {
+										TTS.speechMeta(data);
+									}
+								}, waitToReveal);
+							} else {
+								TTS.speechMeta(data);
+							}
 						}
 					} 
 					return node;
