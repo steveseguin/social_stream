@@ -1317,19 +1317,17 @@ try{
 			console.log(data);
 			if (data.data && data.data[0]) {
 				const currentViewers = data.data[0].viewer_count;
-				if (currentViewers !== lastKnownViewers) {
-					lastKnownViewers = currentViewers;
-					console.log({
-						type: 'twitch',
-						event: 'viewer_update',
-						meta: lastKnownViewers
-					});
-					pushMessage({
-						type: 'twitch',
-						event: 'viewer_update',
-						meta: lastKnownViewers
-					});
-				}
+				lastKnownViewers = currentViewers;
+				console.log({
+					type: 'twitch',
+					event: 'viewer_update',
+					meta: lastKnownViewers
+				});
+				pushMessage({
+					type: 'twitch',
+					event: 'viewer_update',
+					meta: lastKnownViewers
+				});
 			}
 		} catch (error) {
 			console.error('Error fetching viewer count:', error);
