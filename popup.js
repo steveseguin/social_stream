@@ -3797,7 +3797,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 				if (contentType && contentType.includes("application/json")) {
 					const errorData = await response.json();
 					//console.log(errorData);
-					throw new Error(errorData?.message || errorData?.detail?.message || errorData?.error || `HTTP error! status: ${response.status}`);
+					throw new Error(errorData?.message || errorData?.detail?.message || errorData?.error?.message || errorData?.error || `HTTP error! status: ${response.status}`);
 				}
 				throw new Error(`HTTP error! status: ${response.status}`);
 			}

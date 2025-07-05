@@ -1475,13 +1475,27 @@ TTS.googleTTS = function(tts) {
 
     try {
         const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + TTS.GoogleAPIKey;
+        
+        // Smart language code extraction from voice name
+        let languageCode = TTS.googleSettings.lang || TTS.speechLang;
+        const voiceName = TTS.googleSettings.voiceName || "en-GB-Standard-A";
+        
+        // If no explicit language is set but we have a voice name, extract language from it
+        if (!TTS.googleSettings.lang && TTS.googleSettings.voiceName) {
+            // Voice names follow pattern: languageCode-variantName (e.g., en-GB-Chirp3-HD-Laomedeia)
+            const voiceMatch = voiceName.match(/^([a-z]{2}-[A-Z]{2})/);
+            if (voiceMatch) {
+                languageCode = voiceMatch[1];
+            }
+        }
+        
         var data = {
             input: {
                 text: tts
             },
             voice: {
-                languageCode: TTS.googleSettings.lang || TTS.speechLang,
-                name: TTS.googleSettings.voiceName || "en-GB-Standard-A",
+                languageCode: languageCode,
+                name: voiceName,
                 ssmlGender: TTS.voiceGender ? TTS.voiceGender.toUpperCase() : "FEMALE"
             },
             audioConfig: {
