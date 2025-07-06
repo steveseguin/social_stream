@@ -5900,6 +5900,17 @@
 						console.error(e);
 					}
 					return;
+				} else if ("skipTTS" in data) {
+					// Skip the currently playing TTS message
+					try {
+						if (typeof TTS !== 'undefined' && typeof TTS.skipCurrent === 'function') {
+							TTS.skipCurrent();
+						}
+						return true;
+					} catch (e) {
+						console.error(e);
+					}
+					return;
 				} else if ("stripe" in data) {
 					try {
 						if (data.stripe.type !== "checkout.session.completed") {

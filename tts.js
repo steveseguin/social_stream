@@ -1043,6 +1043,26 @@ TTS.clearQueue = function() {
 };
 
 /**
+ * Skip the currently playing TTS message and play the next one in queue
+ */
+TTS.skipCurrent = function() {
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        // For system TTS
+        window.speechSynthesis.cancel();
+        // If there are queued messages, the browser will automatically play the next queued utterance
+    } else if (TTS.premiumQueueActive && TTS.audio) {
+        // For premium TTS providers
+        try {
+            TTS.audio.pause();
+            TTS.audio.currentTime = 0;
+            TTS.finishedAudio(); // This will play the next item in queue
+        } catch (e) {
+            console.warn(e);
+        }
+    }
+};
+
+/**
  * Toggle TTS on/off
  */
 TTS.toggle = function() {
