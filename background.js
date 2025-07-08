@@ -3748,7 +3748,13 @@ async function sendToDestinations(message) {
 					var viewerCounts = {};
 					for (const [tid, tabData] of metaDataStore) {
 						if (tabData.viewer_update && tabData.viewer_update.type){
-							const count = parseInt(tabData.viewer_update.meta) || 0;
+							let count = parseInt(tabData.viewer_update.meta) || 0;
+							
+							// Pump the numbers if enabled
+							if (settings.pumpTheNumbers) {
+								count = Math.round(count * 1.75);
+							}
+							
 							viewerCounts[tabData.viewer_update.type] = (viewerCounts[tabData.viewer_update.type] || 0) + count;
 						}
 					}
