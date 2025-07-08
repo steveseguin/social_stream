@@ -363,7 +363,30 @@
 					if (subtitle && subtitle.endsWith("-Month") && (subtitle!=="1-Month")){
 						subtitle+="s";
 					}
+				} else if (badge.alt && badge.alt.includes("Suscriptor")){
+				   subscriber = "Suscriptor";
+				} else if (badge.alt && badge.alt.includes("Abonné")){
+				   subscriber = "Abonné";
+				} else if (badge.alt && badge.alt.includes("Abonnent")){
+				   subscriber = "Abonnent";
+				} else if (badge.alt && badge.alt.includes("Abbonato")){
+				   subscriber = "Abbonato";
+				} else if (badge.alt && badge.alt.includes("Assinante")){
+				   subscriber = "Assinante";
+				} else if (badge.alt && badge.alt.includes("Abonnee")){
+				   subscriber = "Abonnee";
+				} else if (badge.alt && badge.alt.includes("Prenumerant")){
+				   subscriber = "Prenumerant";
+				} else if (badge.alt && badge.alt.includes("Подписчик")){
+				   subscriber = "Подписчик";
+				} else if (badge.alt && badge.alt.includes("订阅者")){
+				   subscriber = "订阅者";
+				} else if (badge.alt && badge.alt.includes("購読者")){
+				   subscriber = "購読者";
+				} else if (badge.alt && badge.alt.includes("구독자")){
+				   subscriber = "구독자";
 				}
+				
 				if (badge.srcset) {
 					let bb = badge.srcset.split("https://").pop();
 					if (bb) {

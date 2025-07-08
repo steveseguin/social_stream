@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.25.2",
+  "version": "3.25.15",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -34,7 +34,6 @@
     "https://www.bigo.tv/*",
 	"https://soulbound.tv/*",
 	"https://claude.ai/*",
-	"https://arena.social/*",
 	"https://www.moonbeam.stream/*",
 	"https://*.patreon.com/*",
 	"https://patreon.com/*",
@@ -147,7 +146,9 @@
     "https://play.rozy.tv/*",
     "https://www.crowdcast.io/e/*",
     "https://*.zoom.us/*",
+	"https://zoom.us/*",
 	"https://*.zoom.com/*",
+	"https://zoom.com/*",
     "https://watch.owncast.online/*",
     "https://live.simontv.org/*",
     "https://discord.com/*",
@@ -181,10 +182,11 @@
 	"https://live.vkvideo.ru/*/only-chat",
 	"https://vk.com/*",
     "https://maestro-launcher.vercel.app/",
-    "https://arena.tv/*",
+	"https://arena.social/*",
     "https://boltplus.tv/chatpopout/*",
 	"https://boltplus.tv/chatpopout?*",
     "https://chat.openai.com/*",
+	"https://chatgpt.com/*",
     "https://app.livestorm.co/*/live?*",
     "https://steamcommunity.com/broadcast/chatonly/*",
     "https://www.whatnot.com/live/*",
@@ -390,7 +392,7 @@
     },
     {
       "js": [ "./sources/openai.js" ],
-      "matches": [ "https://chat.openai.com/*" ]
+      "matches": [ "https://chat.openai.com/*", "https://chatgpt.com/*"]
     },
 	{
       "js": [ "./sources/sooplive.js" ],
@@ -403,10 +405,6 @@
     {
       "js": [ "./sources/bandlab.js" ],
       "matches": [ "https://*.bandlab.com/*" ]
-    },
-    {
-      "js": [ "./sources/arena.js" ],
-      "matches": [ "https://arena.tv/*" ]
     },
     {
       "js": [ "./sources/vercel.js" ],
@@ -711,7 +709,7 @@
     },
     {
       "js": [ "./sources/zoom.js" ],
-      "matches": [ "https://*.zoom.us/*" , "https://*.zoom.com/*" ]
+      "matches": [ "https://*.zoom.us/*" , "https://zoom.us/*" , "https://*.zoom.com/*", "https://zoom.com/*" ]
     },
     {
       "js": [ "./sources/crowdcast.js" ],

@@ -197,6 +197,7 @@ TTS.beepwords = false;
 TTS.readDonos = false;
 TTS.disableTTS = false;
 TTS.ttsSources = false;
+TTS.ttsQuick = false;
 
 /**
  * Check if the browser is Safari
@@ -472,6 +473,11 @@ TTS.configure = function(urlParams) {
 	if (urlParams.get("ttssources")) {
 		TTS.ttsSources = urlParams.get("ttssources").toLowerCase().split(",").map(element => element.trim());
 	}
+	
+	if (urlParams.has("ttsquick")) {
+		TTS.ttsQuick = parseInt(urlParams.get("ttsquick")) || 80;
+	}
+	
 	
 	if (urlParams.has("ttsdonos")) {
         TTS.readDonos  = urlParams.get("ttsdonos").trim() || "en-US";;
@@ -878,6 +884,12 @@ TTS.speak = function(text, allow = false) {
     if (TTS.replaceURLInLink) { 
         text = TTS.replaceURLsWithSubstring(text, "Link");
     }
+	
+	if (TTS.ttsQuick){
+		if (text.length > TTS.ttsQuick){
+			text = text.substring(0, TTS.ttsQuick);
+		}
+	}
     
     //console.log("About to speak:", text);
 	
@@ -1027,6 +1039,26 @@ TTS.clearQueue = function() {
         } catch (e) {
 			console.warn(e);
 		}
+    }
+};
+
+/**
+ * Skip the currently playing TTS message and play the next one in queue
+ */
+TTS.skipCurrent = function() {
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        // For system TTS
+        window.speechSynthesis.cancel();
+        // If there are queued messages, the browser will automatically play the next queued utterance
+    } else if (TTS.premiumQueueActive && TTS.audio) {
+        // For premium TTS providers
+        try {
+            TTS.audio.pause();
+            TTS.audio.currentTime = 0;
+            TTS.finishedAudio(); // This will play the next item in queue
+        } catch (e) {
+            console.warn(e);
+        }
     }
 };
 
@@ -1463,13 +1495,27 @@ TTS.googleTTS = function(tts) {
 
     try {
         const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + TTS.GoogleAPIKey;
+        
+        // Smart language code extraction from voice name
+        let languageCode = TTS.googleSettings.lang || TTS.speechLang;
+        const voiceName = TTS.googleSettings.voiceName || "en-GB-Standard-A";
+        
+        // If no explicit language is set but we have a voice name, extract language from it
+        if (!TTS.googleSettings.lang && TTS.googleSettings.voiceName) {
+            // Voice names follow pattern: languageCode-variantName (e.g., en-GB-Chirp3-HD-Laomedeia)
+            const voiceMatch = voiceName.match(/^([a-z]{2}-[A-Z]{2})/);
+            if (voiceMatch) {
+                languageCode = voiceMatch[1];
+            }
+        }
+        
         var data = {
             input: {
                 text: tts
             },
             voice: {
-                languageCode: TTS.googleSettings.lang || TTS.speechLang,
-                name: TTS.googleSettings.voiceName || "en-GB-Standard-A",
+                languageCode: languageCode,
+                name: voiceName,
                 ssmlGender: TTS.voiceGender ? TTS.voiceGender.toUpperCase() : "FEMALE"
             },
             audioConfig: {

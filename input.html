@@ -115,6 +115,13 @@
         const urlParams = new URLSearchParams(window.location.search);
         const roomID = urlParams.get("session") || "test";
         const password = urlParams.get("password") || "false";
+        
+        // Check for transparent parameter
+        if (urlParams.has("transparent")) {
+            document.body.style.backgroundColor = "transparent";
+            document.getElementById("chatInput_parent").style.backgroundColor = "transparent";
+            document.getElementById("chatInput_parent").style.boxShadow = "none";
+        }
         let iframes = [];
         let connectedPeers = {};
 

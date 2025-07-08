@@ -1481,7 +1481,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
 							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
 						</label>
-						<select id="overlay-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+						<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
 							<option value="">Classic dock.html (Full Customization)</option>
 							<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
 							<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
@@ -1489,6 +1489,7 @@ body.ssapp .wrapper.ssapp h3 {
 							<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
 							<option value="themes/overlay-bubbles.html">🫧 Bubble Chat - Floating speech bubbles</option>
 							<option value="themes/overlay-cards.html">🃏 Card Flip 3D - Interactive card animations</option>
+							<option value="themes/overlay-xacception.html">❎ Simple Alternative - Basic bubble message</option>
 							<option value="themes/pretty.html">✨ Pretty Theme - Holographic style</option>
 							<option value="themes/Neutron/chatOnly.html">⚛️ Neutron Chat - Sci-fi gaming theme</option>
 							<option value="themes/Neutron/stream.html">⚛️ Neutron Stream - Full stream layout</option>
@@ -1511,7 +1512,7 @@ body.ssapp .wrapper.ssapp h3 {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-menu-options" />
-                    <label class="collapsible-label" for="wrapper-chat-menu-options"><span data-translate="menu">🎚️ Menu</span></label>
+                    <label class="collapsible-label" for="wrapper-chat-menu-options"><span data-translate="menu">🎚️ Bottom Dock Menu Bar</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
@@ -1521,6 +1522,13 @@ body.ssapp .wrapper.ssapp h3 {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-menu-bar"> Hide menu bar </span>
+                                </div>
+								 <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="showmenu" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="show-menu-bar"> Force Show menu bar (using MELD?)</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -1740,9 +1748,10 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30% </span>
                                 </div>
-                                <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom beep audio file">
+                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
+                                    <button type="button" id="uploadBeepBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2074,6 +2083,14 @@ body.ssapp .wrapper.ssapp h3 {
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="if-using-tts-only-announce-every-3rd-message">🗣️ If using TTS, only announce every 3rd message </span>
+								</div>
+								
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param1="ttsquick" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="quick-tts">🔤 Read only the first 100-characters</span>
 								</div>
 								
 								<div title="For the purpose of using this with neurosync. WILL NOT WORK WITH SYSTEM TTS">
@@ -3305,7 +3322,7 @@ body.ssapp .wrapper.ssapp h3 {
                     <label for="featured-preset-select" style="display: inline-block; margin-right: 10px;">
                         <span data-translate="preset-style">🎨 Preset Style:</span>
                     </label>
-                    <select id="featured-preset-select" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
+                    <select id="featured-preset-select" data-optionsetting="featuredOverlayStyle" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
                         <option value="">Classic (Full Customization)</option>
                         <option value="themes/featured-styles/featured-modern.html?style=glass">Modern Glass</option>
                         <option value="themes/featured-styles/featured-modern.html?style=neon">Neon Glow</option>
@@ -3423,7 +3440,14 @@ body.ssapp .wrapper.ssapp h3 {
                                         <input type="checkbox" data-param2="beep" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>		
+                                    <span data-translate="beep-when-there-is-a-new-message">🔔💬 Beep when there is a new message </span>		
+                                </div>
+								<div title="Note: You must first interact with the dock-page for any audio to be audible.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="beepdono" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="beep-when-there-is-a-new-donation">🔔💵 Beep when there is a new donation </span>		
                                 </div>
                                 <div title="Lower the beep's volume by 50%">
                                     <label class="switch">
@@ -3432,10 +3456,10 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30% </span>
                                 </div>
-
-                                <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom beep audio file">
+                                <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam2="custombeep" />
-                                    <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>												 
+                                    <label for="custombeep2"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
+                                    <button type="button" id="uploadBeepBtn2" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5776,23 +5800,12 @@ body.ssapp .wrapper.ssapp h3 {
 									<select data-optionparam19="layout">
 										<option value="corner">Corner Widget</option>
 										<option value="bar">Horizontal Bar</option>
+										<option value="topbar">Top Header Bar (Twitch-style)</option>
 										<option value="full">Full Window</option>
 									</select>
 								</div>
 								<br>
 								
-								<h3><span data-translate="ranking-criteria">Ranking Criteria</span></h3>
-								<div>
-									<span data-translate="ranking-type">
-										Rank By
-									</span>
-									<select data-optionparam19="rankby">
-										<option value="combined">Combined Score (Engagement + Donations)</option>
-										<option value="donations">Total Donations Only</option>
-										<option value="messages">Message Count Only</option>
-									</select>
-								</div>
-								<br>
 								
 								<h3><span data-translate="display-options">Display Options</span></h3>
 								<div>
@@ -5814,18 +5827,14 @@ body.ssapp .wrapper.ssapp h3 {
 											🌐 Show source platform
 										</span>
 									</div>
+								</div>
+								
+								<div style="margin-top: 15px;">
 									<div>
 										<label class="switch">
-											<input type="checkbox" data-param19="animated" />
+											<input type="checkbox" data-param19="maxentries" checked />
 											<span class="slider round"></span>
 										</label>
-										<span data-translate="enable-animations">
-											✨ Enable animations
-										</span>
-									</div>
-									<br>
-									
-									<div>
 										<span data-translate="max-entries">
 											Maximum entries to show
 										</span>
@@ -5841,7 +5850,99 @@ body.ssapp .wrapper.ssapp h3 {
 								</div>
 								<br>
 								
-								<h3><span data-translate="theme-options">Theme Options</span></h3>
+								<h3><span data-translate="rotation-and-display">Top Bar Settings</span></h3>
+								<div style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px;">
+									<span data-translate="topbar-note">These settings only apply when using the "Top Header Bar" layout</span><br>
+									<span style="opacity: 0.8;">ℹ️ Animations and donation tracking are automatically enabled for this layout</span>
+								</div>
+								<div>
+									<span data-translate="topbar-category">
+										Display Mode
+									</span>
+									<select data-optionparam19="category">
+										<option value="rotate">🔄 Rotate through selected views</option>
+										<option value="combined">Combined (Gifts + Donations)</option>
+										<option value="gifts">Top Gifters Only</option>
+										<option value="donations">Top Donors Only</option>
+										<option value="engagement">Most Active Users</option>
+										<option value="recent_gifts">Recent Gifters</option>
+										<option value="recent_donations">Recent Donors</option>
+									</select>
+								</div>
+								<br>
+								
+								<div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">
+									<span style="font-size: 0.9em;"><span data-translate="rotation-includes">When rotating, include:</span></span>
+									<div style="margin-top: 10px;">
+										<label class="switch">
+											<input type="checkbox" data-param19="includeweekly" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="include-weekly">
+											📆 Include weekly stats (default: daily only)
+										</span>
+									</div>
+								</div>
+								
+								<div>
+									<span data-translate="rotation-interval">
+										🔄 Rotation interval <input type="number" style="max-width: 8ch;" max="60" min="3" value="10" size="3" data-numbersetting19="rotateinterval" /> seconds
+									</span>
+								</div>
+								
+								<div>
+									<span data-translate="transition-style">
+										Transition Style
+									</span>
+									<select data-optionparam19="transitionstyle">
+										<option value="fade">Fade</option>
+										<option value="slide">Slide</option>
+									</select>
+								</div>
+								<br>
+								
+								<div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="showvalue" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="show-gift-value">
+											💰 Show monetary value for gifts (instead of count)
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="compact" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="compact-topbar">
+											📐 Compact mode (smaller height)
+										</span>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param19="tickerscroll" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-scroll-mode">
+											📜 Ticker scroll mode (continuous scrolling)
+										</span>
+									</div>
+									<div style="margin-left: 30px;">
+										<span data-translate="ticker-scroll-speed">
+											Scroll Speed
+										</span>
+										<select data-optionparam19="scrollspeed">
+											<option value="slow">Slow</option>
+											<option value="normal">Normal</option>
+											<option value="fast">Fast</option>
+										</select>
+									</div>
+								</div>
+								<br>
+								
+								<h3><span data-translate="theme-and-data">Theme & Data Settings</span></h3>
 								<div>
 									<span data-translate="theme-style-leaderboard">
 										Theme Style
@@ -5855,19 +5956,14 @@ body.ssapp .wrapper.ssapp h3 {
 										<option value="gradient">Gradient</option>
 									</select>
 								</div>
-								<br>
-								
-								<h3><span data-translate="data-options">Data Options</span></h3>
-								<div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param19="persistdata" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="persist-leaderboard-data">
-											💾 Persist data between sessions (7 days max)
-										</span>
-									</div>
+								<div style="margin-top: 10px;">
+									<label class="switch">
+										<input type="checkbox" data-param19="persistdata" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="persist-leaderboard-data">
+										💾 Persist data between sessions (7 days max)
+									</span>
 								</div>
 								<br>
 								
@@ -6768,7 +6864,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="font-family">
                                         Font Family
                                     </span>
-                                    <select data-optionparam6="font">
+                                    <select data-optionparam7="font">
                                         <option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
                                         <option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
                                     </select>
@@ -7258,6 +7354,13 @@ body.ssapp .wrapper.ssapp h3 {
                                     <span data-translate="filter-out-messages-with-bad-karma"> 😈😇 Add sentiment scores to messages </span>
                                 </div>
 								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="pumpTheNumbers" data-setting="pumpTheNumbers" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="pump-the-numbers">📈 Multiply viewer count by 1.75x</span>
+                                </div>
+								<div>
 									<h3>Printer Control</h3>
 									<div class="textInputContainer" style="display: inline-block; width: 250px;">
 										<input type="text" id="printerName" class="textInput" autocomplete="off" data-textsetting="printerName" placeholder="Enter printer name (e.g., 'POS-58')" />
@@ -7431,7 +7534,7 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="enable-points-system">Enable loyalty points system</span>
                                 </div>
-                                
+								
                                 <div style="margin-top: 10px;">
                                     <span data-translate="points-per-engagement">Points per engagement:</span>
                                     <input type="number" id="pointsPerEngagement" data-numbersetting="pointsPerEngagement" min="1" max="100" value="1" style="width: 60px;" />

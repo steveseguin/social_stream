@@ -912,7 +912,9 @@
 			}
 		}
 		
-		
+		if (chatmessage && chatmessage.startsWith("Some comments in this LIVE were filtered to protect the community’s experience")){
+			return;
+		}
 		
 		if (messageLog?.isDuplicate(chatname, chatmessage)) {
 			////console.log("duplicate message; skipping",chatname, chatmessage);

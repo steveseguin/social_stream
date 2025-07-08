@@ -203,12 +203,26 @@ if (typeof chrome.runtime == "undefined") {
 		sender.tab.id = null;
 
 		if (args[0]) {
-			onMessageCallback(args[0], sender, function (response) {
+			// Handle batch messages
+			if (args[0].messages && Array.isArray(args[0].messages)) {
+				// Process batch messages from TikTok
+				args[0].messages.forEach(message => {
+					onMessageCallback({ message }, sender, function (response) {
+						// Individual responses for batch messages
+					});
+				});
 				if (event.returnValue) {
-					event.returnValue = response;
+					event.returnValue = { success: true, count: args[0].messages.length };
 				}
-				ipcRenderer.send("fromBackgroundResponse", response);
-			});
+			} else {
+				// Handle single message (backward compatibility)
+				onMessageCallback(args[0], sender, function (response) {
+					if (event.returnValue) {
+						event.returnValue = response;
+					}
+					ipcRenderer.send("fromBackgroundResponse", response);
+				});
+			}
 		}
 	});
 	ipcRenderer.on("fromMainSender", (event, args) => {
@@ -3188,12 +3202,16 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			var letsGo = await processIncomingMessage(request.message, sender);
 			
 		} else if ("messages" in request) {
-			// Handle batch messages from YouTube
+			// Handle batch messages from YouTube and TikTok
 			sendResponse({ state: isExtensionOn });
 			if (Array.isArray(request.messages)) {
-				for (const message of request.messages) {
-					await processIncomingMessage(message, sender);
-				}
+				// Process messages in parallel for better performance
+				await Promise.all(request.messages.map(message => 
+					processIncomingMessage(message, sender).catch(error => {
+						console.error('Error processing message:', error);
+						// Continue processing other messages even if one fails
+					})
+				));
 			}
 		} else if ("getBTTV" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
@@ -3730,7 +3748,13 @@ async function sendToDestinations(message) {
 					var viewerCounts = {};
 					for (const [tid, tabData] of metaDataStore) {
 						if (tabData.viewer_update && tabData.viewer_update.type){
-							const count = parseInt(tabData.viewer_update.meta) || 0;
+							let count = parseInt(tabData.viewer_update.meta) || 0;
+							
+							// Pump the numbers if enabled
+							if (settings.pumpTheNumbers) {
+								count = Math.round(count * 1.75);
+							}
+							
 							viewerCounts[tabData.viewer_update.type] = (viewerCounts[tabData.viewer_update.type] || 0) + count;
 						}
 					}
@@ -6992,6 +7016,17 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 	} else if ("action" in request) {
 		if (request.action === "openChat") {
 			openchat(request.value || null);
+		} else if (request.action === "skipTTS") {
+			// Skip the currently playing TTS message
+			chrome.tabs.query({}, function(tabs) {
+				tabs.forEach(tab => {
+					chrome.tabs.sendMessage(tab.id, {skipTTS: true}, function() {
+						if (chrome.runtime.lastError) {
+							// Tab doesn't have content script loaded, ignore
+						}
+					});
+				});
+			});
 		} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type) {
 			if (isExtensionOn) {
 				getMessagesDB(request.value.userid || request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {

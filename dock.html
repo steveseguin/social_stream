@@ -3266,8 +3266,24 @@
 				stripHTML = true;
 			}
 
-			var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+			// Lazy initialize audioContext to handle autoplay policy
+			let audioContext = null;
+			let waitingForUserGesture = false;
 			var timeoutTone = null;
+			
+			function initAudioContext() {
+				if (!audioContext && (typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined')) {
+					try {
+						const AudioCtx = window.AudioContext || window.webkitAudioContext;
+						audioContext = new AudioCtx();
+					} catch (e) {
+						// Don't warn about user gesture errors
+						if (!e.message || !e.message.includes('user gesture')) {
+							console.warn('Failed to create AudioContext:', e);
+						}
+					}
+				}
+			}
 
 			async function playtone(tonename = "testtone") {
 				if (timeoutTone) {
@@ -3279,10 +3295,25 @@
 					timeoutTone = false;
 				}, 500);
 
-				if (audioContext.state == "suspended") {
-					await audioContext.resume();
+				// Initialize audio context on first use
+				if (!audioContext) {
+					initAudioContext();
 				}
-				if (audioContext.state == "suspended") {
+				
+				if (audioContext && audioContext.state == "suspended") {
+					try {
+						await audioContext.resume();
+						waitingForUserGesture = false;
+					} catch (e) {
+						// Can't resume without user gesture, set flag to wait
+						if (!waitingForUserGesture) {
+							waitingForUserGesture = true;
+							console.log('Audio requires user interaction. Sound will play after first click.');
+						}
+						return;
+					}
+				}
+				if (!audioContext || audioContext.state == "suspended") {
 					return;
 				}
 				var toneEle = document.getElementById(tonename);
@@ -4279,7 +4310,7 @@
 			}
 
 			if (urlParams.has("showmenu")) {
-				getById("menu").style.display = "block";
+				getById("menu").style.display = "flex";
 				hardFilter = false;
 			} else {
 				try {
@@ -4701,8 +4732,13 @@
 			function upscaleImages(data) {
 				// for third party APIs
 				let chatimg = "";
-				if (data.type && (data.type == "twitch") && data.chatname && !data.chatimg) {
-					chatimg = "https://api.socialstream.ninja/twitch/large?username=" + encodeURIComponent(data.chatname); // 150x150
+				if (data.type && (data.type == "twitch") && data.chatname) {
+					// For Twitch, always check if we need larger images, even if chatimg exists
+					if (!data.chatimg || data.chatimg.includes("api.socialstream.ninja/twitch/?username=")) {
+						chatimg = "https://api.socialstream.ninja/twitch/medium?username=" + encodeURIComponent(data.chatname); // 96x96
+					} else {
+						chatimg = data.chatimg;
+					}
 				} else if (data.type && ((data.type == "youtube") || (data.type == "youtubeshorts")) && data.chatimg) {
 					chatimg = data.chatimg.replace("=s32-", "=s256-");
 					chatimg = chatimg.replace("=s64-", "=s256-");
@@ -5859,6 +5895,17 @@
 					// we will trigger a deleteMessage I guess after, if sync mode is needed.
 					try {
 						deleteMessages(data, deleteOnlyLast);
+						return true;
+					} catch (e) {
+						console.error(e);
+					}
+					return;
+				} else if ("skipTTS" in data) {
+					// Skip the currently playing TTS message
+					try {
+						if (typeof TTS !== 'undefined' && typeof TTS.skipCurrent === 'function') {
+							TTS.skipCurrent();
+						}
 						return true;
 					} catch (e) {
 						console.error(e);
@@ -7982,9 +8029,11 @@
 
 					if (largeavatar && data.chatname && data.type && avatars) {
 						data.chatimg = upscaleImages(data); // increase the resolution of avatars if possible
-					} else if (data.type && (data.type == "twitch") && avatars && !data.chatimg && data.chatname) {
-						// this is a temp fix until everyone updates.
-						data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
+					} else if (data.type && (data.type == "twitch") && avatars && data.chatname) {
+						// Always check cache first for Twitch avatars
+						if (!data.chatimg || data.chatimg.includes("api.socialstream.ninja/twitch/?username=")) {
+							data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(data.chatname); // this is CORS restricted to socialstream, but this is to ensure reliability for all
+						}
 					}
 
 					var chatImg = data.chatimg;
@@ -8515,7 +8564,8 @@
 						processURLs(hlMessage, { makeClickable: activeLinks, stripLinks: stripLinks, shortenURLs: shortlink });
 					} 
 					
-					if (data.type && data.type == "twitch" && avatars && data.chatimg) { 
+					if (data.type && data.type == "twitch" && avatars && data.chatimg && data.chatname) { 
+						// Load Twitch avatar
 						var twitchImage = new Image();
 						twitchImage.onload = function () {
 							try {
@@ -8724,11 +8774,29 @@
 						// skipp TTS
 					} else if (TTS.ttscommand && data.chatmessage && (data.textContent || data.chatmessage).includes(TTS.ttscommand+" ") && (!TTS.ttscommandmembersonly || (TTS.ttscommandmembersonly && data.membership))){
 						if (!node.classList.contains("hide")) {
-							TTS.speechMeta(data);
+							if (waitToReveal) {
+								setTimeout(function() {
+									// Check if node still exists and is connected to DOM
+									if (node && node.isConnected && !node.classList.contains("hide")) {
+										TTS.speechMeta(data);
+									}
+								}, waitToReveal);
+							} else {
+								TTS.speechMeta(data);
+							}
 						}
 					} else if (TTS.speech) {
 						if (!node.classList.contains("hide")) {
-							TTS.speechMeta(data);
+							if (waitToReveal) {
+								setTimeout(function() {
+									// Check if node still exists and is connected to DOM
+									if (node && node.isConnected && !node.classList.contains("hide")) {
+										TTS.speechMeta(data);
+									}
+								}, waitToReveal);
+							} else {
+								TTS.speechMeta(data);
+							}
 						}
 					} 
 					return node;
@@ -9798,6 +9866,39 @@
 			}
 
 			requestWakeLock();
+			
+			// Clean up audio context when page unloads
+			window.addEventListener('beforeunload', function() {
+				if (audioContext && audioContext.state !== 'closed') {
+					audioContext.close();
+				}
+			});
+			
+			// Resume audio context on user interaction if needed
+			function setupUserInteractionHandler() {
+				const handler = function() {
+					if (audioContext && audioContext.state === 'suspended') {
+						audioContext.resume().then(() => {
+							waitingForUserGesture = false;
+							console.log('Audio context resumed after user interaction');
+						});
+					}
+					document.removeEventListener('click', handler);
+					document.removeEventListener('touchstart', handler);
+					document.removeEventListener('keydown', handler);
+				};
+				
+				document.addEventListener('click', handler);
+				document.addEventListener('touchstart', handler);
+				document.addEventListener('keydown', handler);
+			}
+			
+			// Set up user interaction handlers
+			if (document.readyState === 'loading') {
+				document.addEventListener('DOMContentLoaded', setupUserInteractionHandler);
+			} else {
+				setupUserInteractionHandler();
+			}
 			
 		</script>
 	</body>

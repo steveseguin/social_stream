@@ -74,25 +74,41 @@ function convertToUSD(valueStr, source = '') {
     twitch: {
       bits: 0.01,
       bit: 0.01,
-      sub: 4.99
+      sub: 4.99,
+      subscription: 4.99,
+      giftsub: 4.99,
+      giftsubscription: 4.99,
+      tier1: 4.99,
+      tier2: 9.99,
+      tier3: 24.99
     },
     youtube: {
       superchat: 1.0,
-      super: 1.0
+      super: 1.0,
+      membership: 4.99,
+      giftmembership: 4.99,
+      sponsorship: 4.99
     },
     kick: {
       sub: 3.75, // Kick takes a smaller cut
-      subscription: 3.75
+      subscription: 3.75,
+      giftsub: 3.75,
+      giftsubscription: 3.75
     },
     tiktok: {
       coin: 0.01,
       coins: 0.01,
       diamond: 0.005,
-      diamonds: 0.005
+      diamonds: 0.005,
+      gift: 0.01,
+      rose: 0.01,
+      tiktokgift: 0.01
     },
     facebook: {
       star: 0.01,
-      stars: 0.01
+      stars: 0.01,
+      support: 0.99,
+      badge: 0.99
     }
   };
 
@@ -143,4 +159,43 @@ function convertToUSD(valueStr, source = '') {
   
   // Default to USD if no specific currency found
   return amount;
+}
+
+// Helper function to get gift values by platform
+function getGiftValue(platform, giftType = 'default') {
+  const giftValues = {
+    twitch: {
+      default: 4.99,
+      tier1: 4.99,
+      tier2: 9.99,
+      tier3: 24.99,
+      sub: 4.99,
+      giftsub: 4.99
+    },
+    youtube: {
+      default: 4.99,
+      membership: 4.99,
+      giftmembership: 4.99,
+      sponsorship: 4.99
+    },
+    kick: {
+      default: 3.75,
+      sub: 3.75,
+      giftsub: 3.75
+    },
+    tiktok: {
+      default: 0.99,
+      rose: 0.01,
+      gift: 0.99,
+      treasure: 5.00
+    },
+    facebook: {
+      default: 0.99,
+      support: 0.99,
+      badge: 0.99
+    }
+  };
+  
+  const platformGifts = giftValues[platform] || giftValues.twitch;
+  return platformGifts[giftType] || platformGifts.default || 4.99;
 }
