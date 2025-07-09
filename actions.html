@@ -64,12 +64,95 @@
 			max-height: 95%;
 			border: none;
 		}
+		
+		/* Modal styles */
+		.modal {
+			display: none;
+			position: fixed;
+			z-index: 10000;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			background-color: rgba(0, 0, 0, 0.5);
+			justify-content: center;
+			align-items: center;
+		}
+		
+		.modal-content {
+			background-color: #fefefe;
+			padding: 30px;
+			border: 1px solid #888;
+			border-radius: 8px;
+			width: 90%;
+			max-width: 400px;
+			text-align: center;
+			box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+		}
+		
+		.modal-content h2 {
+			margin-top: 0;
+			margin-bottom: 20px;
+			color: #333;
+		}
+		
+		.modal-content input[type="text"] {
+			width: 100%;
+			padding: 10px;
+			margin: 10px 0;
+			border: 1px solid #ddd;
+			border-radius: 4px;
+			font-size: 16px;
+			box-sizing: border-box;
+		}
+		
+		.modal-content button {
+			background-color: #4CAF50;
+			color: white;
+			padding: 12px 24px;
+			margin: 10px 5px;
+			border: none;
+			border-radius: 4px;
+			cursor: pointer;
+			font-size: 16px;
+			transition: background-color 0.3s;
+		}
+		
+		.modal-content button:hover {
+			background-color: #45a049;
+		}
+		
+		.modal-content button.cancel {
+			background-color: #f44336;
+		}
+		
+		.modal-content button.cancel:hover {
+			background-color: #da190b;
+		}
+		
+		.modal-content p {
+			color: #666;
+			margin: 10px 0;
+		}
 		}
     </style>
 </head>
 <body>
     <div id="status-message"></div>
     <div id="fullscreen-media-container" class="fullscreen-media-container"></div>
+    
+    <!-- Session ID Modal -->
+    <div id="sessionModal" class="modal">
+        <div class="modal-content">
+            <h2>Session ID Required</h2>
+            <p>Please enter your session ID to continue:</p>
+            <input type="text" id="sessionIdInput" placeholder="Enter session ID" autofocus>
+            <div>
+                <button onclick="submitSessionId()">Submit</button>
+                <button class="cancel" onclick="cancelSessionId()">Cancel</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
@@ -120,16 +203,20 @@
             console.warn('OBS Studio API (window.obsstudio) not found.');
         }
 
-        // Get session/room ID from URL parameters
-        if (urlParams.has("session")) {
-            roomID = urlParams.get("session");
-        } else if (urlParams.has("s")) {
-            roomID = urlParams.get("s");
-        } else if (urlParams.has("id")) {
-            roomID = urlParams.get("id");
-        } else if (window.location.protocol == "file:") {
-            roomID = prompt("Enter your session ID here, or add it to the URL.");
-            if (roomID) {
+        // Function to show session ID modal
+        function showSessionModal() {
+            var modal = document.getElementById('sessionModal');
+            modal.style.display = 'flex';
+            document.getElementById('sessionIdInput').focus();
+        }
+        
+        // Function to submit session ID
+        function submitSessionId() {
+            var sessionIdInput = document.getElementById('sessionIdInput');
+            var sessionId = sessionIdInput.value.trim();
+            
+            if (sessionId) {
+                roomID = sessionId;
                 var href = window.location.href;
                 var arr = href.split('?');
                 var newurl;
@@ -139,79 +226,145 @@
                     newurl = href + '?session=' + roomID;
                 }
                 window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+                
+                // Hide modal
+                document.getElementById('sessionModal').style.display = 'none';
+                
+                // Continue with initialization
+                initializeWithSessionId();
             } else {
-                alert("You need to provide your extension's session ID for this page to work");
+                alert("Please enter a valid session ID");
             }
+        }
+        
+        // Function to cancel session ID entry
+        function cancelSessionId() {
+            document.getElementById('sessionModal').style.display = 'none';
+            if (window.location.protocol == "file:") {
+                alert("You need to provide your extension's session ID for this page to work");
+            } else {
+                window.location.href = "https://github.com/steveseguin/social_stream#readme";
+            }
+        }
+        
+        // Make functions globally available
+        window.submitSessionId = submitSessionId;
+        window.cancelSessionId = cancelSessionId;
+        
+        // Handle Enter key in input
+        document.addEventListener('DOMContentLoaded', function() {
+            var sessionIdInput = document.getElementById('sessionIdInput');
+            if (sessionIdInput) {
+                sessionIdInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        submitSessionId();
+                    }
+                });
+            }
+        });
+        
+        // Get session/room ID from URL parameters
+        var needsSessionId = false;
+        if (urlParams.has("session")) {
+            roomID = urlParams.get("session");
+        } else if (urlParams.has("s")) {
+            roomID = urlParams.get("s");
+        } else if (urlParams.has("id")) {
+            roomID = urlParams.get("id");
         } else {
-            window.location.href = "https://github.com/steveseguin/social_stream#readme";
+            needsSessionId = true;
         }
 
         // Get password from URL parameters
         if (urlParams.has("password")) {
             password = urlParams.get("password") || "false";
         }
-
-        // Fix for electron dragging
-        try {
-            if ((window.ninjafy || window.electronApi)) {
-                document.body.style.width = "95%";
-                setTimeout(function() {
-                    document.body.style.width = "100%";
-                }, 1000);
-
-                setTimeout(function() {
-                    document.body.style.width = "98%";
-                }, 2000);
-
-                setTimeout(function() {
-                    document.body.style.width = "100%";
-                }, 5000);
-            }
-        } catch(e) {}
-
-        // Load CSS if provided
-        if (urlParams.has('css')) {
-            var cssURL = urlParams.get('css');
-            cssURL = decodeURI(cssURL);
-
-            var cssStylesheet = document.createElement('link');
-            cssStylesheet.rel = 'stylesheet';
-            cssStylesheet.type = 'text/css';
-            cssStylesheet.media = 'screen';
-            cssStylesheet.href = cssURL;
-            document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
-        }
-
-        // Load Base64 CSS if provided
-        if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+        
+        // Function to initialize after session ID is available
+        function initializeWithSessionId() {
+            // Fix for electron dragging
             try {
-                var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
-                var css = decodeURIComponent(atob(base64Css));
-                var cssStyleSheet = document.createElement("style");
-                cssStyleSheet.innerText = css;
-                document.querySelector("head").appendChild(cssStyleSheet);
-            } catch(e) {
-                console.error(e);
-            }
-        }
+                if ((window.ninjafy || window.electronApi)) {
+                    document.body.style.width = "95%";
+                    setTimeout(function() {
+                        document.body.style.width = "100%";
+                    }, 1000);
 
-        // Load JavaScript if provided
-        if (urlParams.has('js')) {
-            console.warn("Third-party JavaScript has been injected into the code. Security cannot be ensured.");
-            var jsURL = urlParams.get('js');
-            jsURL = decodeURI(jsURL);
-            console.log(jsURL);
-            var externalJavaascript = document.createElement('script');
-            externalJavaascript.type = 'text/javascript';
-            externalJavaascript.crossorigin = 'anonymous';
-            externalJavaascript.src = jsURL;
-            externalJavaascript.onerror = function() {
-                console.warn("Third-party JavaScript failed to load");
-            };
-            externalJavaascript.onload = function() {
-                console.log("Third-party JavaScript loaded");
-            };
-            document.head.appendChild(externalJavaascript);
+                    setTimeout(function() {
+                        document.body.style.width = "98%";
+                    }, 2000);
+
+                    setTimeout(function() {
+                        document.body.style.width = "100%";
+                    }, 5000);
+                }
+            } catch(e) {}
+
+            // Load CSS if provided
+            if (urlParams.has('css')) {
+                var cssURL = urlParams.get('css');
+                cssURL = decodeURI(cssURL);
+
+                var cssStylesheet = document.createElement('link');
+                cssStylesheet.rel = 'stylesheet';
+                cssStylesheet.type = 'text/css';
+                cssStylesheet.media = 'screen';
+                cssStylesheet.href = cssURL;
+                document.getElementsByTagName('head')[0].appendChild(cssStylesheet);
+            }
+
+            // Load Base64 CSS if provided
+            if (urlParams.has("base64css") || urlParams.has("b64css") || urlParams.has("cssbase64") || urlParams.has("cssb64")) {
+                try {
+                    var base64Css = urlParams.get("base64css") || urlParams.get("b64css") || urlParams.get("cssbase64") || urlParams.get("cssb64");
+                    var css = decodeURIComponent(atob(base64Css));
+                    var cssStyleSheet = document.createElement("style");
+                    cssStyleSheet.innerText = css;
+                    document.querySelector("head").appendChild(cssStyleSheet);
+                } catch(e) {
+                    console.error(e);
+                }
+            }
+
+            // Load JavaScript if provided
+            if (urlParams.has('js')) {
+                console.warn("Third-party JavaScript has been injected into the code. Security cannot be ensured.");
+                var jsURL = urlParams.get('js');
+                jsURL = decodeURI(jsURL);
+                console.log(jsURL);
+                var externalJavaascript = document.createElement('script');
+                externalJavaascript.type = 'text/javascript';
+                externalJavaascript.crossorigin = 'anonymous';
+                externalJavaascript.src = jsURL;
+                externalJavaascript.onerror = function() {
+                    console.warn("Third-party JavaScript failed to load");
+                };
+                externalJavaascript.onload = function() {
+                    console.log("Third-party JavaScript loaded");
+                };
+                document.head.appendChild(externalJavaascript);
+            }
+            
+            // Setup WebSocket if server parameter is provided
+            if (urlParams.has("server") || urlParams.has("server2")) {
+                serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            }
+            
+            // Create iframe for receiving WebRTC data channel messages
+            iframe = document.createElement("iframe");
+            iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + 
+                "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            document.body.appendChild(iframe);
+            
+            console.log("Actions page initialized with session ID:", roomID);
         }
 
         // WebSocket connection setup
@@ -249,13 +402,6 @@
                     }
                 }
             });
-        }
-
-        // Setup WebSocket if server parameter is provided
-        if (urlParams.has("server") || urlParams.has("server2")) {
-            serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
-            socketserver = new WebSocket(serverURL);
-            setupSocket();
         }
 
 		function processInput(data) {
@@ -367,18 +513,6 @@
             }
         }
 
-        // Create iframe for receiving WebRTC data channel messages
-        iframe = document.createElement("iframe");
-        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + 
-            "&solo&view=" + roomID + "&novideo&noaudio&label=actions&cleanoutput&room=" + roomID;
-        iframe.style.width = "0px";
-        iframe.style.height = "0px";
-        iframe.style.position = "fixed";
-        iframe.style.left = "-100px";
-        iframe.style.top = "-100px";
-        iframe.id = "frame1";
-        document.body.appendChild(iframe);
-
         // Listen for messages from the iframe
         var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
         var eventer = window[eventMethod];
@@ -386,21 +520,22 @@
 
 		eventer(messageEvent, function(e) {
 			// Check if the message is from our iframe
-			if (e.source != iframe.contentWindow) return;
-			
-			// Process data from the WebRTC data channel
-			if (e.data && e.data.dataReceived) {
-				if (e.data.dataReceived.overlayNinja) {
-					processInput(e.data.dataReceived.overlayNinja);
-				} else {
-					// Handle direct action object in dataReceived
-					processInput(e.data.dataReceived);
+			if (iframe && e.source == iframe.contentWindow) {
+				// Process data from the WebRTC data channel
+				if (e.data && e.data.dataReceived) {
+					if (e.data.dataReceived.overlayNinja) {
+						processInput(e.data.dataReceived.overlayNinja);
+					} else {
+						// Handle direct action object in dataReceived
+						processInput(e.data.dataReceived);
+					}
+				} else if (e.data && e.data.actionType) {
+					// Handle direct action object
+					processInput(e.data);
 				}
-			} else if (e.data && e.data.actionType) {
-				// Handle direct action object
-				processInput(e.data);
 			}
 		});
+        
         // Handle audio context for browsers that require user interaction
         document.addEventListener('click', () => {
             if (audioContext.state === 'suspended') {
@@ -417,8 +552,21 @@
 		}
 
 		window.testAction = testAction;
-
-        console.log("Actions page initialized with session ID:", roomID);
+        
+        // Initialize or show modal based on whether session ID is needed
+        if (needsSessionId) {
+            // Wait for DOM to be ready before showing modal
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    showSessionModal();
+                });
+            } else {
+                showSessionModal();
+            }
+        } else {
+            // Session ID is already available, initialize immediately
+            initializeWithSessionId();
+        }
     </script>
 </body>
 </html>
