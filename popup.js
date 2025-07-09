@@ -1622,10 +1622,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 handleAIProviderVisibility(ele.value);
             } else if (key == "ttsProvider") {
                 handleTTSProviderVisibility(ele.value);
-            } else if (key == "featuredOverlayStyle" || key == "overlayPreset") {
-                // Trigger change event to show/hide appropriate sections
-                ele.dispatchEvent(new Event('change'));
-            }
+            } 
         }
     }
 
