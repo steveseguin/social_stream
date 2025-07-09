@@ -3083,6 +3083,14 @@ function refreshLinks(){
       const divElement = document.getElementById(divId);
 
       if (linkElement && divElement && typeof divElement.raw === 'string' && (divElement.raw.startsWith('http') || divElement.raw.startsWith('file://'))) {
+        // Skip TTS parameter cleaning for featured.html (overlay) since it uses a different TTS detection method
+        if (linkId === 'overlaylink') {
+          // Just update the display without cleaning TTS params
+          linkElement.href = divElement.raw;
+          linkElement.innerText = currentHideLinks ? "Click to open link" : divElement.raw;
+          return;
+        }
+        
         const urlToClean = divElement.raw; // Use .raw as the source of truth
         const cleanedUrl = removeTTSProviderParams(urlToClean);
 

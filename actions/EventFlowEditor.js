@@ -139,6 +139,9 @@ class EventFlowEditor {
             }
         });
 		document.getElementById('flow-name').addEventListener('input', (e) => {
+			// Skip if this event was triggered by programmatic update
+			if (this._updatingProgrammatically) return;
+			
 			if (this.currentFlow) {
 				// Update the internal name value WITHOUT the asterisk
 				const inputValue = e.target.value;
@@ -202,8 +205,17 @@ class EventFlowEditor {
 			baseName = baseName.slice(0, -1);
 		}
 		
-		// Set the input value with or without asterisk
-		flowNameInput.value = hasChanges ? baseName + '*' : baseName;
+		// Only update the input value if it's actually different
+		const newValue = hasChanges ? baseName + '*' : baseName;
+		if (flowNameInput.value !== newValue) {
+			// Set a flag to prevent recursive event handling
+			this._updatingProgrammatically = true;
+			flowNameInput.value = newValue;
+			// Reset the flag after a microtask to ensure the event has fired
+			Promise.resolve().then(() => {
+				this._updatingProgrammatically = false;
+			});
+		}
 		
 		// Update save button appearance
 		if (hasChanges) {
