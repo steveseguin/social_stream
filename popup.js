@@ -1622,7 +1622,15 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 handleAIProviderVisibility(ele.value);
             } else if (key == "ttsProvider") {
                 handleTTSProviderVisibility(ele.value);
-            } 
+            } else if (key == "featuredOverlayStyle" ) {
+				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
+					wrapper.style.display = 'none';
+				});
+			 } else if (key == "overlayPreset") {
+				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+					wrapper.style.display = 'none';
+				});
+			 }
         }
     }
 
