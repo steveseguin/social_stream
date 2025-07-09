@@ -139,13 +139,9 @@ class EventFlowEditor {
             }
         });
 		document.getElementById('flow-name').addEventListener('input', (e) => {
-			// Skip if this event was triggered by programmatic update
-			if (this._updatingProgrammatically) return;
-			
 			if (this.currentFlow) {
-				// Update the internal name value WITHOUT the asterisk
-				const inputValue = e.target.value;
-				this.currentFlow.name = inputValue.endsWith('*') ? inputValue.slice(0, -1) : inputValue;
+				// Store the raw input value as the flow name (no asterisks)
+				this.currentFlow.name = e.target.value;
 				
 				// Only mark as unsaved if the name has actually changed
 				if (this.currentFlow.id && this.currentFlow.name !== this.originalFlowName) {
@@ -198,29 +194,13 @@ class EventFlowEditor {
 		const saveButton = document.getElementById('save-flow-btn');
 		
 		if (!flowNameInput || !saveButton || !this.currentFlow) return;
-
-		// Get the base name without any asterisks
-		let baseName = flowNameInput.value;
-		while (baseName.endsWith('*')) {
-			baseName = baseName.slice(0, -1);
-		}
 		
-		// Only update the input value if it's actually different
-		const newValue = hasChanges ? baseName + '*' : baseName;
-		if (flowNameInput.value !== newValue) {
-			// Set a flag to prevent recursive event handling
-			this._updatingProgrammatically = true;
-			flowNameInput.value = newValue;
-			// Reset the flag after a microtask to ensure the event has fired
-			Promise.resolve().then(() => {
-				this._updatingProgrammatically = false;
-			});
-		}
-		
-		// Update save button appearance
+		// Update the visual indicator without modifying the input value
 		if (hasChanges) {
+			flowNameInput.classList.add('unsaved');
 			saveButton.classList.remove('disabled');
 		} else {
+			flowNameInput.classList.remove('unsaved');
 			saveButton.classList.add('disabled');
 		}
 	}
@@ -493,15 +473,6 @@ class EventFlowEditor {
 
 
         let flowToSave = JSON.parse(JSON.stringify(this.currentFlow)); // Deep copy
-        
-        // Remove trailing asterisk if present, as that's a UI indicator for unsaved changes
-        if (flowToSave.name.endsWith('*')) {
-            flowToSave.name = flowToSave.name.slice(0, -1);
-        }
-        // Ensure the name in currentFlow (internal state) also doesn't have the asterisk
-        if (this.currentFlow.name.endsWith('*')) {
-             this.currentFlow.name = this.currentFlow.name.slice(0, -1);
-        }
 
 
         try {
