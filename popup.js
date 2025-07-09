@@ -239,8 +239,7 @@ if (typeof(chrome.runtime)=='undefined'){
 }
 
 function copyToClipboard(event) {
-	//console.log(event);
-   
+	
 	// if (event.target.parentNode.parentNode.querySelector("[data-raw] a[href]")){ // DEPRECATED data-raw
 	// Find the closest .link container
 	const linkContainer = event.target.closest('.link');
@@ -1329,6 +1328,14 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   
   // Process all standard pages
   pages.forEach(page => {
+    // Skip dock update if a preset is selected
+    if (page.id === "dock") {
+      const overlaySelector = document.getElementById('overlay-preset-select');
+      if (overlaySelector && overlaySelector.value) {
+        return; // Skip updating dock when preset is active
+      }
+    }
+    
     const linkPath = page.linkPath || page.path;
     const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${versionParam}`;
     const element = document.getElementById(page.id);
