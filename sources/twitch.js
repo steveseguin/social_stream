@@ -757,7 +757,7 @@
 					if ("settings" in request) {
 						settings = request.settings;
 						sendResponse(true);
-						console.log(settings);
+						//console.log(settings);
 						if (settings.bttv) {
 							chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: channelName ? channelName.toLowerCase() : null, type:"twitch" }, function (response) {});
 						}
@@ -800,11 +800,11 @@
 		chrome.runtime.sendMessage(
 			chrome.runtime.id, {getSettings: true},	function (response) {
 				// {"state":isExtensionOn,"streamID":channel, "settings":settings}
-				console.log(response, response.settings);
+				//console.log(response, response.settings);
 				
 				if (response && "settings" in response) {
 					settings = response.settings;
-					console.log({...settings});
+					//console.log({...settings});
 					if (settings.bttv && !BTTV) {
 						chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true, channel: channelName ? channelName.toLowerCase() : null, type:"twitch" }, function (response) {
 								//console.log(response);
