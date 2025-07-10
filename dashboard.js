@@ -310,6 +310,18 @@ function initDashboard() {
     setupConsoleHook();
     setupPeriodicUpdates();
 	setupReturnButton();
+	
+	// Listen for postMessage from parent window (for cross-origin communication)
+	window.addEventListener('message', function(event) {
+		// Only handle messages with the expected structure
+		if (event.data && event.data.action) {
+			if (event.data.action === 'showDashboardView' && typeof showDashboardView === 'function') {
+				showDashboardView();
+			} else if (event.data.action === 'showEditorView' && typeof showEditorView === 'function') {
+				showEditorView();
+			}
+		}
+	});
 }
 
 if (document.readyState === "complete" || document.readyState === "interactive") {
