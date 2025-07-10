@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phrase Guessing Game - Social Stream Ninja</title>
+    <link rel="icon" href="../favicon.ico" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 30px;
+        }
+
+        .game-status {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 5px;
+        }
+
+        .phrase-display {
+            font-size: 24px;
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            letter-spacing: 2px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+        }
+
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #555;
+        }
+
+        .config-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+        }
+
+        .config-section h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+
+        .config-item {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .config-item label {
+            flex: 1;
+        }
+
+        .config-item input, .config-item select {
+            flex: 2;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #666;
+            background: #333;
+            color: white;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #666;
+            background: #333;
+            color: white;
+            font-family: monospace;
+            resize: vertical;
+        }
+
+        .message-log {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 5px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .message {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #4CAF50;
+            padding-left: 10px;
+        }
+
+        .winner-announcement {
+            animation: pulse 1s ease-in-out infinite;
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .demo-mode {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff6b6b;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Phrase Guessing Game</h1>
+        
+        <div class="game-status" id="gameStatus">
+            <span id="statusText">Waiting to start...</span>
+        </div>
+
+        <div class="phrase-display" id="phraseDisplay">
+            Press "Start Game" to begin!
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="toggleGame()" id="gameToggle">Start Game</button>
+            <button class="btn-secondary" onclick="skipPhrase()">Skip Phrase</button>
+            <button class="btn-secondary" onclick="resetGame()">Reset</button>
+        </div>
+
+        <div class="config-section">
+            <h3>⚙️ Game Configuration</h3>
+            
+            <h3>📝 Phrases (one per line)</h3>
+            <textarea id="phrasesInput" placeholder="Enter phrases here, one per line...">The quick brown fox jumps over the lazy dog
+To be or not to be that is the question
+May the force be with you
+Houston we have a problem
+I'll be back
+Life is like a box of chocolates
+Show me the money
+You can't handle the truth</textarea>
+            
+            <div style="margin-top: 10px;">
+                <button class="btn-secondary" onclick="savePhrases()">Save Phrases</button>
+                <button class="btn-secondary" onclick="loadDefaultPhrases()">Load Defaults</button>
+            </div>
+
+            <div class="config-item">
+                <label>Reveal Interval (seconds):</label>
+                <input type="number" id="revealInterval" min="5" max="60" value="10">
+            </div>
+
+            <div class="config-item">
+                <label>Match Threshold (%):</label>
+                <input type="number" id="matchThreshold" min="50" max="100" value="70">
+            </div>
+
+            <div class="config-item">
+                <label>Initial Mask (%):</label>
+                <input type="number" id="initialMask" min="50" max="95" value="80">
+            </div>
+
+            <div class="config-item">
+                <label>Bot Name:</label>
+                <input type="text" id="botName" value="🎮 Phrase Bot">
+            </div>
+        </div>
+
+        <div class="message-log" id="messageLog">
+            <h4>Recent Activity</h4>
+        </div>
+    </div>
+
+    <div class="demo-mode" id="demoIndicator" style="display: none;">DEMO MODE</div>
+
+    <script>
+        // Configuration and state
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session') || '';
+        const password = urlParams.get('password') || 'false';
+        const serverUrl = urlParams.get('server');
+        const demo = urlParams.has('demo');
+        
+        const config = {
+            revealInterval: 10000,
+            matchThreshold: 70,
+            initialMask: 80,
+            maskReduction: 10,
+            botName: '🎮 Phrase Bot'
+        };
+
+        let gameState = {
+            isActive: false,
+            currentPhrase: '',
+            normalizedPhrase: '',
+            maskedPhrase: '',
+            maskPercent: config.initialMask,
+            phrases: [],
+            currentIndex: -1,
+            revealTimer: null,
+            winner: null,
+            roundStartTime: null
+        };
+
+        let socketserver = null;
+        let iframe = null;
+        let connectedPeers = {};
+
+        // Initialize UI
+        function initializeUI() {
+            document.getElementById('revealInterval').value = config.revealInterval / 1000;
+            document.getElementById('matchThreshold').value = config.matchThreshold;
+            document.getElementById('initialMask').value = config.initialMask;
+            document.getElementById('botName').value = config.botName;
+
+            if (demo) {
+                document.getElementById('demoIndicator').style.display = 'block';
+                loadPhrases();
+                updateStatus('Ready to start (Demo Mode)');
+            } else if (!sessionId) {
+                updateStatus('ERROR: No session ID provided! Add ?session=YOUR_SESSION_ID to the URL');
+                document.getElementById('gameToggle').disabled = true;
+                document.getElementById('phraseDisplay').textContent = 'Session ID required!';
+                document.getElementById('phraseDisplay').style.color = '#ff6b6b';
+            } else {
+                loadPhrases();
+                updateStatus('Ready to start');
+                setupConnection();
+            }
+        }
+
+        // Setup connection (iframe or WebSocket)
+        function setupConnection() {
+            if (serverUrl) {
+                // WebSocket mode
+                connectWebSocket();
+            } else {
+                // Iframe mode (default)
+                setupIframe();
+            }
+        }
+
+        // Setup iframe communication
+        function setupIframe() {
+            iframe = document.createElement("iframe");
+            // Use push mode for bidirectional communication (like dock.html)
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&notmobile&label=phrasegame&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${sessionId}`;
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.style.border = "0";
+            iframe.allow = "autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;midi;geolocation;gyroscope;";
+            document.body.appendChild(iframe);
+
+            window.addEventListener("message", function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                // Handle incoming data
+                if ("dataReceived" in e.data) {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        processData(e.data.dataReceived.overlayNinja);
+                    }
+                }
+                
+                // Track peer connections (like dock.html does)
+                if ("action" in e.data && e.data.UUID) {
+                    if (e.data.action === "push-connection-info") {
+                        if (e.data.value && e.data.value.label) {
+                            connectedPeers[e.data.UUID] = e.data.value.label;
+                        }
+                    } else if (e.data.action === "push-connection" && !e.data.value) {
+                        delete connectedPeers[e.data.UUID];
+                    }
+                }
+            });
+
+            updateStatus('Connected via iframe');
+        }
+
+        // WebSocket connection
+        function connectWebSocket() {
+            socketserver = new WebSocket(serverUrl);
+            
+            socketserver.onopen = function() {
+                updateStatus('Connected via WebSocket');
+                // Join the session - match dock.html pattern
+                socketserver.send(JSON.stringify({ 
+                    join: sessionId.split(",")[0], 
+                    in: 2,    // Listen to dock channel
+                    out: 1    // Send to main channel
+                }));
+            };
+
+            socketserver.onmessage = function(event) {
+                if (event.data) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        processData(data);
+                    } catch (e) {
+                        console.error('WebSocket parse error:', e);
+                    }
+                }
+            };
+
+            socketserver.onerror = function(error) {
+                updateStatus('Connection error');
+                console.error('WebSocket error:', error);
+            };
+
+            socketserver.onclose = function() {
+                updateStatus('Disconnected');
+                // Try to reconnect after 5 seconds
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+
+        // Process incoming data
+        function processData(data) {
+            if (!data || !gameState.isActive) return;
+            
+            // Check if it's a chat message
+            if (data.chatmessage && data.chatname) {
+                // Skip bot messages
+                if (data.type === 'bot' || data.chatname === config.botName) return;
+                
+                processMessage(data);
+            }
+        }
+
+        // Send response back to chat
+        function sendResponse(message) {
+            if (demo) {
+                // Demo mode - just log it
+                addMessage(`[${config.botName}] ${message}`);
+                return;
+            }
+
+            const response = {
+                chatname: config.botName,
+                chatmessage: message,
+                type: 'bot',
+                timestamp: Date.now()
+            };
+
+            if (serverUrl && socketserver && socketserver.readyState === WebSocket.OPEN) {
+                // WebSocket mode - send as action
+                socketserver.send(JSON.stringify({
+                    action: 'sendChat',
+                    value: message
+                }));
+                addMessage(`[Bot sent] ${message}`);
+            } else if (iframe && window.parent !== window) {
+                // We're embedded in an iframe - send to parent
+                window.parent.postMessage({
+                    overlay: 'phraseguess',
+                    response: response
+                }, '*');
+                addMessage(`[Bot sent] ${message}`);
+            } else if (iframe) {
+                // We're standalone - send through iframe to all connected peers
+                Object.keys(connectedPeers).forEach(UUID => {
+                    iframe.contentWindow.postMessage({
+                        sendData: {
+                            overlayNinja: response
+                        },
+                        type: "pcs",
+                        UUID: UUID
+                    }, '*');
+                });
+                addMessage(`[Bot sent] ${message}`);
+            }
+        }
+
+        // Update game status display
+        function updateStatus(text) {
+            document.getElementById('statusText').textContent = text;
+            addMessage(`[System] ${text}`);
+        }
+
+        // Add message to log
+        function addMessage(text) {
+            const log = document.getElementById('messageLog');
+            const message = document.createElement('div');
+            message.className = 'message';
+            message.textContent = `${new Date().toLocaleTimeString()} - ${text}`;
+            log.appendChild(message);
+            log.scrollTop = log.scrollHeight;
+
+            // Keep only last 20 messages
+            while (log.children.length > 21) {
+                log.removeChild(log.children[1]);
+            }
+        }
+
+        // Load phrases from textarea
+        function loadPhrases() {
+            const input = document.getElementById('phrasesInput').value;
+            gameState.phrases = input
+                .split('\n')
+                .map(line => line.trim())
+                .filter(line => line.length > 0);
+            
+            addMessage(`Loaded ${gameState.phrases.length} phrases`);
+        }
+
+        // Save phrases to localStorage
+        function savePhrases() {
+            loadPhrases();
+            localStorage.setItem('ssnPhrases', document.getElementById('phrasesInput').value);
+            addMessage('Phrases saved to browser storage');
+        }
+
+        // Load default phrases
+        function loadDefaultPhrases() {
+            const defaults = [
+                "The quick brown fox jumps over the lazy dog",
+                "To be or not to be that is the question",
+                "May the force be with you",
+                "Houston we have a problem",
+                "I'll be back",
+                "Life is like a box of chocolates",
+                "Show me the money",
+                "You can't handle the truth",
+                "I'm the king of the world",
+                "Here's looking at you kid"
+            ];
+            document.getElementById('phrasesInput').value = defaults.join('\n');
+            loadPhrases();
+        }
+
+        // Normalize text for matching
+        function normalizeText(text) {
+            return text.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+        }
+
+        // Calculate match percentage
+        function calculateMatch(guess, target) {
+            const guessWords = guess.split(/\s+/);
+            const targetWords = target.split(/\s+/);
+            let matches = 0;
+
+            for (const gWord of guessWords) {
+                for (const tWord of targetWords) {
+                    if (gWord === tWord) {
+                        matches++;
+                        break;
+                    }
+                }
+            }
+
+            return Math.floor((matches / Math.max(guessWords.length, targetWords.length)) * 100);
+        }
+
+        // Mask text
+        function maskText(text, percent) {
+            const chars = [...text];
+            const indices = [];
+
+            for (let i = 0; i < chars.length; i++) {
+                if (chars[i] !== ' ') indices.push(i);
+            }
+
+            const maskCount = Math.ceil(indices.length * (percent / 100));
+            
+            // Fisher-Yates shuffle
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+
+            for (let i = 0; i < maskCount && i < indices.length; i++) {
+                chars[indices[i]] = '*';
+            }
+
+            return chars.join('');
+        }
+
+        // Get next phrase
+        function getNextPhrase() {
+            if (gameState.phrases.length === 0) return null;
+            gameState.currentIndex = (gameState.currentIndex + 1) % gameState.phrases.length;
+            return gameState.phrases[gameState.currentIndex];
+        }
+
+        // Start new round
+        function startRound() {
+            const phrase = getNextPhrase();
+            if (!phrase) {
+                updateStatus('No phrases available!');
+                return;
+            }
+
+            gameState.currentPhrase = phrase;
+            gameState.normalizedPhrase = normalizeText(phrase);
+            gameState.maskPercent = config.initialMask;
+            gameState.winner = null;
+            gameState.roundStartTime = Date.now();
+
+            updateStatus(`Round ${gameState.currentIndex + 1} of ${gameState.phrases.length}`);
+            
+            revealPhrase();
+            gameState.revealTimer = setInterval(revealPhrase, config.revealInterval);
+        }
+
+        // Reveal more of the phrase
+        function revealPhrase() {
+            if (!gameState.isActive) return;
+
+            gameState.maskedPhrase = maskText(gameState.currentPhrase, gameState.maskPercent);
+            document.getElementById('phraseDisplay').textContent = gameState.maskedPhrase;
+            
+            sendResponse(`🎯 What's the phrase?: ${gameState.maskedPhrase}`);
+            
+            gameState.maskPercent = Math.max(0, gameState.maskPercent - config.maskReduction);
+            
+            if (gameState.maskPercent === 0 && !gameState.winner) {
+                endRound(null);
+            }
+        }
+
+        // End round
+        function endRound(winner) {
+            clearInterval(gameState.revealTimer);
+            
+            const display = document.getElementById('phraseDisplay');
+            display.textContent = gameState.currentPhrase;
+            
+            if (winner) {
+                display.classList.add('winner-announcement');
+                const timeElapsed = Math.floor((Date.now() - gameState.roundStartTime) / 1000);
+                sendResponse(`🎉 ${winner} wins! The phrase was: "${gameState.currentPhrase}" (Solved in ${timeElapsed}s)`);
+                updateStatus(`${winner} guessed correctly!`);
+            } else {
+                sendResponse(`⏰ Time's up! The phrase was: "${gameState.currentPhrase}"`);
+                updateStatus('Round ended - no winner');
+            }
+
+            setTimeout(() => {
+                display.classList.remove('winner-announcement');
+                if (gameState.isActive) {
+                    startRound();
+                }
+            }, 5000);
+        }
+
+        // Process incoming message
+        function processMessage(data) {
+            if (!gameState.isActive || gameState.winner) return;
+
+            const guess = normalizeText(data.chatmessage);
+            const match = calculateMatch(guess, gameState.normalizedPhrase);
+
+            addMessage(`[${data.chatname}] ${data.chatmessage} (${match}% match)`);
+
+            if (match >= config.matchThreshold) {
+                gameState.winner = data.chatname;
+                endRound(data.chatname);
+            } else if (match >= 50) {
+                // Give hints for close guesses
+                sendResponse(`@${data.chatname} is getting warm! (${match}% match)`);
+            }
+        }
+
+        // Control functions
+        function toggleGame() {
+            if (gameState.isActive) {
+                stopGame();
+            } else {
+                startGame();
+            }
+        }
+
+        function startGame() {
+            // Validate session ID
+            if (!demo && !sessionId) {
+                updateStatus('ERROR: Cannot start game without a session ID!');
+                return;
+            }
+
+            // Update config from UI
+            config.revealInterval = parseInt(document.getElementById('revealInterval').value) * 1000;
+            config.matchThreshold = parseInt(document.getElementById('matchThreshold').value);
+            config.initialMask = parseInt(document.getElementById('initialMask').value);
+            config.botName = document.getElementById('botName').value;
+
+            loadPhrases();
+            
+            if (gameState.phrases.length === 0) {
+                updateStatus('Please add some phrases first!');
+                return;
+            }
+
+            gameState.isActive = true;
+            gameState.currentIndex = -1;
+            document.getElementById('gameToggle').textContent = 'Stop Game';
+            
+            sendResponse('🎮 Phrase Guessing Game started! Get ready to guess the phrases!');
+            setTimeout(startRound, 2000);
+        }
+
+        function stopGame() {
+            gameState.isActive = false;
+            clearInterval(gameState.revealTimer);
+            document.getElementById('gameToggle').textContent = 'Start Game';
+            document.getElementById('phraseDisplay').textContent = 'Game stopped';
+            
+            sendResponse('🛑 Game stopped. Thanks for playing!');
+            updateStatus('Game stopped');
+        }
+
+        function skipPhrase() {
+            if (!gameState.isActive) return;
+            
+            clearInterval(gameState.revealTimer);
+            sendResponse(`⏭️ Skipping phrase. It was: "${gameState.currentPhrase}"`);
+            
+            setTimeout(startRound, 2000);
+        }
+
+        function resetGame() {
+            stopGame();
+            gameState.currentIndex = -1;
+            document.getElementById('phraseDisplay').textContent = 'Press "Start Game" to begin!';
+            updateStatus('Game reset');
+        }
+
+        // Demo mode simulation
+        function simulateDemo() {
+            if (!demo) return;
+            
+            const demoUsers = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve'];
+            
+            setInterval(() => {
+                if (!gameState.isActive || gameState.winner) return;
+
+                const user = demoUsers[Math.floor(Math.random() * demoUsers.length)];
+                const guessQuality = Math.random();
+                let message;
+
+                if (guessQuality > 0.95) {
+                    // Correct guess
+                    message = gameState.currentPhrase;
+                } else if (guessQuality > 0.7) {
+                    // Close guess
+                    const words = gameState.currentPhrase.split(' ');
+                    message = words.slice(0, Math.ceil(words.length * 0.6)).join(' ');
+                } else {
+                    // Random guess
+                    const randomGuesses = ['Is it something?', 'I dont know', 'hmm', '???', 'no idea'];
+                    message = randomGuesses[Math.floor(Math.random() * randomGuesses.length)];
+                }
+
+                processMessage({
+                    chatname: user,
+                    chatmessage: message,
+                    type: 'demo'
+                });
+            }, 3000);
+        }
+
+        // Load saved phrases on startup
+        window.onload = () => {
+            const savedPhrases = localStorage.getItem('ssnPhrases');
+            if (savedPhrases) {
+                document.getElementById('phrasesInput').value = savedPhrases;
+            }
+            
+            initializeUI();
+            
+            if (demo) {
+                simulateDemo();
+            }
+        };
+    </script>
+</body>
+</html>
