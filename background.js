@@ -9859,10 +9859,63 @@ let tmp = new EventFlowSystem({
 	checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
 });
 
+
 tmp.initPromise.then(() => {
 	window.eventFlowSystem = tmp;
 	console.log('[EventFlow Init] EventFlowSystem initialized successfully');
 	console.log('[EventFlow Init] sendMessageToTabs in system:', typeof tmp.sendMessageToTabs, tmp.sendMessageToTabs ? 'Function present' : 'Function missing');
+	
+	// Set up postMessage handler for cross-origin communication from event flow editor
+	// This allows the event flow editor iframe to communicate when in Electron app (ssapp)
+	const urlParams = new URLSearchParams(window.location.search);
+	if (urlParams.has('ssapp')) {
+		window.addEventListener('message', async function(event) {
+			// Handle event flow system requests
+			if (event.data && event.data.type === 'eventFlowRequest') {
+				try {
+					let response;
+					const { action, data } = event.data;
+					
+					// Handle different event flow actions
+					if (action === 'getEventFlowSystem') {
+						// Return whether eventFlowSystem is available
+						response = { available: !!window.eventFlowSystem };
+					} else if (window.eventFlowSystem) {
+						// Forward the action to eventFlowSystem if it exists
+						if (typeof window.eventFlowSystem[action] === 'function') {
+							response = await window.eventFlowSystem[action](data);
+						} else {
+							console.warn('Unknown event flow action:', action);
+							response = { error: 'Unknown action' };
+						}
+					} else {
+						response = { error: 'EventFlowSystem not available' };
+					}
+					
+					// Send response back to iframe
+					if (event.source) {
+						event.source.postMessage({
+							type: 'eventFlowResponse',
+							action: action,
+							data: response,
+							success: !response.error
+						}, event.origin);
+					}
+				} catch (error) {
+					console.error('Error handling event flow request:', error);
+					// Send error response
+					if (event.source) {
+						event.source.postMessage({
+							type: 'eventFlowResponse',
+							action: event.data.action,
+							error: error.message,
+							success: false
+						}, event.origin);
+					}
+				}
+			}
+		});
+	}
 }).catch(error => {
 	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });
