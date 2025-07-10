@@ -215,7 +215,7 @@ You can't handle the truth</textarea>
 
             <div class="config-item">
                 <label>Reveal Interval (seconds):</label>
-                <input type="number" id="revealInterval" min="5" max="60" value="10">
+                <input type="number" id="revealInterval" min="5" max="60" value="20">
             </div>
 
             <div class="config-item">
@@ -231,6 +231,14 @@ You can't handle the truth</textarea>
             <div class="config-item">
                 <label>Bot Name:</label>
                 <input type="text" id="botName" value="🎮 Phrase Bot">
+            </div>
+
+            <div class="config-item">
+                <label>Send messages to:</label>
+                <select id="sendMode">
+                    <option value="dock">Dock only (display in overlay)</option>
+                    <option value="chat">Chat sources (Twitch, YouTube, etc)</option>
+                </select>
             </div>
         </div>
 
@@ -250,11 +258,12 @@ You can't handle the truth</textarea>
         const demo = urlParams.has('demo');
         
         const config = {
-            revealInterval: 10000,
+            revealInterval: 20000,  // Changed to 20 seconds
             matchThreshold: 70,
             initialMask: 80,
             maskReduction: 10,
-            botName: '🎮 Phrase Bot'
+            botName: '🎮 Phrase Bot',
+            sendMode: 'dock'  // default to dock only
         };
 
         let gameState = {
@@ -274,12 +283,47 @@ You can't handle the truth</textarea>
         let iframe = null;
         let connectedPeers = {};
 
+        // Save settings to localStorage
+        function saveSettings() {
+            const settings = {
+                revealInterval: parseInt(document.getElementById('revealInterval').value),
+                matchThreshold: parseInt(document.getElementById('matchThreshold').value),
+                initialMask: parseInt(document.getElementById('initialMask').value),
+                botName: document.getElementById('botName').value,
+                sendMode: document.getElementById('sendMode').value
+            };
+            localStorage.setItem('ssnPhraseGameSettings', JSON.stringify(settings));
+        }
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('ssnPhraseGameSettings');
+            if (saved) {
+                try {
+                    const settings = JSON.parse(saved);
+                    // Update config with saved values
+                    config.revealInterval = (settings.revealInterval || 20) * 1000;
+                    config.matchThreshold = settings.matchThreshold || 70;
+                    config.initialMask = settings.initialMask || 80;
+                    config.botName = settings.botName || '🎮 Phrase Bot';
+                    config.sendMode = settings.sendMode || 'dock';
+                    
+                    // Update UI
+                    document.getElementById('revealInterval').value = settings.revealInterval || 20;
+                    document.getElementById('matchThreshold').value = settings.matchThreshold || 70;
+                    document.getElementById('initialMask').value = settings.initialMask || 80;
+                    document.getElementById('botName').value = settings.botName || '🎮 Phrase Bot';
+                    document.getElementById('sendMode').value = settings.sendMode || 'dock';
+                } catch (e) {
+                    console.error('Failed to load settings:', e);
+                }
+            }
+        }
+
         // Initialize UI
         function initializeUI() {
-            document.getElementById('revealInterval').value = config.revealInterval / 1000;
-            document.getElementById('matchThreshold').value = config.matchThreshold;
-            document.getElementById('initialMask').value = config.initialMask;
-            document.getElementById('botName').value = config.botName;
+            // Load saved settings first
+            loadSettings();
 
             if (demo) {
                 document.getElementById('demoIndicator').style.display = 'block';
@@ -295,6 +339,13 @@ You can't handle the truth</textarea>
                 updateStatus('Ready to start');
                 setupConnection();
             }
+
+            // Add change listeners to save settings automatically
+            document.getElementById('revealInterval').addEventListener('change', saveSettings);
+            document.getElementById('matchThreshold').addEventListener('change', saveSettings);
+            document.getElementById('initialMask').addEventListener('change', saveSettings);
+            document.getElementById('botName').addEventListener('change', saveSettings);
+            document.getElementById('sendMode').addEventListener('change', saveSettings);
         }
 
         // Setup connection (iframe or WebSocket)
@@ -312,7 +363,7 @@ You can't handle the truth</textarea>
         function setupIframe() {
             iframe = document.createElement("iframe");
             // Use push mode for bidirectional communication (like dock.html)
-            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&notmobile&label=phrasegame&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${sessionId}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${password}&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${sessionId}`;
             iframe.style.width = "0px";
             iframe.style.height = "0px";
             iframe.style.position = "fixed";
@@ -333,14 +384,21 @@ You can't handle the truth</textarea>
                 }
                 
                 // Track peer connections (like dock.html does)
-                if ("action" in e.data && e.data.UUID) {
-                    if (e.data.action === "push-connection-info") {
-                        if (e.data.value && e.data.value.label) {
-                            connectedPeers[e.data.UUID] = e.data.value.label;
-                        }
-                    } else if (e.data.action === "push-connection" && !e.data.value) {
-                        delete connectedPeers[e.data.UUID];
-                    }
+                if ("action" in e.data && e.data.UUID && "value" in e.data && !e.data.value && e.data.action === "push-connection") {
+                    delete connectedPeers[e.data.UUID];
+					
+				} else if ("action" in e.data && e.data.UUID && e.data.value && e.data.action === "push-connection-info") {
+                    connectedPeers[e.data.UUID] = e.data.value.label;
+					
+				} else if ("action" in e.data && e.data.UUID && e.data.value && e.data.action === "view-connection-info") {
+                    connectedPeers[e.data.UUID] = e.data.value.label;
+					
+                } else if ("action" in e.data && e.data.UUID && "value" in e.data && !e.data.value && e.data.action === "view-connection") {
+                    delete connectedPeers[e.data.UUID];
+					
+                } else if ("action" in e.data && e.data.UUID && "label" in e.data) {
+                    connectedPeers[e.data.UUID] = e.data.label;
+					
                 }
             });
 
@@ -405,39 +463,85 @@ You can't handle the truth</textarea>
                 return;
             }
 
-            const response = {
-                chatname: config.botName,
-                chatmessage: message,
-                type: 'bot',
-                timestamp: Date.now()
-            };
+            const sendMode = document.getElementById('sendMode').value;
 
             if (serverUrl && socketserver && socketserver.readyState === WebSocket.OPEN) {
-                // WebSocket mode - send as action
-                socketserver.send(JSON.stringify({
-                    action: 'sendChat',
-                    value: message
-                }));
-                addMessage(`[Bot sent] ${message}`);
+                // WebSocket mode - send as action based on mode
+                if (sendMode === 'chat') {
+                    // Send to chat sources (actual chat)
+                    socketserver.send(JSON.stringify({
+                        action: 'sendChat',
+                        value: message
+                    }));
+                    addMessage(`[Bot sent to chat] ${message}`);
+                } else {
+                    // Send to dock (display only)
+                    const response = {
+                        chatname: config.botName,
+                        chatmessage: message,
+                        type: 'bot',
+                        timestamp: Date.now()
+                    };
+                    socketserver.send(JSON.stringify({
+                        action: 'extContent',
+                        value: JSON.stringify(response)
+                    }));
+                    addMessage(`[Bot sent to dock] ${message}`);
+                }
             } else if (iframe && window.parent !== window) {
                 // We're embedded in an iframe - send to parent
+                const response = {
+                    chatname: config.botName,
+                    chatmessage: message,
+                    type: 'bot',
+                    timestamp: Date.now()
+                };
                 window.parent.postMessage({
                     overlay: 'phraseguess',
                     response: response
                 }, '*');
                 addMessage(`[Bot sent] ${message}`);
             } else if (iframe) {
-                // We're standalone - send through iframe to all connected peers
-                Object.keys(connectedPeers).forEach(UUID => {
-                    iframe.contentWindow.postMessage({
-                        sendData: {
-                            overlayNinja: response
-                        },
-                        type: "pcs",
-                        UUID: UUID
-                    }, '*');
-                });
-                addMessage(`[Bot sent] ${message}`);
+                // Send through iframe based on mode
+                if (sendMode === 'chat') {
+                    // Send to chat sources (like input.html does)
+                    const msg = {
+                        response: message  // Simple format for chat
+                    };
+                    
+                    // Send to SocialStream peers only
+                    Object.keys(connectedPeers).forEach(UUID => {
+                        if (connectedPeers[UUID] === "SocialStream") {
+                            iframe.contentWindow.postMessage({
+                                sendData: {
+                                    overlayNinja: msg
+                                },
+                                type: "rpcs",
+                                UUID: UUID
+                            }, '*');
+                        }
+                    });
+                    addMessage(`[Bot sent to chat] ${message}`);
+                } else {
+                    // Send to dock - full message format
+                    const response = {
+                        chatname: config.botName,
+                        chatmessage: message,
+                        type: 'bot',
+                        timestamp: Date.now()
+                    };
+                    
+                    Object.keys(connectedPeers).forEach(UUID => {
+                        iframe.contentWindow.postMessage({
+                            sendData: {
+                                overlayNinja: response
+                            },
+                            type: "pcs",
+                            UUID: UUID
+                        }, '*');
+                    });
+                    addMessage(`[Bot sent to dock] ${message}`);
+                }
             }
         }
 
@@ -647,11 +751,15 @@ You can't handle the truth</textarea>
                 return;
             }
 
-            // Update config from UI
+            // Update config from UI and save
             config.revealInterval = parseInt(document.getElementById('revealInterval').value) * 1000;
             config.matchThreshold = parseInt(document.getElementById('matchThreshold').value);
             config.initialMask = parseInt(document.getElementById('initialMask').value);
             config.botName = document.getElementById('botName').value;
+            config.sendMode = document.getElementById('sendMode').value;
+            
+            // Save current settings
+            saveSettings();
 
             loadPhrases();
             
