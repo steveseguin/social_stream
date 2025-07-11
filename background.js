@@ -34,6 +34,52 @@ var fetchNode = false;
 var postNode = false;
 var putNode = false;
 
+// Check if we're in a child iframe that needs cross-origin eventFlowSystem access
+if (window.parent !== window && urlParams.has('ssapp') && !window.eventFlowSystem) {
+	// Create a proxy eventFlowSystem that forwards calls to parent via postMessage
+	window.eventFlowSystem = new Proxy({}, {
+		get: function(target, prop) {
+			return function(...args) {
+				return new Promise((resolve, reject) => {
+					const messageId = Date.now() + '_' + Math.random();
+					const timeoutId = setTimeout(() => {
+						window.removeEventListener('message', handler);
+						reject(new Error('EventFlow request timeout'));
+					}, 5000); // 5 second timeout
+					
+					const handler = (event) => {
+						if (event.data && event.data.type === 'eventFlowResponse' && event.data.messageId === messageId) {
+							clearTimeout(timeoutId);
+							window.removeEventListener('message', handler);
+							if (event.data.success) {
+								resolve(event.data.data);
+							} else {
+								reject(new Error(event.data.error || 'Unknown error'));
+							}
+						}
+					};
+					
+					window.addEventListener('message', handler);
+					
+					try {
+						window.parent.postMessage({
+							type: 'eventFlowRequest',
+							action: prop,
+							data: args[0], // Assuming methods take at most one argument
+							messageId: messageId
+						}, '*');
+					} catch (error) {
+						clearTimeout(timeoutId);
+						window.removeEventListener('message', handler);
+						reject(error);
+					}
+				});
+			};
+		}
+	});
+	console.log('[EventFlow] Created cross-origin eventFlowSystem proxy');
+}
+
 var properties = ["streamID", "password", "state", "settings"];
 var streamID = false;
 var password = false;
@@ -9898,7 +9944,8 @@ tmp.initPromise.then(() => {
 							type: 'eventFlowResponse',
 							action: action,
 							data: response,
-							success: !response.error
+							success: !response.error,
+							messageId: event.data.messageId // Include messageId for response matching
 						}, event.origin);
 					}
 				} catch (error) {
@@ -9909,7 +9956,8 @@ tmp.initPromise.then(() => {
 							type: 'eventFlowResponse',
 							action: event.data.action,
 							error: error.message,
-							success: false
+							success: false,
+							messageId: event.data.messageId // Include messageId for response matching
 						}, event.origin);
 					}
 				}
