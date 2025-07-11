@@ -44,6 +44,10 @@ class EventFlowEditor {
 			{ id: 'customJs', name: 'Custom JavaScript' }
 		];
 
+        // Check if we're in ssapp context for cross-origin communication
+        const urlParams = new URLSearchParams(window.location.search);
+        this.isSSApp = urlParams.has('ssapp');
+        
         // Ensure logicNodeTypes is initialized HERE
         this.logicNodeTypes = [
             { id: 'AND', name: 'AND Gate', type: 'logic', logicType: 'AND' }, // Added type/logicType for consistency if needed elsewhere
@@ -454,6 +458,29 @@ class EventFlowEditor {
         return finalName;
     }
 
+    // Helper method to safely notify parent window about flow changes
+    notifyParentToReloadFlows() {
+        try {
+            if (this.isSSApp) {
+                // In SSApp context, use postMessage for cross-origin communication
+                console.log('[EventFlowEditor] Using postMessage to notify parent (SSApp mode)');
+                window.parent.postMessage({
+                    type: 'eventFlowRequest',
+                    action: 'reloadFlows',
+                    data: null
+                }, '*');
+            } else {
+                // In regular context, try direct access
+                if (window.parent && window.parent.eventFlowSystem && window.parent.eventFlowSystem !== this.eventFlowSystem) {
+                    console.log('[EventFlowEditor] Notifying parent window to reload flows');
+                    window.parent.eventFlowSystem.reloadFlows();
+                }
+            }
+        } catch (error) {
+            console.warn('[EventFlowEditor] Could not notify parent window:', error);
+            // This is expected in cross-origin situations, not a critical error
+        }
+    }
 
     async saveCurrentFlow() {
         if (!this.currentFlow) {
@@ -487,10 +514,7 @@ class EventFlowEditor {
             await this.loadFlowList(); // Refresh list
             
             // Notify background instance to reload flows
-            if (window.parent && window.parent.eventFlowSystem && window.parent.eventFlowSystem !== this.eventFlowSystem) {
-                console.log('[EventFlowEditor] Notifying parent window to reload flows after save');
-                window.parent.eventFlowSystem.reloadFlows();
-            }
+            this.notifyParentToReloadFlows();
             
             // Re-select the current flow in the list
             document.querySelectorAll('.flow-item').forEach(item => {
@@ -537,10 +561,7 @@ class EventFlowEditor {
            // alert('Flow deleted successfully.');
            
             // Notify background instance to reload flows
-            if (window.parent && window.parent.eventFlowSystem && window.parent.eventFlowSystem !== this.eventFlowSystem) {
-                console.log('[EventFlowEditor] Notifying parent window to reload flows');
-                window.parent.eventFlowSystem.reloadFlows();
-            }
+            this.notifyParentToReloadFlows();
         } catch (error) {
             console.error('Error deleting flow:', error);
             alert('Failed to delete flow. Check console for details.');
