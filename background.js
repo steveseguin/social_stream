@@ -34,52 +34,6 @@ var fetchNode = false;
 var postNode = false;
 var putNode = false;
 
-// Check if we're in a child iframe that needs cross-origin eventFlowSystem access
-if (window.parent !== window && urlParams.has('ssapp') && !window.eventFlowSystem) {
-	// Create a proxy eventFlowSystem that forwards calls to parent via postMessage
-	window.eventFlowSystem = new Proxy({}, {
-		get: function(target, prop) {
-			return function(...args) {
-				return new Promise((resolve, reject) => {
-					const messageId = Date.now() + '_' + Math.random();
-					const timeoutId = setTimeout(() => {
-						window.removeEventListener('message', handler);
-						reject(new Error('EventFlow request timeout'));
-					}, 5000); // 5 second timeout
-					
-					const handler = (event) => {
-						if (event.data && event.data.type === 'eventFlowResponse' && event.data.messageId === messageId) {
-							clearTimeout(timeoutId);
-							window.removeEventListener('message', handler);
-							if (event.data.success) {
-								resolve(event.data.data);
-							} else {
-								reject(new Error(event.data.error || 'Unknown error'));
-							}
-						}
-					};
-					
-					window.addEventListener('message', handler);
-					
-					try {
-						window.parent.postMessage({
-							type: 'eventFlowRequest',
-							action: prop,
-							data: args[0], // Assuming methods take at most one argument
-							messageId: messageId
-						}, '*');
-					} catch (error) {
-						clearTimeout(timeoutId);
-						window.removeEventListener('message', handler);
-						reject(error);
-					}
-				});
-			};
-		}
-	});
-	console.log('[EventFlow] Created cross-origin eventFlowSystem proxy');
-}
-
 var properties = ["streamID", "password", "state", "settings"];
 var streamID = false;
 var password = false;
@@ -9910,60 +9864,6 @@ tmp.initPromise.then(() => {
 	window.eventFlowSystem = tmp;
 	console.log('[EventFlow Init] EventFlowSystem initialized successfully');
 	console.log('[EventFlow Init] sendMessageToTabs in system:', typeof tmp.sendMessageToTabs, tmp.sendMessageToTabs ? 'Function present' : 'Function missing');
-	
-	// Set up postMessage handler for cross-origin communication from event flow editor
-	// This allows the event flow editor iframe to communicate when in Electron app (ssapp)
-	const urlParams = new URLSearchParams(window.location.search);
-	if (urlParams.has('ssapp')) {
-		window.addEventListener('message', async function(event) {
-			// Handle event flow system requests
-			if (event.data && event.data.type === 'eventFlowRequest') {
-				try {
-					let response;
-					const { action, data } = event.data;
-					
-					// Handle different event flow actions
-					if (action === 'getEventFlowSystem') {
-						// Return whether eventFlowSystem is available
-						response = { available: !!window.eventFlowSystem };
-					} else if (window.eventFlowSystem) {
-						// Forward the action to eventFlowSystem if it exists
-						if (typeof window.eventFlowSystem[action] === 'function') {
-							response = await window.eventFlowSystem[action](data);
-						} else {
-							console.warn('Unknown event flow action:', action);
-							response = { error: 'Unknown action' };
-						}
-					} else {
-						response = { error: 'EventFlowSystem not available' };
-					}
-					
-					// Send response back to iframe
-					if (event.source) {
-						event.source.postMessage({
-							type: 'eventFlowResponse',
-							action: action,
-							data: response,
-							success: !response.error,
-							messageId: event.data.messageId // Include messageId for response matching
-						}, event.origin);
-					}
-				} catch (error) {
-					console.error('Error handling event flow request:', error);
-					// Send error response
-					if (event.source) {
-						event.source.postMessage({
-							type: 'eventFlowResponse',
-							action: event.data.action,
-							error: error.message,
-							success: false,
-							messageId: event.data.messageId // Include messageId for response matching
-						}, event.origin);
-					}
-				}
-			}
-		});
-	}
 }).catch(error => {
 	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });
