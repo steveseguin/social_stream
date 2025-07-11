@@ -303,7 +303,8 @@ function setupReturnButton() {
 }
 // Main initialization function
 function initDashboard() {
-    if (new URLSearchParams(window.location.search).has('ssapp')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('ssapp')) {
         document.body.classList.add('ssapp');
     }
     document.getElementById("editorstyle").setAttribute("disabled", "true");
@@ -322,6 +323,14 @@ function initDashboard() {
 			}
 		}
 	});
+	
+	// Check if we should show the editor view initially
+	if (urlParams.get('view') === 'editor') {
+		// Show editor view initially
+		setTimeout(() => {
+			showEditorView();
+		}, 100);
+	}
 }
 
 if (document.readyState === "complete" || document.readyState === "interactive") {
