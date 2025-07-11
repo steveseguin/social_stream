@@ -1323,7 +1323,9 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "privatechatbot", path: "chatbot.html", style: "color:lightblue;" },
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "flowactions", path: "actions.html" },
-	{ id: "custom-gif-commands", path: "gif.html" }
+	{ id: "custom-gif-commands", path: "gif.html" },
+	{ id: "scoreboard", path: "scoreboard.html"}
+	
   ];
   
   // Process all standard pages
@@ -1773,7 +1775,7 @@ function update(response, sync = true) {
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
-                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink',
+                    'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -2202,6 +2204,7 @@ function getTargetMap() {
 		'poll': 16,
 		'eventsdashboard': 17,
 		'flowactions': 18,
+		'scoreboard': 20
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -3078,7 +3081,8 @@ function refreshLinks(){
       'creditslink': 'credits',
       'privatechatbotlink': 'privatechatbot',
       'eventsdashboardlink': 'eventsdashboard',
-      'custom-gif-commandslink': 'custom-gif-commands'
+      'custom-gif-commandslink': 'custom-gif-commands',
+	  'scoreboardlink': 'scoreboard'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
