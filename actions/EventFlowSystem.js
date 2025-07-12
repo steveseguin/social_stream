@@ -15,6 +15,8 @@ class EventFlowSystem {
         console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
         console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
         console.log('  - pointsSystem:', this.pointsSystem ? 'System provided' : 'NULL');
+        console.log('  - sanitizeRelay:', this.sanitizeRelay ? 'Function provided' : 'NULL - Relay will not work!');
+        console.log('  - checkExactDuplicateAlreadyRelayed:', this.checkExactDuplicateAlreadyRelayed ? 'Function provided' : 'NULL - Relay will not work!');
         
         this.initPromise = this.initDatabase();
     }
@@ -694,11 +696,19 @@ class EventFlowSystem {
                 console.log('[RELAY DEBUG - Action] sendMessageToTabs type:', typeof this.sendMessageToTabs);
                 
                 if (this.sendMessageToTabs && message && !message.reflection) {
+                    // Replace all possible template variables
+                    let processedTemplate = config.template;
+                    
+                    // Replace all occurrences of template variables
+                    processedTemplate = processedTemplate.replace(/\{source\}/g, message.type || '');
+                    processedTemplate = processedTemplate.replace(/\{type\}/g, message.type || '');
+                    processedTemplate = processedTemplate.replace(/\{username\}/g, message.chatname || '');
+                    processedTemplate = processedTemplate.replace(/\{chatname\}/g, message.chatname || '');
+                    processedTemplate = processedTemplate.replace(/\{message\}/g, message.chatmessage || '');
+                    processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                    
                     const relayMessage = {
-                        response: config.template
-                            .replace('{source}', message.type || '')
-                            .replace('{username}', message.chatname || '')
-                            .replace('{message}', message.chatmessage || '')
+                        response: processedTemplate
                     };
                     
                     if (message.tid) {

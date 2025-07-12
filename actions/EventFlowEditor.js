@@ -819,25 +819,36 @@ class EventFlowEditor {
 					this.displayTestResults(testResult);
 				});
 		} else {
-			// Create a standalone copy of the flow system just for testing this flow
-			const tempFlowSystem = {
-				flows: [testFlow],
-				processMessage: this.eventFlowSystem.processMessage.bind(this.eventFlowSystem),
-				evaluateFlow: this.eventFlowSystem.evaluateFlow.bind(this.eventFlowSystem),
-				evaluateTrigger: this.eventFlowSystem.evaluateTrigger.bind(this.eventFlowSystem),
-				evaluateSpecificLogicNode: this.eventFlowSystem.evaluateSpecificLogicNode.bind(this.eventFlowSystem),
-				executeAction: this.eventFlowSystem.executeAction.bind(this.eventFlowSystem)
-			};
+			// Just test the flow using the real eventFlowSystem with temporarily modified flows
+			// Save the current flows
+			const originalFlows = this.eventFlowSystem.flows;
+			
+			// Temporarily set just this flow for testing
+			this.eventFlowSystem.flows = [testFlow];
 			
 			// Process the message through just this flow
-			tempFlowSystem.evaluateFlow(testFlow, testMessage)
+			this.eventFlowSystem.evaluateFlow(testFlow, testMessage)
 				.then(result => {
+					// Restore the original flows
+					this.eventFlowSystem.flows = originalFlows;
+					
 					testResult = { 
 						success: true, 
 						message: result.blocked ? 'Message was blocked by this flow' : 
 								 result.modified ? 'Message was modified by this flow' : 
 								 'Flow triggered but no actions affected the message',
 						result: result 
+					};
+					this.displayTestResults(testResult);
+				})
+				.catch(error => {
+					// Restore the original flows even on error
+					this.eventFlowSystem.flows = originalFlows;
+					
+					testResult = {
+						success: false,
+						message: 'Error testing flow: ' + error.message,
+						error: error
 					};
 					this.displayTestResults(testResult);
 				});

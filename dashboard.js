@@ -223,7 +223,7 @@ function setupConsoleHook() {
     const originalError = console.error.bind(console);
     
     console.log = (...args) => {
-        // originalLog(...args);
+        originalLog(...args);
         const message = formatArguments(args);
         addLogMessage(message);
     };

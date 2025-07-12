@@ -8517,23 +8517,14 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		if (settings.firsttimers && data.chatname && data.type){
-			console.log("Checking first timer:", data.chatname, data.type, data.userid);
 			try {
 				let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
-				console.log("User exists:", exists);
 				if (!exists){
 					data.firsttime = true;
-					console.log("First timer marked:", data.chatname);
 				}
 			} catch (e) {
 				console.error("Error checking first timer:", e);
 			}
-		} else {
-			console.log("First timer check skipped:", {
-				setting: settings.firsttimers,
-				chatname: data.chatname,
-				type: data.type
-			});
 		}
 		
 		if (settings.joke && data.chatmessage && data.chatmessage.toLowerCase() === "!joke") {
@@ -9853,6 +9844,8 @@ window.sanitizeRelay = sanitizeRelay;
 window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
 
 console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
+console.log('[EventFlow Init] Checking sanitizeRelay function:', typeof window.sanitizeRelay);
+console.log('[EventFlow Init] Checking checkExactDuplicateAlreadyRelayed function:', typeof window.checkExactDuplicateAlreadyRelayed);
 
 let tmp = new EventFlowSystem({
 	sendMessageToTabs: window.sendMessageToTabs || null,
