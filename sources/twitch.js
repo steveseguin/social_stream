@@ -739,6 +739,7 @@
 			try {
 				if ("getSource" == request){sendResponse("twitch");	return;	}
 				if ("focusChat" == request) {
+					// console.log("FOCUS");
 					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
 						return;
 					}

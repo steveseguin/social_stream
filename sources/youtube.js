@@ -1317,7 +1317,7 @@
 								if (viewerCheckInterval) {
 									clearInterval(viewerCheckInterval);
 								}
-								viewerCheckInterval = setInterval(function(){checkViewers()}, 120000); // 2 minutes
+								viewerCheckInterval = setInterval(function(){checkViewers()}, 118000); // 1:58 seconds
 							}
 							// Fallback to scraping the YouTube page
 							return fetchViewerCountFromPage(videoId);
@@ -1364,7 +1364,7 @@
 					if (viewerCheckInterval) {
 						clearInterval(viewerCheckInterval);
 					}
-					viewerCheckInterval = setInterval(function(){checkViewers()}, 120000); // 2 minutes
+					viewerCheckInterval = setInterval(function(){checkViewers()}, 118000); // 1:58 minutes
 				}
 				// Try fallback method on any error
 				fetchViewerCountFromPage(videoId);
