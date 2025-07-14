@@ -2997,6 +2997,10 @@
 			}
 
 			var highlightSpecial = true;
+			
+			if (urlParams.has("noquestionhightlight")) {
+				highlightSpecial = false;
+			}
 
 			var highlightDonos = true;
 			if (urlParams.has("nodonohighlight")) {
