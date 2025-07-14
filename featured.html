@@ -2372,6 +2372,9 @@
 								if (volume) {
 									audio.volume = volume;
 								}
+								if (!audioContext) {
+									initAudioContext();
+								}
 								if (audioContext.state === 'suspended') {
 									await audioContext.resume();
 								}
@@ -2441,6 +2444,9 @@
 						if (volume) {
 							audio.volume = volume;
 						}
+						if (!audioContext) {
+							initAudioContext();
+						}
 						if (audioContext.state === 'suspended') {
 							await audioContext.resume();
 						}
@@ -2487,6 +2493,9 @@
 						audio.src = blobUrl;
 						if (volume) {
 							audio.volume = volume;
+						}
+						if (!audioContext) {
+							initAudioContext();
 						}
 						if (audioContext.state === 'suspended') {
 							await audioContext.resume();
