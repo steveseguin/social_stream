@@ -181,7 +181,11 @@
 				}
 				try {
 					if (!name){
-						name = getAllContentNodes(ele.querySelector("[id^='message-username-'] [class^='username']"), true).trim();
+						let ntt = ele.querySelector("[id^='message-username-'] [class^='username']");
+						if (ntt){
+							name = getAllContentNodes(ntt, true).trim();
+							nameColor = ntt?.style?.color || "";
+						}
 					}
 				} catch(e){
 				}
@@ -208,6 +212,9 @@
 		data.textColor = "";
 		if (bot){
 			data.bot = true;
+		}
+		if (!name){
+			data.event = true;
 		}
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
