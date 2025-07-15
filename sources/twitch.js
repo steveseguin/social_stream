@@ -444,6 +444,10 @@
 			}
 		} catch (e) {}
 		
+		let crossChatChannelIcon = ele.querySelector(".tw-image-avatar[src]");
+		if (crossChatChannelIcon){
+			crossChatChannelIcon = crossChatChannelIcon.src;
+		}
 
 		var contentimg = ele.querySelector("img[src].chat-line__message--emote-gigantified") || "";
 		
@@ -551,8 +555,6 @@
 				return;
 			}
 		}
-		
-		
 
 		try {
 			if (!donations) {
@@ -720,6 +722,10 @@
 		if (crossChat){
 			data.sourceImg = crossChat;
 		}
+		if (crossChatChannelIcon){
+			data.sourceImg = crossChatChannelIcon;
+		}
+		
 		if (data.hasDonation){
 			data.title = getTranslation("cheers", "CHEERS");
 		}
