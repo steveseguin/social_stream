@@ -1210,7 +1210,7 @@ class EventFlowEditor {
   'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
   'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
    'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
-  'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtube_comments', 'zapstream', 'zoom',
+  'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
    + s.slice(1).replace(/_/g, ' ')}</option>`).join('')}
 						 </select></div>`;
