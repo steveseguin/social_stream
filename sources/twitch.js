@@ -354,6 +354,8 @@
 		var subscriber = "";
 		var subtitle = "";
 		var eventtype = ""; 
+		var crossChat = "";
+		
 		try {
 			ele.querySelectorAll(SELECTORS.chatBadges).forEach(badge => {
 				if (badge.alt && badge.alt.includes("Subscriber")){
@@ -385,6 +387,13 @@
 				   subscriber = "購読者";
 				} else if (badge.alt && badge.alt.includes("구독자")){
 				   subscriber = "구독자";
+				}
+				
+				if (badge.alt && badge.alt.includes(", ")){
+					let name11 = badge.alt.split(", ").pop();
+					if (name11){
+						crossChat = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(name11);
+					}
 				}
 				
 				if (badge.srcset) {
@@ -435,6 +444,10 @@
 			}
 		} catch (e) {}
 		
+		let crossChatChannelIcon = ele.querySelector(".tw-image-avatar[src]");
+		if (crossChatChannelIcon){
+			crossChatChannelIcon = crossChatChannelIcon.src;
+		}
 
 		var contentimg = ele.querySelector("img[src].chat-line__message--emote-gigantified") || "";
 		
@@ -542,8 +555,6 @@
 				return;
 			}
 		}
-		
-		
 
 		try {
 			if (!donations) {
@@ -708,6 +719,13 @@
 		if (brandedImageURL) {
 			data.sourceImg = brandedImageURL;
 		}
+		if (crossChat){
+			data.sourceImg = crossChat;
+		}
+		if (crossChatChannelIcon){
+			data.sourceImg = crossChatChannelIcon;
+		}
+		
 		if (data.hasDonation){
 			data.title = getTranslation("cheers", "CHEERS");
 		}
