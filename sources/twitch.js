@@ -431,7 +431,7 @@
 					chatbadges.push(bage);
 				} */
 			});
-		} catch (e) {console.log(e);}
+		} catch (e) {}
 		
 		if (settings.memberchatonly && !subscriber){
 			return;
