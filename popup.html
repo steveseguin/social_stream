@@ -2228,13 +2228,15 @@ body.ssapp .wrapper.ssapp h3 {
 									<span class="slider round"></span>
 								</label>
 								<select id="elevenlabsmodelSelect" data-optionparam1="elevenlabsmodel">
-									<option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
-									<option value="eleven_turbo_v2_5">eleven_turbo_v2_5</option>
-									<option value="eleven_turbo_v2">eleven_turbo_v2</option>
-									<option value="eleven_english_sts_v2">eleven_english_sts_v2</option>
-									<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2</option>
-									<option value="eleven_monolingual_v1">eleven_monolingual_v1</option>
-									<option value="eleven_multilingual_v1">eleven_multilingual_v1</option>
+									<option value="eleven_flash_v2_5">eleven_flash_v2_5 (Fastest, 32 languages)</option>
+									<option value="eleven_flash_v2">eleven_flash_v2 (Fast, English only)</option>
+									<option value="eleven_turbo_v2_5">eleven_turbo_v2_5 (Fast, 32 languages)</option>
+									<option value="eleven_turbo_v2">eleven_turbo_v2 (Fast, English only)</option>
+									<option value="eleven_multilingual_v2" selected>eleven_multilingual_v2 (High quality)</option>
+									<option value="eleven_english_sts_v2">eleven_english_sts_v2 (Speech-to-Speech)</option>
+									<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2 (Speech-to-Speech)</option>
+									<option value="eleven_monolingual_v1">eleven_monolingual_v1 (Legacy)</option>
+									<option value="eleven_multilingual_v1">eleven_multilingual_v1 (Legacy)</option>
 								</select>
 							</div>
 							<!-- Voice Settings -->
@@ -3519,14 +3521,17 @@ body.ssapp .wrapper.ssapp h3 {
                 </div>
             </div>
 			
-			 <div class="wrapper">
-                <div class="collapsible">
-                    <input type="checkbox" class="collapsible-input" id="wrapper-featured-tts-options" />
-                    <label class="collapsible-label" for="wrapper-featured-tts-options">🗣️ <span data-translate="text-to-speech">Text to Speech</span></label>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-featured-tts-options" />
+					<label class="collapsible-label" for="wrapper-featured-tts-options">
+						<span data-translate="message---tts">💬 Message — 🗣️ Text to Speech</span>
+					</label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group single_message">
-
+                                <!-- Main TTS Toggle -->
+                                <h4 data-translate="enable-tts-featured">Enable Text to Speech in Featured Chat</h4>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="speech" />
@@ -3534,13 +3539,13 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="enable-text-to-speech">🗣️ Enable text-to-speech </span>									  
                                 </div>
-								<br />
-								<i>note: the free built-in TTS plays out via the default audio device. <a target="_blank" class="lightblue"  href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
-								<br />
-								<br />
-                                <div>
-                                    <select id="languageSelect2" data-optionparam2="lang" data-del2="lang,voice" title="Select the default text to speech language"> </select>
-                                </div>
+                            </div>
+                            
+                            <i><a class="lightblue" target="_blank" href="https://socialstream.ninja/docs/tts">Check out the TTS help guide here!</a></i>
+                            
+                            <!-- Global TTS Behavior Options -->
+                            <div class="options_group tts-behavior-options">
+                                <h4 data-translate="tts-filters">TTS Filters</h4>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="ttsdonos" />
@@ -3562,6 +3567,10 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="enable-text-to-speech-for-clicked-only">🗣️🖱️ Enable text-to-speech for clicked messages only </span>
                                 </div>
+                            </div>
+                            
+                            <div class="options_group tts-behavior-options">
+                                <h4 data-translate="tts-more-options">More TTS options</h4>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="simpletts" />
@@ -3583,67 +3592,165 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link". </span>
                                 </div>
-                                <div>
+                                <div title="The volume has a max of 1.0 (100%)">
                                     <label class="switch">
-                                        <input type="checkbox" data-param2="rate" />
+                                        <input type="checkbox" data-param2="volume" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="custom-tts-rate">
-                                        ⏩ Custom speaking rate for the TTS
-                                        <input type="number" style="max-width: 6ch;" step="0.01" max="10" min="0.1" value="1.0" size="5" data-numbersetting2="rate" />
+                                    <span data-translate="system-tts-volume">
+                                        🔉 Volume of speech
+                                        <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting2="volume" />
                                     </span>
                                 </div>
-
-								<br />
-								<!-- Google TTS Options -->
-								<div class="tts-provider-options">
-									<h4>Google TTS Options</h4>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="googleAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam2="ttskey" />
-										<label for="googleAPIKey"><span data-translate="google-api-key">Google API Key</span></label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="googleVoiceName2" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam2="voicegoogle" />
-										<label for="googleVoiceName"><span data-translate="google-voice-name">Google Voice Name</span></label>
-									</div>
-								</div>
-								<br />
-								<!-- ElevenLabs TTS Options -->
-								<div class="tts-provider-options">
-									<h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="elevenLabsKey2" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam2="elevenlabskey" />
-										<label for="elevenLabsKey"><span data-translate="elevenlabs-api-key">ElevenLabs API Key</span></label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="elevenLabsVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam2="voice11" />
-										<label for="elevenLabsVoiceID"><span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span></label>
-									</div>
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param2="latency" />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="elevenlabs-latency">
-											🚀 ElevenLabs Latency Optimization
-											<input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="0" size="5" data-numbersetting2="latency" />
-										</span>
-									</div>
-								</div>
-								<br />
-								<!-- Speechify TTS Options -->
-								<div class="tts-provider-options">
-									<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="password" id="speechifyAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam2="speechifykey" />
-										<label for="speechifyAPIKey"><span data-translate="speechify-api-key">Speechify API Key</span></label>
-									</div>
-									<div class="textInputContainer" style="width: 95%;">
-										<input type="text" id="speechifyVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam2="voicespeechify" />
-										<label for="speechifyVoiceID"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
-									</div>
-								</div>
                             </div>
+                        </div>
+                        
+                        <!-- TTS Provider Selection -->
+                        <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
+                            <h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
+                            <select id="ttsProvider2" data-optionparam2="ttsprovider" data-optionsetting2="ttsProvider" class="textInput">
+                                <option selected value="system">System TTS</option>
+                                <option value="kokoro">Kokoro (webGPU/CPU)</option>
+                                <option value="elevenlabs">ElevenLabs</option>
+                                <option value="google">Google Cloud</option>
+                                <option value="speechify">Speechify</option>
+                                <option value="piper">Piper TTS</option>
+                                <option value="espeak">eSpeak TTS</option>
+                            </select>
+                        </div>
+                        
+                        <!-- System TTS Options -->
+                        <div class="tts-provider-options options_group" id="systemTTS2">
+                            <h4 data-translate="tts-system-options">Built-in System TTS Options</h4>
+                            <i>note: the free built-in TTS plays out via the default audio device. <a class="lightblue" target="_blank" href="https://docs.vdo.ninja/guides/windows-tts-audio-capture-methods-for-obs">[LEARN MORE HERE]</a></i>
+                            <br /><br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="lang" data-del2="lang,voice"/>
+                                    <span class="slider round"></span>
+                                </label>
+                                <select id="languageSelect2" data-optionparam2="lang" data-del2="lang,voice" title="Select the default text to speech language"></select>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="pitch" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="pitch">📯 Pitch:
+                                    <input type="number" style="max-width: 6ch;" step="0.01" max="2" min="0" value="1.0" size="5" data-numbersetting2="pitch" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="rate" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="custom-tts-rate">
+                                    ⏩ Custom speaking rate for the TTS
+                                    <input type="number" style="max-width: 6ch;" step="0.01" max="10" min="0.1" value="1.0" size="5" data-numbersetting2="rate" />
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Kokoro TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="kokoroTTS2">
+                            <h4 data-translate="tts-kokoro-options">Kokoro TTS Options</h4>
+                            <i>note: this free locally-running TTS needs a powerful computer to run well.</i>
+                            <br /><br />
+                            <div>
+                                🎭 Voice to use: 
+                                <select id="kokoroVoiceSelect2" data-optionparam2="voicekokoro" title="Select the Kokoro TTS Voice">
+                                    <option value="af_bella">af_bella</option>
+                                    <option value="af_nicole">af_nicole</option>
+                                    <option value="af_sarah">af_sarah</option>
+                                    <option value="af_sky">af_sky</option>
+                                    <option value="am_adam">am_adam</option>
+                                    <option value="am_michael">am_michael</option>
+                                    <option value="bf_emma">bf_emma</option>
+                                    <option value="bf_isabella">bf_isabella</option>
+                                    <option value="bm_george">bm_george</option>
+                                    <option value="bm_lewis">bm_lewis</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- ElevenLabs TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="elevenlabsTTS2">
+                            <h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="elevenLabsKey2" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-translate="placeholder-elevenlabs-api" data-textparam2="elevenlabskey" />
+                                <label for="elevenLabsKey2"><span data-translate="elevenlabs-api-key">ElevenLabs API Key</span></label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="text" id="elevenLabsVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam2="voice11" />
+                                <label for="elevenLabsVoiceID2"><span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span></label>
+                            </div>
+                            <!-- Model Selection -->
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="elevenlabsmodel" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <select id="elevenlabsmodelSelect2" data-optionparam2="elevenlabsmodel">
+                                    <option value="eleven_flash_v2_5">eleven_flash_v2_5 (Fastest, 32 languages)</option>
+                                    <option value="eleven_flash_v2">eleven_flash_v2 (Fast, English only)</option>
+                                    <option value="eleven_turbo_v2_5">eleven_turbo_v2_5 (Fast, 32 languages)</option>
+                                    <option value="eleven_turbo_v2">eleven_turbo_v2 (Fast, English only)</option>
+                                    <option value="eleven_multilingual_v2" selected>eleven_multilingual_v2 (High quality)</option>
+                                    <option value="eleven_english_sts_v2">eleven_english_sts_v2 (Speech-to-Speech)</option>
+                                    <option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2 (Speech-to-Speech)</option>
+                                    <option value="eleven_monolingual_v1">eleven_monolingual_v1 (Legacy)</option>
+                                    <option value="eleven_multilingual_v1">eleven_multilingual_v1 (Legacy)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="latency" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="elevenlabs-latency">
+                                    🚀 ElevenLabs Latency Optimization
+                                    <input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="0" size="5" data-numbersetting2="latency" />
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Google Cloud TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="googleTTS2">
+                            <h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="googleAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam2="ttskey" />
+                                <label for="googleAPIKey2"><span data-translate="google-api-key">Google API Key</span></label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="text" id="googleVoiceName2" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam2="voicegoogle" />
+                                <label for="googleVoiceName2"><span data-translate="google-voice-name">Google Voice Name</span></label>
+                            </div>
+                        </div>
+                        
+                        <!-- Speechify TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="speechifyTTS2">
+                            <h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="speechifyAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam2="speechifykey" />
+                                <label for="speechifyAPIKey2"><span data-translate="speechify-api-key">Speechify API Key</span></label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="text" id="speechifyVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam2="voicespeechify" />
+                                <label for="speechifyVoiceID2"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+                            </div>
+                        </div>
+                        
+                        <!-- Piper TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="piperTTS2">
+                            <h4 data-translate="tts-piper-options">Piper TTS Options</h4>
+                            <i>Note: Piper requires a local installation</i>
+                        </div>
+                        
+                        <!-- eSpeak TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="espeakTTS2">
+                            <h4 data-translate="tts-espeak-options">eSpeak TTS Options</h4>
+                            <i>Note: eSpeak runs locally in your browser</i>
                         </div>
                     </div>
                 </div>
@@ -4485,13 +4592,15 @@ body.ssapp .wrapper.ssapp h3 {
 									<span class="slider round"></span>
 								</label>
 								<select id="elevenlabsmodelSelect10" data-optionparam10="elevenlabsmodel">
-									<option value="eleven_multilingual_v2">eleven_multilingual_v2</option>
-									<option value="eleven_turbo_v2_5">eleven_turbo_v2_5</option>
-									<option value="eleven_turbo_v2">eleven_turbo_v2</option>
-									<option value="eleven_english_sts_v2">eleven_english_sts_v2</option>
-									<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2</option>
-									<option value="eleven_monolingual_v1">eleven_monolingual_v1</option>
-									<option value="eleven_multilingual_v1">eleven_multilingual_v1</option>
+									<option value="eleven_flash_v2_5">eleven_flash_v2_5 (Fastest, 32 languages)</option>
+									<option value="eleven_flash_v2">eleven_flash_v2 (Fast, English only)</option>
+									<option value="eleven_turbo_v2_5">eleven_turbo_v2_5 (Fast, 32 languages)</option>
+									<option value="eleven_turbo_v2">eleven_turbo_v2 (Fast, English only)</option>
+									<option value="eleven_multilingual_v2" selected>eleven_multilingual_v2 (High quality)</option>
+									<option value="eleven_english_sts_v2">eleven_english_sts_v2 (Speech-to-Speech)</option>
+									<option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2 (Speech-to-Speech)</option>
+									<option value="eleven_monolingual_v1">eleven_monolingual_v1 (Legacy)</option>
+									<option value="eleven_multilingual_v1">eleven_multilingual_v1 (Legacy)</option>
 								</select>
 							</div>
 							<!-- Voice Settings -->

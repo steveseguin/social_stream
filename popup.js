@@ -1420,6 +1420,20 @@ function setupTtsProviders(response) {
         response.settings.ttsProvider.optionsetting = ttsService;
     }
     
+    // Handle featured TTS provider (for param2)
+    if (!response.settings?.ttsProvider?.optionsetting2) {
+        let ttsService = "system";
+        if (response.settings?.ttskey?.textparam2) ttsService = "google";
+        else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
+        else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
+        else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
+        
+        if (!response.settings.ttsProvider) {
+            response.settings.ttsProvider = {};
+        }
+        response.settings.ttsProvider.optionsetting2 = ttsService;
+    }
+    
     // Handle secondary TTS provider (for param10)
     if (!response.settings?.ttsProvider?.optionsetting10) {
         let ttsService = "system";
@@ -1497,7 +1511,9 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 ele.value = storedValue;
                 updateSettings(ele, sync);
 
-                if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
+                if (key == "ttsprovider" && paramNum == 2) { 
+                    handleTTSProvider2Visibility(ele.value); 
+                } else if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
                     handleTTSProvider10Visibility(ele.value); 
                 }
 
@@ -1640,6 +1656,17 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 					wrapper.style.display = 'none';
 				});
 			 }
+        }
+    }
+
+    if ("optionsetting2" in settingObj) {
+        const ele = document.querySelector(`select[data-optionsetting2='${key}']`);
+        if (ele) {
+            ele.value = settingObj.optionsetting2;
+            updateSettings(ele, sync);
+            if (key == "ttsProvider") {
+                handleTTSProvider2Visibility(ele.value);
+            }
         }
     }
 
@@ -1943,6 +1970,31 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS10").classList.remove("hidden");
+    }
+}
+
+// Handle featured TTS provider visibility (param2)
+function handleTTSProvider2Visibility(provider) {
+    // Hide all TTS2 elements
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+        document.getElementById(id)?.classList.add("hidden");
+    });
+    
+    // Show element based on selected provider
+    if (provider == "system") {
+        document.getElementById("systemTTS2").classList.remove("hidden");
+    } else if (provider == "elevenlabs") {
+        document.getElementById("elevenlabsTTS2").classList.remove("hidden");
+    } else if (provider == "google") {
+        document.getElementById("googleTTS2").classList.remove("hidden");
+    } else if (provider == "speechify") {
+        document.getElementById("speechifyTTS2").classList.remove("hidden");
+    } else if (provider == "kokoro") {
+        document.getElementById("kokoroTTS2").classList.remove("hidden");
+    } else if (provider == "piper") {
+        document.getElementById("piperTTS2").classList.remove("hidden");
+    } else if (provider == "espeak") {
+        document.getElementById("espeakTTS2").classList.remove("hidden");
     }
 }
 
@@ -2761,10 +2813,10 @@ function handleOptionSetting(ele, sync) {
     // Handle TTS Provider settings
     if (settingValue === "ttsProvider") {
 		
-        const suffix = settingType === 'optionsetting10' ? '10' : '';
+        const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, 
-            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`
+            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -3094,14 +3146,6 @@ function refreshLinks(){
       const divElement = document.getElementById(divId);
 
       if (linkElement && divElement && typeof divElement.raw === 'string' && (divElement.raw.startsWith('http') || divElement.raw.startsWith('file://'))) {
-        // Skip TTS parameter cleaning for featured.html (overlay) since it uses a different TTS detection method
-        if (linkId === 'overlaylink') {
-          // Just update the display without cleaning TTS params
-          linkElement.href = divElement.raw;
-          linkElement.innerText = currentHideLinks ? "Click to open link" : divElement.raw;
-          return;
-        }
-        
         const urlToClean = divElement.raw; // Use .raw as the source of truth
         const cleanedUrl = removeTTSProviderParams(urlToClean);
 

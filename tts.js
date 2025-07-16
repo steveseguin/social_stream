@@ -135,7 +135,7 @@ TTS.elevenLabsSettings = {
     speakerBoost: false,
     voiceName: false,
     speakingRate: 1.0,
-    model: "eleven_multilingual_v2"
+    model: "eleven_flash_v2_5" // Default to fastest model for streaming
 };
 
 TTS.speechifySettings = {
@@ -198,6 +198,8 @@ TTS.readDonos = false;
 TTS.disableTTS = false;
 TTS.ttsSources = false;
 TTS.ttsQuick = false;
+TTS.newmembertts = false;
+TTS.ttsclicked = false;
 
 /**
  * Check if the browser is Safari
@@ -483,6 +485,14 @@ TTS.configure = function(urlParams) {
         TTS.readDonos  = urlParams.get("ttsdonos").trim() || "en-US";;
     }
 	
+	if (urlParams.has("ttsnewmembers")) {
+		TTS.newmembertts = urlParams.get("ttsnewmembers") || "en-US";
+	}
+	
+	if (urlParams.has("ttsclicked")) {
+		TTS.ttsclicked = urlParams.get("ttsclicked") || "en-US";
+	}
+	
     // API Keys
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
@@ -572,7 +582,7 @@ TTS.configure = function(urlParams) {
     TTS.elevenLabsSettings.speakingRate = urlParams.has("elevenrate") ? parseFloat(urlParams.get("elevenrate")) || 1.0 : 1.0;
     TTS.elevenLabsSettings.speakerBoost = urlParams.has("elevenspeakerboost");
     TTS.elevenLabsSettings.voiceName = urlParams.get("voice11") || urlParams.get("elevenlabsvoice") || false;
-    TTS.elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_multilingual_v2";
+    TTS.elevenLabsSettings.model = urlParams.get("elevenlabsmodel") || "eleven_flash_v2_5";
 
     // Speechify settings
     TTS.speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : TTS.rate;
@@ -580,7 +590,7 @@ TTS.configure = function(urlParams) {
     TTS.speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
 
     // Enable speech if specified
-    if (urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
+    if (TTS.readDonos || TTS.newmembertts || TTS.ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
         if (document.getElementById("tts")) {
             document.getElementById("tts").dataset.state = 1;
             document.getElementById("tts").classList.remove("hidden");
@@ -588,7 +598,7 @@ TTS.configure = function(urlParams) {
             document.getElementById("tts").title = "Text-to-speech — 🔊⏹ Stop reading incoming messages out-loud with text-to-speech";
         }
         TTS.speech = true;
-        TTS.speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || TTS.speechLang;
+        TTS.speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || TTS.readDonos || TTS.newmembertts || TTS.ttsclicked || TTS.speechLang;
 
         if (TTS.speechLang.split("-")[0].toLowerCase() == "en") {
             TTS.English = true;
@@ -627,6 +637,10 @@ TTS.configure = function(urlParams) {
 	
     if (urlParams.has("neurosync")) {
         TTS.neuroSyncEnabled = true;
+    }
+
+    if (urlParams.has("beepwords")) {
+        TTS.beepwords = true;
     }
 
     if (urlParams.has("bottts")) {
@@ -1178,10 +1192,21 @@ TTS.speechMeta = function(data, allow = false) {
         return;
     }
     
-    if (TTS.readDonos && !(data.hasDonation || data.donation)) {
+    // Handle multiple TTS filters
+    if (!(TTS.newmembertts || TTS.ttsclicked) && TTS.readDonos && !(data.hasDonation || data.donation)) {
         //console.log("Filter: Only donations allowed and this is not a donation");
         return;
     }
+	
+	if (TTS.newmembertts && (!data.event || data.event !== "newmember")) {
+		//console.log("Filter: Only new member events allowed");
+		return;
+	}
+	
+	if (TTS.ttsclicked && !data.clicked) {
+		//console.log("Filter: Only clicked messages allowed");
+		return;
+	}
 
     if (TTS.doNotReadEvents && data.event) {
         //console.log("Filter: Events not allowed and this is an event");

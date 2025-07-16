@@ -6241,10 +6241,6 @@ function processHype(data) { // data here should be a chat message
 
     // Handle viewer count updates separately
     if (data.event === 'viewer_update' && data.meta) {
-        // Apply pump the numbers if enabled for individual updates
-        if (settings.pumpTheNumbers) {
-            data.meta = Math.round(parseInt(data.meta) * 1.75) || 0;
-        }
         updateViewerCount(data); // This updates viewers and sends combined data via its own path
         return; // Return here so it doesn't process as a chatter
     }
