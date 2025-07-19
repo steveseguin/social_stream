@@ -25,9 +25,84 @@ var isExtensionOn = false;
 var ssapp = false;
 var USERNAMES = [];
 var WebMidi = null;
+var webMidiInitialized = false;
+var webMidiScriptLoaded = false;
 
 function log(msg,a,b){
 	console.log(msg,a,b);
+}
+
+// MIDI-related functions
+async function loadWebMidiScript(callback) {
+	const script = document.createElement("script");
+	script.type = "text/javascript";
+	script.src = "./thirdparty/webmidi3.js";
+	script.onload = callback; // Run the callback once the script loads
+	script.onerror = () => {
+		console.error("Failed to load WebMidi script.");
+	};
+	document.body.appendChild(script);
+}
+
+async function initializeMIDIDropdown() {
+	try {
+		await WebMidi.enable();
+		console.log("WebMidi enabled!");
+		webMidiInitialized = true;
+		
+		// Initial population of all MIDI selects
+		updateAllMidiSelects();
+		
+		// Handle device changes
+		WebMidi.addListener("connected", updateAllMidiSelects);
+		WebMidi.addListener("disconnected", updateAllMidiSelects);
+		
+	} catch(e) {
+		console.log("Failed to initialize WebMidi:", e);
+	}
+}
+
+async function disableWebMidi() {
+	if (webMidiInitialized && WebMidi) {
+		try {
+			console.log("Disabling WebMidi...");
+			
+			// Remove listeners
+			WebMidi.removeListener("connected");
+			WebMidi.removeListener("disconnected");
+			
+			// Disable WebMidi to release all MIDI devices
+			await WebMidi.disable();
+			webMidiInitialized = false;
+			
+			// Clear all MIDI device selects
+			document.querySelectorAll("select[data-optionsetting^='mididevice']").forEach(select => {
+				select.innerHTML = '<option value="">MIDI disabled</option>';
+			});
+			
+			console.log("WebMidi disabled successfully");
+		} catch (e) {
+			console.error("Failed to disable WebMidi:", e);
+		}
+	}
+}
+
+async function handleMidiToggle(enabled) {
+	if (enabled) {
+		if (!webMidiScriptLoaded) {
+			// Load WebMidi script first
+			loadWebMidiScript(async () => {
+				webMidiScriptLoaded = true;
+				await initializeMIDIDropdown();
+			});
+		} else if (!webMidiInitialized) {
+			// Script already loaded, just initialize
+			await initializeMIDIDropdown();
+		}
+	} else {
+		// Disable WebMidi to release devices
+		await disableWebMidi();
+	}
 }
 
 if (typeof(chrome.runtime)=='undefined'){
@@ -2685,6 +2760,11 @@ function handleSetting(ele, sync) {
         refreshLinks();
     }
     
+    // Handle MIDI toggle
+    if (ele.dataset.setting === "midi") {
+        handleMidiToggle(ele.checked);
+    }
+    
     if (sync) {
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
@@ -5254,44 +5334,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		document.body.classList.add("hidelinks");
 	} 
 	
-	// Function to dynamically load the WebMidi script
-    async function loadWebMidiScript(callback) {
-        const script = document.createElement("script");
-        script.type = "text/javascript";
-        script.src = "./thirdparty/webmidi3.js";
-        script.onload = callback; // Run the callback once the script loads
-        script.onerror = () => {
-            console.error("Failed to load WebMidi script.");
-        };
-        document.body.appendChild(script);
-    }
-    // Function to initialize the MIDI dropdown logic
-    async function initializeMIDIDropdown() {
-	  try {
-		await WebMidi.enable();
-		console.log("WebMidi enabled!");
-		
-		// Initial population of all MIDI selects
-		updateAllMidiSelects();
-		
-		// Handle device changes
-		WebMidi.addListener("connected", updateAllMidiSelects);
-		WebMidi.addListener("disconnected", updateAllMidiSelects);
-		
-	  } catch(e) {
-		console.log("Failed to initialize WebMidi:", e);
-	  }
-	}
 	
 	
 	document.body.classList.add('loaded');
 
-    // Dynamically load the WebMidi script and initialize the dropdown logic
-	try {
-		setTimeout(function(){
-			loadWebMidiScript(initializeMIDIDropdown);
-		},3000);
-	} catch(e){ console.error(e);}
+    // Don't automatically initialize WebMidi - wait for user to enable it
+	console.log("WebMidi initialization deferred until MIDI hotkeys are enabled");
 	
 	// Handle games selector initial state
 	const gamesSelectorInit = document.getElementById('games-preset-select');
