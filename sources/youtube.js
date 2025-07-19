@@ -612,7 +612,7 @@
 			} catch (e) {}
 		}
 
-		var chatbadges = [];
+		var chatbadges = [];  
 		try {
 			ele.querySelectorAll(".yt-live-chat-author-badge-renderer img, .yt-live-chat-author-badge-renderer svg").forEach(img => {
 				if (img.tagName.toLowerCase() == "img") {
@@ -635,6 +635,25 @@
 					chatbadges.push(html);
 				}
 			});
+			
+			ele.querySelectorAll(".yt-spec-button-shape-next--icon-leading[aria-label]").forEach(img => {
+			try {
+				var html = {};
+				html.html = `
+					<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16" fill="rgb(54, 0, 140)" stroke="rgb(255,255,255)" focusable="false" aria-hidden="true" style="width: 100%; height: 100%; background-color:rgb(54, 0, 140); border-radius:3px; margin:0 2px;">
+					  <g fill="rgb(54, 0, 140)" stroke="rgb(255, 255, 255)">
+						<path clip-rule="evenodd" d="M4.5 6 8 2l3.5 4L15 3.5V14H1V3.5L4.5 6ZM2 12v1h12v-1H2Zm12-1H2V5.443L4.656 7.34 8 3.52l3.344 3.821L14 5.443V11Z" fill-rule="evenodd"></path>
+					  </g>
+					  <text x="17" y="12" font-family="Arial, sans-serif" font-size="10" font-weight="lighter" fill="rgb(255,255,255)">${img.ariaLabel}</text>
+					</svg>
+				`;
+				html.type = "svg";
+				chatbadges.push(html);
+			} catch(e) {
+				// Handle error
+			}
+		});
+			
 		} catch (e) {}
 
 		var hasDonation = "";
