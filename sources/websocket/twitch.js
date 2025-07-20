@@ -922,7 +922,10 @@ try{
 		//console.log("Processing message:", parsedMessage);
 		const user = parsedMessage.prefix.split('!')[0];
 		const message = parsedMessage.trailing;
-		channel = parsedMessage.params[0] || channel;
+		// Clean channel name from params (remove # prefix)
+		if (parsedMessage.params[0]) {
+			channel = parsedMessage.params[0].replace(/^#/, '');
+		}
 		const userInfo = await getUserInfo(user);
 		
 		// Parse subscriber info from badge tags
@@ -931,7 +934,7 @@ try{
 		let mod = false;
 		const badgeList = parseBadges(parsedMessage);
 		
-		if (parsedMessage.tags && parsedMessage.tags.badges) {
+		if (parsedMessage.tags && parsedMessage.tags.badges && typeof parsedMessage.tags.badges === 'string') {
 			const badges = parsedMessage.tags.badges.split(',');
 			badges.forEach(badge => {
 				if (badge.startsWith('subscriber/')) {
@@ -1016,20 +1019,25 @@ try{
 		
 		// Parse Twitch emotes from tags
 		let twitchEmotes = null;
-		if (parsedMessage.tags && parsedMessage.tags.emotes) {
-			twitchEmotes = {};
-			// Emotes format: "emote_id:start-end,start-end/emote_id:start-end"
-			const emoteParts = parsedMessage.tags.emotes.split('/');
-			emoteParts.forEach(part => {
-				if (!part) return;
-				const [emoteId, positions] = part.split(':');
-				if (emoteId && positions) {
-					twitchEmotes[emoteId] = positions.split(',').map(pos => {
-						const [start, end] = pos.split('-');
-						return { start, end };
-					});
-				}
-			});
+		if (parsedMessage.tags && parsedMessage.tags.emotes && typeof parsedMessage.tags.emotes === 'string' && parsedMessage.tags.emotes.trim() !== '') {
+			try {
+				twitchEmotes = {};
+				// Emotes format: "emote_id:start-end,start-end/emote_id:start-end"
+				const emoteParts = parsedMessage.tags.emotes.split('/');
+				emoteParts.forEach(part => {
+					if (!part) return;
+					const [emoteId, positions] = part.split(':');
+					if (emoteId && positions) {
+						twitchEmotes[emoteId] = positions.split(',').map(pos => {
+							const [start, end] = pos.split('-');
+							return { start, end };
+						});
+					}
+				});
+			} catch (e) {
+				console.error('Error parsing Twitch emotes:', e);
+				twitchEmotes = null;
+			}
 		}
 		
 		// Handle reply messages
@@ -1341,6 +1349,9 @@ try{
 	async function getViewerCount(channelName) {
 		const token = getStoredToken();
 		if (!token) return;
+		
+		// Clean channel name (remove # if present)
+		channelName = channelName.replace(/^#/, '');
 		
 		try {
 			const response = await fetchWithTimeout(
