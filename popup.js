@@ -75,10 +75,8 @@ async function disableWebMidi() {
 			await WebMidi.disable();
 			webMidiInitialized = false;
 			
-			// Clear all MIDI device selects
-			document.querySelectorAll("select[data-optionsetting^='mididevice']").forEach(select => {
-				select.innerHTML = '<option value="">MIDI disabled</option>';
-			});
+			// Don't clear the MIDI device selects - preserve user's selections
+			// The dropdowns will be repopulated when MIDI is re-enabled
 			
 			console.log("WebMidi disabled successfully");
 		} catch (e) {
@@ -919,7 +917,7 @@ function findExistingEvents(eventType, response) {
   return Array.from(events).sort((a, b) => a - b);
 }
 function updateAllMidiSelects() {
-  document.querySelectorAll("select[data-optionsetting^='mididevice']").forEach(select => {
+  document.querySelectorAll("select[data-optionsetting^='mididevice'], select[data-optionsetting='midiOutputDevice']").forEach(select => {
     const currentValue = select.value;
     
     // Repopulate the select
@@ -1865,6 +1863,13 @@ function update(response, sync = true) {
             }
 
             createTabsFromSettings(response); // Assuming createTabsFromSettings is defined
+
+            // Check if MIDI is enabled and initialize if needed
+            const midiCheckbox = document.querySelector('input[data-setting="midi"]');
+            if (midiCheckbox && midiCheckbox.checked) {
+                // MIDI was enabled in settings, initialize the dropdown
+                handleMidiToggle(true);
+            }
 
             // Refresh all page links.
             refreshLinks();
