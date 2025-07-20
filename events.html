@@ -377,6 +377,11 @@ body.light-mode .message.active {
     
     function addMessageToOverlay(data) {
 		// Only display events from enabled sources
+		
+		if (data.meta){
+			console.log(data);
+		}
+		
 		if (sources && !sources.includes(data.type)) {
 			return;
 		}

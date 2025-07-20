@@ -295,6 +295,28 @@
 		return result;
 	}
 	
+	function getTextWithSpaces(element) {
+	  let textArray = [];
+	  
+	  function traverse(node) {
+		if (node.nodeType === Node.TEXT_NODE) {
+		  const trimmed = node.textContent.trim();
+		  if (trimmed) {
+			textArray.push(trimmed);
+		  }
+		} else if (node.nodeType === Node.ELEMENT_NODE) {
+		  if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+			for (const child of node.childNodes) {
+			  traverse(child);
+			}
+		  }
+		}
+	  }
+	  
+	  traverse(element);
+	  return textArray;
+	}
+
 	var lastMessage = "";
 	var lastUser = "";
 	var lastEle = null;
@@ -737,7 +759,9 @@
 					message: data
 				},
 				function (e) {
-					ele.dataset.mid = e.id;
+					if (e?.id){
+						ele.dataset.mid = e.id;
+					}
 				}
 			);
 		} catch (e) {
@@ -1240,10 +1264,26 @@
 				  //console.log('Viewer count:', count);
 			  });
 		}
+		
+		if (isExtensionOn && document.querySelector(".community-highlight")){
+			let message = getTextWithSpaces(document.querySelector(".community-highlight"));
+			
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				({message:{ 
+						type: 'twitch',
+						event: 'community_highlight',
+						meta: message
+					}
+				}),
+				function (e) {}
+			);
+		}
 	}
 	
 	setTimeout(function(){checkFollowers();},2500);
 	setInterval(function(){checkFollowers()},30000);
+	
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
@@ -1300,7 +1340,6 @@
 		});
 		element.dispatchEvent(focusEvent);
 	}
-
 	
 	function preventBackgroundThrottling() {
 		window.onblur = null;
