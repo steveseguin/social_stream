@@ -32,7 +32,7 @@ try {
     throw new Error('GEMINI_API_KEY environment variable is not set.');
   }
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-04-17' }); // Change to a version now supported.
+  model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' }); // Change to a version now supported.
   log('info', 'Gemini API initialized successfully.');
 } catch (error) {
   log('error', 'Failed to initialize Gemini API', { error: error.message });
