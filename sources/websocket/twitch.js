@@ -723,7 +723,28 @@ try{
 		}
 		return false;
 	}
-	function replaceEmotesWithImages(text) {
+	function replaceEmotesWithImages(text, twitchEmotes = null) {
+		// First, handle Twitch native emotes if provided
+		if (twitchEmotes && Object.keys(twitchEmotes).length > 0) {
+			// Sort emote positions to replace from end to start (to maintain indices)
+			const sortedEmotes = Object.entries(twitchEmotes)
+				.flatMap(([emoteId, positions]) => 
+					positions.map(pos => ({ emoteId, start: parseInt(pos.start), end: parseInt(pos.end) }))
+				)
+				.sort((a, b) => b.start - a.start);
+			
+			// Replace emotes from end to start
+			let result = text;
+			sortedEmotes.forEach(({ emoteId, start, end }) => {
+				const emoteName = text.substring(start, end + 1);
+				const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
+				const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
+				result = result.substring(0, start) + emoteImg + result.substring(end + 1);
+			});
+			text = result;
+		}
+		
+		// Then handle third-party emotes (BTTV, 7TV, FFZ)
 		if (!EMOTELIST) {
 			return text;
 		}
@@ -993,17 +1014,35 @@ try{
 		data.textColor = parsedMessage.tags?.color || "";
 		data.nameColor = parsedMessage.tags?.color || "";
 		
+		// Parse Twitch emotes from tags
+		let twitchEmotes = null;
+		if (parsedMessage.tags && parsedMessage.tags.emotes) {
+			twitchEmotes = {};
+			// Emotes format: "emote_id:start-end,start-end/emote_id:start-end"
+			const emoteParts = parsedMessage.tags.emotes.split('/');
+			emoteParts.forEach(part => {
+				if (!part) return;
+				const [emoteId, positions] = part.split(':');
+				if (emoteId && positions) {
+					twitchEmotes[emoteId] = positions.split(',').map(pos => {
+						const [start, end] = pos.split('-');
+						return { start, end };
+					});
+				}
+			});
+		}
+		
 		// Handle reply messages
 		if (replyMessage) {
 			data.initial = replyMessage;
 			data.reply = originalMessage;
 			if (settings.textonlymode) {
-				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message);
+				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message, twitchEmotes);
 			} else {
-				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message);
+				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message, twitchEmotes);
 			}
 		} else {
-			data.chatmessage = replaceEmotesWithImages(message);
+			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes);
 		}
 		
 		data.membership = subscriber;
