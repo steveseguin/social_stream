@@ -1411,6 +1411,14 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
       }
     }
     
+    // Skip featured overlay update if a preset is selected
+    if (page.id === "overlay") {
+      const featuredPresetSelector = document.getElementById('featured-preset-select');
+      if (featuredPresetSelector && featuredPresetSelector.value) {
+        return; // Skip updating featured overlay when preset is active
+      }
+    }
+    
     const linkPath = page.linkPath || page.path;
     const fullURL = `${baseURL}${page.path}?session=${streamID}${password}${customParams}${versionParam}`;
     const element = document.getElementById(page.id);
