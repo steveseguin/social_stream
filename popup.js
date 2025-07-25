@@ -1790,14 +1790,6 @@ function update(response, sync = true) {
         return;
     }
     
-    // Check if any form element is currently focused and being changed
-    const activeElement = document.activeElement;
-    const isFormElementActive = activeElement && (
-        activeElement.tagName === 'SELECT' || 
-        activeElement.tagName === 'INPUT' || 
-        activeElement.tagName === 'TEXTAREA'
-    );
-    
     if (response !== undefined) {
         if (response.documents) {
             updateDocumentList(response.documents);
