@@ -1790,6 +1790,14 @@ function update(response, sync = true) {
         return;
     }
     
+    // Check if any form element is currently focused and being changed
+    const activeElement = document.activeElement;
+    const isFormElementActive = activeElement && (
+        activeElement.tagName === 'SELECT' || 
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA'
+    );
+    
     if (response !== undefined) {
         if (response.documents) {
             updateDocumentList(response.documents);
@@ -2834,9 +2842,10 @@ function handleSpecialSettings(ele, sync) {
 }
 
 function handleOptionSetting(ele, sync) {
-    if (!ele.dataset.optionsetting && !ele.dataset.optionsetting10) return false;
+    if (!ele.dataset.optionsetting && !ele.dataset.optionsetting2 && !ele.dataset.optionsetting10) return false;
     
-    const settingType = ele.dataset.optionsetting ? 'optionsetting' : 'optionsetting10';
+    const settingType = ele.dataset.optionsetting ? 'optionsetting' : 
+                       (ele.dataset.optionsetting2 ? 'optionsetting2' : 'optionsetting10');
     const settingValue = ele.dataset[settingType];
     
     // Handle poll type
