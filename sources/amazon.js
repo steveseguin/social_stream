@@ -229,7 +229,7 @@
 	console.log("social stream injected");
 	
 	setInterval(function(){
-		var target = document.querySelector("[class*='chatContainer']");
+		var target = document.querySelector("[data-testid='MessageArea']");
 		if (target && !target.marked){
 			target.marked=true;
 			onElementInserted(target, function(element){
