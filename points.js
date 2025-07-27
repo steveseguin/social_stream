@@ -157,6 +157,24 @@ class PointsSystem {
         return userData;
     }
 
+    async addPoints(username, type = 'default', amount) {
+        if (amount <= 0) return { success: false, message: "Amount must be positive" };
+        
+        const userData = await this.getUserPoints(username, type);
+        
+        userData.points += amount;
+        userData.lastActive = Date.now();
+        await this.saveUserPoints(userData);
+        
+        return { 
+            success: true, 
+            message: "Points added successfully", 
+            added: amount,
+            points: userData.points,
+            available: userData.points - userData.pointsSpent
+        };
+    }
+    
     async spendPoints(username, type = 'default', amount) {
         if (amount <= 0) return { success: false, message: "Amount must be positive" };
         

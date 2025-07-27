@@ -23,6 +23,8 @@ class EventFlowEditor {
             { id: 'messageStartsWith', name: 'Message Starts With' },
             { id: 'messageEquals', name: 'Message Equals' },
             { id: 'messageRegex', name: 'Message Regex' },
+            { id: 'messageLength', name: 'Message Length' },
+            { id: 'containsLink', name: 'Contains Link' },
             { id: 'fromSource', name: 'From Source' },
             { id: 'fromChannelName', name: 'From Channel Name' },
             { id: 'fromUser', name: 'From User' },
@@ -34,13 +36,17 @@ class EventFlowEditor {
 		this.actionTypes = [
 			{ id: 'blockMessage', name: 'Block Message' },
 			{ id: 'modifyMessage', name: 'Modify Message' },
+			{ id: 'addPrefix', name: 'Add Prefix' },
+			{ id: 'addSuffix', name: 'Add Suffix' },
+			{ id: 'findReplace', name: 'Find & Replace' },
 			{ id: 'setProperty', name: 'Set Property' },
 			{ id: 'relay', name: 'Relay Message' },
 			{ id: 'webhook', name: 'Call Webhook' },
+			{ id: 'addPoints', name: 'Add Points' },
 			{ id: 'spendPoints', name: 'Spend Points' },
-			{ id: 'playTenorGiphy', name: 'Play TENOR/GIPHY' }, // <-- New Action
-			{ id: 'triggerOBSScene', name: 'Trigger OBS Scene' }, // <-- New Action
-			{ id: 'playAudioClip', name: 'Play Audio Clip' },   // <-- New Action
+			{ id: 'playTenorGiphy', name: 'Play TENOR/GIPHY' },
+			{ id: 'triggerOBSScene', name: 'Trigger OBS Scene' },
+			{ id: 'playAudioClip', name: 'Play Audio Clip' },
 			{ id: 'customJs', name: 'Custom JavaScript' }
 		];
 
@@ -77,7 +83,7 @@ class EventFlowEditor {
                         <h3>Triggers</h3>
                         <div class="node-list" id="trigger-list">
                             ${this.triggerTypes.map(trigger => `
-                                <div class="node-item trigger" data-nodetype="trigger" data-subtype="${trigger.id}" draggable="true">
+                                <div class="node-item trigger" data-nodetype="trigger" data-subtype="${trigger.id}" draggable="true" ${trigger.id === 'customJs' ? 'style="display: none;"' : ''}>
                                     ${trigger.name}
                                 </div>
                             `).join('')}
@@ -85,7 +91,7 @@ class EventFlowEditor {
                         <h3>Actions</h3>
                         <div class="node-list" id="action-list">
                             ${this.actionTypes.map(action => `
-                                <div class="node-item action" data-nodetype="action" data-subtype="${action.id}" draggable="true">
+                                <div class="node-item action" data-nodetype="action" data-subtype="${action.id}" draggable="true" ${action.id === 'customJs' ? 'style="display: none;"' : ''}>
                                     ${action.name}
                                 </div>
                             `).join('')}
@@ -691,6 +697,8 @@ class EventFlowEditor {
                 case 'messageStartsWith': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageEquals': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageRegex': return `Pattern: "${(node.config.pattern || '').substring(0,15)}${(node.config.pattern || '').length > 15 ? '...' : ''}"`;
+                case 'messageLength': return `Length ${node.config.comparison || 'gt'} ${node.config.length || 100}`;
+                case 'containsLink': return 'Contains URL';
                 case 'fromSource': return `Source: ${node.config.source || 'Any'}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
@@ -703,7 +711,12 @@ class EventFlowEditor {
              switch (node.actionType) {
                 case 'blockMessage': return 'Block this message';
                 case 'modifyMessage': return `New: "${(node.config.newMessage || '').substring(0,15)}${(node.config.newMessage || '').length > 15 ? '...' : ''}"`;
+                case 'addPrefix': return `Prefix: "${(node.config.prefix || '').substring(0,15)}${(node.config.prefix || '').length > 15 ? '...' : ''}"`;
+                case 'addSuffix': return `Suffix: "${(node.config.suffix || '').substring(0,15)}${(node.config.suffix || '').length > 15 ? '...' : ''}"`;
+                case 'findReplace': return `Find: "${(node.config.find || '').substring(0,10)}..." → "${(node.config.replace || '').substring(0,10)}..."`;
                 case 'relay': return `To: ${node.config.destination || 'All'}`;
+                case 'addPoints': return `Add: ${node.config.amount || 100} points`;
+                case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'logic') { // NEW
@@ -752,15 +765,48 @@ class EventFlowEditor {
         svgEl.style.left = '0'; svgEl.style.top = '0';
         svgEl.style.width = canvas.scrollWidth + 'px'; 
         svgEl.style.height = canvas.scrollHeight + 'px';
-        svgEl.style.pointerEvents = 'none';
-
-        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        svgEl.style.pointerEvents = 'none'; // Disable pointer events on the SVG container
+        
+        // Create a wider invisible path for easier clicking
+        const clickPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         const controlYOffset = Math.max(50, Math.abs(endY - startY) * 0.3);
-        path.setAttribute('d', `M ${startX},${startY} C ${startX},${startY + controlYOffset} ${endX},${endY - controlYOffset} ${endX},${endY}`);
+        const pathData = `M ${startX},${startY} C ${startX},${startY + controlYOffset} ${endX},${endY - controlYOffset} ${endX},${endY}`;
+        clickPath.setAttribute('d', pathData);
+        clickPath.setAttribute('stroke', 'transparent');
+        clickPath.setAttribute('stroke-width', '30'); // Wide invisible area for clicking
+        clickPath.setAttribute('fill', 'none');
+        clickPath.style.cursor = 'pointer';
+        clickPath.style.pointerEvents = 'stroke'; // Only respond to clicks on the stroke
+        
+        // Visible path
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
         path.setAttribute('stroke', 'var(--primary-color)');
         path.setAttribute('stroke-width', '3');
         path.setAttribute('fill', 'none');
-        svgEl.appendChild(path);
+        path.style.pointerEvents = 'none';
+        
+        // Add hover effect to clickPath
+        clickPath.addEventListener('mouseenter', () => {
+            path.setAttribute('stroke', 'var(--alert-color)');
+            path.setAttribute('stroke-width', '4');
+        });
+        
+        clickPath.addEventListener('mouseleave', () => {
+            path.setAttribute('stroke', 'var(--primary-color)');
+            path.setAttribute('stroke-width', '3');
+        });
+        
+        // Add click handler to clickPath (not the entire SVG)
+        clickPath.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (confirm('Delete this connection?')) {
+                this.deleteConnection(connection.from, connection.to);
+            }
+        });
+        
+        svgEl.appendChild(clickPath); // Add invisible click area first
+        svgEl.appendChild(path); // Add visible path on top
         canvas.insertBefore(svgEl, canvas.firstChild);
     }
 
@@ -974,6 +1020,8 @@ class EventFlowEditor {
                 case 'messageStartsWith': node.config = { text: '!' }; break;
                 case 'messageEquals': node.config = { text: 'hello' }; break;
                 case 'messageRegex': node.config = { pattern: 'pattern', flags: 'i' }; break;
+                case 'messageLength': node.config = { comparison: 'gt', length: 100 }; break;
+                case 'containsLink': node.config = {}; break;
                 case 'fromSource': node.config = { source: '*' }; break;
                 case 'fromChannelName': node.config = { channelName: '' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
@@ -988,12 +1036,20 @@ class EventFlowEditor {
 					node.config = {}; break;
                 case 'modifyMessage':
 					node.config = { newMessage: 'modified text' }; break;
+                case 'addPrefix':
+					node.config = { prefix: '[{source}] ' }; break;
+                case 'addSuffix':
+					node.config = { suffix: ' - sent via Social Stream' }; break;
+                case 'findReplace':
+					node.config = { find: 'bad', replace: 'good', caseSensitive: false }; break;
                 case 'setProperty':
 					node.config = { property: 'chatmessage', value: 'new value' }; break;
                 case 'relay':
 					node.config = { destination: 'discord', template: '[{source}] {username}: {message}', toAll: false, timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true }; break;
+                case 'addPoints':
+					node.config = { amount: 100 }; break;
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
                 case 'customJs': 
@@ -1029,6 +1085,15 @@ class EventFlowEditor {
         if (this.selectedNode === nodeId) {
             this.selectNode(null);
         }
+    }
+
+    deleteConnection(fromNodeId, toNodeId) {
+        if (!this.currentFlow) return;
+        this.currentFlow.connections = this.currentFlow.connections.filter(
+            conn => !(conn.from === fromNodeId && conn.to === toNodeId)
+        );
+        this.markUnsavedChanges(true);
+        this.renderFlow();
     }
 
     startConnection(nodeId, connPointType, event) {
@@ -1195,6 +1260,17 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Regex Pattern</label><input type="text" class="property-input" id="prop-pattern" value="${node.config.pattern || ''}"></div>
 						 <div class="property-group"><label class="property-label">Regex Flags</label><input type="text" class="property-input" id="prop-flags" value="${node.config.flags || 'i'}"></div>`;
 				break;
+			case 'messageLength':
+				html += `<div class="property-group"><label class="property-label">Comparison</label><select class="property-input" id="prop-comparison">
+						   <option value="gt" ${node.config.comparison === 'gt' ? 'selected' : ''}>Greater than</option>
+						   <option value="lt" ${node.config.comparison === 'lt' ? 'selected' : ''}>Less than</option>
+						   <option value="eq" ${node.config.comparison === 'eq' ? 'selected' : ''}>Equals</option>
+						 </select></div>
+						 <div class="property-group"><label class="property-label">Length</label><input type="number" class="property-input" id="prop-length" value="${node.config.length || 100}" min="0"></div>`;
+				break;
+			case 'containsLink':
+				html += `<p class="property-help">Triggers when a message contains a URL (http://, https://, or www.)</p>`;
+				break;
 			case 'fromSource':
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
@@ -1249,21 +1325,82 @@ class EventFlowEditor {
 			case 'modifyMessage':
 				html += `<div class="property-group"><label class="property-label">New Message Content</label><textarea class="property-input" id="prop-newMessage" rows="3">${node.config.newMessage || ''}</textarea><div class="property-help">Placeholders like {username}, {message}, etc. can be used.</div></div>`;
 				break;
+			case 'addPrefix':
+				html += `<div class="property-group"><label class="property-label">Prefix Text</label><input type="text" class="property-input" id="prop-prefix" value="${node.config.prefix || ''}"><div class="property-help">Text to add before the message. Supports {username}, {source} placeholders.</div></div>`;
+				break;
+			case 'addSuffix':
+				html += `<div class="property-group"><label class="property-label">Suffix Text</label><input type="text" class="property-input" id="prop-suffix" value="${node.config.suffix || ''}"><div class="property-help">Text to add after the message. Supports {username}, {source} placeholders.</div></div>`;
+				break;
+			case 'findReplace':
+				html += `<div class="property-group"><label class="property-label">Find Text</label><input type="text" class="property-input" id="prop-find" value="${node.config.find || ''}"></div>
+						 <div class="property-group"><label class="property-label">Replace With</label><input type="text" class="property-input" id="prop-replace" value="${node.config.replace || ''}"></div>
+						 <div class="property-group"><label class="property-label"><input type="checkbox" id="prop-caseSensitive" ${node.config.caseSensitive ? 'checked' : ''}> Case Sensitive</label></div>`;
+				break;
 			case 'setProperty':
 				html += `<div class="property-group"><label class="property-label">Property Name</label><input type="text" class="property-input" id="prop-propertyName" value="${node.config.property || 'chatmessage'}"><div class="property-help">e.g., chatmessage, userColor, customFlag</div></div>
 						 <div class="property-group"><label class="property-label">Property Value</label><input type="text" class="property-input" id="prop-propertyValue" value="${node.config.value || ''}"><div class="property-help">The new value for the property. Can be string, number, or boolean.</div></div>`;
 				break;
 			case 'relay':
-				html += `<div class="property-group"><label class="property-label">Destination</label><input type="text" class="property-input" id="prop-destination" value="${node.config.destination || ''}"><div class="property-help">e.g., 'discord', 'channel_name'. Empty for all integrated platforms.</div></div>
-						 <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || '[{source}] {username}: {message}'}</textarea></div>
-						 <div class="property-group"><label class="property-label"><input type="checkbox" id="prop-toAll" ${node.config.toAll ? 'checked' : ''}> Send to all instances/tabs</label></div>
-						 <div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>`;
+				// Common platforms list - matching the source types from content scripts
+				const platforms = [
+					{ value: '', label: 'All Platforms' },
+					{ value: 'reply', label: '↩️ Reply to Sender Only' },
+					{ value: 'youtube', label: 'YouTube' },
+					{ value: 'youtubeshorts', label: 'YouTube Shorts' },
+					{ value: 'discord', label: 'Discord' },
+					{ value: 'twitch', label: 'Twitch' },
+					{ value: 'kick', label: 'Kick' },
+					{ value: 'facebook', label: 'Facebook' },
+					{ value: 'instagram', label: 'Instagram' },
+					{ value: 'instagramlive', label: 'Instagram Live' },
+					{ value: 'tiktok', label: 'TikTok' },
+					{ value: 'x', label: 'X (Twitter)' },
+					{ value: 'rumble', label: 'Rumble' },
+					{ value: 'odysee', label: 'Odysee' },
+					{ value: 'dlive', label: 'DLive' },
+					{ value: 'trovo', label: 'Trovo' },
+					{ value: 'telegram', label: 'Telegram' },
+					{ value: 'whatsapp', label: 'WhatsApp' },
+					{ value: 'zoom', label: 'Zoom' },
+					{ value: 'teams', label: 'Teams' },
+					{ value: 'slack', label: 'Slack' },
+					{ value: 'vimeo', label: 'Vimeo' },
+					{ value: 'afreecatv', label: 'AfreecaTV' },
+					{ value: 'bigo', label: 'Bigo Live' },
+					{ value: 'bilibili', label: 'Bilibili' },
+					{ value: 'chzzk', label: 'CHZZK' },
+					{ value: 'nicovideo', label: 'Niconico' },
+					{ value: 'picarto', label: 'Picarto' },
+					{ value: 'chaturbate', label: 'Chaturbate' },
+					{ value: 'custom', label: '🔧 Custom...' }
+				];
+				
+				const isCustom = node.config.destination && !platforms.find(p => p.value === node.config.destination);
+				const currentDestination = isCustom ? 'custom' : (node.config.destination || '');
+				
+				html += `<div class="property-group">
+							<label class="property-label">Destination</label>
+							<select class="property-input" id="prop-destination-select">
+								${platforms.map(p => `<option value="${p.value}" ${currentDestination === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
+							</select>
+							<input type="text" class="property-input" id="prop-destination-custom" 
+								   value="${isCustom ? node.config.destination : ''}" 
+								   style="display: ${currentDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
+								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
+							<div class="property-help">Select platform or use custom for specific sources/channels</div>
+						</div>
+						<div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || '[{source}] {username}: {message}'}</textarea></div>
+						<div class="property-group"><label class="property-label"><input type="checkbox" id="prop-toAll" ${node.config.toAll ? 'checked' : ''}> Send to all instances/tabs of destination</label></div>
+						<div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>`;
 				break;
 			case 'webhook':
 				html += `<div class="property-group"><label class="property-label">URL</label><input type="url" class="property-input" id="prop-url" value="${node.config.url || ''}"></div>
 						 <div class="property-group"><label class="property-label">Method</label><select class="property-input" id="prop-method">${['POST', 'GET', 'PUT', 'DELETE', 'PATCH'].map(m => `<option value="${m}" ${node.config.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" id="prop-includeMessage" ${node.config.includeMessage !== false ? 'checked' : ''}> Include full message object as JSON body</label></div>
 						 <div class="property-group" id="webhook-body-group" style="${node.config.includeMessage !== false ? 'display: none;' : ''};"><label class="property-label">Custom Body (JSON)</label><textarea class="property-input" id="prop-body" rows="5">${node.config.body || '{}'}</textarea><div class="property-help">Used if "Include full message" is unchecked.</div></div>`;
+				break;
+			case 'addPoints':
+				html += `<div class="property-group"><label class="property-label">Amount to Add</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
 				break;
 			case 'spendPoints':
 				html += `<div class="property-group"><label class="property-label">Amount to Spend</label><input type="number" class="property-input" id="prop-amount" value="${node.config.amount || 100}" min="0"></div>`;
@@ -1383,6 +1520,30 @@ class EventFlowEditor {
                 });
             }
         });
+
+        // Special handling for relay destination dropdown
+        const destinationSelect = document.getElementById('prop-destination-select');
+        const destinationCustom = document.getElementById('prop-destination-custom');
+        
+        if (destinationSelect && destinationCustom) {
+            destinationSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'custom') {
+                    destinationCustom.style.display = 'block';
+                    nodeData.config.destination = destinationCustom.value || '';
+                } else {
+                    destinationCustom.style.display = 'none';
+                    nodeData.config.destination = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+            
+            destinationCustom.addEventListener('input', (e) => {
+                nodeData.config.destination = e.target.value;
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
 
         // Add upload button handlers
         const uploadMediaBtn = document.getElementById('uploadMediaBtn');
