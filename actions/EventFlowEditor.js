@@ -44,7 +44,7 @@ class EventFlowEditor {
 			{ id: 'webhook', name: 'Call Webhook' },
 			{ id: 'addPoints', name: 'Add Points' },
 			{ id: 'spendPoints', name: 'Spend Points' },
-			{ id: 'playTenorGiphy', name: 'Play TENOR/GIPHY' },
+			{ id: 'playTenorGiphy', name: 'Display Media Overlay' },
 			{ id: 'triggerOBSScene', name: 'Trigger OBS Scene' },
 			{ id: 'playAudioClip', name: 'Play Audio Clip' },
 			{ id: 'customJs', name: 'Custom JavaScript' }
@@ -699,7 +699,7 @@ class EventFlowEditor {
                 case 'messageRegex': return `Pattern: "${(node.config.pattern || '').substring(0,15)}${(node.config.pattern || '').length > 15 ? '...' : ''}"`;
                 case 'messageLength': return `Length ${node.config.comparison || 'gt'} ${node.config.length || 100}`;
                 case 'containsLink': return 'Contains URL';
-                case 'fromSource': return `Source: ${node.config.source || 'Any'}`;
+                case 'fromSource': return `Source: ${node.config.source === '*' ? 'Any' : (node.config.source || 'Any')}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
                 case 'userRole': return `Role: ${node.config.role || 'Any'}`;
@@ -1272,6 +1272,21 @@ class EventFlowEditor {
 				html += `<p class="property-help">Triggers when a message contains a URL (http://, https://, or www.)</p>`;
 				break;
 			case 'fromSource':
+				const isCustomSource = node.config.source && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
+  'bitchute', 'boltplus', 'buzzit', 'castr', 'cbox', 'chatroll', 'chaturbate', 'cherrytv', 'chime', 'chzzk',
+  'circle', 'cloudhub', 'cozy', 'crowdcast', 'discord', 'dlive', 'estrim', 'facebook', 'fansly', 'favorited',
+  'fc2', 'floatplane', 'gala', 'generic', 'instafeed', 'instagram', 'instagramlive', 'jaco', 'joystick', 'kick',
+  'kiwiirc', 'linkedin', 'livepush', 'livestorm', 'livestream', 'locals', 'loco', 'meetme', 'meets',
+  'megaphonetv', 'minnit', 'mixcloud', 'mixlr', 'mobcrush', 'moonbeam', 'nextcloud', 'nicovideo', 'nimo', 'noice',
+  'nonolive', 'odysee', 'on24', 'onlinechurch', 'openai', 'openstreamingplatform', 'owncast', 'parti', 'patreon',
+  'peertube', 'picarto', 'piczel', 'pilled', 'quakenet', 'quickchannel', 'restream', 'riverside', 'rokfin',
+  'roll20', 'rooter', 'rumble', 'rutube', 'sessions', 'shareplay', 'slack', 'slido', 'sooplive', 'soopliveco',
+  'soulbound', 'stageten', 'steam', 'substack', 'teams', 'telegram', 'telegramk', 'tellonym', 'tiktok',
+  'tradingview', 'trovo', 'truffle', 'twitcasting', 'twitch', 'uscreen', 'vdoninja', 'vercel', 'verticalpixelzone',
+   'vimeo', 'vklive', 'vkplay', 'vkvideo', 'wavevideo', 'webex', 'webinargeek', 'whatnot', 'whatsapp', 'whop',
+  'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
+  'other'].includes(node.config.source);
+				
 				html += `<div class="property-group"><label class="property-label">Source Platform</label><select class="property-input" id="prop-source">
 						   <option value="*" ${node.config.source === '*' ? 'selected' : ''}>Any Source</option>
 						    ${['afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
@@ -1289,7 +1304,12 @@ class EventFlowEditor {
   'wix', 'wix2', 'workplace', 'x', 'xeenon', 'younow', 'youtube', 'youtubeshorts', 'youtube_comments', 'zapstream', 'zoom',
   'other'].map(s => `<option value="${s}" ${node.config.source === s ? 'selected' : ''}>${s.charAt(0).toUpperCase()
    + s.slice(1).replace(/_/g, ' ')}</option>`).join('')}
+   						<option value="custom" ${isCustomSource ? 'selected' : ''}>🔧 Custom...</option>
 						 </select></div>`;
+				
+				if (isCustomSource) {
+					html += `<div class="property-group"><label class="property-label">Custom Source</label><input type="text" class="property-input" id="prop-source-custom" value="${node.config.source || ''}" placeholder="Enter custom source"></div>`;
+				}
 				break;
 			case 'fromChannelName':
 				html += `<div class="property-group"><label class="property-label">Channel Name</label><input type="text" class="property-input" id="prop-channelName" value="${node.config.channelName || ''}" placeholder="Enter channel name"></div>
@@ -1540,6 +1560,40 @@ class EventFlowEditor {
             
             destinationCustom.addEventListener('input', (e) => {
                 nodeData.config.destination = e.target.value;
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for source dropdown
+        const sourceSelect = document.getElementById('prop-source');
+        const sourceCustomInput = document.getElementById('prop-source-custom');
+        
+        if (sourceSelect) {
+            sourceSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'custom') {
+                    // Show custom input
+                    if (!sourceCustomInput) {
+                        // Need to re-render the properties to show the custom input
+                        nodeData.config.source = '';
+                        this.showNodeProperties(nodeData);
+                    }
+                } else {
+                    // Hide custom input and use dropdown value
+                    nodeData.config.source = e.target.value;
+                    if (sourceCustomInput) {
+                        // Re-render to hide the custom input
+                        this.showNodeProperties(nodeData);
+                    }
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+        
+        if (sourceCustomInput) {
+            sourceCustomInput.addEventListener('input', (e) => {
+                nodeData.config.source = e.target.value;
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
             });
