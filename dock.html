@@ -3854,6 +3854,7 @@
 			var autoshowdonos = false;
 			var autoshowmembers = false;
 			var autoyoutubememberchat = false;
+			var autoshowcontentimages = false;
 			
 			var autoshowqueued = false;
 			if (urlParams.has("autoshowqueued")) {
@@ -3873,6 +3874,10 @@
 
 			if (urlParams.has("autoshowdonos")) {
 				autoshowdonos = true;
+			}
+			
+			if (urlParams.has("autoshowcontentimages")) {
+				autoshowcontentimages = true;
 			}
 
 			if (urlParams.has("autoshowmembers")) {
@@ -8654,7 +8659,7 @@
 					} else if (autoshow && !bot) {
 						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
 							// pass auto show, since filtered out
-						} else if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership)) {
+						} else if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership) || (autoshowcontentimages && data.contentimg)) {
 							// dono or not to dono.
 							if (autoTimeoutEnabled) {
 								autoShowQueue.push(node);
