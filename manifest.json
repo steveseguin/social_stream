@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.26.8",
+  "version": "3.28.4",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -23,6 +23,12 @@
 	"scripting",
 	"activeTab",
 	"tabCapture"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["sources/inject/streamelements-ws.js", "sources/inject/streamelements-network-monitor.js"],
+      "matches": ["https://streamelements.com/*"]
+    }
   ],
   "host_permissions": [
 	"http://localhost:8080/*",
@@ -835,6 +841,12 @@
         "https://vkplay.live/*/only-chat?*",
         "https://live.vkvideo.ru/*/only-chat"
       ]
+    },
+    {
+      "js": [ "./sources/streamelements.js" ],
+      "matches": [ "https://streamelements.com/overlay/*" ],
+      "run_at": "document_start",
+      "all_frames": true
     }
   ],
   "options_ui": {

@@ -300,6 +300,13 @@ function setupReturnButton() {
             showEditorView();
         });
     }
+    
+    const backToDashboardButton = document.getElementById('back-to-dashboard');
+    if (backToDashboardButton) {
+        backToDashboardButton.addEventListener('click', function() {
+            showDashboardView();
+        });
+    }
 }
 // Main initialization function
 function initDashboard() {

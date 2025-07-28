@@ -875,6 +875,7 @@
 			<source src="./audio/tone.mp3" type="audio/mpeg" />
 			<source src="./audio/tone.ogg" type="audio/ogg" />
 		</audio>
+		<script type="text/javascript" src="tts.js"></script>
 		<script>
 			function log(msg) {
 				//	console.log(msg);
@@ -1368,10 +1369,7 @@
 				});
 			}
 
-			var beepwords = false;
-			if (urlParams.has("beepwords")) {
-				beepwords = true;
-			}
+			// beepwords is now handled by TTS.configure()
 			
 			var pseudodock = false;
 			if (urlParams.has("autoshow")) {
@@ -2063,139 +2061,26 @@
 				onlyshowdonos = true;
 			}
 
-			var speechLang = "en-US";
-			var speech = false;
-			var English = true;
-			var voice = false;
-			var voices = window.speechSynthesis.getVoices();
+			// TTS will be configured later using TTS.configure(urlParams)
 
 			var replaceURLInLink = true;
 			if (urlParams.has("readouturls")) {
 				replaceURLInLink = false;
 			}
 
-			var readDonos = false;
-			if (urlParams.has("ttsdonos")) {
-				readDonos = urlParams.get("ttsdonos") || "en-US";
-			}
+			// These will be handled by TTS.configure()
 			
-			var disableTTS = false;
-			if (urlParams.has("notts")) {
-				disableTTS = true;
-			}
-			
-			var newmembertts = false;
-			if (urlParams.has("ttsnewmembers")) {
-				newmembertts = urlParams.get("ttsnewmembers") || "en-US";
-			}
-			var ttsclicked = false;
-			if (urlParams.has("ttsclicked")) {
-				ttsclicked = urlParams.get("ttsclicked") || "en-US";
-			}
-			
-			if (readDonos || newmembertts || ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
-				if (document.getElementById("tts")) {
-					document.getElementById("tts").dataset.state = 1;
-					document.getElementById("tts").classList.remove("hidden");
-					document.getElementById("tts").classList.add("pressed");
-				}
-				var speech = true;
-				speechLang = urlParams.get("speech") || urlParams.get("speak") || urlParams.get("tts") || readDonos || newmembertts || ttsclicked || "en-US";
-				if (speechLang.split("-")[0].toLowerCase() == "en") {
-					English = true;
-				} else {
-					English = false;
-				}
-			}
-			if (urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln")) {
-				speechLang = urlParams.get("language") || urlParams.get("lang") || urlParams.get("ln");
-				if (speechLang.split("-")[0].toLowerCase() == "en") {
-					English = true;
-				} else {
-					English = false;
-				}
-			}
+			// Configure TTS with URL parameters
+			TTS.configure(urlParams);
 
-			var ttsSpeakChatname = true;
-			if (urlParams.has("simpletts2")) {
-				// You don't want to hear the chatname when TTS is enabled. ＞﹏＜
-				ttsSpeakChatname = false;
-				English = false;
-			}
-
-			if (urlParams.has("simpletts")) {
-				English = false;
-			}
 
 			var colorized = false;
 			if (urlParams.has("colorednames") || urlParams.has("color")) {
 				colorized = true;
 			}
 
-			var pitch = 1;
-			if (urlParams.has("pitch")) {
-				pitch = urlParams.get("pitch") || 1;
-				pitch = parseFloat(pitch);
-			}
 
-			var rate = 1;
-			if (urlParams.has("rate")) {
-				rate = urlParams.get("rate") || 1;
-				rate = parseFloat(rate);
-			}
-
-			var volume = 1;
-			if (urlParams.has("volume")) {
-				volume = urlParams.get("volume") || 1;
-			}
-
-			var voiceLatency = 4; // 0 slowest, but best quality; 4 is fastest, but worst quality
-			if (urlParams.has("latency")) {
-				voiceLatency = urlParams.get("latency") || 0;
-				voiceLatency = parseInt(voiceLatency) || 0;
-			}
-
-			var voiceName = false;
-			if (urlParams.has("voice")) {
-				voiceName = urlParams.get("voice") || "google";
-			}
-			
-			var voiceNameGoogle = false;
-			if (urlParams.has("voicegoogle")) {
-				voiceNameGoogle = urlParams.get("voicegoogle");
-			}
-			
-			var voiceNameElevenlabs = false;
-			if (urlParams.has("voice11")) {
-				voiceNameElevenlabs = urlParams.get("voice11");
-			}
-			
-			var voiceNameSpeechify = false;
-			if (urlParams.has("voicespeechify")) {
-				voiceNameSpeechify = urlParams.get("voicespeechify");
-			}
-
-			var voiceGender = false;
-			if (urlParams.has("gender")) {
-				voiceGender = urlParams.get("gender") || "MALE";
-			}
-			var audio = false;
-
-			var GoogleAPIKey = false; // You can get your API key from Google Cloud ; KEEP IT PRIVATE/SECRET.  It will look like: "ahasdfuyu234hjjUASDtu1234gughasdguhaU" or somnething like that.
-			var ElevenLabsKey = false;
-			var SpeechifyAPIKey = false;
-
-			if (urlParams.has("ttskey") || urlParams.has("googlettskey")) {
-				audio = document.createElement("audio");
-				GoogleAPIKey = urlParams.get("ttskey")  || urlParams.get("googlettskey") || false;
-			} else if (urlParams.has("elevenlabskey")) {
-				audio = document.createElement("audio");
-				ElevenLabsKey = urlParams.get("elevenlabskey") || false;
-			} else if (urlParams.has("speechifykey")) {
-				audio = document.createElement("audio");
-				audio.onended = finishedAudio;
-				SpeechifyAPIKey = urlParams.get("speechifykey") || false;
-			}
+			// TTS parameters are handled by TTS.configure()
 
 			function replaceURLs(node) {
 				if (node.nodeType === 3) {
@@ -2239,86 +2124,19 @@
 			}
 
 			function speak(text) {
-				if (!speech) {
-					return;
-				}
-				if (!text) {
-					return;
-				}
-				if (disableTTS){
-					return; // no exceptions.
-				}
-
+				// Handle URL replacement and beep words before passing to TTS
 				if (replaceURLInLink) {
 					text = replaceURLsWithSubstring(text, "Link");
 				}
 				
-				if (beepwords){
+				if (TTS.beepwords){
 					text = text.replace(/\*+/g, ' beep ');
 				} else {
 					text = text.replace(/\*/g, '');
 				}
-
-				if (GoogleAPIKey) {
-					googleTTS(text);
-					return;
-				} else if (ElevenLabsKey) {
-					ElevenLabsTTS(text);
-					return;
-				} else if (SpeechifyAPIKey){
-					SpeechifyTTS(text);
-					return;
-				}
-
-				if (!voice) {
-					if (!voices || !voices.length) {
-						voices = window.speechSynthesis.getVoices();
-					}
-					console.log("You can do &voice=VOICENAME to try to force select a voice based on a partial string match of its name.");
-					console.log(voices);
-					voices.forEach(vce => {
-						if (vce.name && voiceName && vce.name.toLowerCase().includes(voiceName.toLowerCase())) {
-							if (vce.lang && vce.lang.toLowerCase() == speechLang.toLowerCase()) {
-								voice = vce;
-							} else if (!voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase()) {
-								voice = vce;
-							}
-						} else if (vce.name && vce.name.includes("Siri")) {
-							// SIRI sucks and breaks a lot, so lets skip if possible.
-							return;
-						} else if (!voice && vce.lang && vce.lang.toLowerCase() == speechLang.toLowerCase()) {
-							voice = vce;
-						} else if (!voice && vce.lang && vce.lang.split("-")[0].toLowerCase() == speechLang.split("-")[0].toLowerCase()) {
-							voice = vce;
-						}
-					});
-					if (!voice && voices.length) {
-						voice = voices.shift(); // take the first/default voice
-					}
-					if (voice) {
-						console.log("Voice being used:");
-						console.log(voice);
-						if (voice.lang && voice.lang.split("-")[0].toLowerCase() != "en") {
-							English = false;
-						}
-					} else {
-						console.log("No voice found; using lang: " + speechLang);
-					}
-				}
-
-				var speechInput = new SpeechSynthesisUtterance();
-
-				if (!voice) {
-					speechInput.lang = speechLang;
-				} else {
-					speechInput.voice = voice;
-				}
-
-				speechInput.volume = volume;
-				speechInput.rate = rate;
-				speechInput.pitch = pitch;
-				speechInput.text = text;
-				window.speechSynthesis.speak(speechInput);
+				
+				// Use the TTS module
+				TTS.speak(text);
 			}
 
 			try {
@@ -2330,186 +2148,8 @@
 				errorlog(e);
 			}
 			
-			function SpeechifyTTS(tts) {
-				//console.log(tts);
-				try {
-					const url = "https://api.sws.speechify.com/v1/audio/speech";
-					let model = English ? "simba-english" : "simba-multilingual";
-					const data = {
-						input: "<speak>" + tts + "</speak>",
-						voice_id: voiceNameSpeechify || voiceName || "henry",
-						model: model,
-						audio_format: "mp3"
-					};
-					const otherparam = {
-						method: "POST",
-						headers: {
-							"Authorization": `Bearer ${SpeechifyAPIKey}`,
-							"Content-Type": "application/json"
-						},
-						body: JSON.stringify(data)
-					};
-					fetch(url, otherparam)
-						.then(response => {
-							//console.log(response);
-							if (!response.ok) {
-								throw new Error(`HTTP error! status: ${response.status}`);
-							}
-							return response.json();
-						})
-						.then(async json => {
-							//console.log(json);
-							if (!json.audio_data) {
-								finishedAudio();
-								throw new Error("No audio data in JSON response");
-							}
-							try {
-								if (!audio) {
-									audio = document.createElement("audio");
-									audio.onended = finishedAudio;
-								}
-								audio.src = "data:audio/mp3;base64," + json.audio_data;
-								if (volume) {
-									audio.volume = volume;
-								}
-								if (!audioContext) {
-									initAudioContext();
-								}
-								if (audioContext.state === 'suspended') {
-									await audioContext.resume();
-								}
-								audio.play().then(() => {
-									//console.log("Audio playing successfully");
-								}).catch(err => {
-									console.error("Audio play failed, user interaction required", err);
-									finishedAudio();  // Ensure the queue is released
-								});
-							} catch (e) {
-								console.error(e);
-								finishedAudio();
-								errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-							}
-						})
-						.catch(error => {
-							finishedAudio();
-							console.error("Error with Speechify TTS:", error);
-						});
-				} catch (e) {
-					finishedAudio();
-					console.error("Error in SpeechifyTTS function:", e);
-				}
-			}
+			// TTS provider functions are now handled by tts.js
 
-			function googleTTS(tts) {
-				const url = "https://texttospeech.googleapis.com/v1beta1/text:synthesize?key=" + GoogleAPIKey;
-				var data = {
-					input: {
-						text: tts
-					},
-					voice: {
-						languageCode: speechLang.toLowerCase(),
-						name: "en-GB-Standard-A",
-						ssmlGender: "FEMALE"
-					},
-					audioConfig: {
-						audioEncoding: "MP3",
-						speakingRate: rate
-					}
-				};
-
-				if (voiceName || voiceNameGoogle) {
-					data.voice.name = voiceNameGoogle || voiceName;
-				}
-				if (voiceGender) {
-					data.voice.ssmlGender = voiceGender.toUpperCase();
-				}
-
-				const otherparam = {
-					headers: {
-						"content-type": "application/json; charset=UTF-8"
-					},
-					body: JSON.stringify(data),
-					method: "POST"
-				};
-				fetch(url, otherparam)
-					.then(data => {
-						return data.json();
-					})
-					.then(async res => {
-						//console.log(res.audioContent);
-						if (!audio) {
-							audio = document.createElement("audio");
-						}
-						audio.src = "data:audio/mp3;base64," + res.audioContent;
-						if (volume) {
-							audio.volume = volume;
-						}
-						if (!audioContext) {
-							initAudioContext();
-						}
-						if (audioContext.state === 'suspended') {
-							await audioContext.resume();
-						}
-						audio.play();
-					})
-					.catch(error => {
-						console.error(error);
-					});
-			}
-			function ElevenLabsTTS(tts) {
-				const voiceid = voiceNameElevenlabs || voiceName || "VR6AewLTigWG4xSOukaG";
-				const url = "https://api.elevenlabs.io/v1/text-to-speech/" + voiceid + "/stream?optimize_streaming_latency=" + voiceLatency;
-
-				var data = {
-					text: tts,
-					model_id: "eleven_multilingual_v2",
-					voice_settings: {
-						stability: 0,
-						similarity_boost: 0,
-						style: 0.5,
-						use_speaker_boost: false
-					}
-				};
-
-				const otherparam = {
-					headers: {
-						"content-type": "application/json",
-						"xi-api-key": ElevenLabsKey,
-						accept: "*/*"
-					},
-					body: JSON.stringify(data),
-					method: "POST"
-				};
-				fetch(url, otherparam)
-					.then(data => {
-						return data.blob();
-					})
-					.then(async res => {
-						const newBlob = new Blob([res]);
-						const blobUrl = window.URL.createObjectURL(newBlob);
-						if (!audio) {
-							audio = document.createElement("audio");
-						}
-						audio.src = blobUrl;
-						if (volume) {
-							audio.volume = volume;
-						}
-						if (!audioContext) {
-							initAudioContext();
-						}
-						if (audioContext.state === 'suspended') {
-							await audioContext.resume();
-						}
-						try {
-							audio.play();
-						} catch (e) {
-							errorlog("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
-						}
-					})
-					.catch(error => {
-						console.error(error);
-					});
-			}
 
 			function RecvDataWindow() {
 				var iframe = document.createElement("iframe");
@@ -2717,29 +2357,29 @@
 					if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {
-								speech = !speech;
+								TTS.speech = !TTS.speech;
 							} else if (data.value == "true") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "false") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value == "1") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "0") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value == "on") {
-								speech = true;
+								TTS.speech = true;
 							} else if (data.value == "off") {
-								speech = false;
+								TTS.speech = false;
 							} else if (data.value) {
-								speech = true;
+								TTS.speech = true;
 							} else {
-								speech = false;
+								TTS.speech = false;
 							}
 						} else {
-							speech = !speech;
+							TTS.speech = !TTS.speech;
 						}
-						console.log("TTS: "+speech);
-						return speech
+						console.log("TTS: "+TTS.speech);
+						return TTS.speech
 					}
 				}
 				return null;
@@ -3211,7 +2851,12 @@
 					}
 					document.getElementById("output").classList.remove(transitionType);
 
-					if (speech) {
+					// Handle TTS if enabled
+					if (TTS.speech) {
+					  TTS.speechMeta(data);
+					}
+					
+					/*if (TTS.speech) {
 					  var msgPlain = document.getElementById("message");
 					  if (msgPlain) {
 						msgPlain = (msgPlain.textContent || msgPlain.innerText || "")
@@ -3226,14 +2871,14 @@
 					  }
 
 					  var chatname = "";
-					  if (data.chatname && ttsSpeakChatname) {
+					  if (data.chatname && TTS.ttsSpeakChatname) {
 						chatname = data.chatname.toLowerCase().replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, "");
 						chatname = chatname.replaceAll("_", " ");
 						chatname = chatname.replaceAll("@", " ");
 						chatname = chatname.replaceAll("!", " ");
 					  }
 
-					  if (data.hasDonation && (!(newmembertts || ttsclicked) || readDonos)) {
+					  if (data.hasDonation && TTS.readDonos) {
 						var donoText = document.createElement("div");
 						donoText.innerHTML = data.hasDonation;
 						donoText = donoText.innerText.trim();
@@ -3243,7 +2888,7 @@
 						donoText = donoText.replaceAll("!", " ");
 
 						if (chatname) {
-						  if (English) {
+						  if (TTS.English) {
 							if (msgPlain) {
 							  speak(chatname + " has donated " + donoText + " and says " + msgPlain);
 							} else {
@@ -3254,7 +2899,7 @@
 						  } else {
 							speak(chatname + "! ! .. " + donoText);
 						  }
-						} else if (English) {
+						} else if (TTS.English) {
 						  if (msgPlain) {
 							speak("Someone has donated " + donoText + " and says " + msgPlain);
 						  } else {
@@ -3265,32 +2910,32 @@
 						} else {
 						  speak(donoText);
 						}
-					  } else if (msgPlain && newmembertts && data.event && (data.event == "newmember")){
+					  } else if (msgPlain && data.event && (data.event == "newmember")){
 						if (chatname) {
-						  if (English) {
+						  if (TTS.English) {
 							speak(chatname + " says! " + msgPlain);
 						  } else {
 							speak(chatname + "! ! .. " + msgPlain);
 						  }
-						} else if (English) {
+						} else if (TTS.English) {
 						  speak("Someone says! " + msgPlain);
 						} else {
 						  speak(msgPlain);
 						}
-					  } else if (msgPlain && ((!readDonos && !newmembertts && !ttsclicked) || (ttsclicked && data.clicked))) {
+					  } else if (msgPlain && !TTS.readDonos) {
 						if (chatname) {
-						  if (English) {
+						  if (TTS.English) {
 							speak(chatname + " says! " + msgPlain);
 						  } else {
 							speak(chatname + "! ! .. " + msgPlain);
 						  }
-						} else if (English) {
+						} else if (TTS.English) {
 						  speak("Someone says! " + msgPlain);
 						} else {
 						  speak(msgPlain);
 						}
 					  }
-					}
+					}*/
 
 					if (timeoutDelay) {
 					  timeoutTimer = setTimeout(function () {

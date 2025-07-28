@@ -209,6 +209,8 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - nextcloud (requires domain added)
 - favorited (studio pop out chat)
 - xeenon (not pop out ; dashboard)
+- streamelements (overlay page)
+- patreon
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   

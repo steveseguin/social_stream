@@ -554,6 +554,21 @@ class EventFlowSystem {
                     return false;
                 }
                 
+            case 'messageLength':
+                const msgLength = messageText ? messageText.length : 0;
+                const targetLength = config.length || 100;
+                switch (config.comparison) {
+                    case 'gt': return msgLength > targetLength;
+                    case 'lt': return msgLength < targetLength;
+                    case 'eq': return msgLength === targetLength;
+                    default: return msgLength > targetLength; // Default to greater than
+                }
+                
+            case 'containsLink':
+                // Simple URL detection - matches http://, https://, or www.
+                const urlRegex = /https?:\/\/[^\s]+|www\.[^\s]+/i;
+                return messageText ? urlRegex.test(messageText) : false;
+                
             case 'fromSource':
                 if (config.source === '*') {
                     match = true; // Match any source
@@ -690,14 +705,70 @@ class EventFlowSystem {
                 result.modified = true;
                 break;
                 
+            case 'addPrefix':
+                if (config.prefix && message.chatmessage) {
+                    // Replace placeholders
+                    let prefix = config.prefix;
+                    prefix = prefix.replace(/\{username\}/g, message.chatname || '');
+                    prefix = prefix.replace(/\{source\}/g, message.type || '');
+                    prefix = prefix.replace(/\{chatname\}/g, message.chatname || '');
+                    
+                    result.message = {
+                        ...message,
+                        chatmessage: prefix + message.chatmessage
+                    };
+                    result.modified = true;
+                }
+                break;
+                
+            case 'addSuffix':
+                if (config.suffix && message.chatmessage) {
+                    // Replace placeholders
+                    let suffix = config.suffix;
+                    suffix = suffix.replace(/\{username\}/g, message.chatname || '');
+                    suffix = suffix.replace(/\{source\}/g, message.type || '');
+                    suffix = suffix.replace(/\{chatname\}/g, message.chatname || '');
+                    
+                    result.message = {
+                        ...message,
+                        chatmessage: message.chatmessage + suffix
+                    };
+                    result.modified = true;
+                }
+                break;
+                
+            case 'findReplace':
+                if (config.find && message.chatmessage) {
+                    try {
+                        // Create regex with proper escaping for literal search
+                        const flags = config.caseSensitive ? 'g' : 'gi';
+                        const escapedFind = config.find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        const regex = new RegExp(escapedFind, flags);
+                        
+                        result.message = {
+                            ...message,
+                            chatmessage: message.chatmessage.replace(regex, config.replace || '')
+                        };
+                        
+                        // Only mark as modified if something actually changed
+                        if (result.message.chatmessage !== message.chatmessage) {
+                            result.modified = true;
+                        }
+                    } catch (e) {
+                        console.error('[ExecuteAction - findReplace] Error:', e);
+                    }
+                }
+                break;
+                
             case 'relay':
                 console.log('[RELAY DEBUG - Action] Starting relay action execution');
+                console.log('[RELAY DEBUG - Action] Config:', config);
+                console.log('[RELAY DEBUG - Action] Message source:', message.type);
                 console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
-                console.log('[RELAY DEBUG - Action] sendMessageToTabs type:', typeof this.sendMessageToTabs);
                 
                 if (this.sendMessageToTabs && message && !message.reflection) {
                     // Replace all possible template variables
-                    let processedTemplate = config.template;
+                    let processedTemplate = config.template || '[{source}] {username}: {message}';
                     
                     // Replace all occurrences of template variables
                     processedTemplate = processedTemplate.replace(/\{source\}/g, message.type || '');
@@ -711,28 +782,49 @@ class EventFlowSystem {
                         response: processedTemplate
                     };
                     
-                    if (message.tid) {
-                        relayMessage.tid = message.tid;
+                    // Handle destination based on config
+                    if (config.destination === 'reply') {
+                        // Reply to sender only - use the original message's tab ID
+                        if (message.tid !== undefined && message.tid !== null) {
+                            relayMessage.tid = message.tid;
+                            console.log('[RELAY DEBUG - Action] Mode: Reply to sender, tid:', message.tid);
+                        } else {
+                            console.warn('[RELAY DEBUG - Action] Reply mode selected but no tid available in message');
+                            // Can't reply without a tid, so skip this action
+                            break;
+                        }
+                    } else if (config.destination) {
+                        // Send to specific destination
+                        relayMessage.destination = config.destination;
+                        console.log('[RELAY DEBUG - Action] Mode: Send to specific destination:', config.destination);
+                    } else {
+                        // Send to all platforms (default behavior)
+                        console.log('[RELAY DEBUG - Action] Mode: Send to all platforms');
                     }
                     
                     console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
-                    console.log('[RELAY DEBUG - Action] Config:', config);
-                    console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with params:');
-                    console.log('  - message:', relayMessage);
-                    console.log('  - reverse:', false);
-                    console.log('  - metadata:', null);
-                    console.log('  - relayMode:', true);
-                    console.log('  - antispam:', false);
-                    console.log('  - timeout:', config.timeout || 5100);
-					
-					let result = false;
-					relayMessage.response = this.sanitizeRelay(relayMessage.response, false).trim();
-					if (relayMessage.response) {
-						if (!this.checkExactDuplicateAlreadyRelayed(relayMessage.response, false, relayMessage.tid, false)){
-							result = this.sendMessageToTabs(relayMessage, true, message, true, false, 1000);
-						}
-					}
-					
+                    
+                    let result = false;
+                    relayMessage.response = this.sanitizeRelay(relayMessage.response, false).trim();
+                    if (relayMessage.response) {
+                        if (!this.checkExactDuplicateAlreadyRelayed(relayMessage.response, false, relayMessage.tid, false)){
+                            // Adjust parameters based on destination mode
+                            const reverse = config.destination !== 'reply'; // Don't reverse if replying to sender
+                            const relayMode = config.destination !== 'reply'; // Don't use relay mode for replies
+                            const timeout = config.timeout || 1000;
+                            
+                            console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
+                            console.log('  - message:', relayMessage);
+                            console.log('  - reverse:', reverse);
+                            console.log('  - metadata:', message);
+                            console.log('  - relayMode:', relayMode);
+                            console.log('  - antispam:', false);
+                            console.log('  - timeout:', timeout);
+                            
+                            result = this.sendMessageToTabs(relayMessage, reverse, message, relayMode, false, timeout);
+                        }
+                    }
+                    
                     console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
                 } else {
                     console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
@@ -793,6 +885,25 @@ class EventFlowSystem {
 					result.message = { ...message, webhookError: `Webhook execution error: ${error.message}` };
 					result.modified = true;
 					result.blocked = config.blockOnFailure !== undefined ? !!config.blockOnFailure : true; // Block on failure by default
+				}
+				break;
+                
+            case 'addPoints':
+				if (this.pointsSystem && config.amount > 0) {
+					const addResult = await this.pointsSystem.addPoints(
+						message.chatname,
+						message.type,
+						config.amount
+					);
+					
+					if (addResult.success) {
+						console.log(`[ExecuteAction - addPoints] Added ${config.amount} points to ${message.chatname}. New total: ${addResult.points}`);
+						// You might want to add the new points total to the message for other actions to use
+						result.message = { ...message, pointsTotal: addResult.points };
+						result.modified = true;
+					} else {
+						console.log(`[ExecuteAction - addPoints] Failed to add points for ${message.chatname}. Reason: ${addResult.message || 'Unknown error'}`);
+					}
 				}
 				break;
                 

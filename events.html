@@ -347,6 +347,7 @@ body.light-mode .message.active {
 
 	// Add parameters for display options
 	var donationsOnly = urlParams.has("donationsonly");
+	var minValue = urlParams.has("minvalue") ? parseInt(urlParams.get("minvalue")) : 5;
 	var giftSubsOnly = urlParams.has("giftedsubsonly");
 	var showUSD = urlParams.has("currency") ? true : false;
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
@@ -377,6 +378,11 @@ body.light-mode .message.active {
     
     function addMessageToOverlay(data) {
 		// Only display events from enabled sources
+		
+		if (data.meta){
+			console.log(data);
+		}
+		
 		if (sources && !sources.includes(data.type)) {
 			return;
 		}
@@ -450,6 +456,10 @@ body.light-mode .message.active {
 				} else if (usdValue >= 10) {
 					messageDiv.classList.add('medium-value');
 				}
+			}
+			
+			if (minValue && (minValue < usdValue)){
+				return;
 			}
 			if (!showUSD){
 				usdValue = 0;
