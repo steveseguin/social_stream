@@ -308,9 +308,9 @@ You will still need to manually redo these steps to update when needed, but you 
 
 ### Standalone version of the app
 
-There is an upcoming standalone version of Social Stream Ninja, which installs as an app, rather than as a browser extension.
+There is a now a standalone version of Social Stream Ninja, which installs as an app, rather than as a browser extension. It has the downsides of being blocked by some sites, but it offers better source organization and you don't need to keep windows open.
 
-To try out the preview test version of the app, you can download it below, but keep in mind that the bugs are still being worked out:
+You can download it below, but keep in mind that the bugs are still being worked out:
 
 [https://github.com/steveseguin/social_stream/releases/](https://github.com/steveseguin/social_stream/releases)
 MacOS and Windows 10/11 (x64) are supported currently, with limited Linux support now available via an AppImage.
