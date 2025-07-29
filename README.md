@@ -315,6 +315,8 @@ You can download it below, but keep in mind that the bugs are still being worked
 [https://github.com/steveseguin/social_stream/releases/](https://github.com/steveseguin/social_stream/releases)
 MacOS and Windows 10/11 (x64) are supported currently, with limited Linux support now available via an AppImage.
 
+Source code the standalone app [is here](https://github.com/steveseguin/ssn_app).
+
 Please note:  If using the same session ID in both the browser extension and the standalone version, you will only be able to use one at a time. 
 
 ### To use the extension
