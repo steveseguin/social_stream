@@ -779,7 +779,10 @@
 	if (chrome && chrome.runtime) {
 		chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			try {
-				if ("getSource" == request){sendResponse("twitch");	return;	}
+				if ("getSource" === request) {
+					sendResponse("twitch");
+					return;
+				}
 				if ("focusChat" == request) {
 					// console.log("FOCUS");
 					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
