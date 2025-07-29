@@ -83,6 +83,7 @@ p {
    background-color: #333;
    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
    width: fit-content;
+   max-width: 1400px;
 }
 
 table {
@@ -209,9 +210,13 @@ tr:hover {
        <select id="languageSelect"></select>
        <div id="status"></div>
        
-       <!-- TTS Test Controls -->
-       <div id="ttsControls" style="display: none; margin: 20px auto; padding: 20px; background-color: #2a2a2a; border-radius: 8px; max-width: 600px;">
-           <h3 style="color: #fff; margin-bottom: 15px;">Test TTS Settings</h3>
+       <!-- Main Content Wrapper for Side-by-Side Layout -->
+       <div id="mainContent" style="display: none; max-width: 1400px; margin: 0 auto;">
+           <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+               
+               <!-- Left Column: TTS Test Controls -->
+               <div id="ttsControls" style="flex: 1 1 500px; min-width: 300px; margin: 20px 0; padding: 20px; background-color: #2a2a2a; border-radius: 8px;">
+                   <h3 style="color: #fff; margin-bottom: 15px;">Test TTS Settings</h3>
            
            <div style="margin-bottom: 15px;">
                <label style="display: inline-block; width: 80px; color: #e0e0e0;">Voice:</label>
@@ -243,31 +248,61 @@ tr:hover {
                <textarea id="testText" style="width: calc(100% - 90px); padding: 5px; background-color: #333; color: #e0e0e0; border: 1px solid #444; border-radius: 4px; resize: vertical;" rows="3">Hello, this is a test of the text-to-speech system.</textarea>
            </div>
            
-           <button id="testButton" onclick="testCustomSettings();" style="width: 100%; padding: 10px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Test Voice</button>
-       </div>
-       
-       <!-- URL Parameter Guide -->
-       <div style="margin: 30px auto; padding: 20px; background-color: #2a2a2a; border-radius: 8px; max-width: 800px;">
+                   <button id="testButton" onclick="testCustomSettings();" style="width: 100%; padding: 10px; background-color: #007bff; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Test Voice</button>
+               </div>
+               
+               <!-- Right Column: URL Parameter Guide -->
+               <div style="flex: 1 1 600px; min-width: 300px; margin: 20px 0; padding: 20px; background-color: #2a2a2a; border-radius: 8px;">
            <h3 style="color: #fff; margin-bottom: 15px;">📋 TTS URL Parameters for Social Stream Ninja</h3>
            <p style="color: #e0e0e0; margin-bottom: 15px;">To use specific TTS voices in your Social Stream Ninja overlays (dock.html, featured.html, etc.), remove any existing TTS parameters and add the following:</p>
            
            <div style="background-color: #333; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-               <h4 style="color: #fff; margin-top: 0;">Basic TTS Parameters:</h4>
+               <h4 style="color: #fff; margin-top: 0;">Available TTS Parameters (Examples):</h4>
+               <p style="color: #b0b0b0; font-size: 14px; margin: 0 0 10px 0; font-style: italic;">These are example parameters - use the controls above to generate URLs with your specific settings</p>
                <ul style="color: #e0e0e0; list-style: none; padding-left: 0;">
-                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&speech=en-US</code> - Enable TTS with language code</li>
-                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&voice=Google US English</code> - Specific voice name</li>
-                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&rate=1.2</code> - Speaking rate (0.25 to 4)</li>
-                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&pitch=1.1</code> - Voice pitch (0 to 2)</li>
-                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&volume=0.8</code> - Volume level (0 to 1)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&speech=en-US</code> - Enable TTS with language code (required)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&voice=Google%20US%20English</code> - Specific voice name (optional, URL encoded)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&rate=1.2</code> - Speaking rate (optional, range: 0.25-4, default: 1)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&pitch=1.1</code> - Voice pitch (optional, range: 0-2, default: 1)</li>
+                   <li style="margin-bottom: 8px;"><code style="background-color: #444; padding: 2px 5px; border-radius: 3px;">&volume=0.8</code> - Volume level (optional, range: 0-1, default: 1)</li>
                </ul>
            </div>
            
            <div style="background-color: #333; padding: 15px; border-radius: 4px; margin-bottom: 20px;">
-               <h4 style="color: #fff; margin-top: 0;">Generated URL:</h4>
-               <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
-                   <code id="generatedUrl" style="color: #4caf50;">https://socialstream.ninja/dock.html?session=YOUR_SESSION&speech=en-US</code>
+               <h4 style="color: #fff; margin-top: 0;">🔗 Your Generated URLs (Based on Your Settings Above):</h4>
+               <p style="color: #b0b0b0; font-size: 14px; margin: 0 0 10px 0;">These URLs automatically update when you change the voice settings above</p>
+               
+               <div style="margin-bottom: 15px;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Dock Overlay (dock.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlDock" style="color: #4caf50;">https://socialstream.ninja/dock.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlDock');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
                </div>
-               <button onclick="copyUrl();" style="margin-top: 10px; padding: 8px 15px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Copy URL</button>
+               
+               <div style="margin-bottom: 15px;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Featured Overlay (featured.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlFeatured" style="color: #4caf50;">https://socialstream.ninja/featured.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlFeatured');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
+               </div>
+               
+               <div style="margin-bottom: 15px;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Bot Overlay (bot.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlBot" style="color: #4caf50;">https://socialstream.ninja/bot.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlBot');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
+               </div>
+               
+               <div style="margin-bottom: 0;">
+                   <h5 style="color: #e0e0e0; margin: 10px 0 5px;">Chatbot Overlay (chatbot.html):</h5>
+                   <div style="background-color: #222; padding: 10px; border-radius: 4px; word-break: break-all;">
+                       <code id="generatedUrlChatbot" style="color: #4caf50;">https://socialstream.ninja/chatbot.html?session=YOUR_SESSION&speech=en-US</code>
+                   </div>
+                   <button onclick="copyUrl('generatedUrlChatbot');" style="margin-top: 5px; padding: 6px 12px; background-color: #4caf50; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">Copy</button>
+               </div>
            </div>
            
            <div style="background-color: #d32f2f; padding: 15px; border-radius: 4px; margin-bottom: 15px;">
@@ -278,6 +313,8 @@ tr:hover {
                    <li>Not all voices work in all browsers/contexts</li>
                    <li>Google online voices require internet connection</li>
                </ul>
+                   </div>
+               </div>
            </div>
        </div>
        
@@ -347,7 +384,7 @@ tr:hover {
    		table.innerHTML = "<tr><th>Name</th><th>Language</th><th>Local</th><th>Default</th><th>Test</th></tr>";
 
    		document.getElementById('loadBtn').style.display = 'none';
-   		document.getElementById('ttsControls').style.display = 'block';
+   		document.getElementById('mainContent').style.display = 'block';
 
    		const voices = speechSynthesis.getVoices();
    		allVoices = voices;
@@ -519,39 +556,43 @@ tr:hover {
            const rateSlider = document.getElementById('rateSlider');
            const pitchSlider = document.getElementById('pitchSlider');
            const volumeSlider = document.getElementById('volumeSlider');
-           const urlDiv = document.getElementById('generatedUrl');
            
-           let url = 'https://socialstream.ninja/dock.html?session=YOUR_SESSION';
+           // Generate parameters
+           let params = '';
            
            // Add speech parameter with language
            if (voiceSelect.value && allVoices[voiceSelect.value]) {
                const voice = allVoices[voiceSelect.value];
-               url += `&speech=${voice.lang}`;
-               url += `&voice=${encodeURIComponent(voice.name)}`;
+               params += `&speech=${encodeURIComponent(voice.lang)}`;
+               params += `&voice=${encodeURIComponent(voice.name)}`;
            } else {
-               url += '&speech=en-US';
+               params += '&speech=en-US';
            }
            
            // Add rate if not default
            if (rateSlider.value !== '1') {
-               url += `&rate=${rateSlider.value}`;
+               params += `&rate=${encodeURIComponent(rateSlider.value)}`;
            }
            
            // Add pitch if not default
            if (pitchSlider.value !== '1') {
-               url += `&pitch=${pitchSlider.value}`;
+               params += `&pitch=${encodeURIComponent(pitchSlider.value)}`;
            }
            
            // Add volume if not default
            if (volumeSlider.value !== '1') {
-               url += `&volume=${volumeSlider.value}`;
+               params += `&volume=${encodeURIComponent(volumeSlider.value)}`;
            }
            
-           urlDiv.textContent = url;
+           // Update all overlay URLs
+           document.getElementById('generatedUrlDock').textContent = `https://socialstream.ninja/dock.html?session=YOUR_SESSION${params}`;
+           document.getElementById('generatedUrlFeatured').textContent = `https://socialstream.ninja/featured.html?session=YOUR_SESSION${params}`;
+           document.getElementById('generatedUrlBot').textContent = `https://socialstream.ninja/bot.html?session=YOUR_SESSION${params}`;
+           document.getElementById('generatedUrlChatbot').textContent = `https://socialstream.ninja/chatbot.html?session=YOUR_SESSION${params}`;
        }
        
-       function copyUrl() {
-           const urlText = document.getElementById('generatedUrl').textContent;
+       function copyUrl(elementId) {
+           const urlText = document.getElementById(elementId).textContent;
            navigator.clipboard.writeText(urlText).then(() => {
                const button = event.target;
                const originalText = button.textContent;
