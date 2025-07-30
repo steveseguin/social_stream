@@ -7783,36 +7783,8 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         }
     }
     
-    // Check destination - match against tab's source type instead of URL
-    if (data.destination) {
-        // Ensure tab.id exists before trying to get source type
-        if (!tab.id) {
-            console.log('[RELAY DEBUG - isValidTab] No tab.id available, cannot check source type');
-            // Fall back to URL matching if we have a URL
-            if (tab.url && !tab.url.includes(data.destination)) {
-                return false;
-            }
-            return true; // If no tab.id and no URL, allow it through
-        }
-        
-        const sourceType = await getSourceType(tab.id);
-        console.log('[RELAY DEBUG - isValidTab] Tab source type:', sourceType, 'Expected destination:', data.destination);
-        
-        // If we couldn't get the source type, fall back to URL matching for custom destinations
-        if (!sourceType) {
-            // For custom destinations like channel names, still use URL matching
-            if (!tab.url.includes(data.destination)) {
-                console.log('[RELAY DEBUG - isValidTab] No source type, URL check failed');
-                return false;
-            }
-        } else {
-            // For platform destinations, match exact source type
-            if (sourceType.toLowerCase() !== data.destination.toLowerCase()) {
-                console.log('[RELAY DEBUG - isValidTab] Source type mismatch');
-                return false;
-            }
-        }
-    }
+    // Check destination and timeout conditions
+    if (data.destination && !tab.url.includes(data.destination)) return false;
     if (reverse && !overrideTimeout && tab.id) {
         if (tab.id in messageTimeout && now - messageTimeout[tab.id] < overrideTimeout) {
             return false;
@@ -8021,12 +7993,9 @@ async function focusChat(tabId) {
 
 async function getSourceType(tabId) {
   return new Promise((resolve) => {
-    chrome.tabs.sendMessage(tabId, "getSource", (response) => {
-      if (chrome.runtime.lastError) {
-        resolve(false);
-        return;
-      }
-      resolve(response || false);
+    chrome.tabs.sendMessage(tabId, "getSource", (response = false) => {
+      chrome.runtime.lastError;
+      resolve(response);
     });
   });
 }
