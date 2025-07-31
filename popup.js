@@ -1,5 +1,29 @@
 // popup.js
 
+// Listen for language change messages from parent window
+window.addEventListener('message', function(event) {
+	// Check if this is a language change message
+	if (event.data && event.data.type === 'changeLanguage') {
+		console.log('Received language change message:', event.data.language);
+		
+		// Update the language selector if it exists
+		const languageSelect = document.querySelector('select[data-optionsetting="translationlanguage"]');
+		if (languageSelect && languageSelect.value !== event.data.language) {
+			// Save the new language setting
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: "optionsetting",
+				setting: "translationlanguage",
+				value: event.data.language
+			}, function(response) {
+				console.log("Language setting saved, reloading page");
+				// Reload the page to apply the new language
+				window.location.reload();
+			});
+		}
+	}
+});
+
 (function (w) {
 	w.URLSearchParams = w.URLSearchParams || function (searchString) {
 		var self = this;
@@ -1454,7 +1478,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
     speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
     kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
-    openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat']
+    openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
   };
   
   if (selectedProvider === null) {
@@ -1602,6 +1626,31 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, settingObj[optionParamKey]);
+                }
+                
+                // Handle OpenAI custom voice/model dropdowns
+                if (key === 'voiceopenai' && storedValue === 'custom') {
+                    // Show custom voice input for the appropriate section
+                    const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
+                                       paramNum === 2 ? 'openaiCustomVoice2' : 
+                                       paramNum === 10 ? 'openaiCustomVoice10' : null;
+                    if (customInputId) {
+                        const customInput = document.getElementById(customInputId);
+                        if (customInput) {
+                            customInput.style.display = 'inline-block';
+                        }
+                    }
+                } else if (key === 'openaimodel' && storedValue === 'custom') {
+                    // Show custom model input for the appropriate section
+                    const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
+                                       paramNum === 2 ? 'openaiCustomModel2' : 
+                                       paramNum === 10 ? 'openaiCustomModel10' : null;
+                    if (customInputId) {
+                        const customInput = document.getElementById(customInputId);
+                        if (customInput) {
+                            customInput.style.display = 'inline-block';
+                        }
+                    }
                 }
             }
         }
@@ -3589,9 +3638,25 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             openai: {
                 key: document.getElementById('openaiAPIKey')?.value,
                 endpoint: document.getElementById('openaiEndpoint')?.value || "https://api.openai.com/v1/audio/speech",
-                voice: document.getElementById('openaiVoiceSelect')?.value || 'alloy',
-                model: document.querySelector('[data-param1="openaimodel"]').checked ? 
-                    document.querySelector('[data-optionparam1="openaimodel"]')?.value || 'tts-1' : 'tts-1',
+                voice: (() => {
+                    const voiceSelect = document.getElementById('openaiVoiceSelect');
+                    if (voiceSelect?.value === 'custom') {
+                        const customVoice = document.getElementById('openaiCustomVoice')?.value;
+                        return customVoice || 'alloy';
+                    }
+                    return voiceSelect?.value || 'alloy';
+                })(),
+                model: (() => {
+                    if (document.querySelector('[data-param1="openaimodel"]').checked) {
+                        const modelSelect = document.querySelector('[data-optionparam1="openaimodel"]');
+                        if (modelSelect?.value === 'custom') {
+                            const customModel = document.getElementById('openaiCustomModel')?.value;
+                            return customModel || 'tts-1';
+                        }
+                        return modelSelect?.value || 'tts-1';
+                    }
+                    return 'tts-1';
+                })(),
                 speed: document.querySelector('[data-param1="openaispeed"]').checked ? 
                     parseFloat(document.querySelector('[data-numbersetting="openaispeed"]')?.value) || 1.0 : 1.0,
                 format: document.querySelector('[data-param1="openaiformat"]').checked ? 
@@ -4389,6 +4454,49 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			ProfileManager.saveCurrentProfile();
 		});
 	}
+	
+	// Add event listeners for OpenAI custom voice/model dropdowns
+	const setupOpenAICustomInputs = (voiceSelectId, modelSelectId, customVoiceId, customModelId) => {
+		const voiceSelect = document.getElementById(voiceSelectId);
+		const modelSelect = document.getElementById(modelSelectId);
+		const customVoiceInput = document.getElementById(customVoiceId);
+		const customModelInput = document.getElementById(customModelId);
+		
+		if (voiceSelect && customVoiceInput) {
+			voiceSelect.addEventListener('change', function() {
+				if (this.value === 'custom') {
+					customVoiceInput.style.display = 'inline-block';
+					customVoiceInput.focus();
+				} else {
+					customVoiceInput.style.display = 'none';
+					customVoiceInput.value = '';
+				}
+				updateSettings();
+			});
+			
+			customVoiceInput.addEventListener('input', updateSettings);
+		}
+		
+		if (modelSelect && customModelInput) {
+			modelSelect.addEventListener('change', function() {
+				if (this.value === 'custom') {
+					customModelInput.style.display = 'inline-block';
+					customModelInput.focus();
+				} else {
+					customModelInput.style.display = 'none';
+					customModelInput.value = '';
+				}
+				updateSettings();
+			});
+			
+			customModelInput.addEventListener('input', updateSettings);
+		}
+	};
+	
+	// Setup for all three sections
+	setupOpenAICustomInputs('openaiVoiceSelect', 'openaiModelSelect', 'openaiCustomVoice', 'openaiCustomModel');
+	setupOpenAICustomInputs('openaiVoiceSelect2', 'openaiModelSelect2', 'openaiCustomVoice2', 'openaiCustomModel2');
+	setupOpenAICustomInputs('openaiVoiceSelect10', 'openaiModelSelect10', 'openaiCustomVoice10', 'openaiCustomModel10');
 	
 	// Language selector handling
 	const languageIcon = document.getElementById('languageIcon');
