@@ -2669,7 +2669,7 @@ async function processIncomingMessage(message, sender=null){
 				}
 			}
 			try {
-				if (sender?.tab){
+				if (sender?.tab && ("iframeId" in sender)){
 					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, sender.frameId);
 					if (!shouldAllowMessage) {
 					  return;

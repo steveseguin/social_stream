@@ -29,6 +29,45 @@ try{
 		localStorage.removeItem('twitchOAuthToken');
 		localStorage.removeItem('twitchChannel');
 	}
+	
+	let tokenExpirationHandled = false;
+	function handleTokenExpiration() {
+		// Prevent multiple simultaneous expiration handlers
+		if (tokenExpirationHandled) return;
+		tokenExpirationHandled = true;
+		
+		console.log('Token expired - clearing credentials and prompting for re-authentication');
+		
+		// Clear stored credentials
+		clearStoredToken();
+		localStorage.removeItem('twitchUserAlias');
+		sessionStorage.removeItem('twitchOAuthState');
+		sessionStorage.removeItem('twitchOAuthToken');
+		
+		// Clean up connections
+		if (websocket && websocket.readyState === WebSocket.OPEN) {
+			websocket.close();
+		}
+		if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
+			eventSocket.close();
+		}
+		
+		// Update UI
+		updateHeaderInfo(null, null);
+		document.querySelectorAll('.socket').forEach(ele => ele.classList.add('hidden'));
+		document.querySelector('.auth').classList.remove('hidden');
+		
+		// Show notification
+		const textarea = document.querySelector("#textarea");
+		if (textarea) {
+			textarea.innerHTML = '<div style="color: red; font-weight: bold;">Authentication expired. Please sign in again.</div>';
+		}
+		
+		// Reset flag after a delay
+		setTimeout(() => {
+			tokenExpirationHandled = false;
+		}, 5000);
+	}
 	function showAuthButton() {
 		const authElement = document.querySelector('.auth');
 		if (authElement) authElement.classList.remove("hidden");
@@ -242,6 +281,7 @@ try{
 
 	let getViewerCountInterval = null;
 	let getFollowersInterval = null;
+	let tokenValidationInterval = null;
 	let badges = null;
 
 	async function validateToken(token) {
@@ -251,8 +291,43 @@ try{
 					'Authorization': `OAuth ${token}`
 				}
 			});
-			if (!response.ok) return null;
-			return await response.json();
+			if (!response.ok) {
+				if (response.status === 401 || response.status === 403) {
+					handleTokenExpiration();
+				}
+				return null;
+			}
+			const data = await response.json();
+			
+			// Update auth status indicator
+			const authStatus = document.getElementById('auth-status');
+			if (authStatus) {
+				if (data.expires_in && data.expires_in < 3600) {
+					// Token expires soon
+					authStatus.innerHTML = `⚠️ <span style="color: orange; font-size: 12px;">Expires in ${Math.floor(data.expires_in / 60)}m</span>`;
+					authStatus.title = `Authentication expires in ${Math.floor(data.expires_in / 60)} minutes`;
+				} else if (data.expires_in) {
+					// Token is valid
+					authStatus.innerHTML = `✅ <span style="color: green; font-size: 12px;">Valid</span>`;
+					authStatus.title = `Authentication valid for ${Math.floor(data.expires_in / 3600)} hours`;
+				}
+			}
+			
+			// Check if token will expire soon (within 1 hour)
+			if (data.expires_in && data.expires_in < 3600) {
+				console.warn(`Token expires in ${Math.floor(data.expires_in / 60)} minutes`);
+				// Show warning in UI
+				const textarea = document.querySelector("#textarea");
+				if (textarea && !document.querySelector('.token-expiry-warning')) {
+					const warning = document.createElement("div");
+					warning.className = 'token-expiry-warning';
+					warning.style.cssText = 'color: orange; font-weight: bold; padding: 5px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; margin: 5px 0;';
+					warning.innerHTML = `⚠️ Authentication expires in ${Math.floor(data.expires_in / 60)} minutes. Please re-authenticate soon.`;
+					textarea.insertBefore(warning, textarea.firstChild);
+				}
+			}
+			
+			return data;
 		} catch (error) {
 			console.error('Token validation error:', error);
 			return null;
@@ -344,6 +419,18 @@ try{
 			getViewerCount(channel);
 			clearInterval(getViewerCountInterval);
 			getViewerCountInterval = setInterval(() => getViewerCount(channel), 60000);
+			
+			// Set up periodic token validation
+			clearInterval(tokenValidationInterval);
+			tokenValidationInterval = setInterval(async () => {
+				const token = getStoredToken();
+				if (token) {
+					const validationResult = await validateToken(token);
+					if (!validationResult) {
+						console.log('Token validation failed during periodic check');
+					}
+				}
+			}, 300000); // Check every 5 minutes
 			
 		} catch (error) {
 			console.log('Error during connection setup:', error);
@@ -879,23 +966,28 @@ try{
 		try {
 			const controller = new AbortController();
 			const timeout_id = setTimeout(() => controller.abort(), timeout);
+			let response;
 			if (!headers) {
-				const response = await fetch(URL, {
+				response = await fetch(URL, {
 					timeout: timeout,
 					signal: controller.signal
 				});
-				clearTimeout(timeout_id);
-				return response;
 			} else {
-				const response = await fetch(URL, {
+				response = await fetch(URL, {
 					timeout: timeout,
 					signal: controller.signal,
 					headers: headers
 				});
-				clearTimeout(timeout_id);
-				return response;
+			}
+			clearTimeout(timeout_id);
+			
+			// Check for 401/403 errors which indicate expired token
+			if (response.status === 401 || response.status === 403) {
+				console.error('Authentication error - token may be expired');
+				handleTokenExpiration();
 			}
 			
+			return response;
 		} catch (e) {
 			console.error(e); // Changed from errorlog to console.error
 			return await fetch(URL); // iOS 11.x/12.0
@@ -1444,6 +1536,10 @@ try{
 		if (getFollowersInterval) {
 			clearInterval(getFollowersInterval);
 			getFollowersInterval = null;
+		}
+		if (tokenValidationInterval) {
+			clearInterval(tokenValidationInterval);
+			tokenValidationInterval = null;
 		}
 
 		// Close WebSocket connections
