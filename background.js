@@ -2567,8 +2567,7 @@ try {
         if (videoId && (
           tab.url.includes('https://studio.youtube.com/live_chat?') ||
           tab.url.includes('https://www.youtube.com/live_chat?') ||
-          tab.url.includes('https://www.youtube.com/live/') ||
-          (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
+          tab.url.includes('https://www.youtube.com/live/')
         )) {
           const isPopout = tab.url.includes('live_chat?is_popout=1');
           activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
