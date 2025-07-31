@@ -2144,6 +2144,7 @@ body.ssapp .wrapper.ssapp h3 {
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
+								<option value="openai">OpenAI</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -2467,6 +2468,75 @@ body.ssapp .wrapper.ssapp h3 {
 									<option value="de">German</option>
 									<option value="it">Italian</option>
 								</select>
+							</div>
+						</div>
+						<!-- OpenAI TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="openaiTTS">
+							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="openaiAPIKey" class="textInput instant" autocomplete="off" 
+									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam1="openaikey" />
+								<label for="openaiAPIKey">
+									<span data-translate="openai-api-key">OpenAI API Key</span>
+								</label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
+								<input type="text" id="openaiEndpoint" class="textInput instant" autocomplete="off" 
+									placeholder="https://api.openai.com/v1/audio/speech" data-textparam1="openaiendpoint" />
+								<label for="openaiEndpoint">
+									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+								</label>
+							</div>
+							<div>
+								🎭 Voice to use:
+								<select id="openaiVoiceSelect" data-optionparam1="voiceopenai" title="Select the OpenAI TTS Voice">
+									<option value="alloy" selected>Alloy</option>
+									<option value="echo">Echo</option>
+									<option value="fable">Fable</option>
+									<option value="onyx">Onyx</option>
+									<option value="nova">Nova</option>
+									<option value="shimmer">Shimmer</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="openaimodel" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-model">
+									🤖 Model
+									<select data-optionparam1="openaimodel">
+										<option value="tts-1" selected>tts-1 (faster)</option>
+										<option value="tts-1-hd">tts-1-hd (higher quality)</option>
+									</select>
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="openaispeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" 
+										size="5" data-numbersetting="openaispeed" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="openaiformat" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-format">
+									🎵 Audio Format
+									<select data-optionparam1="openaiformat">
+										<option value="mp3" selected>MP3</option>
+										<option value="opus">Opus</option>
+										<option value="aac">AAC</option>
+										<option value="flac">FLAC</option>
+									</select>
+								</span>
 							</div>
 						</div>
 					</div>
@@ -3622,6 +3692,7 @@ body.ssapp .wrapper.ssapp h3 {
                                 <option value="elevenlabs">ElevenLabs</option>
                                 <option value="google">Google Cloud</option>
                                 <option value="speechify">Speechify</option>
+                                <option value="openai">OpenAI</option>
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
@@ -3746,6 +3817,76 @@ body.ssapp .wrapper.ssapp h3 {
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="text" id="speechifyVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam2="voicespeechify" />
                                 <label for="speechifyVoiceID2"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+                            </div>
+                        </div>
+                        
+                        <!-- OpenAI TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="openaiTTS2">
+                            <h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="openaiAPIKey2" class="textInput instant" autocomplete="off" 
+                                    placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam2="openaikey" />
+                                <label for="openaiAPIKey2">
+                                    <span data-translate="openai-api-key">OpenAI API Key</span>
+                                </label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
+                                <input type="text" id="openaiEndpoint2" class="textInput instant" autocomplete="off" 
+                                    placeholder="https://api.openai.com/v1/audio/speech" data-textparam2="openaiendpoint" />
+                                <label for="openaiEndpoint2">
+                                    <span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+                                </label>
+                            </div>
+                            <div>
+                                🎭 Voice to use:
+                                <select id="openaiVoiceSelect2" data-optionparam2="voiceopenai" title="Select the OpenAI TTS Voice">
+                                    <option value="alloy" selected>Alloy</option>
+                                    <option value="echo">Echo</option>
+                                    <option value="fable">Fable</option>
+                                    <option value="onyx">Onyx</option>
+                                    <option value="nova">Nova</option>
+                                    <option value="shimmer">Shimmer</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="openaimodel" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-model">
+                                    🤖 Model
+                                    <select data-optionparam2="openaimodel">
+                                        <option value="tts-1" selected>tts-1 (faster)</option>
+                                        <option value="tts-1-hd">tts-1-hd (higher quality)</option>
+                                    </select>
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="openaispeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-tts-speed">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" 
+                                        size="5" data-numbersetting2="openaispeed" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="openaiformat" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-format">
+                                    🎵 Audio Format
+                                    <select data-optionparam2="openaiformat">
+                                        <option value="mp3" selected>MP3</option>
+                                        <option value="opus">Opus</option>
+                                        <option value="aac">AAC</option>
+                                        <option value="flac">FLAC</option>
+                                    </select>
+                                </span>
                             </div>
                         </div>
                         
@@ -4536,6 +4677,7 @@ body.ssapp .wrapper.ssapp h3 {
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
+								<option value="openai">OpenAI</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -4831,6 +4973,75 @@ body.ssapp .wrapper.ssapp h3 {
 									<option value="de">German</option>
 									<option value="it">Italian</option>
 								</select>
+							</div>
+						</div>
+						<!-- OpenAI TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="openaiTTS10">
+							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="openaiAPIKey10" class="textInput instant" autocomplete="off" 
+									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam10="openaikey" />
+								<label for="openaiAPIKey10">
+									<span data-translate="openai-api-key">OpenAI API Key</span>
+								</label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
+								<input type="text" id="openaiEndpoint10" class="textInput instant" autocomplete="off" 
+									placeholder="https://api.openai.com/v1/audio/speech" data-textparam10="openaiendpoint" />
+								<label for="openaiEndpoint10">
+									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+								</label>
+							</div>
+							<div>
+								🎭 Voice to use:
+								<select id="openaiVoiceSelect10" data-optionparam10="voiceopenai" title="Select the OpenAI TTS Voice">
+									<option value="alloy" selected>Alloy</option>
+									<option value="echo">Echo</option>
+									<option value="fable">Fable</option>
+									<option value="onyx">Onyx</option>
+									<option value="nova">Nova</option>
+									<option value="shimmer">Shimmer</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="openaimodel" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-model">
+									🤖 Model
+									<select data-optionparam10="openaimodel">
+										<option value="tts-1" selected>tts-1 (faster)</option>
+										<option value="tts-1-hd">tts-1-hd (higher quality)</option>
+									</select>
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="openaispeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" 
+										size="5" data-numbersetting10="openaispeed" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="openaiformat" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-format">
+									🎵 Audio Format
+									<select data-optionparam10="openaiformat">
+										<option value="mp3" selected>MP3</option>
+										<option value="opus">Opus</option>
+										<option value="aac">AAC</option>
+										<option value="flac">FLAC</option>
+									</select>
+								</span>
 							</div>
 						</div>
 						<!-- Kokoro TTS Options -->

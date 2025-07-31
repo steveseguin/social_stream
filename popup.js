@@ -1453,7 +1453,8 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
     google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
     speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
-    kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed']
+    kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
+    openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat']
   };
   
   if (selectedProvider === null) {
@@ -2022,7 +2023,7 @@ function handleAIProviderVisibility(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS", "openaiTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2037,13 +2038,15 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("speechifyTTS").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS").classList.remove("hidden");
+    } else if (provider == "openai") {
+        document.getElementById("openaiTTS").classList.remove("hidden");
     }
 }
 
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10", "openaiTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2058,13 +2061,15 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS10").classList.remove("hidden");
+    } else if (provider == "openai") {
+        document.getElementById("openaiTTS10").classList.remove("hidden");
     }
 }
 
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2079,6 +2084,8 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("speechifyTTS2").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS2").classList.remove("hidden");
+    } else if (provider == "openai") {
+        document.getElementById("openaiTTS2").classList.remove("hidden");
     } else if (provider == "piper") {
         document.getElementById("piperTTS2").classList.remove("hidden");
     } else if (provider == "espeak") {
@@ -2910,7 +2917,7 @@ function handleOptionSetting(ele, sync) {
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, 
-            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
+            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -3576,6 +3583,19 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 lang: document.querySelector('[data-param1="speechifylang"]').checked ? document.querySelector('[data-optionparam1="speechifylang"]')?.value || 'en-US' : 'en-US',
                 speed: document.querySelector('[data-param1="speechifyspeed"]').checked ? parseFloat(document.querySelector('[data-numbersetting="speechifyspeed"]')?.value) || 1.0 : 1.0,
                 model: document.querySelector('[data-param1="speechifymodel"]').checked ? document.querySelector('[data-optionparam1="speechifymodel"]')?.value || 'simba-english' : 'simba-english'
+            },
+            
+            // OpenAI settings
+            openai: {
+                key: document.getElementById('openaiAPIKey')?.value,
+                endpoint: document.getElementById('openaiEndpoint')?.value || "https://api.openai.com/v1/audio/speech",
+                voice: document.getElementById('openaiVoiceSelect')?.value || 'alloy',
+                model: document.querySelector('[data-param1="openaimodel"]').checked ? 
+                    document.querySelector('[data-optionparam1="openaimodel"]')?.value || 'tts-1' : 'tts-1',
+                speed: document.querySelector('[data-param1="openaispeed"]').checked ? 
+                    parseFloat(document.querySelector('[data-numbersetting="openaispeed"]')?.value) || 1.0 : 1.0,
+                format: document.querySelector('[data-param1="openaiformat"]').checked ? 
+                    document.querySelector('[data-optionparam1="openaiformat"]')?.value || 'mp3' : 'mp3'
             }
         };
         
@@ -3609,6 +3629,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         if (settings.google.key) return 'Google Cloud TTS';
         if (settings.elevenLabs.key) return 'ElevenLabs TTS';
         if (settings.speechify.key) return 'Speechify TTS';
+        if (settings.openai.key) return 'OpenAI TTS';
         return 'System TTS';
     },
     
@@ -3650,6 +3671,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             if (serviceName === 'Speechify TTS' && !settings.speechify.key) {
                 throw new Error('Speechify API key is required');
             }
+            if (serviceName === 'OpenAI TTS' && !settings.openai.key) {
+                throw new Error('OpenAI API key is required');
+            }
 
             this.speak(testPhrase, true);
         } catch (error) {
@@ -3676,6 +3700,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             } else if ((settings.service == "speechify") && settings.speechify.key) {
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings);
+                }
+            } else if ((settings.service == "openai") && settings.openai.key) {
+                if (!this.premiumQueueActive) {
+                    await this.openaiTTS(text, settings);
                 }
 			} else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
@@ -3945,6 +3973,28 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             },
             body: JSON.stringify(data)
         }, 'base64');
+    },
+    
+    openaiTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const url = settings.openai.endpoint || "https://api.openai.com/v1/audio/speech";
+        
+        const data = {
+            model: settings.openai.model,
+            input: text,
+            voice: settings.openai.voice,
+            response_format: settings.openai.format,
+            speed: settings.openai.speed
+        };
+        
+        this.fetchAudioContent(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${settings.openai.key}`
+            },
+            body: JSON.stringify(data)
+        }, 'blob');
     },
     
     async fetchAudioContent(url, options, type) {

@@ -144,6 +144,15 @@ TTS.speechifySettings = {
     voiceName: false
 };
 
+TTS.openAISettings = {
+    apiKey: false,
+    endpoint: "https://api.openai.com/v1/audio/speech",
+    model: "tts-1",
+    voice: "alloy",
+    responseFormat: "mp3",
+    speed: 1.0
+};
+
 TTS.kokoroDownloadInProgress = null;
 TTS.kokoroTtsInstance = null;
 TTS.kokoroSettings = {
@@ -163,6 +172,7 @@ TTS.piperSettings = {
 TTS.GoogleAPIKey = false;
 TTS.ElevenLabsKey = false;
 TTS.SpeechifyAPIKey = false;
+TTS.OpenAIAPIKey = false;
 TTS.useKokoroTTS = false;
 TTS.usePiper = false;
 TTS.useEspeak = false;
@@ -497,6 +507,7 @@ TTS.configure = function(urlParams) {
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
     TTS.SpeechifyAPIKey = urlParams.get("speechifykey") || false;
+    TTS.OpenAIAPIKey = urlParams.get("openaikey") || false;
     TTS.useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
     TTS.usePiper = urlParams.has("piper") || urlParams.has("pipertts") || false;
     TTS.useEspeak = urlParams.has("espeak") || urlParams.has("espeaktts") || false;
@@ -521,6 +532,9 @@ TTS.configure = function(urlParams) {
         } else if (TTS.TTSProvider === "speechify" && !TTS.SpeechifyAPIKey) {
             console.warn("Speechify selected but no API key provided. Falling back to system TTS.");
             TTS.TTSProvider = "system";
+        } else if (TTS.TTSProvider === "openai" && !TTS.OpenAIAPIKey) {
+            console.warn("OpenAI selected but no API key provided. Falling back to system TTS.");
+            TTS.TTSProvider = "system";
         }
     } else {
         // Backwards compatibility
@@ -536,6 +550,8 @@ TTS.configure = function(urlParams) {
             TTS.TTSProvider = "elevenlabs";
         } else if (TTS.SpeechifyAPIKey) {
             TTS.TTSProvider = "speechify";
+        } else if (TTS.OpenAIAPIKey) {
+            TTS.TTSProvider = "openai";
         }
     }
 
@@ -588,6 +604,14 @@ TTS.configure = function(urlParams) {
     TTS.speechifySettings.speed = urlParams.has("speechifyspeed") ? parseFloat(urlParams.get("speechifyspeed")) || 1.0 : TTS.rate;
     TTS.speechifySettings.model = urlParams.get("speechifymodel") || 'simba-english';
     TTS.speechifySettings.voiceName = urlParams.get("voicespeechify") || false;
+
+    // OpenAI settings
+    TTS.openAISettings.apiKey = TTS.OpenAIAPIKey;
+    TTS.openAISettings.endpoint = urlParams.get("openaiendpoint") || "https://api.openai.com/v1/audio/speech";
+    TTS.openAISettings.model = urlParams.get("openaimodel") || "tts-1";
+    TTS.openAISettings.voice = urlParams.get("voiceopenai") || "alloy";
+    TTS.openAISettings.responseFormat = urlParams.get("openaiformat") || "mp3";
+    TTS.openAISettings.speed = urlParams.has("openaispeed") ? parseFloat(urlParams.get("openaispeed")) || 1.0 : TTS.rate;
 
     // Enable speech if specified
     if (TTS.readDonos || TTS.newmembertts || TTS.ttsclicked || urlParams.has("speech") || urlParams.has("speak") || urlParams.has("tts")) {
@@ -956,6 +980,16 @@ TTS.speak = function(text, allow = false) {
 			if (TTS.SpeechifyAPIKey) {
 				if (!TTS.premiumQueueActive) {
 					TTS.SpeechifyTTS(text);
+				} else {
+					TTS.premiumQueueTTS.push(text);
+				}
+				return;
+			}
+			return; // Change from break to return
+		case "openai":
+			if (TTS.OpenAIAPIKey) {
+				if (!TTS.premiumQueueActive) {
+					TTS.openAITTS(text);
 				} else {
 					TTS.premiumQueueTTS.push(text);
 				}
@@ -2005,5 +2039,83 @@ TTS.piperTTS = async function(text) {
     } catch (e) {
         console.error('Piper TTS error:', e);
         TTS.finishedAudio();
+    }
+};
+
+/**
+ * OpenAI TTS implementation
+ * @param {string} text - Text to speak
+ */
+TTS.openAITTS = function(text) {
+    try {
+        TTS.premiumQueueActive = true;
+        const url = TTS.openAISettings.endpoint;
+
+        var data = {
+            model: TTS.openAISettings.model,
+            input: text,
+            voice: TTS.openAISettings.voice,
+            response_format: TTS.openAISettings.responseFormat,
+            speed: TTS.openAISettings.speed
+        };
+
+        const otherparam = {
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${TTS.openAISettings.apiKey}`
+            },
+            body: JSON.stringify(data),
+            method: "POST"
+        };
+
+        fetch(url, otherparam)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.blob();
+            })
+            .then(async res => {
+                const newBlob = new Blob([res], { type: `audio/${TTS.openAISettings.responseFormat}` });
+                
+                // Send to NeuroSync in parallel
+                if (TTS.neuroSyncEnabled) {
+                  TTS.sendToNeuroSync(newBlob).then(result => {
+                    if (result && result.blendshapes) {
+                      //console.log(`Received ${result.blendshapes.length} blendshape frames`);
+                    }
+                  }).catch(err => {
+                    console.error("NeuroSync error:", err);
+                  });
+                  return;
+                }
+                
+                const blobUrl = window.URL.createObjectURL(newBlob);
+                if (!TTS.audio) {
+                    TTS.audio = document.createElement("audio");
+                    TTS.audio.onended = TTS.finishedAudio;
+                }
+                TTS.audio.src = blobUrl;
+                if (TTS.volume) {
+                    TTS.audio.volume = TTS.volume;
+                }
+                
+                try {
+                    if (TTS.audioContext.state === 'suspended') {
+                        await TTS.audioContext.resume();
+                    }
+                    TTS.audio.play();
+                } catch (e) {
+                    TTS.finishedAudio();
+                    console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+                }
+            })
+            .catch(error => {
+                TTS.finishedAudio();
+                console.error("OpenAI TTS error:", error);
+            });
+    } catch (e) {
+        TTS.finishedAudio();
+        console.error("OpenAI TTS error:", e);
     }
 };
