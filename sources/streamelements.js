@@ -11,7 +11,6 @@
 
 	// Check if we're in an iframe
 	const isIframe = window !== window.top;
-	console.log(`SSN injected (iframe: ${isIframe}, location: ${window.location.href})`);
 	
 	// Debug: Check if Socket.IO is loaded
 	let checkCount = 0;
@@ -20,16 +19,12 @@
 		
 		// Check for Socket.IO
 		if (typeof io !== 'undefined') {
-			console.log('[StreamElements] Socket.IO found after ' + (checkCount * 500) + 'ms');
 			clearInterval(checkInterval);
 			
 			// Try to intercept Socket.IO connections
 			if (io.Manager && io.Manager.prototype.open) {
 				const originalOpen = io.Manager.prototype.open;
 				io.Manager.prototype.open = function(...args) {
-					console.log('[StreamElements] Socket.IO Manager opening connection:', this);
-					console.log('[StreamElements] Manager URI:', this.uri);
-					console.log('[StreamElements] Manager options:', this.opts);
 					return originalOpen.apply(this, args);
 				};
 			}
@@ -37,10 +32,7 @@
 			// Also intercept io() calls
 			const originalIo = window.io;
 			window.io = function(...args) {
-				console.log('[StreamElements] io() called with:', args);
 				const socket = originalIo.apply(this, args);
-				console.log('[StreamElements] Socket created:', socket);
-				console.log('[StreamElements] Socket URL:', socket.io?.uri || socket.uri);
 				return socket;
 			};
 			// Copy properties
@@ -49,30 +41,10 @@
 			}
 		}
 		
-		// Check for any socket objects in window or on Angular scope
-		if (window.socket) {
-			console.log('[StreamElements] Found window.socket:', window.socket);
-		}
 		
-		// Check Angular scope if available
-		if (window.angular && checkCount === 4) {
-			console.log('[StreamElements] Checking Angular for sockets...');
-			try {
-				const elements = document.querySelectorAll('[ng-controller], [data-ng-controller]');
-				elements.forEach(el => {
-					const scope = window.angular.element(el).scope();
-					if (scope && scope.socket) {
-						console.log('[StreamElements] Found socket in Angular scope:', scope.socket);
-					}
-				});
-			} catch (e) {
-				console.log('[StreamElements] Error checking Angular:', e);
-			}
-		}
 		
 		if (checkCount >= 60) { // Stop after 30 seconds
 			clearInterval(checkInterval);
-			console.log('[StreamElements] Socket.IO never loaded after 30 seconds');
 		}
 	}, 500);
 	
@@ -80,9 +52,6 @@
 	const scriptObserver = new MutationObserver((mutations) => {
 		for (const mutation of mutations) {
 			for (const node of mutation.addedNodes) {
-				if (node.tagName === 'SCRIPT' && node.src && node.src.includes('socket.io')) {
-					console.log('[StreamElements] Socket.IO script loading:', node.src);
-				}
 			}
 		}
 	});
@@ -92,13 +61,12 @@
 	// The user agent might be spoofed, so check for Electron-specific APIs
 	const isElectron = window.ninjafy !== undefined || (typeof process !== 'undefined' && process.versions && process.versions.electron);
 	
+	
 	// Function to set up Electron WebSocket handling
 	function setupElectronWebSocketHandler() {
 		if (!window.ninjafy || !window.ninjafy.onWebSocketMessage) {
 			return false;
 		}
-		
-		log('Running in Electron, using WebSocket debugger');
 		
 		window.ninjafy.onWebSocketMessage((event) => {
 			// Process based on event type
@@ -433,30 +401,9 @@
 		});
 	}
 
-	log('StreamElements interceptor initialized');
-	log('Page URL:', window.location.href);
 	
 	// If we're in the main frame, monitor for iframes that might make Socket.IO connections
 	if (!isIframe) {
-		// Check for existing iframes on the page
-		setTimeout(() => {
-			const iframes = document.querySelectorAll('iframe');
-			console.log(`[StreamElements] Found ${iframes.length} iframes after 2 seconds`);
-			iframes.forEach((iframe, index) => {
-				const src = iframe.src || 'no src';
-				console.log(`[StreamElements] iframe ${index}: ${src}`);
-				// If it's a StreamElements iframe, it might have the Socket.IO connection
-				if (src.includes('streamelements.com')) {
-					console.log(`[StreamElements] Found StreamElements iframe!`);
-				}
-			});
-		}, 2000);
-		
-		// Also check again after 10 seconds
-		setTimeout(() => {
-			const iframes = document.querySelectorAll('iframe');
-			console.log(`[StreamElements] Found ${iframes.length} iframes after 10 seconds`);
-		}, 10000);
 	}
 
 	// Notify extension that interceptor is ready

@@ -840,9 +840,9 @@ try{
 		if (isBitMessage) {
 			// Common cheermote patterns - includes standard and custom cheermotes
 			// Matches patterns like: Cheer100, 4Head100, Kappa1000, etc.
-			const cheermoteRegex = /\b((?:Cheer|Kappa|Kreygasm|SwiftRage|4Head|PJSalt|MrDestructoid|TriHard|NotLikeThis|FailFish|VoHiYo|PogChamp|FrankerZ|HeyGuys|DansGame|EleGiggle|BibleThump|Jebaited|SeemsGood|LUL|VoteYea|VoteNay|HotPokket|OpieOP|FutureMan|FBCatch|TBAngel|PeteZaroll|TwitchUnity|CoolStoryBob|PopCorn|KAPOW|PowerUpR|PowerUpL|DarkMode|HSCheers|PurpleStar|FBPass|FBRun|FBChallenge|RedCoat|GreenTeam|PurpleTeam|HolidayCheer|BitBoss|Streamlabs)(\d+))\b/gi;
+			const cheermoteRegex = /\b(Cheer|Kappa|Kreygasm|SwiftRage|4Head|PJSalt|MrDestructoid|TriHard|NotLikeThis|FailFish|VoHiYo|PogChamp|FrankerZ|HeyGuys|DansGame|EleGiggle|BibleThump|Jebaited|SeemsGood|LUL|VoteYea|VoteNay|HotPokket|OpieOP|FutureMan|FBCatch|TBAngel|PeteZaroll|TwitchUnity|CoolStoryBob|PopCorn|KAPOW|PowerUpR|PowerUpL|DarkMode|HSCheers|PurpleStar|FBPass|FBRun|FBChallenge|RedCoat|GreenTeam|PurpleTeam|HolidayCheer|BitBoss|Streamlabs)(\d+)\b/gi;
 			
-			text = text.replace(cheermoteRegex, (match, fullMatch, emoteName, bitAmount) => {
+			text = text.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
 				const amount = parseInt(bitAmount);
 				
 				if (settings.textonlymode) {
@@ -1179,6 +1179,14 @@ try{
 		
 		// Check if this is a bit message
 		const isBitMessage = !!(parsedMessage.tags && parsedMessage.tags.bits);
+		
+		// Debug logging for bit messages
+		if (isBitMessage) {
+			console.log("Bit message detected!");
+			console.log("Original message:", message);
+			console.log("Bit amount:", parsedMessage.tags.bits);
+			console.log("Emotes in message:", parsedMessage.tags.emotes);
+		}
 		
 		// Handle reply messages
 		if (replyMessage) {
