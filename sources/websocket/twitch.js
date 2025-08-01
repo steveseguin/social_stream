@@ -810,7 +810,7 @@ try{
 		}
 		return false;
 	}
-	function replaceEmotesWithImages(text, twitchEmotes = null) {
+	function replaceEmotesWithImages(text, twitchEmotes = null, isBitMessage = false) {
 		// First, handle Twitch native emotes if provided
 		if (twitchEmotes && Object.keys(twitchEmotes).length > 0) {
 			// Sort emote positions to replace from end to start (to maintain indices)
@@ -824,11 +824,52 @@ try{
 			let result = text;
 			sortedEmotes.forEach(({ emoteId, start, end }) => {
 				const emoteName = text.substring(start, end + 1);
-				const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
-				const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
-				result = result.substring(0, start) + emoteImg + result.substring(end + 1);
+				if (settings.textonlymode) {
+					// In text-only mode, just keep the emote name
+					result = result.substring(0, start) + emoteName + result.substring(end + 1);
+				} else {
+					const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
+					const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
+					result = result.substring(0, start) + emoteImg + result.substring(end + 1);
+				}
 			});
 			text = result;
+		}
+		
+		// Handle cheermotes (bit emotes) if this is a bit message
+		if (isBitMessage) {
+			// Common cheermote patterns - includes standard and custom cheermotes
+			// Matches patterns like: Cheer100, 4Head100, Kappa1000, etc.
+			const cheermoteRegex = /\b((?:Cheer|Kappa|Kreygasm|SwiftRage|4Head|PJSalt|MrDestructoid|TriHard|NotLikeThis|FailFish|VoHiYo|PogChamp|FrankerZ|HeyGuys|DansGame|EleGiggle|BibleThump|Jebaited|SeemsGood|LUL|VoteYea|VoteNay|HotPokket|OpieOP|FutureMan|FBCatch|TBAngel|PeteZaroll|TwitchUnity|CoolStoryBob|PopCorn|KAPOW|PowerUpR|PowerUpL|DarkMode|HSCheers|PurpleStar|FBPass|FBRun|FBChallenge|RedCoat|GreenTeam|PurpleTeam|HolidayCheer|BitBoss|Streamlabs)(\d+))\b/gi;
+			
+			text = text.replace(cheermoteRegex, (match, fullMatch, emoteName, bitAmount) => {
+				const amount = parseInt(bitAmount);
+				
+				if (settings.textonlymode) {
+					// In text-only mode, just show the cheermote as text with a space before the number
+					return emoteName + ' ' + amount;
+				}
+				
+				// Determine tier based on bit amount
+				let tier = 1;
+				if (amount >= 10000) tier = 10000;
+				else if (amount >= 5000) tier = 5000;
+				else if (amount >= 1000) tier = 1000;
+				else if (amount >= 100) tier = 100;
+				
+				// Determine color based on tier
+				let color = '#9c3ee8'; // purple (100-999)
+				if (tier >= 10000) color = '#f43021'; // red
+				else if (tier >= 5000) color = '#1db2a5'; // blue/teal
+				else if (tier >= 1000) color = '#0eba26'; // green
+				else if (tier < 100) color = '#979797'; // gray
+				
+				// Build the cheermote URL
+				const cheermoteUrl = `https://d3aqoihi2n8ty8.cloudfront.net/actions/${emoteName.toLowerCase()}/dark/animated/${tier}/1.gif`;
+				
+				// Return the cheermote image with the bit amount displayed after it
+				return `<img src="${cheermoteUrl}" alt="${escapeHtml(emoteName + ' ' + amount)}" title="${escapeHtml(emoteName + ' ' + amount)}" class="regular-emote"/><strong style="color: ${color}; margin-left: 2px;">${amount}</strong>`;
+			});
 		}
 		
 		// Then handle third-party emotes (BTTV, 7TV, FFZ)
@@ -839,6 +880,10 @@ try{
 		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
 			const emote = EMOTELIST[emoteMatch];
 			if (emote) {
+				if (settings.textonlymode) {
+					// In text-only mode, just return the emote text
+					return emoteMatch;
+				}
 				const escapedMatch = escapeHtml(emoteMatch);
 				const isZeroWidth = typeof emote !== "string" && emote.zw;
 				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
@@ -1132,17 +1177,20 @@ try{
 			}
 		}
 		
+		// Check if this is a bit message
+		const isBitMessage = !!(parsedMessage.tags && parsedMessage.tags.bits);
+		
 		// Handle reply messages
 		if (replyMessage) {
 			data.initial = replyMessage;
 			data.reply = originalMessage;
 			if (settings.textonlymode) {
-				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message, twitchEmotes);
+				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 			} else {
-				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message, twitchEmotes);
+				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 			}
 		} else {
-			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes);
+			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 		}
 		
 		data.membership = subscriber;
