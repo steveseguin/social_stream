@@ -947,6 +947,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		lastMessageTime = Date.now();
 		pushMessage(data);
 	}
 
@@ -1093,6 +1094,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		lastMessageTime = Date.now();
 		pushMessage(data);
 	}
 	var bigDUPE = false;
@@ -1100,7 +1102,9 @@
 	let observedDomElementForObserver2 = null;
 	var observer = false;
 	var observer2 = false;
-	var counter =0;
+	var counter = 0;
+	var lastMessageTime = Date.now();
+	var observerHealthCheckInterval = 60000; // Check every minute
 	
 	function start() {
 		if (!isExtensionOn) {
@@ -1108,6 +1112,21 @@
 			return;
 		}
 		counter+=1;
+		
+		// Health check: If no messages for over 2 minutes and observers exist, force restart
+		if (observer && (Date.now() - lastMessageTime > 120000) && counter % 30 === 0) {
+			console.log("[TikTok] No messages for 2+ minutes, forcing observer restart");
+			if (observer) {
+				observer.disconnect();
+				observer = false;
+				observedDomElementForObserver1 = null;
+			}
+			if (observer2) {
+				observer2.disconnect();
+				observer2 = false;
+				observedDomElementForObserver2 = null;
+			}
+		}
 		
 		if (settings.showviewercount || settings.hypemode) {
 			try {
