@@ -5107,6 +5107,89 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	// Initialize Spotify section inputs and handle manual saving
+	const spotifyClientIdInput = document.getElementById('spotifyClientId');
+	const spotifyClientSecretInput = document.getElementById('spotifyClientSecret');
+	
+	// Manual save function for Spotify credentials
+	function saveSpotifyCredentials() {
+		const clientId = spotifyClientIdInput?.value?.trim();
+		const clientSecret = spotifyClientSecretInput?.value?.trim();
+		
+		if (clientId || clientSecret) {
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: "textsetting",
+				setting: "spotifyClientId",
+				value: clientId
+			});
+			
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",  
+				type: "textsetting",
+				setting: "spotifyClientSecret",
+				value: clientSecret
+			});
+			
+			console.log('Spotify credentials saved');
+		}
+	}
+	
+	// Save on input change
+	if (spotifyClientIdInput) {
+		spotifyClientIdInput.addEventListener('change', saveSpotifyCredentials);
+		spotifyClientIdInput.addEventListener('blur', saveSpotifyCredentials);
+	}
+	
+	if (spotifyClientSecretInput) {
+		spotifyClientSecretInput.addEventListener('change', saveSpotifyCredentials);
+		spotifyClientSecretInput.addEventListener('blur', saveSpotifyCredentials);
+	}
+	
+	// Spotify Auth Button
+	const spotifyAuthButton = document.getElementById('spotifyAuthButton');
+	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');
+	
+	if (spotifyAuthButton) {
+		// Check if already authenticated
+		chrome.storage.local.get(['spotifyAccessToken'], function(result) {
+			if (result.spotifyAccessToken) {
+				spotifyAuthStatus.style.display = 'inline';
+				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+			}
+		});
+		
+		spotifyAuthButton.addEventListener('click', function() {
+			// Disable button during auth
+			spotifyAuthButton.disabled = true;
+			spotifyAuthButton.querySelector('span').textContent = '⏳ Connecting...';
+			
+			chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
+				spotifyAuthButton.disabled = false;
+				
+				if (response && response.success) {
+					spotifyAuthStatus.style.display = 'inline';
+					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+				} else {
+					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+					const errorMsg = response?.error || 'Unknown error';
+					console.error('Spotify auth failed:', errorMsg);
+					alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
+				}
+			});
+		});
+	}
+	
+	// Spotify Setup Guide Button
+	const spotifySetupGuide = document.getElementById('spotifySetupGuide');
+	if (spotifySetupGuide) {
+		spotifySetupGuide.addEventListener('click', function() {
+			// Open spotify.html in a new tab to show setup instructions
+			const spotifyGuideUrl = chrome.runtime.getURL('spotify.html');
+			chrome.tabs.create({ url: spotifyGuideUrl });
+		});
+	}
+
 	let initialSetup = setInterval(()=>{
 		log("pop up asking main for settings yet again..");
 		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {

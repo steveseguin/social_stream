@@ -7885,6 +7885,95 @@ body.ssapp .wrapper.ssapp h3 {
 
             <div class="wrapper">
                 <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-spotify-options" />
+                    <label class="collapsible-label" for="wrapper-spotify-options"><span data-translate="spotify-integration">🎵 Spotify Integration</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group">
+                                <h4>Spotify Configuration</h4>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="spotifyEnabled" data-setting="spotifyEnabled" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="enable-spotify-integration">Enable Spotify integration</span>
+                                </div>
+                                
+                                <div style="margin: 15px 0; padding: 10px; background: var(--color-accent-subtle); border-radius: 5px;">
+                                    <p style="margin: 0 0 10px 0; font-size: 0.9em;">
+                                        Need to create a Spotify app? 
+                                        <a href="https://developer.spotify.com/dashboard" target="_blank" style="color: var(--link-color); font-weight: bold;">
+                                            Open Spotify Dashboard →
+                                        </a>
+                                    </p>
+                                    <button id="spotifySetupGuide" class="glowingButton" style="width: 200px; margin: 0;">
+                                        <span>📋 View Setup Guide</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="text" id="spotifyClientId" class="textInput" autocomplete="off" placeholder="Your Spotify Client ID" data-textsetting="spotifyClientId" />
+                                    <label for="spotifyClientId"><span data-translate="spotify-client-id">&gt; Spotify Client ID</span></label>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="password" id="spotifyClientSecret" class="textInput" autocomplete="off" placeholder="Your Spotify Client Secret" data-textsetting="spotifyClientSecret" />
+                                    <label for="spotifyClientSecret"><span data-translate="spotify-client-secret">&gt; Spotify Client Secret</span></label>
+                                </div>
+                                
+                                <div style="margin-top: 10px;">
+                                    <button id="spotifyAuthButton" class="glowingButton" style="width: 200px;" title="Connect to Spotify">
+                                        <span>🔗 Connect to Spotify</span>
+                                    </button>
+                                    <span id="spotifyAuthStatus" style="margin-left: 10px; color: var(--success-color); display: none;">✓ Connected</span>
+                                </div>
+                                
+                                <h4 style="margin-top: 20px;">Now Playing Features</h4>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="spotifyNowPlaying" data-setting="spotifyNowPlaying" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="spotify-now-playing">Enable now playing tracking</span>
+                                </div>
+                                
+                                <div style="margin-top: 10px;">
+                                    <span data-translate="spotify-polling-interval">Polling interval (seconds):</span>
+                                    <input type="number" id="spotifyPollingInterval" data-numbersetting="spotifyPollingInterval" min="3" max="60" value="5" style="width: 60px;" />
+                                    <span style="font-size: 0.85em; color: var(--text-secondary);">(3-60 seconds)</span>
+                                </div>
+                                
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="spotifyAnnounceNewTrack" data-setting="spotifyAnnounceNewTrack" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="spotify-announce-new-track">Announce new tracks in chat</span>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="text" id="spotifyAnnounceFormat" class="textInput" autocomplete="off" placeholder="🎵 Now playing: {song} by {artist}" data-textsetting="spotifyAnnounceFormat" />
+                                    <label for="spotifyAnnounceFormat"><span data-translate="spotify-announce-format">&gt; Announcement format</span></label>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="text" id="spotifyBotName" class="textInput" autocomplete="off" placeholder="Spotify Bot" data-textsetting="spotifyBotName" />
+                                    <label for="spotifyBotName"><span data-translate="spotify-bot-name">&gt; Bot name for messages</span></label>
+                                </div>
+                                
+                                <h4 style="margin-top: 20px;">Chat Commands</h4>
+                                <p style="font-size: 0.9em; color: var(--text-secondary);">
+                                    Available commands: <code>!song</code>, <code>!nowplaying</code>, <code>!np</code><br>
+                                    Coming soon: <code>!queue</code>, <code>!request</code>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wrapper">
+                <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-points-options" />
                     <label class="collapsible-label" for="wrapper-global-points-options"><span data-translate="points-system">🏆 Points System</span></label>
                     <div class="collapsible-text">

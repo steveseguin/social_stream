@@ -20,6 +20,7 @@ async function loadScriptsInOrder() {
 		'./dashboard.js',
         './libs/objects.js?v=1',
         './libs/colours.js?v=1',
+        './spotify.js?v=1',
         './background.js?v=2',
         './db.js?v=1',
         './ai.js?v=2',

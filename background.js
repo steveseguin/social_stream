@@ -17,6 +17,9 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
+// Spotify integration
+var spotify = null;
+
 var messageCounterBase = Math.floor(Math.random() * 90000);
 var messageCounter = messageCounterBase;
 var lastAntiSpam = 0;
@@ -966,6 +969,11 @@ function loadSettings(item, resave = false) {
 		if (!sentimentAnalysisLoaded) {
 			loadSentimentAnalysis();
 		}
+	}
+	
+	// Initialize Spotify if enabled
+	if (settings.spotifyEnabled) {
+		initializeSpotify();
 	}
 
 	const timedMessage = settings['timedMessage'] || [];
@@ -2732,7 +2740,9 @@ async function processIncomingMessage(message, sender=null){
 	return message;
 }
 
-chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal) {
+	// Handle all messages in an async wrapper
+	(async () => {
 	var response = {};
 	var alreadySet = false;
 	
@@ -2751,17 +2761,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	}
 	
 	if (!loadedFirst){
-		for (var i = 0 ;i < 100;i++){
-			await sleep(100);
-			if (loadedFirst){
-				break;
+		// Handle async waiting
+		(async () => {
+			for (var i = 0 ;i < 100;i++){
+				await sleep(100);
+				if (loadedFirst){
+					break;
+				}
 			}
-		}
-		// add a stall here instead if this actually happens
-		if (!loadedFirst){
-			sendResponse({"tryAgain":true});
-			return response;
-		}
+			// add a stall here instead if this actually happens
+			if (!loadedFirst){
+				sendResponse({"tryAgain":true});
+			}
+		})();
+		return true; // Keep message channel open for async response
 	}
 	
 	try {
@@ -2937,9 +2950,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			
 			if (request.setting == "ticker") {
-				try {
-					await loadFileTicker();
-				} catch(e){}
+				loadFileTicker().catch(e => console.error("Error loading ticker:", e));
 			}
 			if (request.setting == "discord") {
 				pushSettingChange();
@@ -3047,7 +3058,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.bttv) {
 					clearAllWithPrefix("uid2bttv2.twitch:");
 					clearAllWithPrefix("uid2bttv2.youtube:");
-					await getBTTVEmotes();
+					getBTTVEmotes().catch(e => console.error("Error loading BTTV emotes:", e));
 				}
 				pushSettingChange();
 			}
@@ -3056,7 +3067,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					clearAllWithPrefix("uid2seventv.twitch:");
 					clearAllWithPrefix("uid2seventv.youtube:");
 					clearAllWithPrefix("uid2seventv.kick:");
-					await getSEVENTVEmotes();
+					getSEVENTVEmotes().catch(e => console.error("Error loading 7TV emotes:", e));
 				}
 				pushSettingChange();
 			}
@@ -3064,7 +3075,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.ffz) {
 					clearAllWithPrefix("uid2ffz.twitch:");
 					clearAllWithPrefix("uid2ffz.youtube:");
-					await getFFZEmotes();
+					getFFZEmotes().catch(e => console.error("Error loading FFZ emotes:", e));
 				}
 				pushSettingChange();
 			}
@@ -3072,7 +3083,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.pronouns) {
 					clearAllWithPrefix("Pronouns");
 					Pronouns = false;
-					await getPronouns();
+					getPronouns().catch(e => console.error("Error loading pronouns:", e));
 				}
 			}
 			if (request.setting == "addkarma") {
@@ -3506,6 +3517,53 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			localStorage.removeItem('customBadwords');
 			initialLoadBadWords();
 			sendResponse({success: true, state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "spotifyAuthCallback") {
+			// Handle Spotify OAuth callback
+			if (!spotify) {
+				initializeSpotify();
+			}
+			
+			if (spotify && request.code) {
+				(async () => {
+					try {
+						const success = await spotify.handleAuthCallback(request.code, request.state);
+						sendResponse({success: success});
+					} catch (error) {
+						console.error("Spotify callback error:", error);
+						sendResponse({success: false, error: error.message});
+					}
+				})();
+				return true; // Keep the message channel open for async response
+			} else {
+				sendResponse({success: false, error: "Spotify not initialized or no code provided"});
+			}
+		} else if (request.cmd && request.cmd === "spotifyAuth") {
+			// Start Spotify OAuth flow
+			console.log("Spotify auth request received");
+			
+			// Ensure we return true for async response BEFORE any async operations
+			setTimeout(async () => {
+				try {
+					if (!spotify) {
+						console.log("Initializing Spotify...");
+						initializeSpotify();
+					}
+					
+					if (!spotify) {
+						throw new Error("Failed to initialize Spotify integration");
+					}
+					
+					console.log("Starting OAuth flow...");
+					const success = await spotify.startOAuthFlow();
+					console.log("OAuth flow result:", success);
+					sendResponse({success: success});
+				} catch (error) {
+					console.error("Spotify auth error:", error);
+					sendResponse({success: false, error: error.message || error.toString()});
+				}
+			}, 0);
+			
+			return true; // Keep the message channel open for async response
 		} else if (request.cmd && request.target){
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P(request, request.target);
@@ -3515,7 +3573,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	return true;
+	})(); // End async wrapper
+	return true; // Keep message channel open for async responses
 });
 
 const randomDigits = () => {
@@ -5277,6 +5336,46 @@ function sendToPost(data) {
 		} catch (e) {
 			console.warn(e);
 		}
+	}
+}
+
+// Initialize Spotify integration
+function initializeSpotify() {
+	if (!spotify && window.SpotifyIntegration) {
+		spotify = new SpotifyIntegration();
+		
+		// Set up callbacks
+		const callbacks = {
+			onNewTrack: (track) => {
+				if (settings.spotifyAnnounceNewTrack) {
+					const message = settings.spotifyAnnounceFormat?.textsetting || "🎵 Now playing: {song} by {artist}";
+					const formattedMessage = spotify.formatTrackMessage(track, message);
+					
+					const data = {
+						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+						chatbadges: "",
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: formattedMessage,
+						chatimg: track.imageUrl || "https://socialstream.ninja/icons/bot.png",
+						hasDonation: "",
+						membership: "",
+						isRelay: false,
+						type: "spotify",
+						id: "spotify_" + Date.now(),
+						timestamp: Date.now()
+					};
+					
+					sendToDestinations(data);
+				}
+			}
+		};
+		
+		spotify.initialize(settings, callbacks);
+	} else if (spotify && !settings.spotifyEnabled) {
+		// Clean up if disabled
+		spotify.cleanup();
+		spotify = null;
 	}
 }
 
@@ -8721,6 +8820,31 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 		
+		// Handle Spotify commands
+		if (spotify && settings.spotifyEnabled && data.chatmessage) {
+			const response = spotify.handleCommand(data.chatmessage);
+			if (response) {
+				const botResponse = {
+					chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+					chatbadges: "",
+					backgroundColor: "",
+					textColor: "",
+					chatmessage: response,
+					chatimg: "https://socialstream.ninja/icons/bot.png",
+					hasDonation: "",
+					membership: "",
+					isRelay: false,
+					type: "spotify",
+					id: "spotify_response_" + Date.now(),
+					timestamp: Date.now()
+				};
+				
+				sendToS10(botResponse);
+				sendToPost(botResponse);
+				return null; // Don't process the original command further
+			}
+		}
+		
 		if (settings.dice && data.chatname && data.chatmessage && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
 			//	//console.log"dice detected");
 			//if (Date.now() - messageTimeout > 5100) {
@@ -8764,6 +8888,31 @@ async function applyBotActions(data, tab = false) {
 			}
 			// if we send the normal messages, it will screw things up.
 			//}
+		}
+		
+		// Handle Spotify commands
+		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
+			const spotifyResponse = spotify.handleCommand(data.chatmessage);
+			if (spotifyResponse) {
+				setTimeout(() => {
+					const botMessage = {
+						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+						chatbadges: "",
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: spotifyResponse,
+						chatimg: "https://socialstream.ninja/icons/bot.png",
+						hasDonation: "",
+						membership: "",
+						isRelay: false,
+						type: "spotify",
+						bot: "spotify",
+						id: "spotify_response_" + Date.now(),
+						timestamp: Date.now()
+					};
+					sendToDestinations(botMessage);
+				}, 50);
+			}
 		}
 		
 		
