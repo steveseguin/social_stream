@@ -3578,17 +3578,19 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 					
 					console.log("Starting OAuth flow...");
-					const success = await spotify.startOAuthFlow();
-					console.log("OAuth flow result:", success);
+					const result = await spotify.startOAuthFlow();
+					console.log("OAuth flow result:", result);
 					
-					// For Electron app, provide instructions
-					if (isSSAPP && success) {
+					// Handle the response
+					if (typeof result === 'object' && result.alreadyConnected) {
+						sendResponse({success: true, alreadyConnected: true});
+					} else if (isSSAPP && result) {
 						sendResponse({
 							success: true,
 							message: "Please complete authorization in your browser. After authorizing, copy the full URL from the callback page and use the 'Paste Callback URL' option in the settings."
 						});
 					} else {
-						sendResponse({success: success});
+						sendResponse({success: !!result});
 					}
 				} catch (error) {
 					console.error("Spotify auth error:", error);

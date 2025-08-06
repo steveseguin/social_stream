@@ -251,8 +251,8 @@ class SpotifyIntegration {
                 console.log("Token expired, refreshing...");
                 await this.refreshAccessToken();
             }
-            // Return success since we're already connected
-            return true;
+            // Return success with indicator that we're already connected
+            return { success: true, alreadyConnected: true };
         }
 
         const scopes = ['user-read-currently-playing', 'user-read-playback-state'];

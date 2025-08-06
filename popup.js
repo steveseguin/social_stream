@@ -5244,21 +5244,45 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 		
 		spotifyAuthButton.addEventListener('click', function() {
+			// Prevent multiple clicks
+			if (spotifyAuthButton.disabled) {
+				console.log('Spotify auth already in progress');
+				return;
+			}
+			
 			// Disable button during auth
 			spotifyAuthButton.disabled = true;
 			spotifyAuthButton.querySelector('span').textContent = '⏳ Connecting...';
 			
+			console.log('Sending Spotify auth request');
 			chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
+				// Check for Chrome runtime errors
+				if (chrome.runtime.lastError) {
+					console.error('Chrome runtime error:', chrome.runtime.lastError);
+					spotifyAuthButton.disabled = false;
+					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+					alert('Communication error: ' + chrome.runtime.lastError.message);
+					return;
+				}
+				
+				console.log('Spotify auth response received:', response);
 				spotifyAuthButton.disabled = false;
 				
 				if (response && response.success) {
 					spotifyAuthStatus.style.display = 'inline';
 					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+					// Show success message if already connected
+					if (response.alreadyConnected) {
+						console.log('Already connected to Spotify');
+					}
 				} else {
 					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
 					const errorMsg = response?.error || 'Unknown error';
 					console.error('Spotify auth failed:', errorMsg);
-					alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
+					// Only show alert if not already connected
+					if (errorMsg !== 'Already connected') {
+						alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
+					}
 				}
 			});
 		});
