@@ -2960,7 +2960,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			}
 			
 			if (request.setting == "ticker") {
-				loadFileTicker().catch(e => console.error("Error loading ticker:", e));
+				try {
+					await loadFileTicker();
+				} catch(e) {
+					console.error("Error loading ticker:", e);
+				}
 			}
 			if (request.setting == "discord") {
 				pushSettingChange();
