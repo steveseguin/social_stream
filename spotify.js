@@ -321,8 +321,8 @@ class SpotifyIntegration {
             const authUrl = `https://accounts.spotify.com/authorize?client_id=${this.settings.spotifyClientId.textsetting}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(' ')}&state=${state}`;
             
             // Check if we're in Electron environment
-            if (typeof ipcRenderer !== 'undefined' && ipcRenderer.sendSync) {
-                console.log('Using Electron OAuth flow');
+            if (typeof ipcRenderer !== 'undefined' && ipcRenderer.invoke) {
+                console.log('Using Electron OAuth flow with IPC handler');
                 
                 // Store state for callback validation
                 this.pendingAuthState = state;
@@ -330,62 +330,35 @@ class SpotifyIntegration {
                     await chrome.storage.local.set({ spotifyAuthState: state });
                 }
                 
-                // Since the OAuth window opens in Electron, we can intercept it!
-                // Open the auth URL in a new window (this will be an Electron window)
-                const authWindow = window.open(authUrl, 'spotify-auth', 'width=500,height=700');
-                
-                // Set up a listener for the OAuth callback
-                // Poll the window to check if it navigated to the callback URL
-                const checkInterval = setInterval(() => {
-                    try {
-                        if (authWindow && authWindow.location) {
-                            const currentUrl = authWindow.location.href;
-                            
-                            // Check if we've reached the callback URL
-                            if (currentUrl.startsWith('https://socialstream.ninja/spotify.html')) {
-                                // Parse the callback parameters
-                                const urlParams = new URLSearchParams(authWindow.location.search);
-                                const code = urlParams.get('code');
-                                const returnedState = urlParams.get('state');
-                                const error = urlParams.get('error');
-                                
-                                clearInterval(checkInterval);
-                                authWindow.close();
-                                
-                                if (error) {
-                                    console.error('OAuth error:', error);
-                                    throw new Error(`OAuth failed: ${error}`);
-                                }
-                                
-                                if (code) {
-                                    console.log('OAuth code received from Electron window');
-                                    // Process the callback directly
-                                    this.handleAuthCallback(code, returnedState).then(() => {
-                                        console.log('OAuth callback processed successfully');
-                                    }).catch(err => {
-                                        console.error('Failed to process OAuth callback:', err);
-                                    });
-                                }
-                            }
+                // Use the Electron main process handler that can intercept navigation
+                try {
+                    const result = await ipcRenderer.invoke('spotifyOAuth', authUrl);
+                    
+                    if (result && result.success && result.code) {
+                        console.log('OAuth code received from Electron IPC handler');
+                        // Process the callback directly
+                        const success = await this.handleAuthCallback(result.code, result.state);
+                        
+                        if (success) {
+                            console.log('OAuth callback processed successfully');
+                            return { success: true, message: 'Connected to Spotify!' };
+                        } else {
+                            throw new Error('Failed to process OAuth callback');
                         }
-                    } catch (e) {
-                        // Window might be closed or cross-origin
-                        if (authWindow && authWindow.closed) {
-                            clearInterval(checkInterval);
-                            console.log('Auth window closed by user');
-                        }
+                    } else if (result && result.error) {
+                        console.error('OAuth error from Electron:', result.error);
+                        throw new Error(`OAuth failed: ${result.error}`);
+                    } else {
+                        // Window closed without auth
+                        console.log('OAuth window closed without completing authentication');
+                        return { success: false, error: 'Authentication cancelled' };
                     }
-                }, 500);
-                
-                // Clean up after 5 minutes
-                setTimeout(() => {
-                    clearInterval(checkInterval);
-                    if (authWindow && !authWindow.closed) {
-                        authWindow.close();
-                    }
-                }, 300000);
-                
-                return true;
+                } catch (error) {
+                    console.error('Electron OAuth error:', error);
+                    // Fallback to opening window without IPC handler
+                    window.open(authUrl, 'spotify-auth', 'width=500,height=700');
+                    return { success: false, waitingForManualCallback: true };
+                }
             } else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
                 // For Chrome extension, use chrome.tabs.create
                 chrome.tabs.create({ url: authUrl });
