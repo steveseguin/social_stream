@@ -5243,7 +5243,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		
-		spotifyAuthButton.addEventListener('click', function() {
+		spotifyAuthButton.addEventListener('click', async function() {
 			// Prevent multiple clicks
 			if (spotifyAuthButton.disabled) {
 				console.log('Spotify auth already in progress');
@@ -5254,17 +5254,40 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			spotifyAuthButton.disabled = true;
 			spotifyAuthButton.querySelector('span').textContent = '⏳ Connecting...';
 			
-			console.log('Sending Spotify auth request');
-			chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
-				// Check for Chrome runtime errors
-				if (chrome.runtime.lastError) {
-					console.error('Chrome runtime error:', chrome.runtime.lastError);
-					spotifyAuthButton.disabled = false;
-					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-					alert('Communication error: ' + chrome.runtime.lastError.message);
-					return;
-				}
-				
+			console.log('Attempting Spotify auth...');
+			
+			// Try to open the background page directly if needed
+			try {
+				// First, try to communicate normally
+				chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
+					// Check for Chrome runtime errors
+					if (chrome.runtime.lastError) {
+						console.error('Chrome runtime error:', chrome.runtime.lastError);
+						// If communication failed, try opening background page directly
+						chrome.tabs.create({
+							url: chrome.runtime.getURL('background.html'),
+							active: false
+						}, function(tab) {
+							// Wait a bit for background page to load, then retry
+							setTimeout(() => {
+								chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(retryResponse) {
+									handleSpotifyAuthResponse(retryResponse);
+								});
+							}, 2000);
+						});
+						return;
+					}
+					
+					handleSpotifyAuthResponse(response);
+				});
+			} catch (error) {
+				console.error('Error during Spotify auth:', error);
+				spotifyAuthButton.disabled = false;
+				spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+				alert('Failed to initiate Spotify connection. Please try again.');
+			}
+			
+			function handleSpotifyAuthResponse(response) {
 				console.log('Spotify auth response received:', response);
 				spotifyAuthButton.disabled = false;
 				
@@ -5284,7 +5307,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
 					}
 				}
-			});
+			}
 		});
 	}
 	
