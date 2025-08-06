@@ -2751,8 +2751,6 @@ async function processIncomingMessage(message, sender=null){
 }
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
-	// Handle all messages in an async wrapper
-	(async () => {
 	var response = {};
 	var alreadySet = false;
 	
@@ -2771,20 +2769,17 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	}
 	
 	if (!loadedFirst){
-		// Handle async waiting
-		(async () => {
-			for (var i = 0 ;i < 100;i++){
-				await sleep(100);
-				if (loadedFirst){
-					break;
-				}
+		for (var i = 0 ;i < 100;i++){
+			await sleep(100);
+			if (loadedFirst){
+				break;
 			}
-			// add a stall here instead if this actually happens
-			if (!loadedFirst){
-				sendResponse({"tryAgain":true});
-			}
-		})();
-		return true; // Keep message channel open for async response
+		}
+		// add a stall here instead if this actually happens
+		if (!loadedFirst){
+			sendResponse({"tryAgain":true});
+			return response;
+		}
 	}
 	
 	try {
@@ -3072,7 +3067,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.bttv) {
 					clearAllWithPrefix("uid2bttv2.twitch:");
 					clearAllWithPrefix("uid2bttv2.youtube:");
-					getBTTVEmotes().catch(e => console.error("Error loading BTTV emotes:", e));
+					await getBTTVEmotes();
 				}
 				pushSettingChange();
 			}
@@ -3081,7 +3076,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					clearAllWithPrefix("uid2seventv.twitch:");
 					clearAllWithPrefix("uid2seventv.youtube:");
 					clearAllWithPrefix("uid2seventv.kick:");
-					getSEVENTVEmotes().catch(e => console.error("Error loading 7TV emotes:", e));
+					await getSEVENTVEmotes();
 				}
 				pushSettingChange();
 			}
@@ -3089,7 +3084,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.ffz) {
 					clearAllWithPrefix("uid2ffz.twitch:");
 					clearAllWithPrefix("uid2ffz.youtube:");
-					getFFZEmotes().catch(e => console.error("Error loading FFZ emotes:", e));
+					await getFFZEmotes();
 				}
 				pushSettingChange();
 			}
@@ -3097,7 +3092,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				if (settings.pronouns) {
 					clearAllWithPrefix("Pronouns");
 					Pronouns = false;
-					getPronouns().catch(e => console.error("Error loading pronouns:", e));
+					await getPronouns();
 				}
 			}
 			if (request.setting == "addkarma") {
@@ -3658,7 +3653,6 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	})(); // End async wrapper
 	return true; // Keep message channel open for async responses
 });
 
