@@ -5331,12 +5331,12 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			function handleSpotifyAuthResponse(response) {
 				console.log('Spotify auth response received:', response);
 				spotifyAuthButton.disabled = false;
+				const callbackDiv = document.getElementById('spotifyCallbackDiv');
 				
 				if (response && response.success) {
 					spotifyAuthStatus.style.display = 'inline';
 					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
 					// Hide manual callback input on success
-					const callbackDiv = document.getElementById('spotifyCallbackDiv');
 					if (window.ssapp && callbackDiv) {
 						callbackDiv.style.display = 'none';
 						document.getElementById('spotifyCallbackInput').value = '';
@@ -5364,7 +5364,6 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					console.error('Spotify auth failed:', errorMsg);
 					
 					// Show manual callback input only if in Electron and auth failed
-					const callbackDiv = document.getElementById('spotifyCallbackDiv');
 					if (window.ssapp && callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
 						callbackDiv.style.display = 'block';
 						console.log('Please paste the callback URL manually.');
