@@ -33,7 +33,8 @@ async function loadScriptsInOrder() {
             await loadScript(src);
             console.log(`Successfully loaded: ${src}`);
         } catch (error) {
-            console.error(`Error in script loading sequence at: ${src}`);
+            console.error(`Error in script loading sequence at: ${src}`, error);
+            // Continue loading other scripts even if one fails
         }
     }
     // After all scripts are loaded, specifically initialize the editor and UI logic from dashboard.js

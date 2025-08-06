@@ -19,6 +19,7 @@ var sentimentAnalysisLoaded = false;
 
 // Spotify integration
 var spotify = null;
+console.log("Background.js: SpotifyIntegration available?", typeof SpotifyIntegration !== 'undefined');
 
 var messageCounterBase = Math.floor(Math.random() * 90000);
 var messageCounter = messageCounterBase;
@@ -3556,6 +3557,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Process asynchronously
 			(async () => {
 				try {
+					// Check if SpotifyIntegration class is available
+					if (typeof SpotifyIntegration === 'undefined' && typeof window.SpotifyIntegration === 'undefined') {
+						console.error("SpotifyIntegration class not loaded yet");
+						sendResponse({success: false, error: "Spotify integration is still loading. Please try again in a moment."});
+						return;
+					}
+					
 					if (!spotify) {
 						console.log("Initializing Spotify...");
 						initializeSpotify();
@@ -3564,8 +3572,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					}
 					
 					if (!spotify) {
-						console.error("SpotifyIntegration class not available");
-						sendResponse({success: false, error: "Spotify integration not loaded. Please refresh the extension."});
+						console.error("Failed to initialize Spotify instance");
+						sendResponse({success: false, error: "Failed to initialize Spotify. Please check the console for errors."});
 						return;
 					}
 					
