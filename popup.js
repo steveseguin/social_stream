@@ -5256,16 +5256,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			`;
 			spotifyAuthButton.parentElement.appendChild(callbackDiv);
 			
-			// Show callback input after auth button click in Electron
-			const originalClickHandler = spotifyAuthButton.onclick;
-			spotifyAuthButton.addEventListener('click', function() {
-				if (window.ssapp) {
-					setTimeout(() => {
-						callbackDiv.style.display = 'block';
-						console.log('Please paste the callback URL from the browser into the input field above');
-					}, 2000);
-				}
-			});
+			// Only show callback input as a fallback if automatic auth fails
+			// Don't show it immediately anymore since we have automatic detection
 			
 			// Handle callback submission
 			document.getElementById('spotifyCallbackSubmit')?.addEventListener('click', function() {
@@ -5343,6 +5335,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (response && response.success) {
 					spotifyAuthStatus.style.display = 'inline';
 					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+					// Hide manual callback input on success
+					if (window.ssapp && callbackDiv) {
+						callbackDiv.style.display = 'none';
+						document.getElementById('spotifyCallbackInput').value = '';
+					}
 					// Show success message if already connected
 					if (response.alreadyConnected) {
 						console.log('Already connected to Spotify');
@@ -5351,6 +5348,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
 					const errorMsg = response?.error || 'Unknown error';
 					console.error('Spotify auth failed:', errorMsg);
+					
+					// Show manual callback input only if in Electron and auth failed
+					if (window.ssapp && callbackDiv && response?.needsManualCallback) {
+						callbackDiv.style.display = 'block';
+						console.log('Automatic auth failed. Please paste the callback URL manually.');
+					}
+					
 					// Only show alert if not already connected
 					if (errorMsg !== 'Already connected') {
 						alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
