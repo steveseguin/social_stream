@@ -17,6 +17,10 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
+// Spotify integration
+var spotify = null;
+console.log("Background.js: SpotifyIntegration available?", typeof SpotifyIntegration !== 'undefined');
+
 var messageCounterBase = Math.floor(Math.random() * 90000);
 var messageCounter = messageCounterBase;
 var lastAntiSpam = 0;
@@ -106,9 +110,19 @@ if (typeof chrome.runtime == "undefined") {
 		ipcRenderer.sendSync("storageSave", data);
 		log("ipcRenderer.sendSync('storageSave',data);");
 	};
-	chrome.storage.sync.get = async function (arg, callback) {
-		var response = await ipcRenderer.sendSync("storageGet", arg);
-		callback(response);
+	chrome.storage.sync.get = function (arg, callback) {
+		// Support both callback and promise-based usage
+		if (typeof callback === 'function') {
+			// Callback mode
+			var response = ipcRenderer.sendSync("storageGet", arg);
+			callback(response);
+		} else {
+			// Promise mode
+			return new Promise((resolve) => {
+				var response = ipcRenderer.sendSync("storageGet", arg);
+				resolve(response);
+			});
+		}
 	};
 	chrome.storage.sync.remove = async function (arg, callback) {
 		// only used for upgrading; not important atm.
@@ -116,15 +130,15 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.storage.local = {};
-	chrome.storage.local.get = async function (arg, callback) {
-		log("LOCAL SYNC GET");
-		var response = await ipcRenderer.sendSync("storageGet", arg);
-		callback(response);
+	chrome.storage.local.get = function (keys, callback) {
+		log("LOCAL STORAGE GET - using sync storage in Electron");
+		// In Electron, just use sync storage
+		return chrome.storage.sync.get(keys, callback);
 	};
-	chrome.storage.local.set = function (data) {
-		log("LOCAL SYNC SET", data);
-		ipcRenderer.sendSync("storageSave", data);
-		log("ipcRenderer.sendSync('storageSave',data);");
+	chrome.storage.local.set = function (data, callback) {
+		log("LOCAL STORAGE SET - using sync storage in Electron", data);
+		// In Electron, just use sync storage
+		return chrome.storage.sync.set(data, callback);
 	};
 
 	chrome.tabs = {};
@@ -880,7 +894,7 @@ function loadSettings(item, resave = false) {
 				}
 			}
 			reloadNeeded = true;
-			chrome.storage.sync.set({ streamID});
+			chrome.storage.local.set({ streamID});
 			chrome.runtime.lastError;
 		}
 	} else if (!streamID) {
@@ -923,7 +937,7 @@ function loadSettings(item, resave = false) {
 			password = item.password;
 			
 			reloadNeeded = true;
-			chrome.storage.sync.set({ password});
+			chrome.storage.local.set({ password});
 			chrome.runtime.lastError;
 		}
 	}
@@ -952,7 +966,7 @@ function loadSettings(item, resave = false) {
 			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn }); 
 			//ipcRenderer.send('backgroundLoaded');
 			if (resave && settings){
-				chrome.storage.sync.set({ settings});
+				chrome.storage.local.set({ settings});
 				chrome.runtime.lastError;
 			}
 		}
@@ -966,6 +980,11 @@ function loadSettings(item, resave = false) {
 		if (!sentimentAnalysisLoaded) {
 			loadSentimentAnalysis();
 		}
+	}
+	
+	// Initialize Spotify if enabled
+	if (settings.spotifyEnabled) {
+		initializeSpotify();
 	}
 
 	const timedMessage = settings['timedMessage'] || [];
@@ -1429,7 +1448,7 @@ async function overwriteFileExcel(data = false) {
 async function resetSettings(item = false) {
 	log("reset settings");
 	//alert("Settings reset");
-	chrome.storage.sync.get(properties, async function (item) {
+	chrome.storage.local.get(properties, async function (item) {
 		if (!item) {
 			item = {};
 		}
@@ -1440,7 +1459,7 @@ async function resetSettings(item = false) {
 }
 
 async function exportSettings() {
-	chrome.storage.sync.get(properties, async function (item) {
+	chrome.storage.local.get(properties, async function (item) {
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -1663,7 +1682,7 @@ function updateExtensionState(sync = true) {
 	}
 
 	if (sync) {
-		chrome.storage.sync.set({
+		chrome.storage.local.set({
 			state: isExtensionOn
 		});
 		chrome.runtime.lastError;
@@ -2779,11 +2798,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
+			let responseData;
 			try { 
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG};
 			} catch(e){
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings});
+				console.warn("Error including documentsRAG:", e);
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings};
 			}
+			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "saveSetting") {
 			if (typeof settings[request.setting] == "object") {
 				if (!request.value) {
@@ -2939,7 +2961,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "ticker") {
 				try {
 					await loadFileTicker();
-				} catch(e){}
+				} catch(e) {
+					console.error("Error loading ticker:", e);
+				}
 			}
 			if (request.setting == "discord") {
 				pushSettingChange();
@@ -3435,8 +3459,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 				
 				if (isSSAPP) {
-					if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
-						chrome.storage.sync.set({
+					if (chrome && chrome.storage && chrome.storage.local && chrome.storage.local.set) {
+						chrome.storage.local.set({
 							streamID: streamID || ""
 						});
 					}
@@ -3445,8 +3469,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if ("password" in request) {
 				password = request.password;
 				if (isSSAPP) {
-					if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
-						chrome.storage.sync.set({
+					if (chrome && chrome.storage && chrome.storage.local && chrome.storage.local.set) {
+						chrome.storage.local.set({
 							password: password || ""
 						});
 					}
@@ -3506,6 +3530,137 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			localStorage.removeItem('customBadwords');
 			initialLoadBadWords();
 			sendResponse({success: true, state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "spotifyAuthCallback") {
+			// Handle Spotify OAuth callback
+			if (!spotify) {
+				initializeSpotify();
+			}
+			
+			if (spotify && request.code) {
+				(async () => {
+					try {
+						const success = await spotify.handleAuthCallback(request.code, request.state);
+						sendResponse({success: success});
+					} catch (error) {
+						console.error("Spotify callback error:", error);
+						sendResponse({success: false, error: error.message});
+					}
+				})();
+				return true; // Keep the message channel open for async response
+			} else {
+				sendResponse({success: false, error: "Spotify not initialized or no code provided"});
+			}
+		} else if (request.cmd && request.cmd === "spotifyAuth") {
+			// Start Spotify OAuth flow
+			console.log("Spotify auth request received");
+			
+			// Process asynchronously
+			(async () => {
+				try {
+					// Check if SpotifyIntegration class is available
+					if (typeof SpotifyIntegration === 'undefined' && typeof window.SpotifyIntegration === 'undefined') {
+						console.error("SpotifyIntegration class not loaded yet");
+						sendResponse({success: false, error: "Spotify integration is still loading. Please try again in a moment."});
+						return;
+					}
+					
+					if (!spotify) {
+						console.log("Initializing Spotify...");
+						initializeSpotify();
+						// Wait a bit for initialization
+						await new Promise(resolve => setTimeout(resolve, 100));
+					}
+					
+					if (!spotify) {
+						console.error("Failed to initialize Spotify instance");
+						sendResponse({success: false, error: "Failed to initialize Spotify. Please check the console for errors."});
+						return;
+					}
+					
+					console.log("Starting OAuth flow...");
+					const result = await spotify.startOAuthFlow();
+					console.log("OAuth flow result:", result);
+					
+					// Handle the response
+					if (typeof result === 'object' && result.alreadyConnected) {
+						sendResponse({success: true, alreadyConnected: true});
+					} else if (isSSAPP && result) {
+						sendResponse({
+							success: true,
+							message: "Please complete authorization in your browser. After authorizing, copy the full URL from the callback page and use the 'Paste Callback URL' option in the settings."
+						});
+					} else {
+						sendResponse({success: !!result});
+					}
+				} catch (error) {
+					console.error("Spotify auth error:", error);
+					sendResponse({success: false, error: error.message || error.toString()});
+				}
+			})();
+			
+			return true; // Keep the message channel open for async response
+		} else if (request.cmd && request.cmd === "spotifyManualCallback") {
+			// Handle manual callback URL paste (for Electron app)
+			console.log("Manual Spotify callback received with URL:", request.url);
+			
+			if (!request.url) {
+				sendResponse({success: false, error: "No URL provided"});
+				return;
+			}
+			
+			// Process asynchronously
+			(async () => {
+				try {
+					// Initialize Spotify if needed
+					if (!spotify) {
+						console.log("Spotify not initialized, initializing now...");
+						initializeSpotify();
+						// Wait a bit for initialization
+						await new Promise(resolve => setTimeout(resolve, 500));
+					}
+					
+					if (!spotify) {
+						throw new Error("Failed to initialize Spotify integration");
+					}
+					
+					// Parse the callback URL
+					const url = new URL(request.url);
+					const code = url.searchParams.get('code');
+					const state = url.searchParams.get('state');
+					const error = url.searchParams.get('error');
+					
+					console.log("Parsed OAuth callback - code:", code ? "present" : "missing", "state:", state, "error:", error);
+					
+					if (error) {
+						sendResponse({success: false, error: error});
+					} else if (code) {
+						console.log("Processing Spotify callback with code...");
+						// Process the callback
+						const success = await spotify.handleAuthCallback(code, state);
+						console.log("Spotify callback completed, success:", success);
+						
+						if (success) {
+							// Verify tokens were saved
+							chrome.storage.local.get(['settings'], function(data) {
+								if (data.settings && data.settings.spotifyAccessToken) {
+									console.log("✅ Spotify tokens successfully saved to settings!");
+								} else {
+									console.warn("⚠️ Spotify tokens may not have been saved properly");
+								}
+							});
+						}
+						
+						sendResponse({success: success});
+					} else {
+						sendResponse({success: false, error: "No authorization code found in URL"});
+					}
+				} catch (error) {
+					console.error("Manual callback error:", error);
+					sendResponse({success: false, error: error.message || error.toString()});
+				}
+			})();
+			
+			return true; // Keep message channel open for async response
 		} else if (request.cmd && request.target){
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P(request, request.target);
@@ -3515,7 +3670,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	return true;
+	return true; // Keep message channel open for async responses
 });
 
 const randomDigits = () => {
@@ -5277,6 +5432,61 @@ function sendToPost(data) {
 		} catch (e) {
 			console.warn(e);
 		}
+	}
+}
+
+// Initialize Spotify integration
+function initializeSpotify() {
+	if (!spotify) {
+		// Check if SpotifyIntegration is available
+		if (typeof SpotifyIntegration !== 'undefined') {
+			console.log("Creating new SpotifyIntegration instance");
+			spotify = new SpotifyIntegration();
+		} else if (window.SpotifyIntegration) {
+			console.log("Creating new window.SpotifyIntegration instance");
+			spotify = new window.SpotifyIntegration();
+		} else {
+			console.warn("SpotifyIntegration class not yet available, will retry...");
+			// Retry after a short delay
+			setTimeout(initializeSpotify, 500);
+			return;
+		}
+		
+		// Set up callbacks
+		const callbacks = {
+			onNewTrack: (track) => {
+				if (settings.spotifyAnnounceNewTrack) {
+					const message = settings.spotifyAnnounceFormat?.textsetting || "🎵 Now playing: {song} by {artist}";
+					const formattedMessage = spotify.formatTrackMessage(track, message);
+					
+					const data = {
+						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+						chatbadges: "",
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: formattedMessage,
+						chatimg: track.imageUrl || "https://socialstream.ninja/icons/bot.png",
+						hasDonation: "",
+						membership: "",
+						isRelay: false,
+						type: "spotify",
+						id: "spotify_" + Date.now(),
+						timestamp: Date.now()
+					};
+					
+					sendToDestinations(data);
+				}
+			}
+		};
+		
+		// Initialize with settings (async but we don't need to wait here)
+		spotify.initialize(settings, callbacks).catch(err => {
+			console.error("Failed to initialize Spotify:", err);
+		});
+	} else if (spotify && !settings.spotifyEnabled) {
+		// Clean up if disabled
+		spotify.cleanup();
+		spotify = null;
 	}
 }
 
@@ -7256,7 +7466,7 @@ function blockUser(data){
 		if (!isAlreadyBlocked) {
 			// Update blacklist settings
 			settings.blacklistusers.textsetting += (settings.blacklistusers.textsetting ? "," : "") + userToBlock.username + ":" + userToBlock.type;
-			chrome.storage.local.set({ settings: settings });
+			chrome.storage.sync.set({ settings: settings });
 			// Check for errors in chrome storage operations
 			if (chrome.runtime.lastError) {
 				console.error("Error updating settings:", chrome.runtime.lastError.message);
@@ -8721,6 +8931,31 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 		
+		// Handle Spotify commands
+		if (spotify && settings.spotifyEnabled && data.chatmessage) {
+			const response = spotify.handleCommand(data.chatmessage);
+			if (response) {
+				const botResponse = {
+					chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+					chatbadges: "",
+					backgroundColor: "",
+					textColor: "",
+					chatmessage: response,
+					chatimg: "https://socialstream.ninja/icons/bot.png",
+					hasDonation: "",
+					membership: "",
+					isRelay: false,
+					type: "spotify",
+					id: "spotify_response_" + Date.now(),
+					timestamp: Date.now()
+				};
+				
+				sendToS10(botResponse);
+				sendToPost(botResponse);
+				return null; // Don't process the original command further
+			}
+		}
+		
 		if (settings.dice && data.chatname && data.chatmessage && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
 			//	//console.log"dice detected");
 			//if (Date.now() - messageTimeout > 5100) {
@@ -8764,6 +8999,31 @@ async function applyBotActions(data, tab = false) {
 			}
 			// if we send the normal messages, it will screw things up.
 			//}
+		}
+		
+		// Handle Spotify commands
+		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
+			const spotifyResponse = spotify.handleCommand(data.chatmessage);
+			if (spotifyResponse) {
+				setTimeout(() => {
+					const botMessage = {
+						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+						chatbadges: "",
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: spotifyResponse,
+						chatimg: "https://socialstream.ninja/icons/bot.png",
+						hasDonation: "",
+						membership: "",
+						isRelay: false,
+						type: "spotify",
+						bot: "spotify",
+						id: "spotify_response_" + Date.now(),
+						timestamp: Date.now()
+					};
+					sendToDestinations(botMessage);
+				}, 50);
+			}
 		}
 		
 		
@@ -9614,7 +9874,7 @@ window.onload = async function () {
 		loadSettings(programmedSettings, true);
     } else {
         log("Loading settings from the main file into the background.js");
-        chrome.storage.sync.get(properties, function (item) {
+        chrome.storage.local.get(properties, function (item) {
             if (isSSAPP && item) {
                 loadSettings(item, false); 
                 
@@ -9630,7 +9890,7 @@ window.onload = async function () {
                 });
                 chrome.storage.local.get(["settings"], function (item2) {
                     if (item2?.settings){
-                        item = [...item, ...item2];
+                        item = Object.assign({}, item, item2);
                     }
                     if (item?.settings){
                         chrome.storage.local.set({

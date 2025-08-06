@@ -20,6 +20,7 @@ async function loadScriptsInOrder() {
 		'./dashboard.js',
         './libs/objects.js?v=1',
         './libs/colours.js?v=1',
+        './spotify.js?v=1',
         './background.js?v=2',
         './db.js?v=1',
         './ai.js?v=2',
@@ -32,7 +33,8 @@ async function loadScriptsInOrder() {
             await loadScript(src);
             console.log(`Successfully loaded: ${src}`);
         } catch (error) {
-            console.error(`Error in script loading sequence at: ${src}`);
+            console.error(`Error in script loading sequence at: ${src}`, error);
+            // Continue loading other scripts even if one fails
         }
     }
     // After all scripts are loaded, specifically initialize the editor and UI logic from dashboard.js

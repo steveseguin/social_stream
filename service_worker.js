@@ -182,6 +182,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	
   if (message.type === 'injectCustomSource') {
     injectCustomSource(message.source, message.tabId);
+  } else if (message.cmd === 'spotifyAuth' || message.cmd === 'spotifyAuthCallback') {
+    // Forward Spotify auth requests to background page
+    console.log('Service worker forwarding Spotify auth to background');
+    
+    checkBackgroundPageIsOpen().then((isOpen) => {
+      if (!isOpen) {
+        ensureBackgroundPageIsOpen().then(() => {
+          // Forward the message to background
+          chrome.runtime.sendMessage(message, (response) => {
+            if (chrome.runtime.lastError) {
+              console.error("Error forwarding Spotify auth:", chrome.runtime.lastError);
+              sendResponse({ success: false, error: 'Failed to communicate with background page' });
+            } else {
+              sendResponse(response);
+            }
+          });
+        });
+      } else {
+        // Forward the message to background
+        chrome.runtime.sendMessage(message, (response) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error forwarding Spotify auth:", chrome.runtime.lastError);
+            sendResponse({ success: false, error: 'Failed to communicate with background page' });
+          } else {
+            sendResponse(response);
+          }
+        });
+      }
+    });
+    
+    return true; // Keep message channel open for async response
   } else if (message.type === 'toBackground') {
     log("SERVICE WORKER: ", message);
 

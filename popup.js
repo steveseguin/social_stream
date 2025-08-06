@@ -135,10 +135,67 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.runtime = {}
 	chrome.runtime.id = 1;
 	
+	// Add chrome.storage API for Electron
+	chrome.storage = {
+		local: {
+			get: function(keys, callback) {
+				// Use localStorage as a fallback for Electron
+				if (typeof callback === 'function') {
+					const result = {};
+					const keysArray = Array.isArray(keys) ? keys : [keys];
+					keysArray.forEach(key => {
+						const value = localStorage.getItem('chrome_storage_' + key);
+						if (value !== null) {
+							try {
+								result[key] = JSON.parse(value);
+							} catch (e) {
+								result[key] = value;
+							}
+						}
+					});
+					setTimeout(() => callback(result), 0);
+				}
+			},
+			set: function(items, callback) {
+				// Use localStorage as a fallback for Electron
+				Object.keys(items).forEach(key => {
+					localStorage.setItem('chrome_storage_' + key, JSON.stringify(items[key]));
+				});
+				if (typeof callback === 'function') {
+					setTimeout(() => callback(), 0);
+				}
+			},
+			remove: function(keys, callback) {
+				const keysArray = Array.isArray(keys) ? keys : [keys];
+				keysArray.forEach(key => {
+					localStorage.removeItem('chrome_storage_' + key);
+				});
+				if (typeof callback === 'function') {
+					setTimeout(() => callback(), 0);
+				}
+			}
+		},
+		sync: {
+			get: function(keys, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.get(keys, callback);
+			},
+			set: function(items, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.set(items, callback);
+			},
+			remove: function(keys, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.remove(keys, callback);
+			}
+		}
+	};
+	
 	log("pop up started");
 	
 	if (typeof require !== "undefined"){
-		var { ipcRenderer, contextBridge } = require("electron");
+		var { ipcRenderer, contextBridge, shell } = require("electron");
+		window.shell = shell;
 		
 		ssapp = true;
 		
@@ -256,6 +313,33 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	chrome.runtime.getManifest = function(){
 		return false; // I'll need to add version info eventually
+	}
+	
+	chrome.runtime.getURL = function(path){
+		// In Electron, construct URL relative to the app's base path
+		// Remove leading slash if present
+		if (path.startsWith('/')) {
+			path = path.substring(1);
+		}
+		// Get the current window location and construct relative URL
+		const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+		return baseUrl + path;
+	}
+	
+	// Add chrome.tabs API for Electron
+	chrome.tabs = {
+		create: function(options) {
+			// In Electron, open in default browser or new window
+			if (options && options.url) {
+				if (typeof require !== "undefined" && window.shell) {
+					// Use Electron's shell to open external links
+					window.shell.openExternal(options.url);
+				} else {
+					// Fallback to window.open
+					window.open(options.url, '_blank');
+				}
+			}
+		}
 	}
 	
 	try {
@@ -5104,6 +5188,136 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}
 				});
 			}
+		});
+	}
+
+	// Initialize Spotify section inputs and handle manual saving
+	const spotifyClientIdInput = document.getElementById('spotifyClientId');
+	const spotifyClientSecretInput = document.getElementById('spotifyClientSecret');
+	
+	// Manual save function for Spotify credentials
+	function saveSpotifyCredentials() {
+		const clientId = spotifyClientIdInput?.value?.trim();
+		const clientSecret = spotifyClientSecretInput?.value?.trim();
+		
+		if (clientId || clientSecret) {
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: "textsetting",
+				setting: "spotifyClientId",
+				value: clientId
+			});
+			
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",  
+				type: "textsetting",
+				setting: "spotifyClientSecret",
+				value: clientSecret
+			});
+			
+			console.log('Spotify credentials saved');
+		}
+	}
+	
+	// Save on input change
+	if (spotifyClientIdInput) {
+		spotifyClientIdInput.addEventListener('change', saveSpotifyCredentials);
+		spotifyClientIdInput.addEventListener('blur', saveSpotifyCredentials);
+	}
+	
+	if (spotifyClientSecretInput) {
+		spotifyClientSecretInput.addEventListener('change', saveSpotifyCredentials);
+		spotifyClientSecretInput.addEventListener('blur', saveSpotifyCredentials);
+	}
+	
+	// Spotify Auth Button
+	const spotifyAuthButton = document.getElementById('spotifyAuthButton');
+	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');
+	
+	if (spotifyAuthButton) {
+		// Check if already authenticated (tokens are stored in settings object)
+		chrome.storage.local.get(['settings'], function(result) {
+			if (result.settings && result.settings.spotifyAccessToken) {
+				spotifyAuthStatus.style.display = 'inline';
+				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+			}
+		});
+		
+		spotifyAuthButton.addEventListener('click', async function() {
+			// Prevent multiple clicks
+			if (spotifyAuthButton.disabled) {
+				console.log('Spotify auth already in progress');
+				return;
+			}
+			
+			// Disable button during auth
+			spotifyAuthButton.disabled = true;
+			spotifyAuthButton.querySelector('span').textContent = '⏳ Connecting...';
+			
+			console.log('Attempting Spotify auth...');
+			
+			// Try to open the background page directly if needed
+			try {
+				// First, try to communicate normally
+				chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
+					// Check for Chrome runtime errors
+					if (chrome.runtime.lastError) {
+						console.error('Chrome runtime error:', chrome.runtime.lastError);
+						// If communication failed, try opening background page directly
+						chrome.tabs.create({
+							url: chrome.runtime.getURL('background.html'),
+							active: false
+						}, function(tab) {
+							// Wait a bit for background page to load, then retry
+							setTimeout(() => {
+								chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(retryResponse) {
+									handleSpotifyAuthResponse(retryResponse);
+								});
+							}, 2000);
+						});
+						return;
+					}
+					
+					handleSpotifyAuthResponse(response);
+				});
+			} catch (error) {
+				console.error('Error during Spotify auth:', error);
+				spotifyAuthButton.disabled = false;
+				spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+				alert('Failed to initiate Spotify connection. Please try again.');
+			}
+			
+			function handleSpotifyAuthResponse(response) {
+				console.log('Spotify auth response received:', response);
+				spotifyAuthButton.disabled = false;
+				
+				if (response && response.success) {
+					spotifyAuthStatus.style.display = 'inline';
+					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+					// Show success message if already connected
+					if (response.alreadyConnected) {
+						console.log('Already connected to Spotify');
+					}
+				} else {
+					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+					const errorMsg = response?.error || 'Unknown error';
+					console.error('Spotify auth failed:', errorMsg);
+					// Only show alert if not already connected
+					if (errorMsg !== 'Already connected') {
+						alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
+					}
+				}
+			}
+		});
+	}
+	
+	// Spotify Setup Guide Button
+	const spotifySetupGuide = document.getElementById('spotifySetupGuide');
+	if (spotifySetupGuide) {
+		spotifySetupGuide.addEventListener('click', function() {
+			// Open spotify.html in a new tab to show setup instructions
+			const spotifyGuideUrl = chrome.runtime.getURL('spotify.html');
+			chrome.tabs.create({ url: spotifyGuideUrl });
 		});
 	}
 
