@@ -3553,16 +3553,20 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Start Spotify OAuth flow
 			console.log("Spotify auth request received");
 			
-			// Ensure we return true for async response BEFORE any async operations
-			setTimeout(async () => {
+			// Process asynchronously
+			(async () => {
 				try {
 					if (!spotify) {
 						console.log("Initializing Spotify...");
 						initializeSpotify();
+						// Wait a bit for initialization
+						await new Promise(resolve => setTimeout(resolve, 100));
 					}
 					
 					if (!spotify) {
-						throw new Error("Failed to initialize Spotify integration");
+						console.error("SpotifyIntegration class not available");
+						sendResponse({success: false, error: "Spotify integration not loaded. Please refresh the extension."});
+						return;
 					}
 					
 					console.log("Starting OAuth flow...");
@@ -3582,7 +3586,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					console.error("Spotify auth error:", error);
 					sendResponse({success: false, error: error.message || error.toString()});
 				}
-			}, 0);
+			})();
 			
 			return true; // Keep the message channel open for async response
 		} else if (request.cmd && request.cmd === "spotifyManualCallback") {
@@ -5426,11 +5430,13 @@ function initializeSpotify() {
 	if (!spotify) {
 		// Check if SpotifyIntegration is available
 		if (typeof SpotifyIntegration !== 'undefined') {
+			console.log("Creating new SpotifyIntegration instance");
 			spotify = new SpotifyIntegration();
 		} else if (window.SpotifyIntegration) {
+			console.log("Creating new window.SpotifyIntegration instance");
 			spotify = new window.SpotifyIntegration();
 		} else {
-			console.log("SpotifyIntegration class not yet available, will retry...");
+			console.warn("SpotifyIntegration class not yet available, will retry...");
 			// Retry after a short delay
 			setTimeout(initializeSpotify, 500);
 			return;
