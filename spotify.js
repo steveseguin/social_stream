@@ -323,17 +323,67 @@ class SpotifyIntegration {
             // Check if we're in Electron environment
             if (typeof ipcRenderer !== 'undefined' && ipcRenderer.sendSync) {
                 console.log('Using Electron OAuth flow');
-                // For now, just open in external browser in Electron
-                if (typeof shell !== 'undefined' && shell.openExternal) {
-                    shell.openExternal(authUrl);
-                } else {
-                    window.open(authUrl, 'spotify-auth', 'width=500,height=700');
-                }
                 
-                // Store state for manual callback handling
+                // Store state for callback validation
+                this.pendingAuthState = state;
                 if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
                     await chrome.storage.local.set({ spotifyAuthState: state });
                 }
+                
+                // Since the OAuth window opens in Electron, we can intercept it!
+                // Open the auth URL in a new window (this will be an Electron window)
+                const authWindow = window.open(authUrl, 'spotify-auth', 'width=500,height=700');
+                
+                // Set up a listener for the OAuth callback
+                // Poll the window to check if it navigated to the callback URL
+                const checkInterval = setInterval(() => {
+                    try {
+                        if (authWindow && authWindow.location) {
+                            const currentUrl = authWindow.location.href;
+                            
+                            // Check if we've reached the callback URL
+                            if (currentUrl.startsWith('https://socialstream.ninja/spotify.html')) {
+                                // Parse the callback parameters
+                                const urlParams = new URLSearchParams(authWindow.location.search);
+                                const code = urlParams.get('code');
+                                const returnedState = urlParams.get('state');
+                                const error = urlParams.get('error');
+                                
+                                clearInterval(checkInterval);
+                                authWindow.close();
+                                
+                                if (error) {
+                                    console.error('OAuth error:', error);
+                                    throw new Error(`OAuth failed: ${error}`);
+                                }
+                                
+                                if (code) {
+                                    console.log('OAuth code received from Electron window');
+                                    // Process the callback directly
+                                    this.handleAuthCallback(code, returnedState).then(() => {
+                                        console.log('OAuth callback processed successfully');
+                                    }).catch(err => {
+                                        console.error('Failed to process OAuth callback:', err);
+                                    });
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        // Window might be closed or cross-origin
+                        if (authWindow && authWindow.closed) {
+                            clearInterval(checkInterval);
+                            console.log('Auth window closed by user');
+                        }
+                    }
+                }, 500);
+                
+                // Clean up after 5 minutes
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    if (authWindow && !authWindow.closed) {
+                        authWindow.close();
+                    }
+                }, 300000);
                 
                 return true;
             } else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
