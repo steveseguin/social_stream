@@ -893,7 +893,7 @@ function loadSettings(item, resave = false) {
 				}
 			}
 			reloadNeeded = true;
-			chrome.storage.sync.set({ streamID});
+			chrome.storage.local.set({ streamID});
 			chrome.runtime.lastError;
 		}
 	} else if (!streamID) {
@@ -936,7 +936,7 @@ function loadSettings(item, resave = false) {
 			password = item.password;
 			
 			reloadNeeded = true;
-			chrome.storage.sync.set({ password});
+			chrome.storage.local.set({ password});
 			chrome.runtime.lastError;
 		}
 	}
@@ -965,7 +965,7 @@ function loadSettings(item, resave = false) {
 			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn }); 
 			//ipcRenderer.send('backgroundLoaded');
 			if (resave && settings){
-				chrome.storage.sync.set({ settings});
+				chrome.storage.local.set({ settings});
 				chrome.runtime.lastError;
 			}
 		}
@@ -1081,7 +1081,7 @@ async function changeLg(lang) {
 	if (!lang) {
 		log("DISABLING TRANSLATIONS");
 		settings.translation = false;
-		chrome.storage.sync.set({
+		chrome.storage.local.set({
 			settings: settings
 		});
 		chrome.runtime.lastError;
@@ -1104,7 +1104,7 @@ async function changeLg(lang) {
 						}
 						data.miscellaneous = miscTranslations;
 						settings.translation = data;
-						chrome.storage.sync.set({
+						chrome.storage.local.set({
 							settings: settings
 						});
 						chrome.runtime.lastError;
@@ -1251,7 +1251,7 @@ async function loadmidi() {
 		log(e);
 		messagePopup({alert: "File does not contain a valid JSON structure"});
 	}
-	chrome.storage.sync.set({
+	chrome.storage.local.set({
 		settings: settings
 	});
 	chrome.runtime.lastError;
@@ -1447,7 +1447,7 @@ async function overwriteFileExcel(data = false) {
 async function resetSettings(item = false) {
 	log("reset settings");
 	//alert("Settings reset");
-	chrome.storage.sync.get(properties, async function (item) {
+	chrome.storage.local.get(properties, async function (item) {
 		if (!item) {
 			item = {};
 		}
@@ -1458,7 +1458,7 @@ async function resetSettings(item = false) {
 }
 
 async function exportSettings() {
-	chrome.storage.sync.get(properties, async function (item) {
+	chrome.storage.local.get(properties, async function (item) {
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -1681,7 +1681,7 @@ function updateExtensionState(sync = true) {
 	}
 
 	if (sync) {
-		chrome.storage.sync.set({
+		chrome.storage.local.set({
 			state: isExtensionOn
 		});
 		chrome.runtime.lastError;
@@ -2750,7 +2750,7 @@ async function processIncomingMessage(message, sender=null){
 	return message;
 }
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal) {
+chrome.runtime.onMessage.addListener(async function (request, sender, sendResponseReal) {
 	// Handle all messages in an async wrapper
 	(async () => {
 	var response = {};
@@ -2837,7 +2837,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal
 				settings[pattern] = findExistingEvents(pattern,{ settings });
 			})
 
-			chrome.storage.sync.set({
+			chrome.storage.local.set({
 				settings: settings
 			});
 			chrome.runtime.lastError;
@@ -3456,8 +3456,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal
 				}
 				
 				if (isSSAPP) {
-					if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
-						chrome.storage.sync.set({
+					if (chrome && chrome.storage && chrome.storage.local && chrome.storage.local.set) {
+						chrome.storage.local.set({
 							streamID: streamID || ""
 						});
 					}
@@ -3466,8 +3466,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal
 			if ("password" in request) {
 				password = request.password;
 				if (isSSAPP) {
-					if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
-						chrome.storage.sync.set({
+					if (chrome && chrome.storage && chrome.storage.local && chrome.storage.local.set) {
+						chrome.storage.local.set({
 							password: password || ""
 						});
 					}
@@ -3625,7 +3625,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponseReal
 						
 						if (success) {
 							// Verify tokens were saved
-							chrome.storage.sync.get(['settings'], function(data) {
+							chrome.storage.local.get(['settings'], function(data) {
 								if (data.settings && data.settings.spotifyAccessToken) {
 									console.log("✅ Spotify tokens successfully saved to settings!");
 								} else {
@@ -6721,7 +6721,7 @@ function initializePoll() {
 }
 
 function loadPollPreset(pollId) {
-	chrome.storage.sync.get(['savedPolls'], function(result) {
+	chrome.storage.local.get(['savedPolls'], function(result) {
 		if (result.savedPolls) {
 			try {
 				const savedPolls = JSON.parse(result.savedPolls);
@@ -6736,7 +6736,7 @@ function loadPollPreset(pollId) {
 					// Send updated settings to poll overlay
 					sendTargetP2P({settings:settings}, "poll");
 					// Save updated settings
-					chrome.storage.sync.set({settings: settings});
+					chrome.storage.local.set({settings: settings});
 				}
 			} catch (e) {
 				log("Error loading poll preset: " + e.message);
@@ -6760,14 +6760,14 @@ function updatePollSettings(newSettings) {
 		// Send updated settings to poll overlay
 		sendTargetP2P({settings:settings}, "poll");
 		// Save settings
-		chrome.storage.sync.set({settings: settings});
+		chrome.storage.local.set({settings: settings});
 	} catch (e) {
 		log("Error updating poll settings: " + e.message);
 	}
 }
 
 function getPollPresets(callback) {
-	chrome.storage.sync.get(['savedPolls'], function(result) {
+	chrome.storage.local.get(['savedPolls'], function(result) {
 		try {
 			if (result.savedPolls) {
 				const savedPolls = JSON.parse(result.savedPolls);
@@ -7252,7 +7252,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 
 			if (!isAlreadyVIP) {
 				settings.viplistusers.textsetting += (settings.viplistusers.textsetting ? "," : "") + userToVIP.username + ":" + userToVIP.type;
-				chrome.storage.sync.set({ settings: settings });
+				chrome.storage.local.set({ settings: settings });
 				// Check for errors in chrome storage operations
 				if (chrome.runtime.lastError) {
 					console.error("Error updating settings:", chrome.runtime.lastError.message);
@@ -7282,7 +7282,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 				
 				if (!isAlreadyMarked) {
 					settings.botnamesext.textsetting += (settings.botnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
-					chrome.storage.sync.set({ settings: settings });
+					chrome.storage.local.set({ settings: settings });
 					// Check for errors in chrome storage operations
 					if (chrome.runtime.lastError) {
 						console.error("Error updating settings:", chrome.runtime.lastError.message);
@@ -7307,7 +7307,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 				
 				if (!isAlreadyMarked) {
 					settings.modnamesext.textsetting += (settings.modnamesext.textsetting ? "," : "") + userToMark.username + ":" + userToMark.type;
-					chrome.storage.sync.set({ settings: settings });
+					chrome.storage.local.set({ settings: settings });
 					// Check for errors in chrome storage operations
 					if (chrome.runtime.lastError) {
 						console.error("Error updating settings:", chrome.runtime.lastError.message);
@@ -7452,7 +7452,7 @@ function blockUser(data){
 				console.error("Error updating settings:", chrome.runtime.lastError.message);
 			}
 		} else if (resave){
-			chrome.storage.sync.set({ settings: settings });
+			chrome.storage.local.set({ settings: settings });
 		}
 
 		if (isExtensionOn) {
@@ -9854,7 +9854,7 @@ window.onload = async function () {
 		loadSettings(programmedSettings, true);
     } else {
         log("Loading settings from the main file into the background.js");
-        chrome.storage.sync.get(properties, function (item) {
+        chrome.storage.local.get(properties, function (item) {
             if (isSSAPP && item) {
                 loadSettings(item, false); 
                 
@@ -9868,12 +9868,12 @@ window.onload = async function () {
                 chrome.storage.sync.remove(["settings"], function (Items) {
                     log("upgrading from sync to local storage");
                 });
-                chrome.storage.sync.get(["settings"], function (item2) {
+                chrome.storage.local.get(["settings"], function (item2) {
                     if (item2?.settings){
                         item = [...item, ...item2];
                     }
                     if (item?.settings){
-                        chrome.storage.sync.set({
+                        chrome.storage.local.set({
                             settings: item.settings
                         });
                     }
@@ -9889,7 +9889,7 @@ window.onload = async function () {
                 
             } else {
                 loadSettings(item, false);
-                chrome.storage.sync.get(["settings"], function (item2) {
+                chrome.storage.local.get(["settings"], function (item2) {
                     if (item2){
                         loadSettings(item2, false);
                         

@@ -34,9 +34,9 @@ class SpotifyIntegration {
     async loadTokens() {
         try {
             // Check if chrome.storage exists
-            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
                 // Load from settings object
-                const stored = await chrome.storage.sync.get(['settings']);
+                const stored = await chrome.storage.local.get(['settings']);
                 if (stored.settings) {
                     if (stored.settings.spotifyAccessToken) {
                         this.accessToken = stored.settings.spotifyAccessToken;
@@ -83,13 +83,13 @@ class SpotifyIntegration {
                 }
                 
                 // Save tokens to settings object
-                chrome.storage.sync.get(['settings'], async (result) => {
+                chrome.storage.local.get(['settings'], async (result) => {
                     const settings = result.settings || {};
                     settings.spotifyAccessToken = this.accessToken;
                     settings.spotifyRefreshToken = this.refreshToken;
                     settings.spotifyTokenExpiry = this.tokenExpiry;
                     
-                    await chrome.storage.sync.set({ settings: settings });
+                    await chrome.storage.local.set({ settings: settings });
                     console.log('Refreshed Spotify tokens saved to settings');
                 });
             }
@@ -377,13 +377,13 @@ class SpotifyIntegration {
                 this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
                 
                 // Save tokens to settings object
-                chrome.storage.sync.get(['settings'], async (result) => {
+                chrome.storage.local.get(['settings'], async (result) => {
                     const settings = result.settings || {};
                     settings.spotifyAccessToken = this.accessToken;
                     settings.spotifyRefreshToken = this.refreshToken;
                     settings.spotifyTokenExpiry = this.tokenExpiry;
                     
-                    await chrome.storage.sync.set({ settings: settings });
+                    await chrome.storage.local.set({ settings: settings });
                     console.log('Spotify tokens saved to settings successfully');
                 });
                 
