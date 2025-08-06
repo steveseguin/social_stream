@@ -2797,11 +2797,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
+			let responseData;
 			try { 
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG};
 			} catch(e){
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings});
+				console.warn("Error including documentsRAG:", e);
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings};
 			}
+			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "saveSetting") {
 			if (typeof settings[request.setting] == "object") {
 				if (!request.value) {
@@ -9868,7 +9871,7 @@ window.onload = async function () {
                 });
                 chrome.storage.local.get(["settings"], function (item2) {
                     if (item2?.settings){
-                        item = [...item, ...item2];
+                        item = Object.assign({}, item, item2);
                     }
                     if (item?.settings){
                         chrome.storage.local.set({
