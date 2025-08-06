@@ -1193,20 +1193,30 @@ TTS.speechMeta = function(data, allow = false) {
     }
     
     // Handle multiple TTS filters
-    if (!(TTS.newmembertts || TTS.ttsclicked) && TTS.readDonos && !(data.hasDonation || data.donation)) {
-        //console.log("Filter: Only donations allowed and this is not a donation");
+    const isDonation = data.hasDonation || data.donation;
+    const isNewMember = data.event === "newmember";
+    const isClicked = data.clicked;
+   
+    const filters = [];
+   
+    // Only evaluate conditions if the corresponding TTS filter is enabled
+    if (TTS.readDonos) {
+        filters.push(isDonation);
+    }
+   
+    if (TTS.newmembertts) {
+        filters.push(isNewMember);
+     }
+   
+    if (TTS.ttsclicked) {
+        filters.push(isClicked);
+    }
+   
+    // If there are active filters and none of them passed, skip processing
+    if (filters.length > 0 && filters.every(passed => !passed)) {
+        //console.log("Filter: none of the active TTS filters passed");
         return;
     }
-	
-	if (TTS.newmembertts && (!data.event || data.event !== "newmember")) {
-		//console.log("Filter: Only new member events allowed");
-		return;
-	}
-	
-	if (TTS.ttsclicked && !data.clicked) {
-		//console.log("Filter: Only clicked messages allowed");
-		return;
-	}
 
     if (TTS.doNotReadEvents && data.event) {
         //console.log("Filter: Events not allowed and this is an event");
