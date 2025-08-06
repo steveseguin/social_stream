@@ -135,10 +135,67 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.runtime = {}
 	chrome.runtime.id = 1;
 	
+	// Add chrome.storage API for Electron
+	chrome.storage = {
+		local: {
+			get: function(keys, callback) {
+				// Use localStorage as a fallback for Electron
+				if (typeof callback === 'function') {
+					const result = {};
+					const keysArray = Array.isArray(keys) ? keys : [keys];
+					keysArray.forEach(key => {
+						const value = localStorage.getItem('chrome_storage_' + key);
+						if (value !== null) {
+							try {
+								result[key] = JSON.parse(value);
+							} catch (e) {
+								result[key] = value;
+							}
+						}
+					});
+					setTimeout(() => callback(result), 0);
+				}
+			},
+			set: function(items, callback) {
+				// Use localStorage as a fallback for Electron
+				Object.keys(items).forEach(key => {
+					localStorage.setItem('chrome_storage_' + key, JSON.stringify(items[key]));
+				});
+				if (typeof callback === 'function') {
+					setTimeout(() => callback(), 0);
+				}
+			},
+			remove: function(keys, callback) {
+				const keysArray = Array.isArray(keys) ? keys : [keys];
+				keysArray.forEach(key => {
+					localStorage.removeItem('chrome_storage_' + key);
+				});
+				if (typeof callback === 'function') {
+					setTimeout(() => callback(), 0);
+				}
+			}
+		},
+		sync: {
+			get: function(keys, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.get(keys, callback);
+			},
+			set: function(items, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.set(items, callback);
+			},
+			remove: function(keys, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.remove(keys, callback);
+			}
+		}
+	};
+	
 	log("pop up started");
 	
 	if (typeof require !== "undefined"){
-		var { ipcRenderer, contextBridge } = require("electron");
+		var { ipcRenderer, contextBridge, shell } = require("electron");
+		window.shell = shell;
 		
 		ssapp = true;
 		
@@ -256,6 +313,33 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	chrome.runtime.getManifest = function(){
 		return false; // I'll need to add version info eventually
+	}
+	
+	chrome.runtime.getURL = function(path){
+		// In Electron, construct URL relative to the app's base path
+		// Remove leading slash if present
+		if (path.startsWith('/')) {
+			path = path.substring(1);
+		}
+		// Get the current window location and construct relative URL
+		const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+		return baseUrl + path;
+	}
+	
+	// Add chrome.tabs API for Electron
+	chrome.tabs = {
+		create: function(options) {
+			// In Electron, open in default browser or new window
+			if (options && options.url) {
+				if (typeof require !== "undefined" && window.shell) {
+					// Use Electron's shell to open external links
+					window.shell.openExternal(options.url);
+				} else {
+					// Fallback to window.open
+					window.open(options.url, '_blank');
+				}
+			}
+		}
 	}
 	
 	try {

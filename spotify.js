@@ -33,23 +33,30 @@ class SpotifyIntegration {
 
     async loadTokens() {
         try {
-            const stored = await chrome.storage.local.get(['spotifyAccessToken', 'spotifyRefreshToken', 'spotifyTokenExpiry']);
-            if (stored.spotifyAccessToken) {
-                this.accessToken = stored.spotifyAccessToken;
-                this.refreshToken = stored.spotifyRefreshToken;
-                this.tokenExpiry = stored.spotifyTokenExpiry;
-                
-                // Check if token needs refresh
-                if (this.refreshToken && (!this.accessToken || Date.now() >= this.tokenExpiry)) {
-                    await this.refreshToken();
+            // Check if chrome.storage exists
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+                // Load from settings object
+                const stored = await chrome.storage.sync.get(['settings']);
+                if (stored.settings) {
+                    if (stored.settings.spotifyAccessToken) {
+                        this.accessToken = stored.settings.spotifyAccessToken;
+                        this.refreshToken = stored.settings.spotifyRefreshToken;
+                        this.tokenExpiry = stored.settings.spotifyTokenExpiry;
+                        console.log('Loaded Spotify tokens from settings');
+                    }
                 }
+            }
+                
+            // Check if token needs refresh
+            if (this.refreshToken && (!this.accessToken || Date.now() >= this.tokenExpiry)) {
+                await this.refreshAccessToken();
             }
         } catch (e) {
             console.warn('Failed to load Spotify tokens:', e);
         }
     }
 
-    async refreshToken() {
+    async refreshAccessToken() {
         if (!this.refreshToken || !this.settings.spotifyClientId?.textsetting || !this.settings.spotifyClientSecret?.textsetting) {
             return;
         }
@@ -75,11 +82,15 @@ class SpotifyIntegration {
                     this.refreshToken = data.refresh_token;
                 }
                 
-                // Save tokens
-                await chrome.storage.local.set({
-                    spotifyAccessToken: this.accessToken,
-                    spotifyRefreshToken: this.refreshToken,
-                    spotifyTokenExpiry: this.tokenExpiry
+                // Save tokens to settings object
+                chrome.storage.sync.get(['settings'], async (result) => {
+                    const settings = result.settings || {};
+                    settings.spotifyAccessToken = this.accessToken;
+                    settings.spotifyRefreshToken = this.refreshToken;
+                    settings.spotifyTokenExpiry = this.tokenExpiry;
+                    
+                    await chrome.storage.sync.set({ settings: settings });
+                    console.log('Refreshed Spotify tokens saved to settings');
                 });
             }
         } catch (error) {
@@ -105,7 +116,7 @@ class SpotifyIntegration {
 
             // Refresh token if needed
             if (Date.now() >= this.tokenExpiry) {
-                this.refreshToken();
+                this.refreshAccessToken();
                 return;
             }
 
@@ -159,7 +170,7 @@ class SpotifyIntegration {
             }
 
             if (response.status === 401) {
-                await this.refreshToken();
+                await this.refreshAccessToken();
                 return null;
             }
 
@@ -281,10 +292,27 @@ class SpotifyIntegration {
             const redirectUri = 'https://socialstream.ninja/spotify.html';
             const authUrl = `https://accounts.spotify.com/authorize?client_id=${this.settings.spotifyClientId.textsetting}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(' ')}&state=${state}`;
             
-            // For Chrome extension, use chrome.tabs.create instead of window.open
-            if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+            // Check if we're in Electron environment
+            if (typeof ipcRenderer !== 'undefined' && ipcRenderer.sendSync) {
+                console.log('Using Electron OAuth flow');
+                // For now, just open in external browser in Electron
+                if (typeof shell !== 'undefined' && shell.openExternal) {
+                    shell.openExternal(authUrl);
+                } else {
+                    window.open(authUrl, 'spotify-auth', 'width=500,height=700');
+                }
+                
+                // Store state for manual callback handling
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    await chrome.storage.local.set({ spotifyAuthState: state });
+                }
+                
+                return true;
+            } else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+                // For Chrome extension, use chrome.tabs.create
                 chrome.tabs.create({ url: authUrl });
             } else {
+                // Fallback to window.open
                 window.open(authUrl, 'spotify-auth', 'width=500,height=700');
             }
             
@@ -348,11 +376,15 @@ class SpotifyIntegration {
                 this.refreshToken = data.refresh_token;
                 this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
                 
-                // Save tokens
-                await chrome.storage.local.set({
-                    spotifyAccessToken: this.accessToken,
-                    spotifyRefreshToken: this.refreshToken,
-                    spotifyTokenExpiry: this.tokenExpiry
+                // Save tokens to settings object
+                chrome.storage.sync.get(['settings'], async (result) => {
+                    const settings = result.settings || {};
+                    settings.spotifyAccessToken = this.accessToken;
+                    settings.spotifyRefreshToken = this.refreshToken;
+                    settings.spotifyTokenExpiry = this.tokenExpiry;
+                    
+                    await chrome.storage.sync.set({ settings: settings });
+                    console.log('Spotify tokens saved to settings successfully');
                 });
                 
                 console.log('Spotify tokens saved successfully');
