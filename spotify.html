@@ -1,25 +1,34 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Spotify Authorization - Social Stream Ninja</title>
+    <title>Spotify Integration - Social Stream Ninja</title>
     <meta charset="utf-8">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            background-color: #1a1a1a;
+            padding: 20px;
+            background-color: #121212;
             color: #fff;
+            line-height: 1.6;
         }
         .container {
-            text-align: center;
-            padding: 20px;
-            background-color: #2a2a2a;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #1e1e1e;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #1db954;
+            margin-bottom: 10px;
+        }
+        h2 {
+            color: #fff;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.4em;
         }
         .success {
             color: #1db954;
@@ -27,8 +36,69 @@
         .error {
             color: #e74c3c;
         }
+        .warning {
+            background-color: #ff6b35;
+            color: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .info-box {
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #1db954;
+        }
+        .code-block {
+            background-color: #000;
+            color: #1db954;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            user-select: all;
+            cursor: text;
+        }
+        .step {
+            background-color: #282828;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            position: relative;
+            padding-left: 50px;
+        }
+        .step-number {
+            position: absolute;
+            left: 15px;
+            top: 20px;
+            background-color: #1db954;
+            color: #000;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            background-color: #1db954;
+            color: #000;
+            padding: 12px 24px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
         .loader {
-            border: 3px solid #f3f3f3;
+            border: 3px solid #333;
             border-top: 3px solid #1db954;
             border-radius: 50%;
             width: 40px;
@@ -40,67 +110,63 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        ul li:before {
+            content: "✓ ";
+            color: #1db954;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .auth-container {
+            text-align: center;
+            padding: 40px;
+        }
+        #redirect-uri-list {
+            background-color: #000;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .copy-button {
+            background-color: #535353;
+            color: #fff;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 0.9em;
+        }
+        .copy-button:hover {
+            background-color: #737373;
+        }
+        .uri-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #1a1a1a;
+            border-radius: 4px;
+        }
+        .uri-text {
+            flex: 1;
+            margin-right: 10px;
+            word-break: break-all;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Spotify Authorization</h1>
-        <div id="status">
-            <div class="loader"></div>
-            <p>Processing authorization...</p>
+    <div class="container" id="main-container">
+        <div id="content">
+            <!-- Content will be dynamically inserted here -->
         </div>
     </div>
-
-    <script>
-        // Parse URL parameters
-        const urlParams = new URLSearchParams(window.location.search);
-        const code = urlParams.get('code');
-        const error = urlParams.get('error');
-        const state = urlParams.get('state');
-
-        function updateStatus(message, isError = false) {
-            const statusDiv = document.getElementById('status');
-            statusDiv.innerHTML = `
-                <p class="${isError ? 'error' : 'success'}">${message}</p>
-                ${!isError ? '<p>You can close this window.</p>' : ''}
-            `;
-        }
-
-        if (error) {
-            updateStatus(`Authorization failed: ${error}`, true);
-        } else if (code) {
-            // Send the authorization code to the background script
-            if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
-                chrome.runtime.sendMessage({
-                    cmd: "spotifyAuthCallback",
-                    code: code,
-                    state: state
-                }, function(response) {
-                    if (response && response.success) {
-                        updateStatus('Successfully connected to Spotify! 🎵');
-                        // Close the window after 2 seconds
-                        setTimeout(() => window.close(), 2000);
-                    } else {
-                        updateStatus('Failed to complete authorization. Please try again.', true);
-                    }
-                });
-            } else {
-                // For web version, post message to parent or redirect
-                if (window.opener) {
-                    window.opener.postMessage({
-                        type: 'spotifyAuthCallback',
-                        code: code,
-                        state: state
-                    }, '*');
-                    updateStatus('Successfully connected to Spotify! 🎵');
-                    setTimeout(() => window.close(), 2000);
-                } else {
-                    updateStatus('Authorization code received. Please return to Social Stream Ninja.');
-                }
-            }
-        } else {
-            updateStatus('No authorization code received.', true);
-        }
-    </script>
+    
+    <script src="spotify-setup.js"></script>
 </body>
 </html>
