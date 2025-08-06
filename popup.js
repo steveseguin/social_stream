@@ -5243,6 +5243,55 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		
+		// Add manual callback handler for Electron app (ssapp)
+		if (window.ssapp) {
+			// Add a text input for manual callback URL
+			const callbackDiv = document.createElement('div');
+			callbackDiv.style.marginTop = '10px';
+			callbackDiv.style.display = 'none';
+			callbackDiv.id = 'spotifyCallbackDiv';
+			callbackDiv.innerHTML = `
+				<input type="text" id="spotifyCallbackInput" placeholder="Paste callback URL here" style="width: 100%; padding: 5px; margin: 5px 0;">
+				<button id="spotifyCallbackSubmit" class="button">Complete Auth</button>
+			`;
+			spotifyAuthButton.parentElement.appendChild(callbackDiv);
+			
+			// Show callback input after auth button click in Electron
+			const originalClickHandler = spotifyAuthButton.onclick;
+			spotifyAuthButton.addEventListener('click', function() {
+				if (window.ssapp) {
+					setTimeout(() => {
+						callbackDiv.style.display = 'block';
+						console.log('Please paste the callback URL from the browser into the input field above');
+					}, 2000);
+				}
+			});
+			
+			// Handle callback submission
+			document.getElementById('spotifyCallbackSubmit')?.addEventListener('click', function() {
+				const callbackUrl = document.getElementById('spotifyCallbackInput').value;
+				if (callbackUrl && callbackUrl.includes('code=')) {
+					chrome.runtime.sendMessage({
+						cmd: "spotifyManualCallback",
+						url: callbackUrl
+					}, response => {
+						console.log("Manual callback result:", response);
+						if (response && response.success) {
+							spotifyAuthStatus.style.display = 'inline';
+							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+							callbackDiv.style.display = 'none';
+							document.getElementById('spotifyCallbackInput').value = '';
+							alert('Spotify connected successfully!');
+						} else {
+							alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
+						}
+					});
+				} else {
+					alert('Please paste the complete callback URL');
+				}
+			});
+		}
+		
 		spotifyAuthButton.addEventListener('click', async function() {
 			// Prevent multiple clicks
 			if (spotifyAuthButton.disabled) {
