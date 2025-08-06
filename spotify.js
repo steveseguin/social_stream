@@ -243,6 +243,18 @@ class SpotifyIntegration {
             throw new Error("Spotify Client ID not configured");
         }
 
+        // Check if we're already authenticated
+        if (this.accessToken && this.refreshToken) {
+            console.log("Already authenticated with Spotify");
+            // Check if token needs refresh
+            if (Date.now() >= this.tokenExpiry) {
+                console.log("Token expired, refreshing...");
+                await this.refreshAccessToken();
+            }
+            // Return success since we're already connected
+            return true;
+        }
+
         const scopes = ['user-read-currently-playing', 'user-read-playback-state'];
         const state = Math.random().toString(36).substring(7); // Generate random state for security
         

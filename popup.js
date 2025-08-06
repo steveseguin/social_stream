@@ -5235,9 +5235,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');
 	
 	if (spotifyAuthButton) {
-		// Check if already authenticated
-		chrome.storage.local.get(['spotifyAccessToken'], function(result) {
-			if (result.spotifyAccessToken) {
+		// Check if already authenticated (tokens are stored in settings object)
+		chrome.storage.local.get(['settings'], function(result) {
+			if (result.settings && result.settings.spotifyAccessToken) {
 				spotifyAuthStatus.style.display = 'inline';
 				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
 			}
