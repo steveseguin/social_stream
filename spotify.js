@@ -14,7 +14,7 @@ class SpotifyIntegration {
         };
     }
 
-    initialize(settings, callbacks = {}) {
+    async initialize(settings, callbacks = {}) {
         this.settings = settings;
         this.callbacks = { ...this.callbacks, ...callbacks };
         
@@ -22,8 +22,16 @@ class SpotifyIntegration {
             return;
         }
 
-        // Load saved tokens
-        this.loadTokens();
+        // Load saved tokens from settings first
+        if (this.settings.spotifyAccessToken) {
+            this.accessToken = this.settings.spotifyAccessToken;
+            this.refreshToken = this.settings.spotifyRefreshToken;
+            this.tokenExpiry = this.settings.spotifyTokenExpiry;
+            console.log('Loaded Spotify tokens from settings during initialization');
+        }
+
+        // Also try loading from storage
+        await this.loadTokens();
         
         // Start polling if enabled
         if (this.settings.spotifyNowPlaying) {
@@ -241,6 +249,14 @@ class SpotifyIntegration {
     async startOAuthFlow() {
         if (!this.settings.spotifyClientId?.textsetting) {
             throw new Error("Spotify Client ID not configured");
+        }
+
+        // Ensure tokens are loaded from settings
+        if (!this.accessToken && this.settings.spotifyAccessToken) {
+            this.accessToken = this.settings.spotifyAccessToken;
+            this.refreshToken = this.settings.spotifyRefreshToken;
+            this.tokenExpiry = this.settings.spotifyTokenExpiry;
+            console.log("Loaded tokens from settings in startOAuthFlow");
         }
 
         // Check if we're already authenticated

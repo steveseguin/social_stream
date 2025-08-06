@@ -5479,7 +5479,10 @@ function initializeSpotify() {
 			}
 		};
 		
-		spotify.initialize(settings, callbacks);
+		// Initialize with settings (async but we don't need to wait here)
+		spotify.initialize(settings, callbacks).catch(err => {
+			console.error("Failed to initialize Spotify:", err);
+		});
 	} else if (spotify && !settings.spotifyEnabled) {
 		// Clean up if disabled
 		spotify.cleanup();
