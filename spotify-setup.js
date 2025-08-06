@@ -160,8 +160,45 @@ function showAuthCallback() {
     if (error) {
         updateStatus('Authorization failed: ' + error, true);
     } else if (code) {
-        // Send the authorization code to the background script
-        if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+        // Check if we're in the Electron app with IPC support
+        const isElectronApp = typeof window.ninjafy !== 'undefined' && window.ninjafy.sendMessage;
+        
+        if (isElectronApp) {
+            // Use Electron IPC mechanism (same as popup.js)
+            console.log('Sending Spotify auth callback via Electron IPC');
+            
+            // Use the authenticated postMessage method that background.js will receive
+            const messageData = {
+                cmd: "spotifyAuthCallback",
+                code: code,
+                state: state,
+                _authToken: window.ninjafy._authToken // Include auth token for security
+            };
+            
+            // Send via postMessage which will be intercepted by preload.js
+            window.postMessage(messageData, '*');
+            
+            // Also try the direct method as a fallback
+            window.ninjafy.sendMessage(null, {
+                cmd: "spotifyAuthCallback",
+                code: code,
+                state: state
+            }, function(response) {
+                if (response && response.success) {
+                    updateStatus('Successfully connected to Spotify! 🎵');
+                    // Close the window after 2 seconds
+                    setTimeout(() => window.close(), 2000);
+                } else {
+                    // Don't show error immediately, wait for postMessage response
+                    setTimeout(() => {
+                        if (document.getElementById('status').textContent.includes('Processing')) {
+                            updateStatus('Authorization received. You can close this window.', false);
+                        }
+                    }, 2000);
+                }
+            });
+        } else if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+            // Chrome extension environment
             chrome.runtime.sendMessage({
                 cmd: "spotifyAuthCallback",
                 code: code,

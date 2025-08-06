@@ -5336,6 +5336,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					spotifyAuthStatus.style.display = 'inline';
 					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
 					// Hide manual callback input on success
+					const callbackDiv = document.getElementById('spotifyCallbackDiv');
 					if (window.ssapp && callbackDiv) {
 						callbackDiv.style.display = 'none';
 						document.getElementById('spotifyCallbackInput').value = '';
@@ -5343,6 +5344,19 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					// Show success message if already connected
 					if (response.alreadyConnected) {
 						console.log('Already connected to Spotify');
+					} else if (response.message && response.message.includes('authorization')) {
+						// For SSAPP, the OAuth window opened - wait for callback
+						console.log('OAuth window opened - waiting for authorization');
+						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+						// Show manual input as backup after 5 seconds
+						if (window.ssapp && callbackDiv) {
+							setTimeout(() => {
+								if (!spotifyAuthStatus.style.display || spotifyAuthStatus.style.display === 'none') {
+									callbackDiv.style.display = 'block';
+									console.log('If the authorization window is stuck, you can paste the callback URL manually.');
+								}
+							}, 5000);
+						}
 					}
 				} else {
 					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
@@ -5350,9 +5364,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					console.error('Spotify auth failed:', errorMsg);
 					
 					// Show manual callback input only if in Electron and auth failed
-					if (window.ssapp && callbackDiv && response?.needsManualCallback) {
+					const callbackDiv = document.getElementById('spotifyCallbackDiv');
+					if (window.ssapp && callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
 						callbackDiv.style.display = 'block';
-						console.log('Automatic auth failed. Please paste the callback URL manually.');
+						console.log('Please paste the callback URL manually.');
 					}
 					
 					// Only show alert if not already connected
