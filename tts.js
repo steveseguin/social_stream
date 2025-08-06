@@ -80,12 +80,12 @@ document.addEventListener('keydown', function() {
 
 
 TTS.isSafari = function() {
-    const userAgent = navigator.userAgent;
-    const isChrome = userAgent.indexOf("Chrome") > -1;
-    const isSafari = userAgent.indexOf("Safari") > -1;
-    const vendor = navigator.vendor;
+	const userAgent = navigator.userAgent;
+	const isChrome = userAgent.indexOf("Chrome") > -1;
+	const isSafari = userAgent.indexOf("Safari") > -1;
+	const vendor = navigator.vendor;
 
-    return isSafari && !isChrome && vendor.indexOf("Apple") > -1;
+	return isSafari && !isChrome && vendor.indexOf("Apple") > -1;
 }
 
 // Check for available voices
@@ -95,7 +95,7 @@ try {
         if (TTS.isSafari()) {
             console.warn("Safari doesn't really support automatic TTS");
         }
-        if (window.speechSynthesis.onvoiceschanged !== undefined) {
+		if (window.speechSynthesis.onvoiceschanged !== undefined) {
             window.speechSynthesis.onvoiceschanged = function() {
                 TTS.voices = window.speechSynthesis.getVoices();
                 //console.log("Voices loaded:", TTS.voices.length);
@@ -104,7 +104,7 @@ try {
     }
 } catch (e) {
     // Handle lack of TTS support
-    console.warn(e);
+	console.warn(e);
     if (document.getElementById("tts") && e.name !== "InvalidStateError") {
         document.getElementById("tts").style.display = "none";
     }
@@ -407,23 +407,23 @@ TTS.sendToNeuroSync = async function(input, options = {}) {
 // Initialize TTS with URL parameters on script load
 document.addEventListener('DOMContentLoaded', function() {
     TTS.configure(new URLSearchParams(window.location.search));
-    
-    const volumeSlider = document.getElementById('volumeSlider');
-    if (volumeSlider) {
-        volumeSlider.value = TTS.volume * 100;
-        
-        // Add event listener to update TTS.volume when slider changes
-        volumeSlider.addEventListener('input', function() {
-            TTS.volume = this.value / 100;
-            
-            // Also update any current audio element
-            if (TTS.audio) {
-                TTS.audio.volume = TTS.volume;
-            }
-        });
-    }
-    
-    const ttsButton = document.getElementById('tts');
+	
+	const volumeSlider = document.getElementById('volumeSlider');
+	if (volumeSlider) {
+		volumeSlider.value = TTS.volume * 100;
+		
+		// Add event listener to update TTS.volume when slider changes
+		volumeSlider.addEventListener('input', function() {
+			TTS.volume = this.value / 100;
+			
+			// Also update any current audio element
+			if (TTS.audio) {
+				TTS.audio.volume = TTS.volume;
+			}
+		});
+	}
+	
+	const ttsButton = document.getElementById('tts');
     if (ttsButton) {
         ttsButton.addEventListener('click', function() {
             TTS.toggle();
@@ -437,15 +437,15 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 TTS.configure = function(urlParams) {
     // Voice gender
-    
-    if (urlParams.has("notts")) {
+	
+	if (urlParams.has("notts")) {
         TTS.disableTTS = true;
     }
-    
+	
     if (urlParams.has("gender")) {
         TTS.voiceGender = urlParams.get("gender") || "MALE";
     }
-    
+	
     // Volume
     if (urlParams.has("volume")) {
         TTS.volume = urlParams.get("volume") || 1;
@@ -471,28 +471,28 @@ TTS.configure = function(urlParams) {
         TTS.voiceLatency = urlParams.get("latency") || 0;
         TTS.voiceLatency = parseInt(TTS.voiceLatency) || 0;
     }
-    
-    if (urlParams.get("ttssources")) {
-        TTS.ttsSources = urlParams.get("ttssources").toLowerCase().split(",").map(element => element.trim());
-    }
-    
-    if (urlParams.has("ttsquick")) {
-        TTS.ttsQuick = parseInt(urlParams.get("ttsquick")) || 80;
-    }
-    
-    
-    if (urlParams.has("ttsdonos")) {
+	
+	if (urlParams.get("ttssources")) {
+		TTS.ttsSources = urlParams.get("ttssources").toLowerCase().split(",").map(element => element.trim());
+	}
+	
+	if (urlParams.has("ttsquick")) {
+		TTS.ttsQuick = parseInt(urlParams.get("ttsquick")) || 80;
+	}
+	
+	
+	if (urlParams.has("ttsdonos")) {
         TTS.readDonos  = urlParams.get("ttsdonos").trim() || "en-US";;
     }
-    
-    if (urlParams.has("ttsnewmembers")) {
-        TTS.newmembertts = urlParams.get("ttsnewmembers") || "en-US";
-    }
-    
-    if (urlParams.has("ttsclicked")) {
-        TTS.ttsclicked = urlParams.get("ttsclicked") || "en-US";
-    }
-    
+	
+	if (urlParams.has("ttsnewmembers")) {
+		TTS.newmembertts = urlParams.get("ttsnewmembers") || "en-US";
+	}
+	
+	if (urlParams.has("ttsclicked")) {
+		TTS.ttsclicked = urlParams.get("ttsclicked") || "en-US";
+	}
+	
     // API Keys
     TTS.GoogleAPIKey = urlParams.get("ttskey") || urlParams.get("googlettskey") || false;
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
@@ -572,7 +572,7 @@ TTS.configure = function(urlParams) {
     TTS.googleSettings.pitch = urlParams.has("googlepitch") ? parseFloat(urlParams.get("googlepitch")) || 0 : 0;
     TTS.googleSettings.audioProfile = urlParams.get("googleaudioprofile") || false;
     TTS.googleSettings.voiceName = urlParams.get("voicegoogle") || false;
-    TTS.googleSettings.lang = urlParams.get("googlelang") || false;
+	TTS.googleSettings.lang = urlParams.get("googlelang") || false;
 
     // ElevenLabs settings
     TTS.elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : TTS.voiceLatency;
@@ -630,11 +630,11 @@ TTS.configure = function(urlParams) {
     if (urlParams.has("readevents")) {
         TTS.doNotReadEvents = false;
     }
-    
-    if (urlParams.has("readouturls")) {
+	
+	if (urlParams.has("readouturls")) {
         TTS.replaceURLInLink = false;
     }
-    
+	
     if (urlParams.has("neurosync")) {
         TTS.neuroSyncEnabled = true;
     }
@@ -662,8 +662,8 @@ TTS.configure = function(urlParams) {
     if (urlParams.has("viptts")) {
         TTS.viptts = true;
     }
-    
-    if (urlParams.has("membertts")) {
+	
+	if (urlParams.has("membertts")) {
         TTS.membertts = true;
     }
 
@@ -690,8 +690,8 @@ TTS.configure = function(urlParams) {
     if (urlParams.has("allowviptts")) {
         TTS.allowviptts = true;
     }
-    
-    if (urlParams.has("allowmembertts")) {
+	
+	if (urlParams.has("allowmembertts")) {
         TTS.allowmembertts = true;
     }
 
@@ -754,18 +754,18 @@ TTS.configure = function(urlParams) {
             console.error("Failed to load eSpeak TTS", e);
         }
     }
-    
-    if (document.getElementById("tts")) {
-        document.getElementById("tts").classList.remove("hidden");
-        document.getElementById("tts").style.display = "";
-        
-        // Update button state based on current settings
-        if (TTS.speech) {
-            TTS.updateButtonState('on');
-        } else {
-            TTS.updateButtonState('off');
-        }
-    }
+	
+	if (document.getElementById("tts")) {
+		document.getElementById("tts").classList.remove("hidden");
+		document.getElementById("tts").style.display = "";
+		
+		// Update button state based on current settings
+		if (TTS.speech) {
+			TTS.updateButtonState('on');
+		} else {
+			TTS.updateButtonState('off');
+		}
+	}
 };
 
 /**
@@ -877,11 +877,11 @@ TTS.speak = function(text, allow = false) {
         //console.log("Speech is disabled and not forced, aborting");
         return;
     }
-    
-    if (TTS.disableTTS){
-        //console.log("TTS is disabled globally, aborting");
-        return;
-    }
+	
+	if (TTS.disableTTS){
+		//console.log("TTS is disabled globally, aborting");
+		return;
+	}
     
     text = TTS.cleanPunctuation(text);
     
@@ -898,71 +898,71 @@ TTS.speak = function(text, allow = false) {
     if (TTS.replaceURLInLink) { 
         text = TTS.replaceURLsWithSubstring(text, "Link");
     }
-    
-    if (TTS.ttsQuick){
-        if (text.length > TTS.ttsQuick){
-            text = text.substring(0, TTS.ttsQuick);
-        }
-    }
+	
+	if (TTS.ttsQuick){
+		if (text.length > TTS.ttsQuick){
+			text = text.substring(0, TTS.ttsQuick);
+		}
+	}
     
     //console.log("About to speak:", text);
-    
-    TTS.initAudioContext();
+	
+	TTS.initAudioContext();
 
     // Use the selected provider
-    switch (TTS.TTSProvider) {
-        case "piper":
-            if (!TTS.premiumQueueActive) {
-                TTS.piperTTS(text);
-            } else {
-                TTS.premiumQueueTTS.push(text);
-            }
-            return;
-        case "espeak":
-            if (!TTS.premiumQueueActive) {
-                TTS.espeakTTS(text);
-            } else {
-                TTS.premiumQueueTTS.push(text);
-            }
-            return;
-        case "kokoro":
-            if (!TTS.premiumQueueActive) {
-                TTS.kokoroTTS(text);
-            } else {
-                TTS.premiumQueueTTS.push(text);
-            }
-            return;
-        case "google":
-            if (TTS.GoogleAPIKey) {
-                if (!TTS.premiumQueueActive) {
-                    TTS.googleTTS(text);
-                } else {
-                    TTS.premiumQueueTTS.push(text);
-                }
-                return;
-            }
-            return; // Change from break to return
-        case "elevenlabs":
-            if (TTS.ElevenLabsKey) {
-                if (!TTS.premiumQueueActive) {
-                    TTS.ElevenLabsTTS(text);
-                } else {
-                    TTS.premiumQueueTTS.push(text);
-                }
-                return;
-            }
-            return; // Change from break to return
-        case "speechify":
-            if (TTS.SpeechifyAPIKey) {
-                if (!TTS.premiumQueueActive) {
-                    TTS.SpeechifyTTS(text);
-                } else {
-                    TTS.premiumQueueTTS.push(text);
-                }
-                return;
-            }
-            return; // Change from break to return
-    }
+	switch (TTS.TTSProvider) {
+		case "piper":
+			if (!TTS.premiumQueueActive) {
+				TTS.piperTTS(text);
+			} else {
+				TTS.premiumQueueTTS.push(text);
+			}
+			return;
+		case "espeak":
+			if (!TTS.premiumQueueActive) {
+				TTS.espeakTTS(text);
+			} else {
+				TTS.premiumQueueTTS.push(text);
+			}
+			return;
+		case "kokoro":
+			if (!TTS.premiumQueueActive) {
+				TTS.kokoroTTS(text);
+			} else {
+				TTS.premiumQueueTTS.push(text);
+			}
+			return;
+		case "google":
+			if (TTS.GoogleAPIKey) {
+				if (!TTS.premiumQueueActive) {
+					TTS.googleTTS(text);
+				} else {
+					TTS.premiumQueueTTS.push(text);
+				}
+				return;
+			}
+			return; // Change from break to return
+		case "elevenlabs":
+			if (TTS.ElevenLabsKey) {
+				if (!TTS.premiumQueueActive) {
+					TTS.ElevenLabsTTS(text);
+				} else {
+					TTS.premiumQueueTTS.push(text);
+				}
+				return;
+			}
+			return; // Change from break to return
+		case "speechify":
+			if (TTS.SpeechifyAPIKey) {
+				if (!TTS.premiumQueueActive) {
+					TTS.SpeechifyTTS(text);
+				} else {
+					TTS.premiumQueueTTS.push(text);
+				}
+				return;
+			}
+			return; // Change from break to return
+	}
 
     if (!TTS.voices && TTS.voices === null) {
         return;
@@ -1051,8 +1051,8 @@ TTS.clearQueue = function() {
                 TTS.audio.pause();
             }
         } catch (e) {
-            console.warn(e);
-        }
+			console.warn(e);
+		}
     }
 };
 
@@ -1094,8 +1094,8 @@ TTS.toggle = function() {
                 TTS.audio.pause();
             }
         } catch (e) {
-            console.warn(e);
-        }
+			console.warn(e);
+		}
         TTS.premiumQueueActive = false;
     } else {
         TTS.speech = !TTS.speech;
@@ -1127,12 +1127,12 @@ TTS.speechMeta = function(data, allow = false) {
             return;
         }
     }
-    
-    if (TTS.disableTTS){
-        //console.log("TTS is disabled globally, aborting");
-        return;
-    }
-    
+	
+	if (TTS.disableTTS){
+		//console.log("TTS is disabled globally, aborting");
+		return;
+	}
+	
     if (!data.bot && TTS.bottts) {
         //console.log("Filter: Only bot messages allowed and this is not a bot message");
         return;
@@ -1149,7 +1149,7 @@ TTS.speechMeta = function(data, allow = false) {
         //console.log("Filter: Only VIP messages allowed and this is not a VIP message");
         return;
     } 
-    else if (!(data.membership || data.hasMembership) && TTS.membertts) {
+	else if (!(data.membership || data.hasMembership) && TTS.membertts) {
         //console.log("Filter: Only Member messages allowed and this is not a member message");
         return;
     } 
@@ -1166,18 +1166,18 @@ TTS.speechMeta = function(data, allow = false) {
         //console.log("Filter: Host messages not allowed");
         return;
     }
-//  else if (data.mod && !(TTS.allowmodtts || TTS.modtts)) {  // enabling this will prevent these from working.
+//	else if (data.mod && !(TTS.allowmodtts || TTS.modtts)) {  // enabling this will prevent these from working.
  //       return;
  //   }
-//  else if (data.admin && !(TTS.allowadmintts || TTS.admintts)) {
+//	else if (data.admin && !(TTS.allowadmintts || TTS.admintts)) {
  //       //console.log("Filter: Host messages not allowed");
  //       return;
  //   }
-//  else if (data.vip && !(TTS.allowviptts || TTS.viptts)) {
+//	else if (data.vip && !(TTS.allowviptts || TTS.viptts)) {
  //       //console.log("Filter: Host messages not allowed");
  //       return;
  //   }
-//  else if ((data.membership || data.hasMembership) && !(TTS.allowmembertts || TTS.membertts)) {
+//	else if ((data.membership || data.hasMembership) && !(TTS.allowmembertts || TTS.membertts)) {
  //       //console.log("Filter: Host messages not allowed");
  //       return;
  //   } 
@@ -1196,23 +1196,22 @@ TTS.speechMeta = function(data, allow = false) {
     const isDonation = data.hasDonation || data.donation;
     const isNewMember = data.event === "newmember";
     const isClicked = data.clicked;
-
-    // Array to hold the results of each TTS filter condition
+   
     const filters = [];
-
+   
     // Only evaluate conditions if the corresponding TTS filter is enabled
     if (TTS.readDonos) {
         filters.push(isDonation);
     }
-
+   
     if (TTS.newmembertts) {
         filters.push(isNewMember);
-    }
-
+     }
+   
     if (TTS.ttsclicked) {
         filters.push(isClicked);
     }
-
+   
     // If there are active filters and none of them passed, skip processing
     if (filters.length > 0 && filters.every(passed => !passed)) {
         //console.log("Filter: none of the active TTS filters passed");
@@ -1248,8 +1247,8 @@ TTS.speechMeta = function(data, allow = false) {
             }
             msgPlain = msgPlain.trim();
         } else if (data.chatmessage){
-            msgPlain = data.chatmessage;
-        }
+			msgPlain = data.chatmessage;
+		}
 
         var chatname = "";
         if (TTS.ttsSpeakChatname && data.chatname) {
@@ -1709,7 +1708,7 @@ TTS.kokoroTTS = async function(text) {
     if ((window.ninjafy || window.electronApi)) {
       try {
         // Electron implementation remains the same
-        let ninjafy = window.ninjafy || window.electronApi;
+		let ninjafy = window.ninjafy || window.electronApi;
         const wavBuffer = await ninjafy.tts(text, TTS.kokoroSettings);
         const audioBlob = new Blob([wavBuffer], { type: 'audio/wav' });
         
@@ -1730,9 +1729,9 @@ TTS.kokoroTTS = async function(text) {
         }
         
         if (!TTS.audio) {
-            TTS.audio = document.createElement("audio");
-            TTS.audio.onended = TTS.finishedAudio;
-        }
+			TTS.audio = document.createElement("audio");
+			TTS.audio.onended = TTS.finishedAudio;
+		}
         TTS.audio.src = URL.createObjectURL(audioBlob);
         
         if (TTS.volume) TTS.audio.volume = TTS.volume;
@@ -1763,9 +1762,9 @@ TTS.kokoroTTS = async function(text) {
     streamer.close();
     
     if (!TTS.audio) {
-        TTS.audio = document.createElement("audio");
-        TTS.audio.onended = TTS.finishedAudio;
-    }
+		TTS.audio = document.createElement("audio");
+		TTS.audio.onended = TTS.finishedAudio;
+	}
     
     // Use the same stream options as the working version
     const speed = TTS.kokoroSettings.speed || 1.0;
