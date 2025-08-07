@@ -205,8 +205,8 @@
 		if ("settings" in response){
 			settings = response.settings;
 		}
-		if ("state" in request) {
-			isExtensionOn = request.state;
+		if ("state" in response) {
+			isExtensionOn = response.state;
 		}
 	});
 
@@ -247,7 +247,7 @@
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
-							//processMessage(mutation.addedNodes[i]);
+							processMessage(mutation.addedNodes[i]);
 						} catch(e){}
 					}
 				}
@@ -284,7 +284,7 @@
 								if (ele.skip){return;}
 								ele.skip = true;
 								
-								processMessage(ele);
+								//processMessage(ele);
 							} catch(e){}
 						});
 						onElementInserted(document.querySelector(target));
