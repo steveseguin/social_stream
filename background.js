@@ -894,7 +894,7 @@ function loadSettings(item, resave = false) {
 				}
 			}
 			reloadNeeded = true;
-			chrome.storage.local.set({ streamID});
+			chrome.storage.sync.set({ streamID});
 			chrome.runtime.lastError;
 		}
 	} else if (!streamID) {
@@ -937,7 +937,7 @@ function loadSettings(item, resave = false) {
 			password = item.password;
 			
 			reloadNeeded = true;
-			chrome.storage.local.set({ password});
+			chrome.storage.sync.set({ password});
 			chrome.runtime.lastError;
 		}
 	}
@@ -1682,7 +1682,7 @@ function updateExtensionState(sync = true) {
 	}
 
 	if (sync) {
-		chrome.storage.local.set({
+		chrome.storage.sync.set({
 			state: isExtensionOn
 		});
 		chrome.runtime.lastError;
@@ -3459,8 +3459,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				}
 				
 				if (isSSAPP) {
-					if (chrome && chrome.storage && chrome.storage.local && chrome.storage.local.set) {
-						chrome.storage.local.set({
+					if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
+						chrome.storage.sync.set({
 							streamID: streamID || ""
 						});
 					}
@@ -3469,8 +3469,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if ("password" in request) {
 				password = request.password;
 				if (isSSAPP) {
-					if (chrome && chrome.storage && chrome.storage.local && chrome.storage.local.set) {
-						chrome.storage.local.set({
+					if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
+						chrome.storage.sync.set({
 							password: password || ""
 						});
 					}
@@ -7466,7 +7466,7 @@ function blockUser(data){
 		if (!isAlreadyBlocked) {
 			// Update blacklist settings
 			settings.blacklistusers.textsetting += (settings.blacklistusers.textsetting ? "," : "") + userToBlock.username + ":" + userToBlock.type;
-			chrome.storage.sync.set({ settings: settings });
+			chrome.storage.local.set({ settings: settings });
 			// Check for errors in chrome storage operations
 			if (chrome.runtime.lastError) {
 				console.error("Error updating settings:", chrome.runtime.lastError.message);
@@ -9874,52 +9874,69 @@ window.onload = async function () {
 		loadSettings(programmedSettings, true);
     } else {
         log("Loading settings from the main file into the background.js");
-        chrome.storage.local.get(properties, function (item) {
-            if (isSSAPP && item) {
-                loadSettings(item, false); 
+        // Load sync items (streamID, password, state) and local items (settings) separately
+        chrome.storage.sync.get(["streamID", "password", "state"], function (syncItem) {
+            chrome.storage.local.get(["settings"], function (localItem) {
+                // Combine sync and local items
+                let item = Object.assign({}, syncItem, localItem);
                 
-                // Initialize file handles after settings are loaded
-                initializeFileHandles();
-                return;
-            }
-            
-            if (item?.settings) {
-                alert("upgrading from old storage structure format to new...");
-                chrome.storage.sync.remove(["settings"], function (Items) {
-                    log("upgrading from sync to local storage");
-                });
-                chrome.storage.local.get(["settings"], function (item2) {
-                    if (item2?.settings){
-                        item = Object.assign({}, item, item2);
-                    }
-                    if (item?.settings){
-                        chrome.storage.local.set({
-                            settings: item.settings
-                        });
-                    }
-                    if (item){
-                        loadSettings(item, false);
-                        
-                        // Initialize file handles after settings are loaded
-                        if (isSSAPP) {
-                            initializeFileHandles();
-                        }
-                    }
-                });
+                if (isSSAPP && item) {
+                    loadSettings(item, false); 
+                    
+                    // Initialize file handles after settings are loaded
+                    initializeFileHandles();
+                    return;
+                }
                 
-            } else {
-                loadSettings(item, false);
-                chrome.storage.local.get(["settings"], function (item2) {
-                    if (item2){
-                        loadSettings(item2, false);
-                        
-                        // Initialize file handles after settings are loaded
-                        if (isSSAPP) {
-                            initializeFileHandles();
+                // Check for old migration scenario
+                if (!item.settings) {
+                    // Try to get all properties from local storage (old format)
+                    chrome.storage.local.get(properties, function (oldItem) {
+                        if (oldItem?.settings) {
+                            alert("upgrading from old storage structure format to new...");
+                            // Move sync items to sync storage
+                            if (oldItem.streamID || oldItem.password || oldItem.state) {
+                                chrome.storage.sync.set({
+                                    streamID: oldItem.streamID || undefined,
+                                    password: oldItem.password || undefined,
+                                    state: oldItem.state || undefined
+                                });
+                            }
+                            // Keep settings in local storage
+                            chrome.storage.local.set({
+                                settings: oldItem.settings
+                            });
+                            // Remove old sync storage settings if any
+                            chrome.storage.sync.remove(["settings"], function () {
+                                log("upgrading from sync to local storage");
+                            });
+                            
+                            loadSettings(oldItem, false);
+                            
+                            // Initialize file handles after settings are loaded
+                            if (isSSAPP) {
+                                initializeFileHandles();
+                            }
+                        } else {
+                            // No migration needed, just load what we have
+                            loadSettings(item, false);
+                            
+                            // Initialize file handles after settings are loaded
+                            if (isSSAPP) {
+                                initializeFileHandles();
+                            }
                         }
+                    });
+                } else {
+                    // Normal loading - we have settings
+                    loadSettings(item, false);
+                    
+                    // Initialize file handles after settings are loaded
+                    if (isSSAPP) {
+                        initializeFileHandles();
                     }
-                });
-            }
+                }
+            });
         });
     }
 };
