@@ -205,7 +205,7 @@
    limitations under the License.
  */
 var Uc, A2, Ju = { "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm": (x, C, d) => {
-  x.exports = d.p + "ort-wasm-simd-threaded.jsep.wasm";
+  x.exports = d.p + "kokoro-ort-wasm-simd-threaded.jsep.wasm";
 }, "./node_modules/onnxruntime-web/dist/ort.bundle.min.mjs?46eb": (x, C, d) => {
   x.exports = d.p + "ort.bundle.min.mjs";
 }, "?2ce3": () => {
@@ -3717,7 +3717,7 @@ var Uc, A2, Ju = { "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.j
         } catch (te) {
           mt(`Module.instantiateWasm callback failed with error: ${te}`), re(te);
         }
-        return Bc ||= Q.locateFile ? wg("ort-wasm-simd-threaded.jsep.wasm") ? "ort-wasm-simd-threaded.jsep.wasm" : Q.locateFile ? Q.locateFile("ort-wasm-simd-threaded.jsep.wasm", lA) : lA + "ort-wasm-simd-threaded.jsep.wasm" : new URL(d("./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm"), d.b).href, function(te, le) {
+        return Bc ||= Q.locateFile ? wg("kokoro-ort-wasm-simd-threaded.jsep.wasm") ? "kokoro-ort-wasm-simd-threaded.jsep.wasm" : Q.locateFile ? Q.locateFile("kokoro-ort-wasm-simd-threaded.jsep.wasm", lA) : lA + "kokoro-ort-wasm-simd-threaded.jsep.wasm" : new URL(d("./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm"), d.b).href, function(te, le) {
           var be = Bc;
           return LA || typeof WebAssembly.instantiateStreaming != "function" || wg(be) || kg(be) || typeof fetch != "function" ? Bg(be, te, le) : fetch(be, { credentials: "same-origin" }).then((je) => WebAssembly.instantiateStreaming(je, te).then(le, function(IA) {
             return mt(`wasm streaming compile failed: ${IA}`), mt("falling back to ArrayBuffer instantiation"), Bg(be, te, le);
