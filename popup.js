@@ -1562,6 +1562,7 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
     speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
     kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
+    kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
     openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
   };
   
@@ -2156,7 +2157,7 @@ function handleAIProviderVisibility(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS", "openaiTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2171,6 +2172,8 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("speechifyTTS").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS").classList.remove("hidden");
+    } else if (provider == "kitten") {
+        document.getElementById("kittenTTS").classList.remove("hidden");
     } else if (provider == "openai") {
         document.getElementById("openaiTTS").classList.remove("hidden");
     }
@@ -2179,7 +2182,7 @@ function handleTTSProviderVisibility(provider) {
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10", "openaiTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2194,6 +2197,8 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS10").classList.remove("hidden");
+    } else if (provider == "kitten") {
+        document.getElementById("kittenTTS10").classList.remove("hidden");
     } else if (provider == "openai") {
         document.getElementById("openaiTTS10").classList.remove("hidden");
     }
@@ -2202,7 +2207,7 @@ function handleTTSProvider10Visibility(provider) {
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2217,6 +2222,8 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("speechifyTTS2").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS2").classList.remove("hidden");
+    } else if (provider == "kitten") {
+        document.getElementById("kittenTTS2").classList.remove("hidden");
     } else if (provider == "openai") {
         document.getElementById("openaiTTS2").classList.remove("hidden");
     } else if (provider == "piper") {
@@ -3050,7 +3057,7 @@ function handleOptionSetting(ele, sync) {
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, 
-            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
+            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -3680,6 +3687,14 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 rate: document.querySelector('[data-param1="kokorospeed"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="kokorospeed"]')?.value) || 1.0 : 1.0,
             },
             
+            // Kitten TTS settings
+            kitten: {
+                voice: document.getElementById('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-2-f",
+                speed: document.querySelector('[data-param1="kittenspeed"]')?.checked ?  
+                    parseFloat(document.querySelector('[data-numbersetting="kittenspeed"]')?.value) || 1.0 : 1.0,
+                sampleRate: 24000  // Fixed value - not configurable in new library
+            },
+            
             // Google Cloud TTS settings
             google: {
                 key: document.getElementById('googleAPIKey')?.value || document.getElementById('ttskey')?.value,
@@ -3795,6 +3810,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             return;
         }
         
+        if (provider === 'kitten') {
+            let warningMsg = getTranslation("tts-test-limited", "Testing for {provider} requires significant browser resources. Works best during streaming.");
+            warningMsg = warningMsg.replace('{provider}', serviceName);
+            this.showFeedback(warningMsg, 'warning');
+            // Continue with test despite warning
+        }
+        
         this.showFeedback(`Testing ${serviceName}...`, 'info');
         
         const originalOnEnded = this.audio?.onended;
@@ -3857,6 +3879,10 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			} else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
                     await this.kokoroTTS(text, settings);
+                }
+            } else if (settings.service == "kitten") {
+                if (!this.premiumQueueActive) {
+                    await this.kittenTTS(text, settings);
                 }
             } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings);
@@ -3959,6 +3985,76 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			this.finishedAudio();
 		}
 	},
+    
+    async kittenTTS(text, settings) {
+        try {
+            // Load ONNX Runtime first if not loaded
+            if (typeof ort === 'undefined') {
+                const ortScript = document.createElement('script');
+                ortScript.src = './thirdparty/ort.min.js';
+                await new Promise((resolve, reject) => {
+                    ortScript.onload = resolve;
+                    ortScript.onerror = reject;
+                    document.head.appendChild(ortScript);
+                });
+                
+                // Configure WASM paths after loading ONNX Runtime
+                if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
+                    ort.env.wasm.wasmPaths = './thirdparty/';
+                    ort.env.wasm.numThreads = 1;
+                    ort.env.wasm.simd = false;
+                    console.log("Configured ONNX Runtime WASM paths for popup");
+                }
+            }
+            
+            // Load Kitten TTS module if not loaded
+            if (!window.kittenTtsInstance) {
+                // Use absolute URL for chrome extension context
+                const baseUrl = chrome.runtime.getURL('');
+                const moduleUrl = baseUrl + 'thirdparty/kitten-tts/kitten-tts-lib.js';
+                
+                const { KittenTTS } = await import(moduleUrl);
+                
+                window.kittenTtsInstance = new KittenTTS();
+                
+                // Initialize with model, voices, and WASM paths using absolute URLs
+                const modelUrl = baseUrl + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
+                const voicesUrl = baseUrl + 'thirdparty/kitten-tts/voices.json';
+                // Don't set WASM path - let ONNX runtime use its default
+                await window.kittenTtsInstance.init(modelUrl, voicesUrl);
+            }
+            
+            this.premiumQueueActive = true;
+            
+            // Generate speech with selected voice and speed
+            const audioBlob = await window.kittenTtsInstance.generateSpeech(
+                text, 
+                settings.kitten.voice || 'expr-voice-2-f',
+                settings.kitten.speed || 1.0
+            );
+            
+            // Play audio
+            if (!this.audio) {
+                this.audio = document.createElement("audio");
+                this.audio.onended = () => this.finishedAudio();
+            }
+            
+            this.audio.src = URL.createObjectURL(audioBlob);
+            if (settings.volume) {
+                this.audio.volume = settings.volume;
+            }
+            
+            await this.audio.play().catch(e => {
+                console.error("Audio playback failed:", e);
+                this.finishedAudio();
+            });
+            
+        } catch (error) {
+            console.error("Kitten TTS error:", error);
+            this.showFeedback(`Kitten TTS Error: ${error.message}`, 'error');
+            this.finishedAudio();
+        }
+    },
     
     googleTTS(text, settings) {
         this.premiumQueueActive = true;

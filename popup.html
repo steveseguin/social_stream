@@ -2141,6 +2141,7 @@ body.ssapp .wrapper.ssapp h3 {
 							<select id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="kokoro">Kokoro (webGPU/CPU)</option>
+								<option value="kitten">Kitten TTS (browser-based)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
@@ -2207,6 +2208,37 @@ body.ssapp .wrapper.ssapp h3 {
 									⏩ Speaking rate
 									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
 										size="5" data-numbersetting="kokorospeed" />
+								</span>
+							</div>
+						</div>
+						<!-- Kitten TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="kittenTTS">
+							<h4 data-translate="tts-kitten-options">Kitten TTS Options</h4>
+							<i>note: this free browser-based TTS needs to download a ~15MB model on first use.</i>
+							<br /><br />
+							<div>
+								🎭 Voice to use: 
+								<select id="kittenVoiceSelect" data-optionparam1="kittenvoice" title="Select the Kitten TTS Voice">
+									<option value="expr-voice-2-m">Voice 2 (Male)</option>
+									<option selected value="expr-voice-2-f">Voice 2 (Female)</option>
+									<option value="expr-voice-3-m">Voice 3 (Male)</option>
+									<option value="expr-voice-3-f">Voice 3 (Female)</option>
+									<option value="expr-voice-4-m">Voice 4 (Male)</option>
+									<option value="expr-voice-4-f">Voice 4 (Female)</option>
+									<option value="expr-voice-5-m">Voice 5 (Male)</option>
+									<option value="expr-voice-5-f">Voice 5 (Female)</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="kittenspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="kitten-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" 
+										size="5" data-numbersetting="kittenspeed" />
 								</span>
 							</div>
 						</div>
@@ -3693,6 +3725,7 @@ body.ssapp .wrapper.ssapp h3 {
                             <select id="ttsProvider2" data-optionparam2="ttsprovider" data-optionsetting2="ttsProvider" class="textInput">
                                 <option selected value="system">System TTS</option>
                                 <option value="kokoro">Kokoro (webGPU/CPU)</option>
+                                <option value="kitten">Kitten TTS (browser-based)</option>
                                 <option value="elevenlabs">ElevenLabs</option>
                                 <option value="google">Google Cloud</option>
                                 <option value="speechify">Speechify</option>
@@ -3754,6 +3787,38 @@ body.ssapp .wrapper.ssapp h3 {
                                     <option value="bm_george">bm_george</option>
                                     <option value="bm_lewis">bm_lewis</option>
                                 </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Kitten TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="kittenTTS2">
+                            <h4 data-translate="tts-kitten-options">Kitten TTS Options</h4>
+                            <i>note: this free browser-based TTS needs to download a ~15MB model on first use.</i>
+                            <br /><br />
+                            <div>
+                                🎭 Voice to use: 
+                                <select id="kittenVoiceSelect2" data-optionparam2="kittenvoice" title="Select the Kitten TTS Voice">
+                                    <option value="expr-voice-2-m">Voice 2 (Male)</option>
+                                    <option selected value="expr-voice-2-f">Voice 2 (Female)</option>
+                                    <option value="expr-voice-3-m">Voice 3 (Male)</option>
+                                    <option value="expr-voice-3-f">Voice 3 (Female)</option>
+                                    <option value="expr-voice-4-m">Voice 4 (Male)</option>
+                                    <option value="expr-voice-4-f">Voice 4 (Female)</option>
+                                    <option value="expr-voice-5-m">Voice 5 (Male)</option>
+                                    <option value="expr-voice-5-f">Voice 5 (Female)</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="kittenspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="kitten-tts-speed">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" 
+                                        size="5" data-numbersetting2="kittenspeed" />
+                                </span>
                             </div>
                         </div>
                         
@@ -4682,6 +4747,7 @@ body.ssapp .wrapper.ssapp h3 {
 							<select id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="kokoro">Kokoro (webGPU/CPU)</option>
+								<option value="kitten">Kitten TTS (browser-based)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
@@ -5077,6 +5143,37 @@ body.ssapp .wrapper.ssapp h3 {
 									⏩ Speaking rate
 									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
 										size="5" data-numbersetting10="kokorospeed" />
+								</span>
+							</div>
+						</div>
+						<!-- Kitten TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="kittenTTS10">
+							<h4 data-translate="tts-kitten-options">Kitten TTS Options</h4>
+							<i>note: this free browser-based TTS needs to download a ~15MB model on first use.</i>
+							<br /><br />
+							<div>
+								🎭 Voice to use: 
+								<select id="kittenVoiceSelect10" data-optionparam10="kittenvoice" title="Select the Kitten TTS Voice">
+									<option value="expr-voice-2-m">Voice 2 (Male)</option>
+									<option selected value="expr-voice-2-f">Voice 2 (Female)</option>
+									<option value="expr-voice-3-m">Voice 3 (Male)</option>
+									<option value="expr-voice-3-f">Voice 3 (Female)</option>
+									<option value="expr-voice-4-m">Voice 4 (Male)</option>
+									<option value="expr-voice-4-f">Voice 4 (Female)</option>
+									<option value="expr-voice-5-m">Voice 5 (Male)</option>
+									<option value="expr-voice-5-f">Voice 5 (Female)</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="kittenspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="kitten-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" 
+										size="5" data-numbersetting10="kittenspeed" />
 								</span>
 							</div>
 						</div>
@@ -9181,6 +9278,7 @@ body.ssapp .wrapper.ssapp h3 {
 			</span>
         </div>
 		<script type="text/javascript" src="./libs/profiles.js"></script>
+		<!-- Kitten TTS will be loaded dynamically as ES module when needed -->
         <script type="text/javascript" src="popup.js?v=3"></script>
         <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>
