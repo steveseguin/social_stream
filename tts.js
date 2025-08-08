@@ -2238,6 +2238,16 @@ TTS.openAITTS = function(text) {
     try {
         TTS.premiumQueueActive = true;
         const url = TTS.openAISettings.endpoint;
+        
+        // API key is optional for custom endpoints, required for OpenAI's official API
+        const apiKey = TTS.openAISettings.apiKey || TTS.OpenAIAPIKey;
+        const isOfficialEndpoint = !url || url.includes('api.openai.com');
+        
+        if (!apiKey && isOfficialEndpoint) {
+            console.error("OpenAI API key is required for the official OpenAI API");
+            TTS.finishedAudio();
+            return;
+        }
 
         var data = {
             model: TTS.openAISettings.model,
@@ -2247,18 +2257,30 @@ TTS.openAITTS = function(text) {
             speed: TTS.openAISettings.speed
         };
 
+        const headers = {
+            "Content-Type": "application/json"
+        };
+        
+        // Only add Authorization header if API key is provided
+        if (apiKey) {
+            headers["Authorization"] = `Bearer ${apiKey}`;
+        }
+        
         const otherparam = {
-            headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${TTS.openAISettings.apiKey}`
-            },
+            headers: headers,
             body: JSON.stringify(data),
             method: "POST"
         };
 
         fetch(url, otherparam)
-            .then(response => {
+            .then(async response => {
                 if (!response.ok) {
+                    // Try to get detailed error message
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.includes("application/json")) {
+                        const errorData = await response.json();
+                        throw new Error(errorData?.error?.message || errorData?.message || `HTTP error! status: ${response.status}`);
+                    }
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.blob();
