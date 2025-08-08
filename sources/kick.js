@@ -505,9 +505,6 @@
 					}
 				}
 				data.type = "kick";
-				console.warn({
-						delete: data
-					});
 				
 				chrome.runtime.sendMessage(
 					chrome.runtime.id,
@@ -685,7 +682,6 @@
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
-			console.warn(e);
 			if (ele && e && e.id){
 				ele.dataset.mid = e.id;
 			}
@@ -745,9 +741,6 @@
 				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
 				data.type = "kick";
 				
-				console.warn({
-						delete: data
-					});
 				chrome.runtime.sendMessage(
 					chrome.runtime.id,
 					{
@@ -964,7 +957,6 @@
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
-			console.warn(e);
 			if (e && ele){
 				ele.dataset.mid = e?.id;
 			}
