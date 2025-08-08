@@ -1453,7 +1453,27 @@ async function resetSettings(item = false) {
 			item = {};
 		}
 		item.settings = {};
-		loadSettings(item, true);
+		
+		// Clear the global settings object
+		settings = {};
+		
+		// Reset Spotify instance if it exists
+		if (spotify) {
+			spotify.accessToken = null;
+			spotify.refreshToken = null;
+			spotify.tokenExpiry = null;
+			spotify.isPolling = false;
+			if (spotify.pollInterval) {
+				clearInterval(spotify.pollInterval);
+				spotify.pollInterval = null;
+			}
+		}
+		
+		// Save the empty settings to storage first
+		chrome.storage.local.set({ settings: {} }, function() {
+			// Then load default settings
+			loadSettings(item, true);
+		});
 		// window.location.reload()
 	});
 }
@@ -2788,6 +2808,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({"state": isExtensionOn});
 			return response;
 		}
+		
+		// Unwrap messages that come from the service worker for non-Spotify commands
+		// Service worker wraps messages as {type: 'toBackground', data: originalMessage}
+		if (request.type === 'toBackground' && request.data) {
+			request = request.data;
+		}
 
 		if (request.cmd && request.cmd === "setOnOffState") {
 			// toggle the IFRAME (stream to the remote dock) on or off
@@ -3554,49 +3580,44 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Start Spotify OAuth flow
 			console.log("Spotify auth request received");
 			
-			// Process asynchronously
-			(async () => {
-				try {
-					// Check if SpotifyIntegration class is available
-					if (typeof SpotifyIntegration === 'undefined' && typeof window.SpotifyIntegration === 'undefined') {
-						console.error("SpotifyIntegration class not loaded yet");
-						sendResponse({success: false, error: "Spotify integration is still loading. Please try again in a moment."});
-						return;
-					}
-					
-					if (!spotify) {
-						console.log("Initializing Spotify...");
-						initializeSpotify();
-						// Wait a bit for initialization
-						await new Promise(resolve => setTimeout(resolve, 100));
-					}
-					
-					if (!spotify) {
-						console.error("Failed to initialize Spotify instance");
-						sendResponse({success: false, error: "Failed to initialize Spotify. Please check the console for errors."});
-						return;
-					}
-					
-					console.log("Starting OAuth flow...");
-					const result = await spotify.startOAuthFlow();
-					console.log("OAuth flow result:", result);
-					
-					// Handle the response
-					if (typeof result === 'object' && result.alreadyConnected) {
-						sendResponse({success: true, alreadyConnected: true});
-					} else if (isSSAPP && result) {
-						sendResponse({
-							success: true,
-							message: "Please complete authorization in your browser. After authorizing, copy the full URL from the callback page and use the 'Paste Callback URL' option in the settings."
-						});
-					} else {
-						sendResponse({success: !!result});
-					}
-				} catch (error) {
-					console.error("Spotify auth error:", error);
-					sendResponse({success: false, error: error.message || error.toString()});
+			// Check if SpotifyIntegration class is available synchronously
+			if (typeof SpotifyIntegration === 'undefined' && typeof window.SpotifyIntegration === 'undefined') {
+				console.error("SpotifyIntegration class not loaded yet");
+				sendResponse({success: false, error: "Spotify integration is still loading. Please try again in a moment."});
+				return true;
+			}
+			
+			if (!spotify) {
+				console.log("Initializing Spotify...");
+				initializeSpotify();
+			}
+			
+			if (!spotify) {
+				console.error("Failed to initialize Spotify instance");
+				sendResponse({success: false, error: "Failed to initialize Spotify. Please check the console for errors."});
+				return true;
+			}
+			
+			// Process the OAuth flow asynchronously
+			console.log("Starting OAuth flow...");
+			spotify.startOAuthFlow().then(result => {
+				console.log("OAuth flow result:", result);
+				
+				// Handle the response
+				if (typeof result === 'object' && result.alreadyConnected) {
+					sendResponse({success: true, alreadyConnected: true});
+				} else if (isSSAPP && result) {
+					sendResponse({
+						success: true,
+						message: "Please complete authorization in your browser. After authorizing, copy the full URL from the callback page and use the 'Paste Callback URL' option in the settings."
+					});
+				} else {
+					sendResponse({success: !!result});
 				}
-			})();
+			}).catch(error => {
+				console.error("Spotify auth error:", error);
+				sendResponse({success: false, error: error.message || error.toString()});
+			});
 			
 			return true; // Keep the message channel open for async response
 		} else if (request.cmd && request.cmd === "spotifyManualCallback") {
@@ -3661,6 +3682,48 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			})();
 			
 			return true; // Keep message channel open for async response
+		} else if (request.cmd && request.cmd === "spotifySignOut") {
+			// Handle Spotify sign out
+			console.log("Spotify sign out request received");
+			
+			// Clear Spotify tokens from settings synchronously first
+			delete settings.spotifyAccessToken;
+			delete settings.spotifyRefreshToken;
+			delete settings.spotifyTokenExpiry;
+			
+			// Reset Spotify instance if it exists
+			if (spotify) {
+				spotify.accessToken = null;
+				spotify.refreshToken = null;
+				spotify.tokenExpiry = null;
+				spotify.isPolling = false;
+				if (spotify.pollInterval) {
+					clearInterval(spotify.pollInterval);
+					spotify.pollInterval = null;
+				}
+				// Update the Spotify instance's settings reference
+				// This ensures it sees the cleared tokens
+				if (spotify.settings) {
+					delete spotify.settings.spotifyAccessToken;
+					delete spotify.settings.spotifyRefreshToken;
+					delete spotify.settings.spotifyTokenExpiry;
+				}
+			}
+			
+			// Save updated settings asynchronously
+			chrome.storage.local.set({
+				settings: settings
+			}, function() {
+				if (chrome.runtime.lastError) {
+					console.error("Error saving cleared settings:", chrome.runtime.lastError);
+					// Don't send error response since tokens are already cleared
+				} else {
+					console.log("Spotify tokens cleared successfully");
+				}
+			});
+			
+			// Respond immediately - tokens are already cleared in memory
+			sendResponse({success: true});
 		} else if (request.cmd && request.target){
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P(request, request.target);

@@ -5329,6 +5329,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	// Spotify Auth Button
 	const spotifyAuthButton = document.getElementById('spotifyAuthButton');
 	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');
+	const spotifySignOutButton = document.getElementById('spotifySignOutButton');
 	
 	if (spotifyAuthButton) {
 		// Check if already authenticated (tokens are stored in settings object)
@@ -5336,6 +5337,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			if (result.settings && result.settings.spotifyAccessToken) {
 				spotifyAuthStatus.style.display = 'inline';
 				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+				if (spotifySignOutButton) {
+					spotifySignOutButton.style.display = 'inline-block';
+				}
 			}
 		});
 		
@@ -5367,6 +5371,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						if (response && response.success) {
 							spotifyAuthStatus.style.display = 'inline';
 							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+							if (spotifySignOutButton) {
+								spotifySignOutButton.style.display = 'inline-block';
+							}
 							callbackDiv.style.display = 'none';
 							document.getElementById('spotifyCallbackInput').value = '';
 							alert('Spotify connected successfully!');
@@ -5432,6 +5439,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				if (response && response.success) {
 					spotifyAuthStatus.style.display = 'inline';
 					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+					if (spotifySignOutButton) {
+						spotifySignOutButton.style.display = 'inline-block';
+					}
 					// Hide manual callback input on success
 					if (window.ssapp && callbackDiv) {
 						callbackDiv.style.display = 'none';
@@ -5470,6 +5480,44 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
 					}
 				}
+			}
+		});
+	}
+	
+	// Spotify Sign Out Button
+	if (spotifySignOutButton) {
+		spotifySignOutButton.addEventListener('click', function() {
+			if (confirm('Are you sure you want to sign out of Spotify?')) {
+				// Send message to background script to clear Spotify tokens
+				chrome.runtime.sendMessage({cmd: "spotifySignOut"}, function(response) {
+					if (chrome.runtime.lastError) {
+						console.error('Error signing out:', chrome.runtime.lastError);
+						alert('Failed to sign out. Please try again.');
+						return;
+					}
+					
+					if (response && response.success) {
+						// Update UI
+						spotifyAuthStatus.style.display = 'none';
+						spotifySignOutButton.style.display = 'none';
+						spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+						
+						// Clear any manual callback inputs if present
+						const callbackDiv = document.getElementById('spotifyCallbackDiv');
+						if (callbackDiv) {
+							callbackDiv.style.display = 'none';
+							const callbackInput = document.getElementById('spotifyCallbackInput');
+							if (callbackInput) {
+								callbackInput.value = '';
+							}
+						}
+						
+						console.log('Successfully signed out of Spotify');
+						alert('Successfully signed out of Spotify');
+					} else {
+						alert('Failed to sign out: ' + (response?.error || 'Unknown error'));
+					}
+				});
 			}
 		});
 	}
