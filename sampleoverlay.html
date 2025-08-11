@@ -196,7 +196,7 @@ body, html {
 
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
-    const MAX_MESSAGES = 20; // Adjust as needed
+    const MAX_MESSAGES = urlParams.has("limit") ? parseInt(urlParams.get("limit")) : 20; // Adjust as needed
     const topSpacer = document.getElementById('spacer');
 	const messageTimestamps = new Map();
     const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000; 
