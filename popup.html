@@ -113,19 +113,6 @@
     align-items: center;
 }
 
-body.ssapp {
-	font-size: 115%;
-    opacity: 0;
-    transition: opacity 0.5s ease-in;
-}
-
-body.loaded.ssapp {
-    opacity: 1;
-}
-
-body.ssapp .options_group > div {
-    padding-bottom: 15px;
-}
 
 .add-source-container input {
     width: 150px;
@@ -1236,184 +1223,172 @@ input:checked + .slider:before {
   border: none;
 }
 
-//////////
+@media (min-width: 600px) {
+	
+	body.ssapp {
+		font-size: 115%;
+		opacity: 0;
+		transition: opacity 0.5s ease-in;
+	}
+
+	body.loaded.ssapp {
+		opacity: 1;
+	}
+
+	body.ssapp .options_group > div {
+		padding-bottom: 15px;
+	}
 
 
-/* General body and container adjustments for wider screen */
-body.ssapp {
-    font-size: 14px; /* Slightly increase base font size for better readability */
-}
+	/* General body and container adjustments for wider screen */
+	body.ssapp {
+		font-size: 14px; /* Slightly increase base font size for better readability */
+	}
 
-body.ssapp .container {
-    max-width: 1100px; /* Allow the main container to expand */
-    margin: 0 auto; /* Center the container */
-    padding: 0 1em; /* Add some padding on the sides */
-}
+	body.ssapp .container {
+		max-width: 1100px; /* Allow the main container to expand */
+		margin: 0 auto; /* Center the container */
+		padding: 0 1em; /* Add some padding on the sides */
+	}
 
-/* Adjustments for wrapper and collapsible sections */
-body.ssapp .wrapper {
-    display: flex;
-    flex-direction: column; /* Stack wrappers vertically */
-    align-items: center; /* Center content within wrappers */
-}
+	/* Adjustments for wrapper and collapsible sections */
+	body.ssapp .wrapper {
+		display: flex;
+		flex-direction: column; /* Stack wrappers vertically */
+		align-items: center; /* Center content within wrappers */
+	}
 
-body.ssapp .collapsible {
-    width: 100%; /* Allow collapsibles to use full width of their container */
-    max-width: none; /* Remove max-width if previously set for narrow view */
-}
+	body.ssapp .collapsible {
+		width: 100%; /* Allow collapsibles to use full width of their container */
+		max-width: none; /* Remove max-width if previously set for narrow view */
+	}
 
-body.ssapp .collapsible-label {
-    font-size: 1.25em; /* Slightly larger labels */
-}
-
-
-/* Optimize link and options group sections */
-body.ssapp .link,
-body.ssapp .generic_category_title {
-    margin-top: 2em; /* Increase top margin for better separation */
-}
-
-body.ssapp .link div,
-body.ssapp .options_group {
-    padding: 1.5em; /* Increase padding in these groups */
-    max-height: none; /* Allow link divs to expand if needed */
-}
-
-body.ssapp .link h2,
-body.ssapp .generic_category_title h2 {
-    font-size: 1.3rem; /* Slightly larger section titles */
-}
-
-/* Grid adjustments */
-body.ssapp .grid,
-body.ssapp .grid3 {
-    /* If you want to maintain multiple columns on wider screens,
-       you might not need to change these much, but you could adjust gaps.
-       Alternatively, you could allow more columns. */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* More flexible grid columns */
-    gap: 1em; /* Increase gap between grid items */
-}
+	body.ssapp .collapsible-label {
+		font-size: 1.25em; /* Slightly larger labels */
+	}
 
 
-/* Header button adjustments */
-body.ssapp #disableButton {
-    padding: 0.75em 0; /* Slightly more padding for the main toggle button */
-}
+	/* Optimize link and options group sections */
+	body.ssapp .link,
+	body.ssapp .generic_category_title {
+		margin-top: 2em; /* Increase top margin for better separation */
+	}
 
-body.ssapp .glowingButton span {
-    font-size: clamp(14px, 1.1em, 18px); /* Adjust glowing button text size */
-    padding: 6px 12px; /* Adjust padding for glowing buttons */
-}
+	body.ssapp .link div,
+	body.ssapp .options_group {
+		padding: 1.5em; /* Increase padding in these groups */
+		max-height: none; /* Allow link divs to expand if needed */
+	}
 
-body.ssapp div[style*="flex-grow: 1"] .glowingButton span,
-body.ssapp div[style*="flex-basis: auto"] .glowingButton span {
-     /* Ensure buttons that are meant to grow can still do so effectively */
-}
+	body.ssapp .link h2,
+	body.ssapp .generic_category_title h2 {
+		font-size: 1.3rem; /* Slightly larger section titles */
+	}
+
+	/* Grid adjustments */
+	body.ssapp .grid,
+	body.ssapp .grid3 {
+		/* If you want to maintain multiple columns on wider screens,
+		   you might not need to change these much, but you could adjust gaps.
+		   Alternatively, you could allow more columns. */
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* More flexible grid columns */
+		gap: 1em; /* Increase gap between grid items */
+	}
 
 
-/* Text Input Adjustments */
-body.ssapp .textInputContainer {
-    width: auto; /* Allow text input containers to adjust to their content or parent */
-    max-width: 600px; /* Set a max-width for very wide inputs if desired */
-    margin-bottom: 1em; /* More space below inputs */
-}
+	/* Header button adjustments */
+	body.ssapp #disableButton {
+		padding: 0.75em 0; /* Slightly more padding for the main toggle button */
+	}
 
-body.ssapp .textInput,
-body.ssapp .textInputContainer input[type="text"],
-body.ssapp .textInputContainer input[type="password"],
-body.ssapp .textInputContainer input[type="number"],
-body.ssapp .textInputContainer textarea,
-body.ssapp select.textInput {
-    font-size: 1em; /* Ensure consistent font size in inputs */
-    padding: 8px; /* More padding in text inputs */
-}
+	body.ssapp .glowingButton span {
+		font-size: clamp(14px, 1.1em, 18px); /* Adjust glowing button text size */
+		padding: 6px 12px; /* Adjust padding for glowing buttons */
+	}
 
-body.ssapp .textInput + label {
-    font-size: 1.1em; /* Adjust label font size */
-}
+	body.ssapp div[style*="flex-grow: 1"] .glowingButton span,
+	body.ssapp div[style*="flex-basis: auto"] .glowingButton span {
+		 /* Ensure buttons that are meant to grow can still do so effectively */
+	}
 
-body.ssapp .textInput:focus + label,
-body.ssapp .textInput:not(:placeholder-shown) + label {
-    top: -10px; /* Adjust label position on focus/filled */
-    font-size: 0.9em;
-}
 
-/* Tab container adjustments */
-body.ssapp .tab-header {
-    max-height: none; /* Allow more space for tab headers if they wrap */
-}
+	/* Text Input Adjustments */
+	body.ssapp .textInputContainer {
+		width: auto; /* Allow text input containers to adjust to their content or parent */
+		max-width: 600px; /* Set a max-width for very wide inputs if desired */
+		margin-bottom: 1em; /* More space below inputs */
+	}
 
-body.ssapp .tab-button {
-    padding: 0.5em 1em; /* Increase padding for tab buttons */
-}
+	body.ssapp .textInput,
+	body.ssapp .textInputContainer input[type="text"],
+	body.ssapp .textInputContainer input[type="password"],
+	body.ssapp .textInputContainer input[type="number"],
+	body.ssapp .textInputContainer textarea,
+	body.ssapp select.textInput {
+		font-size: 1em; /* Ensure consistent font size in inputs */
+		padding: 8px; /* More padding in text inputs */
+	}
 
-body.ssapp .tab-content {
-    padding: 1.5em; /* More padding for tab content */
-}
+	body.ssapp .textInput + label {
+		font-size: 1.1em; /* Adjust label font size */
+	}
 
-/* Specific adjustments for better layout - you might need to add more based on content */
-body.ssapp .submenubuttons .glowingButton {
-    width: auto; /* Allow submenu buttons to size based on content */
-    flex-grow: 1; /* Allow them to share space if in a flex container */
-    margin: 5px;
-}
+	body.ssapp .textInput:focus + label,
+	body.ssapp .textInput:not(:placeholder-shown) + label {
+		top: -10px; /* Adjust label position on focus/filled */
+		font-size: 0.9em;
+	}
 
-body.ssapp #chatCommands,
-body.ssapp #timedMessages,
-body.ssapp #botReplyMessages {
-    max-height: 300px; /* Allow more height for these scrollable areas */
-}
+	/* Tab container adjustments */
+	body.ssapp .tab-header {
+		max-height: none; /* Allow more space for tab headers if they wrap */
+	}
 
-body.ssapp .source-list-container,
-body.ssapp .username-list-container {
-    max-height: 150px; /* Allow more height for source/username lists */
-}
+	body.ssapp .tab-button {
+		padding: 0.5em 1em; /* Increase padding for tab buttons */
+	}
 
-/* Example: if you want some sections to go side-by-side */
-body.ssapp .wrapper {
-    /* If you have multiple .wrapper elements that you want side-by-side
-       you'll need to wrap them in another container and apply flex display to it.
-       The current CSS makes .wrapper elements stack vertically.
-       If you want specific groups of .collapsible sections to be side-by-side:
-    */
-}
-/*
-   For instance, if you have a structure like:
-   <div class="ssapp-row">
-       <div class="wrapper">...</div>
-       <div class="wrapper">...</div>
-   </div>
+	body.ssapp .tab-content {
+		padding: 1.5em; /* More padding for tab content */
+	}
 
-   Then you could add:
-   body.ssapp .ssapp-row {
-       display: flex;
-       gap: 1em;
-       align-items: flex-start;
-   }
-   body.ssapp .ssapp-row .wrapper {
-       flex: 1;
-   }
-*/
+	/* Specific adjustments for better layout - you might need to add more based on content */
+	body.ssapp .submenubuttons .glowingButton {
+		width: auto; /* Allow submenu buttons to size based on content */
+		flex-grow: 1; /* Allow them to share space if in a flex container */
+		margin: 5px;
+	}
 
-/* Quick open chats section in ssapp mode */
-body.ssapp .wrapper.ssapp .collapsible-text .options_group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Arrange items in a responsive grid */
-    gap: 1em;
-}
+	body.ssapp #chatCommands,
+	body.ssapp #timedMessages,
+	body.ssapp #botReplyMessages {
+		max-height: 300px; /* Allow more height for these scrollable areas */
+	}
 
-body.ssapp .wrapper.ssapp .textInputContainer {
-    width: 100%; /* Make input fields take full width of their grid cell */
-}
+	body.ssapp .source-list-container,
+	body.ssapp .username-list-container {
+		max-height: 150px; /* Allow more height for source/username lists */
+	}
 
-body.ssapp .wrapper.ssapp center {
-    grid-column: 1 / -1; /* Make buttons span full width if needed or style them differently */
-    margin-bottom: 1em;
-}
+	body.ssapp .wrapper.ssapp .collapsible-text .options_group {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Arrange items in a responsive grid */
+		gap: 1em;
+	}
 
-body.ssapp .wrapper.ssapp h3 {
-     grid-column: 1 / -1; /* Make headers span full width */
-     margin-bottom: 0.5em;
+	body.ssapp .wrapper.ssapp .textInputContainer {
+		width: 100%; /* Make input fields take full width of their grid cell */
+	}
+
+	body.ssapp .wrapper.ssapp center {
+		grid-column: 1 / -1; /* Make buttons span full width if needed or style them differently */
+		margin-bottom: 1em;
+	}
+
+	body.ssapp .wrapper.ssapp h3 {
+		 grid-column: 1 / -1; /* Make headers span full width */
+		 margin-bottom: 0.5em;
+	}
 }
         </style>
     </head>
@@ -1497,7 +1472,6 @@ body.ssapp .wrapper.ssapp h3 {
 							<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
 							<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
 							<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
-							<option value="themes/events/index.html">🎉 Events Theme - Special occasions</option>
 							<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
 							<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
 						</select>
