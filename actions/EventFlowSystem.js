@@ -11,12 +11,12 @@ class EventFlowSystem {
         this.sanitizeRelay = options.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || null;
 		
-        console.log('[EventFlowSystem Constructor] Initialized with:');
-        console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
-        console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
-        console.log('  - pointsSystem:', this.pointsSystem ? 'System provided' : 'NULL');
-        console.log('  - sanitizeRelay:', this.sanitizeRelay ? 'Function provided' : 'NULL - Relay will not work!');
-        console.log('  - checkExactDuplicateAlreadyRelayed:', this.checkExactDuplicateAlreadyRelayed ? 'Function provided' : 'NULL - Relay will not work!');
+        //console.log('[EventFlowSystem Constructor] Initialized with:');
+        //console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
+        //console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
+        //console.log('  - pointsSystem:', this.pointsSystem ? 'System provided' : 'NULL');
+        //console.log('  - sanitizeRelay:', this.sanitizeRelay ? 'Function provided' : 'NULL - Relay will not work!');
+        //console.log('  - checkExactDuplicateAlreadyRelayed:', this.checkExactDuplicateAlreadyRelayed ? 'Function provided' : 'NULL - Relay will not work!');
         
         this.initPromise = this.initDatabase();
     }
@@ -328,7 +328,7 @@ class EventFlowSystem {
     
     async reloadFlows() {
         // Force reload flows from database
-        console.log('[EventFlowSystem] Reloading flows from database');
+        //console.log('[EventFlowSystem] Reloading flows from database');
         await this.loadFlows();
         return this.flows;
     }
@@ -338,15 +338,9 @@ class EventFlowSystem {
     }
     
 	async processMessage(message) {
-        console.log("[RELAY DEBUG - ProcessMessage] Received message:", {
-            type: message?.type,
-            chatname: message?.chatname,
-            chatmessage: message?.chatmessage?.substring(0, 50) + '...',
-            hasEventFlowSystem: !!this.sendMessageToTabs
-        });
-        
+		
         if (!message) {
-            console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
+            ////console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
             return message;
         }
         
@@ -354,18 +348,18 @@ class EventFlowSystem {
         let blocked = false;
         
         const activeFlows = this.flows.filter(f => f.active);
-        console.log(`[RELAY DEBUG - ProcessMessage] Processing ${activeFlows.length} active flows`);
-        console.log(`[RELAY DEBUG - ProcessMessage] Active flow names:`, activeFlows.map(f => f.name));
+        ////console.log(`[RELAY DEBUG - ProcessMessage] Processing ${activeFlows.length} active flows`);
+        ////console.log(`[RELAY DEBUG - ProcessMessage] Active flow names:`, activeFlows.map(f => f.name));
         
         for (const flow of this.flows) {
             if (!flow.active) {
-                // console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
+                // //console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
                 continue;
             }
-          //console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
+          ////console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
             
             const result = await this.evaluateFlow(flow, processed);
-          //console.log(`[ProcessMessage] Result for flow "${flow.name}":`, JSON.stringify(result));
+          ////console.log(`[ProcessMessage] Result for flow "${flow.name}":`, JSON.stringify(result));
 
             if (result) {
                 if (result.blocked) {
@@ -458,10 +452,10 @@ class EventFlowSystem {
                     return activation;
                 });
 
-                console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
+                //console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
 
                 if (shouldExecute) {
-                    console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
+                    //console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
                     const actionResult = await this.executeAction(node, overallResult.message);
                   //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} Result:`, JSON.stringify(actionResult));
                     if (actionResult) { 
@@ -575,7 +569,7 @@ class EventFlowSystem {
                 } else {
                     match = message && message.type === config.source;
                 }
-                console.log(`[RELAY DEBUG - fromSource Trigger] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
+                //console.log(`[RELAY DEBUG - fromSource Trigger] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
                 return match;
                 
             case 'fromChannelName':
@@ -585,30 +579,30 @@ class EventFlowSystem {
                     const channelName = (message.sourceName || '').toLowerCase();
                     match = channelName === config.channelName.toLowerCase();
                 }
-                console.log(`[RELAY DEBUG - fromChannelName Trigger] Config Channel: "${config.channelName}", Message Channel: "${message.sourceName}", Match: ${match}`);
+                //console.log(`[RELAY DEBUG - fromChannelName Trigger] Config Channel: "${config.channelName}", Message Channel: "${message.sourceName}", Match: ${match}`);
                 return match;
                 
             case 'fromUser':
                 const identifier = (message.userid || message.chatname || '').toLowerCase();
                 match = config && typeof config.username === 'string' && identifier === config.username.toLowerCase();
-              //console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
+              ////console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
                 return match;
                 
             case 'userRole':
                 match = message && config && message[config.role] === true; 
-              //console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
+              ////console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
                 return match;
                 
             case 'hasDonation':
                 match = !!message.hasDonation; // Assuming hasDonation is a truthy value if donation exists
-              //console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
+              ////console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
                 return match;
                 
             case 'customJs':
                 try {
                     const evalFunction = new Function('message', config.code);
                     match = evalFunction(message);
-                  //console.log(`[EvaluateTrigger - customJs] Code executed. Result: ${match}`);
+                  ////console.log(`[EvaluateTrigger - customJs] Code executed. Result: ${match}`);
                     return match;
                 } catch (e) {
                     console.error('[EvaluateTrigger - customJs] Error in custom JS trigger:', e);
@@ -616,7 +610,7 @@ class EventFlowSystem {
                 }
                 
             default:
-              //console.log(`[EvaluateTrigger] Unknown triggerType: ${triggerType}`);
+              ////console.log(`[EvaluateTrigger] Unknown triggerType: ${triggerType}`);
                 return false;
         }
     }
@@ -674,7 +668,7 @@ class EventFlowSystem {
     
     async executeAction(actionNode, message) {
         const { actionType, config } = actionNode;
-        console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
+        //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
         
         switch (actionType) {
@@ -694,7 +688,7 @@ class EventFlowSystem {
 				};
 				result.modified = true;
 			}
-			console.log(`[ExecuteAction - modifyMessage] Modified message to: "${result.message.chatmessage}"`);
+			//console.log(`[ExecuteAction - modifyMessage] Modified message to: "${result.message.chatmessage}"`);
 			break;
                 
             case 'setProperty':
@@ -761,10 +755,10 @@ class EventFlowSystem {
                 break;
                 
             case 'relay':
-                console.log('[RELAY DEBUG - Action] Starting relay action execution');
-                console.log('[RELAY DEBUG - Action] Config:', config);
-                console.log('[RELAY DEBUG - Action] Message source:', message.type);
-                console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
+                //console.log('[RELAY DEBUG - Action] Starting relay action execution');
+                //console.log('[RELAY DEBUG - Action] Config:', config);
+                //console.log('[RELAY DEBUG - Action] Message source:', message.type);
+                //console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
                 
                 if (this.sendMessageToTabs && message && !message.reflection) {
                     // Replace all possible template variables
@@ -787,7 +781,7 @@ class EventFlowSystem {
                         // Reply to sender only - use the original message's tab ID
                         if (message.tid !== undefined && message.tid !== null) {
                             relayMessage.tid = message.tid;
-                            console.log('[RELAY DEBUG - Action] Mode: Reply to sender, tid:', message.tid);
+                            //console.log('[RELAY DEBUG - Action] Mode: Reply to sender, tid:', message.tid);
                         } else {
                             console.warn('[RELAY DEBUG - Action] Reply mode selected but no tid available in message');
                             // Can't reply without a tid, so skip this action
@@ -796,13 +790,13 @@ class EventFlowSystem {
                     } else if (config.destination) {
                         // Send to specific destination
                         relayMessage.destination = config.destination;
-                        console.log('[RELAY DEBUG - Action] Mode: Send to specific destination:', config.destination);
+                        //console.log('[RELAY DEBUG - Action] Mode: Send to specific destination:', config.destination);
                     } else {
                         // Send to all platforms (default behavior)
-                        console.log('[RELAY DEBUG - Action] Mode: Send to all platforms');
+                        //console.log('[RELAY DEBUG - Action] Mode: Send to all platforms');
                     }
                     
-                    console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
+                    //console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
                     
                     let result = false;
                     relayMessage.response = this.sanitizeRelay(relayMessage.response, false).trim();
@@ -813,19 +807,19 @@ class EventFlowSystem {
                             const relayMode = config.destination !== 'reply'; // Don't use relay mode for replies
                             const timeout = config.timeout || 1000;
                             
-                            console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
-                            console.log('  - message:', relayMessage);
-                            console.log('  - reverse:', reverse);
-                            console.log('  - metadata:', message);
-                            console.log('  - relayMode:', relayMode);
-                            console.log('  - antispam:', false);
-                            console.log('  - timeout:', timeout);
+                            //console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
+                            //console.log('  - message:', relayMessage);
+                            //console.log('  - reverse:', reverse);
+                            //console.log('  - metadata:', message);
+                            //console.log('  - relayMode:', relayMode);
+                            //console.log('  - antispam:', false);
+                            //console.log('  - timeout:', timeout);
                             
                             result = this.sendMessageToTabs(relayMessage, reverse, message, relayMode, false, timeout);
                         }
                     }
                     
-                    console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
+                    //console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
                 } else {
                     console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
                     console.error('[RELAY DEBUG - Action] This EventFlowSystem instance:', this);
@@ -857,7 +851,7 @@ class EventFlowSystem {
 						fetchOpts.body = body;
 					}
 
-					console.log(`[ExecuteAction - webhook] Calling ${method} ${url} with timeout ${webhookTimeout}ms`);
+					//console.log(`[ExecuteAction - webhook] Calling ${method} ${url} with timeout ${webhookTimeout}ms`);
 					const response = await this.fetchWithTimeout(url, fetchOpts, webhookTimeout); // Use the injected function
 
 					if (!response.ok) {
@@ -867,7 +861,7 @@ class EventFlowSystem {
 						result.modified = true;
 						result.blocked = config.blockOnFailure !== undefined ? !!config.blockOnFailure : true; // Block on failure by default, make it configurable
 					} else {
-						console.log(`[ExecuteAction - webhook] Webhook to ${url} successful.`);
+						//console.log(`[ExecuteAction - webhook] Webhook to ${url} successful.`);
 						try {
 							const responseData = await response.json(); // Attempt to parse as JSON
 							result.message = { ...message, webhookResponse: responseData, webhookStatus: response.status };
@@ -897,12 +891,12 @@ class EventFlowSystem {
 					);
 					
 					if (addResult.success) {
-						console.log(`[ExecuteAction - addPoints] Added ${config.amount} points to ${message.chatname}. New total: ${addResult.points}`);
+						//console.log(`[ExecuteAction - addPoints] Added ${config.amount} points to ${message.chatname}. New total: ${addResult.points}`);
 						// You might want to add the new points total to the message for other actions to use
 						result.message = { ...message, pointsTotal: addResult.points };
 						result.modified = true;
 					} else {
-						console.log(`[ExecuteAction - addPoints] Failed to add points for ${message.chatname}. Reason: ${addResult.message || 'Unknown error'}`);
+						//console.log(`[ExecuteAction - addPoints] Failed to add points for ${message.chatname}. Reason: ${addResult.message || 'Unknown error'}`);
 					}
 				}
 				break;
@@ -917,14 +911,14 @@ class EventFlowSystem {
 
 					if (!spendResult.success) {
 						// If spending points failed (e.g., insufficient points)
-						console.log(`[ExecuteAction - spendPoints] Failed for ${message.chatname}. Reason: ${spendResult.message}`);
+						//console.log(`[ExecuteAction - spendPoints] Failed for ${message.chatname}. Reason: ${spendResult.message}`);
 						result.blocked = true; // This will stop subsequent actions in this flow path.
 						// You might also want to include the error message in the result if needed for debugging or other logic
 						result.message = { ...message, pointsSpendError: spendResult.message };
 						result.modified = true;
 					} else {
 						// Points were successfully spent
-						console.log(`[ExecuteAction - spendPoints] Success for ${message.chatname}. Spent ${config.amount}. Remaining: ${spendResult.remaining}`);
+						//console.log(`[ExecuteAction - spendPoints] Success for ${message.chatname}. Spent ${config.amount}. Remaining: ${spendResult.remaining}`);
 						// Optionally, you can add information about the successful transaction to the message
 						// result.message = { ...message, pointsSpentSuccessfully: true, pointsRemaining: spendResult.remaining };
 						// result.modified = true;
@@ -960,11 +954,11 @@ class EventFlowSystem {
 					// or a similar mechanism. The user prompt implies 'sendTargetP2P' is the target function.
 					if (typeof sendTargetP2P === 'function') {
 						sendTargetP2P(actionPayload, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
-						console.log('[ExecuteAction - playTenorGiphy] Sent to actions page:', actionPayload);
+						//console.log('[ExecuteAction - playTenorGiphy] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) { // Fallback or alternative
 						 // Adapt this if sendMessageToTabs can target a specific page by a label/identifier
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true); // Sending to all tabs might not be ideal, adjust if possible
-						console.log('[ExecuteAction - playTenorGiphy] Sent via sendMessageToTabs:', actionPayload);
+						//console.log('[ExecuteAction - playTenorGiphy] Sent via sendMessageToTabs:', actionPayload);
 					} else {
 						console.warn('[ExecuteAction - playTenorGiphy] No function available to send message to actions page.');
 					}
@@ -983,10 +977,10 @@ class EventFlowSystem {
 					};
 					if (typeof sendTargetP2P === 'function') {
 						sendTargetP2P(actionPayload, 'actions');
-						console.log('[ExecuteAction - triggerOBSScene] Sent to actions page:', actionPayload);
+						//console.log('[ExecuteAction - triggerOBSScene] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
-						 console.log('[ExecuteAction - triggerOBSScene] Sent via sendMessageToTabs:', actionPayload);
+						 //console.log('[ExecuteAction - triggerOBSScene] Sent via sendMessageToTabs:', actionPayload);
 					} else {
 						console.warn('[ExecuteAction - triggerOBSScene] No function available to send message to actions page.');
 					}
@@ -1004,10 +998,10 @@ class EventFlowSystem {
 					};
 					if (typeof sendTargetP2P === 'function') {
 						sendTargetP2P(actionPayload, 'actions');
-						console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
+						//console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
-						console.log('[ExecuteAction - playAudioClip] Sent via sendMessageToTabs:', actionPayload);
+						//console.log('[ExecuteAction - playAudioClip] Sent via sendMessageToTabs:', actionPayload);
 					} else {
 						console.warn('[ExecuteAction - playAudioClip] No function available to send message to actions page.');
 					}

@@ -117,14 +117,12 @@ function pushMessage(data){
 			chatimg = "";
 		}
 		
-		
-		
 		var chatmessage="";
 		try{
 			 if (settings.textonlymode){
-				chatmessage = escapeHtml(buttons[1].nextSibling.textContent);
+				chatmessage = escapeHtml(content.querySelector("[id^='Message_']").textContent);
 			 } else {
-				chatmessage = digInto(buttons[1].nextSibling.childNodes)
+				chatmessage = digInto(content.querySelector("[id^='Message_']").childNodes)
 			 }
 		} catch(e){
 			return;
@@ -142,6 +140,8 @@ function pushMessage(data){
 	  data.contentimg = "";
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "piczel";
+	  
+	  
 	  
 	  if (data.chatimg){
 			toDataURL(data.chatimg, function(dataUrl) {
