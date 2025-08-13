@@ -76,7 +76,7 @@
 	var channelName = "";
 	
 	function processMessage(ele){
-		console.log(ele);
+		//console.log(ele);
 		if (!ele || !ele.isConnected){
 		//	console.log("no connected");
 			return;
@@ -92,14 +92,14 @@
 		try {
 			chatimg = ele.querySelector(".rounded-full img[src]").src;
 		} catch(e){
-			console.error(e);
+			//console.error(e);
 		}
 		
 		var name="";
 		try {
 			name = escapeHtml(ele.querySelector("p.text-xs.font-bold").textContent);
 		} catch(e){
-			console.error(e);
+		//	console.error(e);
 			return;
 		}
 		
@@ -136,12 +136,12 @@
 					hasDonation = msg.split(" ")[1] + " " + msg.split(" ")[2];
 				}
 			} catch(e){
-				console.error(e);
+			//	console.error(e);
 			}
 		}
 		
 		if (!msg || !name){
-			console.log("no name", msg, name);
+			//console.log("no name", msg, name);
 			return;
 		}
 		
@@ -161,7 +161,7 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "retake";
 		
-		console.log(data);
+		//console.log(data);
 		pushMessage(data);
 	}
 

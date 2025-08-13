@@ -2909,6 +2909,11 @@
 			if (urlParams.has("autoqueuequestions") || urlParams.has("autoqueuequestion")) {
 				autoQueueQuestions = true;
 			}
+			
+			var autoQueueDonations = false;
+			if (urlParams.has("autoqueuedonations") || urlParams.has("autoqueuedonation")) {
+				autoQueueDonations = true;
+			}
 			if (urlParams.has("viewonly")) {
 				blockMessageSelecting = true;
 			}
@@ -8787,6 +8792,12 @@
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
 						updateQueueButton();
+					} else if (autoQueueDonations && (data.hasDonation || data.donation)) {
+						// Auto-pin questions when autoQueueQuestions URL parameter is set
+						selectedQueue.push(node);
+						node.children[0].dataset.qid = selectedQueue.length;
+						node.classList.add("queued");
+						updateQueueButton();
 					}
 					
 					if (autoPinQuestions && data.question) {
@@ -8796,6 +8807,7 @@
 					if (autoPinDonations && data.hasDonation) {
 						pinIt(node);
 					}
+					
 					
 					if (data.command && doNotTTSBeep){
 						// skipp TTS
