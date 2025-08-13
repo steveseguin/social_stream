@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<!-- AI GUIDANCE FOR EDITING THIS OVERLAY -->
+<!--
+This is a Social Stream Ninja (SSN) chat overlay that displays messages with HORIZONTAL SCROLLING.
+Messages scroll from right to left in a single row with smooth infinite scrolling.
+
+1. CORE FUNCTIONALITY:
+   - Messages arrive via WebRTC (iframe) or WebSocket (if &server parameter is used)
+   - Session ID is crucial - users must provide &session in URL parameters
+   - Message structure includes: {chatname, chatmessage, chatimg, type, contentimg, etc.}
+   - "type" field indicates source platform (youtube, twitch, x, kick, etc.)
+
+2. HORIZONTAL SCROLLING MECHANISM:
+   - New messages are added to the right side
+   - Messages scroll left using CSS transforms on #message-list-wrapper
+   - The spacer element manages scroll position as older messages are removed
+   - Smooth continuous horizontal scrolling animation
+
+3. STYLING GUIDELINES:
+   - Messages are displayed inline in a single row
+   - Compact message design optimized for horizontal display
+   - Background is transparent (#0000) for OBS overlay compatibility
+   - Message animations use CSS transitions for fade-in/out effects
+
+4. BEST PRACTICES:
+   - Test any changes with different message types
+   - Preserve the iframe implementation for WebRTC functionality
+   - Maintain opacity/transform animations for smooth message display
+   - Keep the maximum message count logic intact
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horizontal Chat Overlay</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <script src="https://socialstream.ninja/libs/colours.js" type="text/javascript"></script>
+    <!-- Links to Social Stream Ninja resources -->
+    <link rel="canonical" href="https://socialstream.ninja/">
+    <meta name="generator" content="Social Stream Ninja - https://github.com/steveseguin/social_stream">
+<style>
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,700&display=swap');
+
+body, html {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #0000; /* Transparent background for overlay */
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+#chat-container {
+    position: absolute;
+    bottom: 20px; /* Position closer to bottom of screen */
+    left: 0;
+    width: 100%;
+    height: 80px; /* Fixed height for single row of messages */
+    overflow: hidden;
+    box-sizing: border-box;
+    white-space: nowrap; /* Prevent line wrapping */
+}
+
+#message-list-wrapper {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    transition: transform 0.5s ease-out;
+    gap: 10px; /* Space between messages */
+    padding: 0 15px;
+}
+
+#spacer {
+    display: inline-block;
+    height: 100%;
+    flex-shrink: 0;
+    background: transparent;
+    vertical-align: middle;
+}
+
+.message {
+    background: linear-gradient(145deg, #1a2a48, #162238);
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: 1px solid #2e3b55;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    color: #e4e6eb;
+    opacity: 0;
+    transform: translateX(50px);
+    transition: opacity 0.6s ease-out, transform 0.6s ease-out,
+                max-width 0.5s ease-in-out, margin-right 0.5s ease-in-out;
+    flex-shrink: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: middle;
+    height: 60px; /* Fixed height for uniform appearance */
+    max-width: none; /* Remove max-width limit */
+    white-space: nowrap;
+}
+
+.message-with-edge {
+    border-left: 4px solid;
+    padding-left: 11px;
+}
+
+.message.visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.message.fading {
+    opacity: 0;
+    transition: opacity 1.5s ease-out;
+}
+
+.message.hidden {
+    opacity: 0;
+    transform: translateX(-50px);	
+    max-width: 0px !important;
+    padding-left: 0px !important;
+    padding-right: 0px !important;
+    margin-right: 0px !important;
+    border-width: 0px !important;
+}
+
+.avatar-wrapper {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(45deg, #4ab8f9, #4cd137);
+    padding: 2px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+}
+
+.message-content-wrapper {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    overflow: hidden;
+    gap: 0;
+}
+
+.message-text-meta {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.name-bg {
+    background-color: rgba(74, 111, 165, 0.3);
+    padding: 2px 6px;
+    border-radius: 10px;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.name {
+    color: #b8d4ff;
+    font-size: 0.7em;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 150px;
+}
+
+.text {
+    font-size: 0.95em;
+    line-height: 1.3;
+    font-weight: 500;
+    word-wrap: normal;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 500px;
+    color: #ffffff;
+}
+
+.text img {
+    max-width: 20px;
+    max-height: 20px;
+    vertical-align: middle;
+    margin: 0 2px;
+}
+
+.donation {
+    color: #4cd137;
+    font-weight: 600;
+    font-size: 0.8em;
+    margin-left: 6px;
+    white-space: nowrap;
+}
+
+.source-icon {
+    width: 14px;
+    height: 14px;
+    vertical-align: middle;
+    flex-shrink: 0;
+}
+
+.badge {
+    display: inline-block;
+    height: 14px;
+    margin-left: 2px;
+    vertical-align: middle;
+}
+
+.membership-status {
+    color: #ffd700;
+    font-weight: 600;
+    font-size: 0.7em;
+    white-space: nowrap;
+    margin: 0 3px;
+}
+
+/* Hide large images in horizontal mode */
+.large-image {
+    display: none;
+}
+
+</style>
+</head>
+<body>
+<div id="chat-container">
+    <div id="message-list-wrapper">
+        <div id="spacer" style="width: 2200px;"></div>
+    </div>
+</div>
+<script>
+    var urlParams = new URLSearchParams(window.location.search);
+    var roomID = "iWWnKL28tQ";
+    if (urlParams.has("session")) {
+        roomID = urlParams.get("session");
+    }
+    var password = "false";
+    var featuredMode = false;
+
+    const chatContainer = document.getElementById('chat-container');
+    const messageListWrapper = document.getElementById('message-list-wrapper');
+    const MAX_MESSAGES = urlParams.has("limit") ? parseInt(urlParams.get("limit")) : 10;
+    const leftSpacer = document.getElementById('spacer');
+    const messageTimestamps = new Map();
+    const MAX_SPACER_WIDTH_BEFORE_RESET = 18000000;
+
+    function adjustMessageWrapperScroll() {
+        requestAnimationFrame(() => {
+            const wrapperScrollWidth = messageListWrapper.scrollWidth;
+            const containerClientWidth = chatContainer.clientWidth;
+            
+            let translateX = 0;
+            if (wrapperScrollWidth > containerClientWidth) {
+                translateX = -(wrapperScrollWidth - containerClientWidth);
+            }
+            translateX = Math.min(0, translateX);
+
+            messageListWrapper.style.transform = `translateX(${translateX}px)`;
+        });
+    }
+    
+    setInterval(() => {
+        const now = Date.now();
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message')
+        );
+        
+        messages.forEach(message => {
+            const timestamp = messageTimestamps.get(message.id);
+            if (timestamp) {
+                const age = now - timestamp;
+                
+                // After 30 seconds, start fading
+                if (age > 30000 && !message.classList.contains('fading')) {
+                    message.classList.add('fading');
+                }
+            }
+        });
+    }, 1000);
+    
+    function addMessageToOverlay(data) {
+        
+        if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
+            return;
+        }
+        
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        
+        // Generate unique ID and track timestamp for aging
+        const messageId = data.mid || 'msg-' + Date.now();
+        messageDiv.id = messageId;
+        messageTimestamps.set(messageId, Date.now());
+        
+        var chatbadgesHtml = "";
+        if (data.chatbadges) {
+            data.chatbadges.forEach(badge => {
+                if (typeof badge === "object") {
+                    if (badge.type === "img" && badge.src) {
+                        chatbadgesHtml += `<img class='badge' src='${badge.src}' alt='badge'>`;
+                    } else if (badge.type === "svg" && badge.html) {
+                        chatbadgesHtml += `<span class='badge svg'>${badge.html}</span>`;
+                    }
+                } else { 
+                    chatbadgesHtml += `<img class='badge' src='${badge}' alt='badge'>`;
+                }
+            });
+        }
+        
+        let avatarBorderColor = "linear-gradient(45deg, #4ab8f9, #4cd137)"; // Default gradient
+        if (data.nameColor) {
+            avatarBorderColor = `linear-gradient(45deg, ${data.nameColor}, ${data.nameColor}88)`;
+        }
+        
+        let leftEdgeColor = null;
+        if (typeof getColorFromType === 'function' && data.type) {
+            try {
+                leftEdgeColor = getColorFromType(data.type);
+            } catch (e) {
+                console.error("Error getting color from type:", e);
+            }
+        }
+        
+        if (leftEdgeColor) {
+            messageDiv.style.borderLeft = `4px solid ${leftEdgeColor}`;
+            messageDiv.style.paddingLeft = '12px';
+        }
+        
+        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = data.chatimg ? 
+            `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
+        const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+        const membershipHtml = data.membership ? `<span class="membership-status">${data.membership}</span>` : '';
+        const messageTextHtml = data.chatmessage ? `<span class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage}</span>` : '';
+        const donationHtml = data.hasDonation ? `<span class="donation">${data.hasDonation}</span>` : '';
+
+        // Horizontal layout - name/badges on top, message below
+        messageDiv.innerHTML = `
+            <div class="message-content-wrapper">
+                ${avatarHtml}
+                <div class="message-text-meta">
+                    <div style="display: inline-flex; align-items: center; gap: 4px;">
+                        ${nameHtml}
+                        ${sourceIconHtml}
+                        ${chatbadgesHtml}
+                        ${membershipHtml}
+                    </div>
+                    <div style="display: inline-flex; align-items: center;">
+                        ${messageTextHtml}
+                        ${donationHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+
+        messageListWrapper.appendChild(messageDiv);
+        void messageDiv.offsetWidth; 
+        messageDiv.classList.add('visible');
+        
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message') 
+        );
+        
+        if (messages.length > MAX_MESSAGES) {
+            const oldestMessage = messages[0]; 
+            
+            if (oldestMessage) {
+                const messageStyle = getComputedStyle(oldestMessage);
+                const marginRight = parseFloat(messageStyle.marginRight) || 0;
+                const spaceOccupiedByOldestMessage = oldestMessage.offsetWidth + marginRight;
+                
+                const currentSpacerWidth = parseFloat(leftSpacer.style.width) || 0;
+                let newPotentialSpacerWidth = currentSpacerWidth + spaceOccupiedByOldestMessage;
+
+                if (newPotentialSpacerWidth > MAX_SPACER_WIDTH_BEFORE_RESET) {
+                    console.log(`Spacer width (${newPotentialSpacerWidth}px) exceeded threshold (${MAX_SPACER_WIDTH_BEFORE_RESET}px). Resetting to 0px.`);
+                    newPotentialSpacerWidth = 0; // Reset the width
+                }
+                
+                leftSpacer.style.width = newPotentialSpacerWidth + 'px';
+
+                messageTimestamps.delete(oldestMessage.id);
+                messageListWrapper.removeChild(oldestMessage);
+            }
+        }
+        
+        adjustMessageWrapperScroll();
+    }
+
+    var iframe = document.createElement("iframe");
+    if (featuredMode){
+        iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=overlay&exclude=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+    } else {
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID; 
+    }
+    iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+    document.body.appendChild(iframe);
+    window.addEventListener("message", function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+            addMessageToOverlay(e.data.dataReceived.overlayNinja);
+        }
+    });
+    
+    var conCon = 1;
+    var socketserver = false;
+    var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+
+    function setupSocket(){
+        socketserver.onclose = function (){
+            setTimeout(function(){
+                conCon+=1;
+                socketserver = new WebSocket(serverURL);
+                setupSocket();
+            },100*conCon);
+        };
+        socketserver.onopen = function (){
+            conCon = 1;
+            socketserver.send(JSON.stringify({"join":roomID, "out":3, "in":4}));
+        };
+        socketserver.addEventListener('message', function (event) {
+            if (event.data){
+                try {
+                    var data = JSON.parse(event.data);
+                    if (data) { 
+                        addMessageToOverlay(data);
+                    }
+                } catch (error) {
+                    console.error("Error processing WebSocket message:", error, "Data:", event.data);
+                }
+            }
+        });
+    }
+    
+    if (urlParams.has("server") || urlParams.has("server2")){
+        serverURL = urlParams.get("server") ||  urlParams.get("server2") || serverURL;
+        socketserver = new WebSocket(serverURL);
+        setupSocket();
+    }
+</script>
+</body>
+</html>
