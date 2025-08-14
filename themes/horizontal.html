@@ -261,6 +261,13 @@ body, html {
     }
     var password = "false";
     var featuredMode = false;
+    
+    // Simple URL parameters for customization
+    var hideBadges = urlParams.has("hidebadges") || urlParams.has("nobadges");
+    var hideAvatars = urlParams.has("hideavatars") || urlParams.has("noavatars");
+    var hideNames = urlParams.has("hidenames") || urlParams.has("nonames");
+    var hideSource = urlParams.has("hidesource");
+    var textOnly = urlParams.has("textonly");
 
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
@@ -318,7 +325,7 @@ body, html {
         messageTimestamps.set(messageId, Date.now());
         
         var chatbadgesHtml = "";
-        if (data.chatbadges) {
+        if (!hideBadges && data.chatbadges) {
             data.chatbadges.forEach(badge => {
                 if (typeof badge === "object") {
                     if (badge.type === "img" && badge.src) {
@@ -351,13 +358,13 @@ body, html {
             messageDiv.style.paddingLeft = '12px';
         }
         
-        const sourceIconHtml = data.type ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
-        const avatarHtml = data.chatimg ? 
+        const sourceIconHtml = (!hideSource && data.type) ? `<img src="https://socialstream.ninja/sources/images/${data.type}.png" alt="Source" class="source-icon">` : '';
+        const avatarHtml = (!hideAvatars && data.chatimg) ? 
             `<div class="avatar-wrapper" style="background: ${avatarBorderColor}"><div class="avatar" style="background-image: url('${data.chatimg}');"></div></div>` : '';
-        const nameHtml = data.chatname ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
-        const membershipHtml = data.membership ? `<span class="membership-status">${data.membership}</span>` : '';
+        const nameHtml = (!hideNames && data.chatname) ? `<div class="name-bg"><div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname}</div></div>` : '';
+        const membershipHtml = (!textOnly && data.membership) ? `<span class="membership-status">${data.membership}</span>` : '';
         const messageTextHtml = data.chatmessage ? `<span class="text" ${data.event ? 'style="font-style: italic;"' : ''}>${data.chatmessage}</span>` : '';
-        const donationHtml = data.hasDonation ? `<span class="donation">${data.hasDonation}</span>` : '';
+        const donationHtml = (!textOnly && data.hasDonation) ? `<span class="donation">${data.hasDonation}</span>` : '';
 
         // Horizontal layout - name/badges on top, message below
         messageDiv.innerHTML = `
