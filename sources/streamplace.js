@@ -117,7 +117,7 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelectorAll(".css-1jxf684")[1]).trim();
+			msg = getAllContentNodes([...ele.querySelectorAll(".css-1jxf684")].pop()).trim();
 		} catch(e){
 			return;
 		}
@@ -250,7 +250,7 @@
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					console.log(mutation.addedNodes);
+					//console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							const addedNode = mutation.addedNodes[i];
