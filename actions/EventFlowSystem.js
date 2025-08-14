@@ -530,6 +530,12 @@ class EventFlowSystem {
               //console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
                 return match;
                 
+            case 'messageEndsWith':
+                match = message && messageText && typeof messageText === 'string' &&
+                           config && typeof config.text === 'string' &&
+                           messageText.endsWith(config.text);
+                return match;
+                
             case 'messageEquals':
                 match = message && typeof messageText === 'string' &&
                            config && typeof config.text === 'string' &&
@@ -557,6 +563,21 @@ class EventFlowSystem {
                     case 'eq': return msgLength === targetLength;
                     default: return msgLength > targetLength; // Default to greater than
                 }
+                
+            case 'wordCount':
+                const words = messageText ? messageText.trim().split(/\s+/).length : 0;
+                const targetWords = config.count || 5;
+                switch (config.comparison) {
+                    case 'gt': return words > targetWords;
+                    case 'lt': return words < targetWords;
+                    case 'eq': return words === targetWords;
+                    default: return words > targetWords;
+                }
+                
+            case 'containsEmoji':
+                // Basic emoji detection regex
+                const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+                return messageText ? emojiRegex.test(messageText) : false;
                 
             case 'containsLink':
                 // Simple URL detection - matches http://, https://, or www.
@@ -1009,6 +1030,70 @@ class EventFlowSystem {
 					console.warn('[ExecuteAction - playAudioClip] Audio URL not configured.');
 				}
 				break;
+                
+            case 'delay':
+                // Delay the message by specified milliseconds
+                if (config.delayMs && typeof config.delayMs === 'number') {
+                    await new Promise(resolve => setTimeout(resolve, config.delayMs));
+                    //console.log(`[ExecuteAction - delay] Delayed message by ${config.delayMs}ms`);
+                }
+                break;
+                
+            case 'removeText':
+                if (message.chatmessage && config.removeType) {
+                    let newMessage = message.chatmessage;
+                    
+                    switch (config.removeType) {
+                        case 'removeFirst':
+                            // Remove first character only
+                            if (config.count && typeof config.count === 'number') {
+                                newMessage = newMessage.substring(config.count);
+                            } else {
+                                newMessage = newMessage.substring(1);
+                            }
+                            break;
+                            
+                        case 'removeCommand':
+                            // Remove entire first word (command)
+                            const firstSpaceIndex = newMessage.indexOf(' ');
+                            if (firstSpaceIndex !== -1) {
+                                newMessage = newMessage.substring(firstSpaceIndex + 1);
+                            } else {
+                                // If no space, remove entire message (it's just the command)
+                                newMessage = '';
+                            }
+                            break;
+                            
+                        case 'removeUntil':
+                            // Remove everything up to and including a specific string
+                            if (config.untilText) {
+                                const index = newMessage.indexOf(config.untilText);
+                                if (index !== -1) {
+                                    newMessage = newMessage.substring(index + config.untilText.length);
+                                }
+                            }
+                            break;
+                            
+                        case 'removePrefix':
+                            // Remove a specific prefix if it exists
+                            if (config.prefix && newMessage.startsWith(config.prefix)) {
+                                newMessage = newMessage.substring(config.prefix.length);
+                            }
+                            break;
+                            
+                        case 'trimWhitespace':
+                            // Remove leading/trailing whitespace
+                            newMessage = newMessage.trim();
+                            break;
+                    }
+                    
+                    result.message = {
+                        ...message,
+                        chatmessage: newMessage
+                    };
+                    result.modified = true;
+                }
+                break;
                 
             default:
                 break;

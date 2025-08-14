@@ -21,9 +21,12 @@ class EventFlowEditor {
         this.triggerTypes = [
             { id: 'messageContains', name: 'Message Contains' },
             { id: 'messageStartsWith', name: 'Message Starts With' },
+            { id: 'messageEndsWith', name: 'Message Ends With' },
             { id: 'messageEquals', name: 'Message Equals' },
             { id: 'messageRegex', name: 'Message Regex' },
             { id: 'messageLength', name: 'Message Length' },
+            { id: 'wordCount', name: 'Word Count' },
+            { id: 'containsEmoji', name: 'Contains Emoji' },
             { id: 'containsLink', name: 'Contains Link' },
             { id: 'fromSource', name: 'From Source' },
             { id: 'fromChannelName', name: 'From Channel Name' },
@@ -39,6 +42,7 @@ class EventFlowEditor {
 			{ id: 'addPrefix', name: 'Add Prefix' },
 			{ id: 'addSuffix', name: 'Add Suffix' },
 			{ id: 'findReplace', name: 'Find & Replace' },
+			{ id: 'removeText', name: 'Remove Text' },
 			{ id: 'setProperty', name: 'Set Property' },
 			{ id: 'relay', name: 'Relay Message' },
 			{ id: 'webhook', name: 'Call Webhook' },
@@ -47,6 +51,7 @@ class EventFlowEditor {
 			{ id: 'playTenorGiphy', name: 'Display Media Overlay' },
 			{ id: 'triggerOBSScene', name: 'Trigger OBS Scene' },
 			{ id: 'playAudioClip', name: 'Play Audio Clip' },
+			{ id: 'delay', name: 'Delay Message' },
 			{ id: 'customJs', name: 'Custom JavaScript' }
 		];
 
@@ -695,9 +700,12 @@ class EventFlowEditor {
             switch (node.triggerType) {
                 case 'messageContains': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageStartsWith': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
+                case 'messageEndsWith': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageEquals': return `Text: "${(node.config.text || '').substring(0,15)}${(node.config.text || '').length > 15 ? '...' : ''}"`;
                 case 'messageRegex': return `Pattern: "${(node.config.pattern || '').substring(0,15)}${(node.config.pattern || '').length > 15 ? '...' : ''}"`;
                 case 'messageLength': return `Length ${node.config.comparison || 'gt'} ${node.config.length || 100}`;
+                case 'wordCount': return `Words ${node.config.comparison || 'gt'} ${node.config.count || 5}`;
+                case 'containsEmoji': return 'Has emoji';
                 case 'containsLink': return 'Contains URL';
                 case 'fromSource': return `Source: ${node.config.source === '*' ? 'Any' : (node.config.source || 'Any')}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
@@ -714,9 +722,19 @@ class EventFlowEditor {
                 case 'addPrefix': return `Prefix: "${(node.config.prefix || '').substring(0,15)}${(node.config.prefix || '').length > 15 ? '...' : ''}"`;
                 case 'addSuffix': return `Suffix: "${(node.config.suffix || '').substring(0,15)}${(node.config.suffix || '').length > 15 ? '...' : ''}"`;
                 case 'findReplace': return `Find: "${(node.config.find || '').substring(0,10)}..." → "${(node.config.replace || '').substring(0,10)}..."`;
+                case 'removeText': 
+                    switch(node.config.removeType) {
+                        case 'removeFirst': return `Remove first ${node.config.count || 1} char(s)`;
+                        case 'removeCommand': return 'Remove first word';
+                        case 'removeUntil': return `Remove until "${(node.config.untilText || '').substring(0,10)}..."`;
+                        case 'removePrefix': return `Remove prefix "${(node.config.prefix || '').substring(0,10)}..."`;
+                        case 'trimWhitespace': return 'Trim whitespace';
+                        default: return 'Remove text';
+                    }
                 case 'relay': return `To: ${node.config.destination || 'All'}`;
                 case 'addPoints': return `Add: ${node.config.amount || 100} points`;
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
+                case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'logic') { // NEW
@@ -1018,9 +1036,12 @@ class EventFlowEditor {
             switch (subtype) { /* Populate default configs */ 
                 case 'messageContains': node.config = { text: 'keyword' }; break;
                 case 'messageStartsWith': node.config = { text: '!' }; break;
+                case 'messageEndsWith': node.config = { text: '?' }; break;
                 case 'messageEquals': node.config = { text: 'hello' }; break;
                 case 'messageRegex': node.config = { pattern: 'pattern', flags: 'i' }; break;
                 case 'messageLength': node.config = { comparison: 'gt', length: 100 }; break;
+                case 'wordCount': node.config = { comparison: 'gt', count: 5 }; break;
+                case 'containsEmoji': node.config = {}; break;
                 case 'containsLink': node.config = {}; break;
                 case 'fromSource': node.config = { source: '*' }; break;
                 case 'fromChannelName': node.config = { channelName: '' }; break;
@@ -1042,6 +1063,8 @@ class EventFlowEditor {
 					node.config = { suffix: ' - sent via Social Stream' }; break;
                 case 'findReplace':
 					node.config = { find: 'bad', replace: 'good', caseSensitive: false }; break;
+                case 'removeText':
+					node.config = { removeType: 'removeCommand' }; break;
                 case 'setProperty':
 					node.config = { property: 'chatmessage', value: 'new value' }; break;
                 case 'relay':
@@ -1062,6 +1085,9 @@ class EventFlowEditor {
 					break;
 				case 'playAudioClip':
 					node.config = { audioUrl: 'https://example.com/path/to/sound.mp3', volume: 1.0 };
+					break;
+				case 'delay':
+					node.config = { delayMs: 1000 };
 					break;
             }
         } else if (type === 'logic') { // NEW
@@ -1253,6 +1279,7 @@ class EventFlowEditor {
 			// --- Trigger Cases ---
 			case 'messageContains':
 			case 'messageStartsWith':
+			case 'messageEndsWith':
 			case 'messageEquals':
 				html += `<div class="property-group"><label class="property-label">Text to Match</label><input type="text" class="property-input" id="prop-text" value="${node.config.text || ''}"></div>`;
 				break;
@@ -1267,6 +1294,17 @@ class EventFlowEditor {
 						   <option value="eq" ${node.config.comparison === 'eq' ? 'selected' : ''}>Equals</option>
 						 </select></div>
 						 <div class="property-group"><label class="property-label">Length</label><input type="number" class="property-input" id="prop-length" value="${node.config.length || 100}" min="0"></div>`;
+				break;
+			case 'wordCount':
+				html += `<div class="property-group"><label class="property-label">Comparison</label><select class="property-input" id="prop-comparison">
+						   <option value="gt" ${node.config.comparison === 'gt' ? 'selected' : ''}>Greater than</option>
+						   <option value="lt" ${node.config.comparison === 'lt' ? 'selected' : ''}>Less than</option>
+						   <option value="eq" ${node.config.comparison === 'eq' ? 'selected' : ''}>Equals</option>
+						 </select></div>
+						 <div class="property-group"><label class="property-label">Word Count</label><input type="number" class="property-input" id="prop-count" value="${node.config.count || 5}" min="0"></div>`;
+				break;
+			case 'containsEmoji':
+				html += `<p class="property-help">Triggers when the message contains any emoji character.</p>`;
 				break;
 			case 'containsLink':
 				html += `<p class="property-help">Triggers when a message contains a URL (http://, https://, or www.)</p>`;
@@ -1355,6 +1393,40 @@ class EventFlowEditor {
 				html += `<div class="property-group"><label class="property-label">Find Text</label><input type="text" class="property-input" id="prop-find" value="${node.config.find || ''}"></div>
 						 <div class="property-group"><label class="property-label">Replace With</label><input type="text" class="property-input" id="prop-replace" value="${node.config.replace || ''}"></div>
 						 <div class="property-group"><label class="property-label"><input type="checkbox" id="prop-caseSensitive" ${node.config.caseSensitive ? 'checked' : ''}> Case Sensitive</label></div>`;
+				break;
+			case 'removeText':
+				html += `<div class="property-group">
+							<label class="property-label">Remove Type</label>
+							<select class="property-input" id="prop-removeType">
+								<option value="removeFirst" ${node.config.removeType === 'removeFirst' ? 'selected' : ''}>Remove First Characters</option>
+								<option value="removeCommand" ${node.config.removeType === 'removeCommand' ? 'selected' : ''}>Remove First Word/Command</option>
+								<option value="removeUntil" ${node.config.removeType === 'removeUntil' ? 'selected' : ''}>Remove Until Text</option>
+								<option value="removePrefix" ${node.config.removeType === 'removePrefix' ? 'selected' : ''}>Remove Specific Prefix</option>
+								<option value="trimWhitespace" ${node.config.removeType === 'trimWhitespace' ? 'selected' : ''}>Trim Whitespace</option>
+							</select>
+							<div class="property-help">Choose how to remove text from the message</div>
+						</div>`;
+				
+				// Show additional fields based on removeType
+				if (node.config.removeType === 'removeFirst') {
+					html += `<div class="property-group">
+								<label class="property-label">Number of Characters</label>
+								<input type="number" class="property-input" id="prop-count" value="${node.config.count || 1}" min="1">
+								<div class="property-help">How many characters to remove from the start</div>
+							</div>`;
+				} else if (node.config.removeType === 'removeUntil') {
+					html += `<div class="property-group">
+								<label class="property-label">Remove Until (and including)</label>
+								<input type="text" class="property-input" id="prop-untilText" value="${node.config.untilText || ''}">
+								<div class="property-help">Remove everything up to and including this text</div>
+							</div>`;
+				} else if (node.config.removeType === 'removePrefix') {
+					html += `<div class="property-group">
+								<label class="property-label">Prefix to Remove</label>
+								<input type="text" class="property-input" id="prop-prefix" value="${node.config.prefix || ''}">
+								<div class="property-help">Only removes if message starts with this exact text</div>
+							</div>`;
+				}
 				break;
 			case 'setProperty':
 				html += `<div class="property-group"><label class="property-label">Property Name</label><input type="text" class="property-input" id="prop-propertyName" value="${node.config.property || 'chatmessage'}"><div class="property-help">e.g., chatmessage, userColor, customFlag</div></div>
@@ -1469,6 +1541,13 @@ class EventFlowEditor {
 						 </div>`;
 				break;
 
+			case 'delay':
+				html += `<div class="property-group">
+							 <label class="property-label">Delay Time (milliseconds)</label>
+							 <input type="number" class="property-input" id="prop-delayMs" value="${node.config.delayMs || 1000}" min="0" step="100">
+							 <div class="property-help">Enter the delay time in milliseconds (1000ms = 1 second)</div>
+						 </div>`;
+				break;
 			case 'playAudioClip':
 				html += `<div class="property-group">
 							 <label class="property-label">Audio File URL</label>
@@ -1620,6 +1699,17 @@ class EventFlowEditor {
                         window.removeEventListener('message', handleMessage);
                     }
                 }.bind(this));
+            });
+        }
+
+        // Handle removeType dropdown changes
+        const removeTypeSelect = document.getElementById('prop-removeType');
+        if (removeTypeSelect) {
+            removeTypeSelect.addEventListener('change', (e) => {
+                nodeData.config.removeType = e.target.value;
+                this.markUnsavedChanges(true);
+                this.showNodeProperties(nodeData); // Refresh to show/hide relevant fields
+                this.renderNodeOnCanvas(nodeData.id);
             });
         }
 
