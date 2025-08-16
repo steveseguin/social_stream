@@ -203,14 +203,14 @@ window.addEventListener('unhandledrejection', (event) => {
 
 	setInterval(function(){
 		try {
-			if (!document.querySelector('[data-sentry-element="ScrollableCardContent"]').marked){
-				document.querySelector('[data-sentry-element="ScrollableCardContent"]').marked=true;
+			if (!document.querySelector('body').marked){
+				document.querySelector('body').marked=true;
 				console.log("CONNECTED chat detected");
 				setTimeout(function(){
-					document.querySelectorAll('[data-sentry-component="ChatMessageUser"').forEach(ele=>{
+					document.querySelectorAll('[data-sentry-component="ChatMessageUser"]').forEach(ele=>{
 						ele.skip=true;
 					});
-					onElementInserted(document.querySelector('[data-sentry-element="ScrollableCardContent"]'));
+					onElementInserted(document.querySelector('body'));
 				},1000);
 			}
 		} catch(e){}
