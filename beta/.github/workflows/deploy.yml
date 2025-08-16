@@ -1,0 +1,50 @@
+name: Deploy Main and Beta to GitHub Pages
+on:
+  push:
+    branches:
+      - main
+      - beta
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    if: "!contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create deployment structure
+        run: mkdir -p gh-pages-content/beta
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-content
+
+      - name: Checkout beta branch
+        uses: actions/checkout@v4
+        with:
+          ref: beta
+          path: beta-content
+
+      - name: Prepare content
+        run: |
+          rsync -av --exclude='.git/' main-content/ gh-pages-content/
+          rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/
+          echo "Deployment content (recursive):"
+          ls -laR gh-pages-content
+
+      - name: Push to gh-pages branch
+        run: |
+          cd gh-pages-content
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          # /* Ensure this commit message contains '[skip pages]' */
+          git commit -m "Deploy main and beta to GitHub Pages [skip pages]"
+          git branch -M gh-pages
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push -f origin gh-pages

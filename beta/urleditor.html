@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+URL Parameter Manager for Social Stream Ninja
+===========================================
+
+Description:
+------------
+This web application provides a user interface for managing, editing, and saving URL parameters 
+specifically designed for the Social Stream Ninja streaming overlay system. It allows users to 
+easily manipulate complex URL parameters without needing to manually edit the URL string.
+
+Core Features:
+-------------
+1. URL Parsing & Validation
+   - Automatically parses and validates input URLs
+   - Detects and highlights duplicate parameters
+   - Provides real-time error feedback
+
+2. Parameter Management
+   - Organized parameter categories (Basic, Visual, Layout, Animation, etc.)
+   - Interactive parameter adding/removal
+   - Type-specific input controls (toggles for booleans, number inputs with ranges, etc.)
+   - Parameter descriptions and documentation
+
+3. Local Storage & Presets
+   - Save frequently used URL configurations
+   - Name and manage multiple URL presets
+   - Quick switching between saved configurations
+
+4. Smart Parameter Suggestions
+   - Searchable parameter database
+   - Parameter descriptions and type information
+   - Categorized parameter browsing
+
+Structure:
+----------
+The application uses vanilla JavaScript and CSS, avoiding external dependencies.
+Key components:
+- URLManager class: Core functionality for URL manipulation
+- PARAMETER_DOCS: Documentation and validation rules for parameters
+- Local Storage: For saving and managing URL presets
+
+Usage:
+------
+Users can:
+1. Enter a base URL
+2. Add/remove parameters through the interface
+3. Edit parameter values with appropriate input controls
+4. Save configurations for later use
+5. Copy the final URL for use in their streaming setup
+
+Created for Social Stream Ninja (https://socialstream.ninja/)
+-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Parameter Manager</title>
+    <style>
+/* Updated root variables for better contrast */
+:root {
+    --bg-primary: #121212;
+    --bg-secondary: #1e1e1e;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --accent: #5b9eff;
+    --error: #ff5b5b;
+    --success: #4aff4a;
+    --border: #333333;
+    --input-bg: #2a2a2a;
+}
+
+/* Improved container spacing */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 30px 20px;
+}
+
+/* Enhanced typography */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    line-height: 1.6;
+    font-size: 16px;
+}
+
+/* Better input styling */
+.url-input, .add-param-input {
+    width: 100%;
+    padding: 14px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 16px;
+    margin-bottom: 15px;
+    transition: border-color 0.2s;
+}
+
+.url-input:focus, .add-param-input:focus {
+    border-color: var(--accent);
+    outline: none;
+}
+
+/* Improved parameter sections */
+.params-section {
+    background-color: var(--bg-secondary);
+    padding: 25px;
+    border-radius: 8px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced parameter items */
+.param-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 15px;
+    background-color: var(--bg-primary);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.param-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Improved parameter name styling */
+.param-name {
+    font-weight: 600;
+    min-width: 180px;
+    color: var(--accent);
+}
+
+/* Better description text */
+.param-description {
+    font-size: 0.95em;
+    color: var(--text-secondary);
+    margin-left: 180px;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+/* Enhanced category tabs */
+.category-tab {
+    padding: 10px 18px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.category-tab:hover {
+    background: var(--input-bg);
+    border-color: var(--accent);
+}
+
+.category-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.param-categories {
+	margin-bottom: 15px;
+}
+/* Improved buttons */
+.button {
+    background-color: var(--accent);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.button:hover {
+    opacity: 0.9;
+}
+
+/* Enhanced param value inputs */
+.param-value {
+    flex-grow: 1;
+    padding: 8px 12px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-primary);
+    font-size: 15px;
+}
+
+/* Better remove button */
+.param-remove {
+    background-color: var(--error);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.param-remove:hover {
+    opacity: 0.9;
+}
+
+/* Parameter categories heading */
+.param-category h3 {
+    color: var(--accent);
+    margin: 25px 0 15px;
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+/* Saved URLs section */
+.saved-urls {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.saved-urls h2 {
+    color: var(--accent);
+    margin-bottom: 10px;
+}
+
+/* Tab styling */
+.tab {
+    padding: 10px 20px;
+    background-color: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    background-color: var(--input-bg);
+    border-color: var(--accent);
+}
+
+.tab.active {
+    background-color: var(--accent);
+    border-color: var(--accent);
+}
+
+/* Parameter suggestions dropdown */
+.param-suggestions {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.param-suggestion {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+}
+
+.param-suggestion:hover {
+    background: var(--input-bg);
+}
+
+.param-suggestion-category {
+    padding: 12px 16px;
+    font-weight: 600;
+    background: var(--bg-primary);
+    color: var(--accent);
+    border-bottom: 1px solid var(--border);
+}
+    </style>
+</head>
+<body>
+    <div class="container">
+		<h1>Link Editor for Streaming Overlay (dock.html)</h1><br />
+        <div class="url-input-section">
+            <input type="text" id="urlInput" class="url-input" placeholder="Enter your URL here">
+            <div id="urlError" class="error"></div>
+        </div>
+
+        <div class="add-param-section">
+            <input type="text" id="addParamInput" class="add-param-input" placeholder="Search and add parameters...">
+            <div id="paramSuggestions" class="param-suggestions"></div>
+        </div>
+
+        <div class="param-categories" id="paramCategories">
+            <!-- Category tabs will be added here -->
+        </div>
+
+        <div class="params-section" id="paramsContainer">
+            <!-- Parameters will be dynamically added here -->
+        </div>
+
+        <div class="button-group">
+            <button id="copyUrl" class="button">Copy URL</button>
+            <button id="saveUrl" class="button">Save URL</button>
+        </div>
+
+        <div class="saved-urls" id="savedUrlsContainer">
+            <h2>Saved URLs</h2>
+			<p>You can save multiple URLs to local browser storage, allowing you to manage multiple URLs at a time</p><br >
+            <div class="tab-container" id="savedUrlTabs">
+                <!-- Saved URL tabs will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extended Parameter documentation organized by category
+			const PARAMETER_DOCS = {
+				"Basic Configuration": {
+					session: { description: "Sets the session ID for connecting to the chat", type: "string" },
+					password: { description: "Sets a password for the session", type: "string" },
+					scale: { description: "Adjusts the size scaling of the overlay", type: "float", default: "1.0", range: [0.1, 5.0] },
+					limit: { description: "Maximum number of messages to show", type: "number", default: "200" },
+					opacity: { description: "Sets the opacity of the main overlay window", type: "float", range: [0, 1], default: "1.0" },
+					hidemenu: { description: "Hides the menu bar", type: "boolean" },
+					css: { description: "Applies custom CSS styling", type: "string" },
+					label: { description: "Assigns a label to this instance", type: "string" }
+				},
+				"Visual Style": {
+					darkmode: { description: "Enables dark theme with black background", type: "boolean" },
+					lightmode: { description: "Enables light theme with white background", type: "boolean" },
+					transparent: { description: "Makes background transparent and hides scrollbar", type: "boolean" },
+					chroma: { description: "Sets a specific background color (without #)", type: "string", format: "hex" },
+					blur: { description: "Applies blur effect to messages", type: "number", suffix: "px" },
+					compact: { description: "Enables compact mode with less spacing", type: "boolean" },
+					padding: { description: "Sets padding between messages", type: "number", suffix: "px", default: "3" },
+					largeavatar: { description: "Shows larger user avatars on the left side", type: "boolean" },
+					emoji: { description: "Sets emoji size scaling", type: "number", default: "140", suffix: "%" },
+					nooutline: { description: "Removes text outline effects", type: "boolean" },
+					font: { description: "Sets custom font family", type: "string" },
+					googlefont: { description: "Loads and uses a Google Font", type: "string" }
+				},
+				"Message Display": {
+					showtime: { description: "Auto-hides messages after specified milliseconds", type: "number", suffix: "ms" },
+					delaytime: { description: "Delays showing messages", type: "number", suffix: "ms" },
+					trim: { description: "Trims messages longer than specified characters", type: "number" },
+					trimname: { description: "Trims usernames longer than specified characters", type: "number" },
+					hidenames: { description: "Hides usernames completely", type: "boolean" },
+					firstnames: { description: "Shows only first names of users", type: "boolean" },
+					hidesource: { description: "Hides the source platform icons", type: "boolean" },
+					noavatar: { description: "Hides user avatars", type: "boolean" },
+					nobadges: { description: "Hides user badges", type: "boolean" },
+					limitbadges: { description: "Limits number of badges shown per message", type: "number" },
+					notime: { description: "Hides timestamp", type: "boolean" }
+				},
+				"Layout": {
+					horizontal: { description: "Makes messages scroll horizontally", type: "boolean" },
+					alignbottom: { description: "Makes messages start from bottom", type: "boolean" },
+					alignright: { description: "Aligns messages to the right side", type: "boolean" },
+					rtl: { description: "Enables right-to-left text direction", type: "boolean" },
+					fixed: { description: "Makes messages overlap each other", type: "boolean" },
+					twolines: { description: "Places messages on a separate line below usernames", type: "boolean" },
+					split: { description: "Enables split mode for message alignment", type: "boolean" },
+					bubble: { description: "Styles messages as chat bubbles", type: "boolean" },
+					fadedtop: { description: "Fades out the top of the overlay", type: "boolean" }
+				},
+				"Animation": {
+					fadein: { description: "Enables fade-in animation for new messages", type: "boolean" },
+					fadeout: { description: "Enables fade-out animation when removing messages", type: "boolean" },
+					swipeleft: { description: "Messages slide in from the right", type: "boolean" },
+					swiperight: { description: "Messages slide in from the left", type: "boolean" },
+					swipeup: { description: "Messages slide up from bottom", type: "boolean" },
+					smooth: { description: "Enables smooth scrolling", type: "boolean" },
+					animatein: { description: "Sets specific entrance animation", type: "string", options: ["fadeIn", "slideIn", "zoomIn"] },
+					animateout: { description: "Sets specific exit animation", type: "string", options: ["fadeOut", "slideOut", "zoomOut"] }
+				},
+				"Filtering": {
+					hidecommands: { description: "Hides messages starting with '!'", type: "boolean" },
+					hideshortmessages: { description: "Hides messages shorter than specified length", type: "number" },
+					noemojisonly: { description: "Filters out messages containing only emojis", type: "boolean" },
+					stripemoji: { description: "Removes all emojis from messages", type: "boolean" },
+					striphtml: { description: "Removes HTML formatting from messages", type: "boolean" },
+					striplinks: { description: "Removes links from messages", type: "boolean" },
+					activelinks: { description: "Makes URLs clickable", type: "boolean" },
+					shortlink: { description: "Shortens displayed links", type: "boolean" }
+				},
+				"Donation & Member Parameters": {
+					showonlydonos: { description: "Shows only messages with donations", type: "boolean" },
+					showonlymembers: { description: "Shows only messages from members", type: "boolean" },
+					stripdonations: { description: "Removes donation data from messages", type: "boolean" },
+					nodonohighlight: { description: "Disables background highlighting for donations", type: "boolean" },
+					t1: { description: "First donation threshold amount (USD)", type: "number" },
+					t1c: { description: "Color for first donation threshold messages", type: "string", format: "hex" },
+					t2: { description: "Second donation threshold amount (USD)", type: "number" },
+					t2c: { description: "Color for second donation threshold messages", type: "string", format: "hex" },
+					t3: { description: "Third donation threshold amount (USD)", type: "number" },
+					t3c: { description: "Color for third donation threshold messages", type: "string", format: "hex" }
+				},
+				"Text-to-Speech Parameters": {
+					speech: { description: 'Enables TTS with specified language (e.g., "en-US")', type: "string" },
+					volume: { description: "Sets TTS volume", type: "float", range: [0, 1] },
+					rate: { description: "Sets TTS speaking rate", type: "number" },
+					pitch: { description: "Sets TTS pitch", type: "number" },
+					voice: { description: "Specifies TTS voice to use", type: "string" },
+					ttscommand: { description: 'Custom command to trigger TTS (default: "!say")', type: "string" },
+					ttscommandmembersonly: { description: "Restricts TTS command to members only", type: "boolean" },
+					simpletts: { description: 'Simplified TTS output without "says" phrases', type: "boolean" },
+					readevents: { description: "Enables TTS for stream events", type: "boolean" },
+					readouturls: { description: 'Reads URLs instead of saying "link"', type: "boolean" }
+				},
+				"Bot & Host Control": {
+					myname: { description: "List of bot usernames to identify", type: "string", format: "list" },
+					botlist: { description: "List of bot usernames to identify", type: "string", format: "list" },
+					hidebots: { description: "Hides messages from identified bots", type: "boolean" },
+					hidebotnames: { description: "Hides names of identified bots", type: "boolean" },
+					hidehosts: { description: "Hides messages from hosts", type: "boolean" },
+					hidehostnames: { description: "Hides names of hosts", type: "boolean" },
+					nobeepbot: { description: "Disables notification sound for bot messages", type: "boolean" },
+					nobeephost: { description: "Disables notification sound for host messages", type: "boolean" },
+					nobeepevent: { description: "Disables notification sound for events", type: "boolean" },
+					nobeepmod: { description: "Disables notification sound for moderator messages", type: "boolean" },
+					showvipbadge: { description: "Shows special badge for VIP users", type: "boolean" },
+					autofeaturevip: { description: "Auto-features messages from VIP users", type: "boolean" },
+					autofeaturepriv: { description: "Auto-features messages from privileged users", type: "boolean" }
+				},
+				"Notification & Sound": {
+					beep: { description: "Enables sound notification for new messages", type: "boolean" },
+					beepvolume: { description: "Sets volume for notification sound (percentage)", type: "number", range: [0, 100] },
+					custombeep: { description: "Custom sound file URL for notifications", type: "string", format: "url" },
+					beepwords: { description: "Replaces asterisks with beep in messages", type: "boolean" }
+				},
+				"OBS Integration": {
+					remote: { description: "Enables OBS scene state display", type: "boolean" },
+					cycle: { description: "Allows guests to change OBS scenes with !cycle", type: "boolean" },
+					startstop: { description: "Allows privileged users to start/stop OBS", type: "boolean" },
+					server: { description: "Custom WebSocket server URL", type: "string", format: "url" },
+					server2: { description: "Secondary WebSocket server URL", type: "string", format: "url" },
+					server3: { description: "Tertiary WebSocket server URL", type: "string", format: "url" },
+					lanonly: { description: "Restricts P2P connections to LAN only", type: "boolean" }
+				},
+				"Export & Saving": {
+					save: { description: "Auto-saves messages to downloads folder", type: "boolean" },
+					savesingle: { description: "Saves last message to a file", type: "boolean" },
+					savefeatured: { description: "Saves featured message to file", type: "boolean" },
+					saveimg: { description: "Includes user avatar URLs when saving", type: "boolean" },
+					reload: { description: "Reloads last ~50 messages on refresh", type: "boolean" },
+					loadlast: { description: "Loads specified number of messages from database", type: "number" }
+				},
+				"Message Selection & Queue": {
+					autoshow: { description: "Automatically features new messages", type: "boolean" },
+					autoshowtime: { description: "Custom timing for auto-show feature (milliseconds)", type: "number", suffix: "ms" },
+					chartime: { description: "Time per character for auto-show duration", type: "number" },
+					autoshowdonos: { description: "Auto-features only donation messages", type: "boolean" },
+					autoshowmembers: { description: "Auto-features only member messages", type: "boolean" },
+					autoshowqueued: { description: "Auto-shows queued messages", type: "boolean" },
+					queueonly: { description: "Shows only queued messages", type: "boolean" },
+					pinnedonly: { description: "Shows only pinned messages", type: "boolean" },
+					viewonly: { description: "Disables chat, pin, and feature capabilities", type: "boolean" },
+					chatmode: { description: "Enables chat-only mode (no pin/feature)", type: "boolean" },
+					helpermode: { description: "Enables view/pin/queue mode (no chat/feature)", type: "boolean" },
+					sync: { description: "Syncs message selection across multiple docks", type: "boolean" }
+				}
+			};
+
+        class URLManager {
+            constructor() {
+                this.urlInput = document.getElementById('urlInput');
+                this.paramsContainer = document.getElementById('paramsContainer');
+                this.urlError = document.getElementById('urlError');
+                this.copyUrlBtn = document.getElementById('copyUrl');
+                this.saveUrlBtn = document.getElementById('saveUrl');
+                this.savedUrlsContainer = document.getElementById('savedUrlsContainer');
+                this.savedUrlTabs = document.getElementById('savedUrlTabs');
+                this.addParamInput = document.getElementById('addParamInput');
+                this.paramSuggestions = document.getElementById('paramSuggestions');
+                this.paramCategories = document.getElementById('paramCategories');
+
+                this.currentParams = new Map();
+                this.savedUrls = new Map();
+
+                this.initializeEventListeners();
+                this.loadSavedUrls();
+            }
+
+            initializeEventListeners() {
+                this.urlInput.addEventListener('input', () => this.handleUrlInput());
+                this.copyUrlBtn.addEventListener('click', () => this.copyCurrentUrl());
+                this.saveUrlBtn.addEventListener('click', () => this.showSaveUrlDialog());
+                this.addParamInput.addEventListener('input', () => this.handleParamSearch());
+                this.addParamInput.addEventListener('focus', () => this.showParamSuggestions());
+                document.addEventListener('click', (e) => {
+                    if (!this.addParamInput.contains(e.target) && !this.paramSuggestions.contains(e.target)) {
+                        this.paramSuggestions.style.display = 'none';
+                    }
+                });
+                
+                this.initializeCategories();
+            }
+
+            handleUrlInput() {
+                try {
+                    const url = new URL(this.urlInput.value);
+                    this.currentParams.clear();
+                    
+                    // Parse URL parameters
+                    for (const [key, value] of url.searchParams.entries()) {
+                        if (this.currentParams.has(key)) {
+                            this.showError(`Duplicate parameter found: ${key}`);
+                        }
+                        this.currentParams.set(key, value);
+                    }
+
+                    this.urlError.textContent = '';
+                    this.renderParams();
+                } catch (error) {
+                    if (this.urlInput.value.trim() !== '') {
+                        this.showError('Invalid URL format');
+                    }
+                }
+            }
+
+            renderParamInput(key, value, details) {
+                if (details.type === 'boolean') {
+                    return `
+                        <label class="switch">
+                            <input type="checkbox" class="param-value" 
+                                   data-param-key="${this.escapeHtml(key)}"
+                                   ${value === 'true' ? 'checked' : ''}>
+                            <span class="slider round"></span>
+                        </label>`;
+                } else if (details.type === 'number' || details.type === 'float') {
+                    const step = details.type === 'float' ? '0.1' : '1';
+                    const min = details.range ? details.range[0] : '0';
+                    const max = details.range ? details.range[1] : '999999';
+                    return `
+                        <input type="number" class="url-input param-value" 
+                               value="${this.escapeHtml(value)}"
+                               data-param-key="${this.escapeHtml(key)}"
+                               step="${step}" min="${min}" max="${max}">
+                        ${details.suffix ? `<span class="param-suffix">${details.suffix}</span>` : ''}`;
+                } else if (details.options) {
+                    return `
+                        <select class="url-input param-value" data-param-key="${this.escapeHtml(key)}">
+                            ${details.options.map(option => `
+                                <option value="${option}" ${value === option ? 'selected' : ''}>
+                                    ${option}
+                                </option>
+                            `).join('')}
+                        </select>`;
+                } else {
+                    return `
+                        <input type="text" class="url-input param-value" 
+                               value="${this.escapeHtml(value)}"
+                               data-param-key="${this.escapeHtml(key)}">`;
+                }
+            }
+
+			renderParams() {
+				this.paramsContainer.innerHTML = '';
+				const paramsByCategory = new Map();
+
+				// Group parameters by category
+				for (const [key, value] of this.currentParams.entries()) {
+					let category = "Other";
+					for (const [cat, params] of Object.entries(PARAMETER_DOCS)) {
+						if (key in params) {
+							category = cat;
+							break;
+						}
+					}
+					
+					// Skip if we're filtering and this isn't the active category
+					if (this.activeCategory && category !== this.activeCategory) {
+						continue;
+					}
+
+					if (!paramsByCategory.has(category)) {
+						paramsByCategory.set(category, new Map());
+					}
+					paramsByCategory.get(category).set(key, value);
+				}
+
+                // Render parameters by category
+                for (const [category, params] of paramsByCategory) {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.className = 'param-category';
+                    categoryDiv.innerHTML = `<h3>${category}</h3>`;
+
+                    for (const [key, value] of params) {
+                        const paramDetails = this.findParamDetails(key);
+                        const paramItem = document.createElement('div');
+                        paramItem.className = 'param-item';
+                        
+                        paramItem.innerHTML = `
+                            <span class="param-name">${this.escapeHtml(key)}</span>
+                            ${this.renderParamInput(key, value, paramDetails)}
+                            <button class="param-remove" data-param-key="${this.escapeHtml(key)}">Remove</button>
+                            <div class="param-description">${paramDetails.description}</div>
+                        `;
+
+                        const valueInput = paramItem.querySelector('.param-value');
+                        valueInput.addEventListener('input', (e) => {
+                            let newValue = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
+                            if (this.validateParamValue(key, newValue)) {
+                                this.currentParams.set(key, newValue.toString());
+                                this.updateUrlInput();
+                            }
+                        });
+
+                        const removeBtn = paramItem.querySelector('.param-remove');
+                        removeBtn.addEventListener('click', () => {
+                            this.currentParams.delete(key);
+                            this.renderParams();
+                            this.updateUrlInput();
+                        });
+
+                        categoryDiv.appendChild(paramItem);
+                    }
+
+                    this.paramsContainer.appendChild(categoryDiv);
+                }
+            }
+
+            updateUrlInput() {
+                try {
+                    const url = new URL(this.urlInput.value);
+                    url.search = '';
+                    
+                    for (const [key, value] of this.currentParams.entries()) {
+                        url.searchParams.append(key, value);
+                    }
+                    
+                    this.urlInput.value = url.toString();
+                } catch (error) {
+                    this.showError('Error updating URL');
+                }
+            }
+
+            showSaveUrlDialog() {
+                const name = prompt('Enter a name for this URL:');
+                if (name) {
+                    this.saveUrl(name);
+                }
+            }
+
+            saveUrl(name) {
+                const urlData = {
+                    url: this.urlInput.value,
+                    params: Array.from(this.currentParams.entries())
+                };
+                
+                this.savedUrls.set(name, urlData);
+                localStorage.setItem('savedUrls', JSON.stringify(Array.from(this.savedUrls.entries())));
+                this.renderSavedUrls();
+            }
+
+            loadSavedUrls() {
+                try {
+                    const savedData = localStorage.getItem('savedUrls');
+                    if (savedData) {
+                        this.savedUrls = new Map(JSON.parse(savedData));
+                        this.renderSavedUrls();
+                    }
+                } catch (error) {
+                    console.error('Error loading saved URLs:', error);
+                }
+            }
+
+            renderSavedUrls() {
+                this.savedUrlTabs.innerHTML = '';
+                
+                for (const [name, data] of this.savedUrls.entries()) {
+                    const tab = document.createElement('button');
+                    tab.className = 'tab';
+                    tab.textContent = name;
+                    
+                    tab.addEventListener('click', () => {
+                        this.loadSavedUrl(name);
+                    });
+
+                    this.savedUrlTabs.appendChild(tab);
+                }
+            }
+
+            loadSavedUrl(name) {
+                const urlData = this.savedUrls.get(name);
+                if (urlData) {
+                    this.urlInput.value = urlData.url;
+                    this.currentParams = new Map(urlData.params);
+                    this.renderParams();
+                }
+            }
+
+            async copyCurrentUrl() {
+                try {
+                    await navigator.clipboard.writeText(this.urlInput.value);
+                    this.showSuccess('URL copied to clipboard!');
+                } catch (error) {
+                    this.showError('Failed to copy URL');
+                }
+            }
+
+            showError(message) {
+                this.urlError.textContent = message;
+                this.urlError.style.color = 'var(--error)';
+            }
+
+            showSuccess(message) {
+                this.urlError.textContent = message;
+                this.urlError.style.color = 'var(--success)';
+                setTimeout(() => {
+                    this.urlError.textContent = '';
+                }, 2000);
+            }
+
+            escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
+			initializeCategories() {
+				this.activeCategory = null;
+				for (const category in PARAMETER_DOCS) {
+					const tab = document.createElement('button');
+					tab.className = 'category-tab';
+					tab.textContent = category;
+					tab.addEventListener('click', () => {
+						if (this.activeCategory === category) {
+							this.activeCategory = null;
+							tab.classList.remove('active');
+							this.renderParams(); // Show all params
+						} else {
+							this.activeCategory = category;
+							document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+							tab.classList.add('active');
+							this.renderParams(); // Will now filter by category
+						}
+					});
+					this.paramCategories.appendChild(tab);
+				}
+			}
+
+            filterParamsByCategory(category) {
+                const tabs = this.paramCategories.querySelectorAll('.category-tab');
+                tabs.forEach(tab => tab.classList.remove('active'));
+                Array.from(tabs).find(tab => tab.textContent === category).classList.add('active');
+
+                this.showParamSuggestions(category);
+            }
+
+            handleParamSearch() {
+                const searchTerm = this.addParamInput.value.toLowerCase();
+                this.showParamSuggestions(null, searchTerm);
+            }
+
+            showParamSuggestions(specificCategory = null, searchTerm = '') {
+                this.paramSuggestions.innerHTML = '';
+                this.paramSuggestions.style.display = 'block';
+
+                for (const [category, params] of Object.entries(PARAMETER_DOCS)) {
+                    if (specificCategory && category !== specificCategory) continue;
+
+                    let hasMatchingParams = false;
+                    let categoryHtml = '';
+                    
+                    for (const [param, details] of Object.entries(params)) {
+                        if (searchTerm && !param.toLowerCase().includes(searchTerm) && 
+                            !details.description.toLowerCase().includes(searchTerm)) {
+                            continue;
+                        }
+
+                        if (!hasMatchingParams) {
+                            categoryHtml = `<div class="param-suggestion-category">${category}</div>`;
+                            hasMatchingParams = true;
+                        }
+
+                        categoryHtml += `
+                            <div class="param-suggestion" data-param="${param}">
+                                <strong>${param}</strong>
+                                <span class="param-type">${details.type}</span>
+                                <div class="param-description">${details.description}</div>
+                            </div>
+                        `;
+                    }
+
+                    if (hasMatchingParams) {
+                        this.paramSuggestions.innerHTML += categoryHtml;
+                    }
+                }
+
+                // Add click handlers to suggestions
+                this.paramSuggestions.querySelectorAll('.param-suggestion').forEach(suggestion => {
+                    suggestion.addEventListener('click', () => {
+                        const param = suggestion.dataset.param;
+                        this.addParameter(param);
+                        this.paramSuggestions.style.display = 'none';
+                        this.addParamInput.value = '';
+                    });
+                });
+            }
+
+            addParameter(param) {
+                if (this.currentParams.has(param)) {
+                    this.showError(`Parameter '${param}' already exists`);
+                    return;
+                }
+
+                const paramDetails = this.findParamDetails(param);
+                let defaultValue = '';
+                
+                if (paramDetails.type === 'boolean') {
+                    defaultValue = 'true';
+                } else if (paramDetails.default) {
+                    defaultValue = paramDetails.default;
+                }
+
+                this.currentParams.set(param, defaultValue);
+                this.renderParams();
+                this.updateUrlInput();
+            }
+
+            findParamDetails(param) {
+                for (const category of Object.values(PARAMETER_DOCS)) {
+                    if (param in category) {
+                        return category[param];
+                    }
+                }
+                return { type: 'string', description: 'Custom parameter' };
+            }
+
+            validateParamValue(param, value) {
+                const details = this.findParamDetails(param);
+                
+                if (details.type === 'number' || details.type === 'float') {
+                    const num = parseFloat(value);
+                    if (isNaN(num)) return false;
+                    if (details.range) {
+                        return num >= details.range[0] && num <= details.range[1];
+                    }
+                }
+                
+                return true;
+            }
+        }
+
+        // Initialize the URL Manager when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new URLManager();
+        });
+    </script>
+</body>
+</html>

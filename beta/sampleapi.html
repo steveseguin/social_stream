@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream API Sandbox</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet">
+	<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjNGE5MGUyIiByeD0iNCIvPjxwYXRoIGQ9Ik0xNCA4QzExIDggOSA5IDggMTJjMyAwIDUgMCA3IDBjMCAwIDMgMCAzIDNzLTMgMy0zIDNjLTUgMC04IDAtMTEgMGMxIDMgMyA0IDYgNGg2YzMgMCA1LTEgNi00YzEtMyAwLTUtMi03cy00LTMtNi0zeiIgZmlsbD0iI2ZmZiIvPjwvc3ZnPg=="/>
+	<meta name="robots" content="noindex">
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --primary-color: #4a90e2;
+            --tertiary-color: #38393a;
+            --secondary-color: #283037;
+            --accent-color: #e74c3c;
+            --success-color: #2ecc71;
+            --warning-color: #f39c12;
+            --info-color: #3498db;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+        }
+
+        h1, h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+		}
+		
+		.request-log {
+			background: rgba(0,0,0,0.3);
+			border-radius: 4px;
+			padding: 10px;
+			margin-top: 10px;
+			font-family: monospace;
+			white-space: pre-wrap;
+			display: none;
+			color: #e0e0e0;
+		}
+
+        .section {
+            background-color: var(--tertiary-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .section:hover {
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        #incoming_messages {
+            height: 300px;
+            overflow-y: auto;
+            background-color: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .inbound {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .btn {
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            border-color: var(--warning-color);
+        }
+
+        .btn-info {
+            background-color: var(--info-color);
+            border-color: var(--info-color);
+        }
+
+		.form-control {
+			background-color: rgba(255, 255, 255, 0.1);
+			border-color: rgba(255, 255, 255, 0.2);
+			color: var(--text-color);
+		}
+
+		select.form-control {
+			background-color: var(--tertiary-color);
+			color: var(--text-color);
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			padding-right: 1.75rem;
+		}
+
+		/* Style the options in the dropdown */
+		select.form-control option {
+			background-color: var(--bg-color);
+			color: var(--text-color);
+		}
+
+		/* Style the select when focused */
+		select.form-control:focus {
+			background-color: var(--tertiary-color);
+			border-color: var(--primary-color);
+			box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+			color: var(--text-color);
+		}
+
+        .form-control:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+            color: var(--text-color);
+        }
+
+        #connectionStatus {
+            font-weight: bold;
+        }
+
+        .connected {
+            color: var(--success-color);
+        }
+
+        .disconnected {
+            color: var(--accent-color);
+        }
+
+        .note {
+            font-size: 0.9em;
+            font-style: italic;
+            color: var(--info-color);
+            margin-top: 10px;
+        }
+
+        #testMessageForm .form-group {
+            margin-bottom: 10px;
+        }
+
+        #testMessageForm label {
+            color: var(--text-color);
+        }
+		
+		.request-log {
+			margin-bottom: 10px;
+		}
+
+		.request-log:before {
+			content: attr(data-type);
+			display: block;
+			font-weight: bold;
+			margin-bottom: 5px;
+			color: var(--primary-color);
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4">Social Stream API Sandbox</h1>
+		
+		<div class="container mt-3">
+			<p class="lead">
+				This Social Stream API Sandbox is a comprehensive tool for developers to test and interact with the Social Stream Ninja API. It provides a user-friendly interface to experiment with various API features, including message generation, user management, and channel-specific communications. For full API documentation, please visit <a href="https://socialstream.ninja/api" target="_blank">socialstream.ninja/api</a>.
+				<br/><br/>
+				Please note that you may need to add <b><i>&server</i></b> to the dock.html or featured.html pages if you wish to send messages to them via the API. By default the extension, nor any dock/overlay page, will connect to the API server by default; they must be configured to work with the API server via menu toggle or URL parameter.
+			</p>
+		</div>
+
+		<style>
+			.lead {
+				font-size: 1.1rem;
+				color: #e0e0e0;
+				background-color: rgba(255, 255, 255, 0.1);
+				padding: 15px;
+				border-radius: 5px;
+				margin-bottom: 20px;
+			}
+			.lead a {
+				color: #4a90e2;
+				text-decoration: none;
+			}
+			.lead a:hover {
+				text-decoration: underline;
+			}
+		</style>
+        
+        <div class="section">
+            <h2>Connection Settings</h2>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="sessionID" class="form-label">Session ID:</label>
+                    <input type="text" id="sessionID" class="form-control" placeholder="Enter session ID">
+                </div>
+                <div class="col-md-3">
+                    <label for="channelOut" class="form-label">Out Channel:</label>
+                    <select id="channelOut" class="form-control">
+                        <option value="">Default (1)</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label for="channelIn" class="form-label">In Channel:</label>
+                    <select id="channelIn" class="form-control">
+                        <option value="">Default (2)</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                        <option value="9">9</option>
+                        <option value="10">10</option>
+                    </select>
+                </div>
+            </div>
+            <button id="connectButton" class="btn btn-primary">Connect to API via Websocket</button>
+            <button id="disconnectButton" class="btn btn-danger">Disconnect</button>
+            <span id="connectionStatus" class="ms-3"></span>
+            <span id="channelInfo" class="ms-3 text-info"></span>
+            <p class="note">Note: The connection will automatically attempt to reconnect if disconnected. The session ID for the API needs to match the session ID provided by the extension; this should correspond to the ?session value found on the dock.html and featured.html links. Simply sending messages to the API using GET/POST messaging doesn't require a websocket connection.</p>
+        </div>
+
+        <div class="section">
+            <h2>General Commands</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-secondary" onclick="sendCommand('clearOverlay')">Clear Overlay</button>
+                <button class="btn btn-secondary" onclick="sendCommand('clearAll')">Clear All Messages</button>
+                <button class="btn btn-secondary" onclick="sendCommand('feature')">Feature Next Unfeatured</button>
+                <button class="btn btn-secondary" onclick="sendCommand('autoShow', 'toggle')">Toggle Auto-show</button>
+                <button class="btn btn-secondary" onclick="sendCommand('nextInQueue')">Next in Queue</button>
+                <button class="btn btn-secondary" onclick="sendCommand('getQueueSize')">Get Queue Size</button>
+            </div>
+            <p class="note">These commands control the general behavior of the overlay and message queue.</p>
+        </div>
+		
+		<div class="section">
+            <h2>TTS Controls</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-info" onclick="sendCommand('tts', 'on', 1)">Turn TTS On (via Dock)</button>
+                <button class="btn btn-info" onclick="sendCommand('tts', 'off', 1)">Turn TTS Off (via Dock)</button>
+                <button class="btn btn-info" onclick="sendCommand('tts', 'on', 2)">Turn TTS On (via Featured)</button>
+                <button class="btn btn-info" onclick="sendCommand('tts', 'off', 2)">Turn TTS Off (via Featured)</button>
+                <button class="btn btn-warning" onclick="sendCommand('skipTTS')">Skip Current TTS</button>
+            </div>
+            <p class="note">TTS (Text-to-Speech) can be controlled separately for the dock and featured messages. You can also skip the currently playing TTS message to move to the next one in the queue. Make sure to enable the &server mode for the target you wish to directly interact with.</p>
+        </div>
+		        <div class="section">
+            <h2>Send Simple Message to Social Sites</h2>
+            <div class="mb-3">
+                <input type="text" id="customMessage" class="form-control" placeholder="Enter custom message">
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-success" onclick="sendCustomMessage('sendChat')">Send via WSS</button>
+                <button class="btn btn-success" onclick="sendCustomMessage('sendEncodedChat', true)">Send via HTTPS GET</button>
+                <button class="btn btn-success" onclick="sendCustomMessage('sendChat', false, true)">Send via HTTPS POST</button>
+            </div>
+            <p class="note">Custom messages can be sent using different methods: WebSocket (WSS), HTTPS GET, or HTTPS POST. These are sent to sites like Twitch, Youtube, etc, and not directly to the dock.</p>
+        </div>
+        <div class="section">
+            <h2>Advanced Message Generator - "fake an incoming message"</h2>
+            <form id="testMessageForm">
+                <div class="form-group">
+                    <label for="chatname">Username:</label>
+                    <input type="text" class="form-control" id="chatname" placeholder="Enter username">
+                </div>
+                <div class="form-group">
+                    <label for="chatmessage">Message:</label>
+                    <input type="text" class="form-control" id="chatmessage" placeholder="Enter message">
+                </div>
+                <div class="form-group">
+                    <label for="type">Platform:</label>
+                    <select class="form-control" id="type">
+                        <option value="twitch">Twitch</option>
+                        <option value="youtube">YouTube</option>
+                        <option value="facebook">Facebook</option>
+                        <option value="discord">Discord</option>
+                        <option value="slack">Slack</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="hasDonation">Donation Amount:</label>
+                    <input type="text" class="form-control" id="hasDonation" placeholder="Enter donation amount (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="membership">Membership:</label>
+                    <input type="text" class="form-control" id="membership" placeholder="Enter membership status (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="chatimg">Avatar URL:</label>
+                    <input type="text" class="form-control" id="chatimg" placeholder="Enter avatar URL (optional)">
+                </div>
+                <div class="form-group">
+                    <label for="nameColor">Name Color:</label>
+                    <input type="color" class="form-control" id="nameColor">
+                </div>
+				 <div class="form-group">
+                    <label for="eventType">Event Type:</label>
+                    <input type="text" class="form-control" placeholder="Enter anything to mark as an event" id="eventType">
+                </div>
+                <div class="form-group">
+                    <label for="contentimg">Content Image URL:</label>
+                    <input type="text" class="form-control" id="contentimg" placeholder="Enter content image URL (optional)">
+                </div>
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="isQuestion">
+                    <label class="form-check-label" for="isQuestion">Mark as Question</label>
+                </div>
+				
+				<button type="button" class="btn btn-primary" onclick="sendTestMessage()">Send as a Test Message</button>
+                <button type="button" class="btn btn-secondary" onclick="generateRandomMessage()">Generate Random Message</button>
+				<div class="form-group" style="display:inline-block;width:unset;">
+					<select class="form-control" id="messageChannel">
+						<option value="">Default (to Extension as normal)</option>
+						<option value="2">Channel 2 (direct to Featured /w &server)</option>
+						<option value="4">Channel 4 (direct to Dock /w &server2)</option>
+					</select>
+				</div>
+            </form>
+            <p class="note">Generate custom test messages to simulate different platforms and scenarios. This uses the `extContent` message type..</p>
+        </div>
+        <div class="section">
+            <h2>Channel-Specific Messaging</h2>
+            <div class="mb-3">
+                <input type="text" id="channelMessage" class="form-control" placeholder="Enter channel-specific message">
+                <select id="channelSelect" class="form-control mt-2">
+                    <option value="1">Channel 1</option>
+                    <option value="2">Channel 2</option>
+                    <option value="3">Channel 3</option>
+                    <option value="4">Channel 4</option>
+                    <option value="5">Channel 5</option>
+                    <option value="6">Channel 6</option>
+                    <option value="7">Channel 7</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="sendChannelMessage()">Send Channel Message</button>
+            <p class="note">Send messages to specific channels of the API server for more granular control of API messaging.</p>
+        </div>
+		
+        <div class="section">
+            <h2>Waitlist Commands</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-warning" onclick="sendCommand('removefromwaitlist', 1)">Remove First from Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('highlightwaitlist', 1)">Highlight First in Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('resetwaitlist')">Reset Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('downloadwaitlist')">Download Waitlist</button>
+                <button class="btn btn-warning" onclick="sendCommand('selectwinner')">Select Winner</button>
+                <button class="btn btn-warning" onclick="sendCommand('stopentries')">Stop Entries</button>
+                <button class="btn btn-warning" onclick="sendCommand('waitlistmessage', 'Custom waitlist message')">Set Waitlist Message</button>
+            </div>
+            <p class="note">These commands manage the waitlist functionality, useful for giveaways or queue management.</p>
+        </div>
+		
+		<div class="section">
+            <h2>Poll Commands</h2>
+            <div class="mb-3">
+                <select id="pollPresetSelect" class="form-control">
+                    <option value="">Select a poll preset...</option>
+                </select>
+                <button class="btn btn-info btn-sm mt-2" onclick="refreshPollPresets()">Refresh Presets</button>
+            </div>
+            <div class="mb-3">
+                <input type="text" id="pollQuestion" class="form-control" placeholder="Poll question">
+                <select id="pollType" class="form-control mt-2">
+                    <option value="freeform">Freeform</option>
+                    <option value="multiple">Multiple Choice</option>
+                </select>
+                <textarea id="pollOptions" class="form-control mt-2" placeholder="Enter options (one per line)" rows="4" style="display:none;"></textarea>
+            </div>
+            <div class="btn-group" role="group">
+                <button class="btn btn-warning" onclick="sendCommand('resetpoll')">Reset Poll</button>
+                <button class="btn btn-warning" onclick="sendCommand('closepoll')">Close Poll</button>
+                <button class="btn btn-warning" onclick="loadPollPreset()">Load Preset</button>
+                <button class="btn btn-warning" onclick="createCustomPoll()">Create Custom Poll</button>
+            </div>
+            <p class="note">Extended poll controls allow you to load saved presets, create custom polls, and manage poll settings via the API.</p>
+        </div>
+
+        <div class="section">
+            <h2>User Management</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-danger" onclick="blockUser()">Block User</button>
+                <button class="btn btn-success" onclick="toggleVIPUser()">Toggle VIP User</button>
+                <button class="btn btn-info" onclick="getUserHistory()">Get User History</button>
+            </div>
+            <p class="note">Manage users, including blocking, VIP status, and viewing history.</p>
+        </div>
+
+        <div class="section">
+            <h2>Incoming Messages</h2>
+            <div id="incoming_messages"></div>
+            <p class="note">This area displays incoming messages from the server.</p>
+        </div>
+    </div>
+
+    <script>
+        let socket;
+        let sessionID;
+        let quick = true;
+		
+		const urlParams = new URLSearchParams(window.location.search);
+
+        function getSessionIdFromURL() {
+            return urlParams.get('session');
+        }
+
+        function updateConnectionStatus(status) {
+            const statusElement = document.getElementById('connectionStatus');
+            statusElement.textContent = status;
+            statusElement.className = status === 'Connected' ? 'connected' : 'disconnected';
+        }
+
+        function connect() {
+            sessionID = document.getElementById('sessionID').value;
+            if (!sessionID) {
+                alert('Please enter a session ID');
+                return;
+            }
+            
+            // Get channel values from input fields, URL params, or use defaults
+            const channelOutInput = document.getElementById('channelOut').value;
+            const channelInInput = document.getElementById('channelIn').value;
+            const channelOut = channelOutInput ? parseInt(channelOutInput) : 
+                              (parseInt(urlParams.get('channelout')) || 1);
+            const channelIn = channelInInput ? parseInt(channelInInput) : 
+                             (parseInt(urlParams.get('channelin')) || 2);
+            
+            socket = new WebSocket(urlParams.has("localserver") ? "ws://127.0.0.1:3000" : 'wss://io.socialstream.ninja:443');
+            socket.onopen = function() {
+                socket.send(JSON.stringify({
+                    join: sessionID,
+                    out: channelOut,
+                    in: channelIn
+                }));
+                updateConnectionStatus('Connected');
+                document.getElementById('channelInfo').textContent = `(out: ${channelOut}, in: ${channelIn})`;
+                document.getElementById('connectButton').disabled = true;
+                document.getElementById('disconnectButton').disabled = false;
+                quick = true;
+            };
+            socket.onmessage = function(event) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'inbound';
+                messageDiv.textContent = event.data;
+                document.getElementById('incoming_messages').prepend(messageDiv);
+            };
+            socket.onclose = function() {
+                updateConnectionStatus('Disconnected');
+                document.getElementById('connectButton').disabled = false;
+                document.getElementById('disconnectButton').disabled = true;
+                if (quick) {
+                    quick = false;
+                    connect();
+                } else {
+                    setTimeout(function() {
+                        connect();
+                    }, 5000);
+                }
+            };
+        }
+
+        function disconnect() {
+            if (socket) {
+                socket.close();
+            }
+        }
+
+		function sendCommand(action, value = null, channel = null, element = null) {
+			let message = {
+				action,
+				apiid: sessionID,
+				value: value !== null ? value : undefined,
+				out: channel !== null ? parseInt(channel) : undefined
+			};
+			
+			logRequest(element || event.target.closest('.btn-group'), {
+				type: 'WebSocket',
+				url: 'wss://io.socialstream.ninja:443',
+				message
+			});
+			
+			if (!socket || socket.readyState !== WebSocket.OPEN) {
+				alert('Please connect first');
+				return;
+			}
+			socket.send(JSON.stringify(message));
+		}
+
+        function originalSendCustomMessage(action, isEncodedGet = false, isPost = false) {
+		
+            const message = document.getElementById('customMessage').value;
+            if (!message) {
+                alert('Please enter a message');
+                return;
+            }
+            if (isEncodedGet) {
+                const encodedMessage = encodeURIComponent(message);
+                fetch(`https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}`)
+                    .then(response => response.text())
+                    .then(data => console.log('Message sent via HTTPS GET'));
+            } else if (isPost) {
+                fetch(`https://io.socialstream.ninja/${sessionID}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({action: action, value: message, apiid: sessionID}),
+                })
+                    .then(response => response.text())
+                    .then(data => console.log('Message sent via HTTPS POST'));
+            } else {
+                sendCommand(action, message);
+            }
+        }
+		
+		function sendCustomMessage(action, isEncodedGet = false, isPost = false) {
+			const message = document.getElementById('customMessage').value;
+			const selectedChannel = parseInt(document.getElementById('channelSelect').value);
+			
+			if (!message) {
+				alert('Please enter a message');
+				return;
+			}
+
+			const buttonGroup = event.target.closest('.btn-group');
+			
+			if (isEncodedGet) {
+				const encodedMessage = encodeURIComponent(message);
+				const url = `https://io.socialstream.ninja/${sessionID}/${action}/null/${encodedMessage}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
+				logRequest(buttonGroup, {
+					type: 'HTTP GET',
+					url
+				});
+				fetch(url).then(response => response.text())
+					.then(data => console.log('Message sent via HTTPS GET'));
+			} else if (isPost) {
+				const url = `https://io.socialstream.ninja/${sessionID}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
+				const body = {
+					action, 
+					value: message, 
+					apiid: sessionID
+				};
+				if (selectedChannel){
+					body.out = selectedChannel;
+				}
+				logRequest(buttonGroup, {
+					type: 'HTTP POST',
+					url,
+					body
+				});
+				fetch(url, {
+					method: 'POST',
+					headers: {'Content-Type': 'application/json'},
+					body: JSON.stringify(body)
+				}).then(response => response.text())
+					.then(data => console.log('Message sent via HTTPS POST'));
+			} else {
+				sendCommand(action, message, selectedChannel);
+			}
+		}
+
+		function sendTestMessage() {
+			const currentSessionID = document.getElementById('sessionID').value;
+			if (!currentSessionID) {
+				alert('Please enter a session ID');
+				return;
+			}
+			const testMessage = {
+				chatname: document.getElementById('chatname').value,
+				chatmessage: document.getElementById('chatmessage').value,
+				type: document.getElementById('type').value,
+				hasDonation: document.getElementById('hasDonation').value,
+				membership: document.getElementById('membership').value,
+				chatimg: document.getElementById('chatimg').value,
+				nameColor: document.getElementById('nameColor').value,
+				eventType: document.getElementById('eventType').value || false,
+				contentimg: document.getElementById('contentimg').value,
+				question: document.getElementById('isQuestion').checked
+			};
+			
+			const selectedChannel = parseInt(document.getElementById('messageChannel').value);
+			const container = event.target.closest('.section');
+			const action = selectedChannel ? 'content' : 'extContent';
+			
+			// WebSocket request
+			const wsMessage = {
+				action: action,
+				apiid: currentSessionID,
+				value: JSON.stringify(testMessage)
+			};
+			if (selectedChannel) {
+				wsMessage.out = selectedChannel;
+			}
+			logRequest(container, {
+				type: 'WebSocket',
+				url: 'wss://io.socialstream.ninja:443',
+				message: wsMessage
+			});
+
+			// GET request with channel parameter
+			const encodedMessage = encodeURIComponent(JSON.stringify(testMessage));
+			const getUrl = `https://io.socialstream.ninja/${currentSessionID}/${action}/null/${encodedMessage}${selectedChannel ? `?channel=${selectedChannel}` : ''}`;
+			logRequest(container, {
+				type: 'HTTP GET',
+				url: getUrl
+			});
+
+			// POST request
+			logRequest(container, {
+				type: 'HTTP POST',
+				url: `https://io.socialstream.ninja/${currentSessionID}${selectedChannel ? `?channel=${selectedChannel}` : ''}`,
+				body: wsMessage
+			});
+
+			// Actually send via WebSocket
+			if (socket && socket.readyState === WebSocket.OPEN) {
+				socket.send(JSON.stringify(wsMessage));
+			} else {
+				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
+			}
+		}
+
+        function generateRandomMessage() {
+			const randomData = {
+				chatname: "User" + Math.floor(Math.random() * 1000),
+				chatmessage: "Random message " + Math.random().toString(36).substring(7),
+				type: ["twitch", "youtube", "facebook", "discord", "slack", "zoom"][Math.floor(Math.random() * 6)],
+				hasDonation: Math.random() > 0.7 ? "$" + (Math.random() * 100).toFixed(2) : "",
+				membership: Math.random() > 0.8 ? "Premium Member" : "",
+				chatimg: "https://picsum.photos/50/50?random=" + Math.random(),
+				nameColor: '#' + Math.floor(Math.random()*16777215).toString(16),
+				event: false,
+				contentimg: Math.random() > 0.9 ? "https://picsum.photos/200/200?random=" + Math.random() : "",
+				question: Math.random() > 0.8
+			};
+			Object.keys(randomData).forEach(key => {
+				const element = document.getElementById(key);
+				if (element) {
+					if (element.type === 'checkbox') {
+						element.checked = randomData[key];
+					} else if (element.tagName === 'SELECT') {
+						const option = Array.from(element.options).find(opt => opt.value === randomData[key]);
+						if (option) option.selected = true;
+					} else {
+						element.value = randomData[key];
+					}
+				}
+			});
+		}
+
+		function blockUser() {
+			const username = document.getElementById('chatname').value;
+			const platform = document.getElementById('type').value;
+			if (!username || !platform) {
+				alert('Please enter a username and select a platform');
+				return;
+			}
+			sendCommand('blockUser', { chatname: username, type: platform });
+		}
+
+		function toggleVIPUser() {
+			const username = document.getElementById('chatname').value;
+			const platform = document.getElementById('type').value;
+			if (!username || !platform) {
+				alert('Please enter a username and select a platform');
+				return;
+			}
+			sendCommand('toggleVIPUser', { chatname: username, type: platform });
+		}
+
+		function getUserHistory() {
+			const username = document.getElementById('chatname').value;
+			const platform = document.getElementById('type').value;
+			if (!username || !platform) {
+				alert('Please enter a username and select a platform');
+				return;
+			}
+			sendCommand('getUserHistory', { chatname: username, type: platform });
+		}
+
+		function sendChannelMessage() {
+			const message = document.getElementById('channelMessage').value;
+			const channel = parseInt(document.getElementById('channelSelect').value);
+			
+			if (!message) {
+				alert('Please enter a message');
+				return;
+			}
+
+			const buttonGroup = event.target.closest('.btn-group');
+			
+			// WebSocket request
+			const wsMessage = {
+				action: 'content',
+				apiid: sessionID,
+				value: message
+			};
+			
+			if (channel){
+				wsMessage.out = channel;
+			}
+
+			// Log and send WebSocket request
+			logRequest(buttonGroup, {
+				type: 'WebSocket',
+				url: 'wss://io.socialstream.ninja:443',
+				message: wsMessage
+			});
+
+			// Log GET request format
+			logRequest(buttonGroup, {
+				type: 'HTTP GET',
+				url: `https://io.socialstream.ninja/${sessionID}/content/null/${encodeURIComponent(message)}?channel=${channel}`
+			});
+
+			// Log POST request format
+			logRequest(buttonGroup, {
+				type: 'HTTP POST',
+				url: `https://io.socialstream.ninja/${sessionID}?channel=${channel}`,
+				body: wsMessage
+			});
+
+			// Send via WebSocket
+			if (socket && socket.readyState === WebSocket.OPEN) {
+				socket.send(JSON.stringify(wsMessage));
+			} else {
+				alert('WebSocket not connected - message not sent. Connect first or use GET/POST methods.');
+			}
+		}
+
+		// Event listeners
+		document.getElementById('connectButton').addEventListener('click', connect);
+		document.getElementById('disconnectButton').addEventListener('click', disconnect);
+
+		// Auto-connect if session ID is provided in URL
+		window.addEventListener('load', function() {
+			const urlSessionId = getSessionIdFromURL();
+			if (urlSessionId) {
+				document.getElementById('sessionID').value = urlSessionId;
+				connect();
+			}
+		});
+
+		// Developer Notes
+		console.log(`
+Developer Notes:
+1. The WebSocket server is at wss://io.socialstream.ninja:443
+2. Session ID is crucial for connecting to the correct room
+3. Use channel 1 for general communication, channel 2 for dock.html, etc.
+4. The 'extContent' action is used to send simulated messages from various platforms
+5. Custom actions can be added using a custom.js file in your project
+6. MIDI hotkey support is available for predefined chat messages
+7. The API supports both WebSocket and HTTP (GET/POST) methods
+8. Use the 'target' field in messages for specific instance targeting
+9. Error handling and reconnection logic is implemented for robustness
+10. Experiment with different message types and actions to understand the full capabilities of the API
+		`);
+		
+		document.querySelectorAll('.btn-group').forEach(group => {
+			const log = document.createElement('pre');
+			log.className = 'request-log';
+			group.parentNode.insertBefore(log, group.nextSibling);
+		});
+		
+		var lastLog = null;
+		
+		function logRequest(element, requestData) {
+			if (!element) return; // Guard against null element
+			let container = element;
+			if (element?.classList.contains('btn')) {
+				container = element.closest('.section');
+			} else if (element?.classList.contains('btn-group')) {
+				container = element.parentNode;
+			}
+			if (!container){return;}
+
+			const logId = `log-${requestData.type.replace(/\s+/g, '-').toLowerCase()}`;
+			let log = container.querySelector(`#${logId}`);
+			
+			if (!log) {
+				log = document.createElement('pre');
+				log.className = 'request-log';
+				log.id = logId;
+				container.appendChild(log);
+			}
+
+			log.setAttribute('data-type', requestData.type);
+			log.textContent = JSON.stringify(requestData, null, 2);
+			log.style.display = 'block';
+		}
+		
+		// Poll-specific functions
+		function refreshPollPresets() {
+			if (!socket || socket.readyState !== WebSocket.OPEN) {
+				alert('Please connect first');
+				return;
+			}
+			
+			// Generate a unique callback ID
+			const callbackId = 'cb_' + Date.now();
+			
+			// Send request with callback
+			socket.send(JSON.stringify({
+				action: 'getpollpresets',
+				apiid: sessionID,
+				get: callbackId
+			}));
+			
+			// Listen for response
+			socket.addEventListener('message', function handlePresets(event) {
+				try {
+					const data = JSON.parse(event.data);
+					if (data.callback && data.callback.get === callbackId) {
+						// Remove this listener
+						socket.removeEventListener('message', handlePresets);
+						
+						// Update the select dropdown
+						const select = document.getElementById('pollPresetSelect');
+						select.innerHTML = '<option value="">Select a poll preset...</option>';
+						
+						if (data.callback.result && Array.isArray(data.callback.result)) {
+							data.callback.result.forEach(preset => {
+								const option = document.createElement('option');
+								option.value = preset.id;
+								option.textContent = preset.name;
+								select.appendChild(option);
+							});
+						}
+					}
+				} catch (e) {
+					console.error('Error parsing preset response:', e);
+				}
+			});
+		}
+		
+		function loadPollPreset() {
+			const presetId = document.getElementById('pollPresetSelect').value;
+			if (!presetId) {
+				alert('Please select a poll preset');
+				return;
+			}
+			
+			sendCommand('loadpoll', { pollId: presetId });
+		}
+		
+		function createCustomPoll() {
+			const question = document.getElementById('pollQuestion').value;
+			const type = document.getElementById('pollType').value;
+			const optionsText = document.getElementById('pollOptions').value;
+			
+			if (!question) {
+				alert('Please enter a poll question');
+				return;
+			}
+			
+			const settings = {
+				pollQuestion: question,
+				pollType: type,
+				pollTimer: '120',
+				pollTimerState: true,
+				pollTally: true,
+				pollSpam: false
+			};
+			
+			if (type === 'multiple' && optionsText) {
+				settings.multipleChoiceOptions = optionsText;
+			}
+			
+			sendCommand('createpoll', { settings });
+		}
+		
+		// Show/hide options textarea based on poll type
+		document.getElementById('pollType').addEventListener('change', function() {
+			const optionsTextarea = document.getElementById('pollOptions');
+			if (this.value === 'multiple') {
+				optionsTextarea.style.display = 'block';
+			} else {
+				optionsTextarea.style.display = 'none';
+			}
+		});
+		</script>
+		</body>
+		</html>
