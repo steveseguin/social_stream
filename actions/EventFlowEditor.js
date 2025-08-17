@@ -887,8 +887,9 @@ class EventFlowEditor {
 			if (e.target.classList.contains('connection-point')) {
 				 if (e.target.dataset.pointType === 'output') { // Only start dragging from output points
 					this.startConnection(node.id, e.target.dataset.pointType, e);
+					return;
 				 }
-				return;
+				// Don't return for input points - allow drag to continue
 			}
 			this.selectNode(node.id);
 
@@ -2332,7 +2333,7 @@ class EventFlowEditor {
 								${relayPlatforms.map(p => `<option value="${p.value}" ${currentDestination === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
 							</select>
 							<input type="text" class="property-input" id="prop-destination-custom" 
-								   value="${isCustom ? node.config.destination : ''}" 
+								   value="${isCustomRelayDest ? node.config.destination : ''}" 
 								   style="display: ${currentDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
 								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
 							<div class="property-help">Relays chat messages to other platforms. Source is always excluded to prevent loops.</div>
