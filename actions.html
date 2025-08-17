@@ -458,6 +458,90 @@
                     }
                     break;
                     
+                // OBS Browser Source API Actions
+                case 'obsChangeScene':
+                    if (obsStudio && payload.sceneName) {
+                        console.log(`[OBS] Changing scene to: ${payload.sceneName}`);
+                        obsStudio.setCurrentScene(payload.sceneName)
+                            .then(() => console.log(`[OBS] Scene changed to ${payload.sceneName}`))
+                            .catch(err => console.error("[OBS] Error changing scene:", err));
+                    } else if (!obsStudio) {
+                        console.warn("[OBS] API not available");
+                    } else {
+                        console.warn("[OBS] Scene name not provided");
+                    }
+                    break;
+                    
+                case 'obsStartRecording':
+                    if (obsStudio) {
+                        try {
+                            console.log("[OBS] Starting recording");
+                            obsStudio.startRecording();
+                            console.log("[OBS] Recording start command sent");
+                        } catch (err) {
+                            console.error("[OBS] Error starting recording:", err);
+                        }
+                    } else {
+                        console.warn("[OBS] API not available");
+                    }
+                    break;
+                    
+                case 'obsStopRecording':
+                    if (obsStudio) {
+                        try {
+                            console.log("[OBS] Stopping recording");
+                            obsStudio.stopRecording();
+                            console.log("[OBS] Recording stop command sent");
+                        } catch (err) {
+                            console.error("[OBS] Error stopping recording:", err);
+                        }
+                    } else {
+                        console.warn("[OBS] API not available");
+                    }
+                    break;
+                    
+                case 'obsStartStreaming':
+                    if (obsStudio) {
+                        try {
+                            console.log("[OBS] Starting streaming");
+                            obsStudio.startStreaming();
+                            console.log("[OBS] Streaming start command sent");
+                        } catch (err) {
+                            console.error("[OBS] Error starting streaming:", err);
+                        }
+                    } else {
+                        console.warn("[OBS] API not available");
+                    }
+                    break;
+                    
+                case 'obsStopStreaming':
+                    if (obsStudio) {
+                        try {
+                            console.log("[OBS] Stopping streaming");
+                            obsStudio.stopStreaming();
+                            console.log("[OBS] Streaming stop command sent");
+                        } catch (err) {
+                            console.error("[OBS] Error stopping streaming:", err);
+                        }
+                    } else {
+                        console.warn("[OBS] API not available");
+                    }
+                    break;
+                    
+                case 'obsReplayBuffer':
+                    if (obsStudio) {
+                        try {
+                            console.log("[OBS] Saving replay buffer");
+                            obsStudio.saveReplayBuffer();
+                            console.log("[OBS] Replay buffer save command sent");
+                        } catch (err) {
+                            console.error("[OBS] Error saving replay buffer:", err);
+                        }
+                    } else {
+                        console.warn("[OBS] API not available");
+                    }
+                    break;
+                    
                 default:
                     console.warn("Unknown action type received:", payload.actionType);
             }

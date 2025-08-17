@@ -10257,6 +10257,7 @@ window.sendToDestinations = sendToDestinations;
 window.fetchWithTimeout = fetchWithTimeout;
 window.sanitizeRelay = sanitizeRelay;
 window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
+window.handleMessageStore = handleMessageStore;
 
 console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
 console.log('[EventFlow Init] Checking sanitizeRelay function:', typeof window.sanitizeRelay);
@@ -10269,6 +10270,8 @@ let tmp = new EventFlowSystem({
 	fetchWithTimeout: window.fetchWithTimeout || null, // Assuming fetchWithTimeout is on window from background.js
 	sanitizeRelay: window.sanitizeRelay || null,
 	checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
+	messageStore: messageStore || {},  // Share the message store for duplicate detection
+	handleMessageStore: handleMessageStore || null  // Share the message store handler
 });
 
 

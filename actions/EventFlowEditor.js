@@ -19,40 +19,53 @@ class EventFlowEditor {
 		
         // Initialize all node type definitions here
         this.triggerTypes = [
-            { id: 'messageContains', name: 'Message Contains' },
-            { id: 'messageStartsWith', name: 'Message Starts With' },
-            { id: 'messageEndsWith', name: 'Message Ends With' },
-            { id: 'messageEquals', name: 'Message Equals' },
-            { id: 'messageRegex', name: 'Message Regex' },
-            { id: 'messageLength', name: 'Message Length' },
-            { id: 'wordCount', name: 'Word Count' },
-            { id: 'containsEmoji', name: 'Contains Emoji' },
-            { id: 'containsLink', name: 'Contains Link' },
-            { id: 'fromSource', name: 'From Source' },
-            { id: 'fromChannelName', name: 'From Channel Name' },
-            { id: 'fromUser', name: 'From User' },
-            { id: 'userRole', name: 'User Role' },
-            { id: 'hasDonation', name: 'Has Donation' },
-            { id: 'customJs', name: 'Custom JavaScript' }
+            { id: 'messageContains', name: '🔍 Message Contains' },
+            { id: 'messageStartsWith', name: '▶️ Message Starts With' },
+            { id: 'messageEndsWith', name: '⏹️ Message Ends With' },
+            { id: 'messageEquals', name: '🟰 Message Equals' },
+            { id: 'messageRegex', name: '🔤 Message Regex' },
+            { id: 'messageLength', name: '📏 Message Length' },
+            { id: 'wordCount', name: '🔢 Word Count' },
+            { id: 'containsEmoji', name: '😀 Contains Emoji' },
+            { id: 'containsLink', name: '🔗 Contains Link' },
+            { id: 'fromSource', name: '📡 From Source' },
+            { id: 'fromChannelName', name: '📺 From Channel Name' },
+            { id: 'fromUser', name: '👤 From User' },
+            { id: 'userRole', name: '👑 User Role' },
+            { id: 'hasDonation', name: '💰 Has Donation' },
+            { id: 'randomChance', name: '🎲 Random Chance' },
+            { id: 'messageProperties', name: '⚙️ Message Properties Filter' },
+            { id: 'counter', name: '🔄 Counter' },
+            { id: 'userPool', name: '👥 User Pool' },
+            { id: 'accumulator', name: '➕ Accumulator' },
+            { id: 'customJs', name: '📝 Custom JavaScript' }
         ];
 
 		this.actionTypes = [
-			{ id: 'blockMessage', name: 'Block Message' },
-			{ id: 'modifyMessage', name: 'Modify Message' },
-			{ id: 'addPrefix', name: 'Add Prefix' },
-			{ id: 'addSuffix', name: 'Add Suffix' },
-			{ id: 'findReplace', name: 'Find & Replace' },
-			{ id: 'removeText', name: 'Remove Text' },
-			{ id: 'setProperty', name: 'Set Property' },
-			{ id: 'relay', name: 'Relay Message' },
-			{ id: 'webhook', name: 'Call Webhook' },
-			{ id: 'addPoints', name: 'Add Points' },
-			{ id: 'spendPoints', name: 'Spend Points' },
-			{ id: 'playTenorGiphy', name: 'Display Media Overlay' },
-			{ id: 'triggerOBSScene', name: 'Trigger OBS Scene' },
-			{ id: 'playAudioClip', name: 'Play Audio Clip' },
-			{ id: 'delay', name: 'Delay Message' },
-			{ id: 'customJs', name: 'Custom JavaScript' }
+			{ id: 'blockMessage', name: '🚫 Block Message' },
+			{ id: 'modifyMessage', name: '✏️ Modify Message' },
+			{ id: 'addPrefix', name: '⬅️ Add Prefix' },
+			{ id: 'addSuffix', name: '➡️ Add Suffix' },
+			{ id: 'findReplace', name: '🔄 Find & Replace' },
+			{ id: 'removeText', name: '✂️ Remove Text' },
+			{ id: 'setProperty', name: '🎨 Set Property' },
+			{ id: 'sendMessage', name: '💬 Send Message' },
+			{ id: 'relay', name: '📢 Relay Chat' },
+			{ id: 'webhook', name: '🌐 Call Webhook' },
+			{ id: 'addPoints', name: '⬆️ Add Points' },
+			{ id: 'spendPoints', name: '⬇️ Spend Points' },
+			{ id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
+			{ id: 'triggerOBSScene', name: '🎬 Trigger OBS Scene' },
+			{ id: 'playAudioClip', name: '🔊 Play Audio Clip' },
+			{ id: 'delay', name: '⏱️ Delay Message' },
+			{ id: 'obsChangeScene', name: '🎬 OBS: Change Scene' },
+			{ id: 'obsToggleSource', name: '👁️ OBS: Toggle Source' },
+			{ id: 'obsStartRecording', name: '🔴 OBS: Start Recording' },
+			{ id: 'obsStopRecording', name: '⏹️ OBS: Stop Recording' },
+			{ id: 'obsStartStreaming', name: '📡 OBS: Start Streaming' },
+			{ id: 'obsStopStreaming', name: '⏹️ OBS: Stop Streaming' },
+			{ id: 'obsReplayBuffer', name: '💾 OBS: Save Replay Buffer' },
+			{ id: 'customJs', name: '📝 Custom JavaScript' }
 		];
 
         // Check if we're in ssapp context for cross-origin communication
@@ -61,9 +74,9 @@ class EventFlowEditor {
         
         // Ensure logicNodeTypes is initialized HERE
         this.logicNodeTypes = [
-            { id: 'AND', name: 'AND Gate', type: 'logic', logicType: 'AND' }, // Added type/logicType for consistency if needed elsewhere
-            { id: 'OR', name: 'OR Gate', type: 'logic', logicType: 'OR' },
-            { id: 'NOT', name: 'NOT Gate', type: 'logic', logicType: 'NOT' }
+            { id: 'AND', name: '🔀 AND Gate', type: 'logic', logicType: 'AND' }, // Added type/logicType for consistency if needed elsewhere
+            { id: 'OR', name: '🔄 OR Gate', type: 'logic', logicType: 'OR' },
+            { id: 'NOT', name: '🚫 NOT Gate', type: 'logic', logicType: 'NOT' }
         ];
 
         this.init(); // init() will call createEditorLayout()
@@ -82,7 +95,11 @@ class EventFlowEditor {
                     <div class="flow-list-container">
                         <h3>Flows</h3>
                         <div class="flow-list" id="flow-list"></div>
-                        <button id="new-flow-btn" class="btn">Create New Flow</button>
+                        <button id="new-flow-btn" class="btn"><span style="color: #4CAF50; margin-right: 5px;">+</span>Create New Flow</button>
+                        <div class="flow-import-export" style="display: flex; gap: 5px; margin-top: 10px;">
+                            <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📥 Import</button>
+                            <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📤 Export All</button>
+                        </div>
                     </div>
                     <div class="node-palette">
                         <h3>Triggers</h3>
@@ -146,6 +163,8 @@ class EventFlowEditor {
         document.getElementById('new-flow-btn').addEventListener('click', () => this.createNewFlow());
         document.getElementById('save-flow-btn').addEventListener('click', () => this.saveCurrentFlow());
         document.getElementById('duplicate-flow-btn').addEventListener('click', () => this.duplicateCurrentFlow());
+        document.getElementById('import-flow-btn').addEventListener('click', () => this.importFlows());
+        document.getElementById('export-all-btn').addEventListener('click', () => this.exportAllFlows());
 
         document.getElementById('flow-active').addEventListener('change', (e) => {
             if (this.currentFlow) {
@@ -239,6 +258,7 @@ class EventFlowEditor {
                     <span class="flow-item-status ${flow.active ? 'active' : 'inactive'}" title="${flow.active ? 'Active' : 'Inactive'}">
                         ${flow.active ? '✓' : '◯'}
                     </span>
+                    <span class="flow-item-export" data-id="${flow.id}" title="Export Flow" style="cursor: pointer; margin: 0 5px;">📤</span>
                     <span class="flow-item-delete" data-id="${flow.id}" title="Delete Flow">×</span>
                 </div>
             `;
@@ -248,6 +268,11 @@ class EventFlowEditor {
             item.addEventListener('click', (e) => {
                 if (e.target.classList.contains('flow-item-delete') || (e.target.parentElement && e.target.parentElement.classList.contains('flow-item-delete'))) {
                     return; // Deletion handled by its own listener
+                }
+                if (e.target.classList.contains('flow-item-export')) {
+                    e.stopPropagation();
+                    this.exportFlow(flow.id);
+                    return;
                 }
                 if (e.target.classList.contains('drag-handle')) return; // Don't load if interacting with drag handle
                 this.loadFlow(item.dataset.id);
@@ -579,6 +604,209 @@ class EventFlowEditor {
         }
     }
 
+    async exportFlow(flowId) {
+        try {
+            const flow = await this.eventFlowSystem.getFlowById(flowId);
+            if (!flow) {
+                alert('Flow not found');
+                return;
+            }
+
+            // Add metadata
+            const exportData = {
+                ...flow,
+                exportDate: new Date().toISOString(),
+                version: '1.0.0',
+                exportedBy: 'Social Stream Event Flow System'
+            };
+
+            // Create downloadable JSON
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // Create download link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `flow_${flow.name.replace(/[^a-z0-9]/gi, '_')}_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show success notification
+            this.showNotification(`Flow "${flow.name}" exported successfully!`, 'success');
+        } catch (error) {
+            console.error('Error exporting flow:', error);
+            alert('Failed to export flow. Check console for details.');
+        }
+    }
+
+    async exportAllFlows() {
+        try {
+            const flows = await this.eventFlowSystem.getAllFlows();
+            if (!flows || flows.length === 0) {
+                alert('No flows to export');
+                return;
+            }
+
+            // Add metadata
+            const exportData = {
+                flows: flows,
+                exportDate: new Date().toISOString(),
+                version: '1.0.0',
+                exportedBy: 'Social Stream Event Flow System',
+                totalFlows: flows.length
+            };
+
+            // Create downloadable JSON
+            const jsonStr = JSON.stringify(exportData, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            // Create download link
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `all_flows_backup_${Date.now()}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            // Show success notification
+            this.showNotification(`Exported ${flows.length} flow(s) successfully!`, 'success');
+        } catch (error) {
+            console.error('Error exporting flows:', error);
+            alert('Failed to export flows. Check console for details.');
+        }
+    }
+
+    async importFlows() {
+        try {
+            // Create file input
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.multiple = true;
+
+            input.onchange = async (e) => {
+                const files = e.target.files;
+                if (!files || files.length === 0) return;
+
+                let totalImported = 0;
+                let totalFailed = 0;
+
+                for (const file of files) {
+                    try {
+                        const text = await file.text();
+                        const data = JSON.parse(text);
+
+                        // Check if it's a single flow or multiple flows
+                        if (data.flows && Array.isArray(data.flows)) {
+                            // Multiple flows export
+                            for (const flow of data.flows) {
+                                const success = await this.importSingleFlow(flow);
+                                if (success) totalImported++;
+                                else totalFailed++;
+                            }
+                        } else {
+                            // Single flow export
+                            const success = await this.importSingleFlow(data);
+                            if (success) totalImported++;
+                            else totalFailed++;
+                        }
+                    } catch (error) {
+                        console.error('Error importing file:', file.name, error);
+                        totalFailed++;
+                    }
+                }
+
+                // Refresh flow list
+                await this.loadFlowList();
+                
+                // Notify background to reload
+                this.notifyParentToReloadFlows();
+
+                // Show results
+                let message = `Import complete! `;
+                if (totalImported > 0) message += `${totalImported} flow(s) imported. `;
+                if (totalFailed > 0) message += `${totalFailed} flow(s) failed.`;
+                
+                this.showNotification(message, totalFailed > 0 ? 'warning' : 'success');
+            };
+
+            input.click();
+        } catch (error) {
+            console.error('Error in import process:', error);
+            alert('Failed to import flows. Check console for details.');
+        }
+    }
+
+    async importSingleFlow(flowData) {
+        try {
+            // Remove metadata fields
+            const cleanFlow = { ...flowData };
+            delete cleanFlow.exportDate;
+            delete cleanFlow.version;
+            delete cleanFlow.exportedBy;
+            delete cleanFlow.totalFlows;
+            
+            // Clear ID to force new one
+            delete cleanFlow.id;
+            
+            // Check for duplicate names
+            const flows = await this.eventFlowSystem.getAllFlows();
+            const existingNames = flows.map(f => f.name);
+            
+            if (existingNames.includes(cleanFlow.name)) {
+                // Add suffix to make unique
+                let suffix = 1;
+                const baseName = cleanFlow.name;
+                while (existingNames.includes(`${baseName} (${suffix})`)) {
+                    suffix++;
+                }
+                cleanFlow.name = `${baseName} (${suffix})`;
+            }
+
+            // Import the flow
+            const savedFlow = await this.eventFlowSystem.saveFlow(cleanFlow);
+            return savedFlow !== null;
+        } catch (error) {
+            console.error('Error importing single flow:', error);
+            return false;
+        }
+    }
+
+    showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `flow-notification ${type}`;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#FF9800' : '#2196F3'};
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            notification.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
+    }
+
     renderFlow() {
         const canvas = document.getElementById('flow-canvas');
         canvas.innerHTML = '';
@@ -712,6 +940,47 @@ class EventFlowEditor {
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
                 case 'userRole': return `Role: ${node.config.role || 'Any'}`;
                 case 'hasDonation': return 'Has donation';
+                case 'randomChance': {
+                    const prob = Math.round((node.config.probability || 0.1) * 100);
+                    const cooldown = node.config.cooldownMs ? ` (${node.config.cooldownMs/1000}s cooldown)` : '';
+                    const rateLimit = node.config.maxPerMinute ? ` max ${node.config.maxPerMinute}/min` : '';
+                    return `${prob}% chance${cooldown}${rateLimit}`;
+                }
+                case 'messageProperties': {
+                    const req = node.config.requiredProperties?.length || 0;
+                    const forb = node.config.forbiddenProperties?.length || 0;
+                    const mode = node.config.requireAll ? 'ALL' : 'ANY';
+                    if (req && forb) return `${mode}: ${req} required, ${forb} forbidden`;
+                    if (req) return `${mode}: ${req} required`;
+                    if (forb) return `${forb} forbidden`;
+                    return 'No filters set';
+                }
+                case 'counter': {
+                    const name = node.config.counterName || 'default';
+                    const thresh = node.config.threshold || 10;
+                    const mode = node.config.triggerMode === 'multiple' ? `Every ${thresh}` : 
+                                  node.config.triggerMode === 'gte' ? `≥${thresh}` : `=${thresh}`;
+                    const scope = node.config.scope === 'global' ? ' (global)' : 
+                                  node.config.scope === 'perSource' ? ' (per source)' : 
+                                  node.config.scope === 'perUserPerSource' ? ' (per user/source)' : ' (per user)';
+                    return `${name}: ${mode}${scope}`;
+                }
+                case 'userPool': {
+                    const name = node.config.poolName || 'default';
+                    const max = node.config.maxUsers || 10;
+                    const keyword = node.config.requireEntry ? ` "${node.config.entryKeyword || '!enter'}"` : '';
+                    const scope = node.config.scope === 'perSource' ? ' (per source)' : '';
+                    return `${name}: ${max} users${keyword}${scope}`;
+                }
+                case 'accumulator': {
+                    const name = node.config.accumulatorName || 'default';
+                    const op = node.config.operation || 'sum';
+                    const thresh = node.config.threshold || 100;
+                    const mode = node.config.triggerMode === 'lte' ? '≤' : 
+                                  node.config.triggerMode === 'exact' ? '=' : '≥';
+                    const prop = node.config.propertyName || 'amount';
+                    return `${name}: ${op}(${prop}) ${mode}${thresh}`;
+                }
                 case 'customJs': return 'Custom JS';
                 default: return `${this.getNodeTitle(node)}`;
             }
@@ -731,10 +1000,24 @@ class EventFlowEditor {
                         case 'trimWhitespace': return 'Trim whitespace';
                         default: return 'Remove text';
                     }
-                case 'relay': return `To: ${node.config.destination || 'All'}`;
+                case 'setProperty': {
+                    const prop = node.config.property || 'nameColor';
+                    const value = node.config.value || '';
+                    const shortValue = value.length > 15 ? value.substring(0, 15) + '...' : value;
+                    return `${prop} = ${shortValue}`;
+                }
+                case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
+                case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
                 case 'addPoints': return `Add: ${node.config.amount || 100} points`;
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
+                case 'obsChangeScene': return `Scene: ${node.config.sceneName || 'Not set'}`;
+                case 'obsToggleSource': return `${node.config.sourceName || 'Source'}: ${node.config.visible ? 'Show' : 'Hide'}`;
+                case 'obsStartRecording': return 'Start Recording';
+                case 'obsStopRecording': return 'Stop Recording';
+                case 'obsStartStreaming': return 'Start Streaming';
+                case 'obsStopStreaming': return 'Stop Streaming';
+                case 'obsReplayBuffer': return 'Save Replay Buffer';
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'logic') { // NEW
@@ -1048,6 +1331,11 @@ class EventFlowEditor {
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
                 case 'hasDonation': node.config = {}; break;
+                case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
+                case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true }; break;
+                case 'counter': node.config = { counterName: 'default', scope: 'perUser', threshold: 10, triggerMode: 'exact', autoReset: false, countType: 'messages', resetAfterMs: 0 }; break;
+                case 'userPool': node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' }; break;
+                case 'accumulator': node.config = { accumulatorName: 'default', threshold: 100, propertyName: 'amount', operation: 'sum', triggerMode: 'gte', autoReset: false, scope: 'global', resetAfterMs: 0 }; break;
                 case 'customJs': node.config = { code: 'return message.chatmessage.includes("test");' }; break;
             }
         } else if (type === 'action') {
@@ -1066,9 +1354,11 @@ class EventFlowEditor {
                 case 'removeText':
 					node.config = { removeType: 'removeCommand' }; break;
                 case 'setProperty':
-					node.config = { property: 'chatmessage', value: 'new value' }; break;
+					node.config = { property: 'nameColor', value: '#FF0000' }; break;
+                case 'sendMessage':
+					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0 }; break;
                 case 'relay':
-					node.config = { destination: 'discord', template: '[{source}] {username}: {message}', toAll: false, timeout: 0 }; break;
+					node.config = { destination: 'all', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true }; break;
                 case 'addPoints':
@@ -1088,6 +1378,27 @@ class EventFlowEditor {
 					break;
 				case 'delay':
 					node.config = { delayMs: 1000 };
+					break;
+				case 'obsChangeScene':
+					node.config = { sceneName: 'Scene 1' };
+					break;
+				case 'obsToggleSource':
+					node.config = { sourceName: 'Source 1', visible: true };
+					break;
+				case 'obsStartRecording':
+					node.config = {};
+					break;
+				case 'obsStopRecording':
+					node.config = {};
+					break;
+				case 'obsStartStreaming':
+					node.config = {};
+					break;
+				case 'obsStopStreaming':
+					node.config = {};
+					break;
+				case 'obsReplayBuffer':
+					node.config = {};
 					break;
             }
         } else if (type === 'logic') { // NEW
@@ -1364,6 +1675,380 @@ class EventFlowEditor {
 			case 'hasDonation': // Trigger type
 				html += `<p class="property-help">Fires if the message includes donation information.</p>`;
 				break;
+			case 'randomChance': // Random trigger
+				const probability = (node.config.probability || 0.1) * 100; // Convert to percentage for display
+				html += `
+					<div class="property-group">
+						<label class="property-label">Trigger Probability</label>
+						<div style="display: flex; align-items: center; gap: 10px;">
+							<input type="range" class="property-input" id="prop-probability-slider" 
+								min="0" max="100" step="1" value="${probability}">
+							<input type="number" class="property-input" id="prop-probability" 
+								min="0" max="100" step="1" value="${probability}" style="width: 80px;">
+							<span>%</span>
+						</div>
+						<div class="property-help">Chance this trigger will fire (0-100%)</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Cooldown (seconds)</label>
+						<input type="number" class="property-input" id="prop-cooldownMs" 
+							value="${(node.config.cooldownMs || 0) / 1000}" min="0" step="0.1">
+						<div class="property-help">Minimum time between triggers (0 = no cooldown)</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Max Triggers Per Minute</label>
+						<input type="number" class="property-input" id="prop-maxPerMinute" 
+							value="${node.config.maxPerMinute || 0}" min="0" step="1">
+						<div class="property-help">Rate limit (0 = unlimited)</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" id="prop-requireMessage" 
+								${node.config.requireMessage !== false ? 'checked' : ''}>
+							Require Chat Message
+						</label>
+						<div class="property-help">Only trigger on actual chat messages (skip metadata updates)</div>
+					</div>
+					
+					<details style="margin-top: 10px;">
+						<summary style="cursor: pointer; color: #888;">Use Cases & Examples</summary>
+						<div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+							<strong>Giveaway Entry:</strong> 10% chance, 1 per minute max<br>
+							<strong>Random Highlight:</strong> 5% chance, 30 second cooldown<br>
+							<strong>A/B Testing:</strong> 50% chance for feature A vs B<br>
+							<strong>Lottery System:</strong> 1% chance, once per user<br>
+							<strong>Random Moderation:</strong> 20% chance to check for spam
+						</div>
+					</details>`;
+				break;
+			case 'messageProperties': // Advanced property filter
+				const messagePropertyOptions = [
+					// Basic Properties
+					{ value: 'chatname', label: 'Username (chatname)', group: 'Basic' },
+					{ value: 'chatmessage', label: 'Chat Message', group: 'Basic' },
+					{ value: 'type', label: 'Source Type', group: 'Basic' },
+					{ value: 'sourceName', label: 'Channel Name', group: 'Basic' },
+					// Media Properties
+					{ value: 'chatimg', label: 'User Avatar', group: 'Media' },
+					{ value: 'contentimg', label: 'Content Image/Video', group: 'Media' },
+					{ value: 'sourceImg', label: 'Source Image', group: 'Media' },
+					// Status Properties
+					{ value: 'moderator', label: 'Is Moderator', group: 'Status' },
+					{ value: 'admin', label: 'Is Admin', group: 'Status' },
+					{ value: 'bot', label: 'Is Bot', group: 'Status' },
+					{ value: 'verified', label: 'Is Verified', group: 'Status' },
+					// Event Properties
+					{ value: 'hasDonation', label: 'Has Donation', group: 'Events' },
+					{ value: 'membership', label: 'Membership Event', group: 'Events' },
+					{ value: 'event', label: 'Is Event', group: 'Events' },
+					{ value: 'title', label: 'Event Title', group: 'Events' },
+					{ value: 'subtitle', label: 'Event Subtitle', group: 'Events' },
+					// Interaction Properties
+					{ value: 'question', label: 'Is Question', group: 'Interaction' },
+					{ value: 'private', label: 'Is Private', group: 'Interaction' },
+					{ value: 'highKarma', label: 'High Karma (≥0.7)', group: 'Interaction' },
+					{ value: 'lowKarma', label: 'Low Karma (<0.3)', group: 'Interaction' },
+					// Metadata
+					{ value: 'userid', label: 'User ID', group: 'Metadata' },
+					{ value: 'textonly', label: 'Text Only', group: 'Metadata' },
+					{ value: 'chatbadges', label: 'Has Badges', group: 'Metadata' }
+				];
+				
+				const currentRequired = node.config.requiredProperties || [];
+				const currentForbidden = node.config.forbiddenProperties || [];
+				const requireAll = node.config.requireAll !== false;
+				
+				// Group properties by category
+				const groupedProps = {};
+				messagePropertyOptions.forEach(opt => {
+					if (!groupedProps[opt.group]) groupedProps[opt.group] = [];
+					groupedProps[opt.group].push(opt);
+				});
+				
+				html += `
+					<div class="property-group">
+						<label class="property-label">Logic Mode</label>
+						<div style="margin: 5px 0;">
+							<label><input type="radio" name="prop-requireAll" value="true" ${requireAll ? 'checked' : ''}> Require ALL checked properties</label><br>
+							<label><input type="radio" name="prop-requireAll" value="false" ${!requireAll ? 'checked' : ''}> Require ANY checked property</label>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">✓ Required Properties (must exist)</label>
+						<div style="max-height: 200px; overflow-y: auto; border: 1px solid #444; padding: 5px; background: #2a2a2a;">`;
+				
+				Object.entries(groupedProps).forEach(([group, props]) => {
+					html += `<div style="margin-bottom: 10px;"><strong style="color: #888;">${group}:</strong><br>`;
+					props.forEach(prop => {
+						const isChecked = currentRequired.includes(prop.value);
+						html += `<label style="display: block; margin: 2px 0;">
+							<input type="checkbox" class="prop-required" value="${prop.value}" ${isChecked ? 'checked' : ''}> 
+							${prop.label}
+						</label>`;
+					});
+					html += `</div>`;
+				});
+				
+				html += `</div></div>
+					<div class="property-group">
+						<label class="property-label">✗ Forbidden Properties (must NOT exist)</label>
+						<div style="max-height: 200px; overflow-y: auto; border: 1px solid #444; padding: 5px; background: #2a2a2a;">`;
+				
+				Object.entries(groupedProps).forEach(([group, props]) => {
+					html += `<div style="margin-bottom: 10px;"><strong style="color: #888;">${group}:</strong><br>`;
+					props.forEach(prop => {
+						const isChecked = currentForbidden.includes(prop.value);
+						html += `<label style="display: block; margin: 2px 0;">
+							<input type="checkbox" class="prop-forbidden" value="${prop.value}" ${isChecked ? 'checked' : ''}> 
+							${prop.label}
+						</label>`;
+					});
+					html += `</div>`;
+				});
+				
+				html += `</div></div>
+					<div class="property-help">Filter messages based on presence/absence of properties. Required properties must exist and be truthy. Forbidden properties must not exist or be falsy.</div>`;
+				break;
+			case 'counter': // Counter trigger
+				html += `
+					<div class="property-group">
+						<label class="property-label">Counter Name</label>
+						<input type="text" class="property-input" id="prop-counterName" 
+							value="${node.config.counterName || 'default'}" placeholder="e.g., donations, messages">
+						<div class="property-help">Unique identifier for this counter</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Scope</label>
+						<select class="property-input" id="prop-scope">
+							<option value="global" ${node.config.scope === 'global' ? 'selected' : ''}>Global (all users)</option>
+							<option value="perUser" ${(!node.config.scope || node.config.scope === 'perUser') ? 'selected' : ''}>Per User</option>
+							<option value="perSource" ${node.config.scope === 'perSource' ? 'selected' : ''}>Per Source/Channel</option>
+							<option value="perUserPerSource" ${node.config.scope === 'perUserPerSource' ? 'selected' : ''}>Per User Per Source</option>
+						</select>
+						<div class="property-help">How to track counts - globally or separately</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Trigger At Count</label>
+						<input type="number" class="property-input" id="prop-threshold" 
+							value="${node.config.threshold || 10}" min="1" step="1">
+						<div class="property-help">Fire when counter reaches this value</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Trigger Mode</label>
+						<select class="property-input" id="prop-triggerMode">
+							<option value="exact" ${(!node.config.triggerMode || node.config.triggerMode === 'exact') ? 'selected' : ''}>Exact match (==)</option>
+							<option value="multiple" ${node.config.triggerMode === 'multiple' ? 'selected' : ''}>Every multiple of</option>
+							<option value="gte" ${node.config.triggerMode === 'gte' ? 'selected' : ''}>Greater or equal (≥)</option>
+						</select>
+						<div class="property-help">When to trigger based on count value</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" id="prop-autoReset" 
+								${node.config.autoReset ? 'checked' : ''}>
+							Auto-reset after trigger
+						</label>
+						<div class="property-help">Reset counter to 0 after triggering</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Count What</label>
+						<select class="property-input" id="prop-countType">
+							<option value="messages" ${(!node.config.countType || node.config.countType === 'messages') ? 'selected' : ''}>All messages</option>
+							<option value="property" ${node.config.countType === 'property' ? 'selected' : ''}>Messages with property</option>
+							<option value="value" ${node.config.countType === 'value' ? 'selected' : ''}>Property value sum</option>
+						</select>
+					</div>
+					
+					<div class="property-group" id="counter-property-group" style="${node.config.countType === 'property' || node.config.countType === 'value' ? '' : 'display: none;'}">
+						<label class="property-label">Property Name</label>
+						<input type="text" class="property-input" id="prop-propertyName" 
+							value="${node.config.propertyName || 'hasDonation'}" placeholder="e.g., hasDonation, amount">
+						<div class="property-help">Which property to check/sum</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Reset After (seconds)</label>
+						<input type="number" class="property-input" id="prop-resetAfterMs" 
+							value="${(node.config.resetAfterMs || 0) / 1000}" min="0" step="1">
+						<div class="property-help">Auto-reset after inactivity (0 = never)</div>
+					</div>
+					
+					<details style="margin-top: 10px;">
+						<summary style="cursor: pointer; color: #888;">Use Cases & Examples</summary>
+						<div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+							<strong>10th Message Reward:</strong> Every 10 messages from a user<br>
+							<strong>Donation Goal:</strong> Sum donations until $100 reached<br>
+							<strong>Spam Detection:</strong> User sends 5+ messages in 30 seconds<br>
+							<strong>Engagement Milestone:</strong> 100 total chat messages<br>
+							<strong>Command Cooldown:</strong> Allow command every 3 uses
+						</div>
+					</details>`;
+				break;
+			case 'userPool': // User Pool trigger
+				html += `
+					<div class="property-group">
+						<label class="property-label">Pool Name</label>
+						<input type="text" class="property-input" id="prop-poolName" 
+							value="${node.config.poolName || 'default'}" placeholder="e.g., giveaway, raffle">
+						<div class="property-help">Unique identifier for this pool</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Maximum Users</label>
+						<input type="number" class="property-input" id="prop-maxUsers" 
+							value="${node.config.maxUsers || 10}" min="1" step="1">
+						<div class="property-help">Trigger when pool reaches this many users</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" id="prop-requireEntry" 
+								${node.config.requireEntry !== false ? 'checked' : ''}>
+							Require Entry Keyword
+						</label>
+						<div class="property-help">Users must use keyword to enter pool</div>
+					</div>
+					
+					<div class="property-group" id="pool-keyword-group" style="${node.config.requireEntry !== false ? '' : 'display: none;'}">
+						<label class="property-label">Entry Keyword</label>
+						<input type="text" class="property-input" id="prop-entryKeyword" 
+							value="${node.config.entryKeyword || '!enter'}" placeholder="e.g., !enter, !join">
+						<div class="property-help">Keyword users must type to enter pool</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Scope</label>
+						<select class="property-input" id="prop-scope">
+							<option value="global" ${(!node.config.scope || node.config.scope === 'global') ? 'selected' : ''}>Global (all sources)</option>
+							<option value="perSource" ${node.config.scope === 'perSource' ? 'selected' : ''}>Per Source/Channel</option>
+						</select>
+						<div class="property-help">Track pool globally or per channel</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" id="prop-resetOnFull" 
+								${node.config.resetOnFull ? 'checked' : ''}>
+							Auto-reset when full
+						</label>
+						<div class="property-help">Clear pool after triggering</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" id="prop-allowReentry" 
+								${node.config.allowReentry ? 'checked' : ''}>
+							Allow Re-entry
+						</label>
+						<div class="property-help">Let users enter pool multiple times</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Reset After (seconds)</label>
+						<input type="number" class="property-input" id="prop-resetAfterMs" 
+							value="${(node.config.resetAfterMs || 0) / 1000}" min="0" step="1">
+						<div class="property-help">Clear pool after inactivity (0 = never)</div>
+					</div>
+					
+					<details style="margin-top: 10px;">
+						<summary style="cursor: pointer; color: #888;">Use Cases & Examples</summary>
+						<div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+							<strong>Giveaway:</strong> 10 users, !enter keyword, reset on full<br>
+							<strong>Waiting List:</strong> 5 users, no keyword, per source<br>
+							<strong>Team Selection:</strong> 2 teams of 5, different pool names<br>
+							<strong>Raffle:</strong> 100 users, !raffle keyword, allow reentry<br>
+							<strong>Queue System:</strong> 3 users, !next keyword, auto-reset
+						</div>
+					</details>`;
+				break;
+			case 'accumulator': // Accumulator trigger
+				html += `
+					<div class="property-group">
+						<label class="property-label">Accumulator Name</label>
+						<input type="text" class="property-input" id="prop-accumulatorName" 
+							value="${node.config.accumulatorName || 'default'}" placeholder="e.g., donations, points">
+						<div class="property-help">Unique identifier for this accumulator</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Operation</label>
+						<select class="property-input" id="prop-operation">
+							<option value="sum" ${(!node.config.operation || node.config.operation === 'sum') ? 'selected' : ''}>Sum</option>
+							<option value="avg" ${node.config.operation === 'avg' ? 'selected' : ''}>Average</option>
+							<option value="max" ${node.config.operation === 'max' ? 'selected' : ''}>Maximum</option>
+							<option value="min" ${node.config.operation === 'min' ? 'selected' : ''}>Minimum</option>
+							<option value="count" ${node.config.operation === 'count' ? 'selected' : ''}>Count</option>
+						</select>
+						<div class="property-help">How to accumulate values</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Property Name</label>
+						<input type="text" class="property-input" id="prop-propertyName" 
+							value="${node.config.propertyName || 'amount'}" placeholder="e.g., amount, donationAmount">
+						<div class="property-help">Message property to accumulate</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Trigger Condition</label>
+						<div style="display: flex; gap: 10px; align-items: center;">
+							<select class="property-input" id="prop-triggerMode" style="width: auto;">
+								<option value="gte" ${(!node.config.triggerMode || node.config.triggerMode === 'gte') ? 'selected' : ''}>≥ Greater or equal</option>
+								<option value="exact" ${node.config.triggerMode === 'exact' ? 'selected' : ''}>= Exactly equal</option>
+								<option value="lte" ${node.config.triggerMode === 'lte' ? 'selected' : ''}>≤ Less or equal</option>
+							</select>
+							<input type="number" class="property-input" id="prop-threshold" 
+								value="${node.config.threshold || 100}" min="0" step="1" style="width: 100px;">
+						</div>
+						<div class="property-help">Trigger when accumulated value meets condition</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Scope</label>
+						<select class="property-input" id="prop-scope">
+							<option value="global" ${(!node.config.scope || node.config.scope === 'global') ? 'selected' : ''}>Global (all users)</option>
+							<option value="perUser" ${node.config.scope === 'perUser' ? 'selected' : ''}>Per User</option>
+							<option value="perSource" ${node.config.scope === 'perSource' ? 'selected' : ''}>Per Source/Channel</option>
+							<option value="perUserPerSource" ${node.config.scope === 'perUserPerSource' ? 'selected' : ''}>Per User Per Source</option>
+						</select>
+						<div class="property-help">Track accumulation globally or separately</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" id="prop-autoReset" 
+								${node.config.autoReset ? 'checked' : ''}>
+							Auto-reset after trigger
+						</label>
+						<div class="property-help">Reset accumulator to 0 after triggering</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Reset After (seconds)</label>
+						<input type="number" class="property-input" id="prop-resetAfterMs" 
+							value="${(node.config.resetAfterMs || 0) / 1000}" min="0" step="1">
+						<div class="property-help">Auto-reset after inactivity (0 = never)</div>
+					</div>
+					
+					<details style="margin-top: 10px;">
+						<summary style="cursor: pointer; color: #888;">Use Cases & Examples</summary>
+						<div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+							<strong>Donation Goal:</strong> Sum donations until $100 reached<br>
+							<strong>Average Viewer Time:</strong> Track average time property<br>
+							<strong>Peak Viewers:</strong> Track maximum viewer count<br>
+							<strong>Minimum Bid:</strong> Track lowest bid amount<br>
+							<strong>Total Messages:</strong> Count all messages (operation: count)
+						</div>
+					</details>`;
+				break;
 			// --- Custom JS Trigger ---
 			case 'customJs': // Assuming 'customJs' can be a trigger, action, or logic type based on context
 				if (node.type === 'trigger') {
@@ -1428,15 +2113,135 @@ class EventFlowEditor {
 							</div>`;
 				}
 				break;
-			case 'setProperty':
-				html += `<div class="property-group"><label class="property-label">Property Name</label><input type="text" class="property-input" id="prop-propertyName" value="${node.config.property || 'chatmessage'}"><div class="property-help">e.g., chatmessage, userColor, customFlag</div></div>
-						 <div class="property-group"><label class="property-label">Property Value</label><input type="text" class="property-input" id="prop-propertyValue" value="${node.config.value || ''}"><div class="property-help">The new value for the property. Can be string, number, or boolean.</div></div>`;
+			case 'setProperty': {
+				const commonProperties = [
+					{ value: 'custom', label: '-- Custom Property --' },
+					{ value: 'nameColor', label: 'Name Color', type: 'color' },
+					{ value: 'backgroundColor', label: 'Background Color', type: 'color' },
+					{ value: 'textColor', label: 'Text Color', type: 'color' },
+					{ value: 'chatmessage', label: 'Chat Message', type: 'text' },
+					{ value: 'chatname', label: 'Username', type: 'text' },
+					{ value: 'chatimg', label: 'Avatar URL', type: 'url' },
+					{ value: 'sourceImg', label: 'Source Icon URL', type: 'url' },
+					{ value: 'mod', label: 'Is Moderator', type: 'boolean' },
+					{ value: 'vip', label: 'Is VIP', type: 'boolean' },
+					{ value: 'verified', label: 'Is Verified', type: 'boolean' },
+					{ value: 'bot', label: 'Is Bot', type: 'boolean' }
+				];
+				
+				const selectedProp = commonProperties.find(p => p.value === node.config.property);
+				const isCustom = !selectedProp || node.config.property === 'custom';
+				const propType = selectedProp?.type || 'text';
+				
+				html += `
+					<div class="property-group">
+						<label class="property-label">Property to Set</label>
+						<select class="property-input" id="prop-property-select">
+							${commonProperties.map(prop => 
+								`<option value="${prop.value}" ${node.config.property === prop.value ? 'selected' : ''}>
+									${prop.label}
+								</option>`
+							).join('')}
+						</select>
+					</div>
+					
+					<div class="property-group" id="custom-property-name" style="${isCustom ? '' : 'display: none;'}">
+						<label class="property-label">Custom Property Name</label>
+						<input type="text" class="property-input" id="prop-property" 
+							value="${isCustom ? (node.config.property || '') : ''}" 
+							placeholder="e.g., customBadge, priority">
+						<div class="property-help">Enter the exact property name</div>
+					</div>
+					
+					<div class="property-group">
+						<label class="property-label">Value</label>`;
+				
+				// Different input types based on property type
+				if (propType === 'color' && node.config.property !== 'custom') {
+					const colorPresets = [
+						{ color: '#FF0000', name: 'Red' },
+						{ color: '#00FF00', name: 'Green' },
+						{ color: '#0000FF', name: 'Blue' },
+						{ color: '#FFFF00', name: 'Yellow' },
+						{ color: '#FF00FF', name: 'Magenta' },
+						{ color: '#00FFFF', name: 'Cyan' },
+						{ color: '#FFA500', name: 'Orange' },
+						{ color: '#800080', name: 'Purple' },
+						{ color: '#FFC0CB', name: 'Pink' },
+						{ color: '#FFFFFF', name: 'White' },
+						{ color: '#000000', name: 'Black' },
+						{ color: '#808080', name: 'Gray' }
+					];
+					
+					html += `
+						<div style="display: flex; gap: 10px; align-items: center;">
+							<input type="color" class="property-input" id="prop-value-color" 
+								value="${node.config.value?.startsWith('#') ? node.config.value : '#FF0000'}" 
+								style="width: 60px; height: 35px;">
+							<input type="text" class="property-input" id="prop-value" 
+								value="${node.config.value || '#FF0000'}" 
+								placeholder="#FF0000 or red or {source}_color"
+								style="flex: 1;">
+						</div>
+						<div class="property-help">Pick a color, use hex code, color name, or template like "{source}_color"</div>
+						<div style="margin-top: 10px;">
+							<label class="property-label">Quick Colors:</label>
+							<div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+								${colorPresets.map(preset => 
+									`<button type="button" class="color-preset-btn" 
+										data-color="${preset.color}" 
+										style="background: ${preset.color}; width: 30px; height: 30px; border: 1px solid #555; cursor: pointer; border-radius: 4px;"
+										title="${preset.name}"></button>`
+								).join('')}
+							</div>
+						</div>`;
+				} else if (propType === 'boolean') {
+					html += `
+						<select class="property-input" id="prop-value">
+							<option value="true" ${node.config.value === true || node.config.value === 'true' ? 'selected' : ''}>True</option>
+							<option value="false" ${node.config.value === false || node.config.value === 'false' ? 'selected' : ''}>False</option>
+						</select>
+						<div class="property-help">Set boolean flag</div>`;
+				} else {
+					html += `
+						<input type="text" class="property-input" id="prop-value" 
+							value="${node.config.value || ''}" 
+							placeholder="${propType === 'url' ? 'https://example.com/image.png' : 'Enter value or use {username}, {source}, etc.'}">
+						<div class="property-help">Can use template variables: {username}, {source}, {message}, {type}</div>`;
+				}
+				
+				html += `</div>
+					
+					<details style="margin-top: 10px;">
+						<summary style="cursor: pointer; color: #888;">Examples & Use Cases</summary>
+						<div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+							<strong>Platform Colors:</strong><br>
+							• YouTube → nameColor: #FF0000<br>
+							• Twitch → nameColor: #9146FF<br>
+							• Discord → nameColor: #5865F2<br><br>
+							
+							<strong>Role-based Colors:</strong><br>
+							• Moderators → backgroundColor: #FFD700<br>
+							• VIPs → nameColor: #FF69B4<br>
+							• Donors → textColor: #00FF00<br><br>
+							
+							<strong>Dynamic Values:</strong><br>
+							• Property: chatimg<br>
+							• Value: https://api.example.com/avatar/{username}.png<br><br>
+							
+							<strong>Conditional Styling:</strong><br>
+							• Use with "From Source" trigger<br>
+							• Set different colors per platform
+						</div>
+					</details>`;
 				break;
-			case 'relay':
-				// Common platforms list - matching the source types from content scripts
-				const platforms = [
-					{ value: '', label: 'All Platforms' },
-					{ value: 'reply', label: '↩️ Reply to Sender Only' },
+			}
+			case 'sendMessage':
+				// Send Message allows sending generated messages (e.g., thank you messages, announcements)
+				const sendDestinations = [
+					{ value: 'reply', label: '↩️ Reply to Source' },
+					{ value: 'all', label: '📢 All Platforms (Including Source)' },
+					{ value: 'all-except-source', label: '🔄 All Platforms (Excluding Source)' },
 					{ value: 'youtube', label: 'YouTube' },
 					{ value: 'youtubeshorts', label: 'YouTube Shorts' },
 					{ value: 'discord', label: 'Discord' },
@@ -1467,22 +2272,72 @@ class EventFlowEditor {
 					{ value: 'custom', label: '🔧 Custom...' }
 				];
 				
-				const isCustom = node.config.destination && !platforms.find(p => p.value === node.config.destination);
-				const currentDestination = isCustom ? 'custom' : (node.config.destination || '');
+				const isCustomSend = node.config.destination && !sendDestinations.find(p => p.value === node.config.destination);
+				const currentSendDestination = isCustomSend ? 'custom' : (node.config.destination || 'reply');
 				
 				html += `<div class="property-group">
-							<label class="property-label">Destination</label>
+							<label class="property-label">Send To</label>
 							<select class="property-input" id="prop-destination-select">
-								${platforms.map(p => `<option value="${p.value}" ${currentDestination === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
+								${sendDestinations.map(p => `<option value="${p.value}" ${currentSendDestination === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
+							</select>
+							<input type="text" class="property-input" id="prop-destination-custom" 
+								   value="${isCustomSend ? node.config.destination : ''}" 
+								   style="display: ${currentSendDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
+								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
+							<div class="property-help">Send generated messages (e.g., "Thank you" for donations, announcements, bot responses)</div>
+						</div>
+						<div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || 'Thank you {username}!'}</textarea><div class="property-help">Use {username}, {message}, {source} placeholders</div></div>
+						<div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>`;
+				break;
+			case 'relay':
+				// Relay is for forwarding chat messages to other platforms
+				const relayPlatforms = [
+					{ value: '', label: 'All Platforms (Excluding Source)' },
+					{ value: 'youtube', label: 'YouTube' },
+					{ value: 'youtubeshorts', label: 'YouTube Shorts' },
+					{ value: 'discord', label: 'Discord' },
+					{ value: 'twitch', label: 'Twitch' },
+					{ value: 'kick', label: 'Kick' },
+					{ value: 'facebook', label: 'Facebook' },
+					{ value: 'instagram', label: 'Instagram' },
+					{ value: 'instagramlive', label: 'Instagram Live' },
+					{ value: 'tiktok', label: 'TikTok' },
+					{ value: 'x', label: 'X (Twitter)' },
+					{ value: 'rumble', label: 'Rumble' },
+					{ value: 'odysee', label: 'Odysee' },
+					{ value: 'dlive', label: 'DLive' },
+					{ value: 'trovo', label: 'Trovo' },
+					{ value: 'telegram', label: 'Telegram' },
+					{ value: 'whatsapp', label: 'WhatsApp' },
+					{ value: 'zoom', label: 'Zoom' },
+					{ value: 'teams', label: 'Teams' },
+					{ value: 'slack', label: 'Slack' },
+					{ value: 'vimeo', label: 'Vimeo' },
+					{ value: 'afreecatv', label: 'AfreecaTV' },
+					{ value: 'bigo', label: 'Bigo Live' },
+					{ value: 'bilibili', label: 'Bilibili' },
+					{ value: 'chzzk', label: 'CHZZK' },
+					{ value: 'nicovideo', label: 'Niconico' },
+					{ value: 'picarto', label: 'Picarto' },
+					{ value: 'chaturbate', label: 'Chaturbate' },
+					{ value: 'custom', label: '🔧 Custom...' }
+				];
+				
+				const isCustomRelayDest = node.config.destination && !relayPlatforms.find(p => p.value === node.config.destination);
+				const currentDestination = isCustomRelayDest ? 'custom' : (node.config.destination || '');
+				
+				html += `<div class="property-group">
+							<label class="property-label">Relay Destination</label>
+							<select class="property-input" id="prop-destination-select">
+								${relayPlatforms.map(p => `<option value="${p.value}" ${currentDestination === p.value ? 'selected' : ''}>${p.label}</option>`).join('')}
 							</select>
 							<input type="text" class="property-input" id="prop-destination-custom" 
 								   value="${isCustom ? node.config.destination : ''}" 
 								   style="display: ${currentDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
 								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
-							<div class="property-help">Select platform or use custom for specific sources/channels</div>
+							<div class="property-help">Relays chat messages to other platforms. Source is always excluded to prevent loops.</div>
 						</div>
 						<div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || '[{source}] {username}: {message}'}</textarea></div>
-						<div class="property-group"><label class="property-label"><input type="checkbox" id="prop-toAll" ${node.config.toAll ? 'checked' : ''}> Send to all instances/tabs of destination</label></div>
 						<div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>`;
 				break;
 			case 'webhook':
@@ -1547,6 +2402,86 @@ class EventFlowEditor {
 							 <input type="number" class="property-input" id="prop-delayMs" value="${node.config.delayMs || 1000}" min="0" step="100">
 							 <div class="property-help">Enter the delay time in milliseconds (1000ms = 1 second)</div>
 						 </div>`;
+				break;
+			
+			// OBS Browser Source API Actions
+			case 'obsChangeScene':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Scene Name</label>
+						<input type="text" class="property-input" id="prop-sceneName" 
+							value="${node.config.sceneName || ''}" placeholder="e.g., Game Scene, Starting Soon">
+						<div class="property-help">The exact name of the OBS scene to switch to</div>
+					</div>
+					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+						<strong>⚠️ OBS Permission Required:</strong><br>
+						Set your Browser Source permissions to "Advanced Access Level" to enable OBS control.
+					</div>`;
+				break;
+				
+			case 'obsToggleSource':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName" 
+							value="${node.config.sourceName || ''}" placeholder="e.g., Webcam, Alert Box">
+						<div class="property-help">The exact name of the OBS source to toggle</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Visibility</label>
+						<select class="property-input" id="prop-visible">
+							<option value="true" ${node.config.visible === true ? 'selected' : ''}>Show</option>
+							<option value="false" ${node.config.visible === false ? 'selected' : ''}>Hide</option>
+							<option value="toggle" ${node.config.visible === 'toggle' ? 'selected' : ''}>Toggle</option>
+						</select>
+						<div class="property-help">Set whether to show, hide, or toggle the source</div>
+					</div>`;
+				break;
+				
+			case 'obsStartRecording':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Starts recording in OBS. Make sure recording is configured in OBS settings.</div>
+					</div>
+					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+						<strong>⚠️ OBS Permission Required:</strong><br>
+						Browser Source needs "Advanced Access Level" permissions.
+					</div>`;
+				break;
+				
+			case 'obsStopRecording':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Stops the current recording in OBS.</div>
+					</div>`;
+				break;
+				
+			case 'obsStartStreaming':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Starts streaming in OBS. Make sure stream settings are configured.</div>
+					</div>
+					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+						<strong>⚠️ OBS Permission Required:</strong><br>
+						Browser Source needs "Advanced Access Level" permissions.
+					</div>`;
+				break;
+				
+			case 'obsStopStreaming':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Stops the current stream in OBS.</div>
+					</div>`;
+				break;
+				
+			case 'obsReplayBuffer':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Saves the replay buffer. Replay buffer must be enabled and running in OBS.</div>
+					</div>
+					<div class="property-group" style="background: #4CAF50; padding: 10px; border-radius: 4px;">
+						<strong>💡 Tip:</strong> Perfect for saving highlight moments triggered by donations or special messages!
+					</div>`;
 				break;
 			case 'playAudioClip':
 				html += `<div class="property-group">
@@ -1641,6 +2576,243 @@ class EventFlowEditor {
                 nodeData.config.destination = e.target.value;
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for randomChance probability slider
+        if (nodeData.triggerType === 'randomChance' || nodeData.type === 'trigger' && this.selectedNode?.triggerType === 'randomChance') {
+            const slider = document.getElementById('prop-probability-slider');
+            const input = document.getElementById('prop-probability');
+            const cooldownInput = document.getElementById('prop-cooldownMs');
+            
+            if (slider && input) {
+                // Sync slider and input
+                slider.addEventListener('input', (e) => {
+                    const percentage = parseFloat(e.target.value);
+                    input.value = percentage;
+                    nodeData.config.probability = percentage / 100; // Store as decimal
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+                
+                input.addEventListener('input', (e) => {
+                    const percentage = Math.min(100, Math.max(0, parseFloat(e.target.value) || 0));
+                    slider.value = percentage;
+                    input.value = percentage;
+                    nodeData.config.probability = percentage / 100; // Store as decimal
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+            
+            // Convert cooldown from seconds to milliseconds
+            if (cooldownInput) {
+                cooldownInput.addEventListener('input', (e) => {
+                    const seconds = parseFloat(e.target.value) || 0;
+                    nodeData.config.cooldownMs = seconds * 1000; // Convert to ms
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+        }
+
+        // Special handling for messageProperties checkboxes
+        if (nodeData.triggerType === 'messageProperties' || nodeData.type === 'trigger' && this.selectedNode?.triggerType === 'messageProperties') {
+            // Handle requireAll radio buttons
+            document.querySelectorAll('input[name="prop-requireAll"]').forEach(radio => {
+                radio.addEventListener('change', (e) => {
+                    nodeData.config.requireAll = e.target.value === 'true';
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            });
+            
+            // Handle required properties checkboxes
+            document.querySelectorAll('.prop-required').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    if (!nodeData.config.requiredProperties) nodeData.config.requiredProperties = [];
+                    
+                    if (e.target.checked) {
+                        if (!nodeData.config.requiredProperties.includes(e.target.value)) {
+                            nodeData.config.requiredProperties.push(e.target.value);
+                        }
+                    } else {
+                        nodeData.config.requiredProperties = nodeData.config.requiredProperties.filter(p => p !== e.target.value);
+                    }
+                    
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            });
+            
+            // Handle forbidden properties checkboxes
+            document.querySelectorAll('.prop-forbidden').forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    if (!nodeData.config.forbiddenProperties) nodeData.config.forbiddenProperties = [];
+                    
+                    if (e.target.checked) {
+                        if (!nodeData.config.forbiddenProperties.includes(e.target.value)) {
+                            nodeData.config.forbiddenProperties.push(e.target.value);
+                        }
+                    } else {
+                        nodeData.config.forbiddenProperties = nodeData.config.forbiddenProperties.filter(p => p !== e.target.value);
+                    }
+                    
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            });
+        }
+
+        // Special handling for counter trigger
+        if (nodeData.triggerType === 'counter' || nodeData.type === 'trigger' && this.selectedNode?.triggerType === 'counter') {
+            const countTypeSelect = document.getElementById('prop-countType');
+            const propertyGroup = document.getElementById('counter-property-group');
+            
+            if (countTypeSelect) {
+                countTypeSelect.addEventListener('change', (e) => {
+                    nodeData.config.countType = e.target.value;
+                    
+                    // Show/hide property name field based on count type
+                    if (propertyGroup) {
+                        if (e.target.value === 'property' || e.target.value === 'value') {
+                            propertyGroup.style.display = '';
+                        } else {
+                            propertyGroup.style.display = 'none';
+                        }
+                    }
+                    
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+            
+            // Handle reset after conversion from seconds to milliseconds
+            const resetAfterInput = document.getElementById('prop-resetAfterMs');
+            if (resetAfterInput) {
+                resetAfterInput.addEventListener('input', (e) => {
+                    const seconds = parseFloat(e.target.value) || 0;
+                    nodeData.config.resetAfterMs = seconds * 1000; // Convert to ms
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+        }
+        
+        // Special handling for userPool trigger
+        if (nodeData.triggerType === 'userPool' || nodeData.type === 'trigger' && this.selectedNode?.triggerType === 'userPool') {
+            const requireEntryCheckbox = document.getElementById('prop-requireEntry');
+            const keywordGroup = document.getElementById('pool-keyword-group');
+            const resetAfterInput = document.getElementById('prop-resetAfterMs');
+            
+            if (requireEntryCheckbox) {
+                requireEntryCheckbox.addEventListener('change', (e) => {
+                    nodeData.config.requireEntry = e.target.checked;
+                    
+                    // Show/hide keyword field
+                    if (keywordGroup) {
+                        keywordGroup.style.display = e.target.checked ? '' : 'none';
+                    }
+                    
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+            
+            // Handle reset after conversion from seconds to milliseconds
+            if (resetAfterInput) {
+                resetAfterInput.addEventListener('input', (e) => {
+                    const seconds = parseFloat(e.target.value) || 0;
+                    nodeData.config.resetAfterMs = seconds * 1000; // Convert to ms
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+        }
+        
+        // Special handling for accumulator trigger
+        if (nodeData.triggerType === 'accumulator' || nodeData.type === 'trigger' && this.selectedNode?.triggerType === 'accumulator') {
+            const resetAfterInput = document.getElementById('prop-resetAfterMs');
+            
+            // Handle reset after conversion from seconds to milliseconds
+            if (resetAfterInput) {
+                resetAfterInput.addEventListener('input', (e) => {
+                    const seconds = parseFloat(e.target.value) || 0;
+                    nodeData.config.resetAfterMs = seconds * 1000; // Convert to ms
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+        }
+
+        // Special handling for setProperty action
+        if (nodeData.actionType === 'setProperty' || nodeData.type === 'action' && this.selectedNode?.actionType === 'setProperty') {
+            const propertySelect = document.getElementById('prop-property-select');
+            const customPropertyDiv = document.getElementById('custom-property-name');
+            const customPropertyInput = document.getElementById('prop-property');
+            const valueInput = document.getElementById('prop-value');
+            const colorInput = document.getElementById('prop-value-color');
+            
+            // Handle property dropdown change
+            if (propertySelect) {
+                propertySelect.addEventListener('change', (e) => {
+                    const selectedValue = e.target.value;
+                    
+                    // Show/hide custom property name input
+                    if (customPropertyDiv) {
+                        customPropertyDiv.style.display = selectedValue === 'custom' ? '' : 'none';
+                    }
+                    
+                    // Update the property value
+                    if (selectedValue !== 'custom') {
+                        nodeData.config.property = selectedValue;
+                    } else if (customPropertyInput) {
+                        nodeData.config.property = customPropertyInput.value || 'customProperty';
+                    }
+                    
+                    // Refresh the properties panel to show appropriate value input
+                    this.markUnsavedChanges(true);
+                    this.showNodeProperties(nodeData);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+            
+            // Handle custom property name input
+            if (customPropertyInput) {
+                customPropertyInput.addEventListener('input', (e) => {
+                    nodeData.config.property = e.target.value;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+            
+            // Handle color picker
+            if (colorInput) {
+                colorInput.addEventListener('input', (e) => {
+                    const color = e.target.value;
+                    if (valueInput) {
+                        valueInput.value = color;
+                    }
+                    nodeData.config.value = color;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+            
+            // Handle color preset buttons
+            document.querySelectorAll('.color-preset-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const color = e.target.dataset.color;
+                    if (valueInput) {
+                        valueInput.value = color;
+                    }
+                    if (colorInput) {
+                        colorInput.value = color;
+                    }
+                    nodeData.config.value = color;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
             });
         }
 

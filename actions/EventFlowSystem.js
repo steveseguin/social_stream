@@ -10,6 +10,8 @@ class EventFlowSystem {
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
         this.sanitizeRelay = options.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || null;
+		this.messageStore = options.messageStore || {}; // Share message store from background.js
+		this.handleMessageStore = options.handleMessageStore || null; // Function to handle message storage
 		
         //console.log('[EventFlowSystem Constructor] Initialized with:');
         //console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
@@ -17,6 +19,8 @@ class EventFlowSystem {
         //console.log('  - pointsSystem:', this.pointsSystem ? 'System provided' : 'NULL');
         //console.log('  - sanitizeRelay:', this.sanitizeRelay ? 'Function provided' : 'NULL - Relay will not work!');
         //console.log('  - checkExactDuplicateAlreadyRelayed:', this.checkExactDuplicateAlreadyRelayed ? 'Function provided' : 'NULL - Relay will not work!');
+        //console.log('  - messageStore:', this.messageStore ? 'Object provided' : 'NULL - Duplicate detection may not work!');
+        //console.log('  - handleMessageStore:', this.handleMessageStore ? 'Function provided' : 'NULL');
         
         this.initPromise = this.initDatabase();
     }
@@ -630,6 +634,382 @@ class EventFlowSystem {
                     return false;
                 }
                 
+            case 'counter': {
+                const {
+                    threshold = 10,
+                    countType = 'global', // 'global', 'perUser', 'perSource'
+                    resetOnTrigger = true,
+                    resetAfterMs = 0, // Auto-reset after time (0 = never)
+                    countProperty = null // Count specific property (e.g., 'hasDonation')
+                } = config;
+                
+                // Initialize state
+                if (!this.triggerState) this.triggerState = {};
+                const counterId = `counter_${triggerNode.id}`;
+                
+                if (!this.triggerState[counterId]) {
+                    this.triggerState[counterId] = {
+                        counts: {},
+                        lastReset: Date.now()
+                    };
+                }
+                
+                const counterState = this.triggerState[counterId];
+                const now = Date.now();
+                
+                // Auto-reset if time expired
+                if (resetAfterMs > 0 && now - counterState.lastReset > resetAfterMs) {
+                    counterState.counts = {};
+                    counterState.lastReset = now;
+                }
+                
+                // Determine counter key
+                let counterKey = 'global';
+                if (countType === 'perUser' && message.userid) {
+                    counterKey = `user_${message.userid}`;
+                } else if (countType === 'perSource' && message.type) {
+                    counterKey = `source_${message.type}`;
+                }
+                
+                // Skip if counting specific property that doesn't exist
+                if (countProperty && !message[countProperty]) {
+                    return false;
+                }
+                
+                // Increment counter
+                if (!counterState.counts[counterKey]) {
+                    counterState.counts[counterKey] = 0;
+                }
+                counterState.counts[counterKey]++;
+                
+                // Check threshold
+                const triggered = counterState.counts[counterKey] >= threshold;
+                
+                if (triggered && resetOnTrigger) {
+                    counterState.counts[counterKey] = 0;
+                }
+                
+                return triggered;
+            }
+            
+            case 'userPool': {
+                const poolConfig = {
+                    poolName: trigger.config.poolName || 'default',
+                    maxUsers: trigger.config.maxUsers || 10,
+                    requireEntry: trigger.config.requireEntry !== false, // Default true
+                    entryKeyword: trigger.config.entryKeyword || '!enter',
+                    resetOnFull: trigger.config.resetOnFull || false,
+                    resetAfterMs: trigger.config.resetAfterMs || 0,
+                    allowReentry: trigger.config.allowReentry || false,
+                    scope: trigger.config.scope || 'global' // global, perSource
+                };
+                
+                // Initialize pool storage if needed
+                if (!this.userPools) {
+                    this.userPools = {};
+                }
+                
+                // Create pool key based on scope
+                const poolKey = poolConfig.scope === 'perSource' 
+                    ? `${poolConfig.poolName}_${message.type || 'unknown'}`
+                    : poolConfig.poolName;
+                
+                // Initialize this pool if it doesn't exist
+                if (!this.userPools[poolKey]) {
+                    this.userPools[poolKey] = {
+                        users: [],
+                        lastActivity: Date.now(),
+                        resetTimeout: null
+                    };
+                }
+                
+                const pool = this.userPools[poolKey];
+                const userId = message.userid || message.chatname;
+                
+                // Clear reset timeout if pool is active
+                if (pool.resetTimeout) {
+                    clearTimeout(pool.resetTimeout);
+                    pool.resetTimeout = null;
+                }
+                
+                // Check if pool should reset due to inactivity
+                if (poolConfig.resetAfterMs > 0 && 
+                    Date.now() - pool.lastActivity > poolConfig.resetAfterMs) {
+                    pool.users = [];
+                }
+                
+                // Update last activity
+                pool.lastActivity = Date.now();
+                
+                // Check if user needs to enter the pool
+                if (poolConfig.requireEntry) {
+                    const messageText = (message.chatmessage || '').toLowerCase().trim();
+                    const keyword = poolConfig.entryKeyword.toLowerCase();
+                    
+                    if (!messageText.includes(keyword)) {
+                        return false; // User hasn't entered with keyword
+                    }
+                }
+                
+                // Check if user is already in pool
+                const userInPool = pool.users.includes(userId);
+                
+                // Handle reentry logic
+                if (userInPool && !poolConfig.allowReentry) {
+                    return false; // User already in pool and reentry not allowed
+                }
+                
+                // Add user to pool if not already there
+                if (!userInPool) {
+                    pool.users.push(userId);
+                }
+                
+                // Check if pool is full
+                const poolFull = pool.users.length >= poolConfig.maxUsers;
+                
+                if (poolFull) {
+                    // Trigger when pool becomes full
+                    if (poolConfig.resetOnFull) {
+                        // Schedule reset after triggering
+                        setTimeout(() => {
+                            pool.users = [];
+                        }, 100);
+                    }
+                    return true;
+                }
+                
+                // Set up inactivity reset if configured
+                if (poolConfig.resetAfterMs > 0) {
+                    pool.resetTimeout = setTimeout(() => {
+                        pool.users = [];
+                    }, poolConfig.resetAfterMs);
+                }
+                
+                return false;
+            }
+            
+            case 'accumulator': {
+                const accConfig = {
+                    accumulatorName: trigger.config.accumulatorName || 'default',
+                    threshold: trigger.config.threshold || 100,
+                    propertyName: trigger.config.propertyName || 'amount',
+                    operation: trigger.config.operation || 'sum', // sum, avg, max, min
+                    triggerMode: trigger.config.triggerMode || 'gte', // gte, exact, lte
+                    autoReset: trigger.config.autoReset || false,
+                    scope: trigger.config.scope || 'global', // global, perUser, perSource
+                    resetAfterMs: trigger.config.resetAfterMs || 0
+                };
+                
+                // Initialize accumulator storage if needed
+                if (!this.accumulators) {
+                    this.accumulators = {};
+                }
+                
+                // Create accumulator key based on scope
+                let accKey = accConfig.accumulatorName;
+                if (accConfig.scope === 'perUser') {
+                    accKey += `_${message.userid || message.chatname}`;
+                } else if (accConfig.scope === 'perSource') {
+                    accKey += `_${message.type || 'unknown'}`;
+                } else if (accConfig.scope === 'perUserPerSource') {
+                    accKey += `_${message.userid || message.chatname}_${message.type || 'unknown'}`;
+                }
+                
+                // Initialize this accumulator if it doesn't exist
+                if (!this.accumulators[accKey]) {
+                    this.accumulators[accKey] = {
+                        value: 0,
+                        count: 0,
+                        max: -Infinity,
+                        min: Infinity,
+                        lastUpdate: Date.now(),
+                        resetTimeout: null
+                    };
+                }
+                
+                const acc = this.accumulators[accKey];
+                
+                // Clear reset timeout if accumulator is active
+                if (acc.resetTimeout) {
+                    clearTimeout(acc.resetTimeout);
+                    acc.resetTimeout = null;
+                }
+                
+                // Check if accumulator should reset due to inactivity
+                if (accConfig.resetAfterMs > 0 && 
+                    Date.now() - acc.lastUpdate > accConfig.resetAfterMs) {
+                    acc.value = 0;
+                    acc.count = 0;
+                    acc.max = -Infinity;
+                    acc.min = Infinity;
+                }
+                
+                // Get the value to accumulate
+                const valueToAccumulate = parseFloat(message[accConfig.propertyName]) || 0;
+                
+                // Only accumulate if there's a value
+                if (valueToAccumulate !== 0 || accConfig.operation === 'count') {
+                    acc.lastUpdate = Date.now();
+                    acc.count++;
+                    
+                    switch (accConfig.operation) {
+                        case 'sum':
+                            acc.value += valueToAccumulate;
+                            break;
+                        case 'avg':
+                            acc.value = ((acc.value * (acc.count - 1)) + valueToAccumulate) / acc.count;
+                            break;
+                        case 'max':
+                            acc.max = Math.max(acc.max, valueToAccumulate);
+                            acc.value = acc.max;
+                            break;
+                        case 'min':
+                            acc.min = Math.min(acc.min, valueToAccumulate);
+                            acc.value = acc.min;
+                            break;
+                        case 'count':
+                            acc.value = acc.count;
+                            break;
+                    }
+                }
+                
+                // Check if trigger condition is met
+                let accTriggered = false;
+                switch (accConfig.triggerMode) {
+                    case 'gte':
+                        accTriggered = acc.value >= accConfig.threshold;
+                        break;
+                    case 'exact':
+                        accTriggered = acc.value === accConfig.threshold;
+                        break;
+                    case 'lte':
+                        accTriggered = acc.value <= accConfig.threshold;
+                        break;
+                }
+                
+                // Reset if triggered and auto-reset is enabled
+                if (accTriggered && accConfig.autoReset) {
+                    setTimeout(() => {
+                        acc.value = 0;
+                        acc.count = 0;
+                        acc.max = -Infinity;
+                        acc.min = Infinity;
+                    }, 100);
+                }
+                
+                // Set up inactivity reset if configured
+                if (accConfig.resetAfterMs > 0) {
+                    acc.resetTimeout = setTimeout(() => {
+                        acc.value = 0;
+                        acc.count = 0;
+                        acc.max = -Infinity;
+                        acc.min = Infinity;
+                    }, accConfig.resetAfterMs);
+                }
+                
+                return accTriggered;
+            }
+                
+            case 'randomChance': {
+                const { 
+                    probability = 0.5, 
+                    cooldownMs = 0,
+                    maxPerMinute = 0,
+                    requireMessage = true 
+                } = config;
+                
+                // Skip if no message when required
+                if (requireMessage && (!message.chatmessage || !message.chatmessage.trim())) {
+                    return false;
+                }
+                
+                // Initialize trigger state if needed
+                if (!this.triggerState) this.triggerState = {};
+                const triggerId = `random_${triggerNode.id}`;
+                
+                if (!this.triggerState[triggerId]) {
+                    this.triggerState[triggerId] = {
+                        lastTriggered: 0,
+                        minuteCounter: [],
+                        cooldownUntil: 0
+                    };
+                }
+                
+                const state = this.triggerState[triggerId];
+                const now = Date.now();
+                
+                // Check cooldown
+                if (cooldownMs > 0 && now < state.cooldownUntil) {
+                    return false;
+                }
+                
+                // Check rate limit (max per minute)
+                if (maxPerMinute > 0) {
+                    // Clean old entries
+                    state.minuteCounter = state.minuteCounter.filter(t => now - t < 60000);
+                    
+                    if (state.minuteCounter.length >= maxPerMinute) {
+                        return false;
+                    }
+                }
+                
+                // Random check
+                const randomValue = Math.random();
+                const triggered = randomValue < probability;
+                
+                if (triggered) {
+                    // Update state
+                    state.lastTriggered = now;
+                    state.cooldownUntil = now + cooldownMs;
+                    if (maxPerMinute > 0) {
+                        state.minuteCounter.push(now);
+                    }
+                }
+                
+                return triggered;
+            }
+                
+            case 'messageProperties': {
+                const { requiredProperties = [], forbiddenProperties = [], requireAll = true } = config;
+                
+                // Check forbidden properties first (immediate fail)
+                for (const prop of forbiddenProperties) {
+                    // Special handling for karma thresholds
+                    if (prop === 'lowKarma' && message.karma !== undefined && message.karma < 0.3) {
+                        return false;
+                    }
+                    // Check if property exists and is truthy (not false, null, undefined, 0, or empty string)
+                    if (prop !== 'lowKarma' && message[prop]) {
+                        return false; // Forbidden property exists and is truthy
+                    }
+                }
+                
+                // If no required properties, pass
+                if (requiredProperties.length === 0) return true;
+                
+                // Check required properties
+                const checkProperty = (prop) => {
+                    // Special handling for karma thresholds
+                    if (prop === 'highKarma') {
+                        return message.karma !== undefined && message.karma >= 0.7;
+                    }
+                    // Special handling for arrays
+                    if (prop === 'chatbadges') {
+                        return Array.isArray(message.chatbadges) && message.chatbadges.length > 0;
+                    }
+                    // Check if property exists and is truthy
+                    return message[prop] && message[prop] !== false;
+                };
+                
+                if (requireAll) {
+                    // ALL required properties must exist
+                    return requiredProperties.every(checkProperty);
+                } else {
+                    // ANY required property must exist
+                    return requiredProperties.some(checkProperty);
+                }
+            }
+                
             default:
               ////console.log(`[EvaluateTrigger] Unknown triggerType: ${triggerType}`);
                 return false;
@@ -713,9 +1093,22 @@ class EventFlowSystem {
 			break;
                 
             case 'setProperty':
+                // Process value with template variables
+                let processedValue = config.value || '';
+                
+                // Replace template variables if value is a string
+                if (typeof processedValue === 'string') {
+                    processedValue = processedValue.replace(/\{source\}/g, message.type || '');
+                    processedValue = processedValue.replace(/\{type\}/g, message.type || '');
+                    processedValue = processedValue.replace(/\{username\}/g, message.chatname || '');
+                    processedValue = processedValue.replace(/\{chatname\}/g, message.chatname || '');
+                    processedValue = processedValue.replace(/\{message\}/g, message.chatmessage || '');
+                    processedValue = processedValue.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                }
+                
                 result.message = {
                     ...message,
-                    [config.property]: config.value
+                    [config.property]: processedValue
                 };
                 result.modified = true;
                 break;
@@ -775,77 +1168,189 @@ class EventFlowSystem {
                 }
                 break;
                 
-            case 'relay':
+            case 'sendMessage': {
+                //console.log('[SEND MESSAGE - Action] Starting send message action execution');
+                //console.log('[SEND MESSAGE - Action] Config:', config);
+                //console.log('[SEND MESSAGE - Action] Message source:', message.type);
+                
+                // Don't process reflections to prevent loops
+                if (message && message.reflection) {
+                    //console.log('[SEND MESSAGE - Action] Skipping - message is a reflection');
+                    break;
+                }
+                
+                // Skip metadata-only updates (like viewer count updates)
+                if (message && message.meta && !message.chatmessage && !message.chatname) {
+                    //console.log('[SEND MESSAGE - Action] Skipping - metadata-only update');
+                    break;
+                }
+                
+                // Check if we have the required functions
+                if (!this.sendMessageToTabs) {
+                    console.error('[SEND MESSAGE - Action] CRITICAL: sendMessageToTabs is not available!');
+                    break;
+                }
+                
+                // Process template - this can use any message properties, not just chatmessage
+                let processedTemplate = config.template || 'Hello from {source}!';
+                
+                // Replace all occurrences of template variables
+                processedTemplate = processedTemplate.replace(/\{source\}/g, message.type || '');
+                processedTemplate = processedTemplate.replace(/\{type\}/g, message.type || '');
+                processedTemplate = processedTemplate.replace(/\{username\}/g, message.chatname || '');
+                processedTemplate = processedTemplate.replace(/\{chatname\}/g, message.chatname || '');
+                processedTemplate = processedTemplate.replace(/\{message\}/g, message.chatmessage || '');
+                processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                
+                // Sanitize the message
+                let sanitizedSendMessage = this.sanitizeRelay ? this.sanitizeRelay(processedTemplate, false).trim() : processedTemplate.trim();
+                
+                // Check if sanitized message is empty
+                if (!sanitizedSendMessage) {
+                    //console.log('[SEND MESSAGE - Action] Skipping - message empty after processing');
+                    break;
+                }
+                
+                // Build message with reflection flag to prevent loops
+                const sendMsg = {
+                    response: sanitizedSendMessage,
+                    reflection: true  // Mark to prevent loops
+                };
+                
+                // Determine send parameters based on destination config
+                let reverse = false;
+                let relayMode = false;
+                
+                if (config.destination === 'reply') {
+                    // Reply to source: send back to the tab that triggered the event
+                    if (message.tid !== undefined && message.tid !== null) {
+                        sendMsg.tid = message.tid;
+                        reverse = false;  // Don't exclude source, we're replying to it
+                        relayMode = false;  // Not a broadcast
+                        //console.log('[SEND MESSAGE - Action] Mode: Reply to source, tid:', message.tid);
+                    } else {
+                        console.warn('[SEND MESSAGE - Action] Reply mode selected but no tid available');
+                        break;
+                    }
+                } else if (config.destination === 'all') {
+                    // Send to all platforms INCLUDING source
+                    reverse = false;  // Don't exclude any tabs
+                    relayMode = true;  // This is a broadcast
+                    //console.log('[SEND MESSAGE - Action] Mode: Send to all platforms (including source)');
+                } else if (config.destination === 'all-except-source') {
+                    // Send to all platforms EXCLUDING source
+                    reverse = true;  // Exclude source tab
+                    relayMode = true;  // This is a broadcast
+                    if (message.tid) {
+                        sendMsg.tid = message.tid;  // Pass source tid for exclusion
+                    }
+                    //console.log('[SEND MESSAGE - Action] Mode: Send to all platforms (excluding source)');
+                } else if (config.destination) {
+                    // Send to specific platform/destination
+                    sendMsg.destination = config.destination;
+                    reverse = true;  // Exclude source tab by default for platform sends
+                    relayMode = true;  // This is a broadcast
+                    if (message.tid) {
+                        sendMsg.tid = message.tid;  // Pass source tid for exclusion
+                    }
+                    //console.log('[SEND MESSAGE - Action] Mode: Send to platform:', config.destination);
+                }
+                
+                const timeout = config.timeout || 1000;
+                
+                //console.log('[SEND MESSAGE - Action] Calling sendMessageToTabs with:');
+                //console.log('  - message:', sendMsg);
+                //console.log('  - reverse:', reverse);
+                //console.log('  - metadata:', message);
+                //console.log('  - relayMode:', relayMode);
+                //console.log('  - timeout:', timeout);
+                
+                const sendResult = this.sendMessageToTabs(sendMsg, reverse, message, relayMode, false, timeout);
+                //console.log('[SEND MESSAGE - Action] sendMessageToTabs returned:', sendResult);
+                break;
+            }
+                
+            case 'relay': {
                 //console.log('[RELAY DEBUG - Action] Starting relay action execution');
                 //console.log('[RELAY DEBUG - Action] Config:', config);
                 //console.log('[RELAY DEBUG - Action] Message source:', message.type);
-                //console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
                 
-                if (this.sendMessageToTabs && message && !message.reflection) {
-                    // Replace all possible template variables
-                    let processedTemplate = config.template || '[{source}] {username}: {message}';
-                    
-                    // Replace all occurrences of template variables
-                    processedTemplate = processedTemplate.replace(/\{source\}/g, message.type || '');
-                    processedTemplate = processedTemplate.replace(/\{type\}/g, message.type || '');
-                    processedTemplate = processedTemplate.replace(/\{username\}/g, message.chatname || '');
-                    processedTemplate = processedTemplate.replace(/\{chatname\}/g, message.chatname || '');
-                    processedTemplate = processedTemplate.replace(/\{message\}/g, message.chatmessage || '');
-                    processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
-                    
-                    const relayMessage = {
-                        response: processedTemplate
-                    };
-                    
-                    // Handle destination based on config
-                    if (config.destination === 'reply') {
-                        // Reply to sender only - use the original message's tab ID
-                        if (message.tid !== undefined && message.tid !== null) {
-                            relayMessage.tid = message.tid;
-                            //console.log('[RELAY DEBUG - Action] Mode: Reply to sender, tid:', message.tid);
-                        } else {
-                            console.warn('[RELAY DEBUG - Action] Reply mode selected but no tid available in message');
-                            // Can't reply without a tid, so skip this action
-                            break;
-                        }
-                    } else if (config.destination) {
-                        // Send to specific destination
-                        relayMessage.destination = config.destination;
-                        //console.log('[RELAY DEBUG - Action] Mode: Send to specific destination:', config.destination);
-                    } else {
-                        // Send to all platforms (default behavior)
-                        //console.log('[RELAY DEBUG - Action] Mode: Send to all platforms');
-                    }
-                    
-                    //console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
-                    
-                    let result = false;
-                    relayMessage.response = this.sanitizeRelay(relayMessage.response, false).trim();
-                    if (relayMessage.response) {
-                        if (!this.checkExactDuplicateAlreadyRelayed(relayMessage.response, false, relayMessage.tid, false)){
-                            // Adjust parameters based on destination mode
-                            const reverse = config.destination !== 'reply'; // Don't reverse if replying to sender
-                            const relayMode = config.destination !== 'reply'; // Don't use relay mode for replies
-                            const timeout = config.timeout || 1000;
-                            
-                            //console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
-                            //console.log('  - message:', relayMessage);
-                            //console.log('  - reverse:', reverse);
-                            //console.log('  - metadata:', message);
-                            //console.log('  - relayMode:', relayMode);
-                            //console.log('  - antispam:', false);
-                            //console.log('  - timeout:', timeout);
-                            
-                            result = this.sendMessageToTabs(relayMessage, reverse, message, relayMode, false, timeout);
-                        }
-                    }
-                    
-                    //console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
-                } else {
-                    console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
-                    console.error('[RELAY DEBUG - Action] This EventFlowSystem instance:', this);
+                // Relay is strictly for forwarding chat messages - MUST have chatmessage
+                if (!message || !message.chatmessage || !message.chatmessage.trim()) {
+                    //console.log('[RELAY DEBUG - Action] Skipping relay - no chatmessage to relay');
+                    break;
                 }
+                
+                // Don't relay reflections to prevent loops
+                if (message.reflection) {
+                    //console.log('[RELAY DEBUG - Action] Skipping relay - message is a reflection');
+                    break;
+                }
+                
+                // Check if we have required functions
+                if (!this.sendMessageToTabs) {
+                    console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
+                    break;
+                }
+                
+                // Process relay template - focused on forwarding the chat message
+                let relayTemplate = config.template || '[{source}] {username}: {message}';
+                
+                // Replace all occurrences of template variables
+                relayTemplate = relayTemplate.replace(/\{source\}/g, message.type || '');
+                relayTemplate = relayTemplate.replace(/\{type\}/g, message.type || '');
+                relayTemplate = relayTemplate.replace(/\{username\}/g, message.chatname || '');
+                relayTemplate = relayTemplate.replace(/\{chatname\}/g, message.chatname || '');
+                relayTemplate = relayTemplate.replace(/\{message\}/g, message.chatmessage || '');
+                relayTemplate = relayTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                
+                // Sanitize the message
+                let sanitizedRelayMessage = this.sanitizeRelay ? this.sanitizeRelay(relayTemplate, false).trim() : relayTemplate.trim();
+                
+                // Check if sanitized message is empty
+                if (!sanitizedRelayMessage) {
+                    //console.log('[RELAY DEBUG - Action] Skipping relay - message empty after sanitization');
+                    break;
+                }
+                
+                // Build relay message with reflection flag to prevent loops
+                const relayMessage = {
+                    response: sanitizedRelayMessage,
+                    reflection: true  // Mark as relayed to prevent infinite loops
+                };
+                
+                // Relay ALWAYS excludes source (never relay back to where it came from)
+                let reverse = true;  // Always exclude source
+                let relayMode = true;  // Always in relay mode
+                
+                if (config.destination && config.destination !== 'all') {
+                    // Relay to specific platform/destination
+                    relayMessage.destination = config.destination;
+                    //console.log('[RELAY DEBUG - Action] Mode: Relay to specific platform:', config.destination);
+                } else {
+                    // Relay to all platforms (excluding source)
+                    // Pass source tid for exclusion
+                    if (message.tid) {
+                        relayMessage.tid = message.tid;
+                    }
+                    //console.log('[RELAY DEBUG - Action] Mode: Relay to all platforms (excluding source)');
+                }
+                
+                //console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
+                
+                const timeout = config.timeout || 1000;
+                
+                //console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
+                //console.log('  - message:', relayMessage);
+                //console.log('  - reverse:', reverse);
+                //console.log('  - metadata:', message);
+                //console.log('  - relayMode:', relayMode);
+                //console.log('  - timeout:', timeout);
+                
+                const result = this.sendMessageToTabs(relayMessage, reverse, message, relayMode, false, timeout);
+                //console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
                 break;
+            }
                 
             case 'webhook':
 				try {
@@ -1036,6 +1541,105 @@ class EventFlowSystem {
                 if (config.delayMs && typeof config.delayMs === 'number') {
                     await new Promise(resolve => setTimeout(resolve, config.delayMs));
                     //console.log(`[ExecuteAction - delay] Delayed message by ${config.delayMs}ms`);
+                }
+                break;
+            
+            // OBS Browser Source API Actions
+            case 'obsChangeScene':
+                if (config.sceneName) {
+                    const actionPayload = {
+                        actionType: 'obsChangeScene',
+                        sceneName: config.sceneName
+                    };
+                    
+                    if (typeof sendTargetP2P === 'function') {
+                        sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                        console.log('[OBS] Sent scene change to actions page:', config.sceneName);
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available');
+                    }
+                }
+                break;
+                
+            case 'obsToggleSource':
+                if (config.sourceName) {
+                    const actionPayload = {
+                        action: 'obsToggleSource',
+                        sourceName: config.sourceName,
+                        visible: config.visible
+                    };
+                    
+                    if (typeof sendTargetP2P === 'function') {
+                        sendTargetP2P(actionPayload, 'actions');
+                        console.log('[OBS] Sent toggle source to actions page:', config.sourceName, config.visible);
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available');
+                    }
+                }
+                break;
+                
+            case 'obsStartRecording':
+                const startRecordingPayload = {
+                    actionType: 'obsStartRecording'
+                };
+                
+                if (typeof sendTargetP2P === 'function') {
+                    sendTargetP2P({ overlayNinja: startRecordingPayload }, 'actions');
+                    console.log('[OBS] Sent start recording to actions page');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsStopRecording':
+                const stopRecordingPayload = {
+                    actionType: 'obsStopRecording'
+                };
+                
+                if (typeof sendTargetP2P === 'function') {
+                    sendTargetP2P({ overlayNinja: stopRecordingPayload }, 'actions');
+                    console.log('[OBS] Sent stop recording to actions page');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsStartStreaming':
+                const startStreamingPayload = {
+                    actionType: 'obsStartStreaming'
+                };
+                
+                if (typeof sendTargetP2P === 'function') {
+                    sendTargetP2P({ overlayNinja: startStreamingPayload }, 'actions');
+                    console.log('[OBS] Sent start streaming to actions page');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsStopStreaming':
+                const stopStreamingPayload = {
+                    actionType: 'obsStopStreaming'
+                };
+                
+                if (typeof sendTargetP2P === 'function') {
+                    sendTargetP2P({ overlayNinja: stopStreamingPayload }, 'actions');
+                    console.log('[OBS] Sent stop streaming to actions page');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsReplayBuffer':
+                const replayBufferPayload = {
+                    actionType: 'obsReplayBuffer'
+                };
+                
+                if (typeof sendTargetP2P === 'function') {
+                    sendTargetP2P({ overlayNinja: replayBufferPayload }, 'actions');
+                    console.log('[OBS] Sent save replay buffer to actions page');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
                 }
                 break;
                 
