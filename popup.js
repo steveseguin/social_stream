@@ -1604,6 +1604,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
+        else if (response.settings?.openaikey?.textparam1) ttsService = "openai";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -1618,6 +1619,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
+        else if (response.settings?.openaikey?.textparam2) ttsService = "openai";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -1632,6 +1634,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
+        else if (response.settings?.openaikey?.textparam10) ttsService = "openai";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -1868,9 +1871,43 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 					wrapper.style.display = 'none';
 				});
 			 } else if (key == "overlayPreset") {
-				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
-					wrapper.style.display = 'none';
-				});
+				// Update the dock URL to match the saved overlay preset
+				const dockDiv = document.getElementById('dock');
+				const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
+				
+				if (dockDiv && ele.value) {
+					// An overlay is selected, update the URL
+					const overlayUrl = baseURL + ele.value;
+					
+					// Extract existing parameters from current dock URL
+					let existingParams = '';
+					if (dockDiv.raw && dockDiv.raw.includes('?')) {
+						existingParams = dockDiv.raw.split('?')[1];
+					}
+					
+					// Build new URL with overlay
+					let newUrl = overlayUrl;
+					if (existingParams) {
+						newUrl += '?' + existingParams;
+					}
+					
+					// Update the dock URL
+					dockDiv.raw = newUrl;
+					if (dockLink) {
+						dockLink.href = newUrl;
+						dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+					}
+					
+					// Hide classic dock customization options
+					document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+						wrapper.style.display = 'none';
+					});
+				} else {
+					// Show classic dock customization options when no overlay is selected
+					document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+						wrapper.style.display = '';
+					});
+				}
 			 }
         }
     }

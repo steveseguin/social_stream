@@ -5533,7 +5533,7 @@ function initializeSpotify() {
 						membership: "",
 						isRelay: false,
 						type: "spotify",
-						id: "spotify_" + Date.now(),
+						bot: "spotify",
 						timestamp: Date.now()
 					};
 					
@@ -9009,7 +9009,7 @@ async function applyBotActions(data, tab = false) {
 					membership: "",
 					isRelay: false,
 					type: "spotify",
-					id: "spotify_response_" + Date.now(),
+					bot: "spotify",
 					timestamp: Date.now()
 				};
 				
@@ -9081,7 +9081,6 @@ async function applyBotActions(data, tab = false) {
 						isRelay: false,
 						type: "spotify",
 						bot: "spotify",
-						id: "spotify_response_" + Date.now(),
 						timestamp: Date.now()
 					};
 					sendToDestinations(botMessage);
