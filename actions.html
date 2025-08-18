@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Actions Overlay - Social Stream Ninja</title>
+    <script src="thirdparty/obs-websocket.min.js"></script>
     <style>
 		body, html {
 			margin: 0;
@@ -192,13 +193,50 @@
         var mediaContainer = document.getElementById('fullscreen-media-container');
         var statusMessage = document.getElementById('status-message');
         var obsStudio = null;
+        var obsWebSocket = null;
         var audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
         // Attempt to connect to OBS Studio API if available
         if (window.obsstudio) {
             obsStudio = window.obsstudio;
             console.log('OBS Studio API found.');
-        } 
+        }
+        
+        // Initialize OBS WebSocket connection
+        async function initOBSWebSocket() {
+            if (typeof OBSWebSocket === 'undefined') {
+                console.warn('OBS WebSocket library not loaded');
+                return;
+            }
+            
+            // Get OBS WebSocket settings from URL parameters
+            const wsUrl = urlParams.get('obsws') || urlParams.get('obswebsocket') || 'ws://localhost:4455';
+            const wsPassword = urlParams.get('obspw') || urlParams.get('obspassword') || '';
+            
+            // Only try to connect if password is provided
+            if (!wsPassword) {
+                console.log('OBS WebSocket password not provided. Use ?obspw=yourpassword in URL to enable.');
+                return;
+            }
+            
+            obsWebSocket = new OBSWebSocket();
+            
+            try {
+                const { obsWebSocketVersion, negotiatedRpcVersion } = await obsWebSocket.connect(wsUrl, wsPassword);
+                console.log(`Connected to OBS WebSocket v${obsWebSocketVersion} (RPC ${negotiatedRpcVersion})`);
+                
+                // Test the connection
+                const version = await obsWebSocket.call('GetVersion');
+                console.log('OBS Studio Version:', version.obsVersion);
+            } catch (error) {
+                console.warn('Failed to connect to OBS WebSocket:', error.message);
+                console.log('Make sure OBS WebSocket is enabled in OBS Tools -> WebSocket Server Settings');
+                obsWebSocket = null;
+            }
+        }
+        
+        // Try to connect to OBS WebSocket on page load
+        setTimeout(initOBSWebSocket, 1000); 
 
         // Function to show session ID modal
         function showSessionModal() {
@@ -458,21 +496,141 @@
                     
                 // OBS Browser Source API Actions
                 case 'obsChangeScene':
-                    if (obsStudio && payload.sceneName) {
-                        try {
-                            const result = obsStudio.setCurrentScene(payload.sceneName);
-                            // Check if it returns a Promise or is synchronous
-                            if (result && typeof result.then === 'function') {
-                                result.then(() => {})
-                                      .catch(err => console.error("[OBS] Error changing scene:", err));
+                    if (payload.sceneName) {
+                        // Try OBS WebSocket first, then fall back to Browser Source API
+                        if (obsWebSocket) {
+                            obsWebSocket.call('SetCurrentProgramScene', { sceneName: payload.sceneName })
+                                .then(() => console.log(`[OBS WebSocket] Changed scene to ${payload.sceneName}`))
+                                .catch(err => console.error("[OBS WebSocket] Error changing scene:", err));
+                        } else if (obsStudio) {
+                            try {
+                                const result = obsStudio.setCurrentScene(payload.sceneName);
+                                if (result && typeof result.then === 'function') {
+                                    result.then(() => {})
+                                          .catch(err => console.error("[OBS] Error changing scene:", err));
+                                }
+                            } catch (err) {
+                                console.error("[OBS] Error changing scene:", err);
                             }
-                        } catch (err) {
-                            console.error("[OBS] Error changing scene:", err);
+                        } else {
+                            console.warn("[OBS] No API available (WebSocket or Browser Source)");
                         }
-                    } else if (!obsStudio) {
-                        console.warn("[OBS] API not available");
                     } else {
                         console.warn("[OBS] Scene name not provided");
+                    }
+                    break;
+                
+                case 'obsToggleSource':
+                    if (payload.sourceName && obsWebSocket) {
+                        // Get current scene to find the source
+                        obsWebSocket.call('GetCurrentProgramScene')
+                            .then(async (data) => {
+                                const sceneName = data.currentProgramSceneName;
+                                
+                                // Get the current visibility state
+                                try {
+                                    const sceneItemId = await obsWebSocket.call('GetSceneItemId', {
+                                        sceneName: sceneName,
+                                        sourceName: payload.sourceName
+                                    });
+                                    
+                                    let enabled = payload.visible;
+                                    if (payload.visible === 'toggle' || payload.visible === undefined) {
+                                        // Get current state to toggle
+                                        const itemState = await obsWebSocket.call('GetSceneItemEnabled', {
+                                            sceneName: sceneName,
+                                            sceneItemId: sceneItemId.sceneItemId
+                                        });
+                                        enabled = !itemState.sceneItemEnabled;
+                                    }
+                                    
+                                    // Set the visibility
+                                    await obsWebSocket.call('SetSceneItemEnabled', {
+                                        sceneName: sceneName,
+                                        sceneItemId: sceneItemId.sceneItemId,
+                                        sceneItemEnabled: enabled
+                                    });
+                                    
+                                    console.log(`[OBS WebSocket] Source '${payload.sourceName}' set to ${enabled ? 'visible' : 'hidden'}`);
+                                } catch (err) {
+                                    // More user-friendly error message
+                                    if (err.message && err.message.includes('No scene items were found')) {
+                                        console.warn(`[OBS WebSocket] Source '${payload.sourceName}' not found in scene '${sceneName}'`);
+                                    } else {
+                                        console.warn(`[OBS WebSocket] Could not toggle source '${payload.sourceName}':`, err.message || err);
+                                    }
+                                }
+                            })
+                            .catch(err => console.error("[OBS WebSocket] Error getting current scene:", err));
+                    } else if (!obsWebSocket) {
+                        console.warn("[OBS] WebSocket not connected - source toggle requires OBS WebSocket");
+                    } else {
+                        console.warn("[OBS] Source name not provided");
+                    }
+                    break;
+                
+                case 'obsSetSourceFilter':
+                    if (payload.sourceName && payload.filterName && obsWebSocket) {
+                        const enabled = payload.enabled === 'toggle' ? undefined : 
+                                      (payload.enabled === true || payload.enabled === 'true');
+                        
+                        if (enabled === undefined) {
+                            // Toggle the filter
+                            obsWebSocket.call('GetSourceFilterEnabled', {
+                                sourceName: payload.sourceName,
+                                filterName: payload.filterName
+                            })
+                            .then(async (state) => {
+                                await obsWebSocket.call('SetSourceFilterEnabled', {
+                                    sourceName: payload.sourceName,
+                                    filterName: payload.filterName,
+                                    filterEnabled: !state.filterEnabled
+                                });
+                                console.log(`[OBS WebSocket] Filter '${payload.filterName}' toggled`);
+                            })
+                            .catch(err => console.error("[OBS WebSocket] Error toggling filter:", err));
+                        } else {
+                            // Set specific state
+                            obsWebSocket.call('SetSourceFilterEnabled', {
+                                sourceName: payload.sourceName,
+                                filterName: payload.filterName,
+                                filterEnabled: enabled
+                            })
+                            .then(() => console.log(`[OBS WebSocket] Filter '${payload.filterName}' set to ${enabled ? 'enabled' : 'disabled'}`))
+                            .catch(err => console.error("[OBS WebSocket] Error setting filter:", err));
+                        }
+                    } else if (!obsWebSocket) {
+                        console.warn("[OBS] WebSocket not connected - filter toggle requires OBS WebSocket");
+                    }
+                    break;
+                
+                case 'obsMuteSource':
+                    if (payload.sourceName && obsWebSocket) {
+                        const muted = payload.muted === 'toggle' ? undefined : 
+                                    (payload.muted === true || payload.muted === 'true');
+                        
+                        if (muted === undefined) {
+                            // Toggle mute state
+                            obsWebSocket.call('GetInputMute', { inputName: payload.sourceName })
+                                .then(async (state) => {
+                                    await obsWebSocket.call('SetInputMute', {
+                                        inputName: payload.sourceName,
+                                        inputMuted: !state.inputMuted
+                                    });
+                                    console.log(`[OBS WebSocket] Source '${payload.sourceName}' mute toggled`);
+                                })
+                                .catch(err => console.error("[OBS WebSocket] Error toggling mute:", err));
+                        } else {
+                            // Set specific mute state
+                            obsWebSocket.call('SetInputMute', {
+                                inputName: payload.sourceName,
+                                inputMuted: muted
+                            })
+                            .then(() => console.log(`[OBS WebSocket] Source '${payload.sourceName}' ${muted ? 'muted' : 'unmuted'}`))
+                            .catch(err => console.error("[OBS WebSocket] Error setting mute:", err));
+                        }
+                    } else if (!obsWebSocket) {
+                        console.warn("[OBS] WebSocket not connected - mute toggle requires OBS WebSocket");
                     }
                     break;
                 

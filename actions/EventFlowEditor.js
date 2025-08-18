@@ -66,6 +66,9 @@ class EventFlowEditor {
 			{ id: 'playAudioClip', name: '🔊 Play Audio Clip' },
 			{ id: 'delay', name: '⏱️ Delay' },
 			{ id: 'obsChangeScene', name: '🎬 OBS: Change Scene' },
+			{ id: 'obsToggleSource', name: '👁️ OBS: Toggle Source' },
+			{ id: 'obsSetSourceFilter', name: '🎨 OBS: Toggle Filter' },
+			{ id: 'obsMuteSource', name: '🔇 OBS: Mute/Unmute Audio' },
 			{ id: 'obsStartRecording', name: '🔴 OBS: Start Recording' },
 			{ id: 'obsStopRecording', name: '⏹️ OBS: Stop Recording' },
 			{ id: 'obsStartStreaming', name: '📡 OBS: Start Streaming' },
@@ -1150,6 +1153,9 @@ class EventFlowEditor {
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
                 case 'obsChangeScene': return `Scene: ${node.config.sceneName || 'Not set'}`;
+                case 'obsToggleSource': return `${node.config.sourceName || 'Source'}: ${node.config.visible === false ? 'Hide' : node.config.visible === true ? 'Show' : 'Toggle'}`;
+                case 'obsSetSourceFilter': return `Filter: ${node.config.filterName || 'Not set'}`;
+                case 'obsMuteSource': return `${node.config.sourceName || 'Source'}: ${node.config.muted === true ? 'Mute' : node.config.muted === false ? 'Unmute' : 'Toggle'}`;
                 case 'obsStartRecording': return 'Start Recording';
                 case 'obsStopRecording': return 'Stop Recording';
                 case 'obsStartStreaming': return 'Start Streaming';
@@ -1537,6 +1543,15 @@ class EventFlowEditor {
 					break;
 				case 'obsChangeScene':
 					node.config = { sceneName: 'Scene 1' };
+					break;
+				case 'obsToggleSource':
+					node.config = { sourceName: 'Source 1', visible: 'toggle' };
+					break;
+				case 'obsSetSourceFilter':
+					node.config = { sourceName: 'Source 1', filterName: 'Filter 1', enabled: 'toggle' };
+					break;
+				case 'obsMuteSource':
+					node.config = { sourceName: 'Audio Source', muted: 'toggle' };
 					break;
 				case 'obsStartRecording':
 					node.config = {};
@@ -2667,6 +2682,84 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Set your Browser Source permissions to "Advanced Access Level" to enable OBS control.
+					</div>`;
+				break;
+				
+			case 'obsToggleSource':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName" 
+							value="${node.config.sourceName || ''}" placeholder="e.g., Webcam, Alert Box">
+						<div class="property-help">The exact name of the OBS source to toggle</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Visibility</label>
+						<select class="property-input" id="prop-visible">
+							<option value="toggle" ${node.config.visible === 'toggle' ? 'selected' : ''}>Toggle</option>
+							<option value="true" ${node.config.visible === true || node.config.visible === 'true' ? 'selected' : ''}>Show</option>
+							<option value="false" ${node.config.visible === false || node.config.visible === 'false' ? 'selected' : ''}>Hide</option>
+						</select>
+						<div class="property-help">Set whether to show, hide, or toggle the source</div>
+					</div>
+					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
+						1. Enable in OBS: Tools → WebSocket Server Settings<br>
+						2. Note your password (required by OBS)<br>
+						3. Add to actions.html URL: <code>&obspw=yourpassword</code><br>
+						Example: <code>actions.html?session=test&obspw=abc123</code>
+					</div>`;
+				break;
+				
+			case 'obsSetSourceFilter':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName" 
+							value="${node.config.sourceName || ''}" placeholder="e.g., Webcam, Game Capture">
+						<div class="property-help">The source that has the filter</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Filter Name</label>
+						<input type="text" class="property-input" id="prop-filterName" 
+							value="${node.config.filterName || ''}" placeholder="e.g., Color Correction, Blur">
+						<div class="property-help">The exact name of the filter to toggle</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">State</label>
+						<select class="property-input" id="prop-enabled">
+							<option value="toggle" ${node.config.enabled === 'toggle' ? 'selected' : ''}>Toggle</option>
+							<option value="true" ${node.config.enabled === true || node.config.enabled === 'true' ? 'selected' : ''}>Enable</option>
+							<option value="false" ${node.config.enabled === false || node.config.enabled === 'false' ? 'selected' : ''}>Disable</option>
+						</select>
+					</div>
+					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
+						1. Enable in OBS: Tools → WebSocket Server Settings<br>
+						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
+					</div>`;
+				break;
+				
+			case 'obsMuteSource':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Audio Source Name</label>
+						<input type="text" class="property-input" id="prop-sourceName" 
+							value="${node.config.sourceName || ''}" placeholder="e.g., Mic/Aux, Desktop Audio">
+						<div class="property-help">The exact name of the audio source</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Mute State</label>
+						<select class="property-input" id="prop-muted">
+							<option value="toggle" ${node.config.muted === 'toggle' ? 'selected' : ''}>Toggle</option>
+							<option value="true" ${node.config.muted === true || node.config.muted === 'true' ? 'selected' : ''}>Mute</option>
+							<option value="false" ${node.config.muted === false || node.config.muted === 'false' ? 'selected' : ''}>Unmute</option>
+						</select>
+					</div>
+					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
+						1. Enable in OBS: Tools → WebSocket Server Settings<br>
+						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
 					</div>`;
 				break;
 				

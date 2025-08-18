@@ -1839,6 +1839,55 @@ class EventFlowSystem {
                 }
                 break;
                 
+            case 'obsToggleSource':
+                if (config.sourceName) {
+                    const actionPayload = {
+                        actionType: 'obsToggleSource',
+                        sourceName: config.sourceName,
+                        visible: config.visible
+                    };
+                    
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
+                    }
+                }
+                break;
+            
+            case 'obsSetSourceFilter':
+                if (config.sourceName && config.filterName) {
+                    const actionPayload = {
+                        actionType: 'obsSetSourceFilter',
+                        sourceName: config.sourceName,
+                        filterName: config.filterName,
+                        enabled: config.enabled
+                    };
+                    
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
+                    }
+                }
+                break;
+            
+            case 'obsMuteSource':
+                if (config.sourceName) {
+                    const actionPayload = {
+                        actionType: 'obsMuteSource',
+                        sourceName: config.sourceName,
+                        muted: config.muted
+                    };
+                    
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
+                    }
+                }
+                break;
+                
             case 'obsStartRecording':
                 const startRecordingPayload = {
                     actionType: 'obsStartRecording'
