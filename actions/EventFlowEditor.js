@@ -19,6 +19,7 @@ class EventFlowEditor {
 		
         // Initialize all node type definitions here
         this.triggerTypes = [
+            { id: 'anyMessage', name: '💬 Any Message' },
             { id: 'messageContains', name: '🔍 Message Contains' },
             { id: 'messageStartsWith', name: '▶️ Message Starts With' },
             { id: 'messageEndsWith', name: '⏹️ Message Ends With' },
@@ -34,6 +35,11 @@ class EventFlowEditor {
             { id: 'userRole', name: '👑 User Role' },
             { id: 'hasDonation', name: '💰 Has Donation' },
             { id: 'randomChance', name: '🎲 Random Chance' },
+            { id: 'timeInterval', name: '⏰ Time Interval' },
+            { id: 'timeOfDay', name: '🕐 Time of Day' },
+            { id: 'midiNoteOn', name: '🎹 MIDI Note On' },
+            { id: 'midiNoteOff', name: '🎹 MIDI Note Off' },
+            { id: 'midiCC', name: '🎛️ MIDI Control Change' },
             { id: 'messageProperties', name: '⚙️ Message Properties Filter' },
             { id: 'counter', name: '🔄 Counter' },
             { id: 'userPool', name: '👥 User Pool' },
@@ -65,6 +71,8 @@ class EventFlowEditor {
 			{ id: 'obsStartStreaming', name: '📡 OBS: Start Streaming' },
 			{ id: 'obsStopStreaming', name: '⏹️ OBS: Stop Streaming' },
 			{ id: 'obsReplayBuffer', name: '💾 OBS: Save Replay Buffer' },
+			{ id: 'midiSendNote', name: '🎹 MIDI: Send Note' },
+			{ id: 'midiSendCC', name: '🎛️ MIDI: Send Control Change' },
 			{ id: 'customJs', name: '📝 Custom JavaScript' }
 		];
 
@@ -76,7 +84,9 @@ class EventFlowEditor {
         this.logicNodeTypes = [
             { id: 'AND', name: '🔀 AND Gate', type: 'logic', logicType: 'AND' }, // Added type/logicType for consistency if needed elsewhere
             { id: 'OR', name: '🔄 OR Gate', type: 'logic', logicType: 'OR' },
-            { id: 'NOT', name: '🚫 NOT Gate', type: 'logic', logicType: 'NOT' }
+            { id: 'NOT', name: '🚫 NOT Gate', type: 'logic', logicType: 'NOT' },
+            { id: 'RANDOM', name: '🎲 RANDOM Gate', type: 'logic', logicType: 'RANDOM' }
+            // { id: 'DELAY', name: '⏱️ DELAY Gate', type: 'logic', logicType: 'DELAY' } // Hidden for now to reduce complexity
         ];
 
         this.init(); // init() will call createEditorLayout()
@@ -495,6 +505,80 @@ class EventFlowEditor {
     }
 
     // Helper method to safely notify parent window about flow changes
+    async populateMIDIInputDevices(selectId, currentValue) {
+        // Initialize MIDI if needed
+        if (!this.eventFlowSystem.midiEnabled) {
+            await this.eventFlowSystem.initializeMIDI();
+        }
+        
+        setTimeout(() => {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            
+            // Clear existing options except the first
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
+            // Add MIDI input devices
+            const inputs = this.eventFlowSystem.midiInputs || [];
+            inputs.forEach(input => {
+                const option = document.createElement('option');
+                option.value = input.id;
+                option.textContent = input.name || `MIDI Input ${input.id}`;
+                if (input.id === currentValue) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            if (inputs.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No MIDI input devices found";
+                option.disabled = true;
+                select.appendChild(option);
+            }
+        }, 100);
+    }
+    
+    async populateMIDIOutputDevices(selectId, currentValue) {
+        // Initialize MIDI if needed
+        if (!this.eventFlowSystem.midiEnabled) {
+            await this.eventFlowSystem.initializeMIDI();
+        }
+        
+        setTimeout(() => {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            
+            // Clear existing options except the first
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+            
+            // Add MIDI output devices
+            const outputs = this.eventFlowSystem.midiOutputs || [];
+            outputs.forEach(output => {
+                const option = document.createElement('option');
+                option.value = output.id;
+                option.textContent = output.name || `MIDI Output ${output.id}`;
+                if (output.id === currentValue) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+            
+            if (outputs.length === 0) {
+                const option = document.createElement('option');
+                option.value = "";
+                option.textContent = "No MIDI output devices found";
+                option.disabled = true;
+                select.appendChild(option);
+            }
+        }, 100);
+    }
+    
     notifyParentToReloadFlows() {
         try {
             if (this.isSSApp) {
@@ -1026,6 +1110,8 @@ class EventFlowEditor {
                 case 'AND': return 'All inputs must be true.';
                 case 'OR': return 'Any input can be true.';
                 case 'NOT': return 'Inverts the input signal.';
+                case 'RANDOM': return `${node.config?.probability || 50}% chance`;
+                case 'DELAY': return `${(node.config?.delay || 1000) / 1000}s delay`;
                 default: return 'Logic Gate';
             }
         }
@@ -1318,6 +1404,7 @@ class EventFlowEditor {
         if (type === 'trigger') {
             node.triggerType = subtype;
             switch (subtype) { /* Populate default configs */ 
+                case 'anyMessage': node.config = {}; break;
                 case 'messageContains': node.config = { text: 'keyword' }; break;
                 case 'messageStartsWith': node.config = { text: '!' }; break;
                 case 'messageEndsWith': node.config = { text: '?' }; break;
@@ -1333,6 +1420,11 @@ class EventFlowEditor {
                 case 'userRole': node.config = { role: 'mod' }; break;
                 case 'hasDonation': node.config = {}; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
+                case 'timeInterval': node.config = { interval: 60 }; break;
+                case 'timeOfDay': node.config = { times: ['12:00'] }; break;
+                case 'midiNoteOn': node.config = { deviceId: '', note: '', channel: 1 }; break;
+                case 'midiNoteOff': node.config = { deviceId: '', note: '', channel: 1 }; break;
+                case 'midiCC': node.config = { deviceId: '', controller: '', channel: 1 }; break;
                 case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true }; break;
                 case 'counter': node.config = { counterName: 'default', scope: 'perUser', threshold: 10, triggerMode: 'exact', autoReset: false, countType: 'messages', resetAfterMs: 0 }; break;
                 case 'userPool': node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' }; break;
@@ -1359,7 +1451,7 @@ class EventFlowEditor {
                 case 'sendMessage':
 					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0 }; break;
                 case 'relay':
-					node.config = { destination: 'all', template: '[{source}] {username}: {message}', timeout: 0 }; break;
+					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true }; break;
                 case 'addPoints':
@@ -1401,10 +1493,30 @@ class EventFlowEditor {
 				case 'obsReplayBuffer':
 					node.config = {};
 					break;
+				case 'midiSendNote':
+					node.config = { deviceId: '', note: 'C4', velocity: 127, duration: 100, channel: 1 };
+					break;
+				case 'midiSendCC':
+					node.config = { deviceId: '', controller: 1, value: 64, channel: 1 };
+					break;
+				case 'customJs':
+					node.config = { code: 'console.log("Action executed!", message);' };
+					break;
             }
         } else if (type === 'logic') { // NEW
-            node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT'
-            // Logic nodes might not need specific default configs beyond their type
+            node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT', 'RANDOM', 'DELAY'
+            // Add default configs for configurable logic gates
+            switch (subtype) {
+                case 'RANDOM':
+                    node.config = { probability: 50 }; // 50% chance by default
+                    break;
+                case 'DELAY':
+                    node.config = { delay: 1000 }; // 1 second delay by default
+                    break;
+                default:
+                    node.config = {};
+                    break;
+            }
         }
         this.currentFlow.nodes.push(node);
         this.renderNode(node);
@@ -1620,6 +1732,61 @@ class EventFlowEditor {
 				break;
 			case 'containsLink':
 				html += `<p class="property-help">Triggers when a message contains a URL (http://, https://, or www.)</p>`;
+				break;
+			case 'anyMessage':
+				html += `<p class="property-help">Triggers on any message regardless of content.</p>`;
+				break;
+			case 'timeInterval':
+				html += `<div class="property-group">
+					<label class="property-label">Interval (seconds)</label>
+					<input type="number" class="property-input" id="prop-interval" value="${node.config.interval || 60}" min="1">
+				</div>
+				<p class="property-help">Triggers at regular intervals.</p>`;
+				break;
+			case 'timeOfDay':
+				html += `<div class="property-group">
+					<label class="property-label">Times (HH:MM format, comma separated)</label>
+					<input type="text" class="property-input" id="prop-times" value="${(node.config.times || ['12:00']).join(', ')}" placeholder="09:00, 12:00, 18:00">
+				</div>
+				<p class="property-help">Triggers at specific times of day.</p>`;
+				break;
+			case 'midiNoteOn':
+			case 'midiNoteOff':
+				html += `<div class="property-group">
+					<label class="property-label">MIDI Input Device</label>
+					<select class="property-input" id="prop-deviceId">
+						<option value="">Select MIDI Input Device...</option>
+					</select>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Note (e.g., C4, D#5, or leave empty for any)</label>
+					<input type="text" class="property-input" id="prop-note" value="${node.config.note || ''}" placeholder="C4">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Channel (1-16)</label>
+					<input type="number" class="property-input" id="prop-channel" value="${node.config.channel || 1}" min="1" max="16">
+				</div>
+				<p class="property-help">Triggers on MIDI ${node.triggerType === 'midiNoteOn' ? 'Note On' : 'Note Off'} events.</p>`;
+				// Populate MIDI devices asynchronously
+				this.populateMIDIInputDevices('prop-deviceId', node.config.deviceId);
+				break;
+			case 'midiCC':
+				html += `<div class="property-group">
+					<label class="property-label">MIDI Input Device</label>
+					<select class="property-input" id="prop-deviceId">
+						<option value="">Select MIDI Input Device...</option>
+					</select>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Controller Number (0-127, or leave empty for any)</label>
+					<input type="number" class="property-input" id="prop-controller" value="${node.config.controller || ''}" min="0" max="127" placeholder="1">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Channel (1-16)</label>
+					<input type="number" class="property-input" id="prop-channel" value="${node.config.channel || 1}" min="1" max="16">
+				</div>
+				<p class="property-help">Triggers on MIDI Control Change events.</p>`;
+				this.populateMIDIInputDevices('prop-deviceId', node.config.deviceId);
 				break;
 			case 'fromSource':
 				const isCustomSource = node.config.source && !['*', 'afreecatv', 'amazon', 'arena', 'arenasocial', 'bandlab', 'beamstream', 'bigo', 'bilibili', 'bilibilicom',
@@ -2366,6 +2533,20 @@ class EventFlowEditor {
 			case 'NOT':
 				html += `<p class="property-help">This gate inverts its single input. It outputs TRUE if the input is FALSE, and FALSE if the input is TRUE.</p>`;
 				break;
+			case 'RANDOM':
+				html += `<div class="property-group">
+					<label class="property-label">Probability (%)</label>
+					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability || 50}" min="0" max="100">
+				</div>
+				<p class="property-help">This gate outputs TRUE with the specified probability when any input is TRUE. For example, 25% means it will activate roughly 1 in 4 times.</p>`;
+				break;
+			case 'DELAY':
+				html += `<div class="property-group">
+					<label class="property-label">Delay (milliseconds)</label>
+					<input type="number" class="property-input" id="prop-delay" value="${node.config?.delay || 1000}" min="0" step="100">
+				</div>
+				<p class="property-help">This gate delays the signal by the specified time. The signal will propagate to connected actions after the delay. 1000ms = 1 second.</p>`;
+				break;
 			case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
 				html += `<div class="property-group">
 							 <label class="property-label">Media URL (TENOR/GIPHY)</label>
@@ -2483,6 +2664,54 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #4CAF50; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Perfect for saving highlight moments triggered by donations or special messages!
 					</div>`;
+				break;
+			case 'midiSendNote':
+				html += `<div class="property-group">
+					<label class="property-label">MIDI Output Device</label>
+					<select class="property-input" id="prop-deviceId">
+						<option value="">Select MIDI Output Device...</option>
+					</select>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Note (e.g., C4, D#5)</label>
+					<input type="text" class="property-input" id="prop-note" value="${node.config.note || 'C4'}" placeholder="C4">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Velocity (0-127)</label>
+					<input type="number" class="property-input" id="prop-velocity" value="${node.config.velocity || 127}" min="0" max="127">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Duration (ms)</label>
+					<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 100}" min="1">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Channel (1-16)</label>
+					<input type="number" class="property-input" id="prop-channel" value="${node.config.channel || 1}" min="1" max="16">
+				</div>
+				<p class="property-help">Sends a MIDI note to the selected output device.</p>`;
+				this.populateMIDIOutputDevices('prop-deviceId', node.config.deviceId);
+				break;
+			case 'midiSendCC':
+				html += `<div class="property-group">
+					<label class="property-label">MIDI Output Device</label>
+					<select class="property-input" id="prop-deviceId">
+						<option value="">Select MIDI Output Device...</option>
+					</select>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Controller Number (0-127)</label>
+					<input type="number" class="property-input" id="prop-controller" value="${node.config.controller || 1}" min="0" max="127">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Value (0-127)</label>
+					<input type="number" class="property-input" id="prop-value" value="${node.config.value || 64}" min="0" max="127">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Channel (1-16)</label>
+					<input type="number" class="property-input" id="prop-channel" value="${node.config.channel || 1}" min="1" max="16">
+				</div>
+				<p class="property-help">Sends a MIDI Control Change message to the selected output device.</p>`;
+				this.populateMIDIOutputDevices('prop-deviceId', node.config.deviceId);
 				break;
 			case 'playAudioClip':
 				html += `<div class="property-group">

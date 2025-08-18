@@ -13,6 +13,16 @@ class EventFlowSystem {
 		this.messageStore = options.messageStore || {}; // Share message store from background.js
 		this.handleMessageStore = options.handleMessageStore || null; // Function to handle message storage
 		
+		// MIDI properties
+		this.midiEnabled = false;
+		this.midiInputs = [];
+		this.midiOutputs = [];
+		this.midiListeners = new Map(); // Store listeners for cleanup
+		
+		// Delay gate management
+		this.delayTimers = new Map(); // Store active delay timers
+		this.delayedSignals = new Map(); // Store delayed signal states
+		
         //console.log('[EventFlowSystem Constructor] Initialized with:');
         //console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
         //console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
@@ -25,7 +35,169 @@ class EventFlowSystem {
         this.initPromise = this.initDatabase();
     }
 	
-	async evaluateSpecificLogicNode(logicType, inputValues) {
+	// MIDI Methods
+	async initializeMIDI() {
+		if (this.midiEnabled || typeof WebMidi === 'undefined') return;
+		
+		return new Promise((resolve, reject) => {
+			WebMidi.enable((err) => {
+				if (err) {
+					console.error('[EventFlowSystem] Failed to enable WebMIDI:', err);
+					reject(err);
+					return;
+				}
+				
+				this.midiEnabled = true;
+				this.updateMIDIDevices();
+				
+				// Listen for device changes
+				WebMidi.addListener("connected", () => this.updateMIDIDevices());
+				WebMidi.addListener("disconnected", () => this.updateMIDIDevices());
+				
+				console.log('[EventFlowSystem] WebMIDI enabled successfully');
+				resolve();
+			});
+		});
+	}
+	
+	updateMIDIDevices() {
+		this.midiInputs = WebMidi.inputs.map(input => ({
+			id: input.id,
+			name: input.name,
+			manufacturer: input.manufacturer
+		}));
+		
+		this.midiOutputs = WebMidi.outputs.map(output => ({
+			id: output.id,
+			name: output.name,
+			manufacturer: output.manufacturer
+		}));
+	}
+	
+	getMIDIInputDevice(deviceId) {
+		if (!this.midiEnabled) return null;
+		return WebMidi.getInputById(deviceId);
+	}
+	
+	getMIDIOutputDevice(deviceId) {
+		if (!this.midiEnabled) return null;
+		return WebMidi.getOutputById(deviceId);
+	}
+	
+	// Check if MIDI needs to be initialized based on flows
+	async checkMIDIRequirement() {
+		const needsMIDI = this.flows.some(flow => {
+			if (!flow.active) return false;
+			
+			return flow.nodes.some(node => {
+				const isMIDITrigger = ['midiNoteOn', 'midiNoteOff', 'midiCC'].includes(node.triggerType);
+				const isMIDIAction = ['midiSendNote', 'midiSendCC'].includes(node.actionType);
+				return isMIDITrigger || isMIDIAction;
+			});
+		});
+		
+		if (needsMIDI && !this.midiEnabled) {
+			try {
+				await this.initializeMIDI();
+			} catch (err) {
+				console.error('[EventFlowSystem] Failed to initialize MIDI:', err);
+			}
+		}
+	}
+	
+	// Set up MIDI listeners for trigger nodes
+	setupMIDIListeners() {
+		if (!this.midiEnabled) return;
+		
+		// Clear existing listeners
+		this.midiListeners.forEach((listener, key) => {
+			const [deviceId, eventType] = key.split('|');
+			const input = this.getMIDIInputDevice(deviceId);
+			if (input) {
+				input.removeListener(eventType, 'all', listener);
+			}
+		});
+		this.midiListeners.clear();
+		
+		// Set up new listeners for active flows
+		this.flows.forEach(flow => {
+			if (!flow.active) return;
+			
+			flow.nodes.forEach(node => {
+				if (!node.config || !node.config.deviceId) return;
+				
+				const input = this.getMIDIInputDevice(node.config.deviceId);
+				if (!input) return;
+				
+				let listener = null;
+				const listenerKey = `${node.config.deviceId}|${node.triggerType}`;
+				
+				switch (node.triggerType) {
+					case 'midiNoteOn':
+						listener = (e) => {
+							// Check if note matches config (if specified)
+							if (!node.config.note || node.config.note === e.note.identifier) {
+								this.processMIDITrigger(flow, node, {
+									type: 'midiNoteOn',
+									note: e.note.identifier,
+									velocity: e.velocity,
+									channel: e.channel
+								});
+							}
+						};
+						input.addListener('noteon', 'all', listener);
+						break;
+						
+					case 'midiNoteOff':
+						listener = (e) => {
+							if (!node.config.note || node.config.note === e.note.identifier) {
+								this.processMIDITrigger(flow, node, {
+									type: 'midiNoteOff',
+									note: e.note.identifier,
+									velocity: e.velocity,
+									channel: e.channel
+								});
+							}
+						};
+						input.addListener('noteoff', 'all', listener);
+						break;
+						
+					case 'midiCC':
+						listener = (e) => {
+							if (!node.config.controller || node.config.controller === e.controller.number) {
+								this.processMIDITrigger(flow, node, {
+									type: 'midiCC',
+									controller: e.controller.number,
+									value: e.value,
+									channel: e.channel
+								});
+							}
+						};
+						input.addListener('controlchange', 'all', listener);
+						break;
+				}
+				
+				if (listener) {
+					this.midiListeners.set(listenerKey, listener);
+				}
+			});
+		});
+	}
+	
+	// Process MIDI trigger events
+	async processMIDITrigger(flow, triggerNode, midiData) {
+		// Create a synthetic message for MIDI events
+		const midiMessage = {
+			type: 'midi',
+			midiData: midiData,
+			timestamp: Date.now()
+		};
+		
+		// Process the flow with this MIDI message
+		await this.evaluateFlow(flow, midiMessage);
+	}
+	
+	async evaluateSpecificLogicNode(logicType, inputValues, nodeConfig) {
         if (!Array.isArray(inputValues)) return false;
 
         switch (logicType) {
@@ -38,6 +210,20 @@ class EventFlowSystem {
             case 'NOT':
                 // NOT node should ideally have exactly one input value
                 return inputValues.length > 0 ? !inputValues[0] : false; // Default to false if no input
+            case 'RANDOM':
+                // RANDOM gate: outputs true based on probability
+                // If any input is true, roll the dice
+                const hasActiveInput = inputValues.some(v => v === true);
+                if (!hasActiveInput) return false;
+                
+                // Get probability from config (0-100), default to 50%
+                const probability = (nodeConfig && nodeConfig.probability) || 50;
+                const roll = Math.random() * 100;
+                return roll < probability;
+            case 'DELAY':
+                // DELAY gate: delays the signal propagation
+                // This returns a special marker that the flow evaluator will handle
+                return { type: 'delayed', inputs: inputValues, config: nodeConfig };
             default:
                 return false;
         }
@@ -126,12 +312,12 @@ class EventFlowSystem {
 	async loadFlows() {
 			const db = await this.ensureDB();
 			
-			return new Promise((resolve) => {
+			return new Promise(async (resolve) => {
 				const tx = db.transaction(this.storeName, 'readonly');
 				const store = tx.objectStore(this.storeName);
 				const request = store.getAll();
 				
-				request.onsuccess = () => {
+				request.onsuccess = async () => {
 					let flowsFromDB = request.result.map(flow => {
 						return {
 							...flow,
@@ -157,6 +343,11 @@ class EventFlowSystem {
 					});
 					
 					this.flows = flowsFromDB;
+					
+					// Check if MIDI is required and set up listeners
+					await this.checkMIDIRequirement();
+					this.setupMIDIListeners();
+					
 					resolve(this.flows);
 				};
 				
@@ -198,7 +389,7 @@ class EventFlowSystem {
 			
 			const request = store.put(flowData); // flowData now includes 'order'
 			
-			request.onsuccess = () => {
+			request.onsuccess = async () => {
 				if (existingFlowIndex !== -1) {
 					this.flows[existingFlowIndex] = flowData;
 				} else {
@@ -206,6 +397,11 @@ class EventFlowSystem {
 				}
 				// Re-sort the in-memory list by order after any save
 				this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
+				
+				// Check if MIDI is required and update listeners
+				await this.checkMIDIRequirement();
+				this.setupMIDIListeners();
+				
 				resolve(flowData);
 			};
 			
@@ -348,6 +544,13 @@ class EventFlowSystem {
             return message;
         }
         
+        // Block relayed messages (reflections) from propagating to sendToDestinations
+        // This prevents relay echoes from being sent to external destinations
+        if (message.reflection) {
+            // Return null to block the message from sendToDestinations
+            return null;
+        }
+        
         let processed = { ...message };
         let blocked = false;
         
@@ -423,7 +626,33 @@ class EventFlowSystem {
                     if (allInputsEvaluated) {
                         const inputValues = inputNodeIds.map(inputId => nodeActivationStates[inputId]);
                       //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Logic Node ID: ${node.id} (${node.logicType}) with inputs: ${JSON.stringify(inputValues)} from nodes: ${JSON.stringify(inputNodeIds)}`);
-                        nodeActivationStates[node.id] = await this.evaluateSpecificLogicNode(node.logicType, inputValues);
+                        const result = await this.evaluateSpecificLogicNode(node.logicType, inputValues, node.config);
+                        
+                        // Handle DELAY gate special case
+                        if (result && typeof result === 'object' && result.type === 'delayed') {
+                            const delayMs = (node.config && node.config.delay) || 1000; // Default 1 second
+                            const delayKey = `${flow.id}_${node.id}_${Date.now()}`;
+                            
+                            // Check if any input is true
+                            const shouldDelay = result.inputs.some(v => v === true);
+                            
+                            if (shouldDelay) {
+                                // Set up delayed activation
+                                setTimeout(() => {
+                                    this.delayedSignals.set(node.id, true);
+                                    // Re-evaluate flow after delay
+                                    this.evaluateFlow(flow, message);
+                                }, delayMs);
+                                
+                                // For now, output false (will become true after delay)
+                                nodeActivationStates[node.id] = false;
+                            } else {
+                                nodeActivationStates[node.id] = false;
+                            }
+                        } else {
+                            nodeActivationStates[node.id] = result;
+                        }
+                        
                       //console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
                         madeChangeInLoop = true;
                     }
@@ -519,6 +748,11 @@ class EventFlowSystem {
         }
         
         switch (triggerType) {
+            case 'anyMessage':
+                // Trigger on any message regardless of content
+                match = message && (message.chatmessage || message.textContent);
+                return match;
+                
             case 'messageContains':
                 // Ensure properties exist before trying to access them
                 match = message && messageText && typeof messageText === 'string' &&
@@ -622,6 +856,55 @@ class EventFlowSystem {
                 match = !!message.hasDonation; // Assuming hasDonation is a truthy value if donation exists
               ////console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
                 return match;
+                
+            case 'timeInterval':
+                // Trigger at regular intervals (in seconds)
+                if (!config.interval || config.interval <= 0) return false;
+                
+                const nodeState = `timeInterval_${triggerNode.id}`;
+                const now = Date.now();
+                const lastTriggered = this[nodeState] || 0;
+                const intervalMs = config.interval * 1000;
+                
+                if (now - lastTriggered >= intervalMs) {
+                    this[nodeState] = now;
+                    return true;
+                }
+                return false;
+                
+            case 'timeOfDay':
+                // Trigger at specific times of day
+                if (!config.times || !Array.isArray(config.times)) return false;
+                
+                const currentTime = new Date();
+                const currentHour = currentTime.getHours();
+                const currentMinute = currentTime.getMinutes();
+                const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+                
+                // Check if current time matches any configured time
+                match = config.times.some(time => {
+                    if (typeof time === 'string' && time.includes(':')) {
+                        return time === currentTimeString;
+                    }
+                    return false;
+                });
+                
+                // Prevent triggering multiple times in the same minute
+                const todNodeState = `timeOfDay_${triggerNode.id}_lastTriggered`;
+                if (match) {
+                    if (this[todNodeState] === currentTimeString) {
+                        return false; // Already triggered this minute
+                    }
+                    this[todNodeState] = currentTimeString;
+                }
+                return match;
+                
+            case 'midiNoteOn':
+            case 'midiNoteOff':
+            case 'midiCC':
+                // MIDI triggers are handled by listeners, not evaluated per message
+                // They'll be set up when flows are loaded/saved
+                return false;
                 
             case 'customJs':
                 try {
@@ -1329,7 +1612,7 @@ class EventFlowSystem {
                     //console.log('[RELAY DEBUG - Action] Mode: Relay to specific platform:', config.destination);
                 } else {
                     // Relay to all platforms (excluding source)
-                    // Pass source tid for exclusion
+                    // CRITICAL: Must pass tid for source exclusion to work with reverse=true
                     if (message.tid) {
                         relayMessage.tid = message.tid;
                     }
@@ -1640,6 +1923,44 @@ class EventFlowSystem {
                     console.log('[OBS] Sent save replay buffer to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'midiSendNote':
+                if (!this.midiEnabled || !config.deviceId || !config.note) break;
+                
+                const noteOutput = this.getMIDIOutputDevice(config.deviceId);
+                if (noteOutput) {
+                    const velocity = config.velocity || 127;
+                    const duration = config.duration || 100;
+                    const channel = config.channel || 1;
+                    
+                    try {
+                        noteOutput.playNote(config.note, channel, {
+                            velocity: velocity / 127,
+                            duration: duration
+                        });
+                        console.log(`[MIDI] Sent note ${config.note} to device ${config.deviceId}`);
+                    } catch (err) {
+                        console.error('[MIDI] Error sending note:', err);
+                    }
+                }
+                break;
+                
+            case 'midiSendCC':
+                if (!this.midiEnabled || !config.deviceId || config.controller === undefined) break;
+                
+                const ccOutput = this.getMIDIOutputDevice(config.deviceId);
+                if (ccOutput) {
+                    const value = config.value || 0;
+                    const channel = config.channel || 1;
+                    
+                    try {
+                        ccOutput.sendControlChange(config.controller, value, channel);
+                        console.log(`[MIDI] Sent CC ${config.controller}:${value} to device ${config.deviceId}`);
+                    } catch (err) {
+                        console.error('[MIDI] Error sending CC:', err);
+                    }
                 }
                 break;
                 

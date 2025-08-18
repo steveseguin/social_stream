@@ -8141,12 +8141,15 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         }
     }
 	
+	// In relay mode, if relaytargets is configured, only relay to those targets
+	// If relaytargets is not configured (false), allow all targets
 	if (relayMode && relaytargets){
 		let sourceType = await getSourceType(tab.id);
 		if (!sourceType || !relaytargets.includes(sourceType)){
 			return false;
 		}
 	}
+	// If relayMode is true but relaytargets is false, we allow all destinations
 	
     return true;
 }
