@@ -1157,7 +1157,7 @@ function checkTriggerWords(triggerString, sentence) {
 
 let isProcessing = false;
 const lastResponseTime = {};
-let lastSentMessage = "";
+// lastSentMessage is already declared in background.js
 
 async function processSummary(data){
 	//console.log(data);
