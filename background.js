@@ -9692,9 +9692,15 @@ async function applyBotActions(data, tab = false) {
 				if (settings.modLLMonly){
 					if (data.mod){
 						processMessageWithOllama(data);
+						// SECONDARY FIX: Add await to properly handle async errors
+						// Uncomment to test if error handling needs this
+						// await processMessageWithOllama(data);
 					}
 				} else {
 					processMessageWithOllama(data);
+					// SECONDARY FIX: Add await to properly handle async errors
+					// Uncomment to test if error handling needs this
+					// await processMessageWithOllama(data);
 				}
 			} catch(e){
 				console.log(e); // ai.js file missing?

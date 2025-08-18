@@ -1157,6 +1157,7 @@ function checkTriggerWords(triggerString, sentence) {
 
 let isProcessing = false;
 const lastResponseTime = {};
+let lastSentMessage = "";
 
 async function processSummary(data){
 	//console.log(data);
@@ -1302,6 +1303,12 @@ async function processMessageWithOllama(data, idx=null) {
         request: data,
         tts: settings.ollamatts ? true : false
       }, "bot");
+      
+      // SECONDARY FIX: Track bot's own message for overlay-only mode
+      // Uncomment to test if overlay-only mode needs this
+      // if (settings.ollamaoverlayonly) {
+      //   lastSentMessage = response;
+      // }
 
       // Send to tabs if not overlay-only
       if (!settings.ollamaoverlayonly) {
@@ -1312,6 +1319,7 @@ async function processMessageWithOllama(data, idx=null) {
         };
         sendMessageToTabs(msg);
         lastResponseTime[data.tid] = Date.now();
+        lastSentMessage = response;
       }
 	  data.botResponse = response;
 	  
