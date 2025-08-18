@@ -402,8 +402,6 @@
         }
 
 		function processInput(data) {
-			console.log("Processing input:", data);
-			
 			if (data.actionType) {
 				// Handle direct action object
 				handleAction(data);
@@ -461,10 +459,16 @@
                 // OBS Browser Source API Actions
                 case 'obsChangeScene':
                     if (obsStudio && payload.sceneName) {
-                        console.log(`[OBS] Changing scene to: ${payload.sceneName}`);
-                        obsStudio.setCurrentScene(payload.sceneName)
-                            .then(() => console.log(`[OBS] Scene changed to ${payload.sceneName}`))
-                            .catch(err => console.error("[OBS] Error changing scene:", err));
+                        try {
+                            const result = obsStudio.setCurrentScene(payload.sceneName);
+                            // Check if it returns a Promise or is synchronous
+                            if (result && typeof result.then === 'function') {
+                                result.then(() => {})
+                                      .catch(err => console.error("[OBS] Error changing scene:", err));
+                            }
+                        } catch (err) {
+                            console.error("[OBS] Error changing scene:", err);
+                        }
                     } else if (!obsStudio) {
                         console.warn("[OBS] API not available");
                     } else {

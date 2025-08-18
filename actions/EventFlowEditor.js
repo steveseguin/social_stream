@@ -49,6 +49,7 @@ class EventFlowEditor {
 
 		this.actionTypes = [
 			{ id: 'blockMessage', name: '🚫 Block Message' },
+			{ id: 'returnMessage', name: '✅ Return Message' },
 			{ id: 'modifyMessage', name: '✏️ Modify Message' },
 			{ id: 'addPrefix', name: '⬅️ Add Prefix' },
 			{ id: 'addSuffix', name: '➡️ Add Suffix' },
@@ -63,7 +64,7 @@ class EventFlowEditor {
 			{ id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
 			{ id: 'triggerOBSScene', name: '🎬 Trigger OBS Scene' },
 			{ id: 'playAudioClip', name: '🔊 Play Audio Clip' },
-			{ id: 'delay', name: '⏱️ Delay Message' },
+			{ id: 'delay', name: '⏱️ Delay' },
 			{ id: 'obsChangeScene', name: '🎬 OBS: Change Scene' },
 			{ id: 'obsToggleSource', name: '👁️ OBS: Toggle Source' },
 			{ id: 'obsStartRecording', name: '🔴 OBS: Start Recording' },
@@ -86,7 +87,6 @@ class EventFlowEditor {
             { id: 'OR', name: '🔄 OR Gate', type: 'logic', logicType: 'OR' },
             { id: 'NOT', name: '🚫 NOT Gate', type: 'logic', logicType: 'NOT' },
             { id: 'RANDOM', name: '🎲 RANDOM Gate', type: 'logic', logicType: 'RANDOM' }
-            // { id: 'DELAY', name: '⏱️ DELAY Gate', type: 'logic', logicType: 'DELAY' } // Hidden for now to reduce complexity
         ];
 
         this.init(); // init() will call createEditorLayout()
@@ -924,10 +924,25 @@ class EventFlowEditor {
 		let outputPointsHTML = '';
 
 		if (node.type === 'trigger') {
-			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
+			// Triggers that don't have a message get async output
+			const noMessageTriggers = ['timeInterval', 'timeOfDay', 'midiNoteOn', 'midiNoteOff', 'midiCC'];
+			if (noMessageTriggers.includes(node.triggerType)) {
+				outputPointsHTML = '<div class="connection-point output async-output" data-point-type="output"></div>';
+			} else {
+				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
+			}
 		} else if (node.type === 'action') {
 			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
-			// outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>'; // If actions can lead to other nodes
+			// Actions that can't return the original message get async output
+			// Only blockMessage truly blocks, and returnMessage is special (async return)
+			const nonReturningActions = [
+				'returnMessage', 'blockMessage'
+			];
+			if (nonReturningActions.includes(node.actionType)) {
+				outputPointsHTML = '<div class="connection-point output async-output" data-point-type="output"></div>';
+			} else {
+				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>'; // Actions can lead to other nodes
+			}
 		} else if (node.type === 'logic') {
 			let pointClasses = "connection-point input"; // Base classes for the input point
 			
@@ -1007,6 +1022,44 @@ class EventFlowEditor {
         return typeDef ? typeDef.name : 'Unknown Node';
     }
 
+    // Check if a connection comes after a terminal action (message won't be returned)
+    isPostTerminalConnection(connection) {
+        if (!this.currentFlow || !this.currentFlow.nodes) return false;
+        
+        // Terminal actions are those that consume/block the message
+        const terminalActions = ['blockMessage']; // Add more terminal actions here as needed
+        
+        // Check if the source node is a terminal action
+        const sourceNode = this.currentFlow.nodes.find(n => n.id === connection.from);
+        if (sourceNode && sourceNode.type === 'action' && terminalActions.includes(sourceNode.actionType)) {
+            return true;
+        }
+        
+        // Recursively check if any upstream node is a terminal action
+        const visited = new Set();
+        const checkUpstream = (nodeId) => {
+            if (visited.has(nodeId)) return false;
+            visited.add(nodeId);
+            
+            const node = this.currentFlow.nodes.find(n => n.id === nodeId);
+            if (node && node.type === 'action' && terminalActions.includes(node.actionType)) {
+                return true;
+            }
+            
+            // Check all connections leading to this node
+            const upstreamConnections = this.currentFlow.connections.filter(c => c.to === nodeId);
+            for (const conn of upstreamConnections) {
+                if (checkUpstream(conn.from)) {
+                    return true;
+                }
+            }
+            
+            return false;
+        };
+        
+        return checkUpstream(connection.from);
+    }
+    
     getNodeDescription(node) {
         if (!node.config) node.config = {}; // Ensure config exists
         if (node.type === 'trigger') {
@@ -1072,6 +1125,7 @@ class EventFlowEditor {
         } else if (node.type === 'action') {
              switch (node.actionType) {
                 case 'blockMessage': return 'Block this message';
+                case 'returnMessage': return 'Return message for display';
                 case 'modifyMessage': return `New: "${(node.config.newMessage || '').substring(0,15)}${(node.config.newMessage || '').length > 15 ? '...' : ''}"`;
                 case 'addPrefix': return `Prefix: "${(node.config.prefix || '').substring(0,15)}${(node.config.prefix || '').length > 15 ? '...' : ''}"`;
                 case 'addSuffix': return `Suffix: "${(node.config.suffix || '').substring(0,15)}${(node.config.suffix || '').length > 15 ? '...' : ''}"`;
@@ -1111,7 +1165,6 @@ class EventFlowEditor {
                 case 'OR': return 'Any input can be true.';
                 case 'NOT': return 'Inverts the input signal.';
                 case 'RANDOM': return `${node.config?.probability || 50}% chance`;
-                case 'DELAY': return `${(node.config?.delay || 1000) / 1000}s delay`;
                 default: return 'Logic Gate';
             }
         }
@@ -1141,6 +1194,9 @@ class EventFlowEditor {
         const startY = (sourceRect.top + sourceRect.height / 2) - canvasRect.top + canvas.scrollTop;
         const endX = (targetRect.left + targetRect.width / 2) - canvasRect.left + canvas.scrollLeft;
         const endY = (targetRect.top + targetRect.height / 2) - canvasRect.top + canvas.scrollTop;
+        
+        // Check if this connection comes after a terminal action (message already consumed)
+        const isPostTerminal = this.isPostTerminalConnection(connection);
 
         let svgEl = canvas.querySelector(`svg.connection[data-from="${connection.from}"][data-to="${connection.to}"]`);
         if (svgEl) svgEl.remove();
@@ -1169,10 +1225,16 @@ class EventFlowEditor {
         // Visible path
         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         path.setAttribute('d', pathData);
-        path.setAttribute('stroke', 'var(--primary-color)');
+        // Use purple (#9b59b6) for post-terminal connections, green for normal
+        path.setAttribute('stroke', isPostTerminal ? '#9b59b6' : 'var(--primary-color)');
         path.setAttribute('stroke-width', '3');
         path.setAttribute('fill', 'none');
         path.style.pointerEvents = 'none';
+        
+        // If post-terminal, add a dashed pattern to make it more distinctive
+        if (isPostTerminal) {
+            path.setAttribute('stroke-dasharray', '10,5');
+        }
         
         // Add hover effect to clickPath
         clickPath.addEventListener('mouseenter', () => {
@@ -1181,7 +1243,8 @@ class EventFlowEditor {
         });
         
         clickPath.addEventListener('mouseleave', () => {
-            path.setAttribute('stroke', 'var(--primary-color)');
+            // Restore the appropriate color based on post-terminal status
+            path.setAttribute('stroke', isPostTerminal ? '#9b59b6' : 'var(--primary-color)');
             path.setAttribute('stroke-width', '3');
         });
         
@@ -1436,6 +1499,8 @@ class EventFlowEditor {
             switch (subtype) { /* Populate default configs */
                 case 'blockMessage':
 					node.config = {}; break;
+                case 'returnMessage':
+					node.config = {}; break;
                 case 'modifyMessage':
 					node.config = { newMessage: 'modified text' }; break;
                 case 'addPrefix':
@@ -1504,14 +1569,11 @@ class EventFlowEditor {
 					break;
             }
         } else if (type === 'logic') { // NEW
-            node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT', 'RANDOM', 'DELAY'
+            node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT', 'RANDOM'
             // Add default configs for configurable logic gates
             switch (subtype) {
                 case 'RANDOM':
                     node.config = { probability: 50 }; // 50% chance by default
-                    break;
-                case 'DELAY':
-                    node.config = { delay: 1000 }; // 1 second delay by default
                     break;
                 default:
                     node.config = {};
@@ -1607,6 +1669,7 @@ class EventFlowEditor {
         }
 
         const targetElement = document.elementFromPoint(e.clientX, e.clientY);
+        // Only allow dropping on input points (we started from output)
         if (targetElement && targetElement.classList.contains('connection-point') && targetElement.dataset.pointType === 'input') {
             const targetNodeElement = targetElement.closest('.node');
             if (targetNodeElement) {
@@ -1619,12 +1682,27 @@ class EventFlowEditor {
 
                     let isValidConnection = false;
                     if (fromNodeData && toNodeData) {
-                        if ((fromNodeData.type === 'trigger' || fromNodeData.type === 'logic') &&
-                            (toNodeData.type === 'action' || toNodeData.type === 'logic')) {
-                            isValidConnection = true;
+                        // Check if this would be a post-terminal connection to Return Message
+                        if (toNodeData.type === 'action' && toNodeData.actionType === 'returnMessage') {
+                            // Check if the source is post-terminal (after a block)
+                            const wouldBePostTerminal = this.isPostTerminalConnection({ from: fromNodeId, to: toNodeId });
+                            if (wouldBePostTerminal) {
+                                // Show error message
+                                this.showNotification('Cannot connect to Return Message after a terminal action (Block Message)', 'error');
+                                isValidConnection = false;
+                            } else {
+                                isValidConnection = true;
+                            }
+                        } else {
+                            // Valid connections:
+                            // - Trigger -> Action or Logic
+                            // - Logic -> Action or Logic
+                            // - Action -> Action or Logic (now that actions have outputs)
+                            if ((fromNodeData.type === 'trigger' || fromNodeData.type === 'logic' || fromNodeData.type === 'action') &&
+                                (toNodeData.type === 'action' || toNodeData.type === 'logic')) {
+                                isValidConnection = true;
+                            }
                         }
-                        // Prevent connecting action output to trigger input (if actions had outputs and triggers inputs)
-                        // Or more simply, rely on points: output can only go to input.
                     }
                     
                     if (isValidConnection) {
@@ -2231,7 +2309,10 @@ class EventFlowEditor {
 
 			// --- Action Cases ---
 			case 'blockMessage':
-				html += `<p class="property-help">Blocks the current message from further processing or display.</p>`;
+				html += `<p class="property-help">Blocks the current message from further processing or display. Actions after this will work with a cloned message that cannot be returned.</p>`;
+				break;
+			case 'returnMessage':
+				html += `<p class="property-help">Explicitly returns the message for display. Use this after processing to ensure the message is shown. Cannot be used after terminal actions like Block Message.</p>`;
 				break;
 			case 'modifyMessage':
 				html += `<div class="property-group"><label class="property-label">New Message Content</label><textarea class="property-input" id="prop-newMessage" rows="3">${node.config.newMessage || ''}</textarea><div class="property-help">Placeholders like {username}, {message}, etc. can be used.</div></div>`;
@@ -2538,14 +2619,7 @@ class EventFlowEditor {
 					<label class="property-label">Probability (%)</label>
 					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability || 50}" min="0" max="100">
 				</div>
-				<p class="property-help">This gate outputs TRUE with the specified probability when any input is TRUE. For example, 25% means it will activate roughly 1 in 4 times.</p>`;
-				break;
-			case 'DELAY':
-				html += `<div class="property-group">
-					<label class="property-label">Delay (milliseconds)</label>
-					<input type="number" class="property-input" id="prop-delay" value="${node.config?.delay || 1000}" min="0" step="100">
-				</div>
-				<p class="property-help">This gate delays the signal by the specified time. The signal will propagate to connected actions after the delay. 1000ms = 1 second.</p>`;
+				<p class="property-help">This gate randomly passes or blocks the input signal based on the probability. For example, 25% means the signal will pass through roughly 1 in 4 times.</p>`;
 				break;
 			case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
 				html += `<div class="property-group">
@@ -2582,7 +2656,7 @@ class EventFlowEditor {
 				html += `<div class="property-group">
 							 <label class="property-label">Delay Time (milliseconds)</label>
 							 <input type="number" class="property-input" id="prop-delayMs" value="${node.config.delayMs || 1000}" min="0" step="100">
-							 <div class="property-help">Enter the delay time in milliseconds (1000ms = 1 second)</div>
+							 <div class="property-help">Delays the message by the specified time before continuing. 1000ms = 1 second.</div>
 						 </div>`;
 				break;
 			

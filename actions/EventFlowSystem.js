@@ -10,6 +10,7 @@ class EventFlowSystem {
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
         this.sanitizeRelay = options.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || null;
+		this.sendTargetP2P = options.sendTargetP2P || null;
 		this.messageStore = options.messageStore || {}; // Share message store from background.js
 		this.handleMessageStore = options.handleMessageStore || null; // Function to handle message storage
 		
@@ -211,19 +212,17 @@ class EventFlowSystem {
                 // NOT node should ideally have exactly one input value
                 return inputValues.length > 0 ? !inputValues[0] : false; // Default to false if no input
             case 'RANDOM':
-                // RANDOM gate: outputs true based on probability
-                // If any input is true, roll the dice
+                // RANDOM gate: probabilistic filter that passes or blocks the input signal
+                // If no active input, output false
                 const hasActiveInput = inputValues.some(v => v === true);
                 if (!hasActiveInput) return false;
                 
                 // Get probability from config (0-100), default to 50%
                 const probability = (nodeConfig && nodeConfig.probability) || 50;
                 const roll = Math.random() * 100;
+                
+                // Pass the input through if roll succeeds, otherwise block it
                 return roll < probability;
-            case 'DELAY':
-                // DELAY gate: delays the signal propagation
-                // This returns a special marker that the flow evaluator will handle
-                return { type: 'delayed', inputs: inputValues, config: nodeConfig };
             default:
                 return false;
         }
@@ -627,31 +626,7 @@ class EventFlowSystem {
                         const inputValues = inputNodeIds.map(inputId => nodeActivationStates[inputId]);
                       //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Logic Node ID: ${node.id} (${node.logicType}) with inputs: ${JSON.stringify(inputValues)} from nodes: ${JSON.stringify(inputNodeIds)}`);
                         const result = await this.evaluateSpecificLogicNode(node.logicType, inputValues, node.config);
-                        
-                        // Handle DELAY gate special case
-                        if (result && typeof result === 'object' && result.type === 'delayed') {
-                            const delayMs = (node.config && node.config.delay) || 1000; // Default 1 second
-                            const delayKey = `${flow.id}_${node.id}_${Date.now()}`;
-                            
-                            // Check if any input is true
-                            const shouldDelay = result.inputs.some(v => v === true);
-                            
-                            if (shouldDelay) {
-                                // Set up delayed activation
-                                setTimeout(() => {
-                                    this.delayedSignals.set(node.id, true);
-                                    // Re-evaluate flow after delay
-                                    this.evaluateFlow(flow, message);
-                                }, delayMs);
-                                
-                                // For now, output false (will become true after delay)
-                                nodeActivationStates[node.id] = false;
-                            } else {
-                                nodeActivationStates[node.id] = false;
-                            }
-                        } else {
-                            nodeActivationStates[node.id] = result;
-                        }
+                        nodeActivationStates[node.id] = result;
                         
                       //console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
                         madeChangeInLoop = true;
@@ -667,42 +642,64 @@ class EventFlowSystem {
       //console.log(`[EvaluateFlow "${flow.name}"] Pass 3: Executing Actions. Current node states:`, JSON.stringify(nodeActivationStates));
         let overallResult = { modified: false, message: { ...message }, blocked: false }; 
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
+        const executedActions = new Set(); // Track which actions have been executed
 
-        for (const node of flow.nodes) {
-            if (node.type === 'action') {
-                if (overallResult.blocked) {
-                  //console.log(`[EvaluateFlow "${flow.name}"] Message already blocked by a previous action in this flow. Skipping action node ${node.id} (${node.actionType}).`);
-                    break; 
+        // Process actions in topological order (following connections)
+        const executeActionChain = async (actionId) => {
+            if (executedActions.has(actionId)) {
+                return; // Already executed this action
+            }
+            
+            const node = nodeMap.get(actionId);
+            if (!node || node.type !== 'action') {
+                return;
+            }
+            
+            if (overallResult.blocked) {
+              //console.log(`[EvaluateFlow "${flow.name}"] Message already blocked. Skipping action node ${node.id} (${node.actionType}).`);
+                return; 
+            }
+            
+            // Execute this action
+            executedActions.add(actionId);
+            const actionResult = await this.executeAction(node, overallResult.message);
+            
+            if (actionResult) { 
+                if (actionResult.blocked) {
+                    overallResult.blocked = true;
+                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
+                    return; 
                 }
+                if (actionResult.modified && actionResult.message) {
+                    overallResult.message = { ...actionResult.message }; 
+                    overallResult.modified = true;
+                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
+                }
+            }
+            
+            // Find and execute downstream actions
+            const downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
+            for (const conn of downstreamConnections) {
+                const downstreamNode = nodeMap.get(conn.to);
+                if (downstreamNode && downstreamNode.type === 'action') {
+                    await executeActionChain(conn.to);
+                }
+            }
+        };
 
+        // Start execution from actions connected to activated triggers/logic
+        for (const node of flow.nodes) {
+            if (node.type === 'action' && !executedActions.has(node.id)) {
                 const inputConnections = flow.connections.filter(conn => conn.to === node.id);
                 const inputNodeIds = inputConnections.map(conn => conn.from);
                 
                 const shouldExecute = inputNodeIds.some(inputId => {
                     const inputNode = nodeMap.get(inputId);
-                    const activation = inputNode && (inputNode.type === 'trigger' || inputNode.type === 'logic') && nodeActivationStates[inputId] === true;
-                    // console.log(`[EvaluateFlow "${flow.name}"] Action ${node.id}: checking input ${inputId} (Type: ${inputNode ? inputNode.type : 'N/A'}), State: ${nodeActivationStates[inputId]}, Activates: ${activation}`);
-                    return activation;
+                    return inputNode && (inputNode.type === 'trigger' || inputNode.type === 'logic') && nodeActivationStates[inputId] === true;
                 });
 
-                //console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
-
                 if (shouldExecute) {
-                    //console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
-                    const actionResult = await this.executeAction(node, overallResult.message);
-                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} Result:`, JSON.stringify(actionResult));
-                    if (actionResult) { 
-                        if (actionResult.blocked) {
-                            overallResult.blocked = true;
-                          //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
-                            break; 
-                        }
-                        if (actionResult.modified && actionResult.message) {
-                            overallResult.message = { ...actionResult.message }; 
-                            overallResult.modified = true;
-                          //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
-                        }
-                    }
+                    await executeActionChain(node.id);
                 }
             }
         }
@@ -1761,8 +1758,8 @@ class EventFlowSystem {
 					};
 					// Assuming sendTargetP2P is globally available or accessible via this.sendToDestinations
 					// or a similar mechanism. The user prompt implies 'sendTargetP2P' is the target function.
-					if (typeof sendTargetP2P === 'function') {
-						sendTargetP2P(actionPayload, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P(actionPayload, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
 						//console.log('[ExecuteAction - playTenorGiphy] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) { // Fallback or alternative
 						 // Adapt this if sendMessageToTabs can target a specific page by a label/identifier
@@ -1784,8 +1781,8 @@ class EventFlowSystem {
 						actionType: 'obs_scene_change',
 						sceneName: config.sceneName
 					};
-					if (typeof sendTargetP2P === 'function') {
-						sendTargetP2P(actionPayload, 'actions');
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P(actionPayload, 'actions');
 						//console.log('[ExecuteAction - triggerOBSScene] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
@@ -1805,8 +1802,8 @@ class EventFlowSystem {
 						audioUrl: config.audioUrl,
 						volume: config.volume !== undefined ? config.volume : 1.0
 					};
-					if (typeof sendTargetP2P === 'function') {
-						sendTargetP2P(actionPayload, 'actions');
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P(actionPayload, 'actions');
 						//console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
@@ -1823,7 +1820,6 @@ class EventFlowSystem {
                 // Delay the message by specified milliseconds
                 if (config.delayMs && typeof config.delayMs === 'number') {
                     await new Promise(resolve => setTimeout(resolve, config.delayMs));
-                    //console.log(`[ExecuteAction - delay] Delayed message by ${config.delayMs}ms`);
                 }
                 break;
             
@@ -1835,11 +1831,10 @@ class EventFlowSystem {
                         sceneName: config.sceneName
                     };
                     
-                    if (typeof sendTargetP2P === 'function') {
-                        sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
-                        console.log('[OBS] Sent scene change to actions page:', config.sceneName);
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
                     } else {
-                        console.warn('[OBS] sendTargetP2P not available');
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
                     }
                 }
                 break;
@@ -1852,11 +1847,11 @@ class EventFlowSystem {
                         visible: config.visible
                     };
                     
-                    if (typeof sendTargetP2P === 'function') {
-                        sendTargetP2P(actionPayload, 'actions');
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P(actionPayload, 'actions');
                         console.log('[OBS] Sent toggle source to actions page:', config.sourceName, config.visible);
                     } else {
-                        console.warn('[OBS] sendTargetP2P not available');
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
                     }
                 }
                 break;
@@ -1866,8 +1861,8 @@ class EventFlowSystem {
                     actionType: 'obsStartRecording'
                 };
                 
-                if (typeof sendTargetP2P === 'function') {
-                    sendTargetP2P({ overlayNinja: startRecordingPayload }, 'actions');
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: startRecordingPayload }, 'actions');
                     console.log('[OBS] Sent start recording to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
@@ -1879,8 +1874,8 @@ class EventFlowSystem {
                     actionType: 'obsStopRecording'
                 };
                 
-                if (typeof sendTargetP2P === 'function') {
-                    sendTargetP2P({ overlayNinja: stopRecordingPayload }, 'actions');
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: stopRecordingPayload }, 'actions');
                     console.log('[OBS] Sent stop recording to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
@@ -1892,8 +1887,8 @@ class EventFlowSystem {
                     actionType: 'obsStartStreaming'
                 };
                 
-                if (typeof sendTargetP2P === 'function') {
-                    sendTargetP2P({ overlayNinja: startStreamingPayload }, 'actions');
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: startStreamingPayload }, 'actions');
                     console.log('[OBS] Sent start streaming to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
@@ -1905,8 +1900,8 @@ class EventFlowSystem {
                     actionType: 'obsStopStreaming'
                 };
                 
-                if (typeof sendTargetP2P === 'function') {
-                    sendTargetP2P({ overlayNinja: stopStreamingPayload }, 'actions');
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: stopStreamingPayload }, 'actions');
                     console.log('[OBS] Sent stop streaming to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
@@ -1918,8 +1913,8 @@ class EventFlowSystem {
                     actionType: 'obsReplayBuffer'
                 };
                 
-                if (typeof sendTargetP2P === 'function') {
-                    sendTargetP2P({ overlayNinja: replayBufferPayload }, 'actions');
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: replayBufferPayload }, 'actions');
                     console.log('[OBS] Sent save replay buffer to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');

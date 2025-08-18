@@ -10262,9 +10262,6 @@ window.sanitizeRelay = sanitizeRelay;
 window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
 window.handleMessageStore = handleMessageStore;
 
-console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
-console.log('[EventFlow Init] Checking sanitizeRelay function:', typeof window.sanitizeRelay);
-console.log('[EventFlow Init] Checking checkExactDuplicateAlreadyRelayed function:', typeof window.checkExactDuplicateAlreadyRelayed);
 
 let tmp = new EventFlowSystem({
 	sendMessageToTabs: window.sendMessageToTabs || null,
@@ -10274,14 +10271,13 @@ let tmp = new EventFlowSystem({
 	sanitizeRelay: window.sanitizeRelay || null,
 	checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
 	messageStore: messageStore || {},  // Share the message store for duplicate detection
-	handleMessageStore: handleMessageStore || null  // Share the message store handler
+	handleMessageStore: handleMessageStore || null,  // Share the message store handler
+	sendTargetP2P: window.sendTargetP2P || null  // Add sendTargetP2P for OBS and other actions
 });
 
 
 tmp.initPromise.then(() => {
 	window.eventFlowSystem = tmp;
-	console.log('[EventFlow Init] EventFlowSystem initialized successfully');
-	console.log('[EventFlow Init] sendMessageToTabs in system:', typeof tmp.sendMessageToTabs, tmp.sendMessageToTabs ? 'Function present' : 'Function missing');
 }).catch(error => {
 	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });
