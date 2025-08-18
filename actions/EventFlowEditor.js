@@ -66,7 +66,6 @@ class EventFlowEditor {
 			{ id: 'playAudioClip', name: '🔊 Play Audio Clip' },
 			{ id: 'delay', name: '⏱️ Delay' },
 			{ id: 'obsChangeScene', name: '🎬 OBS: Change Scene' },
-			{ id: 'obsToggleSource', name: '👁️ OBS: Toggle Source' },
 			{ id: 'obsStartRecording', name: '🔴 OBS: Start Recording' },
 			{ id: 'obsStopRecording', name: '⏹️ OBS: Stop Recording' },
 			{ id: 'obsStartStreaming', name: '📡 OBS: Start Streaming' },
@@ -1151,7 +1150,6 @@ class EventFlowEditor {
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
                 case 'obsChangeScene': return `Scene: ${node.config.sceneName || 'Not set'}`;
-                case 'obsToggleSource': return `${node.config.sourceName || 'Source'}: ${node.config.visible ? 'Show' : 'Hide'}`;
                 case 'obsStartRecording': return 'Start Recording';
                 case 'obsStopRecording': return 'Stop Recording';
                 case 'obsStartStreaming': return 'Start Streaming';
@@ -1539,9 +1537,6 @@ class EventFlowEditor {
 					break;
 				case 'obsChangeScene':
 					node.config = { sceneName: 'Scene 1' };
-					break;
-				case 'obsToggleSource':
-					node.config = { sourceName: 'Source 1', visible: true };
 					break;
 				case 'obsStartRecording':
 					node.config = {};
@@ -2675,25 +2670,6 @@ class EventFlowEditor {
 					</div>`;
 				break;
 				
-			case 'obsToggleSource':
-				html += `
-					<div class="property-group">
-						<label class="property-label">Source Name</label>
-						<input type="text" class="property-input" id="prop-sourceName" 
-							value="${node.config.sourceName || ''}" placeholder="e.g., Webcam, Alert Box">
-						<div class="property-help">The exact name of the OBS source to toggle</div>
-					</div>
-					<div class="property-group">
-						<label class="property-label">Visibility</label>
-						<select class="property-input" id="prop-visible">
-							<option value="true" ${node.config.visible === true ? 'selected' : ''}>Show</option>
-							<option value="false" ${node.config.visible === false ? 'selected' : ''}>Hide</option>
-							<option value="toggle" ${node.config.visible === 'toggle' ? 'selected' : ''}>Toggle</option>
-						</select>
-						<div class="property-help">Set whether to show, hide, or toggle the source</div>
-					</div>`;
-				break;
-				
 			case 'obsStartRecording':
 				html += `
 					<div class="property-group">
@@ -2709,6 +2685,10 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Stops the current recording in OBS.</div>
+					</div>
+					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+						<strong>⚠️ OBS Permission Required:</strong><br>
+						Browser Source needs "Advanced Access Level" permissions.
 					</div>`;
 				break;
 				
@@ -2727,6 +2707,10 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Stops the current stream in OBS.</div>
+					</div>
+					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+						<strong>⚠️ OBS Permission Required:</strong><br>
+						Browser Source needs "Advanced Access Level" permissions.
 					</div>`;
 				break;
 				
@@ -2734,6 +2718,10 @@ class EventFlowEditor {
 				html += `
 					<div class="property-group">
 						<div class="property-help">Saves the replay buffer. Replay buffer must be enabled and running in OBS.</div>
+					</div>
+					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+						<strong>⚠️ OBS Permission Required:</strong><br>
+						Browser Source needs "Advanced Access Level" permissions.
 					</div>
 					<div class="property-group" style="background: #4CAF50; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Perfect for saving highlight moments triggered by donations or special messages!

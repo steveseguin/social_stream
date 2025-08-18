@@ -1759,7 +1759,7 @@ class EventFlowSystem {
 					// Assuming sendTargetP2P is globally available or accessible via this.sendToDestinations
 					// or a similar mechanism. The user prompt implies 'sendTargetP2P' is the target function.
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
-						this.sendTargetP2P(actionPayload, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
 						//console.log('[ExecuteAction - playTenorGiphy] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) { // Fallback or alternative
 						 // Adapt this if sendMessageToTabs can target a specific page by a label/identifier
@@ -1782,7 +1782,7 @@ class EventFlowSystem {
 						sceneName: config.sceneName
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
-						this.sendTargetP2P(actionPayload, 'actions');
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
 						//console.log('[ExecuteAction - triggerOBSScene] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
@@ -1803,7 +1803,7 @@ class EventFlowSystem {
 						volume: config.volume !== undefined ? config.volume : 1.0
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
-						this.sendTargetP2P(actionPayload, 'actions');
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
 						//console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
@@ -1839,23 +1839,6 @@ class EventFlowSystem {
                 }
                 break;
                 
-            case 'obsToggleSource':
-                if (config.sourceName) {
-                    const actionPayload = {
-                        action: 'obsToggleSource',
-                        sourceName: config.sourceName,
-                        visible: config.visible
-                    };
-                    
-                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
-                        this.sendTargetP2P(actionPayload, 'actions');
-                        console.log('[OBS] Sent toggle source to actions page:', config.sourceName, config.visible);
-                    } else {
-                        console.warn('[OBS] sendTargetP2P not available on this instance');
-                    }
-                }
-                break;
-                
             case 'obsStartRecording':
                 const startRecordingPayload = {
                     actionType: 'obsStartRecording'
@@ -1863,7 +1846,6 @@ class EventFlowSystem {
                 
                 if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
                     this.sendTargetP2P({ overlayNinja: startRecordingPayload }, 'actions');
-                    console.log('[OBS] Sent start recording to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
@@ -1876,7 +1858,6 @@ class EventFlowSystem {
                 
                 if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
                     this.sendTargetP2P({ overlayNinja: stopRecordingPayload }, 'actions');
-                    console.log('[OBS] Sent stop recording to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
@@ -1889,7 +1870,6 @@ class EventFlowSystem {
                 
                 if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
                     this.sendTargetP2P({ overlayNinja: startStreamingPayload }, 'actions');
-                    console.log('[OBS] Sent start streaming to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
@@ -1902,7 +1882,6 @@ class EventFlowSystem {
                 
                 if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
                     this.sendTargetP2P({ overlayNinja: stopStreamingPayload }, 'actions');
-                    console.log('[OBS] Sent stop streaming to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
@@ -1915,7 +1894,6 @@ class EventFlowSystem {
                 
                 if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
                     this.sendTargetP2P({ overlayNinja: replayBufferPayload }, 'actions');
-                    console.log('[OBS] Sent save replay buffer to actions page');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
