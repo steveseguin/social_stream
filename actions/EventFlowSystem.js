@@ -24,6 +24,13 @@ class EventFlowSystem {
 		this.delayTimers = new Map(); // Store active delay timers
 		this.delayedSignals = new Map(); // Store delayed signal states
 		
+		// State node management for flow control
+		this.nodeStates = new Map(); // Persistent state storage for state nodes
+		this.stateTimers = new Map(); // Timeout management for auto-resets
+		this.messageQueues = new Map(); // Queue storage for queue nodes
+		this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
+		this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+		
         //console.log('[EventFlowSystem Constructor] Initialized with:');
         //console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
         //console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
@@ -226,6 +233,322 @@ class EventFlowSystem {
             default:
                 return false;
         }
+    }
+    
+    // Evaluate state nodes (Gate, Queue, Semaphore, etc.)
+    async evaluateStateNode(node, message, inputActive) {
+        const nodeId = node.id;
+        const stateType = node.stateType;
+        const config = node.config || {};
+        
+        // Initialize state if it doesn't exist
+        if (!this.nodeStates.has(nodeId)) {
+            this.initializeStateNode(nodeId, stateType, config);
+        }
+        
+        // Return object includes both activation state and whether to pass message
+        let result = { active: false, passMessage: false, modifiedMessage: null };
+        
+        switch (stateType) {
+            case 'GATE':
+                result = this.evaluateGateNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'QUEUE':
+                result = this.evaluateQueueNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'SEMAPHORE':
+                result = this.evaluateSemaphoreNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'LATCH':
+                result = this.evaluateLatchNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'THROTTLE':
+                result = this.evaluateThrottleNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'SEQUENCER':
+                result = this.evaluateSequencerNode(nodeId, config, message, inputActive);
+                break;
+                
+            default:
+                result = { active: false, passMessage: false };
+        }
+        
+        return result;
+    }
+    
+    // Initialize state for a state node
+    initializeStateNode(nodeId, stateType, config) {
+        switch (stateType) {
+            case 'GATE':
+                this.nodeStates.set(nodeId, { 
+                    state: config.defaultState || 'ALLOW' 
+                });
+                break;
+                
+            case 'QUEUE':
+                this.messageQueues.set(nodeId, []);
+                this.nodeStates.set(nodeId, { 
+                    processing: false,
+                    lastProcessTime: 0
+                });
+                break;
+                
+            case 'SEMAPHORE':
+                this.semaphoreStates.set(nodeId, {
+                    currentCount: 0,
+                    activeOperations: []
+                });
+                break;
+                
+            case 'LATCH':
+                this.nodeStates.set(nodeId, { 
+                    triggered: false 
+                });
+                break;
+                
+            case 'THROTTLE':
+                this.throttleStates.set(nodeId, {
+                    messageTimestamps: [],
+                    lastResetTime: Date.now()
+                });
+                break;
+                
+            case 'SEQUENCER':
+                this.nodeStates.set(nodeId, {
+                    sequence: [],
+                    lastActivity: Date.now()
+                });
+                break;
+        }
+    }
+    
+    // Gate node: Allow/Block/Toggle state
+    evaluateGateNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        
+        // Handle control signals (would come from special control connections)
+        // For now, just use the current state
+        
+        if (state.state === 'ALLOW') {
+            // Check for auto-reset
+            if (config.autoResetMs > 0) {
+                // Clear existing timer
+                if (this.stateTimers.has(nodeId)) {
+                    clearTimeout(this.stateTimers.get(nodeId));
+                }
+                // Set new timer to reset to BLOCK
+                const timer = setTimeout(() => {
+                    state.state = 'BLOCK';
+                    this.stateTimers.delete(nodeId);
+                }, config.autoResetMs);
+                this.stateTimers.set(nodeId, timer);
+            }
+            // Pass the message through unchanged
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Block the message
+        return { active: false, passMessage: false };
+    }
+    
+    // Queue node: FIFO message queue with overflow strategies
+    evaluateQueueNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const queue = this.messageQueues.get(nodeId) || [];
+        const state = this.nodeStates.get(nodeId);
+        
+        // Add message to queue
+        if (message) {
+            // Check queue size limit
+            if (queue.length >= config.maxSize) {
+                // Apply overflow strategy
+                switch (config.overflowStrategy) {
+                    case 'DROP_OLDEST':
+                        queue.shift(); // Remove oldest
+                        break;
+                    case 'DROP_NEWEST':
+                        return false; // Don't add new message
+                    case 'DROP_RANDOM':
+                        const randomIndex = Math.floor(Math.random() * queue.length);
+                        queue.splice(randomIndex, 1);
+                        break;
+                    default:
+                        return false; // Block by default
+                }
+            }
+            
+            // Add message with timestamp
+            queue.push({
+                message: message,
+                timestamp: Date.now()
+            });
+            this.messageQueues.set(nodeId, queue);
+        }
+        
+        // Check if we should dequeue
+        if (config.autoDequeue && !state.processing) {
+            const now = Date.now();
+            const timeSinceLastProcess = now - state.lastProcessTime;
+            
+            if (timeSinceLastProcess >= config.processingDelayMs && queue.length > 0) {
+                // Check TTL and remove expired messages
+                const filteredQueue = queue.filter(item => {
+                    return (now - item.timestamp) < config.ttlMs;
+                });
+                this.messageQueues.set(nodeId, filteredQueue);
+                
+                if (filteredQueue.length > 0) {
+                    // Dequeue next message
+                    const item = filteredQueue.shift();
+                    state.processing = true;
+                    state.lastProcessTime = now;
+                    
+                    // Reset processing flag after delay
+                    setTimeout(() => {
+                        state.processing = false;
+                    }, config.processingDelayMs);
+                    
+                    // Return the dequeued message (async - doesn't return original)
+                    return { active: true, passMessage: false, modifiedMessage: item.message };
+                }
+            }
+        }
+        
+        // Message queued but not released yet
+        return { active: false, passMessage: false };
+    }
+    
+    // Cleanup state nodes when flow is deactivated
+    cleanupStateNodes(flowId) {
+        // Clear all timers for this flow's nodes
+        this.stateTimers.forEach((timer, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                clearTimeout(timer);
+                this.stateTimers.delete(nodeId);
+            }
+        });
+        
+        // Clear state storage
+        this.nodeStates.forEach((state, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.nodeStates.delete(nodeId);
+            }
+        });
+        
+        // Clear message queues
+        this.messageQueues.forEach((queue, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.messageQueues.delete(nodeId);
+            }
+        });
+        
+        // Clear semaphore states
+        this.semaphoreStates.forEach((state, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.semaphoreStates.delete(nodeId);
+            }
+        });
+        
+        // Clear throttle states
+        this.throttleStates.forEach((state, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.throttleStates.delete(nodeId);
+            }
+        });
+    }
+    
+    // Simplified implementations for other state nodes (to be expanded)
+    evaluateSemaphoreNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.semaphoreStates.get(nodeId);
+        if (state.currentCount < config.maxConcurrent) {
+            state.currentCount++;
+            
+            // Auto-release after timeout
+            if (config.timeoutMs > 0) {
+                setTimeout(() => {
+                    if (state.currentCount > 0) {
+                        state.currentCount--;
+                    }
+                }, config.timeoutMs);
+            }
+            
+            // Allow message through
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Block message - semaphore full
+        return { active: false, passMessage: false };
+    }
+    
+    evaluateLatchNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        if (!state.triggered) {
+            state.triggered = true;
+            
+            // Auto-reset after timeout
+            if (config.autoResetMs > 0) {
+                setTimeout(() => {
+                    state.triggered = false;
+                }, config.autoResetMs);
+            }
+            
+            // First trigger - pass message through
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Already triggered - block
+        return { active: false, passMessage: false };
+    }
+    
+    evaluateThrottleNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.throttleStates.get(nodeId);
+        const now = Date.now();
+        
+        // Remove timestamps older than 1 second
+        state.messageTimestamps = state.messageTimestamps.filter(
+            timestamp => now - timestamp < 1000
+        );
+        
+        if (state.messageTimestamps.length < config.messagesPerSecond) {
+            state.messageTimestamps.push(now);
+            // Within rate limit - pass through
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Rate limit exceeded - block
+        return { active: false, passMessage: false };
+    }
+    
+    evaluateSequencerNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        const now = Date.now();
+        
+        // Check for timeout
+        if (config.resetOnTimeout && (now - state.lastActivity) > config.timeoutMs) {
+            state.sequence = [];
+        }
+        
+        state.sequence.push(now);
+        state.lastActivity = now;
+        
+        // Sequencer delays messages - async operation
+        return { active: true, passMessage: false, modifiedMessage: message };
     }
     
     async initDatabase() {
@@ -629,6 +952,29 @@ class EventFlowSystem {
                         nodeActivationStates[node.id] = result;
                         
                       //console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
+                        madeChangeInLoop = true;
+                    }
+                } else if (node.type === 'state' && !nodeActivationStates.hasOwnProperty(node.id)) {
+                    const inputConnections = flow.connections.filter(conn => conn.to === node.id);
+                    const inputNodeIds = inputConnections.map(conn => conn.from);
+                    
+                    const allInputsEvaluated = inputNodeIds.every(inputId => nodeActivationStates.hasOwnProperty(inputId));
+
+                    if (allInputsEvaluated) {
+                        const inputActive = inputNodeIds.some(inputId => nodeActivationStates[inputId] === true);
+                      //console.log(`[EvaluateFlow "${flow.name}"] Evaluating State Node ID: ${node.id} (${node.stateType}) with input active: ${inputActive}`);
+                        const result = await this.evaluateStateNode(node, message, inputActive);
+                        
+                        // State nodes return an object with activation and pass-through info
+                        nodeActivationStates[node.id] = result.active;
+                        
+                        // If the state node modifies or passes the message, update it
+                        if (result.passMessage && result.modifiedMessage) {
+                            // Update the message for downstream nodes
+                            message = result.modifiedMessage;
+                        }
+                        
+                      //console.log(`[EvaluateFlow "${flow.name}"] State Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
                         madeChangeInLoop = true;
                     }
                 }

@@ -40,11 +40,7 @@ class EventFlowEditor {
             { id: 'midiNoteOn', name: '🎹 MIDI Note On' },
             { id: 'midiNoteOff', name: '🎹 MIDI Note Off' },
             { id: 'midiCC', name: '🎛️ MIDI Control Change' },
-            { id: 'messageProperties', name: '⚙️ Message Properties Filter' },
-            { id: 'counter', name: '🔄 Counter' },
-            { id: 'userPool', name: '👥 User Pool' },
-            { id: 'accumulator', name: '➕ Accumulator' },
-            { id: 'customJs', name: '📝 Custom JavaScript' }
+            { id: 'messageProperties', name: '⚙️ Message Properties Filter' }
         ];
 
 		this.actionTypes = [
@@ -75,8 +71,7 @@ class EventFlowEditor {
 			{ id: 'obsStopStreaming', name: '⏹️ OBS: Stop Streaming' },
 			{ id: 'obsReplayBuffer', name: '💾 OBS: Save Replay Buffer' },
 			{ id: 'midiSendNote', name: '🎹 MIDI: Send Note' },
-			{ id: 'midiSendCC', name: '🎛️ MIDI: Send Control Change' },
-			{ id: 'customJs', name: '📝 Custom JavaScript' }
+			{ id: 'midiSendCC', name: '🎛️ MIDI: Send Control Change' }
 		];
 
         // Check if we're in ssapp context for cross-origin communication
@@ -89,6 +84,19 @@ class EventFlowEditor {
             { id: 'OR', name: '🔄 OR Gate', type: 'logic', logicType: 'OR' },
             { id: 'NOT', name: '🚫 NOT Gate', type: 'logic', logicType: 'NOT' },
             { id: 'RANDOM', name: '🎲 RANDOM Gate', type: 'logic', logicType: 'RANDOM' }
+        ];
+        
+        // State management nodes - maintain state between messages
+        this.stateNodeTypes = [
+            { id: 'GATE', name: '🚦 Gate Control', type: 'state', stateType: 'GATE' },
+            { id: 'QUEUE', name: '📋 Message Queue', type: 'state', stateType: 'QUEUE' },
+            { id: 'SEMAPHORE', name: '🎛️ Semaphore', type: 'state', stateType: 'SEMAPHORE' },
+            { id: 'LATCH', name: '🔒 Latch Memory', type: 'state', stateType: 'LATCH' },
+            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' },
+            { id: 'SEQUENCER', name: '🎬 Sequencer', type: 'state', stateType: 'SEQUENCER' },
+            { id: 'COUNTER', name: '🔄 Counter', type: 'state', stateType: 'COUNTER' },
+            { id: 'USERPOOL', name: '👥 User Pool', type: 'state', stateType: 'USERPOOL' },
+            { id: 'ACCUMULATOR', name: '➕ Accumulator', type: 'state', stateType: 'ACCUMULATOR' }
         ];
 
         this.init(); // init() will call createEditorLayout()
@@ -135,6 +143,14 @@ class EventFlowEditor {
                             ${this.logicNodeTypes.map(logicNode => `
                                 <div class="node-item logic" data-nodetype="logic" data-subtype="${logicNode.id}" draggable="true">
                                     ${logicNode.name}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <h3>State Nodes</h3>
+                        <div class="node-list" id="state-list">
+                            ${this.stateNodeTypes.map(stateNode => `
+                                <div class="node-item state" data-nodetype="state" data-subtype="${stateNode.id}" draggable="true">
+                                    ${stateNode.name}
                                 </div>
                             `).join('')}
                         </div>
@@ -207,6 +223,10 @@ class EventFlowEditor {
 		const logicItems = document.querySelectorAll('#logic-list .node-item');
         logicItems.forEach(item => {
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'logic', item.dataset.subtype));
+        });
+        const stateItems = document.querySelectorAll('#state-list .node-item');
+        stateItems.forEach(item => {
+            item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'state', item.dataset.subtype));
         });
 		
         const canvas = document.getElementById('flow-canvas');
@@ -966,6 +986,19 @@ class EventFlowEditor {
 			
 			inputPointsHTML = `<div class="${pointClasses}" data-point-type="input" data-logic-type="${node.logicType}"></div>`;
 			outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
+		} else if (node.type === 'state') {
+			// State nodes have input and output points
+			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
+			
+			// Determine if this state node blocks or delays messages
+			// Queue and Sequencer delay messages (async), others pass through synchronously
+			const asyncStateNodes = ['QUEUE', 'SEQUENCER'];
+			if (asyncStateNodes.includes(node.stateType)) {
+				outputPointsHTML = '<div class="connection-point output async-output" data-point-type="output"></div>';
+			} else {
+				// Gate, Semaphore, Latch, Throttle can pass messages through synchronously
+				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>';
+			}
 		}
 
 		nodeEl.innerHTML = `
@@ -1017,6 +1050,9 @@ class EventFlowEditor {
         } else if (node.type === 'logic') { // NEW
             typesArray = this.logicNodeTypes;
             subtypeField = 'logicType';
+        } else if (node.type === 'state') {
+            typesArray = this.stateNodeTypes;
+            subtypeField = 'stateType';
         } else {
             return 'Unknown Type';
         }
@@ -1095,33 +1131,6 @@ class EventFlowEditor {
                     if (forb) return `${forb} forbidden`;
                     return 'No filters set';
                 }
-                case 'counter': {
-                    const name = node.config.counterName || 'default';
-                    const thresh = node.config.threshold || 10;
-                    const mode = node.config.triggerMode === 'multiple' ? `Every ${thresh}` : 
-                                  node.config.triggerMode === 'gte' ? `≥${thresh}` : `=${thresh}`;
-                    const scope = node.config.scope === 'global' ? ' (global)' : 
-                                  node.config.scope === 'perSource' ? ' (per source)' : 
-                                  node.config.scope === 'perUserPerSource' ? ' (per user/source)' : ' (per user)';
-                    return `${name}: ${mode}${scope}`;
-                }
-                case 'userPool': {
-                    const name = node.config.poolName || 'default';
-                    const max = node.config.maxUsers || 10;
-                    const keyword = node.config.requireEntry ? ` "${node.config.entryKeyword || '!enter'}"` : '';
-                    const scope = node.config.scope === 'perSource' ? ' (per source)' : '';
-                    return `${name}: ${max} users${keyword}${scope}`;
-                }
-                case 'accumulator': {
-                    const name = node.config.accumulatorName || 'default';
-                    const op = node.config.operation || 'sum';
-                    const thresh = node.config.threshold || 100;
-                    const mode = node.config.triggerMode === 'lte' ? '≤' : 
-                                  node.config.triggerMode === 'exact' ? '=' : '≥';
-                    const prop = node.config.propertyName || 'amount';
-                    return `${name}: ${op}(${prop}) ${mode}${thresh}`;
-                }
-                case 'customJs': return 'Custom JS';
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
@@ -1170,6 +1179,33 @@ class EventFlowEditor {
                 case 'NOT': return 'Inverts the input signal.';
                 case 'RANDOM': return `${node.config?.probability || 50}% chance`;
                 default: return 'Logic Gate';
+            }
+        } else if (node.type === 'state') {
+            switch (node.stateType) {
+                case 'GATE': return `State: ${node.config?.defaultState || 'ALLOW'}`;
+                case 'QUEUE': return `Max: ${node.config?.maxSize || 10}, ${node.config?.overflowStrategy || 'DROP_OLDEST'}`;
+                case 'SEMAPHORE': return `Max concurrent: ${node.config?.maxConcurrent || 1}`;
+                case 'LATCH': return node.config?.autoResetMs > 0 ? `Auto-reset: ${node.config.autoResetMs/1000}s` : 'Manual reset';
+                case 'THROTTLE': return `${node.config?.messagesPerSecond || 1} msg/s`;
+                case 'SEQUENCER': return `Delay: ${(node.config?.sequenceDelayMs || 1000)/1000}s`;
+                case 'COUNTER': {
+                    const name = node.config?.counterName || 'default';
+                    const thresh = node.config?.threshold || 10;
+                    const mode = node.config?.triggerMode === 'multiple' ? `Every ${thresh}` : 
+                                  node.config?.triggerMode === 'gte' ? `≥${thresh}` : `=${thresh}`;
+                    return `${name}: ${mode}`;
+                }
+                case 'USERPOOL': {
+                    const name = node.config?.poolName || 'default';
+                    const max = node.config?.maxUsers || 10;
+                    return `${name}: ${max} users max`;
+                }
+                case 'ACCUMULATOR': {
+                    const thresh = node.config?.threshold || 100;
+                    const op = node.config?.operation || 'sum';
+                    return `${op} until ${thresh}`;
+                }
+                default: return 'State Node';
             }
         }
         return '';
@@ -1493,10 +1529,6 @@ class EventFlowEditor {
                 case 'midiNoteOff': node.config = { deviceId: '', note: '', channel: 1 }; break;
                 case 'midiCC': node.config = { deviceId: '', controller: '', channel: 1 }; break;
                 case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true }; break;
-                case 'counter': node.config = { counterName: 'default', scope: 'perUser', threshold: 10, triggerMode: 'exact', autoReset: false, countType: 'messages', resetAfterMs: 0 }; break;
-                case 'userPool': node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' }; break;
-                case 'accumulator': node.config = { accumulatorName: 'default', threshold: 100, propertyName: 'amount', operation: 'sum', triggerMode: 'gte', autoReset: false, scope: 'global', resetAfterMs: 0 }; break;
-                case 'customJs': node.config = { code: 'return message.chatmessage.includes("test");' }; break;
             }
         } else if (type === 'action') {
             node.actionType = subtype;
@@ -1527,8 +1559,6 @@ class EventFlowEditor {
 					node.config = { amount: 100 }; break;
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
-                case 'customJs': 
-					node.config = { code: 'message.chatmessage += " (edited)";\nreturn { modified: true, message };' }; break;
 				case 'playTenorGiphy':
 					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000 };
 					break;
@@ -1574,9 +1604,6 @@ class EventFlowEditor {
 				case 'midiSendCC':
 					node.config = { deviceId: '', controller: 1, value: 64, channel: 1 };
 					break;
-				case 'customJs':
-					node.config = { code: 'console.log("Action executed!", message);' };
-					break;
             }
         } else if (type === 'logic') { // NEW
             node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT', 'RANDOM'
@@ -1588,6 +1615,39 @@ class EventFlowEditor {
                 default:
                     node.config = {};
                     break;
+            }
+        } else if (type === 'state') {
+            node.stateType = subtype;
+            switch (subtype) {
+                case 'GATE':
+                    node.config = { defaultState: 'ALLOW', autoResetMs: 0 };
+                    break;
+                case 'QUEUE':
+                    node.config = { maxSize: 10, overflowStrategy: 'DROP_OLDEST', processingDelayMs: 1000, ttlMs: 60000, autoDequeue: true };
+                    break;
+                case 'SEMAPHORE':
+                    node.config = { maxConcurrent: 1, timeoutMs: 30000, queueOverflow: false };
+                    break;
+                case 'LATCH':
+                    node.config = { autoResetMs: 0, resetOnFlow: false };
+                    break;
+                case 'THROTTLE':
+                    node.config = { messagesPerSecond: 1, burstSize: 1, dropStrategy: 'DROP_NEWEST' };
+                    break;
+                case 'SEQUENCER':
+                    node.config = { sequenceDelayMs: 1000, resetOnTimeout: true, timeoutMs: 60000 };
+                    break;
+                case 'COUNTER':
+                    node.config = { counterName: 'default', scope: 'perUser', threshold: 10, triggerMode: 'exact', autoReset: false, resetAfterMs: 0 };
+                    break;
+                case 'USERPOOL':
+                    node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' };
+                    break;
+                case 'ACCUMULATOR':
+                    node.config = { accumulatorName: 'default', threshold: 100, propertyName: 'amount', operation: 'sum', triggerMode: 'gte', autoReset: false, scope: 'global', resetAfterMs: 0 };
+                    break;
+                default:
+                    node.config = {};
             }
         }
         this.currentFlow.nodes.push(node);
@@ -1770,6 +1830,9 @@ class EventFlowEditor {
 		} else if (node.type === 'logic') {
 			typeArray = this.logicNodeTypes; // Ensure this.logicNodeTypes is defined in your constructor
 			subtypeField = 'logicType';
+		} else if (node.type === 'state') {
+			typeArray = this.stateNodeTypes;
+			subtypeField = 'stateType';
 		} else {
 			propertiesContent.innerHTML = '<p>Unknown node type selected.</p>';
 			return;
@@ -2630,6 +2693,113 @@ class EventFlowEditor {
 					<input type="number" class="property-input" id="prop-probability" value="${node.config?.probability || 50}" min="0" max="100">
 				</div>
 				<p class="property-help">This gate randomly passes or blocks the input signal based on the probability. For example, 25% means the signal will pass through roughly 1 in 4 times.</p>`;
+				break;
+			
+			// State Node Configurations
+			case 'GATE':
+				html += `<div class="property-group">
+					<label class="property-label">Default State</label>
+					<select class="property-input" id="prop-defaultState">
+						<option value="ALLOW" ${node.config?.defaultState === 'ALLOW' ? 'selected' : ''}>ALLOW</option>
+						<option value="BLOCK" ${node.config?.defaultState === 'BLOCK' ? 'selected' : ''}>BLOCK</option>
+					</select>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Auto Reset (ms, 0 = disabled)</label>
+					<input type="number" class="property-input" id="prop-autoResetMs" value="${node.config?.autoResetMs || 0}" min="0">
+				</div>
+				<p class="property-help">Gate controls message flow. When ALLOW, messages pass through. When BLOCK, messages are stopped.</p>`;
+				break;
+				
+			case 'QUEUE':
+				html += `<div class="property-group">
+					<label class="property-label">Max Queue Size</label>
+					<input type="number" class="property-input" id="prop-maxSize" value="${node.config?.maxSize || 10}" min="1">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Overflow Strategy</label>
+					<select class="property-input" id="prop-overflowStrategy">
+						<option value="DROP_OLDEST" ${node.config?.overflowStrategy === 'DROP_OLDEST' ? 'selected' : ''}>Drop Oldest (Leaky)</option>
+						<option value="DROP_NEWEST" ${node.config?.overflowStrategy === 'DROP_NEWEST' ? 'selected' : ''}>Drop Newest</option>
+						<option value="DROP_RANDOM" ${node.config?.overflowStrategy === 'DROP_RANDOM' ? 'selected' : ''}>Drop Random</option>
+					</select>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Processing Delay (ms)</label>
+					<input type="number" class="property-input" id="prop-processingDelayMs" value="${node.config?.processingDelayMs || 1000}" min="0">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Message TTL (ms)</label>
+					<input type="number" class="property-input" id="prop-ttlMs" value="${node.config?.ttlMs || 60000}" min="1000">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Auto Dequeue</label>
+					<input type="checkbox" class="property-input" id="prop-autoDequeue" ${node.config?.autoDequeue ? 'checked' : ''}>
+				</div>
+				<p class="property-help">Queues messages and releases them sequentially. Perfect for preventing overlapping animations.</p>`;
+				break;
+				
+			case 'SEMAPHORE':
+				html += `<div class="property-group">
+					<label class="property-label">Max Concurrent</label>
+					<input type="number" class="property-input" id="prop-maxConcurrent" value="${node.config?.maxConcurrent || 1}" min="1">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Timeout (ms, 0 = no timeout)</label>
+					<input type="number" class="property-input" id="prop-timeoutMs" value="${node.config?.timeoutMs || 30000}" min="0">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Queue on Overflow</label>
+					<input type="checkbox" class="property-input" id="prop-queueOverflow" ${node.config?.queueOverflow ? 'checked' : ''}>
+				</div>
+				<p class="property-help">Limits how many operations can run simultaneously. E.g., allow only 2 scene effects at once.</p>`;
+				break;
+				
+			case 'LATCH':
+				html += `<div class="property-group">
+					<label class="property-label">Auto Reset (ms, 0 = manual reset)</label>
+					<input type="number" class="property-input" id="prop-autoResetMs" value="${node.config?.autoResetMs || 0}" min="0">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Reset on Flow Reload</label>
+					<input type="checkbox" class="property-input" id="prop-resetOnFlow" ${node.config?.resetOnFlow ? 'checked' : ''}>
+				</div>
+				<p class="property-help">Triggers once and stays triggered until reset. Useful for one-shot events.</p>`;
+				break;
+				
+			case 'THROTTLE':
+				html += `<div class="property-group">
+					<label class="property-label">Messages Per Second</label>
+					<input type="number" class="property-input" id="prop-messagesPerSecond" value="${node.config?.messagesPerSecond || 1}" min="0.1" step="0.1">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Burst Size</label>
+					<input type="number" class="property-input" id="prop-burstSize" value="${node.config?.burstSize || 1}" min="1">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Drop Strategy</label>
+					<select class="property-input" id="prop-dropStrategy">
+						<option value="DROP_NEWEST" ${node.config?.dropStrategy === 'DROP_NEWEST' ? 'selected' : ''}>Drop Newest</option>
+						<option value="DROP_OLDEST" ${node.config?.dropStrategy === 'DROP_OLDEST' ? 'selected' : ''}>Drop Oldest</option>
+					</select>
+				</div>
+				<p class="property-help">Limits message rate. Prevents spam and controls flow speed.</p>`;
+				break;
+				
+			case 'SEQUENCER':
+				html += `<div class="property-group">
+					<label class="property-label">Sequence Delay (ms)</label>
+					<input type="number" class="property-input" id="prop-sequenceDelayMs" value="${node.config?.sequenceDelayMs || 1000}" min="0">
+				</div>
+				<div class="property-group">
+					<label class="property-label">Reset on Timeout</label>
+					<input type="checkbox" class="property-input" id="prop-resetOnTimeout" ${node.config?.resetOnTimeout ? 'checked' : ''}>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Timeout (ms)</label>
+					<input type="number" class="property-input" id="prop-timeoutMs" value="${node.config?.timeoutMs || 60000}" min="1000">
+				</div>
+				<p class="property-help">Enforces sequential execution with delays. Good for step-by-step processes.</p>`;
 				break;
 			case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
 				html += `<div class="property-group">

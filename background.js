@@ -7876,24 +7876,24 @@ function delayedDetach(tabid) {
 }
 
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 3500) {
-    console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
-        data: data,
-        reverse: reverse,
-        metadata: metadata,
-        relayMode: relayMode,
-        antispam: antispam,
-        overrideTimeout: overrideTimeout,
-        isExtensionOn: isExtensionOn,
-        disablehost: settings.disablehost
-    });
+    // console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
+    //     data: data,
+    //     reverse: reverse,
+    //     metadata: metadata,
+    //     relayMode: relayMode,
+    //     antispam: antispam,
+    //     overrideTimeout: overrideTimeout,
+    //     isExtensionOn: isExtensionOn,
+    //     disablehost: settings.disablehost
+    // });
     
     if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
-        console.log('[RELAY DEBUG - sendMessageToTabs] Early return - Extension off or host disabled');
+        // console.log('[RELAY DEBUG - sendMessageToTabs] Early return - Extension off or host disabled');
         return false;
     }
 
 	if (!data.response){
-		console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
+		// console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
 		return false;
 	}
     if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
@@ -7928,13 +7928,13 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     try {
 		
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
-        console.log(`[RELAY DEBUG - sendMessageToTabs] Found ${tabs.length} tabs`);
+        // console.log(`[RELAY DEBUG - sendMessageToTabs] Found ${tabs.length} tabs`);
         var published = {};
         let processedAnyTab = false;  // Track if we processed any tabs with destination filter
         
         // Helper function to process a tab
         const processTab = async (tab) => {
-            console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
+            // console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
             processedAnyTab = true;  // Mark that we found at least one valid tab
 
             // Handle message store
@@ -8016,19 +8016,19 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                 // Skip invalid tabs
                 let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
                 if (!isValid) {
-                    console.log(`[RELAY DEBUG - sendMessageToTabs] Tab ${tab.id} (${tab.url?.substring(0, 50)}...) is invalid, skipping`);
+                    // console.log(`[RELAY DEBUG - sendMessageToTabs] Tab ${tab.id} (${tab.url?.substring(0, 50)}...) is invalid, skipping`);
                     continue;
                 }
                 await processTab(tab);
             } catch (e) {
                 chrome.runtime.lastError;
-                console.log(`[RELAY DEBUG - sendMessageToTabs] Error processing tab ${tab.id}:`, e);
+                // console.log(`[RELAY DEBUG - sendMessageToTabs] Error processing tab ${tab.id}:`, e);
             }
         }
         
         // If we have a destination filter and didn't process any tabs, try URL matching as fallback
         if (data.destination && !processedAnyTab) {
-            console.log(`[RELAY DEBUG - sendMessageToTabs] No tabs matched destination '${data.destination}' by source type, trying URL matching fallback`);
+            // console.log(`[RELAY DEBUG - sendMessageToTabs] No tabs matched destination '${data.destination}' by source type, trying URL matching fallback`);
             
             // Reset published to allow retrying
             published = {};
@@ -8061,15 +8061,15 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     
                     // Try URL matching for the destination
                     if (!tab.url.includes(data.destination)) {
-                        console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Tab ${tab.id} URL doesn't include '${data.destination}', skipping`);
+                        // console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Tab ${tab.id} URL doesn't include '${data.destination}', skipping`);
                         continue;
                     }
                     
-                    console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Processing tab ${tab.id} via URL match: ${tab.url?.substring(0, 50)}...`);
+                    // console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Processing tab ${tab.id} via URL match: ${tab.url?.substring(0, 50)}...`);
                     await processTab(tab);
                 } catch (e) {
                     chrome.runtime.lastError;
-                    console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Error processing tab ${tab.id}:`, e);
+                    // console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Error processing tab ${tab.id}:`, e);
                 }
             }
         }
@@ -8108,7 +8108,7 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
     if (data.destination) {
         // Ensure tab.id exists before trying to get source type
         if (!tab.id) {
-            console.log('[RELAY DEBUG - isValidTab] No tab.id available, cannot check source type');
+            // console.log('[RELAY DEBUG - isValidTab] No tab.id available, cannot check source type');
             // Fall back to URL matching if we have a URL
             if (tab.url && !tab.url.includes(data.destination)) {
                 return false;
@@ -8117,19 +8117,19 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         }
         
         const sourceType = await getSourceType(tab.id);
-        console.log('[RELAY DEBUG - isValidTab] Tab source type:', sourceType, 'Expected destination:', data.destination);
+        // console.log('[RELAY DEBUG - isValidTab] Tab source type:', sourceType, 'Expected destination:', data.destination);
         
         // If we couldn't get the source type, fall back to URL matching for custom destinations
         if (!sourceType) {
             // For custom destinations like channel names, still use URL matching
             if (!tab.url.includes(data.destination)) {
-                console.log('[RELAY DEBUG - isValidTab] No source type, URL check failed');
+                // console.log('[RELAY DEBUG - isValidTab] No source type, URL check failed');
                 return false;
             }
         } else {
             // For platform destinations, match exact source type (already lowercase from getSourceType)
             if (sourceType !== data.destination.toLowerCase()) {
-                console.log('[RELAY DEBUG - isValidTab] Source type mismatch');
+                // console.log('[RELAY DEBUG - isValidTab] Source type mismatch');
                 // Don't return false here - we'll check this in sendMessageToTabs for fallback
                 return false;
             }

@@ -5945,12 +5945,35 @@ input:checked + .slider:before {
                     </span>
                     <br>
                     <span style="color: #888; font-size: 0.9em;">
-                       Note: To access the Event Flow Editor, visit <a href="actions/index.html" target="_blank" style="color: #4a9eff;">actions/index.html</a> instead.
+                       Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" style="color: #4a9eff;">click here</a>.
                     </span>
                 </h3>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
             </div>
 			
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-obs-options" />
+                    <label class="collapsible-label" for="wrapper-flowactions-obs-options">🎬 <span data-translate="obs-websocket-settings">OBS WebSocket Settings</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group flowactions">
+                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket server URL (default: ws://localhost:4455)">
+                                    <input type="text" id="obsWebSocketUrl" class="textInput instant" autocomplete="off" placeholder="ws://localhost:4455" data-textparam18="obsws" />
+                                    <label for="obsWebSocketUrl"><span data-translate="obs-websocket-url">&gt; OBS WebSocket URL</span></label>
+                                </div>
+                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket password for authentication">
+                                    <input type="password" id="obsWebSocketPassword" class="textInput instant" autocomplete="off" placeholder="Enter your OBS password" data-textparam18="obspw" />
+                                    <label for="obsWebSocketPassword"><span data-translate="obs-websocket-password">&gt; OBS WebSocket Password</span></label>
+                                </div>
+                                <div style="margin-top: 10px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
+                                    <small data-translate="obs-websocket-info">💡 Configure your OBS WebSocket settings here to enable Flow Actions to control OBS. Make sure OBS WebSocket Server is enabled in OBS: Tools → WebSocket Server Settings</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 			
 			<div class="link hidden" title="Giveaway Tool" style="display:none;">
                 <h2 class="giveaway_mode_title">

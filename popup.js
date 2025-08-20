@@ -48,6 +48,14 @@ ssapp = urlParams.has("ssapp") || ssapp;
 var isExtensionOn = false;
 var ssapp = false;
 var USERNAMES = [];
+
+// Function to open Event Flow Editor
+function openEventFlowEditor() {
+    // For all contexts, just open actions/index.html
+    window.open('actions/index.html', '_blank');
+}
+// Make function available globally
+window.openEventFlowEditor = openEventFlowEditor;
 var WebMidi = null;
 var webMidiInitialized = false;
 var webMidiScriptLoaded = false;
@@ -4661,6 +4669,16 @@ const PollManager = {
 
 
 document.addEventListener("DOMContentLoaded", async function(event) {
+	// Add event listener for Event Flow Editor link
+	const eventFlowLink = document.getElementById('open-event-flow-editor-link');
+	if (eventFlowLink) {
+		eventFlowLink.addEventListener('click', function(e) {
+			e.preventDefault();
+			openEventFlowEditor();
+			return false;
+		});
+	}
+	
 	// Initialize ProfileManager after DOM is ready
 	ProfileManager.init();
 	

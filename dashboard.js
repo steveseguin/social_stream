@@ -269,22 +269,7 @@ function showDashboardView() {
     
 }
 
-function showEditorView() {
-    document.getElementById("dash").style.display = 'none';
-    document.getElementById("editorstyle").removeAttribute("disabled");
-    
-    document.getElementById("editor").style.opacity = '0';
-    document.getElementById("editor").style.display = 'block';
-    
-    void document.getElementById("editor").offsetWidth;
-    document.getElementById("editor").style.opacity = '1';
-    
-    document.getElementById("dashstyle").setAttribute("disabled", "true");
-    
-    document.body.style.padding = '0';
-    document.body.style.overflow = 'hidden';
-	
-}
+// Duplicate showEditorView removed - using the one defined earlier
 
 function setupReturnButton() {
     const returnButton = document.getElementById('return-to-dashboard');
@@ -338,6 +323,22 @@ function initDashboard() {
 			showEditorView();
 		}, 100);
 	}
+	
+	// Check if we should show editor based on hash
+	if (window.location.hash === '#editor') {
+		setTimeout(() => {
+			showEditorView();
+		}, 100);
+	}
+	
+	// Listen for hash changes to switch views
+	window.addEventListener('hashchange', function() {
+		if (window.location.hash === '#editor') {
+			showEditorView();
+		} else if (window.location.hash === '#dashboard' || !window.location.hash) {
+			showDashboardView();
+		}
+	});
 }
 
 if (document.readyState === "complete" || document.readyState === "interactive") {
