@@ -2116,10 +2116,10 @@ TTS.initKitten = async function() {
             });
         }
         
-        // Configure WASM paths after loading - use the main thirdparty folder
+        // Configure WASM paths after loading
         if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
-            // Use the main thirdparty folder where the general ONNX WASM files are located
-            ort.env.wasm.wasmPaths = './thirdparty/';
+            // Use absolute URL for WASM files to avoid path resolution issues
+            ort.env.wasm.wasmPaths = baseUrl + '/thirdparty/';
             ort.env.wasm.numThreads = 1;
             ort.env.wasm.simd = false;
             
