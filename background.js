@@ -5684,7 +5684,6 @@ function setupSocket() {
 				data.target = "";
 			}
 			
-			console.log(data.kofi);
 
 			if (data.action && data.action === "sendChat" && data.value) {
 				var msg = {};

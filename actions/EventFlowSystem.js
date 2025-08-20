@@ -274,6 +274,10 @@ class EventFlowSystem {
                 result = this.evaluateSequencerNode(nodeId, config, message, inputActive);
                 break;
                 
+            case 'COUNTER':
+                result = this.evaluateCounterNode(nodeId, config, message, inputActive);
+                break;
+                
             default:
                 result = { active: false, passMessage: false };
         }
@@ -322,6 +326,15 @@ class EventFlowSystem {
                 this.nodeStates.set(nodeId, {
                     sequence: [],
                     lastActivity: Date.now()
+                });
+                break;
+                
+            case 'COUNTER':
+                this.nodeStates.set(nodeId, {
+                    count: config.initialCount || 0,
+                    targetCount: config.targetCount || 10,
+                    resetOnTarget: config.resetOnTarget !== false,
+                    mode: config.mode || 'INCREMENT' // INCREMENT, DECREMENT, or MATCH
                 });
                 break;
         }
@@ -549,6 +562,52 @@ class EventFlowSystem {
         
         // Sequencer delays messages - async operation
         return { active: true, passMessage: false, modifiedMessage: message };
+    }
+    
+    // Counter node: Counts messages and triggers at target
+    evaluateCounterNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        
+        // Increment/decrement counter based on mode
+        if (state.mode === 'INCREMENT') {
+            state.count++;
+        } else if (state.mode === 'DECREMENT') {
+            state.count--;
+        }
+        
+        // Check if we've reached the target
+        const targetReached = (state.mode === 'MATCH' && state.count === state.targetCount) ||
+                            (state.mode === 'INCREMENT' && state.count >= state.targetCount) ||
+                            (state.mode === 'DECREMENT' && state.count <= state.targetCount);
+        
+        let shouldPass = false;
+        
+        if (targetReached) {
+            shouldPass = true;
+            
+            // Reset counter if configured to do so
+            if (state.resetOnTarget) {
+                state.count = config.initialCount || 0;
+            }
+        }
+        
+        // Add count to message for downstream nodes
+        const modifiedMessage = {
+            ...message,
+            counterValue: state.count,
+            counterTarget: state.targetCount,
+            counterTriggered: targetReached
+        };
+        
+        console.log(`[Counter ${nodeId}] Count: ${state.count}/${state.targetCount}, Pass: ${shouldPass}`);
+        
+        return { 
+            active: shouldPass, 
+            passMessage: shouldPass, 
+            modifiedMessage: modifiedMessage 
+        };
     }
     
     async initDatabase() {
@@ -2328,6 +2387,76 @@ class EventFlowSystem {
                         console.log(`[MIDI] Sent CC ${config.controller}:${value} to device ${config.deviceId}`);
                     } catch (err) {
                         console.error('[MIDI] Error sending CC:', err);
+                    }
+                }
+                break;
+                
+            case 'setGateState':
+                // Set the state of a gate node (ALLOW or BLOCK)
+                if (config.targetNodeId && config.state) {
+                    const targetState = this.nodeStates.get(config.targetNodeId);
+                    if (targetState) {
+                        targetState.state = config.state; // 'ALLOW' or 'BLOCK'
+                        console.log(`[SetGateState] Gate ${config.targetNodeId} set to ${config.state}`);
+                    }
+                }
+                break;
+                
+            case 'resetStateNode':
+                // Reset any state node to its initial state
+                if (config.targetNodeId) {
+                    // Find the node to get its type
+                    const allFlows = this.flows || [];
+                    let targetNode = null;
+                    
+                    for (const flow of allFlows) {
+                        targetNode = flow.nodes?.find(n => n.id === config.targetNodeId);
+                        if (targetNode) break;
+                    }
+                    
+                    if (targetNode && targetNode.type === 'state') {
+                        this.initializeStateNode(config.targetNodeId, targetNode.stateType, targetNode.config || {});
+                        console.log(`[ResetStateNode] State node ${config.targetNodeId} reset`);
+                    }
+                }
+                break;
+                
+            case 'setCounter':
+                // Set counter to specific value
+                if (config.targetNodeId && config.value !== undefined) {
+                    const counterState = this.nodeStates.get(config.targetNodeId);
+                    if (counterState && counterState.hasOwnProperty('count')) {
+                        counterState.count = config.value;
+                        console.log(`[SetCounter] Counter ${config.targetNodeId} set to ${config.value}`);
+                    }
+                }
+                break;
+                
+            case 'incrementCounter':
+                // Increment or decrement counter
+                if (config.targetNodeId) {
+                    const counterState = this.nodeStates.get(config.targetNodeId);
+                    if (counterState && counterState.hasOwnProperty('count')) {
+                        const delta = config.delta || 1;
+                        counterState.count += delta;
+                        console.log(`[IncrementCounter] Counter ${config.targetNodeId} changed by ${delta} to ${counterState.count}`);
+                    }
+                }
+                break;
+                
+            case 'checkCounter':
+                // Check counter value and optionally modify message
+                if (config.targetNodeId) {
+                    const counterState = this.nodeStates.get(config.targetNodeId);
+                    if (counterState && counterState.hasOwnProperty('count')) {
+                        // Add counter info to message
+                        result.message = {
+                            ...message,
+                            counterValue: counterState.count,
+                            counterTarget: counterState.targetCount
+                        };
+                        result.modified = true;
+                        console.log(`[CheckCounter] Counter ${config.targetNodeId} value: ${counterState.count}`);
                     }
                 }
                 break;

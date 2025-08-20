@@ -71,7 +71,11 @@ class EventFlowEditor {
 			{ id: 'obsStopStreaming', name: '⏹️ OBS: Stop Streaming' },
 			{ id: 'obsReplayBuffer', name: '💾 OBS: Save Replay Buffer' },
 			{ id: 'midiSendNote', name: '🎹 MIDI: Send Note' },
-			{ id: 'midiSendCC', name: '🎛️ MIDI: Send Control Change' }
+			{ id: 'midiSendCC', name: '🎛️ MIDI: Send Control Change' },
+			{ id: 'setGateState', name: '🚦 Set Gate State' },
+			{ id: 'resetStateNode', name: '🔄 Reset State Node' },
+			{ id: 'setCounter', name: '🔢 Set Counter Value' },
+			{ id: 'incrementCounter', name: '➕ Increment Counter' }
 		];
 
         // Check if we're in ssapp context for cross-origin communication
@@ -88,15 +92,9 @@ class EventFlowEditor {
         
         // State management nodes - maintain state between messages
         this.stateNodeTypes = [
-            { id: 'GATE', name: '🚦 Gate Control', type: 'state', stateType: 'GATE' },
-            { id: 'QUEUE', name: '📋 Message Queue', type: 'state', stateType: 'QUEUE' },
-            { id: 'SEMAPHORE', name: '🎛️ Semaphore', type: 'state', stateType: 'SEMAPHORE' },
-            { id: 'LATCH', name: '🔒 Latch Memory', type: 'state', stateType: 'LATCH' },
-            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' },
-            { id: 'SEQUENCER', name: '🎬 Sequencer', type: 'state', stateType: 'SEQUENCER' },
-            { id: 'COUNTER', name: '🔄 Counter', type: 'state', stateType: 'COUNTER' },
-            { id: 'USERPOOL', name: '👥 User Pool', type: 'state', stateType: 'USERPOOL' },
-            { id: 'ACCUMULATOR', name: '➕ Accumulator', type: 'state', stateType: 'ACCUMULATOR' }
+            { id: 'GATE', name: '🚦 On/Off Switch', type: 'state', stateType: 'GATE' },
+            { id: 'COUNTER', name: '🔢 Counter', type: 'state', stateType: 'COUNTER' },
+            { id: 'THROTTLE', name: '⏲️ Rate Limiter', type: 'state', stateType: 'THROTTLE' }
         ];
 
         this.init(); // init() will call createEditorLayout()
@@ -119,6 +117,11 @@ class EventFlowEditor {
                         <div class="flow-import-export" style="display: flex; gap: 5px; margin-top: 10px;">
                             <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📥 Import</button>
                             <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📤 Export All</button>
+                        </div>
+                        <div style="margin-top: 10px;">
+                            <button id="help-btn" class="btn" style="width: 100%; padding: 8px 12px; font-size: 14px; background: #667eea;">
+                                ❓ State Nodes Guide
+                            </button>
                         </div>
                     </div>
                     <div class="node-palette">
@@ -193,6 +196,9 @@ class EventFlowEditor {
         document.getElementById('duplicate-flow-btn').addEventListener('click', () => this.duplicateCurrentFlow());
         document.getElementById('import-flow-btn').addEventListener('click', () => this.importFlows());
         document.getElementById('export-all-btn').addEventListener('click', () => this.exportAllFlows());
+        document.getElementById('help-btn').addEventListener('click', () => {
+            window.open('state-nodes-guide.html', '_blank');
+        });
 
         document.getElementById('flow-active').addEventListener('change', (e) => {
             if (this.currentFlow) {
@@ -1182,18 +1188,16 @@ class EventFlowEditor {
             }
         } else if (node.type === 'state') {
             switch (node.stateType) {
-                case 'GATE': return `State: ${node.config?.defaultState || 'ALLOW'}`;
+                case 'GATE': return `${node.config?.name || 'Switch'}: ${node.config?.defaultState === 'BLOCK' ? 'OFF' : 'ON'}`;
                 case 'QUEUE': return `Max: ${node.config?.maxSize || 10}, ${node.config?.overflowStrategy || 'DROP_OLDEST'}`;
                 case 'SEMAPHORE': return `Max concurrent: ${node.config?.maxConcurrent || 1}`;
                 case 'LATCH': return node.config?.autoResetMs > 0 ? `Auto-reset: ${node.config.autoResetMs/1000}s` : 'Manual reset';
-                case 'THROTTLE': return `${node.config?.messagesPerSecond || 1} msg/s`;
+                case 'THROTTLE': return `${node.config?.name || 'Limiter'}: ${node.config?.messagesPerSecond || 1} msg/s`;
                 case 'SEQUENCER': return `Delay: ${(node.config?.sequenceDelayMs || 1000)/1000}s`;
                 case 'COUNTER': {
-                    const name = node.config?.counterName || 'default';
-                    const thresh = node.config?.threshold || 10;
-                    const mode = node.config?.triggerMode === 'multiple' ? `Every ${thresh}` : 
-                                  node.config?.triggerMode === 'gte' ? `≥${thresh}` : `=${thresh}`;
-                    return `${name}: ${mode}`;
+                    const name = node.config?.name || 'Counter';
+                    const target = node.config?.targetCount || 5;
+                    return `${name}: Triggers at ${target}`;
                 }
                 case 'USERPOOL': {
                     const name = node.config?.poolName || 'default';
@@ -1604,6 +1608,21 @@ class EventFlowEditor {
 				case 'midiSendCC':
 					node.config = { deviceId: '', controller: 1, value: 64, channel: 1 };
 					break;
+				case 'setGateState':
+					node.config = { targetNodeId: '', state: 'ALLOW' };
+					break;
+				case 'resetStateNode':
+					node.config = { targetNodeId: '' };
+					break;
+				case 'setCounter':
+					node.config = { targetNodeId: '', value: 0 };
+					break;
+				case 'incrementCounter':
+					node.config = { targetNodeId: '', delta: 1 };
+					break;
+				case 'checkCounter':
+					node.config = { targetNodeId: '' };
+					break;
             }
         } else if (type === 'logic') { // NEW
             node.logicType = subtype; // subtype will be 'AND', 'OR', 'NOT', 'RANDOM'
@@ -1620,10 +1639,10 @@ class EventFlowEditor {
             node.stateType = subtype;
             switch (subtype) {
                 case 'GATE':
-                    node.config = { defaultState: 'ALLOW', autoResetMs: 0 };
+                    node.config = { name: 'Gate 1', defaultState: 'ALLOW', autoResetMs: 0 };
                     break;
                 case 'QUEUE':
-                    node.config = { maxSize: 10, overflowStrategy: 'DROP_OLDEST', processingDelayMs: 1000, ttlMs: 60000, autoDequeue: true };
+                    node.config = { name: 'Queue 1', maxSize: 10, overflowStrategy: 'DROP_OLDEST', processingDelayMs: 1000, ttlMs: 60000, autoDequeue: true };
                     break;
                 case 'SEMAPHORE':
                     node.config = { maxConcurrent: 1, timeoutMs: 30000, queueOverflow: false };
@@ -1638,7 +1657,7 @@ class EventFlowEditor {
                     node.config = { sequenceDelayMs: 1000, resetOnTimeout: true, timeoutMs: 60000 };
                     break;
                 case 'COUNTER':
-                    node.config = { counterName: 'default', scope: 'perUser', threshold: 10, triggerMode: 'exact', autoReset: false, resetAfterMs: 0 };
+                    node.config = { name: 'Counter 1', initialCount: 0, targetCount: 5, resetOnTarget: true, mode: 'INCREMENT' };
                     break;
                 case 'USERPOOL':
                     node.config = { poolName: 'default', maxUsers: 10, requireEntry: true, entryKeyword: '!enter', resetOnFull: false, resetAfterMs: 0, allowReentry: false, scope: 'global' };
@@ -1765,11 +1784,12 @@ class EventFlowEditor {
                             }
                         } else {
                             // Valid connections:
-                            // - Trigger -> Action or Logic
-                            // - Logic -> Action or Logic
-                            // - Action -> Action or Logic (now that actions have outputs)
-                            if ((fromNodeData.type === 'trigger' || fromNodeData.type === 'logic' || fromNodeData.type === 'action') &&
-                                (toNodeData.type === 'action' || toNodeData.type === 'logic')) {
+                            // - Trigger -> Action, Logic, or State
+                            // - Logic -> Action, Logic, or State
+                            // - Action -> Action, Logic, or State
+                            // - State -> Action, Logic, or State
+                            if ((fromNodeData.type === 'trigger' || fromNodeData.type === 'logic' || fromNodeData.type === 'action' || fromNodeData.type === 'state') &&
+                                (toNodeData.type === 'action' || toNodeData.type === 'logic' || toNodeData.type === 'state')) {
                                 isValidConnection = true;
                             }
                         }
@@ -2698,17 +2718,18 @@ class EventFlowEditor {
 			// State Node Configurations
 			case 'GATE':
 				html += `<div class="property-group">
-					<label class="property-label">Default State</label>
-					<select class="property-input" id="prop-defaultState">
-						<option value="ALLOW" ${node.config?.defaultState === 'ALLOW' ? 'selected' : ''}>ALLOW</option>
-						<option value="BLOCK" ${node.config?.defaultState === 'BLOCK' ? 'selected' : ''}>BLOCK</option>
-					</select>
+					<label class="property-label">Variable Name</label>
+					<input type="text" class="property-input" id="prop-name" value="${node.config?.name || 'Switch 1'}" placeholder="e.g., Scene Active, Cooldown">
+					<div class="property-help">Give this switch a meaningful name</div>
 				</div>
 				<div class="property-group">
-					<label class="property-label">Auto Reset (ms, 0 = disabled)</label>
-					<input type="number" class="property-input" id="prop-autoResetMs" value="${node.config?.autoResetMs || 0}" min="0">
+					<label class="property-label">Default State</label>
+					<select class="property-input" id="prop-defaultState">
+						<option value="ALLOW" ${node.config?.defaultState === 'ALLOW' ? 'selected' : ''}>ON (Messages pass)</option>
+						<option value="BLOCK" ${node.config?.defaultState === 'BLOCK' ? 'selected' : ''}>OFF (Messages blocked)</option>
+					</select>
 				</div>
-				<p class="property-help">Gate controls message flow. When ALLOW, messages pass through. When BLOCK, messages are stopped.</p>`;
+				<p class="property-help">💡 <strong>Simple switch:</strong> ON = messages pass through, OFF = messages stop. Use "Set Gate State" action to flip the switch.</p>`;
 				break;
 				
 			case 'QUEUE':
@@ -2800,6 +2821,25 @@ class EventFlowEditor {
 					<input type="number" class="property-input" id="prop-timeoutMs" value="${node.config?.timeoutMs || 60000}" min="1000">
 				</div>
 				<p class="property-help">Enforces sequential execution with delays. Good for step-by-step processes.</p>`;
+				break;
+				
+			case 'COUNTER':
+				html += `<div class="property-group">
+					<label class="property-label">Variable Name</label>
+					<input type="text" class="property-input" id="prop-name" value="${node.config?.name || 'Counter 1'}" placeholder="e.g., Hello Count, Points">
+					<div class="property-help">Give this counter a meaningful name</div>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Trigger at Count</label>
+					<input type="number" class="property-input" id="prop-targetCount" value="${node.config?.targetCount || 5}">
+					<div class="property-help">Activates connected nodes when this number is reached</div>
+				</div>
+				<div class="property-group">
+					<label class="property-label">Auto-Reset</label>
+					<input type="checkbox" class="property-input" id="prop-resetOnTarget" ${node.config?.resetOnTarget ? 'checked' : ''}>
+					<div class="property-help">Start over from 0 after triggering</div>
+				</div>
+				<p class="property-help">💡 <strong>Simple counter:</strong> Counts up by 1 each time a message passes. Triggers at your target number. Example: "Every 5th !hello"</p>`;
 				break;
 			case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
 				html += `<div class="property-group">
@@ -3038,6 +3078,119 @@ class EventFlowEditor {
 				<p class="property-help">Sends a MIDI Control Change message to the selected output device.</p>`;
 				this.populateMIDIOutputDevices('prop-deviceId', node.config.deviceId);
 				break;
+				
+			case 'setGateState':
+				html += `
+					<div class="property-group" style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+						<strong>💡 How this works:</strong><br>
+						Controls an <strong>ON/OFF Switch</strong> node. First add a 🚦 ON/OFF Switch to your flow, then use this action to flip it ON or OFF.
+					</div>
+					<div class="property-group">
+						<label class="property-label">Target Switch</label>
+						<select class="property-input" id="prop-targetNodeId">
+							<option value="">Select ON/OFF Switch...</option>
+							${this.currentFlow?.nodes
+								?.filter(n => n.type === 'state' && n.stateType === 'GATE')
+								?.map(n => `<option value="${n.id}" ${node.config.targetNodeId === n.id ? 'selected' : ''}>${n.config?.name || 'Unnamed Gate'}</option>`)
+								?.join('') || ''}
+						</select>
+						${!this.currentFlow?.nodes?.some(n => n.type === 'state' && n.stateType === 'GATE') ? 
+							'<div class="property-help" style="color: #ff6b6b;">⚠️ No ON/OFF Switch nodes found! Add one from the State Nodes section.</div>' : 
+							'<div class="property-help">Select which switch to control</div>'}
+					</div>
+					<div class="property-group">
+						<label class="property-label">Set State To</label>
+						<select class="property-input" id="prop-state">
+							<option value="ALLOW" ${node.config.state === 'ALLOW' ? 'selected' : ''}>ON - Let messages through</option>
+							<option value="BLOCK" ${node.config.state === 'BLOCK' ? 'selected' : ''}>OFF - Block messages</option>
+						</select>
+					</div>`;
+				break;
+				
+			case 'resetStateNode':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Target State Node</label>
+						<select class="property-input" id="prop-targetNodeId">
+							<option value="">Select State Node...</option>
+							${this.currentFlow?.nodes
+								?.filter(n => n.type === 'state')
+								?.map(n => `<option value="${n.id}" ${node.config.targetNodeId === n.id ? 'selected' : ''}>${n.config?.name || 'Unnamed'} (${n.stateType})</option>`)
+								?.join('') || ''}
+						</select>
+						<div class="property-help">Resets the selected state node to its initial configuration</div>
+					</div>`;
+				break;
+				
+			case 'setCounter':
+				html += `
+					<div class="property-group" style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+						<strong>💡 How this works:</strong><br>
+						Sets a <strong>Counter</strong> node to a specific value. First add a 🔢 Counter to your flow, then use this to reset it or set it to any number.
+					</div>
+					<div class="property-group">
+						<label class="property-label">Target Counter</label>
+						<select class="property-input" id="prop-targetNodeId">
+							<option value="">Select Counter...</option>
+							${this.currentFlow?.nodes
+								?.filter(n => n.type === 'state' && n.stateType === 'COUNTER')
+								?.map(n => `<option value="${n.id}" ${node.config.targetNodeId === n.id ? 'selected' : ''}>${n.config?.name || 'Unnamed Counter'}</option>`)
+								?.join('') || ''}
+						</select>
+						${!this.currentFlow?.nodes?.some(n => n.type === 'state' && n.stateType === 'COUNTER') ? 
+							'<div class="property-help" style="color: #ff6b6b;">⚠️ No Counter nodes found! Add one from the State Nodes section.</div>' : 
+							'<div class="property-help">Select which counter to modify</div>'}
+					</div>
+					<div class="property-group">
+						<label class="property-label">Set Value To</label>
+						<input type="number" class="property-input" id="prop-value" 
+							value="${node.config.value || 0}">
+						<div class="property-help">Example: Set to 0 to reset the counter</div>
+					</div>`;
+				break;
+				
+			case 'incrementCounter':
+				html += `
+					<div class="property-group" style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+						<strong>💡 How this works:</strong><br>
+						Adds or subtracts from a <strong>Counter</strong> node. Use this when you want to add points, track multiple items, or count down.
+					</div>
+					<div class="property-group">
+						<label class="property-label">Target Counter</label>
+						<select class="property-input" id="prop-targetNodeId">
+							<option value="">Select Counter...</option>
+							${this.currentFlow?.nodes
+								?.filter(n => n.type === 'state' && n.stateType === 'COUNTER')
+								?.map(n => `<option value="${n.id}" ${node.config.targetNodeId === n.id ? 'selected' : ''}>${n.config?.name || 'Unnamed Counter'}</option>`)
+								?.join('') || ''}
+						</select>
+						${!this.currentFlow?.nodes?.some(n => n.type === 'state' && n.stateType === 'COUNTER') ? 
+							'<div class="property-help" style="color: #ff6b6b;">⚠️ No Counter nodes found! Add one from the State Nodes section.</div>' : 
+							'<div class="property-help">Select which counter to change</div>'}
+					</div>
+					<div class="property-group">
+						<label class="property-label">Change Amount</label>
+						<input type="number" class="property-input" id="prop-delta" 
+							value="${node.config.delta || 1}">
+						<div class="property-help">Examples: 1 to add one, -1 to subtract one, 10 to add ten points</div>
+					</div>`;
+				break;
+				
+			case 'checkCounter':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Target Counter Node</label>
+						<select class="property-input" id="prop-targetNodeId">
+							<option value="">Select Counter Node...</option>
+							${this.currentFlow?.nodes
+								?.filter(n => n.type === 'state' && n.stateType === 'COUNTER')
+								?.map(n => `<option value="${n.id}" ${node.config.targetNodeId === n.id ? 'selected' : ''}>${n.config?.name || 'Unnamed Counter'}</option>`)
+								?.join('') || ''}
+						</select>
+						<div class="property-help">Adds counter value to message for downstream nodes</div>
+					</div>`;
+				break;
+				
 			case 'playAudioClip':
 				html += `<div class="property-group">
 							 <label class="property-label">Audio File URL</label>
