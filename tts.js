@@ -2107,6 +2107,14 @@ TTS.initKitten = async function() {
         
         // Load ONNX Runtime first if not loaded
         if (typeof ort === 'undefined') {
+            // First configure global ONNX settings before loading
+            window.ort = window.ort || {};
+            window.ort.env = window.ort.env || {};
+            window.ort.env.wasm = window.ort.env.wasm || {};
+            window.ort.env.wasm.wasmPaths = baseUrl + '/thirdparty/kitten-tts/';
+            window.ort.env.wasm.numThreads = 1;
+            window.ort.env.wasm.simd = false;
+            
             await new Promise((resolve, reject) => {
                 const ortScript = document.createElement('script');
                 ortScript.src = './thirdparty/ort.min.js';
@@ -2116,16 +2124,24 @@ TTS.initKitten = async function() {
             });
         }
         
-        // Always configure WASM paths before using ONNX Runtime
+        // Reconfigure WASM paths after loading to ensure they're set
         if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
             // Use absolute paths for WASM files to avoid loading issues
             ort.env.wasm.wasmPaths = baseUrl + '/thirdparty/kitten-tts/';
             ort.env.wasm.numThreads = 1;
-            ort.env.wasm.simd = true; // Enable SIMD for better performance
+            
+            // Try with SIMD disabled first for broader compatibility
+            ort.env.wasm.simd = false;
             ort.env.logLevel = 'warning'; // Add logging to help debug
             
             // Set execution providers explicitly
             ort.env.wasm.proxy = false;
+            
+            // Additional ONNX runtime settings for better compatibility
+            if (ort.env.wasm) {
+                ort.env.wasm.trace = false;
+                ort.env.wasm.graphOptimizationLevel = 'all';
+            }
             
             console.log("Configured ONNX Runtime WASM paths for TTS:", ort.env.wasm.wasmPaths);
         }
@@ -2143,9 +2159,29 @@ TTS.initKitten = async function() {
         const modelUrl = baseUrl + '/thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
         const voicesUrl = baseUrl + '/thirdparty/kitten-tts/voices.json';
         
+        // Try to verify the model file is accessible before initialization
+        try {
+            const modelResponse = await fetch(modelUrl, { method: 'HEAD' });
+            if (!modelResponse.ok) {
+                throw new Error(`Model file not accessible: ${modelResponse.status}`);
+            }
+        } catch (fetchError) {
+            console.error('Failed to verify model file accessibility:', fetchError);
+            // Continue anyway as it might work with direct loading
+        }
+        
         // Set WASM path explicitly for Kitten TTS
         const wasmPath = baseUrl + '/thirdparty/kitten-tts/';
-        await TTS.kittenInstance.init(modelUrl, voicesUrl, wasmPath);
+        
+        // Try initialization with explicit session options
+        try {
+            await TTS.kittenInstance.init(modelUrl, voicesUrl, wasmPath);
+        } catch (initError) {
+            console.error('Initial Kitten TTS init failed, trying alternative approach:', initError);
+            
+            // Alternative: Try without the wasmPath parameter
+            await TTS.kittenInstance.init(modelUrl, voicesUrl);
+        }
         
         // Get available voices
         TTS.kittenVoices = TTS.kittenInstance.getVoices();
