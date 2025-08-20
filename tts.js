@@ -2118,8 +2118,8 @@ TTS.initKitten = async function() {
         
         // Configure WASM paths after loading
         if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
-            // Use absolute URL for WASM files to avoid path resolution issues
-            ort.env.wasm.wasmPaths = baseUrl + '/thirdparty/';
+            // Point to kitten-tts folder where we have all the required files
+            ort.env.wasm.wasmPaths = baseUrl + '/thirdparty/kitten-tts/';
             ort.env.wasm.numThreads = 1;
             ort.env.wasm.simd = false;
             
