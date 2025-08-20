@@ -1134,10 +1134,15 @@
 				if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
 					// not active
 				} else if (counter%15==1){
-					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+					var viewerCount = document.querySelector("[data-e2e='live-people-count'], .flex.justify-start.items-center .P4-Regular.text-UIText3");
 
 					if (viewerCount && viewerCount.textContent) {
 						let views = viewerCount.textContent;
+						
+						if (views.startsWith("· ")){
+							views = views.replace("· ","");
+						}
+						
 						let multiplier = 1;
 						if (views.includes("K")) {
 							multiplier = 1000;
