@@ -110,8 +110,16 @@
 		try {
 			chrome.runtime.sendMessage(chrome.runtime.id, {
 				"message": data
-			}, function(e) {});
-		} catch (e) {}
+			}, function(e) {
+				// Check for chrome runtime errors
+				if (chrome.runtime.lastError) {
+					console.error("[TikTok] Chrome runtime error:", chrome.runtime.lastError.message);
+					// Could indicate extension was reloaded or connection lost
+				}
+			});
+		} catch (e) {
+			console.error("[TikTok] Failed to send message:", e);
+		}
 	}
 
 	function getTranslation(key, value = false) {
@@ -939,6 +947,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		lastMessageTime = Date.now();
 		pushMessage(data);
 	}
 
@@ -1085,6 +1094,7 @@
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
 		}
+		lastMessageTime = Date.now();
 		pushMessage(data);
 	}
 	var bigDUPE = false;
@@ -1092,7 +1102,9 @@
 	let observedDomElementForObserver2 = null;
 	var observer = false;
 	var observer2 = false;
-	var counter =0;
+	var counter = 0;
+	var lastMessageTime = Date.now();
+	var observerHealthCheckInterval = 60000; // Check every minute
 	
 	function start() {
 		if (!isExtensionOn) {
@@ -1101,16 +1113,36 @@
 		}
 		counter+=1;
 		
+		// Health check: If no messages for over 2 minutes and observers exist, force restart
+		if (observer && (Date.now() - lastMessageTime > 120000) && counter % 30 === 0) {
+			console.log("[TikTok] No messages for 2+ minutes, forcing observer restart");
+			if (observer) {
+				observer.disconnect();
+				observer = false;
+				observedDomElementForObserver1 = null;
+			}
+			if (observer2) {
+				observer2.disconnect();
+				observer2 = false;
+				observedDomElementForObserver2 = null;
+			}
+		}
+		
 		if (settings.showviewercount || settings.hypemode) {
 			try {
 
 				if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
 					// not active
 				} else if (counter%15==1){
-					var viewerCount = document.querySelector("[data-e2e='live-people-count']");
+					var viewerCount = document.querySelector("[data-e2e='live-people-count'], .flex.justify-start.items-center .P4-Regular.text-UIText3");
 
 					if (viewerCount && viewerCount.textContent) {
 						let views = viewerCount.textContent;
+						
+						if (views.startsWith("· ")){
+							views = views.replace("· ","");
+						}
+						
 						let multiplier = 1;
 						if (views.includes("K")) {
 							multiplier = 1000;
@@ -1140,9 +1172,17 @@
 			}
 		}
 		
-		if (observer && observedDomElementForObserver1 && observedDomElementForObserver1.isConnected) {
-			//console.log("<<>");
-			return;
+		if (observer && observedDomElementForObserver1) {
+			// Check if the observed element is still connected
+			if (!observedDomElementForObserver1.isConnected) {
+				console.log("[TikTok] Observer target disconnected, will re-establish");
+				observer.disconnect();
+				observer = false;
+				observedDomElementForObserver1 = null;
+			} else {
+				//console.log("<<>");
+				return;
+			}
 		}
 		//console.log("..................");
 		let target = null;
@@ -1188,12 +1228,13 @@
 		console.log("subtree: "+subtree);
 		////console.log("Attempting to start social stream on target:", target);
 		observer = new MutationObserver((mutations) => {
-			if (!isExtensionOn) return;
-			mutations.forEach((mutation) => {
-				if (mutation.addedNodes.length) {
-					//console.warn(mutation.addedNodes);
-					for (let i = 0; i < mutation.addedNodes.length; i++) {
-						try {
+			try {
+				if (!isExtensionOn) return;
+				mutations.forEach((mutation) => {
+					if (mutation.addedNodes.length) {
+						//console.warn(mutation.addedNodes);
+						for (let i = 0; i < mutation.addedNodes.length; i++) {
+							try {
 							const node = mutation.addedNodes[i];
 							if (!node.isConnected) continue;
 							if (!subtree) {
@@ -1222,6 +1263,15 @@
 					}
 				}
 			});
+			} catch (err) {
+				console.error("[TikTok] Observer error:", err);
+				// If there's a critical error, try to restart
+				if (observer) {
+					observer.disconnect();
+					observer = false;
+					observedDomElementForObserver1 = null;
+				}
+			}
 		});
 		const currentTargetForTimeout = target;
 		setTimeout(function() {
@@ -1258,8 +1308,16 @@
 		if (!isExtensionOn || !settings.captureevents) {
 			return;
 		}
-		if (observer2 && observedDomElementForObserver2 && observedDomElementForObserver2.isConnected) {
-			return;
+		if (observer2 && observedDomElementForObserver2) {
+			// Check if the observed element is still connected
+			if (!observedDomElementForObserver2.isConnected) {
+				console.log("[TikTok] Observer2 target disconnected, will re-establish");
+				observer2.disconnect();
+				observer2 = false;
+				observedDomElementForObserver2 = null;
+			} else {
+				return;
+			}
 		}
 		var target2 = document.querySelector('[class*="DivBottomStickyMessageContainer"], [class="w-full h-auto overflow-hidden flex-shrink-0 max-h-[200px] min-h-32"]');
 		if (!target2 && other && other.isConnected && other.nextElementSibling) {
@@ -1278,11 +1336,12 @@
 			observedDomElementForObserver2 = null;
 		}
 		observer2 = new MutationObserver((mutations) => {
-			if (!settings.captureevents || !isExtensionOn) return;
-			mutations.forEach((mutation) => {
-				if (mutation.addedNodes.length) {
-					for (let i = 0; i < mutation.addedNodes.length; i++) {
-						try {
+			try {
+				if (!settings.captureevents || !isExtensionOn) return;
+				mutations.forEach((mutation) => {
+					if (mutation.addedNodes.length) {
+						for (let i = 0; i < mutation.addedNodes.length; i++) {
+							try {
 							const node = mutation.addedNodes[i];
 							if (!node.isConnected) continue;
 							if (node.nodeName === "DIV") {
@@ -1300,6 +1359,15 @@
 					}
 				}
 			});
+			} catch (err) {
+				console.error("[TikTok] Observer2 error:", err);
+				// If there's a critical error, try to restart
+				if (observer2) {
+					observer2.disconnect();
+					observer2 = false;
+					observedDomElementForObserver2 = null;
+				}
+			}
 		});
 		if (target2.isConnected) {
 			observer2.observe(target2, {
@@ -1378,6 +1446,7 @@
 					}
 					if ("focusChat" == request) {
 						if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
+							sendResponse(false);
 							return;
 						}
 						if (settings.customtiktokstate) {
@@ -1386,11 +1455,14 @@
 								channel = channel[1].split("/")[0].trim();
 							}
 							if (!channel) {
+								sendResponse(false);
 								return;
 							}
 							if (settings.customtiktokaccount && settings.customtiktokaccount.textsetting && ((settings.customtiktokaccount.textsetting.toLowerCase() !== channel.toLowerCase()) && (settings.customtiktokaccount.textsetting.toLowerCase() !== "@" + channel.toLowerCase()))) {
+								sendResponse(false);
 								return;
 							} else if (!settings.customtiktokaccount) {
+								sendResponse(false);
 								return;
 							}
 						}
@@ -1471,12 +1543,17 @@
 		initialUrl: null,
 		lastUserInteraction: 0,
 		navigationTimeout: 10000,
+		previousChannel: null,
+		navigationCount: 0,
 		init() {
 			this.initialUrl = location.href;
 			this.lastUserInteraction = Date.now();
-			document.addEventListener('click', () => {
-				this.initialUrl = location.href;
-				this.lastUserInteraction = Date.now();
+			this.previousChannel = this.getCurrentChannel();
+			
+			// Track user interactions
+			document.addEventListener('click', (e) => {
+				// Reset state on user click
+				this.reset();
 				////console.log("Stream state reset by click");
 			});
 			document.addEventListener('keydown', () => {
@@ -1485,14 +1562,73 @@
 			document.addEventListener('touchstart', () => {
 				this.lastUserInteraction = Date.now();
 			});
+			
+			// Monitor URL changes via History API
+			const originalPushState = history.pushState;
+			const originalReplaceState = history.replaceState;
+			
+			history.pushState = function() {
+				originalPushState.apply(history, arguments);
+				StreamState.handleNavigation();
+			};
+			
+			history.replaceState = function() {
+				originalReplaceState.apply(history, arguments);
+				StreamState.handleNavigation();
+			};
+			
+			window.addEventListener('popstate', () => {
+				this.handleNavigation();
+			});
+		},
+		handleNavigation() {
+			const currentChannel = this.getCurrentChannel();
+			const timeSinceInteraction = Date.now() - this.lastUserInteraction;
+			
+			// If channel changed and it wasn't recent user interaction
+			if (currentChannel && this.previousChannel && 
+				currentChannel !== this.previousChannel && 
+				timeSinceInteraction > 1000) {
+				this.navigationCount++;
+				console.log(`[StreamState] Automated navigation detected: ${this.previousChannel} -> ${currentChannel}`);
+			}
+			
+			this.previousChannel = currentChannel;
 		},
 		isValid() {
 			const currentUrl = location.href;
+			const currentChannel = this.getCurrentChannel();
+			
+			// If URL hasn't changed, it's valid
 			if (currentUrl === this.initialUrl) {
 				return true;
 			}
+			
+			// If no channel in URL (not on a live page), consider invalid
+			if (!currentChannel) {
+				return false;
+			}
+			
+			// Check if this was a recent user interaction
 			const timeSinceInteraction = Date.now() - this.lastUserInteraction;
-			return timeSinceInteraction <= this.navigationTimeout;
+			if (timeSinceInteraction <= this.navigationTimeout) {
+				return true;
+			}
+			
+			// If we've detected multiple automated navigations, be more strict
+			if (this.navigationCount > 1) {
+				return false;
+			}
+			
+			// Check if we're still on the same channel
+			const initialChannel = this.initialUrl.match(/@([^/]+)/)?.[1];
+			return currentChannel === initialChannel;
+		},
+		reset() {
+			this.initialUrl = location.href;
+			this.lastUserInteraction = Date.now();
+			this.previousChannel = this.getCurrentChannel();
+			this.navigationCount = 0;
 		},
 		getCurrentChannel() {
 			const match = location.href.match(/@([^/]+)/);
