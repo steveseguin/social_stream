@@ -8345,12 +8345,9 @@ async function focusChat(tabId) {
 
 async function getSourceType(tabId) {
   return new Promise((resolve) => {
-    chrome.tabs.sendMessage(tabId, "getSource", (response) => {
-      if (chrome.runtime.lastError) {
-        resolve(false);
-        return;
-      }
-      resolve(response || false);
+    chrome.tabs.sendMessage(tabId, "getSource", (response = false) => {
+      chrome.runtime.lastError;
+      resolve(response);
     });
   });
 }
