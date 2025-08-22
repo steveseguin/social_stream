@@ -7,6 +7,23 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Loading Modal -->
+    <div id="loading-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+        <div style="background: #2d3142; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">
+            <h2 style="margin: 0 0 20px 0; color: #e0e0e0;">Loading Event Flow Editor</h2>
+            <div style="margin: 20px 0;">
+                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #4a5568; border-top: 4px solid #2a9d8f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <p style="color: #a0a0a0; margin: 10px 0 0 0;">Initializing system...</p>
+        </div>
+    </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    
     <div class="editor-container">
         <div class="editor-header">
             <div class="editor-title">Event Flow Editor</div>

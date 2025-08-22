@@ -10,18 +10,202 @@ class EventFlowSystem {
         this.fetchWithTimeout = options.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
         this.sanitizeRelay = options.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || null;
+		this.sendTargetP2P = options.sendTargetP2P || null;
+		this.messageStore = options.messageStore || {}; // Share message store from background.js
+		this.handleMessageStore = options.handleMessageStore || null; // Function to handle message storage
 		
-        console.log('[EventFlowSystem Constructor] Initialized with:');
-        console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
-        console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
-        console.log('  - pointsSystem:', this.pointsSystem ? 'System provided' : 'NULL');
-        console.log('  - sanitizeRelay:', this.sanitizeRelay ? 'Function provided' : 'NULL - Relay will not work!');
-        console.log('  - checkExactDuplicateAlreadyRelayed:', this.checkExactDuplicateAlreadyRelayed ? 'Function provided' : 'NULL - Relay will not work!');
+		// MIDI properties
+		this.midiEnabled = false;
+		this.midiInputs = [];
+		this.midiOutputs = [];
+		this.midiListeners = new Map(); // Store listeners for cleanup
+		
+		// Delay gate management
+		this.delayTimers = new Map(); // Store active delay timers
+		this.delayedSignals = new Map(); // Store delayed signal states
+		
+		// State node management for flow control
+		this.nodeStates = new Map(); // Persistent state storage for state nodes
+		this.stateTimers = new Map(); // Timeout management for auto-resets
+		this.messageQueues = new Map(); // Queue storage for queue nodes
+		this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
+		this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+		
+        //console.log('[EventFlowSystem Constructor] Initialized with:');
+        //console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
+        //console.log('  - sendToDestinations:', this.sendToDestinations ? 'Function provided' : 'NULL');
+        //console.log('  - pointsSystem:', this.pointsSystem ? 'System provided' : 'NULL');
+        //console.log('  - sanitizeRelay:', this.sanitizeRelay ? 'Function provided' : 'NULL - Relay will not work!');
+        //console.log('  - checkExactDuplicateAlreadyRelayed:', this.checkExactDuplicateAlreadyRelayed ? 'Function provided' : 'NULL - Relay will not work!');
+        //console.log('  - messageStore:', this.messageStore ? 'Object provided' : 'NULL - Duplicate detection may not work!');
+        //console.log('  - handleMessageStore:', this.handleMessageStore ? 'Function provided' : 'NULL');
         
         this.initPromise = this.initDatabase();
     }
 	
-	async evaluateSpecificLogicNode(logicType, inputValues) {
+	// MIDI Methods
+	async initializeMIDI() {
+		if (this.midiEnabled || typeof WebMidi === 'undefined') return;
+		
+		return new Promise((resolve, reject) => {
+			WebMidi.enable((err) => {
+				if (err) {
+					console.error('[EventFlowSystem] Failed to enable WebMIDI:', err);
+					reject(err);
+					return;
+				}
+				
+				this.midiEnabled = true;
+				this.updateMIDIDevices();
+				
+				// Listen for device changes
+				WebMidi.addListener("connected", () => this.updateMIDIDevices());
+				WebMidi.addListener("disconnected", () => this.updateMIDIDevices());
+				
+				console.log('[EventFlowSystem] WebMIDI enabled successfully');
+				resolve();
+			});
+		});
+	}
+	
+	updateMIDIDevices() {
+		this.midiInputs = WebMidi.inputs.map(input => ({
+			id: input.id,
+			name: input.name,
+			manufacturer: input.manufacturer
+		}));
+		
+		this.midiOutputs = WebMidi.outputs.map(output => ({
+			id: output.id,
+			name: output.name,
+			manufacturer: output.manufacturer
+		}));
+	}
+	
+	getMIDIInputDevice(deviceId) {
+		if (!this.midiEnabled) return null;
+		return WebMidi.getInputById(deviceId);
+	}
+	
+	getMIDIOutputDevice(deviceId) {
+		if (!this.midiEnabled) return null;
+		return WebMidi.getOutputById(deviceId);
+	}
+	
+	// Check if MIDI needs to be initialized based on flows
+	async checkMIDIRequirement() {
+		const needsMIDI = this.flows.some(flow => {
+			if (!flow.active) return false;
+			
+			return flow.nodes.some(node => {
+				const isMIDITrigger = ['midiNoteOn', 'midiNoteOff', 'midiCC'].includes(node.triggerType);
+				const isMIDIAction = ['midiSendNote', 'midiSendCC'].includes(node.actionType);
+				return isMIDITrigger || isMIDIAction;
+			});
+		});
+		
+		if (needsMIDI && !this.midiEnabled) {
+			try {
+				await this.initializeMIDI();
+			} catch (err) {
+				console.error('[EventFlowSystem] Failed to initialize MIDI:', err);
+			}
+		}
+	}
+	
+	// Set up MIDI listeners for trigger nodes
+	setupMIDIListeners() {
+		if (!this.midiEnabled) return;
+		
+		// Clear existing listeners
+		this.midiListeners.forEach((listener, key) => {
+			const [deviceId, eventType] = key.split('|');
+			const input = this.getMIDIInputDevice(deviceId);
+			if (input) {
+				input.removeListener(eventType, 'all', listener);
+			}
+		});
+		this.midiListeners.clear();
+		
+		// Set up new listeners for active flows
+		this.flows.forEach(flow => {
+			if (!flow.active) return;
+			
+			flow.nodes.forEach(node => {
+				if (!node.config || !node.config.deviceId) return;
+				
+				const input = this.getMIDIInputDevice(node.config.deviceId);
+				if (!input) return;
+				
+				let listener = null;
+				const listenerKey = `${node.config.deviceId}|${node.triggerType}`;
+				
+				switch (node.triggerType) {
+					case 'midiNoteOn':
+						listener = (e) => {
+							// Check if note matches config (if specified)
+							if (!node.config.note || node.config.note === e.note.identifier) {
+								this.processMIDITrigger(flow, node, {
+									type: 'midiNoteOn',
+									note: e.note.identifier,
+									velocity: e.velocity,
+									channel: e.channel
+								});
+							}
+						};
+						input.addListener('noteon', 'all', listener);
+						break;
+						
+					case 'midiNoteOff':
+						listener = (e) => {
+							if (!node.config.note || node.config.note === e.note.identifier) {
+								this.processMIDITrigger(flow, node, {
+									type: 'midiNoteOff',
+									note: e.note.identifier,
+									velocity: e.velocity,
+									channel: e.channel
+								});
+							}
+						};
+						input.addListener('noteoff', 'all', listener);
+						break;
+						
+					case 'midiCC':
+						listener = (e) => {
+							if (!node.config.controller || node.config.controller === e.controller.number) {
+								this.processMIDITrigger(flow, node, {
+									type: 'midiCC',
+									controller: e.controller.number,
+									value: e.value,
+									channel: e.channel
+								});
+							}
+						};
+						input.addListener('controlchange', 'all', listener);
+						break;
+				}
+				
+				if (listener) {
+					this.midiListeners.set(listenerKey, listener);
+				}
+			});
+		});
+	}
+	
+	// Process MIDI trigger events
+	async processMIDITrigger(flow, triggerNode, midiData) {
+		// Create a synthetic message for MIDI events
+		const midiMessage = {
+			type: 'midi',
+			midiData: midiData,
+			timestamp: Date.now()
+		};
+		
+		// Process the flow with this MIDI message
+		await this.evaluateFlow(flow, midiMessage);
+	}
+	
+	async evaluateSpecificLogicNode(logicType, inputValues, nodeConfig) {
         if (!Array.isArray(inputValues)) return false;
 
         switch (logicType) {
@@ -34,9 +218,396 @@ class EventFlowSystem {
             case 'NOT':
                 // NOT node should ideally have exactly one input value
                 return inputValues.length > 0 ? !inputValues[0] : false; // Default to false if no input
+            case 'RANDOM':
+                // RANDOM gate: probabilistic filter that passes or blocks the input signal
+                // If no active input, output false
+                const hasActiveInput = inputValues.some(v => v === true);
+                if (!hasActiveInput) return false;
+                
+                // Get probability from config (0-100), default to 50%
+                const probability = (nodeConfig && nodeConfig.probability) || 50;
+                const roll = Math.random() * 100;
+                
+                // Pass the input through if roll succeeds, otherwise block it
+                return roll < probability;
             default:
                 return false;
         }
+    }
+    
+    // Evaluate state nodes (Gate, Queue, Semaphore, etc.)
+    async evaluateStateNode(node, message, inputActive) {
+        const nodeId = node.id;
+        const stateType = node.stateType;
+        const config = node.config || {};
+        
+        // Initialize state if it doesn't exist
+        if (!this.nodeStates.has(nodeId)) {
+            this.initializeStateNode(nodeId, stateType, config);
+        }
+        
+        // Return object includes both activation state and whether to pass message
+        let result = { active: false, passMessage: false, modifiedMessage: null };
+        
+        switch (stateType) {
+            case 'GATE':
+                result = this.evaluateGateNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'QUEUE':
+                result = this.evaluateQueueNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'SEMAPHORE':
+                result = this.evaluateSemaphoreNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'LATCH':
+                result = this.evaluateLatchNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'THROTTLE':
+                result = this.evaluateThrottleNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'SEQUENCER':
+                result = this.evaluateSequencerNode(nodeId, config, message, inputActive);
+                break;
+                
+            case 'COUNTER':
+                result = this.evaluateCounterNode(nodeId, config, message, inputActive);
+                break;
+                
+            default:
+                result = { active: false, passMessage: false };
+        }
+        
+        return result;
+    }
+    
+    // Initialize state for a state node
+    initializeStateNode(nodeId, stateType, config) {
+        switch (stateType) {
+            case 'GATE':
+                this.nodeStates.set(nodeId, { 
+                    state: config.defaultState || 'ALLOW' 
+                });
+                break;
+                
+            case 'QUEUE':
+                this.messageQueues.set(nodeId, []);
+                this.nodeStates.set(nodeId, { 
+                    processing: false,
+                    lastProcessTime: 0
+                });
+                break;
+                
+            case 'SEMAPHORE':
+                this.semaphoreStates.set(nodeId, {
+                    currentCount: 0,
+                    activeOperations: []
+                });
+                break;
+                
+            case 'LATCH':
+                this.nodeStates.set(nodeId, { 
+                    triggered: false 
+                });
+                break;
+                
+            case 'THROTTLE':
+                this.throttleStates.set(nodeId, {
+                    messageTimestamps: [],
+                    lastResetTime: Date.now()
+                });
+                break;
+                
+            case 'SEQUENCER':
+                this.nodeStates.set(nodeId, {
+                    sequence: [],
+                    lastActivity: Date.now()
+                });
+                break;
+                
+            case 'COUNTER':
+                this.nodeStates.set(nodeId, {
+                    count: config.initialCount || 0,
+                    targetCount: config.targetCount || 10,
+                    resetOnTarget: config.resetOnTarget !== false,
+                    mode: config.mode || 'INCREMENT' // INCREMENT, DECREMENT, or MATCH
+                });
+                break;
+        }
+    }
+    
+    // Gate node: Allow/Block/Toggle state
+    evaluateGateNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        
+        // Handle control signals (would come from special control connections)
+        // For now, just use the current state
+        
+        if (state.state === 'ALLOW') {
+            // Check for auto-reset
+            if (config.autoResetMs > 0) {
+                // Clear existing timer
+                if (this.stateTimers.has(nodeId)) {
+                    clearTimeout(this.stateTimers.get(nodeId));
+                }
+                // Set new timer to reset to BLOCK
+                const timer = setTimeout(() => {
+                    state.state = 'BLOCK';
+                    this.stateTimers.delete(nodeId);
+                }, config.autoResetMs);
+                this.stateTimers.set(nodeId, timer);
+            }
+            // Pass the message through unchanged
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Block the message
+        return { active: false, passMessage: false };
+    }
+    
+    // Queue node: FIFO message queue with overflow strategies
+    evaluateQueueNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const queue = this.messageQueues.get(nodeId) || [];
+        const state = this.nodeStates.get(nodeId);
+        
+        // Add message to queue
+        if (message) {
+            // Check queue size limit
+            if (queue.length >= config.maxSize) {
+                // Apply overflow strategy
+                switch (config.overflowStrategy) {
+                    case 'DROP_OLDEST':
+                        queue.shift(); // Remove oldest
+                        break;
+                    case 'DROP_NEWEST':
+                        return false; // Don't add new message
+                    case 'DROP_RANDOM':
+                        const randomIndex = Math.floor(Math.random() * queue.length);
+                        queue.splice(randomIndex, 1);
+                        break;
+                    default:
+                        return false; // Block by default
+                }
+            }
+            
+            // Add message with timestamp
+            queue.push({
+                message: message,
+                timestamp: Date.now()
+            });
+            this.messageQueues.set(nodeId, queue);
+        }
+        
+        // Check if we should dequeue
+        if (config.autoDequeue && !state.processing) {
+            const now = Date.now();
+            const timeSinceLastProcess = now - state.lastProcessTime;
+            
+            if (timeSinceLastProcess >= config.processingDelayMs && queue.length > 0) {
+                // Check TTL and remove expired messages
+                const filteredQueue = queue.filter(item => {
+                    return (now - item.timestamp) < config.ttlMs;
+                });
+                this.messageQueues.set(nodeId, filteredQueue);
+                
+                if (filteredQueue.length > 0) {
+                    // Dequeue next message
+                    const item = filteredQueue.shift();
+                    state.processing = true;
+                    state.lastProcessTime = now;
+                    
+                    // Reset processing flag after delay
+                    setTimeout(() => {
+                        state.processing = false;
+                    }, config.processingDelayMs);
+                    
+                    // Return the dequeued message (async - doesn't return original)
+                    return { active: true, passMessage: false, modifiedMessage: item.message };
+                }
+            }
+        }
+        
+        // Message queued but not released yet
+        return { active: false, passMessage: false };
+    }
+    
+    // Cleanup state nodes when flow is deactivated
+    cleanupStateNodes(flowId) {
+        // Clear all timers for this flow's nodes
+        this.stateTimers.forEach((timer, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                clearTimeout(timer);
+                this.stateTimers.delete(nodeId);
+            }
+        });
+        
+        // Clear state storage
+        this.nodeStates.forEach((state, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.nodeStates.delete(nodeId);
+            }
+        });
+        
+        // Clear message queues
+        this.messageQueues.forEach((queue, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.messageQueues.delete(nodeId);
+            }
+        });
+        
+        // Clear semaphore states
+        this.semaphoreStates.forEach((state, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.semaphoreStates.delete(nodeId);
+            }
+        });
+        
+        // Clear throttle states
+        this.throttleStates.forEach((state, nodeId) => {
+            if (nodeId.startsWith(flowId)) {
+                this.throttleStates.delete(nodeId);
+            }
+        });
+    }
+    
+    // Simplified implementations for other state nodes (to be expanded)
+    evaluateSemaphoreNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.semaphoreStates.get(nodeId);
+        if (state.currentCount < config.maxConcurrent) {
+            state.currentCount++;
+            
+            // Auto-release after timeout
+            if (config.timeoutMs > 0) {
+                setTimeout(() => {
+                    if (state.currentCount > 0) {
+                        state.currentCount--;
+                    }
+                }, config.timeoutMs);
+            }
+            
+            // Allow message through
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Block message - semaphore full
+        return { active: false, passMessage: false };
+    }
+    
+    evaluateLatchNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        if (!state.triggered) {
+            state.triggered = true;
+            
+            // Auto-reset after timeout
+            if (config.autoResetMs > 0) {
+                setTimeout(() => {
+                    state.triggered = false;
+                }, config.autoResetMs);
+            }
+            
+            // First trigger - pass message through
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Already triggered - block
+        return { active: false, passMessage: false };
+    }
+    
+    evaluateThrottleNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.throttleStates.get(nodeId);
+        const now = Date.now();
+        
+        // Remove timestamps older than 1 second
+        state.messageTimestamps = state.messageTimestamps.filter(
+            timestamp => now - timestamp < 1000
+        );
+        
+        if (state.messageTimestamps.length < config.messagesPerSecond) {
+            state.messageTimestamps.push(now);
+            // Within rate limit - pass through
+            return { active: true, passMessage: true, modifiedMessage: message };
+        }
+        
+        // Rate limit exceeded - block
+        return { active: false, passMessage: false };
+    }
+    
+    evaluateSequencerNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        const now = Date.now();
+        
+        // Check for timeout
+        if (config.resetOnTimeout && (now - state.lastActivity) > config.timeoutMs) {
+            state.sequence = [];
+        }
+        
+        state.sequence.push(now);
+        state.lastActivity = now;
+        
+        // Sequencer delays messages - async operation
+        return { active: true, passMessage: false, modifiedMessage: message };
+    }
+    
+    // Counter node: Counts messages and triggers at target
+    evaluateCounterNode(nodeId, config, message, inputActive) {
+        if (!inputActive) return { active: false, passMessage: false };
+        
+        const state = this.nodeStates.get(nodeId);
+        
+        // Increment/decrement counter based on mode
+        if (state.mode === 'INCREMENT') {
+            state.count++;
+        } else if (state.mode === 'DECREMENT') {
+            state.count--;
+        }
+        
+        // Check if we've reached the target
+        const targetReached = (state.mode === 'MATCH' && state.count === state.targetCount) ||
+                            (state.mode === 'INCREMENT' && state.count >= state.targetCount) ||
+                            (state.mode === 'DECREMENT' && state.count <= state.targetCount);
+        
+        let shouldPass = false;
+        
+        if (targetReached) {
+            shouldPass = true;
+            
+            // Reset counter if configured to do so
+            if (state.resetOnTarget) {
+                state.count = config.initialCount || 0;
+            }
+        }
+        
+        // Add count to message for downstream nodes
+        const modifiedMessage = {
+            ...message,
+            counterValue: state.count,
+            counterTarget: state.targetCount,
+            counterTriggered: targetReached
+        };
+        
+        console.log(`[Counter ${nodeId}] Count: ${state.count}/${state.targetCount}, Pass: ${shouldPass}`);
+        
+        return { 
+            active: shouldPass, 
+            passMessage: shouldPass, 
+            modifiedMessage: modifiedMessage 
+        };
     }
     
     async initDatabase() {
@@ -122,12 +693,12 @@ class EventFlowSystem {
 	async loadFlows() {
 			const db = await this.ensureDB();
 			
-			return new Promise((resolve) => {
+			return new Promise(async (resolve) => {
 				const tx = db.transaction(this.storeName, 'readonly');
 				const store = tx.objectStore(this.storeName);
 				const request = store.getAll();
 				
-				request.onsuccess = () => {
+				request.onsuccess = async () => {
 					let flowsFromDB = request.result.map(flow => {
 						return {
 							...flow,
@@ -153,6 +724,11 @@ class EventFlowSystem {
 					});
 					
 					this.flows = flowsFromDB;
+					
+					// Check if MIDI is required and set up listeners
+					await this.checkMIDIRequirement();
+					this.setupMIDIListeners();
+					
 					resolve(this.flows);
 				};
 				
@@ -194,7 +770,7 @@ class EventFlowSystem {
 			
 			const request = store.put(flowData); // flowData now includes 'order'
 			
-			request.onsuccess = () => {
+			request.onsuccess = async () => {
 				if (existingFlowIndex !== -1) {
 					this.flows[existingFlowIndex] = flowData;
 				} else {
@@ -202,6 +778,11 @@ class EventFlowSystem {
 				}
 				// Re-sort the in-memory list by order after any save
 				this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
+				
+				// Check if MIDI is required and update listeners
+				await this.checkMIDIRequirement();
+				this.setupMIDIListeners();
+				
 				resolve(flowData);
 			};
 			
@@ -328,7 +909,7 @@ class EventFlowSystem {
     
     async reloadFlows() {
         // Force reload flows from database
-        console.log('[EventFlowSystem] Reloading flows from database');
+        //console.log('[EventFlowSystem] Reloading flows from database');
         await this.loadFlows();
         return this.flows;
     }
@@ -338,34 +919,35 @@ class EventFlowSystem {
     }
     
 	async processMessage(message) {
-        console.log("[RELAY DEBUG - ProcessMessage] Received message:", {
-            type: message?.type,
-            chatname: message?.chatname,
-            chatmessage: message?.chatmessage?.substring(0, 50) + '...',
-            hasEventFlowSystem: !!this.sendMessageToTabs
-        });
-        
+		
         if (!message) {
-            console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
+            ////console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
             return message;
+        }
+        
+        // Block relayed messages (reflections) from propagating to sendToDestinations
+        // This prevents relay echoes from being sent to external destinations
+        if (message.reflection) {
+            // Return null to block the message from sendToDestinations
+            return null;
         }
         
         let processed = { ...message };
         let blocked = false;
         
         const activeFlows = this.flows.filter(f => f.active);
-        console.log(`[RELAY DEBUG - ProcessMessage] Processing ${activeFlows.length} active flows`);
-        console.log(`[RELAY DEBUG - ProcessMessage] Active flow names:`, activeFlows.map(f => f.name));
+        ////console.log(`[RELAY DEBUG - ProcessMessage] Processing ${activeFlows.length} active flows`);
+        ////console.log(`[RELAY DEBUG - ProcessMessage] Active flow names:`, activeFlows.map(f => f.name));
         
         for (const flow of this.flows) {
             if (!flow.active) {
-                // console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
+                // //console.log(`[ProcessMessage] Flow "${flow.name}" (ID: ${flow.id}) is inactive. Skipping.`);
                 continue;
             }
-          //console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
+          ////console.log(`[ProcessMessage] Evaluating active flow "${flow.name}" (ID: ${flow.id})`);
             
             const result = await this.evaluateFlow(flow, processed);
-          //console.log(`[ProcessMessage] Result for flow "${flow.name}":`, JSON.stringify(result));
+          ////console.log(`[ProcessMessage] Result for flow "${flow.name}":`, JSON.stringify(result));
 
             if (result) {
                 if (result.blocked) {
@@ -425,8 +1007,33 @@ class EventFlowSystem {
                     if (allInputsEvaluated) {
                         const inputValues = inputNodeIds.map(inputId => nodeActivationStates[inputId]);
                       //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Logic Node ID: ${node.id} (${node.logicType}) with inputs: ${JSON.stringify(inputValues)} from nodes: ${JSON.stringify(inputNodeIds)}`);
-                        nodeActivationStates[node.id] = await this.evaluateSpecificLogicNode(node.logicType, inputValues);
+                        const result = await this.evaluateSpecificLogicNode(node.logicType, inputValues, node.config);
+                        nodeActivationStates[node.id] = result;
+                        
                       //console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
+                        madeChangeInLoop = true;
+                    }
+                } else if (node.type === 'state' && !nodeActivationStates.hasOwnProperty(node.id)) {
+                    const inputConnections = flow.connections.filter(conn => conn.to === node.id);
+                    const inputNodeIds = inputConnections.map(conn => conn.from);
+                    
+                    const allInputsEvaluated = inputNodeIds.every(inputId => nodeActivationStates.hasOwnProperty(inputId));
+
+                    if (allInputsEvaluated) {
+                        const inputActive = inputNodeIds.some(inputId => nodeActivationStates[inputId] === true);
+                      //console.log(`[EvaluateFlow "${flow.name}"] Evaluating State Node ID: ${node.id} (${node.stateType}) with input active: ${inputActive}`);
+                        const result = await this.evaluateStateNode(node, message, inputActive);
+                        
+                        // State nodes return an object with activation and pass-through info
+                        nodeActivationStates[node.id] = result.active;
+                        
+                        // If the state node modifies or passes the message, update it
+                        if (result.passMessage && result.modifiedMessage) {
+                            // Update the message for downstream nodes
+                            message = result.modifiedMessage;
+                        }
+                        
+                      //console.log(`[EvaluateFlow "${flow.name}"] State Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
                         madeChangeInLoop = true;
                     }
                 }
@@ -440,42 +1047,64 @@ class EventFlowSystem {
       //console.log(`[EvaluateFlow "${flow.name}"] Pass 3: Executing Actions. Current node states:`, JSON.stringify(nodeActivationStates));
         let overallResult = { modified: false, message: { ...message }, blocked: false }; 
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
+        const executedActions = new Set(); // Track which actions have been executed
 
-        for (const node of flow.nodes) {
-            if (node.type === 'action') {
-                if (overallResult.blocked) {
-                  //console.log(`[EvaluateFlow "${flow.name}"] Message already blocked by a previous action in this flow. Skipping action node ${node.id} (${node.actionType}).`);
-                    break; 
+        // Process actions in topological order (following connections)
+        const executeActionChain = async (actionId) => {
+            if (executedActions.has(actionId)) {
+                return; // Already executed this action
+            }
+            
+            const node = nodeMap.get(actionId);
+            if (!node || node.type !== 'action') {
+                return;
+            }
+            
+            if (overallResult.blocked) {
+              //console.log(`[EvaluateFlow "${flow.name}"] Message already blocked. Skipping action node ${node.id} (${node.actionType}).`);
+                return; 
+            }
+            
+            // Execute this action
+            executedActions.add(actionId);
+            const actionResult = await this.executeAction(node, overallResult.message);
+            
+            if (actionResult) { 
+                if (actionResult.blocked) {
+                    overallResult.blocked = true;
+                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
+                    return; 
                 }
+                if (actionResult.modified && actionResult.message) {
+                    overallResult.message = { ...actionResult.message }; 
+                    overallResult.modified = true;
+                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
+                }
+            }
+            
+            // Find and execute downstream actions
+            const downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
+            for (const conn of downstreamConnections) {
+                const downstreamNode = nodeMap.get(conn.to);
+                if (downstreamNode && downstreamNode.type === 'action') {
+                    await executeActionChain(conn.to);
+                }
+            }
+        };
 
+        // Start execution from actions connected to activated triggers/logic
+        for (const node of flow.nodes) {
+            if (node.type === 'action' && !executedActions.has(node.id)) {
                 const inputConnections = flow.connections.filter(conn => conn.to === node.id);
                 const inputNodeIds = inputConnections.map(conn => conn.from);
                 
                 const shouldExecute = inputNodeIds.some(inputId => {
                     const inputNode = nodeMap.get(inputId);
-                    const activation = inputNode && (inputNode.type === 'trigger' || inputNode.type === 'logic') && nodeActivationStates[inputId] === true;
-                    // console.log(`[EvaluateFlow "${flow.name}"] Action ${node.id}: checking input ${inputId} (Type: ${inputNode ? inputNode.type : 'N/A'}), State: ${nodeActivationStates[inputId]}, Activates: ${activation}`);
-                    return activation;
+                    return inputNode && (inputNode.type === 'trigger' || inputNode.type === 'logic') && nodeActivationStates[inputId] === true;
                 });
 
-                console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} (${node.actionType}), ShouldExecute: ${shouldExecute} (based on inputs: ${JSON.stringify(inputNodeIds)})`);
-
                 if (shouldExecute) {
-                    console.log(`[RELAY DEBUG - EvaluateFlow "${flow.name}"] EXECUTING Action Node ID: ${node.id} (${node.actionType})`);
-                    const actionResult = await this.executeAction(node, overallResult.message);
-                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} Result:`, JSON.stringify(actionResult));
-                    if (actionResult) { 
-                        if (actionResult.blocked) {
-                            overallResult.blocked = true;
-                          //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
-                            break; 
-                        }
-                        if (actionResult.modified && actionResult.message) {
-                            overallResult.message = { ...actionResult.message }; 
-                            overallResult.modified = true;
-                          //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
-                        }
-                    }
+                    await executeActionChain(node.id);
                 }
             }
         }
@@ -521,6 +1150,11 @@ class EventFlowSystem {
         }
         
         switch (triggerType) {
+            case 'anyMessage':
+                // Trigger on any message regardless of content
+                match = message && (message.chatmessage || message.textContent);
+                return match;
+                
             case 'messageContains':
                 // Ensure properties exist before trying to access them
                 match = message && messageText && typeof messageText === 'string' &&
@@ -534,6 +1168,12 @@ class EventFlowSystem {
                            config && typeof config.text === 'string' &&
                            messageText.startsWith(config.text);
               //console.log(`[EvaluateTrigger - messageStartsWith] Config Text: "${config.text}", Message Text: "${messageText}", Match: ${match}`);
+                return match;
+                
+            case 'messageEndsWith':
+                match = message && messageText && typeof messageText === 'string' &&
+                           config && typeof config.text === 'string' &&
+                           messageText.endsWith(config.text);
                 return match;
                 
             case 'messageEquals':
@@ -564,6 +1204,21 @@ class EventFlowSystem {
                     default: return msgLength > targetLength; // Default to greater than
                 }
                 
+            case 'wordCount':
+                const words = messageText ? messageText.trim().split(/\s+/).length : 0;
+                const targetWords = config.count || 5;
+                switch (config.comparison) {
+                    case 'gt': return words > targetWords;
+                    case 'lt': return words < targetWords;
+                    case 'eq': return words === targetWords;
+                    default: return words > targetWords;
+                }
+                
+            case 'containsEmoji':
+                // Basic emoji detection regex
+                const emojiRegex = /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F700}-\u{1F77F}]|[\u{1F780}-\u{1F7FF}]|[\u{1F800}-\u{1F8FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]/gu;
+                return messageText ? emojiRegex.test(messageText) : false;
+                
             case 'containsLink':
                 // Simple URL detection - matches http://, https://, or www.
                 const urlRegex = /https?:\/\/[^\s]+|www\.[^\s]+/i;
@@ -575,7 +1230,7 @@ class EventFlowSystem {
                 } else {
                     match = message && message.type === config.source;
                 }
-                console.log(`[RELAY DEBUG - fromSource Trigger] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
+                //console.log(`[RELAY DEBUG - fromSource Trigger] Config Source: "${config.source}", Message Type: "${message.type}", Match: ${match}`);
                 return match;
                 
             case 'fromChannelName':
@@ -585,38 +1240,463 @@ class EventFlowSystem {
                     const channelName = (message.sourceName || '').toLowerCase();
                     match = channelName === config.channelName.toLowerCase();
                 }
-                console.log(`[RELAY DEBUG - fromChannelName Trigger] Config Channel: "${config.channelName}", Message Channel: "${message.sourceName}", Match: ${match}`);
+                //console.log(`[RELAY DEBUG - fromChannelName Trigger] Config Channel: "${config.channelName}", Message Channel: "${message.sourceName}", Match: ${match}`);
                 return match;
                 
             case 'fromUser':
                 const identifier = (message.userid || message.chatname || '').toLowerCase();
                 match = config && typeof config.username === 'string' && identifier === config.username.toLowerCase();
-              //console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
+              ////console.log(`[EvaluateTrigger - fromUser] Config Username: "${config.username}", Message Identifier: "${identifier}", Match: ${match}`);
                 return match;
                 
             case 'userRole':
                 match = message && config && message[config.role] === true; 
-              //console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
+              ////console.log(`[EvaluateTrigger - userRole] Config Role: "${config.role}", Message Role Value: ${message[config.role]}, Match: ${match}`);
                 return match;
                 
             case 'hasDonation':
                 match = !!message.hasDonation; // Assuming hasDonation is a truthy value if donation exists
-              //console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
+              ////console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
                 return match;
+                
+            case 'timeInterval':
+                // Trigger at regular intervals (in seconds)
+                if (!config.interval || config.interval <= 0) return false;
+                
+                const nodeState = `timeInterval_${triggerNode.id}`;
+                const now = Date.now();
+                const lastTriggered = this[nodeState] || 0;
+                const intervalMs = config.interval * 1000;
+                
+                if (now - lastTriggered >= intervalMs) {
+                    this[nodeState] = now;
+                    return true;
+                }
+                return false;
+                
+            case 'timeOfDay':
+                // Trigger at specific times of day
+                if (!config.times || !Array.isArray(config.times)) return false;
+                
+                const currentTime = new Date();
+                const currentHour = currentTime.getHours();
+                const currentMinute = currentTime.getMinutes();
+                const currentTimeString = `${currentHour.toString().padStart(2, '0')}:${currentMinute.toString().padStart(2, '0')}`;
+                
+                // Check if current time matches any configured time
+                match = config.times.some(time => {
+                    if (typeof time === 'string' && time.includes(':')) {
+                        return time === currentTimeString;
+                    }
+                    return false;
+                });
+                
+                // Prevent triggering multiple times in the same minute
+                const todNodeState = `timeOfDay_${triggerNode.id}_lastTriggered`;
+                if (match) {
+                    if (this[todNodeState] === currentTimeString) {
+                        return false; // Already triggered this minute
+                    }
+                    this[todNodeState] = currentTimeString;
+                }
+                return match;
+                
+            case 'midiNoteOn':
+            case 'midiNoteOff':
+            case 'midiCC':
+                // MIDI triggers are handled by listeners, not evaluated per message
+                // They'll be set up when flows are loaded/saved
+                return false;
                 
             case 'customJs':
                 try {
                     const evalFunction = new Function('message', config.code);
                     match = evalFunction(message);
-                  //console.log(`[EvaluateTrigger - customJs] Code executed. Result: ${match}`);
+                  ////console.log(`[EvaluateTrigger - customJs] Code executed. Result: ${match}`);
                     return match;
                 } catch (e) {
                     console.error('[EvaluateTrigger - customJs] Error in custom JS trigger:', e);
                     return false;
                 }
                 
+            case 'counter': {
+                const {
+                    threshold = 10,
+                    countType = 'global', // 'global', 'perUser', 'perSource'
+                    resetOnTrigger = true,
+                    resetAfterMs = 0, // Auto-reset after time (0 = never)
+                    countProperty = null // Count specific property (e.g., 'hasDonation')
+                } = config;
+                
+                // Initialize state
+                if (!this.triggerState) this.triggerState = {};
+                const counterId = `counter_${triggerNode.id}`;
+                
+                if (!this.triggerState[counterId]) {
+                    this.triggerState[counterId] = {
+                        counts: {},
+                        lastReset: Date.now()
+                    };
+                }
+                
+                const counterState = this.triggerState[counterId];
+                const now = Date.now();
+                
+                // Auto-reset if time expired
+                if (resetAfterMs > 0 && now - counterState.lastReset > resetAfterMs) {
+                    counterState.counts = {};
+                    counterState.lastReset = now;
+                }
+                
+                // Determine counter key
+                let counterKey = 'global';
+                if (countType === 'perUser' && message.userid) {
+                    counterKey = `user_${message.userid}`;
+                } else if (countType === 'perSource' && message.type) {
+                    counterKey = `source_${message.type}`;
+                }
+                
+                // Skip if counting specific property that doesn't exist
+                if (countProperty && !message[countProperty]) {
+                    return false;
+                }
+                
+                // Increment counter
+                if (!counterState.counts[counterKey]) {
+                    counterState.counts[counterKey] = 0;
+                }
+                counterState.counts[counterKey]++;
+                
+                // Check threshold
+                const triggered = counterState.counts[counterKey] >= threshold;
+                
+                if (triggered && resetOnTrigger) {
+                    counterState.counts[counterKey] = 0;
+                }
+                
+                return triggered;
+            }
+            
+            case 'userPool': {
+                const poolConfig = {
+                    poolName: trigger.config.poolName || 'default',
+                    maxUsers: trigger.config.maxUsers || 10,
+                    requireEntry: trigger.config.requireEntry !== false, // Default true
+                    entryKeyword: trigger.config.entryKeyword || '!enter',
+                    resetOnFull: trigger.config.resetOnFull || false,
+                    resetAfterMs: trigger.config.resetAfterMs || 0,
+                    allowReentry: trigger.config.allowReentry || false,
+                    scope: trigger.config.scope || 'global' // global, perSource
+                };
+                
+                // Initialize pool storage if needed
+                if (!this.userPools) {
+                    this.userPools = {};
+                }
+                
+                // Create pool key based on scope
+                const poolKey = poolConfig.scope === 'perSource' 
+                    ? `${poolConfig.poolName}_${message.type || 'unknown'}`
+                    : poolConfig.poolName;
+                
+                // Initialize this pool if it doesn't exist
+                if (!this.userPools[poolKey]) {
+                    this.userPools[poolKey] = {
+                        users: [],
+                        lastActivity: Date.now(),
+                        resetTimeout: null
+                    };
+                }
+                
+                const pool = this.userPools[poolKey];
+                const userId = message.userid || message.chatname;
+                
+                // Clear reset timeout if pool is active
+                if (pool.resetTimeout) {
+                    clearTimeout(pool.resetTimeout);
+                    pool.resetTimeout = null;
+                }
+                
+                // Check if pool should reset due to inactivity
+                if (poolConfig.resetAfterMs > 0 && 
+                    Date.now() - pool.lastActivity > poolConfig.resetAfterMs) {
+                    pool.users = [];
+                }
+                
+                // Update last activity
+                pool.lastActivity = Date.now();
+                
+                // Check if user needs to enter the pool
+                if (poolConfig.requireEntry) {
+                    const messageText = (message.chatmessage || '').toLowerCase().trim();
+                    const keyword = poolConfig.entryKeyword.toLowerCase();
+                    
+                    if (!messageText.includes(keyword)) {
+                        return false; // User hasn't entered with keyword
+                    }
+                }
+                
+                // Check if user is already in pool
+                const userInPool = pool.users.includes(userId);
+                
+                // Handle reentry logic
+                if (userInPool && !poolConfig.allowReentry) {
+                    return false; // User already in pool and reentry not allowed
+                }
+                
+                // Add user to pool if not already there
+                if (!userInPool) {
+                    pool.users.push(userId);
+                }
+                
+                // Check if pool is full
+                const poolFull = pool.users.length >= poolConfig.maxUsers;
+                
+                if (poolFull) {
+                    // Trigger when pool becomes full
+                    if (poolConfig.resetOnFull) {
+                        // Schedule reset after triggering
+                        setTimeout(() => {
+                            pool.users = [];
+                        }, 100);
+                    }
+                    return true;
+                }
+                
+                // Set up inactivity reset if configured
+                if (poolConfig.resetAfterMs > 0) {
+                    pool.resetTimeout = setTimeout(() => {
+                        pool.users = [];
+                    }, poolConfig.resetAfterMs);
+                }
+                
+                return false;
+            }
+            
+            case 'accumulator': {
+                const accConfig = {
+                    accumulatorName: trigger.config.accumulatorName || 'default',
+                    threshold: trigger.config.threshold || 100,
+                    propertyName: trigger.config.propertyName || 'amount',
+                    operation: trigger.config.operation || 'sum', // sum, avg, max, min
+                    triggerMode: trigger.config.triggerMode || 'gte', // gte, exact, lte
+                    autoReset: trigger.config.autoReset || false,
+                    scope: trigger.config.scope || 'global', // global, perUser, perSource
+                    resetAfterMs: trigger.config.resetAfterMs || 0
+                };
+                
+                // Initialize accumulator storage if needed
+                if (!this.accumulators) {
+                    this.accumulators = {};
+                }
+                
+                // Create accumulator key based on scope
+                let accKey = accConfig.accumulatorName;
+                if (accConfig.scope === 'perUser') {
+                    accKey += `_${message.userid || message.chatname}`;
+                } else if (accConfig.scope === 'perSource') {
+                    accKey += `_${message.type || 'unknown'}`;
+                } else if (accConfig.scope === 'perUserPerSource') {
+                    accKey += `_${message.userid || message.chatname}_${message.type || 'unknown'}`;
+                }
+                
+                // Initialize this accumulator if it doesn't exist
+                if (!this.accumulators[accKey]) {
+                    this.accumulators[accKey] = {
+                        value: 0,
+                        count: 0,
+                        max: -Infinity,
+                        min: Infinity,
+                        lastUpdate: Date.now(),
+                        resetTimeout: null
+                    };
+                }
+                
+                const acc = this.accumulators[accKey];
+                
+                // Clear reset timeout if accumulator is active
+                if (acc.resetTimeout) {
+                    clearTimeout(acc.resetTimeout);
+                    acc.resetTimeout = null;
+                }
+                
+                // Check if accumulator should reset due to inactivity
+                if (accConfig.resetAfterMs > 0 && 
+                    Date.now() - acc.lastUpdate > accConfig.resetAfterMs) {
+                    acc.value = 0;
+                    acc.count = 0;
+                    acc.max = -Infinity;
+                    acc.min = Infinity;
+                }
+                
+                // Get the value to accumulate
+                const valueToAccumulate = parseFloat(message[accConfig.propertyName]) || 0;
+                
+                // Only accumulate if there's a value
+                if (valueToAccumulate !== 0 || accConfig.operation === 'count') {
+                    acc.lastUpdate = Date.now();
+                    acc.count++;
+                    
+                    switch (accConfig.operation) {
+                        case 'sum':
+                            acc.value += valueToAccumulate;
+                            break;
+                        case 'avg':
+                            acc.value = ((acc.value * (acc.count - 1)) + valueToAccumulate) / acc.count;
+                            break;
+                        case 'max':
+                            acc.max = Math.max(acc.max, valueToAccumulate);
+                            acc.value = acc.max;
+                            break;
+                        case 'min':
+                            acc.min = Math.min(acc.min, valueToAccumulate);
+                            acc.value = acc.min;
+                            break;
+                        case 'count':
+                            acc.value = acc.count;
+                            break;
+                    }
+                }
+                
+                // Check if trigger condition is met
+                let accTriggered = false;
+                switch (accConfig.triggerMode) {
+                    case 'gte':
+                        accTriggered = acc.value >= accConfig.threshold;
+                        break;
+                    case 'exact':
+                        accTriggered = acc.value === accConfig.threshold;
+                        break;
+                    case 'lte':
+                        accTriggered = acc.value <= accConfig.threshold;
+                        break;
+                }
+                
+                // Reset if triggered and auto-reset is enabled
+                if (accTriggered && accConfig.autoReset) {
+                    setTimeout(() => {
+                        acc.value = 0;
+                        acc.count = 0;
+                        acc.max = -Infinity;
+                        acc.min = Infinity;
+                    }, 100);
+                }
+                
+                // Set up inactivity reset if configured
+                if (accConfig.resetAfterMs > 0) {
+                    acc.resetTimeout = setTimeout(() => {
+                        acc.value = 0;
+                        acc.count = 0;
+                        acc.max = -Infinity;
+                        acc.min = Infinity;
+                    }, accConfig.resetAfterMs);
+                }
+                
+                return accTriggered;
+            }
+                
+            case 'randomChance': {
+                const { 
+                    probability = 0.5, 
+                    cooldownMs = 0,
+                    maxPerMinute = 0,
+                    requireMessage = true 
+                } = config;
+                
+                // Skip if no message when required
+                if (requireMessage && (!message.chatmessage || !message.chatmessage.trim())) {
+                    return false;
+                }
+                
+                // Initialize trigger state if needed
+                if (!this.triggerState) this.triggerState = {};
+                const triggerId = `random_${triggerNode.id}`;
+                
+                if (!this.triggerState[triggerId]) {
+                    this.triggerState[triggerId] = {
+                        lastTriggered: 0,
+                        minuteCounter: [],
+                        cooldownUntil: 0
+                    };
+                }
+                
+                const state = this.triggerState[triggerId];
+                const now = Date.now();
+                
+                // Check cooldown
+                if (cooldownMs > 0 && now < state.cooldownUntil) {
+                    return false;
+                }
+                
+                // Check rate limit (max per minute)
+                if (maxPerMinute > 0) {
+                    // Clean old entries
+                    state.minuteCounter = state.minuteCounter.filter(t => now - t < 60000);
+                    
+                    if (state.minuteCounter.length >= maxPerMinute) {
+                        return false;
+                    }
+                }
+                
+                // Random check
+                const randomValue = Math.random();
+                const triggered = randomValue < probability;
+                
+                if (triggered) {
+                    // Update state
+                    state.lastTriggered = now;
+                    state.cooldownUntil = now + cooldownMs;
+                    if (maxPerMinute > 0) {
+                        state.minuteCounter.push(now);
+                    }
+                }
+                
+                return triggered;
+            }
+                
+            case 'messageProperties': {
+                const { requiredProperties = [], forbiddenProperties = [], requireAll = true } = config;
+                
+                // Check forbidden properties first (immediate fail)
+                for (const prop of forbiddenProperties) {
+                    // Special handling for karma thresholds
+                    if (prop === 'lowKarma' && message.karma !== undefined && message.karma < 0.3) {
+                        return false;
+                    }
+                    // Check if property exists and is truthy (not false, null, undefined, 0, or empty string)
+                    if (prop !== 'lowKarma' && message[prop]) {
+                        return false; // Forbidden property exists and is truthy
+                    }
+                }
+                
+                // If no required properties, pass
+                if (requiredProperties.length === 0) return true;
+                
+                // Check required properties
+                const checkProperty = (prop) => {
+                    // Special handling for karma thresholds
+                    if (prop === 'highKarma') {
+                        return message.karma !== undefined && message.karma >= 0.7;
+                    }
+                    // Special handling for arrays
+                    if (prop === 'chatbadges') {
+                        return Array.isArray(message.chatbadges) && message.chatbadges.length > 0;
+                    }
+                    // Check if property exists and is truthy
+                    return message[prop] && message[prop] !== false;
+                };
+                
+                if (requireAll) {
+                    // ALL required properties must exist
+                    return requiredProperties.every(checkProperty);
+                } else {
+                    // ANY required property must exist
+                    return requiredProperties.some(checkProperty);
+                }
+            }
+                
             default:
-              //console.log(`[EvaluateTrigger] Unknown triggerType: ${triggerType}`);
+              ////console.log(`[EvaluateTrigger] Unknown triggerType: ${triggerType}`);
                 return false;
         }
     }
@@ -674,7 +1754,7 @@ class EventFlowSystem {
     
     async executeAction(actionNode, message) {
         const { actionType, config } = actionNode;
-        console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
+        //console.log(`[ExecuteAction] Node: ${actionNode.id}, Type: ${actionType}, Config: ${JSON.stringify(config)}`);
         let result = { modified: false, message, blocked: false };
         
         switch (actionType) {
@@ -694,13 +1774,26 @@ class EventFlowSystem {
 				};
 				result.modified = true;
 			}
-			console.log(`[ExecuteAction - modifyMessage] Modified message to: "${result.message.chatmessage}"`);
+			//console.log(`[ExecuteAction - modifyMessage] Modified message to: "${result.message.chatmessage}"`);
 			break;
                 
             case 'setProperty':
+                // Process value with template variables
+                let processedValue = config.value || '';
+                
+                // Replace template variables if value is a string
+                if (typeof processedValue === 'string') {
+                    processedValue = processedValue.replace(/\{source\}/g, message.type || '');
+                    processedValue = processedValue.replace(/\{type\}/g, message.type || '');
+                    processedValue = processedValue.replace(/\{username\}/g, message.chatname || '');
+                    processedValue = processedValue.replace(/\{chatname\}/g, message.chatname || '');
+                    processedValue = processedValue.replace(/\{message\}/g, message.chatmessage || '');
+                    processedValue = processedValue.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                }
+                
                 result.message = {
                     ...message,
-                    [config.property]: config.value
+                    [config.property]: processedValue
                 };
                 result.modified = true;
                 break;
@@ -760,77 +1853,189 @@ class EventFlowSystem {
                 }
                 break;
                 
-            case 'relay':
-                console.log('[RELAY DEBUG - Action] Starting relay action execution');
-                console.log('[RELAY DEBUG - Action] Config:', config);
-                console.log('[RELAY DEBUG - Action] Message source:', message.type);
-                console.log('[RELAY DEBUG - Action] sendMessageToTabs available?', !!this.sendMessageToTabs);
+            case 'sendMessage': {
+                //console.log('[SEND MESSAGE - Action] Starting send message action execution');
+                //console.log('[SEND MESSAGE - Action] Config:', config);
+                //console.log('[SEND MESSAGE - Action] Message source:', message.type);
                 
-                if (this.sendMessageToTabs && message && !message.reflection) {
-                    // Replace all possible template variables
-                    let processedTemplate = config.template || '[{source}] {username}: {message}';
-                    
-                    // Replace all occurrences of template variables
-                    processedTemplate = processedTemplate.replace(/\{source\}/g, message.type || '');
-                    processedTemplate = processedTemplate.replace(/\{type\}/g, message.type || '');
-                    processedTemplate = processedTemplate.replace(/\{username\}/g, message.chatname || '');
-                    processedTemplate = processedTemplate.replace(/\{chatname\}/g, message.chatname || '');
-                    processedTemplate = processedTemplate.replace(/\{message\}/g, message.chatmessage || '');
-                    processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
-                    
-                    const relayMessage = {
-                        response: processedTemplate
-                    };
-                    
-                    // Handle destination based on config
-                    if (config.destination === 'reply') {
-                        // Reply to sender only - use the original message's tab ID
-                        if (message.tid !== undefined && message.tid !== null) {
-                            relayMessage.tid = message.tid;
-                            console.log('[RELAY DEBUG - Action] Mode: Reply to sender, tid:', message.tid);
-                        } else {
-                            console.warn('[RELAY DEBUG - Action] Reply mode selected but no tid available in message');
-                            // Can't reply without a tid, so skip this action
-                            break;
-                        }
-                    } else if (config.destination) {
-                        // Send to specific destination
-                        relayMessage.destination = config.destination;
-                        console.log('[RELAY DEBUG - Action] Mode: Send to specific destination:', config.destination);
-                    } else {
-                        // Send to all platforms (default behavior)
-                        console.log('[RELAY DEBUG - Action] Mode: Send to all platforms');
-                    }
-                    
-                    console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
-                    
-                    let result = false;
-                    relayMessage.response = this.sanitizeRelay(relayMessage.response, false).trim();
-                    if (relayMessage.response) {
-                        if (!this.checkExactDuplicateAlreadyRelayed(relayMessage.response, false, relayMessage.tid, false)){
-                            // Adjust parameters based on destination mode
-                            const reverse = config.destination !== 'reply'; // Don't reverse if replying to sender
-                            const relayMode = config.destination !== 'reply'; // Don't use relay mode for replies
-                            const timeout = config.timeout || 1000;
-                            
-                            console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
-                            console.log('  - message:', relayMessage);
-                            console.log('  - reverse:', reverse);
-                            console.log('  - metadata:', message);
-                            console.log('  - relayMode:', relayMode);
-                            console.log('  - antispam:', false);
-                            console.log('  - timeout:', timeout);
-                            
-                            result = this.sendMessageToTabs(relayMessage, reverse, message, relayMode, false, timeout);
-                        }
-                    }
-                    
-                    console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
-                } else {
-                    console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
-                    console.error('[RELAY DEBUG - Action] This EventFlowSystem instance:', this);
+                // Don't process reflections to prevent loops
+                if (message && message.reflection) {
+                    //console.log('[SEND MESSAGE - Action] Skipping - message is a reflection');
+                    break;
                 }
+                
+                // Skip metadata-only updates (like viewer count updates)
+                if (message && message.meta && !message.chatmessage && !message.chatname) {
+                    //console.log('[SEND MESSAGE - Action] Skipping - metadata-only update');
+                    break;
+                }
+                
+                // Check if we have the required functions
+                if (!this.sendMessageToTabs) {
+                    console.error('[SEND MESSAGE - Action] CRITICAL: sendMessageToTabs is not available!');
+                    break;
+                }
+                
+                // Process template - this can use any message properties, not just chatmessage
+                let processedTemplate = config.template || 'Hello from {source}!';
+                
+                // Replace all occurrences of template variables
+                processedTemplate = processedTemplate.replace(/\{source\}/g, message.type || '');
+                processedTemplate = processedTemplate.replace(/\{type\}/g, message.type || '');
+                processedTemplate = processedTemplate.replace(/\{username\}/g, message.chatname || '');
+                processedTemplate = processedTemplate.replace(/\{chatname\}/g, message.chatname || '');
+                processedTemplate = processedTemplate.replace(/\{message\}/g, message.chatmessage || '');
+                processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                
+                // Sanitize the message
+                let sanitizedSendMessage = this.sanitizeRelay ? this.sanitizeRelay(processedTemplate, false).trim() : processedTemplate.trim();
+                
+                // Check if sanitized message is empty
+                if (!sanitizedSendMessage) {
+                    //console.log('[SEND MESSAGE - Action] Skipping - message empty after processing');
+                    break;
+                }
+                
+                // Build message with reflection flag to prevent loops
+                const sendMsg = {
+                    response: sanitizedSendMessage,
+                    reflection: true  // Mark to prevent loops
+                };
+                
+                // Determine send parameters based on destination config
+                let reverse = false;
+                let relayMode = false;
+                
+                if (config.destination === 'reply') {
+                    // Reply to source: send back to the tab that triggered the event
+                    if (message.tid !== undefined && message.tid !== null) {
+                        sendMsg.tid = message.tid;
+                        reverse = false;  // Don't exclude source, we're replying to it
+                        relayMode = false;  // Not a broadcast
+                        //console.log('[SEND MESSAGE - Action] Mode: Reply to source, tid:', message.tid);
+                    } else {
+                        console.warn('[SEND MESSAGE - Action] Reply mode selected but no tid available');
+                        break;
+                    }
+                } else if (config.destination === 'all') {
+                    // Send to all platforms INCLUDING source
+                    reverse = false;  // Don't exclude any tabs
+                    relayMode = true;  // This is a broadcast
+                    //console.log('[SEND MESSAGE - Action] Mode: Send to all platforms (including source)');
+                } else if (config.destination === 'all-except-source') {
+                    // Send to all platforms EXCLUDING source
+                    reverse = true;  // Exclude source tab
+                    relayMode = true;  // This is a broadcast
+                    if (message.tid) {
+                        sendMsg.tid = message.tid;  // Pass source tid for exclusion
+                    }
+                    //console.log('[SEND MESSAGE - Action] Mode: Send to all platforms (excluding source)');
+                } else if (config.destination) {
+                    // Send to specific platform/destination
+                    sendMsg.destination = config.destination;
+                    reverse = true;  // Exclude source tab by default for platform sends
+                    relayMode = true;  // This is a broadcast
+                    if (message.tid) {
+                        sendMsg.tid = message.tid;  // Pass source tid for exclusion
+                    }
+                    //console.log('[SEND MESSAGE - Action] Mode: Send to platform:', config.destination);
+                }
+                
+                const timeout = config.timeout || 1000;
+                
+                //console.log('[SEND MESSAGE - Action] Calling sendMessageToTabs with:');
+                //console.log('  - message:', sendMsg);
+                //console.log('  - reverse:', reverse);
+                //console.log('  - metadata:', message);
+                //console.log('  - relayMode:', relayMode);
+                //console.log('  - timeout:', timeout);
+                
+                const sendResult = this.sendMessageToTabs(sendMsg, reverse, message, relayMode, false, timeout);
+                //console.log('[SEND MESSAGE - Action] sendMessageToTabs returned:', sendResult);
                 break;
+            }
+                
+            case 'relay': {
+                //console.log('[RELAY DEBUG - Action] Starting relay action execution');
+                //console.log('[RELAY DEBUG - Action] Config:', config);
+                //console.log('[RELAY DEBUG - Action] Message source:', message.type);
+                
+                // Relay is strictly for forwarding chat messages - MUST have chatmessage
+                if (!message || !message.chatmessage || !message.chatmessage.trim()) {
+                    //console.log('[RELAY DEBUG - Action] Skipping relay - no chatmessage to relay');
+                    break;
+                }
+                
+                // Don't relay reflections to prevent loops
+                if (message.reflection) {
+                    //console.log('[RELAY DEBUG - Action] Skipping relay - message is a reflection');
+                    break;
+                }
+                
+                // Check if we have required functions
+                if (!this.sendMessageToTabs) {
+                    console.error('[RELAY DEBUG - Action] CRITICAL: sendMessageToTabs is not available!');
+                    break;
+                }
+                
+                // Process relay template - focused on forwarding the chat message
+                let relayTemplate = config.template || '[{source}] {username}: {message}';
+                
+                // Replace all occurrences of template variables
+                relayTemplate = relayTemplate.replace(/\{source\}/g, message.type || '');
+                relayTemplate = relayTemplate.replace(/\{type\}/g, message.type || '');
+                relayTemplate = relayTemplate.replace(/\{username\}/g, message.chatname || '');
+                relayTemplate = relayTemplate.replace(/\{chatname\}/g, message.chatname || '');
+                relayTemplate = relayTemplate.replace(/\{message\}/g, message.chatmessage || '');
+                relayTemplate = relayTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                
+                // Sanitize the message
+                let sanitizedRelayMessage = this.sanitizeRelay ? this.sanitizeRelay(relayTemplate, false).trim() : relayTemplate.trim();
+                
+                // Check if sanitized message is empty
+                if (!sanitizedRelayMessage) {
+                    //console.log('[RELAY DEBUG - Action] Skipping relay - message empty after sanitization');
+                    break;
+                }
+                
+                // Build relay message with reflection flag to prevent loops
+                const relayMessage = {
+                    response: sanitizedRelayMessage,
+                    reflection: true  // Mark as relayed to prevent infinite loops
+                };
+                
+                // Relay ALWAYS excludes source (never relay back to where it came from)
+                let reverse = true;  // Always exclude source
+                let relayMode = true;  // Always in relay mode
+                
+                if (config.destination && config.destination !== 'all') {
+                    // Relay to specific platform/destination
+                    relayMessage.destination = config.destination;
+                    //console.log('[RELAY DEBUG - Action] Mode: Relay to specific platform:', config.destination);
+                } else {
+                    // Relay to all platforms (excluding source)
+                    // CRITICAL: Must pass tid for source exclusion to work with reverse=true
+                    if (message.tid) {
+                        relayMessage.tid = message.tid;
+                    }
+                    //console.log('[RELAY DEBUG - Action] Mode: Relay to all platforms (excluding source)');
+                }
+                
+                //console.log('[RELAY DEBUG - Action] Relay message prepared:', relayMessage);
+                
+                const timeout = config.timeout || 1000;
+                
+                //console.log('[RELAY DEBUG - Action] Calling sendMessageToTabs with:');
+                //console.log('  - message:', relayMessage);
+                //console.log('  - reverse:', reverse);
+                //console.log('  - metadata:', message);
+                //console.log('  - relayMode:', relayMode);
+                //console.log('  - timeout:', timeout);
+                
+                const result = this.sendMessageToTabs(relayMessage, reverse, message, relayMode, false, timeout);
+                //console.log('[RELAY DEBUG - Action] sendMessageToTabs returned:', result);
+                break;
+            }
                 
             case 'webhook':
 				try {
@@ -857,7 +2062,7 @@ class EventFlowSystem {
 						fetchOpts.body = body;
 					}
 
-					console.log(`[ExecuteAction - webhook] Calling ${method} ${url} with timeout ${webhookTimeout}ms`);
+					//console.log(`[ExecuteAction - webhook] Calling ${method} ${url} with timeout ${webhookTimeout}ms`);
 					const response = await this.fetchWithTimeout(url, fetchOpts, webhookTimeout); // Use the injected function
 
 					if (!response.ok) {
@@ -867,7 +2072,7 @@ class EventFlowSystem {
 						result.modified = true;
 						result.blocked = config.blockOnFailure !== undefined ? !!config.blockOnFailure : true; // Block on failure by default, make it configurable
 					} else {
-						console.log(`[ExecuteAction - webhook] Webhook to ${url} successful.`);
+						//console.log(`[ExecuteAction - webhook] Webhook to ${url} successful.`);
 						try {
 							const responseData = await response.json(); // Attempt to parse as JSON
 							result.message = { ...message, webhookResponse: responseData, webhookStatus: response.status };
@@ -897,12 +2102,12 @@ class EventFlowSystem {
 					);
 					
 					if (addResult.success) {
-						console.log(`[ExecuteAction - addPoints] Added ${config.amount} points to ${message.chatname}. New total: ${addResult.points}`);
+						//console.log(`[ExecuteAction - addPoints] Added ${config.amount} points to ${message.chatname}. New total: ${addResult.points}`);
 						// You might want to add the new points total to the message for other actions to use
 						result.message = { ...message, pointsTotal: addResult.points };
 						result.modified = true;
 					} else {
-						console.log(`[ExecuteAction - addPoints] Failed to add points for ${message.chatname}. Reason: ${addResult.message || 'Unknown error'}`);
+						//console.log(`[ExecuteAction - addPoints] Failed to add points for ${message.chatname}. Reason: ${addResult.message || 'Unknown error'}`);
 					}
 				}
 				break;
@@ -917,14 +2122,14 @@ class EventFlowSystem {
 
 					if (!spendResult.success) {
 						// If spending points failed (e.g., insufficient points)
-						console.log(`[ExecuteAction - spendPoints] Failed for ${message.chatname}. Reason: ${spendResult.message}`);
+						//console.log(`[ExecuteAction - spendPoints] Failed for ${message.chatname}. Reason: ${spendResult.message}`);
 						result.blocked = true; // This will stop subsequent actions in this flow path.
 						// You might also want to include the error message in the result if needed for debugging or other logic
 						result.message = { ...message, pointsSpendError: spendResult.message };
 						result.modified = true;
 					} else {
 						// Points were successfully spent
-						console.log(`[ExecuteAction - spendPoints] Success for ${message.chatname}. Spent ${config.amount}. Remaining: ${spendResult.remaining}`);
+						//console.log(`[ExecuteAction - spendPoints] Success for ${message.chatname}. Spent ${config.amount}. Remaining: ${spendResult.remaining}`);
 						// Optionally, you can add information about the successful transaction to the message
 						// result.message = { ...message, pointsSpentSuccessfully: true, pointsRemaining: spendResult.remaining };
 						// result.modified = true;
@@ -958,13 +2163,13 @@ class EventFlowSystem {
 					};
 					// Assuming sendTargetP2P is globally available or accessible via this.sendToDestinations
 					// or a similar mechanism. The user prompt implies 'sendTargetP2P' is the target function.
-					if (typeof sendTargetP2P === 'function') {
-						sendTargetP2P(actionPayload, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
-						console.log('[ExecuteAction - playTenorGiphy] Sent to actions page:', actionPayload);
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
+						//console.log('[ExecuteAction - playTenorGiphy] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) { // Fallback or alternative
 						 // Adapt this if sendMessageToTabs can target a specific page by a label/identifier
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true); // Sending to all tabs might not be ideal, adjust if possible
-						console.log('[ExecuteAction - playTenorGiphy] Sent via sendMessageToTabs:', actionPayload);
+						//console.log('[ExecuteAction - playTenorGiphy] Sent via sendMessageToTabs:', actionPayload);
 					} else {
 						console.warn('[ExecuteAction - playTenorGiphy] No function available to send message to actions page.');
 					}
@@ -981,12 +2186,12 @@ class EventFlowSystem {
 						actionType: 'obs_scene_change',
 						sceneName: config.sceneName
 					};
-					if (typeof sendTargetP2P === 'function') {
-						sendTargetP2P(actionPayload, 'actions');
-						console.log('[ExecuteAction - triggerOBSScene] Sent to actions page:', actionPayload);
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+						//console.log('[ExecuteAction - triggerOBSScene] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
-						 console.log('[ExecuteAction - triggerOBSScene] Sent via sendMessageToTabs:', actionPayload);
+						 //console.log('[ExecuteAction - triggerOBSScene] Sent via sendMessageToTabs:', actionPayload);
 					} else {
 						console.warn('[ExecuteAction - triggerOBSScene] No function available to send message to actions page.');
 					}
@@ -1002,12 +2207,12 @@ class EventFlowSystem {
 						audioUrl: config.audioUrl,
 						volume: config.volume !== undefined ? config.volume : 1.0
 					};
-					if (typeof sendTargetP2P === 'function') {
-						sendTargetP2P(actionPayload, 'actions');
-						console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+						//console.log('[ExecuteAction - playAudioClip] Sent to actions page:', actionPayload);
 					} else if (this.sendMessageToTabs) {
 						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
-						console.log('[ExecuteAction - playAudioClip] Sent via sendMessageToTabs:', actionPayload);
+						//console.log('[ExecuteAction - playAudioClip] Sent via sendMessageToTabs:', actionPayload);
 					} else {
 						console.warn('[ExecuteAction - playAudioClip] No function available to send message to actions page.');
 					}
@@ -1015,6 +2220,302 @@ class EventFlowSystem {
 					console.warn('[ExecuteAction - playAudioClip] Audio URL not configured.');
 				}
 				break;
+                
+            case 'delay':
+                // Delay the message by specified milliseconds
+                if (config.delayMs && typeof config.delayMs === 'number') {
+                    await new Promise(resolve => setTimeout(resolve, config.delayMs));
+                }
+                break;
+            
+            // OBS Browser Source API Actions
+            case 'obsChangeScene':
+                if (config.sceneName) {
+                    const actionPayload = {
+                        actionType: 'obsChangeScene',
+                        sceneName: config.sceneName
+                    };
+                    
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
+                    }
+                }
+                break;
+                
+            case 'obsToggleSource':
+                if (config.sourceName) {
+                    const actionPayload = {
+                        actionType: 'obsToggleSource',
+                        sourceName: config.sourceName,
+                        visible: config.visible
+                    };
+                    
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
+                    }
+                }
+                break;
+            
+            case 'obsSetSourceFilter':
+                if (config.sourceName && config.filterName) {
+                    const actionPayload = {
+                        actionType: 'obsSetSourceFilter',
+                        sourceName: config.sourceName,
+                        filterName: config.filterName,
+                        enabled: config.enabled
+                    };
+                    
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
+                    }
+                }
+                break;
+            
+            case 'obsMuteSource':
+                if (config.sourceName) {
+                    const actionPayload = {
+                        actionType: 'obsMuteSource',
+                        sourceName: config.sourceName,
+                        muted: config.muted
+                    };
+                    
+                    if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                        this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+                    } else {
+                        console.warn('[OBS] sendTargetP2P not available on this instance');
+                    }
+                }
+                break;
+                
+            case 'obsStartRecording':
+                const startRecordingPayload = {
+                    actionType: 'obsStartRecording'
+                };
+                
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: startRecordingPayload }, 'actions');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsStopRecording':
+                const stopRecordingPayload = {
+                    actionType: 'obsStopRecording'
+                };
+                
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: stopRecordingPayload }, 'actions');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsStartStreaming':
+                const startStreamingPayload = {
+                    actionType: 'obsStartStreaming'
+                };
+                
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: startStreamingPayload }, 'actions');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsStopStreaming':
+                const stopStreamingPayload = {
+                    actionType: 'obsStopStreaming'
+                };
+                
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: stopStreamingPayload }, 'actions');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'obsReplayBuffer':
+                const replayBufferPayload = {
+                    actionType: 'obsReplayBuffer'
+                };
+                
+                if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+                    this.sendTargetP2P({ overlayNinja: replayBufferPayload }, 'actions');
+                } else {
+                    console.warn('[OBS] sendTargetP2P not available');
+                }
+                break;
+                
+            case 'midiSendNote':
+                if (!this.midiEnabled || !config.deviceId || !config.note) break;
+                
+                const noteOutput = this.getMIDIOutputDevice(config.deviceId);
+                if (noteOutput) {
+                    const velocity = config.velocity || 127;
+                    const duration = config.duration || 100;
+                    const channel = config.channel || 1;
+                    
+                    try {
+                        noteOutput.playNote(config.note, channel, {
+                            velocity: velocity / 127,
+                            duration: duration
+                        });
+                        console.log(`[MIDI] Sent note ${config.note} to device ${config.deviceId}`);
+                    } catch (err) {
+                        console.error('[MIDI] Error sending note:', err);
+                    }
+                }
+                break;
+                
+            case 'midiSendCC':
+                if (!this.midiEnabled || !config.deviceId || config.controller === undefined) break;
+                
+                const ccOutput = this.getMIDIOutputDevice(config.deviceId);
+                if (ccOutput) {
+                    const value = config.value || 0;
+                    const channel = config.channel || 1;
+                    
+                    try {
+                        ccOutput.sendControlChange(config.controller, value, channel);
+                        console.log(`[MIDI] Sent CC ${config.controller}:${value} to device ${config.deviceId}`);
+                    } catch (err) {
+                        console.error('[MIDI] Error sending CC:', err);
+                    }
+                }
+                break;
+                
+            case 'setGateState':
+                // Set the state of a gate node (ALLOW or BLOCK)
+                if (config.targetNodeId && config.state) {
+                    const targetState = this.nodeStates.get(config.targetNodeId);
+                    if (targetState) {
+                        targetState.state = config.state; // 'ALLOW' or 'BLOCK'
+                        console.log(`[SetGateState] Gate ${config.targetNodeId} set to ${config.state}`);
+                    }
+                }
+                break;
+                
+            case 'resetStateNode':
+                // Reset any state node to its initial state
+                if (config.targetNodeId) {
+                    // Find the node to get its type
+                    const allFlows = this.flows || [];
+                    let targetNode = null;
+                    
+                    for (const flow of allFlows) {
+                        targetNode = flow.nodes?.find(n => n.id === config.targetNodeId);
+                        if (targetNode) break;
+                    }
+                    
+                    if (targetNode && targetNode.type === 'state') {
+                        this.initializeStateNode(config.targetNodeId, targetNode.stateType, targetNode.config || {});
+                        console.log(`[ResetStateNode] State node ${config.targetNodeId} reset`);
+                    }
+                }
+                break;
+                
+            case 'setCounter':
+                // Set counter to specific value
+                if (config.targetNodeId && config.value !== undefined) {
+                    const counterState = this.nodeStates.get(config.targetNodeId);
+                    if (counterState && counterState.hasOwnProperty('count')) {
+                        counterState.count = config.value;
+                        console.log(`[SetCounter] Counter ${config.targetNodeId} set to ${config.value}`);
+                    }
+                }
+                break;
+                
+            case 'incrementCounter':
+                // Increment or decrement counter
+                if (config.targetNodeId) {
+                    const counterState = this.nodeStates.get(config.targetNodeId);
+                    if (counterState && counterState.hasOwnProperty('count')) {
+                        const delta = config.delta || 1;
+                        counterState.count += delta;
+                        console.log(`[IncrementCounter] Counter ${config.targetNodeId} changed by ${delta} to ${counterState.count}`);
+                    }
+                }
+                break;
+                
+            case 'checkCounter':
+                // Check counter value and optionally modify message
+                if (config.targetNodeId) {
+                    const counterState = this.nodeStates.get(config.targetNodeId);
+                    if (counterState && counterState.hasOwnProperty('count')) {
+                        // Add counter info to message
+                        result.message = {
+                            ...message,
+                            counterValue: counterState.count,
+                            counterTarget: counterState.targetCount
+                        };
+                        result.modified = true;
+                        console.log(`[CheckCounter] Counter ${config.targetNodeId} value: ${counterState.count}`);
+                    }
+                }
+                break;
+                
+            case 'removeText':
+                if (message.chatmessage && config.removeType) {
+                    let newMessage = message.chatmessage;
+                    
+                    switch (config.removeType) {
+                        case 'removeFirst':
+                            // Remove first character only
+                            if (config.count && typeof config.count === 'number') {
+                                newMessage = newMessage.substring(config.count);
+                            } else {
+                                newMessage = newMessage.substring(1);
+                            }
+                            break;
+                            
+                        case 'removeCommand':
+                            // Remove entire first word (command)
+                            const firstSpaceIndex = newMessage.indexOf(' ');
+                            if (firstSpaceIndex !== -1) {
+                                newMessage = newMessage.substring(firstSpaceIndex + 1);
+                            } else {
+                                // If no space, remove entire message (it's just the command)
+                                newMessage = '';
+                            }
+                            break;
+                            
+                        case 'removeUntil':
+                            // Remove everything up to and including a specific string
+                            if (config.untilText) {
+                                const index = newMessage.indexOf(config.untilText);
+                                if (index !== -1) {
+                                    newMessage = newMessage.substring(index + config.untilText.length);
+                                }
+                            }
+                            break;
+                            
+                        case 'removePrefix':
+                            // Remove a specific prefix if it exists
+                            if (config.prefix && newMessage.startsWith(config.prefix)) {
+                                newMessage = newMessage.substring(config.prefix.length);
+                            }
+                            break;
+                            
+                        case 'trimWhitespace':
+                            // Remove leading/trailing whitespace
+                            newMessage = newMessage.trim();
+                            break;
+                    }
+                    
+                    result.message = {
+                        ...message,
+                        chatmessage: newMessage
+                    };
+                    result.modified = true;
+                }
+                break;
                 
             default:
                 break;

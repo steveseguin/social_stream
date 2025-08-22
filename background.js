@@ -17,6 +17,10 @@ var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
 var sentimentAnalysisLoaded = false;
 
+// Spotify integration
+var spotify = null;
+console.log("Background.js: SpotifyIntegration available?", typeof SpotifyIntegration !== 'undefined');
+
 var messageCounterBase = Math.floor(Math.random() * 90000);
 var messageCounter = messageCounterBase;
 var lastAntiSpam = 0;
@@ -106,9 +110,19 @@ if (typeof chrome.runtime == "undefined") {
 		ipcRenderer.sendSync("storageSave", data);
 		log("ipcRenderer.sendSync('storageSave',data);");
 	};
-	chrome.storage.sync.get = async function (arg, callback) {
-		var response = await ipcRenderer.sendSync("storageGet", arg);
-		callback(response);
+	chrome.storage.sync.get = function (arg, callback) {
+		// Support both callback and promise-based usage
+		if (typeof callback === 'function') {
+			// Callback mode
+			var response = ipcRenderer.sendSync("storageGet", arg);
+			callback(response);
+		} else {
+			// Promise mode
+			return new Promise((resolve) => {
+				var response = ipcRenderer.sendSync("storageGet", arg);
+				resolve(response);
+			});
+		}
 	};
 	chrome.storage.sync.remove = async function (arg, callback) {
 		// only used for upgrading; not important atm.
@@ -116,15 +130,15 @@ if (typeof chrome.runtime == "undefined") {
 	};
 
 	chrome.storage.local = {};
-	chrome.storage.local.get = async function (arg, callback) {
-		log("LOCAL SYNC GET");
-		var response = await ipcRenderer.sendSync("storageGet", arg);
-		callback(response);
+	chrome.storage.local.get = function (keys, callback) {
+		log("LOCAL STORAGE GET - using sync storage in Electron");
+		// In Electron, just use sync storage
+		return chrome.storage.sync.get(keys, callback);
 	};
-	chrome.storage.local.set = function (data) {
-		log("LOCAL SYNC SET", data);
-		ipcRenderer.sendSync("storageSave", data);
-		log("ipcRenderer.sendSync('storageSave',data);");
+	chrome.storage.local.set = function (data, callback) {
+		log("LOCAL STORAGE SET - using sync storage in Electron", data);
+		// In Electron, just use sync storage
+		return chrome.storage.sync.set(data, callback);
 	};
 
 	chrome.tabs = {};
@@ -952,7 +966,7 @@ function loadSettings(item, resave = false) {
 			ipcRenderer.sendSync("fromBackground", { streamID, password, settings, state: isExtensionOn }); 
 			//ipcRenderer.send('backgroundLoaded');
 			if (resave && settings){
-				chrome.storage.sync.set({ settings});
+				chrome.storage.local.set({ settings});
 				chrome.runtime.lastError;
 			}
 		}
@@ -966,6 +980,11 @@ function loadSettings(item, resave = false) {
 		if (!sentimentAnalysisLoaded) {
 			loadSentimentAnalysis();
 		}
+	}
+	
+	// Initialize Spotify if enabled
+	if (settings.spotifyEnabled) {
+		initializeSpotify();
 	}
 
 	const timedMessage = settings['timedMessage'] || [];
@@ -1429,18 +1448,38 @@ async function overwriteFileExcel(data = false) {
 async function resetSettings(item = false) {
 	log("reset settings");
 	//alert("Settings reset");
-	chrome.storage.sync.get(properties, async function (item) {
+	chrome.storage.local.get(properties, async function (item) {
 		if (!item) {
 			item = {};
 		}
 		item.settings = {};
-		loadSettings(item, true);
+		
+		// Clear the global settings object
+		settings = {};
+		
+		// Reset Spotify instance if it exists
+		if (spotify) {
+			spotify.accessToken = null;
+			spotify.refreshToken = null;
+			spotify.tokenExpiry = null;
+			spotify.isPolling = false;
+			if (spotify.pollInterval) {
+				clearInterval(spotify.pollInterval);
+				spotify.pollInterval = null;
+			}
+		}
+		
+		// Save the empty settings to storage first
+		chrome.storage.local.set({ settings: {} }, function() {
+			// Then load default settings
+			loadSettings(item, true);
+		});
 		// window.location.reload()
 	});
 }
 
 async function exportSettings() {
-	chrome.storage.sync.get(properties, async function (item) {
+	chrome.storage.local.get(properties, async function (item) {
 		item.settings = settings;
 		const opts = {
 			types: [
@@ -2567,8 +2606,7 @@ try {
         if (videoId && (
           tab.url.includes('https://studio.youtube.com/live_chat?') ||
           tab.url.includes('https://www.youtube.com/live_chat?') ||
-          tab.url.includes('https://www.youtube.com/live/') ||
-          (tab.url.includes('https://studio.youtube.com/video/') && tab.url.includes('/livestreaming'))
+          tab.url.includes('https://www.youtube.com/live/')
         )) {
           const isPopout = tab.url.includes('live_chat?is_popout=1');
           activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
@@ -2670,7 +2708,7 @@ async function processIncomingMessage(message, sender=null){
 				}
 			}
 			try {
-				if (sender?.tab){
+				if (sender?.tab && ("iframeId" in sender)){
 					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, sender.frameId);
 					if (!shouldAllowMessage) {
 					  return;
@@ -2770,6 +2808,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({"state": isExtensionOn});
 			return response;
 		}
+		
+		// Unwrap messages that come from the service worker for non-Spotify commands
+		// Service worker wraps messages as {type: 'toBackground', data: originalMessage}
+		if (request.type === 'toBackground' && request.data) {
+			request = request.data;
+		}
 
 		if (request.cmd && request.cmd === "setOnOffState") {
 			// toggle the IFRAME (stream to the remote dock) on or off
@@ -2780,11 +2824,14 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
+			let responseData;
 			try { 
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG});
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG};
 			} catch(e){
-				sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings});
+				console.warn("Error including documentsRAG:", e);
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings};
 			}
+			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "saveSetting") {
 			if (typeof settings[request.setting] == "object") {
 				if (!request.value) {
@@ -2940,7 +2987,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "ticker") {
 				try {
 					await loadFileTicker();
-				} catch(e){}
+				} catch(e) {
+					console.error("Error loading ticker:", e);
+				}
 			}
 			if (request.setting == "discord") {
 				pushSettingChange();
@@ -3507,6 +3556,174 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			localStorage.removeItem('customBadwords');
 			initialLoadBadWords();
 			sendResponse({success: true, state: isExtensionOn });
+		} else if (request.cmd && request.cmd === "spotifyAuthCallback") {
+			// Handle Spotify OAuth callback
+			if (!spotify) {
+				initializeSpotify();
+			}
+			
+			if (spotify && request.code) {
+				(async () => {
+					try {
+						const success = await spotify.handleAuthCallback(request.code, request.state);
+						sendResponse({success: success});
+					} catch (error) {
+						console.error("Spotify callback error:", error);
+						sendResponse({success: false, error: error.message});
+					}
+				})();
+				return true; // Keep the message channel open for async response
+			} else {
+				sendResponse({success: false, error: "Spotify not initialized or no code provided"});
+			}
+		} else if (request.cmd && request.cmd === "spotifyAuth") {
+			// Start Spotify OAuth flow
+			console.log("Spotify auth request received");
+			
+			// Check if SpotifyIntegration class is available synchronously
+			if (typeof SpotifyIntegration === 'undefined' && typeof window.SpotifyIntegration === 'undefined') {
+				console.error("SpotifyIntegration class not loaded yet");
+				sendResponse({success: false, error: "Spotify integration is still loading. Please try again in a moment."});
+				return true;
+			}
+			
+			if (!spotify) {
+				console.log("Initializing Spotify...");
+				initializeSpotify();
+			}
+			
+			if (!spotify) {
+				console.error("Failed to initialize Spotify instance");
+				sendResponse({success: false, error: "Failed to initialize Spotify. Please check the console for errors."});
+				return true;
+			}
+			
+			// Process the OAuth flow asynchronously
+			console.log("Starting OAuth flow...");
+			spotify.startOAuthFlow().then(result => {
+				console.log("OAuth flow result:", result);
+				
+				// Handle the response
+				if (typeof result === 'object' && result.alreadyConnected) {
+					sendResponse({success: true, alreadyConnected: true});
+				} else if (isSSAPP && result) {
+					sendResponse({
+						success: true,
+						message: "Please complete authorization in your browser. After authorizing, copy the full URL from the callback page and use the 'Paste Callback URL' option in the settings."
+					});
+				} else {
+					sendResponse({success: !!result});
+				}
+			}).catch(error => {
+				console.error("Spotify auth error:", error);
+				sendResponse({success: false, error: error.message || error.toString()});
+			});
+			
+			return true; // Keep the message channel open for async response
+		} else if (request.cmd && request.cmd === "spotifyManualCallback") {
+			// Handle manual callback URL paste (for Electron app)
+			console.log("Manual Spotify callback received with URL:", request.url);
+			
+			if (!request.url) {
+				sendResponse({success: false, error: "No URL provided"});
+				return;
+			}
+			
+			// Process asynchronously
+			(async () => {
+				try {
+					// Initialize Spotify if needed
+					if (!spotify) {
+						console.log("Spotify not initialized, initializing now...");
+						initializeSpotify();
+						// Wait a bit for initialization
+						await new Promise(resolve => setTimeout(resolve, 500));
+					}
+					
+					if (!spotify) {
+						throw new Error("Failed to initialize Spotify integration");
+					}
+					
+					// Parse the callback URL
+					const url = new URL(request.url);
+					const code = url.searchParams.get('code');
+					const state = url.searchParams.get('state');
+					const error = url.searchParams.get('error');
+					
+					console.log("Parsed OAuth callback - code:", code ? "present" : "missing", "state:", state, "error:", error);
+					
+					if (error) {
+						sendResponse({success: false, error: error});
+					} else if (code) {
+						console.log("Processing Spotify callback with code...");
+						// Process the callback
+						const success = await spotify.handleAuthCallback(code, state);
+						console.log("Spotify callback completed, success:", success);
+						
+						if (success) {
+							// Verify tokens were saved
+							chrome.storage.local.get(['settings'], function(data) {
+								if (data.settings && data.settings.spotifyAccessToken) {
+									console.log("✅ Spotify tokens successfully saved to settings!");
+								} else {
+									console.warn("⚠️ Spotify tokens may not have been saved properly");
+								}
+							});
+						}
+						
+						sendResponse({success: success});
+					} else {
+						sendResponse({success: false, error: "No authorization code found in URL"});
+					}
+				} catch (error) {
+					console.error("Manual callback error:", error);
+					sendResponse({success: false, error: error.message || error.toString()});
+				}
+			})();
+			
+			return true; // Keep message channel open for async response
+		} else if (request.cmd && request.cmd === "spotifySignOut") {
+			// Handle Spotify sign out
+			console.log("Spotify sign out request received");
+			
+			// Clear Spotify tokens from settings synchronously first
+			delete settings.spotifyAccessToken;
+			delete settings.spotifyRefreshToken;
+			delete settings.spotifyTokenExpiry;
+			
+			// Reset Spotify instance if it exists
+			if (spotify) {
+				spotify.accessToken = null;
+				spotify.refreshToken = null;
+				spotify.tokenExpiry = null;
+				spotify.isPolling = false;
+				if (spotify.pollInterval) {
+					clearInterval(spotify.pollInterval);
+					spotify.pollInterval = null;
+				}
+				// Update the Spotify instance's settings reference
+				// This ensures it sees the cleared tokens
+				if (spotify.settings) {
+					delete spotify.settings.spotifyAccessToken;
+					delete spotify.settings.spotifyRefreshToken;
+					delete spotify.settings.spotifyTokenExpiry;
+				}
+			}
+			
+			// Save updated settings asynchronously
+			chrome.storage.local.set({
+				settings: settings
+			}, function() {
+				if (chrome.runtime.lastError) {
+					console.error("Error saving cleared settings:", chrome.runtime.lastError);
+					// Don't send error response since tokens are already cleared
+				} else {
+					console.log("Spotify tokens cleared successfully");
+				}
+			});
+			
+			// Respond immediately - tokens are already cleared in memory
+			sendResponse({success: true});
 		} else if (request.cmd && request.target){
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P(request, request.target);
@@ -3516,7 +3733,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 	} catch (e) {
 		console.warn(e);
 	}
-	return true;
+	return true; // Keep message channel open for async responses
 });
 
 const randomDigits = () => {
@@ -5281,6 +5498,61 @@ function sendToPost(data) {
 	}
 }
 
+// Initialize Spotify integration
+function initializeSpotify() {
+	if (!spotify) {
+		// Check if SpotifyIntegration is available
+		if (typeof SpotifyIntegration !== 'undefined') {
+			console.log("Creating new SpotifyIntegration instance");
+			spotify = new SpotifyIntegration();
+		} else if (window.SpotifyIntegration) {
+			console.log("Creating new window.SpotifyIntegration instance");
+			spotify = new window.SpotifyIntegration();
+		} else {
+			console.warn("SpotifyIntegration class not yet available, will retry...");
+			// Retry after a short delay
+			setTimeout(initializeSpotify, 500);
+			return;
+		}
+		
+		// Set up callbacks
+		const callbacks = {
+			onNewTrack: (track) => {
+				if (settings.spotifyAnnounceNewTrack) {
+					const message = settings.spotifyAnnounceFormat?.textsetting || "🎵 Now playing: {song} by {artist}";
+					const formattedMessage = spotify.formatTrackMessage(track, message);
+					
+					const data = {
+						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+						chatbadges: "",
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: formattedMessage,
+						chatimg: track.imageUrl || "https://socialstream.ninja/icons/bot.png",
+						hasDonation: "",
+						membership: "",
+						isRelay: false,
+						type: "spotify",
+						bot: "spotify",
+						timestamp: Date.now()
+					};
+					
+					sendToDestinations(data);
+				}
+			}
+		};
+		
+		// Initialize with settings (async but we don't need to wait here)
+		spotify.initialize(settings, callbacks).catch(err => {
+			console.error("Failed to initialize Spotify:", err);
+		});
+	} else if (spotify && !settings.spotifyEnabled) {
+		// Clean up if disabled
+		spotify.cleanup();
+		spotify = null;
+	}
+}
+
 var socketserverDock = false;
 var serverURLDock = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/dock";
 var conConDock = 0; 
@@ -5412,7 +5684,6 @@ function setupSocket() {
 				data.target = "";
 			}
 			
-			console.log(data.kofi);
 
 			if (data.action && data.action === "sendChat" && data.value) {
 				var msg = {};
@@ -7604,24 +7875,24 @@ function delayedDetach(tabid) {
 }
 
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 3500) {
-    console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
-        data: data,
-        reverse: reverse,
-        metadata: metadata,
-        relayMode: relayMode,
-        antispam: antispam,
-        overrideTimeout: overrideTimeout,
-        isExtensionOn: isExtensionOn,
-        disablehost: settings.disablehost
-    });
+    // console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
+    //     data: data,
+    //     reverse: reverse,
+    //     metadata: metadata,
+    //     relayMode: relayMode,
+    //     antispam: antispam,
+    //     overrideTimeout: overrideTimeout,
+    //     isExtensionOn: isExtensionOn,
+    //     disablehost: settings.disablehost
+    // });
     
     if (!chrome.debugger || !isExtensionOn || settings.disablehost) {
-        console.log('[RELAY DEBUG - sendMessageToTabs] Early return - Extension off or host disabled');
+        // console.log('[RELAY DEBUG - sendMessageToTabs] Early return - Extension off or host disabled');
         return false;
     }
 
 	if (!data.response){
-		console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
+		// console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
 		return false;
 	}
     if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
@@ -7656,104 +7927,153 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     try {
 		
         const tabs = await new Promise(resolve => chrome.tabs.query({}, resolve));
-        console.log(`[RELAY DEBUG - sendMessageToTabs] Found ${tabs.length} tabs`);
+        // console.log(`[RELAY DEBUG - sendMessageToTabs] Found ${tabs.length} tabs`);
         var published = {};
-		
+        let processedAnyTab = false;  // Track if we processed any tabs with destination filter
         
+        // Helper function to process a tab
+        const processTab = async (tab) => {
+            // console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
+            processedAnyTab = true;  // Mark that we found at least one valid tab
+
+            // Handle message store
+            if (msg2Save) {  
+                handleMessageStore(tab.id, msg2Save, now, relayMode);
+            }
+
+            published[tab.url] = true;
+                
+            // Handle different site types
+            if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
+                // we will handle this on its own.
+                return;
+            } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
+                let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
+                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
+            } else if (tab.url.startsWith("https://boltplus.tv/")) {
+                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
+            } else if (tab.url.startsWith("https://rumble.com/")) {
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
+            } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
+                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
+            } else if (tab.url.startsWith("https://kick.com/")) {
+                let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
+                if (isSSAPP){
+                    await attachAndChat(tab.id, " "+restxt, false, true, true, false, overrideTimeout);
+                } else {
+                    await attachAndChat(tab.id, restxt, false, true, true, false, overrideTimeout);
+                }
+            } else if (tab.url.startsWith("https://app.slack.com")) {
+                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
+            } else if (tab.url.startsWith("https://app.zoom.us/")) {
+                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat);
+                return;
+            } else {
+                // Generic handler
+                if (tab.url.includes("youtube.com/live_chat")) {
+                    getYoutubeAvatarImage(tab.url, true);
+                    let restxt = data.response;
+                    
+                    if (restxt.length > 200){
+                        restxt = restxt.substring(0, 200);
+                        var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
+                        if (ignore) {  
+                            handleMessageStore(tab.id, ignore, now, relayMode);
+                        }
+                    }
+                    
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+                    return;
+                }
+                
+                if (tab.url.includes("tiktok.com")) {
+                    let tiktokMessage = data.response;
+                    
+                    if (settings.notiktoklinks){
+                        tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
+                    }
+                    let restxt = tiktokMessage.length > 150 ? tiktokMessage.substring(0, 150) : tiktokMessage;
+                    
+                    if (restxt!==data.response){
+                        var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
+                        if (ignore) {  
+                            handleMessageStore(tab.id, ignore, now, relayMode);
+                        }
+                    }
+                    
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+                    return;
+                }
+                
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
+            }
+        };
+        
+        // First pass: try with source type matching
         for (const tab of tabs) {
             try {
                 // Skip invalid tabs
-				let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
+                let isValid = await isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode);
                 if (!isValid) {
-                    console.log(`[RELAY DEBUG - sendMessageToTabs] Tab ${tab.id} (${tab.url?.substring(0, 50)}...) is invalid, skipping`);
+                    // console.log(`[RELAY DEBUG - sendMessageToTabs] Tab ${tab.id} (${tab.url?.substring(0, 50)}...) is invalid, skipping`);
                     continue;
                 }
-                console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
-
-                // Handle message store
-                if (msg2Save) {  
-                    handleMessageStore(tab.id, msg2Save, now, relayMode);
-                }
-
-                published[tab.url] = true;
-                
-                // Handle different site types
-                if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
-					// we will handle this on its own.
-					continue;
-                } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
-					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
-					await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
-					
-                } else if (tab.url.startsWith("https://boltplus.tv/")) {
-                    await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
-					
-				} else if (tab.url.startsWith("https://rumble.com/")) {
-                    await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);	
-					
-                } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
-                    await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
-					//  middle, keypress, backspace, delayedPress, overrideTimeout
-               //     await attachAndChat(tab.id, data.response, true, true, true, true, overrideTimeout); 
-			   
-				} else if (tab.url.startsWith("https://kick.com/")) {
-					let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
-					if (isSSAPP){
-						await attachAndChat(tab.id, " "+restxt, false, true, true, false, overrideTimeout);
-					} else {
-						await attachAndChat(tab.id, restxt, false, true, true, false, overrideTimeout);
-					}
-                } else if (tab.url.startsWith("https://app.slack.com")) {
-                    await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
-                } else if (tab.url.startsWith("https://app.zoom.us/")) {
-                    await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat);
-                    continue;
-                } else {
-                    // Generic handler
-                    if (tab.url.includes("youtube.com/live_chat")) {
-                        getYoutubeAvatarImage(tab.url, true);
-						let restxt = data.response;
-						
-						if (restxt.length > 200){
-							restxt = restxt.substring(0, 200);
-							var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
-							if (ignore) {  
-								handleMessageStore(tab.id, ignore, now, relayMode);
-							}
-						}
-						
-						await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
-						continue;
-                    }
-                    
-                    if (tab.url.includes("tiktok.com")) {
-						let tiktokMessage = data.response;
-						
-						if (settings.notiktoklinks){
-							tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
-						}
-						let restxt = tiktokMessage.length > 150 ? tiktokMessage.substring(0, 150) : tiktokMessage;
-						
-						if (restxt!==data.response){
-							var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
-							if (ignore) {  
-								handleMessageStore(tab.id, ignore, now, relayMode);
-							}
-						}
-						
-						await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
-						continue;
-                    }
-					
-                    await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
-                }
+                await processTab(tab);
             } catch (e) {
                 chrome.runtime.lastError;
-                //console.loge, tab);
+                // console.log(`[RELAY DEBUG - sendMessageToTabs] Error processing tab ${tab.id}:`, e);
+            }
+        }
+        
+        // If we have a destination filter and didn't process any tabs, try URL matching as fallback
+        if (data.destination && !processedAnyTab) {
+            // console.log(`[RELAY DEBUG - sendMessageToTabs] No tabs matched destination '${data.destination}' by source type, trying URL matching fallback`);
+            
+            // Reset published to allow retrying
+            published = {};
+            
+            // Create a modified data object that bypasses source type checking
+            const fallbackData = {...data};
+            
+            for (const tab of tabs) {
+                try {
+                    // Skip basic invalid checks
+                    if (!tab.url) continue;
+                    if (tab.url.startsWith("chrome://")) continue;
+                    if (tab.url.startsWith("chrome-extension")) continue;
+                    if (tab.url.startsWith("https://socialstream.ninja/")) continue;
+                    if (tab.url in published) continue;
+                    if (!checkIfAllowed(tab.url)) continue;
+                    
+                    // Check TID conditions
+                    if ("tid" in data && data.tid !== false && data.tid !== null) {
+                        if (typeof data.tid == "object") {
+                            if (reverse && data.tid.includes(tab.id.toString())) continue;
+                            if (!reverse && !data.tid.includes(tab.id.toString())) continue;
+                        } else {
+                            if (reverse) {
+                                if (data.tid === tab.id) continue;
+                                if (data.url && tab.url && data.url === tab.url) continue;
+                            } else if (data.tid !== tab.id) continue;
+                        }
+                    }
+                    
+                    // Try URL matching for the destination
+                    if (!tab.url.includes(data.destination)) {
+                        // console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Tab ${tab.id} URL doesn't include '${data.destination}', skipping`);
+                        continue;
+                    }
+                    
+                    // console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Processing tab ${tab.id} via URL match: ${tab.url?.substring(0, 50)}...`);
+                    await processTab(tab);
+                } catch (e) {
+                    chrome.runtime.lastError;
+                    // console.log(`[RELAY DEBUG - sendMessageToTabs FALLBACK] Error processing tab ${tab.id}:`, e);
+                }
             }
         }
     } catch (error) {
-        //console.log'Error in sendMessageToTabs:', error);
+        //console.log('Error in sendMessageToTabs:', error);
         return false;
     }
     
@@ -7783,20 +8103,52 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         }
     }
     
-    // Check destination and timeout conditions
-    if (data.destination && !tab.url.includes(data.destination)) return false;
+    // Check destination - match against tab's source type instead of URL
+    if (data.destination) {
+        // Ensure tab.id exists before trying to get source type
+        if (!tab.id) {
+            // console.log('[RELAY DEBUG - isValidTab] No tab.id available, cannot check source type');
+            // Fall back to URL matching if we have a URL
+            if (tab.url && !tab.url.includes(data.destination)) {
+                return false;
+            }
+            return true; // If no tab.id and no URL, allow it through
+        }
+        
+        const sourceType = await getSourceType(tab.id);
+        // console.log('[RELAY DEBUG - isValidTab] Tab source type:', sourceType, 'Expected destination:', data.destination);
+        
+        // If we couldn't get the source type, fall back to URL matching for custom destinations
+        if (!sourceType) {
+            // For custom destinations like channel names, still use URL matching
+            if (!tab.url.includes(data.destination)) {
+                // console.log('[RELAY DEBUG - isValidTab] No source type, URL check failed');
+                return false;
+            }
+        } else {
+            // For platform destinations, match exact source type (already lowercase from getSourceType)
+            if (sourceType !== data.destination.toLowerCase()) {
+                // console.log('[RELAY DEBUG - isValidTab] Source type mismatch');
+                // Don't return false here - we'll check this in sendMessageToTabs for fallback
+                return false;
+            }
+        }
+    }
     if (reverse && !overrideTimeout && tab.id) {
         if (tab.id in messageTimeout && now - messageTimeout[tab.id] < overrideTimeout) {
             return false;
         }
     }
 	
+	// In relay mode, if relaytargets is configured, only relay to those targets
+	// If relaytargets is not configured (false), allow all targets
 	if (relayMode && relaytargets){
 		let sourceType = await getSourceType(tab.id);
 		if (!sourceType || !relaytargets.includes(sourceType)){
 			return false;
 		}
 	}
+	// If relayMode is true but relaytargets is false, we allow all destinations
 	
     return true;
 }
@@ -8641,6 +8993,31 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 		
+		// Handle Spotify commands
+		if (spotify && settings.spotifyEnabled && data.chatmessage) {
+			const response = spotify.handleCommand(data.chatmessage);
+			if (response) {
+				const botResponse = {
+					chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+					chatbadges: "",
+					backgroundColor: "",
+					textColor: "",
+					chatmessage: response,
+					chatimg: "https://socialstream.ninja/icons/bot.png",
+					hasDonation: "",
+					membership: "",
+					isRelay: false,
+					type: "spotify",
+					bot: "spotify",
+					timestamp: Date.now()
+				};
+				
+				sendToS10(botResponse);
+				sendToPost(botResponse);
+				return null; // Don't process the original command further
+			}
+		}
+		
 		if (settings.dice && data.chatname && data.chatmessage && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {
 			//	//console.log"dice detected");
 			//if (Date.now() - messageTimeout > 5100) {
@@ -8684,6 +9061,30 @@ async function applyBotActions(data, tab = false) {
 			}
 			// if we send the normal messages, it will screw things up.
 			//}
+		}
+		
+		// Handle Spotify commands
+		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
+			const spotifyResponse = spotify.handleCommand(data.chatmessage);
+			if (spotifyResponse) {
+				setTimeout(() => {
+					const botMessage = {
+						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+						chatbadges: "",
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: spotifyResponse,
+						chatimg: "https://socialstream.ninja/icons/bot.png",
+						hasDonation: "",
+						membership: "",
+						isRelay: false,
+						type: "spotify",
+						bot: "spotify",
+						timestamp: Date.now()
+					};
+					sendToDestinations(botMessage);
+				}, 50);
+			}
 		}
 		
 		
@@ -9287,9 +9688,15 @@ async function applyBotActions(data, tab = false) {
 				if (settings.modLLMonly){
 					if (data.mod){
 						processMessageWithOllama(data);
+						// SECONDARY FIX: Add await to properly handle async errors
+						// Uncomment to test if error handling needs this
+						// await processMessageWithOllama(data);
 					}
 				} else {
 					processMessageWithOllama(data);
+					// SECONDARY FIX: Add await to properly handle async errors
+					// Uncomment to test if error handling needs this
+					// await processMessageWithOllama(data);
 				}
 			} catch(e){
 				console.log(e); // ai.js file missing?
@@ -9534,52 +9941,69 @@ window.onload = async function () {
 		loadSettings(programmedSettings, true);
     } else {
         log("Loading settings from the main file into the background.js");
-        chrome.storage.sync.get(properties, function (item) {
-            if (isSSAPP && item) {
-                loadSettings(item, false); 
+        // Load sync items (streamID, password, state) and local items (settings) separately
+        chrome.storage.sync.get(["streamID", "password", "state"], function (syncItem) {
+            chrome.storage.local.get(["settings"], function (localItem) {
+                // Combine sync and local items
+                let item = Object.assign({}, syncItem, localItem);
                 
-                // Initialize file handles after settings are loaded
-                initializeFileHandles();
-                return;
-            }
-            
-            if (item?.settings) {
-                alert("upgrading from old storage structure format to new...");
-                chrome.storage.sync.remove(["settings"], function (Items) {
-                    log("upgrading from sync to local storage");
-                });
-                chrome.storage.local.get(["settings"], function (item2) {
-                    if (item2?.settings){
-                        item = [...item, ...item2];
-                    }
-                    if (item?.settings){
-                        chrome.storage.local.set({
-                            settings: item.settings
-                        });
-                    }
-                    if (item){
-                        loadSettings(item, false);
-                        
-                        // Initialize file handles after settings are loaded
-                        if (isSSAPP) {
-                            initializeFileHandles();
-                        }
-                    }
-                });
+                if (isSSAPP && item) {
+                    loadSettings(item, false); 
+                    
+                    // Initialize file handles after settings are loaded
+                    initializeFileHandles();
+                    return;
+                }
                 
-            } else {
-                loadSettings(item, false);
-                chrome.storage.local.get(["settings"], function (item2) {
-                    if (item2){
-                        loadSettings(item2, false);
-                        
-                        // Initialize file handles after settings are loaded
-                        if (isSSAPP) {
-                            initializeFileHandles();
+                // Check for old migration scenario
+                if (!item.settings) {
+                    // Try to get all properties from local storage (old format)
+                    chrome.storage.local.get(properties, function (oldItem) {
+                        if (oldItem?.settings) {
+                            alert("upgrading from old storage structure format to new...");
+                            // Move sync items to sync storage
+                            if (oldItem.streamID || oldItem.password || oldItem.state) {
+                                chrome.storage.sync.set({
+                                    streamID: oldItem.streamID || undefined,
+                                    password: oldItem.password || undefined,
+                                    state: oldItem.state || undefined
+                                });
+                            }
+                            // Keep settings in local storage
+                            chrome.storage.local.set({
+                                settings: oldItem.settings
+                            });
+                            // Remove old sync storage settings if any
+                            chrome.storage.sync.remove(["settings"], function () {
+                                log("upgrading from sync to local storage");
+                            });
+                            
+                            loadSettings(oldItem, false);
+                            
+                            // Initialize file handles after settings are loaded
+                            if (isSSAPP) {
+                                initializeFileHandles();
+                            }
+                        } else {
+                            // No migration needed, just load what we have
+                            loadSettings(item, false);
+                            
+                            // Initialize file handles after settings are loaded
+                            if (isSSAPP) {
+                                initializeFileHandles();
+                            }
                         }
+                    });
+                } else {
+                    // Normal loading - we have settings
+                    loadSettings(item, false);
+                    
+                    // Initialize file handles after settings are loaded
+                    if (isSSAPP) {
+                        initializeFileHandles();
                     }
-                });
-            }
+                }
+            });
         });
     }
 };
@@ -9838,10 +10262,8 @@ window.sendToDestinations = sendToDestinations;
 window.fetchWithTimeout = fetchWithTimeout;
 window.sanitizeRelay = sanitizeRelay;
 window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
+window.handleMessageStore = handleMessageStore;
 
-console.log('[EventFlow Init] Checking sendMessageToTabs function:', typeof window.sendMessageToTabs, window.sendMessageToTabs ? window.sendMessageToTabs.toString().substring(0, 100) : 'null');
-console.log('[EventFlow Init] Checking sanitizeRelay function:', typeof window.sanitizeRelay);
-console.log('[EventFlow Init] Checking checkExactDuplicateAlreadyRelayed function:', typeof window.checkExactDuplicateAlreadyRelayed);
 
 let tmp = new EventFlowSystem({
 	sendMessageToTabs: window.sendMessageToTabs || null,
@@ -9850,13 +10272,14 @@ let tmp = new EventFlowSystem({
 	fetchWithTimeout: window.fetchWithTimeout || null, // Assuming fetchWithTimeout is on window from background.js
 	sanitizeRelay: window.sanitizeRelay || null,
 	checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
+	messageStore: messageStore || {},  // Share the message store for duplicate detection
+	handleMessageStore: handleMessageStore || null,  // Share the message store handler
+	sendTargetP2P: window.sendTargetP2P || null  // Add sendTargetP2P for OBS and other actions
 });
 
 
 tmp.initPromise.then(() => {
 	window.eventFlowSystem = tmp;
-	console.log('[EventFlow Init] EventFlowSystem initialized successfully');
-	console.log('[EventFlow Init] sendMessageToTabs in system:', typeof tmp.sendMessageToTabs, tmp.sendMessageToTabs ? 'Function present' : 'Function missing');
 }).catch(error => {
 	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });

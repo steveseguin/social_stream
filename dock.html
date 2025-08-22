@@ -2530,6 +2530,12 @@
 						<span>See User History</span>
 					</a>
 				</li>
+				<li class="context-menu__item hidden" data-action="Feature">
+					<a href="#" class="context-menu__link" data-action="Feature">
+						🔦
+						<span>Feature</span>
+					</a>
+				</li>
 				<li class="context-menu__item" data-action="Queue">
 					<a href="#" class="context-menu__link" data-action="Queue">
 						🔢
@@ -2903,6 +2909,11 @@
 			if (urlParams.has("autoqueuequestions") || urlParams.has("autoqueuequestion")) {
 				autoQueueQuestions = true;
 			}
+			
+			var autoQueueDonations = false;
+			if (urlParams.has("autoqueuedonations") || urlParams.has("autoqueuedonation")) {
+				autoQueueDonations = true;
+			}
 			if (urlParams.has("viewonly")) {
 				blockMessageSelecting = true;
 			}
@@ -2938,6 +2949,12 @@
 			var activeLinks = false;
 			if (urlParams.has("activelinks")) {
 				activeLinks = true;
+			}
+			
+			var altSelect = false;
+			if (urlParams.has("altselect")) {
+				altSelect = true;
+				document.querySelector('[data-action="Feature"]').classList.remove("hidden");
 			}
 
 			var shortlink = false;
@@ -7193,12 +7210,12 @@
 					syncQueueP2P(false, element);
 					
 				}
-				if (element.classList.contains("pinned")) {
-					unpinIt(element);
-					if (element.dataset.mid) {
-						syncDataAny({ unpin: [element.dataset.mid] });
-					}
-				}
+				//if (element.classList.contains("pinned")) {
+				//	unpinIt(element);
+				//	if (element.dataset.mid) {
+				//		syncDataAny({ unpin: [element.dataset.mid] });
+				//	}
+				//}
 
 				if (autoTimeoutEnabled || lastpushreset) {
 					lastPushed = Date.now();
@@ -8691,8 +8708,10 @@
 							}
 						}
 					}
-
-					node.onmousedown = selectedMessage;
+					
+					if (!altSelect){
+						node.onmousedown = selectedMessage;
+					}
 					node.title = "Click to feature message instantly. CTRL + Click to add to the queue. Alt + Click to Pin.";
 					
 					var imageElements = node.getElementsByTagName("img");
@@ -8773,6 +8792,12 @@
 						node.children[0].dataset.qid = selectedQueue.length;
 						node.classList.add("queued");
 						updateQueueButton();
+					} else if (autoQueueDonations && (data.hasDonation || data.donation)) {
+						// Auto-pin questions when autoQueueQuestions URL parameter is set
+						selectedQueue.push(node);
+						node.children[0].dataset.qid = selectedQueue.length;
+						node.classList.add("queued");
+						updateQueueButton();
 					}
 					
 					if (autoPinQuestions && data.question) {
@@ -8782,6 +8807,7 @@
 					if (autoPinDonations && data.hasDonation) {
 						pinIt(node);
 					}
+					
 					
 					if (data.command && doNotTTSBeep){
 						// skipp TTS
@@ -9344,6 +9370,8 @@
 							deleteMessage(taskItemInContext);
 						} else if (link.getAttribute("data-action") === "Block") {
 							blockUser(taskItemInContext);
+						} else if (link.getAttribute("data-action") === "Feature") {
+							selectedMessage(false, taskItemInContext); 
 						} else if (link.getAttribute("data-action") === "History") {
 							getUserHistory(taskItemInContext);
 						} else if (link.getAttribute("data-action") === "Reply") {

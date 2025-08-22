@@ -1,5 +1,29 @@
 // popup.js
 
+// Listen for language change messages from parent window
+window.addEventListener('message', function(event) {
+	// Check if this is a language change message
+	if (event.data && event.data.type === 'changeLanguage') {
+		console.log('Received language change message:', event.data.language);
+		
+		// Update the language selector if it exists
+		const languageSelect = document.querySelector('select[data-optionsetting="translationlanguage"]');
+		if (languageSelect && languageSelect.value !== event.data.language) {
+			// Save the new language setting
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: "optionsetting",
+				setting: "translationlanguage",
+				value: event.data.language
+			}, function(response) {
+				console.log("Language setting saved, reloading page");
+				// Reload the page to apply the new language
+				window.location.reload();
+			});
+		}
+	}
+});
+
 (function (w) {
 	w.URLSearchParams = w.URLSearchParams || function (searchString) {
 		var self = this;
@@ -24,6 +48,14 @@ ssapp = urlParams.has("ssapp") || ssapp;
 var isExtensionOn = false;
 var ssapp = false;
 var USERNAMES = [];
+
+// Function to open Event Flow Editor
+function openEventFlowEditor() {
+    // For all contexts, just open actions/index.html
+    window.open('actions/index.html', '_blank');
+}
+// Make function available globally
+window.openEventFlowEditor = openEventFlowEditor;
 var WebMidi = null;
 var webMidiInitialized = false;
 var webMidiScriptLoaded = false;
@@ -111,10 +143,67 @@ if (typeof(chrome.runtime)=='undefined'){
 	chrome.runtime = {}
 	chrome.runtime.id = 1;
 	
+	// Add chrome.storage API for Electron
+	chrome.storage = {
+		local: {
+			get: function(keys, callback) {
+				// Use localStorage as a fallback for Electron
+				if (typeof callback === 'function') {
+					const result = {};
+					const keysArray = Array.isArray(keys) ? keys : [keys];
+					keysArray.forEach(key => {
+						const value = localStorage.getItem('chrome_storage_' + key);
+						if (value !== null) {
+							try {
+								result[key] = JSON.parse(value);
+							} catch (e) {
+								result[key] = value;
+							}
+						}
+					});
+					setTimeout(() => callback(result), 0);
+				}
+			},
+			set: function(items, callback) {
+				// Use localStorage as a fallback for Electron
+				Object.keys(items).forEach(key => {
+					localStorage.setItem('chrome_storage_' + key, JSON.stringify(items[key]));
+				});
+				if (typeof callback === 'function') {
+					setTimeout(() => callback(), 0);
+				}
+			},
+			remove: function(keys, callback) {
+				const keysArray = Array.isArray(keys) ? keys : [keys];
+				keysArray.forEach(key => {
+					localStorage.removeItem('chrome_storage_' + key);
+				});
+				if (typeof callback === 'function') {
+					setTimeout(() => callback(), 0);
+				}
+			}
+		},
+		sync: {
+			get: function(keys, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.get(keys, callback);
+			},
+			set: function(items, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.set(items, callback);
+			},
+			remove: function(keys, callback) {
+				// Use local storage for sync in Electron
+				chrome.storage.local.remove(keys, callback);
+			}
+		}
+	};
+	
 	log("pop up started");
 	
 	if (typeof require !== "undefined"){
-		var { ipcRenderer, contextBridge } = require("electron");
+		var { ipcRenderer, contextBridge, shell } = require("electron");
+		window.shell = shell;
 		
 		ssapp = true;
 		
@@ -232,6 +321,33 @@ if (typeof(chrome.runtime)=='undefined'){
 	};
 	chrome.runtime.getManifest = function(){
 		return false; // I'll need to add version info eventually
+	}
+	
+	chrome.runtime.getURL = function(path){
+		// In Electron, construct URL relative to the app's base path
+		// Remove leading slash if present
+		if (path.startsWith('/')) {
+			path = path.substring(1);
+		}
+		// Get the current window location and construct relative URL
+		const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+		return baseUrl + path;
+	}
+	
+	// Add chrome.tabs API for Electron
+	chrome.tabs = {
+		create: function(options) {
+			// In Electron, open in default browser or new window
+			if (options && options.url) {
+				if (typeof require !== "undefined" && window.shell) {
+					// Use Electron's shell to open external links
+					window.shell.openExternal(options.url);
+				} else {
+					// Fallback to window.open
+					window.open(options.url, '_blank');
+				}
+			}
+		}
 	}
 	
 	try {
@@ -1453,7 +1569,9 @@ function removeTTSProviderParams(url, selectedProvider=null) {
     elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
     google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
     speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
-    kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed']
+    kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
+    kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
+    openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
   };
   
   if (selectedProvider === null) {
@@ -1494,6 +1612,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
+        else if (response.settings?.openaikey?.textparam1) ttsService = "openai";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -1508,6 +1627,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
+        else if (response.settings?.openaikey?.textparam2) ttsService = "openai";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -1522,6 +1642,7 @@ function setupTtsProviders(response) {
         else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
+        else if (response.settings?.openaikey?.textparam10) ttsService = "openai";
         
         if (!response.settings.ttsProvider) {
             response.settings.ttsProvider = {};
@@ -1601,6 +1722,31 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, settingObj[optionParamKey]);
+                }
+                
+                // Handle OpenAI custom voice/model dropdowns
+                if (key === 'voiceopenai' && storedValue === 'custom') {
+                    // Show custom voice input for the appropriate section
+                    const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
+                                       paramNum === 2 ? 'openaiCustomVoice2' : 
+                                       paramNum === 10 ? 'openaiCustomVoice10' : null;
+                    if (customInputId) {
+                        const customInput = document.getElementById(customInputId);
+                        if (customInput) {
+                            customInput.style.display = 'inline-block';
+                        }
+                    }
+                } else if (key === 'openaimodel' && storedValue === 'custom') {
+                    // Show custom model input for the appropriate section
+                    const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
+                                       paramNum === 2 ? 'openaiCustomModel2' : 
+                                       paramNum === 10 ? 'openaiCustomModel10' : null;
+                    if (customInputId) {
+                        const customInput = document.getElementById(customInputId);
+                        if (customInput) {
+                            customInput.style.display = 'inline-block';
+                        }
+                    }
                 }
             }
         }
@@ -1733,9 +1879,43 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 					wrapper.style.display = 'none';
 				});
 			 } else if (key == "overlayPreset") {
-				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
-					wrapper.style.display = 'none';
-				});
+				// Update the dock URL to match the saved overlay preset
+				const dockDiv = document.getElementById('dock');
+				const dockLink = document.querySelector('#dock a, a[href*="dock.html"]');
+				
+				if (dockDiv && ele.value) {
+					// An overlay is selected, update the URL
+					const overlayUrl = baseURL + ele.value;
+					
+					// Extract existing parameters from current dock URL
+					let existingParams = '';
+					if (dockDiv.raw && dockDiv.raw.includes('?')) {
+						existingParams = dockDiv.raw.split('?')[1];
+					}
+					
+					// Build new URL with overlay
+					let newUrl = overlayUrl;
+					if (existingParams) {
+						newUrl += '?' + existingParams;
+					}
+					
+					// Update the dock URL
+					dockDiv.raw = newUrl;
+					if (dockLink) {
+						dockLink.href = newUrl;
+						dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
+					}
+					
+					// Hide classic dock customization options
+					document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+						wrapper.style.display = 'none';
+					});
+				} else {
+					// Show classic dock customization options when no overlay is selected
+					document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
+						wrapper.style.display = '';
+					});
+				}
 			 }
         }
     }
@@ -2022,7 +2202,7 @@ function handleAIProviderVisibility(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2037,13 +2217,17 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("speechifyTTS").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS").classList.remove("hidden");
+    } else if (provider == "kitten") {
+        document.getElementById("kittenTTS").classList.remove("hidden");
+    } else if (provider == "openai") {
+        document.getElementById("openaiTTS").classList.remove("hidden");
     }
 }
 
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2058,13 +2242,17 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS10").classList.remove("hidden");
+    } else if (provider == "kitten") {
+        document.getElementById("kittenTTS10").classList.remove("hidden");
+    } else if (provider == "openai") {
+        document.getElementById("openaiTTS10").classList.remove("hidden");
     }
 }
 
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2079,6 +2267,10 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("speechifyTTS2").classList.remove("hidden");
     } else if (provider == "kokoro") {
         document.getElementById("kokoroTTS2").classList.remove("hidden");
+    } else if (provider == "kitten") {
+        document.getElementById("kittenTTS2").classList.remove("hidden");
+    } else if (provider == "openai") {
+        document.getElementById("openaiTTS2").classList.remove("hidden");
     } else if (provider == "piper") {
         document.getElementById("piperTTS2").classList.remove("hidden");
     } else if (provider == "espeak") {
@@ -2910,7 +3102,7 @@ function handleOptionSetting(ele, sync) {
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
         const ttsProviderElements = [
             `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, 
-            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
+            `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
         ttsProviderElements.forEach(id => {
@@ -3540,6 +3732,14 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 rate: document.querySelector('[data-param1="kokorospeed"]').checked ?  parseFloat(document.querySelector('[data-numbersetting="kokorospeed"]')?.value) || 1.0 : 1.0,
             },
             
+            // Kitten TTS settings
+            kitten: {
+                voice: document.getElementById('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-2-f",
+                speed: document.querySelector('[data-param1="kittenspeed"]')?.checked ?  
+                    parseFloat(document.querySelector('[data-numbersetting="kittenspeed"]')?.value) || 1.0 : 1.0,
+                sampleRate: 24000  // Fixed value - not configurable in new library
+            },
+            
             // Google Cloud TTS settings
             google: {
                 key: document.getElementById('googleAPIKey')?.value || document.getElementById('ttskey')?.value,
@@ -3576,6 +3776,35 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 lang: document.querySelector('[data-param1="speechifylang"]').checked ? document.querySelector('[data-optionparam1="speechifylang"]')?.value || 'en-US' : 'en-US',
                 speed: document.querySelector('[data-param1="speechifyspeed"]').checked ? parseFloat(document.querySelector('[data-numbersetting="speechifyspeed"]')?.value) || 1.0 : 1.0,
                 model: document.querySelector('[data-param1="speechifymodel"]').checked ? document.querySelector('[data-optionparam1="speechifymodel"]')?.value || 'simba-english' : 'simba-english'
+            },
+            
+            // OpenAI settings
+            openai: {
+                key: document.getElementById('openaiAPIKey')?.value,
+                endpoint: document.getElementById('openaiEndpoint')?.value || "https://api.openai.com/v1/audio/speech",
+                voice: (() => {
+                    const voiceSelect = document.getElementById('openaiVoiceSelect');
+                    if (voiceSelect?.value === 'custom') {
+                        const customVoice = document.getElementById('openaiCustomVoice')?.value;
+                        return customVoice || 'alloy';
+                    }
+                    return voiceSelect?.value || 'alloy';
+                })(),
+                model: (() => {
+                    if (document.querySelector('[data-param1="openaimodel"]').checked) {
+                        const modelSelect = document.querySelector('[data-optionparam1="openaimodel"]');
+                        if (modelSelect?.value === 'custom') {
+                            const customModel = document.getElementById('openaiCustomModel')?.value;
+                            return customModel || 'tts-1';
+                        }
+                        return modelSelect?.value || 'tts-1';
+                    }
+                    return 'tts-1';
+                })(),
+                speed: document.querySelector('[data-param1="openaispeed"]').checked ? 
+                    parseFloat(document.querySelector('[data-numbersetting="openaispeed"]')?.value) || 1.0 : 1.0,
+                format: document.querySelector('[data-param1="openaiformat"]').checked ? 
+                    document.querySelector('[data-optionparam1="openaiformat"]')?.value || 'mp3' : 'mp3'
             }
         };
         
@@ -3609,6 +3838,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
         if (settings.google.key) return 'Google Cloud TTS';
         if (settings.elevenLabs.key) return 'ElevenLabs TTS';
         if (settings.speechify.key) return 'Speechify TTS';
+        if (settings.openai.key) return 'OpenAI TTS';
         return 'System TTS';
     },
     
@@ -3623,6 +3853,13 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             warningMsg = warningMsg.replace('{provider}', serviceName);
             this.showFeedback(warningMsg, 'error');
             return;
+        }
+        
+        if (provider === 'kitten') {
+            let warningMsg = getTranslation("tts-test-limited", "Testing for {provider} requires significant browser resources. Works best during streaming.");
+            warningMsg = warningMsg.replace('{provider}', serviceName);
+            this.showFeedback(warningMsg, 'warning');
+            // Continue with test despite warning
         }
         
         this.showFeedback(`Testing ${serviceName}...`, 'info');
@@ -3649,6 +3886,9 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             }
             if (serviceName === 'Speechify TTS' && !settings.speechify.key) {
                 throw new Error('Speechify API key is required');
+            }
+            if (serviceName === 'OpenAI TTS' && !settings.openai.key) {
+                throw new Error('OpenAI API key is required');
             }
 
             this.speak(testPhrase, true);
@@ -3677,9 +3917,17 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                 if (!this.premiumQueueActive) {
                     await this.speechifyTTS(text, settings);
                 }
+            } else if ((settings.service == "openai") && settings.openai.key) {
+                if (!this.premiumQueueActive) {
+                    await this.openaiTTS(text, settings);
+                }
 			} else if (settings.service == "kokoro") {
                 if (!this.premiumQueueActive) {
                     await this.kokoroTTS(text, settings);
+                }
+            } else if (settings.service == "kitten") {
+                if (!this.premiumQueueActive) {
+                    await this.kittenTTS(text, settings);
                 }
             } else if (!settings.service || (settings.service == "system")) {
                 this.systemTTS(text, settings);
@@ -3782,6 +4030,76 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
 			this.finishedAudio();
 		}
 	},
+    
+    async kittenTTS(text, settings) {
+        try {
+            // Load ONNX Runtime first if not loaded
+            if (typeof ort === 'undefined') {
+                const ortScript = document.createElement('script');
+                ortScript.src = './thirdparty/ort.min.js';
+                await new Promise((resolve, reject) => {
+                    ortScript.onload = resolve;
+                    ortScript.onerror = reject;
+                    document.head.appendChild(ortScript);
+                });
+                
+                // Configure WASM paths after loading ONNX Runtime
+                if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
+                    ort.env.wasm.wasmPaths = './thirdparty/';
+                    ort.env.wasm.numThreads = 1;
+                    ort.env.wasm.simd = false;
+                    console.log("Configured ONNX Runtime WASM paths for popup");
+                }
+            }
+            
+            // Load Kitten TTS module if not loaded
+            if (!window.kittenTtsInstance) {
+                // Use absolute URL for chrome extension context
+                const baseUrl = chrome.runtime.getURL('');
+                const moduleUrl = baseUrl + 'thirdparty/kitten-tts/kitten-tts-lib.js';
+                
+                const { KittenTTS } = await import(moduleUrl);
+                
+                window.kittenTtsInstance = new KittenTTS();
+                
+                // Initialize with model, voices, and WASM paths using absolute URLs
+                const modelUrl = baseUrl + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
+                const voicesUrl = baseUrl + 'thirdparty/kitten-tts/voices.json';
+                // Don't set WASM path - let ONNX runtime use its default
+                await window.kittenTtsInstance.init(modelUrl, voicesUrl);
+            }
+            
+            this.premiumQueueActive = true;
+            
+            // Generate speech with selected voice and speed
+            const audioBlob = await window.kittenTtsInstance.generateSpeech(
+                text, 
+                settings.kitten.voice || 'expr-voice-2-f',
+                settings.kitten.speed || 1.0
+            );
+            
+            // Play audio
+            if (!this.audio) {
+                this.audio = document.createElement("audio");
+                this.audio.onended = () => this.finishedAudio();
+            }
+            
+            this.audio.src = URL.createObjectURL(audioBlob);
+            if (settings.volume) {
+                this.audio.volume = settings.volume;
+            }
+            
+            await this.audio.play().catch(e => {
+                console.error("Audio playback failed:", e);
+                this.finishedAudio();
+            });
+            
+        } catch (error) {
+            console.error("Kitten TTS error:", error);
+            this.showFeedback(`Kitten TTS Error: ${error.message}`, 'error');
+            this.finishedAudio();
+        }
+    },
     
     googleTTS(text, settings) {
         this.premiumQueueActive = true;
@@ -3945,6 +4263,28 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             },
             body: JSON.stringify(data)
         }, 'base64');
+    },
+    
+    openaiTTS(text, settings) {
+        this.premiumQueueActive = true;
+        const url = settings.openai.endpoint || "https://api.openai.com/v1/audio/speech";
+        
+        const data = {
+            model: settings.openai.model,
+            input: text,
+            voice: settings.openai.voice,
+            response_format: settings.openai.format,
+            speed: settings.openai.speed
+        };
+        
+        this.fetchAudioContent(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${settings.openai.key}`
+            },
+            body: JSON.stringify(data)
+        }, 'blob');
     },
     
     async fetchAudioContent(url, options, type) {
@@ -4329,6 +4669,16 @@ const PollManager = {
 
 
 document.addEventListener("DOMContentLoaded", async function(event) {
+	// Add event listener for Event Flow Editor link
+	const eventFlowLink = document.getElementById('open-event-flow-editor-link');
+	if (eventFlowLink) {
+		eventFlowLink.addEventListener('click', function(e) {
+			e.preventDefault();
+			openEventFlowEditor();
+			return false;
+		});
+	}
+	
 	// Initialize ProfileManager after DOM is ready
 	ProfileManager.init();
 	
@@ -4339,6 +4689,49 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			ProfileManager.saveCurrentProfile();
 		});
 	}
+	
+	// Add event listeners for OpenAI custom voice/model dropdowns
+	const setupOpenAICustomInputs = (voiceSelectId, modelSelectId, customVoiceId, customModelId) => {
+		const voiceSelect = document.getElementById(voiceSelectId);
+		const modelSelect = document.getElementById(modelSelectId);
+		const customVoiceInput = document.getElementById(customVoiceId);
+		const customModelInput = document.getElementById(customModelId);
+		
+		if (voiceSelect && customVoiceInput) {
+			voiceSelect.addEventListener('change', function() {
+				if (this.value === 'custom') {
+					customVoiceInput.style.display = 'inline-block';
+					customVoiceInput.focus();
+				} else {
+					customVoiceInput.style.display = 'none';
+					customVoiceInput.value = '';
+				}
+				updateSettings();
+			});
+			
+			customVoiceInput.addEventListener('input', updateSettings);
+		}
+		
+		if (modelSelect && customModelInput) {
+			modelSelect.addEventListener('change', function() {
+				if (this.value === 'custom') {
+					customModelInput.style.display = 'inline-block';
+					customModelInput.focus();
+				} else {
+					customModelInput.style.display = 'none';
+					customModelInput.value = '';
+				}
+				updateSettings();
+			});
+			
+			customModelInput.addEventListener('input', updateSettings);
+		}
+	};
+	
+	// Setup for all three sections
+	setupOpenAICustomInputs('openaiVoiceSelect', 'openaiModelSelect', 'openaiCustomVoice', 'openaiCustomModel');
+	setupOpenAICustomInputs('openaiVoiceSelect2', 'openaiModelSelect2', 'openaiCustomVoice2', 'openaiCustomModel2');
+	setupOpenAICustomInputs('openaiVoiceSelect10', 'openaiModelSelect10', 'openaiCustomVoice10', 'openaiCustomModel10');
 	
 	// Language selector handling
 	const languageIcon = document.getElementById('languageIcon');
@@ -4946,6 +5339,251 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}
 				});
 			}
+		});
+	}
+
+	// Initialize Spotify section inputs and handle manual saving
+	const spotifyClientIdInput = document.getElementById('spotifyClientId');
+	const spotifyClientSecretInput = document.getElementById('spotifyClientSecret');
+	
+	// Manual save function for Spotify credentials
+	function saveSpotifyCredentials() {
+		const clientId = spotifyClientIdInput?.value?.trim();
+		const clientSecret = spotifyClientSecretInput?.value?.trim();
+		
+		if (clientId || clientSecret) {
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",
+				type: "textsetting",
+				setting: "spotifyClientId",
+				value: clientId
+			});
+			
+			chrome.runtime.sendMessage({
+				cmd: "saveSetting",  
+				type: "textsetting",
+				setting: "spotifyClientSecret",
+				value: clientSecret
+			});
+			
+			console.log('Spotify credentials saved');
+		}
+	}
+	
+	// Save on input change
+	if (spotifyClientIdInput) {
+		spotifyClientIdInput.addEventListener('change', saveSpotifyCredentials);
+		spotifyClientIdInput.addEventListener('blur', saveSpotifyCredentials);
+	}
+	
+	if (spotifyClientSecretInput) {
+		spotifyClientSecretInput.addEventListener('change', saveSpotifyCredentials);
+		spotifyClientSecretInput.addEventListener('blur', saveSpotifyCredentials);
+	}
+	
+	// Spotify Auth Button
+	const spotifyAuthButton = document.getElementById('spotifyAuthButton');
+	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');
+	const spotifySignOutButton = document.getElementById('spotifySignOutButton');
+	
+	if (spotifyAuthButton) {
+		// Check if already authenticated (tokens are stored in settings object)
+		chrome.storage.local.get(['settings'], function(result) {
+			if (result.settings && result.settings.spotifyAccessToken) {
+				spotifyAuthStatus.style.display = 'inline';
+				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+				if (spotifySignOutButton) {
+					spotifySignOutButton.style.display = 'inline-block';
+				}
+			}
+		});
+		
+		// Add manual callback handler for Electron app (ssapp)
+		if (window.ssapp) {
+			// Add a text input for manual callback URL
+			const callbackDiv = document.createElement('div');
+			callbackDiv.style.marginTop = '10px';
+			callbackDiv.style.display = 'none';
+			callbackDiv.id = 'spotifyCallbackDiv';
+			callbackDiv.innerHTML = `
+				<input type="text" id="spotifyCallbackInput" placeholder="Paste callback URL here" style="width: 100%; padding: 5px; margin: 5px 0;">
+				<button id="spotifyCallbackSubmit" class="button">Complete Auth</button>
+			`;
+			spotifyAuthButton.parentElement.appendChild(callbackDiv);
+			
+			// Only show callback input as a fallback if automatic auth fails
+			// Don't show it immediately anymore since we have automatic detection
+			
+			// Handle callback submission
+			document.getElementById('spotifyCallbackSubmit')?.addEventListener('click', function() {
+				const callbackUrl = document.getElementById('spotifyCallbackInput').value;
+				if (callbackUrl && callbackUrl.includes('code=')) {
+					chrome.runtime.sendMessage({
+						cmd: "spotifyManualCallback",
+						url: callbackUrl
+					}, response => {
+						console.log("Manual callback result:", response);
+						if (response && response.success) {
+							spotifyAuthStatus.style.display = 'inline';
+							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+							if (spotifySignOutButton) {
+								spotifySignOutButton.style.display = 'inline-block';
+							}
+							callbackDiv.style.display = 'none';
+							document.getElementById('spotifyCallbackInput').value = '';
+							alert('Spotify connected successfully!');
+						} else {
+							alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
+						}
+					});
+				} else {
+					alert('Please paste the complete callback URL');
+				}
+			});
+		}
+		
+		spotifyAuthButton.addEventListener('click', async function() {
+			// Prevent multiple clicks
+			if (spotifyAuthButton.disabled) {
+				console.log('Spotify auth already in progress');
+				return;
+			}
+			
+			// Disable button during auth
+			spotifyAuthButton.disabled = true;
+			spotifyAuthButton.querySelector('span').textContent = '⏳ Connecting...';
+			
+			console.log('Attempting Spotify auth...');
+			
+			// Try to open the background page directly if needed
+			try {
+				// First, try to communicate normally
+				chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
+					// Check for Chrome runtime errors
+					if (chrome.runtime.lastError) {
+						console.error('Chrome runtime error:', chrome.runtime.lastError);
+						// If communication failed, try opening background page directly
+						chrome.tabs.create({
+							url: chrome.runtime.getURL('background.html'),
+							active: false
+						}, function(tab) {
+							// Wait a bit for background page to load, then retry
+							setTimeout(() => {
+								chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(retryResponse) {
+									handleSpotifyAuthResponse(retryResponse);
+								});
+							}, 2000);
+						});
+						return;
+					}
+					
+					handleSpotifyAuthResponse(response);
+				});
+			} catch (error) {
+				console.error('Error during Spotify auth:', error);
+				spotifyAuthButton.disabled = false;
+				spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+				alert('Failed to initiate Spotify connection. Please try again.');
+			}
+			
+			function handleSpotifyAuthResponse(response) {
+				console.log('Spotify auth response received:', response);
+				spotifyAuthButton.disabled = false;
+				const callbackDiv = document.getElementById('spotifyCallbackDiv');
+				
+				if (response && response.success) {
+					spotifyAuthStatus.style.display = 'inline';
+					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+					if (spotifySignOutButton) {
+						spotifySignOutButton.style.display = 'inline-block';
+					}
+					// Hide manual callback input on success
+					if (window.ssapp && callbackDiv) {
+						callbackDiv.style.display = 'none';
+						document.getElementById('spotifyCallbackInput').value = '';
+					}
+					// Show success message if already connected
+					if (response.alreadyConnected) {
+						console.log('Already connected to Spotify');
+					} else if (response.message && response.message.includes('authorization')) {
+						// For SSAPP, the OAuth window opened - wait for callback
+						console.log('OAuth window opened - waiting for authorization');
+						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+						// Show manual input as backup after 5 seconds
+						if (window.ssapp && callbackDiv) {
+							setTimeout(() => {
+								if (!spotifyAuthStatus.style.display || spotifyAuthStatus.style.display === 'none') {
+									callbackDiv.style.display = 'block';
+									console.log('If the authorization window is stuck, you can paste the callback URL manually.');
+								}
+							}, 5000);
+						}
+					}
+				} else {
+					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+					const errorMsg = response?.error || 'Unknown error';
+					console.error('Spotify auth failed:', errorMsg);
+					
+					// Show manual callback input only if in Electron and auth failed
+					if (window.ssapp && callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
+						callbackDiv.style.display = 'block';
+						console.log('Please paste the callback URL manually.');
+					}
+					
+					// Only show alert if not already connected
+					if (errorMsg !== 'Already connected') {
+						alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\nPlease ensure:\n1. Spotify integration is enabled\n2. Client ID and Secret are filled in\n3. Your redirect URIs are configured in Spotify app settings');
+					}
+				}
+			}
+		});
+	}
+	
+	// Spotify Sign Out Button
+	if (spotifySignOutButton) {
+		spotifySignOutButton.addEventListener('click', function() {
+			if (confirm('Are you sure you want to sign out of Spotify?')) {
+				// Send message to background script to clear Spotify tokens
+				chrome.runtime.sendMessage({cmd: "spotifySignOut"}, function(response) {
+					if (chrome.runtime.lastError) {
+						console.error('Error signing out:', chrome.runtime.lastError);
+						alert('Failed to sign out. Please try again.');
+						return;
+					}
+					
+					if (response && response.success) {
+						// Update UI
+						spotifyAuthStatus.style.display = 'none';
+						spotifySignOutButton.style.display = 'none';
+						spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+						
+						// Clear any manual callback inputs if present
+						const callbackDiv = document.getElementById('spotifyCallbackDiv');
+						if (callbackDiv) {
+							callbackDiv.style.display = 'none';
+							const callbackInput = document.getElementById('spotifyCallbackInput');
+							if (callbackInput) {
+								callbackInput.value = '';
+							}
+						}
+						
+						console.log('Successfully signed out of Spotify');
+						alert('Successfully signed out of Spotify');
+					} else {
+						alert('Failed to sign out: ' + (response?.error || 'Unknown error'));
+					}
+				});
+			}
+		});
+	}
+	
+	// Spotify Setup Guide Button
+	const spotifySetupGuide = document.getElementById('spotifySetupGuide');
+	if (spotifySetupGuide) {
+		spotifySetupGuide.addEventListener('click', function() {
+			// Open spotify.html in a new tab to show setup instructions
+			const spotifyGuideUrl = chrome.runtime.getURL('spotify.html');
+			chrome.tabs.create({ url: spotifyGuideUrl });
 		});
 	}
 

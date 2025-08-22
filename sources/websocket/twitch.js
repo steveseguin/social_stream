@@ -29,6 +29,45 @@ try{
 		localStorage.removeItem('twitchOAuthToken');
 		localStorage.removeItem('twitchChannel');
 	}
+	
+	let tokenExpirationHandled = false;
+	function handleTokenExpiration() {
+		// Prevent multiple simultaneous expiration handlers
+		if (tokenExpirationHandled) return;
+		tokenExpirationHandled = true;
+		
+		console.log('Token expired - clearing credentials and prompting for re-authentication');
+		
+		// Clear stored credentials
+		clearStoredToken();
+		localStorage.removeItem('twitchUserAlias');
+		sessionStorage.removeItem('twitchOAuthState');
+		sessionStorage.removeItem('twitchOAuthToken');
+		
+		// Clean up connections
+		if (websocket && websocket.readyState === WebSocket.OPEN) {
+			websocket.close();
+		}
+		if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
+			eventSocket.close();
+		}
+		
+		// Update UI
+		updateHeaderInfo(null, null);
+		document.querySelectorAll('.socket').forEach(ele => ele.classList.add('hidden'));
+		document.querySelector('.auth').classList.remove('hidden');
+		
+		// Show notification
+		const textarea = document.querySelector("#textarea");
+		if (textarea) {
+			textarea.innerHTML = '<div style="color: red; font-weight: bold;">Authentication expired. Please sign in again.</div>';
+		}
+		
+		// Reset flag after a delay
+		setTimeout(() => {
+			tokenExpirationHandled = false;
+		}, 5000);
+	}
 	function showAuthButton() {
 		const authElement = document.querySelector('.auth');
 		if (authElement) authElement.classList.remove("hidden");
@@ -242,6 +281,7 @@ try{
 
 	let getViewerCountInterval = null;
 	let getFollowersInterval = null;
+	let tokenValidationInterval = null;
 	let badges = null;
 
 	async function validateToken(token) {
@@ -251,8 +291,43 @@ try{
 					'Authorization': `OAuth ${token}`
 				}
 			});
-			if (!response.ok) return null;
-			return await response.json();
+			if (!response.ok) {
+				if (response.status === 401 || response.status === 403) {
+					handleTokenExpiration();
+				}
+				return null;
+			}
+			const data = await response.json();
+			
+			// Update auth status indicator
+			const authStatus = document.getElementById('auth-status');
+			if (authStatus) {
+				if (data.expires_in && data.expires_in < 3600) {
+					// Token expires soon
+					authStatus.innerHTML = `⚠️ <span style="color: orange; font-size: 12px;">Expires in ${Math.floor(data.expires_in / 60)}m</span>`;
+					authStatus.title = `Authentication expires in ${Math.floor(data.expires_in / 60)} minutes`;
+				} else if (data.expires_in) {
+					// Token is valid
+					authStatus.innerHTML = `✅ <span style="color: green; font-size: 12px;">Valid</span>`;
+					authStatus.title = `Authentication valid for ${Math.floor(data.expires_in / 3600)} hours`;
+				}
+			}
+			
+			// Check if token will expire soon (within 1 hour)
+			if (data.expires_in && data.expires_in < 3600) {
+				console.warn(`Token expires in ${Math.floor(data.expires_in / 60)} minutes`);
+				// Show warning in UI
+				const textarea = document.querySelector("#textarea");
+				if (textarea && !document.querySelector('.token-expiry-warning')) {
+					const warning = document.createElement("div");
+					warning.className = 'token-expiry-warning';
+					warning.style.cssText = 'color: orange; font-weight: bold; padding: 5px; background: #fff3cd; border: 1px solid #ffeeba; border-radius: 4px; margin: 5px 0;';
+					warning.innerHTML = `⚠️ Authentication expires in ${Math.floor(data.expires_in / 60)} minutes. Please re-authenticate soon.`;
+					textarea.insertBefore(warning, textarea.firstChild);
+				}
+			}
+			
+			return data;
 		} catch (error) {
 			console.error('Token validation error:', error);
 			return null;
@@ -344,6 +419,18 @@ try{
 			getViewerCount(channel);
 			clearInterval(getViewerCountInterval);
 			getViewerCountInterval = setInterval(() => getViewerCount(channel), 60000);
+			
+			// Set up periodic token validation
+			clearInterval(tokenValidationInterval);
+			tokenValidationInterval = setInterval(async () => {
+				const token = getStoredToken();
+				if (token) {
+					const validationResult = await validateToken(token);
+					if (!validationResult) {
+						console.log('Token validation failed during periodic check');
+					}
+				}
+			}, 300000); // Check every 5 minutes
 			
 		} catch (error) {
 			console.log('Error during connection setup:', error);
@@ -723,7 +810,7 @@ try{
 		}
 		return false;
 	}
-	function replaceEmotesWithImages(text, twitchEmotes = null) {
+	function replaceEmotesWithImages(text, twitchEmotes = null, isBitMessage = false) {
 		// First, handle Twitch native emotes if provided
 		if (twitchEmotes && Object.keys(twitchEmotes).length > 0) {
 			// Sort emote positions to replace from end to start (to maintain indices)
@@ -737,11 +824,52 @@ try{
 			let result = text;
 			sortedEmotes.forEach(({ emoteId, start, end }) => {
 				const emoteName = text.substring(start, end + 1);
-				const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
-				const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
-				result = result.substring(0, start) + emoteImg + result.substring(end + 1);
+				if (settings.textonlymode) {
+					// In text-only mode, just keep the emote name
+					result = result.substring(0, start) + emoteName + result.substring(end + 1);
+				} else {
+					const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
+					const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
+					result = result.substring(0, start) + emoteImg + result.substring(end + 1);
+				}
 			});
 			text = result;
+		}
+		
+		// Handle cheermotes (bit emotes) if this is a bit message
+		if (isBitMessage) {
+			// Common cheermote patterns - includes standard and custom cheermotes
+			// Matches patterns like: Cheer100, 4Head100, Kappa1000, etc.
+			const cheermoteRegex = /\b(Cheer|Kappa|Kreygasm|SwiftRage|4Head|PJSalt|MrDestructoid|TriHard|NotLikeThis|FailFish|VoHiYo|PogChamp|FrankerZ|HeyGuys|DansGame|EleGiggle|BibleThump|Jebaited|SeemsGood|LUL|VoteYea|VoteNay|HotPokket|OpieOP|FutureMan|FBCatch|TBAngel|PeteZaroll|TwitchUnity|CoolStoryBob|PopCorn|KAPOW|PowerUpR|PowerUpL|DarkMode|HSCheers|PurpleStar|FBPass|FBRun|FBChallenge|RedCoat|GreenTeam|PurpleTeam|HolidayCheer|BitBoss|Streamlabs)(\d+)\b/gi;
+			
+			text = text.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
+				const amount = parseInt(bitAmount);
+				
+				if (settings.textonlymode) {
+					// In text-only mode, just show the cheermote as text with a space before the number
+					return emoteName + ' ' + amount;
+				}
+				
+				// Determine tier based on bit amount
+				let tier = 1;
+				if (amount >= 10000) tier = 10000;
+				else if (amount >= 5000) tier = 5000;
+				else if (amount >= 1000) tier = 1000;
+				else if (amount >= 100) tier = 100;
+				
+				// Determine color based on tier
+				let color = '#9c3ee8'; // purple (100-999)
+				if (tier >= 10000) color = '#f43021'; // red
+				else if (tier >= 5000) color = '#1db2a5'; // blue/teal
+				else if (tier >= 1000) color = '#0eba26'; // green
+				else if (tier < 100) color = '#979797'; // gray
+				
+				// Build the cheermote URL
+				const cheermoteUrl = `https://d3aqoihi2n8ty8.cloudfront.net/actions/${emoteName.toLowerCase()}/dark/animated/${tier}/1.gif`;
+				
+				// Return the cheermote image with the bit amount displayed after it
+				return `<img src="${cheermoteUrl}" alt="${escapeHtml(emoteName + ' ' + amount)}" title="${escapeHtml(emoteName + ' ' + amount)}" class="regular-emote"/><strong style="color: ${color}; margin-left: 2px;">${amount}</strong>`;
+			});
 		}
 		
 		// Then handle third-party emotes (BTTV, 7TV, FFZ)
@@ -752,6 +880,10 @@ try{
 		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
 			const emote = EMOTELIST[emoteMatch];
 			if (emote) {
+				if (settings.textonlymode) {
+					// In text-only mode, just return the emote text
+					return emoteMatch;
+				}
 				const escapedMatch = escapeHtml(emoteMatch);
 				const isZeroWidth = typeof emote !== "string" && emote.zw;
 				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
@@ -879,23 +1011,28 @@ try{
 		try {
 			const controller = new AbortController();
 			const timeout_id = setTimeout(() => controller.abort(), timeout);
+			let response;
 			if (!headers) {
-				const response = await fetch(URL, {
+				response = await fetch(URL, {
 					timeout: timeout,
 					signal: controller.signal
 				});
-				clearTimeout(timeout_id);
-				return response;
 			} else {
-				const response = await fetch(URL, {
+				response = await fetch(URL, {
 					timeout: timeout,
 					signal: controller.signal,
 					headers: headers
 				});
-				clearTimeout(timeout_id);
-				return response;
+			}
+			clearTimeout(timeout_id);
+			
+			// Check for 401/403 errors which indicate expired token
+			if (response.status === 401 || response.status === 403) {
+				console.error('Authentication error - token may be expired');
+				handleTokenExpiration();
 			}
 			
+			return response;
 		} catch (e) {
 			console.error(e); // Changed from errorlog to console.error
 			return await fetch(URL); // iOS 11.x/12.0
@@ -1040,17 +1177,28 @@ try{
 			}
 		}
 		
+		// Check if this is a bit message
+		const isBitMessage = !!(parsedMessage.tags && parsedMessage.tags.bits);
+		
+		// Debug logging for bit messages
+		if (isBitMessage) {
+			console.log("Bit message detected!");
+			console.log("Original message:", message);
+			console.log("Bit amount:", parsedMessage.tags.bits);
+			console.log("Emotes in message:", parsedMessage.tags.emotes);
+		}
+		
 		// Handle reply messages
 		if (replyMessage) {
 			data.initial = replyMessage;
 			data.reply = originalMessage;
 			if (settings.textonlymode) {
-				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message, twitchEmotes);
+				data.chatmessage = replyMessage + ": " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 			} else {
-				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message, twitchEmotes);
+				data.chatmessage = "<i><small>" + escapeHtml(replyMessage) + ":&nbsp;</small></i> " + replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 			}
 		} else {
-			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes);
+			data.chatmessage = replaceEmotesWithImages(message, twitchEmotes, isBitMessage);
 		}
 		
 		data.membership = subscriber;
@@ -1444,6 +1592,10 @@ try{
 		if (getFollowersInterval) {
 			clearInterval(getFollowersInterval);
 			getFollowersInterval = null;
+		}
+		if (tokenValidationInterval) {
+			clearInterval(tokenValidationInterval);
+			tokenValidationInterval = null;
 		}
 
 		// Close WebSocket connections

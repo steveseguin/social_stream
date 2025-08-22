@@ -113,19 +113,6 @@
     align-items: center;
 }
 
-body.ssapp {
-	font-size: 115%;
-    opacity: 0;
-    transition: opacity 0.5s ease-in;
-}
-
-body.loaded.ssapp {
-    opacity: 1;
-}
-
-body.ssapp .options_group > div {
-    padding-bottom: 15px;
-}
 
 .add-source-container input {
     width: 150px;
@@ -1236,184 +1223,172 @@ input:checked + .slider:before {
   border: none;
 }
 
-//////////
+@media (min-width: 600px) {
+	
+	body.ssapp {
+		font-size: 115%;
+		opacity: 0;
+		transition: opacity 0.5s ease-in;
+	}
+
+	body.loaded.ssapp {
+		opacity: 1;
+	}
+
+	body.ssapp .options_group > div {
+		padding-bottom: 15px;
+	}
 
 
-/* General body and container adjustments for wider screen */
-body.ssapp {
-    font-size: 14px; /* Slightly increase base font size for better readability */
-}
+	/* General body and container adjustments for wider screen */
+	body.ssapp {
+		font-size: 14px; /* Slightly increase base font size for better readability */
+	}
 
-body.ssapp .container {
-    max-width: 1100px; /* Allow the main container to expand */
-    margin: 0 auto; /* Center the container */
-    padding: 0 1em; /* Add some padding on the sides */
-}
+	body.ssapp .container {
+		max-width: 1100px; /* Allow the main container to expand */
+		margin: 0 auto; /* Center the container */
+		padding: 0 1em; /* Add some padding on the sides */
+	}
 
-/* Adjustments for wrapper and collapsible sections */
-body.ssapp .wrapper {
-    display: flex;
-    flex-direction: column; /* Stack wrappers vertically */
-    align-items: center; /* Center content within wrappers */
-}
+	/* Adjustments for wrapper and collapsible sections */
+	body.ssapp .wrapper {
+		display: flex;
+		flex-direction: column; /* Stack wrappers vertically */
+		align-items: center; /* Center content within wrappers */
+	}
 
-body.ssapp .collapsible {
-    width: 100%; /* Allow collapsibles to use full width of their container */
-    max-width: none; /* Remove max-width if previously set for narrow view */
-}
+	body.ssapp .collapsible {
+		width: 100%; /* Allow collapsibles to use full width of their container */
+		max-width: none; /* Remove max-width if previously set for narrow view */
+	}
 
-body.ssapp .collapsible-label {
-    font-size: 1.25em; /* Slightly larger labels */
-}
-
-
-/* Optimize link and options group sections */
-body.ssapp .link,
-body.ssapp .generic_category_title {
-    margin-top: 2em; /* Increase top margin for better separation */
-}
-
-body.ssapp .link div,
-body.ssapp .options_group {
-    padding: 1.5em; /* Increase padding in these groups */
-    max-height: none; /* Allow link divs to expand if needed */
-}
-
-body.ssapp .link h2,
-body.ssapp .generic_category_title h2 {
-    font-size: 1.3rem; /* Slightly larger section titles */
-}
-
-/* Grid adjustments */
-body.ssapp .grid,
-body.ssapp .grid3 {
-    /* If you want to maintain multiple columns on wider screens,
-       you might not need to change these much, but you could adjust gaps.
-       Alternatively, you could allow more columns. */
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* More flexible grid columns */
-    gap: 1em; /* Increase gap between grid items */
-}
+	body.ssapp .collapsible-label {
+		font-size: 1.25em; /* Slightly larger labels */
+	}
 
 
-/* Header button adjustments */
-body.ssapp #disableButton {
-    padding: 0.75em 0; /* Slightly more padding for the main toggle button */
-}
+	/* Optimize link and options group sections */
+	body.ssapp .link,
+	body.ssapp .generic_category_title {
+		margin-top: 2em; /* Increase top margin for better separation */
+	}
 
-body.ssapp .glowingButton span {
-    font-size: clamp(14px, 1.1em, 18px); /* Adjust glowing button text size */
-    padding: 6px 12px; /* Adjust padding for glowing buttons */
-}
+	body.ssapp .link div,
+	body.ssapp .options_group {
+		padding: 1.5em; /* Increase padding in these groups */
+		max-height: none; /* Allow link divs to expand if needed */
+	}
 
-body.ssapp div[style*="flex-grow: 1"] .glowingButton span,
-body.ssapp div[style*="flex-basis: auto"] .glowingButton span {
-     /* Ensure buttons that are meant to grow can still do so effectively */
-}
+	body.ssapp .link h2,
+	body.ssapp .generic_category_title h2 {
+		font-size: 1.3rem; /* Slightly larger section titles */
+	}
+
+	/* Grid adjustments */
+	body.ssapp .grid,
+	body.ssapp .grid3 {
+		/* If you want to maintain multiple columns on wider screens,
+		   you might not need to change these much, but you could adjust gaps.
+		   Alternatively, you could allow more columns. */
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* More flexible grid columns */
+		gap: 1em; /* Increase gap between grid items */
+	}
 
 
-/* Text Input Adjustments */
-body.ssapp .textInputContainer {
-    width: auto; /* Allow text input containers to adjust to their content or parent */
-    max-width: 600px; /* Set a max-width for very wide inputs if desired */
-    margin-bottom: 1em; /* More space below inputs */
-}
+	/* Header button adjustments */
+	body.ssapp #disableButton {
+		padding: 0.75em 0; /* Slightly more padding for the main toggle button */
+	}
 
-body.ssapp .textInput,
-body.ssapp .textInputContainer input[type="text"],
-body.ssapp .textInputContainer input[type="password"],
-body.ssapp .textInputContainer input[type="number"],
-body.ssapp .textInputContainer textarea,
-body.ssapp select.textInput {
-    font-size: 1em; /* Ensure consistent font size in inputs */
-    padding: 8px; /* More padding in text inputs */
-}
+	body.ssapp .glowingButton span {
+		font-size: clamp(14px, 1.1em, 18px); /* Adjust glowing button text size */
+		padding: 6px 12px; /* Adjust padding for glowing buttons */
+	}
 
-body.ssapp .textInput + label {
-    font-size: 1.1em; /* Adjust label font size */
-}
+	body.ssapp div[style*="flex-grow: 1"] .glowingButton span,
+	body.ssapp div[style*="flex-basis: auto"] .glowingButton span {
+		 /* Ensure buttons that are meant to grow can still do so effectively */
+	}
 
-body.ssapp .textInput:focus + label,
-body.ssapp .textInput:not(:placeholder-shown) + label {
-    top: -10px; /* Adjust label position on focus/filled */
-    font-size: 0.9em;
-}
 
-/* Tab container adjustments */
-body.ssapp .tab-header {
-    max-height: none; /* Allow more space for tab headers if they wrap */
-}
+	/* Text Input Adjustments */
+	body.ssapp .textInputContainer {
+		width: auto; /* Allow text input containers to adjust to their content or parent */
+		max-width: 600px; /* Set a max-width for very wide inputs if desired */
+		margin-bottom: 1em; /* More space below inputs */
+	}
 
-body.ssapp .tab-button {
-    padding: 0.5em 1em; /* Increase padding for tab buttons */
-}
+	body.ssapp .textInput,
+	body.ssapp .textInputContainer input[type="text"],
+	body.ssapp .textInputContainer input[type="password"],
+	body.ssapp .textInputContainer input[type="number"],
+	body.ssapp .textInputContainer textarea,
+	body.ssapp select.textInput {
+		font-size: 1em; /* Ensure consistent font size in inputs */
+		padding: 8px; /* More padding in text inputs */
+	}
 
-body.ssapp .tab-content {
-    padding: 1.5em; /* More padding for tab content */
-}
+	body.ssapp .textInput + label {
+		font-size: 1.1em; /* Adjust label font size */
+	}
 
-/* Specific adjustments for better layout - you might need to add more based on content */
-body.ssapp .submenubuttons .glowingButton {
-    width: auto; /* Allow submenu buttons to size based on content */
-    flex-grow: 1; /* Allow them to share space if in a flex container */
-    margin: 5px;
-}
+	body.ssapp .textInput:focus + label,
+	body.ssapp .textInput:not(:placeholder-shown) + label {
+		top: -10px; /* Adjust label position on focus/filled */
+		font-size: 0.9em;
+	}
 
-body.ssapp #chatCommands,
-body.ssapp #timedMessages,
-body.ssapp #botReplyMessages {
-    max-height: 300px; /* Allow more height for these scrollable areas */
-}
+	/* Tab container adjustments */
+	body.ssapp .tab-header {
+		max-height: none; /* Allow more space for tab headers if they wrap */
+	}
 
-body.ssapp .source-list-container,
-body.ssapp .username-list-container {
-    max-height: 150px; /* Allow more height for source/username lists */
-}
+	body.ssapp .tab-button {
+		padding: 0.5em 1em; /* Increase padding for tab buttons */
+	}
 
-/* Example: if you want some sections to go side-by-side */
-body.ssapp .wrapper {
-    /* If you have multiple .wrapper elements that you want side-by-side
-       you'll need to wrap them in another container and apply flex display to it.
-       The current CSS makes .wrapper elements stack vertically.
-       If you want specific groups of .collapsible sections to be side-by-side:
-    */
-}
-/*
-   For instance, if you have a structure like:
-   <div class="ssapp-row">
-       <div class="wrapper">...</div>
-       <div class="wrapper">...</div>
-   </div>
+	body.ssapp .tab-content {
+		padding: 1.5em; /* More padding for tab content */
+	}
 
-   Then you could add:
-   body.ssapp .ssapp-row {
-       display: flex;
-       gap: 1em;
-       align-items: flex-start;
-   }
-   body.ssapp .ssapp-row .wrapper {
-       flex: 1;
-   }
-*/
+	/* Specific adjustments for better layout - you might need to add more based on content */
+	body.ssapp .submenubuttons .glowingButton {
+		width: auto; /* Allow submenu buttons to size based on content */
+		flex-grow: 1; /* Allow them to share space if in a flex container */
+		margin: 5px;
+	}
 
-/* Quick open chats section in ssapp mode */
-body.ssapp .wrapper.ssapp .collapsible-text .options_group {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Arrange items in a responsive grid */
-    gap: 1em;
-}
+	body.ssapp #chatCommands,
+	body.ssapp #timedMessages,
+	body.ssapp #botReplyMessages {
+		max-height: 300px; /* Allow more height for these scrollable areas */
+	}
 
-body.ssapp .wrapper.ssapp .textInputContainer {
-    width: 100%; /* Make input fields take full width of their grid cell */
-}
+	body.ssapp .source-list-container,
+	body.ssapp .username-list-container {
+		max-height: 150px; /* Allow more height for source/username lists */
+	}
 
-body.ssapp .wrapper.ssapp center {
-    grid-column: 1 / -1; /* Make buttons span full width if needed or style them differently */
-    margin-bottom: 1em;
-}
+	body.ssapp .wrapper.ssapp .collapsible-text .options_group {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Arrange items in a responsive grid */
+		gap: 1em;
+	}
 
-body.ssapp .wrapper.ssapp h3 {
-     grid-column: 1 / -1; /* Make headers span full width */
-     margin-bottom: 0.5em;
+	body.ssapp .wrapper.ssapp .textInputContainer {
+		width: 100%; /* Make input fields take full width of their grid cell */
+	}
+
+	body.ssapp .wrapper.ssapp center {
+		grid-column: 1 / -1; /* Make buttons span full width if needed or style them differently */
+		margin-bottom: 1em;
+	}
+
+	body.ssapp .wrapper.ssapp h3 {
+		 grid-column: 1 / -1; /* Make headers span full width */
+		 margin-bottom: 0.5em;
+	}
 }
         </style>
     </head>
@@ -1485,6 +1460,7 @@ body.ssapp .wrapper.ssapp h3 {
 						<select id="overlay-preset-select" data-optionsetting="overlayPreset" style="padding: 5px 10px; border-radius: 4px; background: #333; color: #fff; border: 1px solid #555;">
 							<option value="">Default dock.html (Customizable)</option>
 							<option value="sampleoverlay.html">📄 Sample Overlay - Basic chat overlay</option>
+							<option value="themes/horizontal.html">➡️ Horizontal Scroll - Right-to-left ticker</option>
 							<option value="themes/overlay-neon-cyberpunk.html">⚡ Neon Cyberpunk - Futuristic glitch effects</option>
 							<option value="themes/overlay-particles.html">✨ Particle System - Floating message effects</option>
 							<option value="themes/overlay-typewriter.html">⌨️ Terminal Typewriter - Retro typing effects</option>
@@ -1497,7 +1473,6 @@ body.ssapp .wrapper.ssapp h3 {
 							<option value="themes/Windows3.1/index.html">🖥️ Windows 3.1 - Retro computing</option>
 							<option value="themes/deuks_overlay/overlay1.html">🎬 Deuks Overlay 1 - Custom streaming</option>
 							<option value="themes/deuks_overlay/overlay2.html">🎬 Deuks Overlay 2 - Alternative layout</option>
-							<option value="themes/events/index.html">🎉 Events Theme - Special occasions</option>
 							<option value="themes/rainbowpuke/index.html">🌈 Rainbow Puke - Colorful chaos</option>
 							<option value="themes/t3nk3y/index.html">🎮 T3nk3y Theme - Gaming style</option>
 						</select>
@@ -1776,6 +1751,14 @@ body.ssapp .wrapper.ssapp h3 {
                                     </label>
                                     <span data-translate="auto-select-new-messages-skipping-as-needed">🔖 Auto-select new messages (skipping as needed) </span>
                                 </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="altselect" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="altselect">🖱️ Must manually select via context-menu</span>
+                                </div>
+								
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshowtime" />
@@ -1854,6 +1837,13 @@ body.ssapp .wrapper.ssapp h3 {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="auto-pin-donations">💵📌 Auto-pin messages with donations</span>
+                                </div>
+								<div title="Automatically queue messages that are identified as donations" data-keywords="donations queue sticky">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="autoqueuedonations" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="auto-queue-donations">💵🔢 Auto-queue messages with donations</span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2141,9 +2131,11 @@ body.ssapp .wrapper.ssapp h3 {
 							<select id="ttsProvider" data-optionparam1="ttsprovider" data-optionsetting="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="kokoro">Kokoro (webGPU/CPU)</option>
+								<option value="kitten">Kitten TTS (browser-based)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
+								<option value="openai">OpenAI</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -2206,6 +2198,37 @@ body.ssapp .wrapper.ssapp h3 {
 									⏩ Speaking rate
 									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
 										size="5" data-numbersetting="kokorospeed" />
+								</span>
+							</div>
+						</div>
+						<!-- Kitten TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="kittenTTS">
+							<h4 data-translate="tts-kitten-options">Kitten TTS Options</h4>
+							<i>note: this free browser-based TTS needs to download a ~15MB model on first use.</i>
+							<br /><br />
+							<div>
+								🎭 Voice to use: 
+								<select id="kittenVoiceSelect" data-optionparam1="kittenvoice" title="Select the Kitten TTS Voice">
+									<option value="expr-voice-2-m">Voice 2 (Male)</option>
+									<option selected value="expr-voice-2-f">Voice 2 (Female)</option>
+									<option value="expr-voice-3-m">Voice 3 (Male)</option>
+									<option value="expr-voice-3-f">Voice 3 (Female)</option>
+									<option value="expr-voice-4-m">Voice 4 (Male)</option>
+									<option value="expr-voice-4-f">Voice 4 (Female)</option>
+									<option value="expr-voice-5-m">Voice 5 (Male)</option>
+									<option value="expr-voice-5-f">Voice 5 (Female)</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="kittenspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="kitten-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" 
+										size="5" data-numbersetting="kittenspeed" />
 								</span>
 							</div>
 						</div>
@@ -2467,6 +2490,79 @@ body.ssapp .wrapper.ssapp h3 {
 									<option value="de">German</option>
 									<option value="it">Italian</option>
 								</select>
+							</div>
+						</div>
+						<!-- OpenAI TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="openaiTTS">
+							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="openaiAPIKey" class="textInput instant" autocomplete="off" 
+									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam1="openaikey" />
+								<label for="openaiAPIKey">
+									<span data-translate="openai-api-key">OpenAI API Key</span>
+								</label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
+								<input type="text" id="openaiEndpoint" class="textInput instant" autocomplete="off" 
+									placeholder="https://api.openai.com/v1/audio/speech" data-textparam1="openaiendpoint" />
+								<label for="openaiEndpoint">
+									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+								</label>
+							</div>
+							<div>
+								🎭 Voice to use:
+								<select id="openaiVoiceSelect" data-optionparam1="voiceopenai" title="Select the OpenAI TTS Voice">
+									<option value="alloy" selected>Alloy</option>
+									<option value="echo">Echo</option>
+									<option value="fable">Fable</option>
+									<option value="onyx">Onyx</option>
+									<option value="nova">Nova</option>
+									<option value="shimmer">Shimmer</option>
+									<option value="custom">Custom</option>
+								</select>
+								<input type="text" id="openaiCustomVoice" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom voice name" data-textparam1="openaicustomvoice" />
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="openaimodel" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-model">
+									🤖 Model
+									<select id="openaiModelSelect" data-optionparam1="openaimodel">
+										<option value="tts-1" selected>tts-1 (faster)</option>
+										<option value="tts-1-hd">tts-1-hd (higher quality)</option>
+										<option value="custom">Custom</option>
+									</select>
+									<input type="text" id="openaiCustomModel" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom model name" data-textparam1="openaicustommodelx" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="openaispeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" 
+										size="5" data-numbersetting="openaispeed" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param1="openaiformat" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-format">
+									🎵 Audio Format
+									<select data-optionparam1="openaiformat">
+										<option value="mp3" selected>MP3</option>
+										<option value="opus">Opus</option>
+										<option value="aac">AAC</option>
+										<option value="flac">FLAC</option>
+									</select>
+								</span>
 							</div>
 						</div>
 					</div>
@@ -3619,9 +3715,11 @@ body.ssapp .wrapper.ssapp h3 {
                             <select id="ttsProvider2" data-optionparam2="ttsprovider" data-optionsetting2="ttsProvider" class="textInput">
                                 <option selected value="system">System TTS</option>
                                 <option value="kokoro">Kokoro (webGPU/CPU)</option>
+                                <option value="kitten">Kitten TTS (browser-based)</option>
                                 <option value="elevenlabs">ElevenLabs</option>
                                 <option value="google">Google Cloud</option>
                                 <option value="speechify">Speechify</option>
+                                <option value="openai">OpenAI</option>
                                 <option value="piper">Piper TTS</option>
                                 <option value="espeak">eSpeak TTS</option>
                             </select>
@@ -3679,6 +3777,38 @@ body.ssapp .wrapper.ssapp h3 {
                                     <option value="bm_george">bm_george</option>
                                     <option value="bm_lewis">bm_lewis</option>
                                 </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Kitten TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="kittenTTS2">
+                            <h4 data-translate="tts-kitten-options">Kitten TTS Options</h4>
+                            <i>note: this free browser-based TTS needs to download a ~15MB model on first use.</i>
+                            <br /><br />
+                            <div>
+                                🎭 Voice to use: 
+                                <select id="kittenVoiceSelect2" data-optionparam2="kittenvoice" title="Select the Kitten TTS Voice">
+                                    <option value="expr-voice-2-m">Voice 2 (Male)</option>
+                                    <option selected value="expr-voice-2-f">Voice 2 (Female)</option>
+                                    <option value="expr-voice-3-m">Voice 3 (Male)</option>
+                                    <option value="expr-voice-3-f">Voice 3 (Female)</option>
+                                    <option value="expr-voice-4-m">Voice 4 (Male)</option>
+                                    <option value="expr-voice-4-f">Voice 4 (Female)</option>
+                                    <option value="expr-voice-5-m">Voice 5 (Male)</option>
+                                    <option value="expr-voice-5-f">Voice 5 (Female)</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="kittenspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="kitten-tts-speed">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" 
+                                        size="5" data-numbersetting2="kittenspeed" />
+                                </span>
                             </div>
                         </div>
                         
@@ -3746,6 +3876,80 @@ body.ssapp .wrapper.ssapp h3 {
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="text" id="speechifyVoiceID2" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam2="voicespeechify" />
                                 <label for="speechifyVoiceID2"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+                            </div>
+                        </div>
+                        
+                        <!-- OpenAI TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="openaiTTS2">
+                            <h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="openaiAPIKey2" class="textInput instant" autocomplete="off" 
+                                    placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam2="openaikey" />
+                                <label for="openaiAPIKey2">
+                                    <span data-translate="openai-api-key">OpenAI API Key</span>
+                                </label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
+                                <input type="text" id="openaiEndpoint2" class="textInput instant" autocomplete="off" 
+                                    placeholder="https://api.openai.com/v1/audio/speech" data-textparam2="openaiendpoint" />
+                                <label for="openaiEndpoint2">
+                                    <span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+                                </label>
+                            </div>
+                            <div>
+                                🎭 Voice to use:
+                                <select id="openaiVoiceSelect2" data-optionparam2="voiceopenai" title="Select the OpenAI TTS Voice">
+                                    <option value="alloy" selected>Alloy</option>
+                                    <option value="echo">Echo</option>
+                                    <option value="fable">Fable</option>
+                                    <option value="onyx">Onyx</option>
+                                    <option value="nova">Nova</option>
+                                    <option value="shimmer">Shimmer</option>
+                                    <option value="custom">Custom</option>
+                                </select>
+                                <input type="text" id="openaiCustomVoice2" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom voice name" data-textparam2="openaicustomvoice" />
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="openaimodel" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-model">
+                                    🤖 Model
+                                    <select id="openaiModelSelect2" data-optionparam2="openaimodel">
+                                        <option value="tts-1" selected>tts-1 (faster)</option>
+                                        <option value="tts-1-hd">tts-1-hd (higher quality)</option>
+                                        <option value="custom">Custom</option>
+                                    </select>
+                                    <input type="text" id="openaiCustomModel2" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom model name" data-textparam2="openaicustommodelx" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="openaispeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-tts-speed">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" 
+                                        size="5" data-numbersetting2="openaispeed" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param2="openaiformat" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-format">
+                                    🎵 Audio Format
+                                    <select data-optionparam2="openaiformat">
+                                        <option value="mp3" selected>MP3</option>
+                                        <option value="opus">Opus</option>
+                                        <option value="aac">AAC</option>
+                                        <option value="flac">FLAC</option>
+                                    </select>
+                                </span>
                             </div>
                         </div>
                         
@@ -4533,9 +4737,11 @@ body.ssapp .wrapper.ssapp h3 {
 							<select id="ttsProvider10" data-optionparam10="ttsprovider" data-optionsetting10="ttsProvider" class="textInput">
 								<option selected value="system">System TTS</option>
 								<option value="kokoro">Kokoro (webGPU/CPU)</option>
+								<option value="kitten">Kitten TTS (browser-based)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
 								<option value="speechify">Speechify</option>
+								<option value="openai">OpenAI</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
 							</select>
@@ -4833,6 +5039,79 @@ body.ssapp .wrapper.ssapp h3 {
 								</select>
 							</div>
 						</div>
+						<!-- OpenAI TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="openaiTTS10">
+							<h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="openaiAPIKey10" class="textInput instant" autocomplete="off" 
+									placeholder="Your OpenAI API Key" data-translate="placeholder-openai-api" data-textparam10="openaikey" />
+								<label for="openaiAPIKey10">
+									<span data-translate="openai-api-key">OpenAI API Key</span>
+								</label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
+								<input type="text" id="openaiEndpoint10" class="textInput instant" autocomplete="off" 
+									placeholder="https://api.openai.com/v1/audio/speech" data-textparam10="openaiendpoint" />
+								<label for="openaiEndpoint10">
+									<span data-translate="openai-endpoint">Custom API Endpoint (optional)</span>
+								</label>
+							</div>
+							<div>
+								🎭 Voice to use:
+								<select id="openaiVoiceSelect10" data-optionparam10="voiceopenai" title="Select the OpenAI TTS Voice">
+									<option value="alloy" selected>Alloy</option>
+									<option value="echo">Echo</option>
+									<option value="fable">Fable</option>
+									<option value="onyx">Onyx</option>
+									<option value="nova">Nova</option>
+									<option value="shimmer">Shimmer</option>
+									<option value="custom">Custom</option>
+								</select>
+								<input type="text" id="openaiCustomVoice10" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom voice name" data-textparam10="openaicustomvoice" />
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="openaimodel" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-model">
+									🤖 Model
+									<select id="openaiModelSelect10" data-optionparam10="openaimodel">
+										<option value="tts-1" selected>tts-1 (faster)</option>
+										<option value="tts-1-hd">tts-1-hd (higher quality)</option>
+										<option value="custom">Custom</option>
+									</select>
+									<input type="text" id="openaiCustomModel10" class="textInput" style="display:none; margin-left: 10px; width: 150px;" placeholder="Custom model name" data-textparam10="openaicustommodelx" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="openaispeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" 
+										size="5" data-numbersetting10="openaispeed" />
+								</span>
+							</div>
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="openaiformat" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="openai-format">
+									🎵 Audio Format
+									<select data-optionparam10="openaiformat">
+										<option value="mp3" selected>MP3</option>
+										<option value="opus">Opus</option>
+										<option value="aac">AAC</option>
+										<option value="flac">FLAC</option>
+									</select>
+								</span>
+							</div>
+						</div>
 						<!-- Kokoro TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="kokoroTTS10">
 							<h4 data-translate="tts-kokoro-options">Kokoro TTS Options</h4>
@@ -4854,6 +5133,37 @@ body.ssapp .wrapper.ssapp h3 {
 									⏩ Speaking rate
 									<input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" 
 										size="5" data-numbersetting10="kokorospeed" />
+								</span>
+							</div>
+						</div>
+						<!-- Kitten TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="kittenTTS10">
+							<h4 data-translate="tts-kitten-options">Kitten TTS Options</h4>
+							<i>note: this free browser-based TTS needs to download a ~15MB model on first use.</i>
+							<br /><br />
+							<div>
+								🎭 Voice to use: 
+								<select id="kittenVoiceSelect10" data-optionparam10="kittenvoice" title="Select the Kitten TTS Voice">
+									<option value="expr-voice-2-m">Voice 2 (Male)</option>
+									<option selected value="expr-voice-2-f">Voice 2 (Female)</option>
+									<option value="expr-voice-3-m">Voice 3 (Male)</option>
+									<option value="expr-voice-3-f">Voice 3 (Female)</option>
+									<option value="expr-voice-4-m">Voice 4 (Male)</option>
+									<option value="expr-voice-4-f">Voice 4 (Female)</option>
+									<option value="expr-voice-5-m">Voice 5 (Male)</option>
+									<option value="expr-voice-5-f">Voice 5 (Female)</option>
+								</select>
+							</div>
+							<br />
+							<div>
+								<label class="switch">
+									<input type="checkbox" data-param10="kittenspeed" />
+									<span class="slider round"></span>
+								</label>
+								<span data-translate="kitten-tts-speed">
+									⏩ Speaking rate
+									<input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" 
+										size="5" data-numbersetting10="kittenspeed" />
 								</span>
 							</div>
 						</div>
@@ -5635,12 +5945,35 @@ body.ssapp .wrapper.ssapp h3 {
                     </span>
                     <br>
                     <span style="color: #888; font-size: 0.9em;">
-                       Note: To access the Event Flow Editor, visit <a href="actions/index.html" target="_blank" style="color: #4a9eff;">actions/index.html</a> instead.
+                       Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" style="color: #4a9eff;">click here</a>.
                     </span>
                 </h3>
                 <div id="flowactions" data-raw="" class="flowactions_chat"><a href="" id="flowactionslink"></a></div>
             </div>
 			
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-obs-options" />
+                    <label class="collapsible-label" for="wrapper-flowactions-obs-options">🎬 <span data-translate="obs-websocket-settings">OBS WebSocket Settings</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group flowactions">
+                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket server URL (default: ws://localhost:4455)">
+                                    <input type="text" id="obsWebSocketUrl" class="textInput instant" autocomplete="off" placeholder="ws://localhost:4455" data-textparam18="obsws" />
+                                    <label for="obsWebSocketUrl"><span data-translate="obs-websocket-url">&gt; OBS WebSocket URL</span></label>
+                                </div>
+                                <div class="textInputContainer" style="width: 95%;" title="OBS WebSocket password for authentication">
+                                    <input type="password" id="obsWebSocketPassword" class="textInput instant" autocomplete="off" placeholder="Enter your OBS password" data-textparam18="obspw" />
+                                    <label for="obsWebSocketPassword"><span data-translate="obs-websocket-password">&gt; OBS WebSocket Password</span></label>
+                                </div>
+                                <div style="margin-top: 10px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
+                                    <small data-translate="obs-websocket-info">💡 Configure your OBS WebSocket settings here to enable Flow Actions to control OBS. Make sure OBS WebSocket Server is enabled in OBS: Tools → WebSocket Server Settings</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 			
 			<div class="link hidden" title="Giveaway Tool" style="display:none;">
                 <h2 class="giveaway_mode_title">
@@ -7662,6 +7995,98 @@ body.ssapp .wrapper.ssapp h3 {
 
             <div class="wrapper">
                 <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-spotify-options" />
+                    <label class="collapsible-label" for="wrapper-spotify-options"><span data-translate="spotify-integration">🎵 Spotify Integration</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group">
+                                <h4>Spotify Configuration</h4>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="spotifyEnabled" data-setting="spotifyEnabled" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="enable-spotify-integration">Enable Spotify integration</span>
+                                </div>
+                                
+                                <div style="margin: 15px 0; padding: 10px; background: var(--color-accent-subtle); border-radius: 5px;">
+                                    <p style="margin: 0 0 10px 0; font-size: 0.9em;">
+                                        Need to create a Spotify app? 
+                                        <a href="https://developer.spotify.com/dashboard" target="_blank" style="color: var(--link-color); font-weight: bold;">
+                                            Open Spotify Dashboard →
+                                        </a>
+                                    </p>
+                                    <button id="spotifySetupGuide" class="glowingButton" style="width: 200px; margin: 0;">
+                                        <span>📋 View Setup Guide</span>
+                                    </button>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="text" id="spotifyClientId" class="textInput" autocomplete="off" placeholder="Your Spotify Client ID" data-textsetting="spotifyClientId" />
+                                    <label for="spotifyClientId"><span data-translate="spotify-client-id">&gt; Spotify Client ID</span></label>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="password" id="spotifyClientSecret" class="textInput" autocomplete="off" placeholder="Your Spotify Client Secret" data-textsetting="spotifyClientSecret" />
+                                    <label for="spotifyClientSecret"><span data-translate="spotify-client-secret">&gt; Spotify Client Secret</span></label>
+                                </div>
+                                
+                                <div style="margin-top: 10px;">
+                                    <button id="spotifyAuthButton" class="glowingButton" style="width: 200px;" title="Connect to Spotify">
+                                        <span>🔗 Connect to Spotify</span>
+                                    </button>
+                                    <button id="spotifySignOutButton" class="glowingButton" style="width: 200px; margin-left: 10px; display: none; background: #d32f2f;" title="Sign out of Spotify">
+                                        <span>🚪 Sign Out</span>
+                                    </button>
+                                    <span id="spotifyAuthStatus" style="margin-left: 10px; color: var(--success-color); display: none;">✓ Connected</span>
+                                </div>
+                                
+                                <h4 style="margin-top: 20px;">Now Playing Features</h4>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="spotifyNowPlaying" data-setting="spotifyNowPlaying" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="spotify-now-playing">Enable now playing tracking</span>
+                                </div>
+                                
+                                <div style="margin-top: 10px;">
+                                    <span data-translate="spotify-polling-interval">Polling interval (seconds):</span>
+                                    <input type="number" id="spotifyPollingInterval" data-numbersetting="spotifyPollingInterval" min="3" max="60" value="5" style="width: 60px;" />
+                                    <span style="font-size: 0.85em; color: var(--text-secondary);">(3-60 seconds)</span>
+                                </div>
+                                
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" id="spotifyAnnounceNewTrack" data-setting="spotifyAnnounceNewTrack" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="spotify-announce-new-track">Announce new tracks in chat</span>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="text" id="spotifyAnnounceFormat" class="textInput" autocomplete="off" placeholder="🎵 Now playing: {song} by {artist}" data-textsetting="spotifyAnnounceFormat" />
+                                    <label for="spotifyAnnounceFormat"><span data-translate="spotify-announce-format">&gt; Announcement format</span></label>
+                                </div>
+                                
+                                <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
+                                    <input type="text" id="spotifyBotName" class="textInput" autocomplete="off" placeholder="Spotify Bot" data-textsetting="spotifyBotName" />
+                                    <label for="spotifyBotName"><span data-translate="spotify-bot-name">&gt; Bot name for messages</span></label>
+                                </div>
+                                
+                                <h4 style="margin-top: 20px;">Chat Commands</h4>
+                                <p style="font-size: 0.9em; color: var(--text-secondary);">
+                                    Available commands: <code>!song</code>, <code>!nowplaying</code>, <code>!np</code><br>
+                                    Coming soon: <code>!queue</code>, <code>!request</code>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="wrapper">
+                <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-points-options" />
                     <label class="collapsible-label" for="wrapper-global-points-options"><span data-translate="points-system">🏆 Points System</span></label>
                     <div class="collapsible-text">
@@ -8869,6 +9294,8 @@ body.ssapp .wrapper.ssapp h3 {
 			</span>
         </div>
 		<script type="text/javascript" src="./libs/profiles.js"></script>
-        <script type="text/javascript" src="popup.js?v=2"></script>
+		<!-- Kitten TTS will be loaded dynamically as ES module when needed -->
+        <script type="text/javascript" src="popup.js?v=3"></script>
+        <script type="text/javascript" src="spotify-auth-helper.js"></script>
     </body>
 </html>

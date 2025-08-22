@@ -343,7 +343,7 @@ class MessageStoreDB {
     scheduleCleanup() {
         const cleanup = async () => {
             // Skip cleanup if unlimiteDB is enabled
-            if (settings?.unlimiteDB) {
+            if (window.settings?.unlimiteDB || (typeof settings !== 'undefined' && settings?.unlimiteDB)) {
                 console.log('Unlimited DB mode enabled, skipping cleanup');
                 return;
             }

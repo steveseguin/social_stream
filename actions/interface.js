@@ -36,12 +36,33 @@ async function startFlowSystem() {
     editor.initTestPanel();
 }
 // Wait for background.js to initialize before starting
+let waitLogged = false;
+let waitAttempts = 0;
+const maxWaitAttempts = 20; // 2 seconds max wait
+
 function waitForEventFlowSystem() {
     if (window.eventFlowSystem) {
         console.log('[interface.js] Found eventFlowSystem, starting editor');
+        // Hide loading modal if it exists
+        const loadingModal = document.getElementById('loading-modal');
+        if (loadingModal) {
+            loadingModal.style.display = 'none';
+        }
+        startFlowSystem();
+    } else if (waitAttempts >= maxWaitAttempts) {
+        console.log('[interface.js] No eventFlowSystem found, starting standalone editor');
+        // Hide loading modal if it exists
+        const loadingModal = document.getElementById('loading-modal');
+        if (loadingModal) {
+            loadingModal.style.display = 'none';
+        }
         startFlowSystem();
     } else {
-        console.log('[interface.js] Waiting for eventFlowSystem from background.js...');
+        if (!waitLogged) {
+            console.log('[interface.js] Waiting for eventFlowSystem from background.js...');
+            waitLogged = true;
+        }
+        waitAttempts++;
         setTimeout(waitForEventFlowSystem, 100);
     }
 }

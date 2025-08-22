@@ -65,6 +65,8 @@
     --action-bg: rgba(26, 125, 58, 0.2); /* Adjusted background for consistency if used */
     --logic-color: #B45309;        /* UPDATED: Darker Amber/Orange */
     --logic-bg: rgba(180, 83, 9, 0.2); /* Adjusted background for consistency if used */
+    --state-color: #9333EA;         /* Purple for state management nodes */
+    --state-bg: rgba(147, 51, 234, 0.2); /* State node background */
 
     /* Fonts */
     --font-primary: 'Inter', sans-serif;
@@ -498,6 +500,10 @@ label {
     background-color: var(--logic-color);
     border-color: var(--logic-color);
 }
+.node-item.state {
+    background-color: var(--state-color);
+    border-color: var(--state-color);
+}
 
 
 /* --- Flow Editor Main Area --- */
@@ -655,6 +661,7 @@ input:checked + .slider:before {
 .node.trigger .node-header { background-color: var(--trigger-color); }
 .node.action .node-header { background-color: var(--action-color); }
 .node.logic .node-header { background-color: var(--logic-color); }
+.node.state .node-header { background-color: var(--state-color); }
 .node.unknown .node-header { background-color: var(--text-secondary); }
 
 
@@ -721,6 +728,14 @@ input:checked + .slider:before {
     transform: translateX(-50%);
 }
 
+.connection-point.output.async-output {
+    border: 2px dashed #9b59b6; /* Purple dashed border for async outputs */
+    background-color: rgba(155, 89, 182, 0.1); /* Light purple background */
+}
+.connection-point.output.async-output:hover {
+    background-color: rgba(155, 89, 182, 0.3);
+    border-color: #9b59b6;
+}
 
 /* Specific logic input point styles from HTML */
 .connection-point.input.logic-input-single {
@@ -1076,5 +1091,28 @@ select.property-input {
 /* --- General utility classes --- */
 .hidden {
     display: none !important;
+}
+
+/* --- Notification Animations --- */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateX(100%);
+        opacity: 0;
+    }
 }
 

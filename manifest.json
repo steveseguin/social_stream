@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.28.6",
+  "version": "3.30.5",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -22,7 +22,8 @@
     "tabs",
 	"scripting",
 	"activeTab",
-	"tabCapture"
+	"tabCapture",
+	"identity"
   ],
   "web_accessible_resources": [
     {
@@ -43,6 +44,7 @@
 	"https://www.moonbeam.stream/*",
 	"https://*.patreon.com/*",
 	"https://patreon.com/*",
+	"https://simps.com/app/*",
 	"https://studio.favorited.com/popout/chat",
 	"https://*/*autoreloadwithsocialstream",
 	"https://*.webinargeek.com/webinar/*",
@@ -73,6 +75,7 @@
     "https://tellonym.me/*",
     "https://chat.wix.com/*",
     "https://live.wix.com/*",
+	"https://stream.place/*",
     "https://www.wix.com/*",
     "https://wix.com/*",
     "https://verticalpixelzone.com/*",
@@ -97,8 +100,6 @@
 	"https://kick.com/popout/*/chat",
     "https://chatroll.com/embed/chat/*",
     "https://www.nimo.tv/popout/chat/*",
-	"https://noice.com/*",
-	"https://studio.noice.com/popout/*",
     "https://dashboard.nimo.tv/popout/chat/*",
     "https://demo.openstreamingplatform.com/view/*chatOnly=True*",
     "https://*.locals.com/post/*",
@@ -275,6 +276,18 @@
       "matches": [ "https://demo.openstreamingplatform.com/view/*chatOnly=True*" ]
     },
 	{
+      "js": [ "./sources/streamplace.js" ],
+      "matches": [ "https://stream.place/*" ]
+    },
+	{
+      "js": [ "./sources/simps.js" ],
+      "matches": [ "https://simps.com/app/*" ]
+    },
+	{
+      "js": [ "./sources/retake.js" ],
+      "matches": [ "https://retake.tv/live/*" ]
+    },
+	{
       "js": [ "./sources/xeenon.js" ],
       "matches": [ "https://xeenon.xyz/*" ]
     },
@@ -305,10 +318,6 @@
 	{
       "js": [ "./sources/uscreen.js" ],
       "matches": [ "https://www.ilmfix.de/programs/*" ]
-    },
-	{
-      "js": [ "./sources/noice.js"],
-      "matches": [ "https://noice.com/*", "https://studio.noice.com/popout/*"]
     },
 	{
       "js": [ "./sources/nicovideo.js" ],

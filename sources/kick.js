@@ -505,6 +505,7 @@
 					}
 				}
 				data.type = "kick";
+				
 				chrome.runtime.sendMessage(
 					chrome.runtime.id,
 					{
@@ -681,7 +682,6 @@
 	  
 	  try {
 		chrome.runtime.sendMessage(chrome.runtime.id, { "message": data }, (e)=>{
-			console.warn(e);
 			if (ele && e && e.id){
 				ele.dataset.mid = e.id;
 			}
@@ -730,7 +730,7 @@
 	
 	  if (!ele || !ele.isConnected) return;
 	  
-	  if (ele.querySelector(".line-through")){
+	  if (ele.querySelector(".line-through, .text-neutral>.font-semibold")){
 		 // console.log("DELETEED");
 		  try {
 				var data = {};
@@ -740,6 +740,7 @@
 				data.chatname = data.chatname.trim();
 				ele.dataset.mid ? (data.id = parseInt(ele.dataset.mid)) || null : "";
 				data.type = "kick";
+				
 				chrome.runtime.sendMessage(
 					chrome.runtime.id,
 					{

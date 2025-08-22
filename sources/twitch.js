@@ -868,7 +868,10 @@
 					}
 				}
 				if (response && "state" in response) {
+					
 					isExtensionOn = response.state;
+					
+					checkFollowers();
 				}
 			}
 		);
@@ -1284,7 +1287,6 @@
 		}
 	}
 	
-	setTimeout(function(){checkFollowers();},2500);
 	setInterval(function(){checkFollowers()},30000);
 	
 
