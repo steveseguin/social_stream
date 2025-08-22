@@ -3734,7 +3734,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             
             // Kitten TTS settings
             kitten: {
-                voice: document.getElementById('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-2-f",
+                voice: document.getElementById('kittenVoiceSelect')?.selectedOptions[0]?.value || "expr-voice-4-f",
                 speed: document.querySelector('[data-param1="kittenspeed"]')?.checked ?  
                     parseFloat(document.querySelector('[data-numbersetting="kittenspeed"]')?.value) || 1.0 : 1.0,
                 sampleRate: 24000  // Fixed value - not configurable in new library
@@ -4074,7 +4074,7 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
             // Generate speech with selected voice and speed
             const audioBlob = await window.kittenTtsInstance.generateSpeech(
                 text, 
-                settings.kitten.voice || 'expr-voice-2-f',
+                settings.kitten.voice || 'expr-voice-4-f',
                 settings.kitten.speed || 1.0
             );
             
