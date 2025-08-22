@@ -598,7 +598,7 @@ TTS.configure = function(urlParams) {
     TTS.espeakSettings.variant = urlParams.has("espeakvariant") ? parseInt(urlParams.get("espeakvariant")) || 0 : 0;
 
     // Kitten TTS settings
-    TTS.kittenSettings.voice = urlParams.get("kittenvoice") || "expr-voice-2-m";
+    TTS.kittenSettings.voice = urlParams.get("kittenvoice") || "expr-voice-4-f";
     TTS.kittenSettings.speed = urlParams.has("kittenspeed") ? parseFloat(urlParams.get("kittenspeed")) || 1.0 : 1.0;
     TTS.kittenSettings.sampleRate = urlParams.has("kittensamplerate") ? parseInt(urlParams.get("kittensamplerate")) || 24000 : 24000;
 
