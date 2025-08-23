@@ -925,13 +925,6 @@ class EventFlowSystem {
             return message;
         }
         
-        // Block relayed messages (reflections) from propagating to sendToDestinations
-        // This prevents relay echoes from being sent to external destinations
-        if (message.reflection) {
-            // Return null to block the message from sendToDestinations
-            return null;
-        }
-        
         let processed = { ...message };
         let blocked = false;
         
