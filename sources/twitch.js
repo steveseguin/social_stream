@@ -977,6 +977,8 @@
 			data.event = "reward";
 		} else if (data.chatmessage.includes(" gifting ") && data.chatmessage.includes(" Sub")) {
 			data.event = "giftpurchase";
+		} else if (data.chatmessage.includes(" gifted ") && data.chatmessage.includes(" Sub")) {
+			data.event = "sponsorship";
 		}
 		
 
