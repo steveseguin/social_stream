@@ -534,7 +534,9 @@
                                         sourceName: payload.sourceName
                                     });
                                     
-                                    let enabled = payload.visible;
+                                    // Coerce string values to boolean when provided
+                                    const toBool = (v) => (v === true || v === 'true' || v === 1 || v === '1');
+                                    let enabled = undefined;
                                     if (payload.visible === 'toggle' || payload.visible === undefined) {
                                         // Get current state to toggle
                                         const itemState = await obsWebSocket.call('GetSceneItemEnabled', {
@@ -542,6 +544,8 @@
                                             sceneItemId: sceneItemId.sceneItemId
                                         });
                                         enabled = !itemState.sceneItemEnabled;
+                                    } else {
+                                        enabled = toBool(payload.visible);
                                     }
                                     
                                     // Set the visibility

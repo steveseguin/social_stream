@@ -1076,7 +1076,28 @@ class EventFlowSystem {
             }
             
             // Find and execute downstream actions
-            const downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
+            let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
+            // Prioritize lightweight/control actions before heavy ones (e.g., delay)
+            const priorityOf = (node) => {
+                if (!node || node.type !== 'action') return 50;
+                switch (node.actionType) {
+                    case 'setGateState':
+                    case 'resetStateNode':
+                    case 'setCounter':
+                    case 'incrementCounter':
+                    case 'checkCounter':
+                        return 0; // control/state updates first
+                    case 'delay':
+                        return 100; // run after immediate controls
+                    default:
+                        return 50; // normal actions
+                }
+            };
+            downstreamConnections.sort((a, b) => {
+                const an = nodeMap.get(a.to);
+                const bn = nodeMap.get(b.to);
+                return priorityOf(an) - priorityOf(bn);
+            });
             for (const conn of downstreamConnections) {
                 const downstreamNode = nodeMap.get(conn.to);
                 if (downstreamNode && downstreamNode.type === 'action') {
@@ -1085,7 +1106,7 @@ class EventFlowSystem {
             }
         };
 
-        // Start execution from actions connected to activated triggers/logic
+        // Start execution from actions connected to activated triggers/logic/state
         for (const node of flow.nodes) {
             if (node.type === 'action' && !executedActions.has(node.id)) {
                 const inputConnections = flow.connections.filter(conn => conn.to === node.id);
@@ -1093,7 +1114,12 @@ class EventFlowSystem {
                 
                 const shouldExecute = inputNodeIds.some(inputId => {
                     const inputNode = nodeMap.get(inputId);
-                    return inputNode && (inputNode.type === 'trigger' || inputNode.type === 'logic') && nodeActivationStates[inputId] === true;
+                    // Allow actions to be driven by triggers, logic, or state nodes
+                    return (
+                        inputNode &&
+                        (inputNode.type === 'trigger' || inputNode.type === 'logic' || inputNode.type === 'state') &&
+                        nodeActivationStates[inputId] === true
+                    );
                 });
 
                 if (shouldExecute) {
@@ -1145,8 +1171,8 @@ class EventFlowSystem {
         switch (triggerType) {
             case 'anyMessage':
                 // Trigger on any message regardless of content
-                match = message && (message.chatmessage || message.textContent);
-                return match;
+                // Ensure we return a strict boolean so downstream checks using === true work
+                return !!message;
                 
             case 'messageContains':
                 // Ensure properties exist before trying to access them
