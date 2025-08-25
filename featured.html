@@ -778,11 +778,21 @@
 		  overflow: hidden;
 		  text-overflow: ellipsis;
 		  z-index: 3;
+		  left: 20px; /* keep name close to the message when avatar is hidden */
 		}
 
 		.no-avatar .hl-message {
 		  margin-bottom: 0;
 		  border-radius: var(--rounded-border-radius);
+		  /* remove the large left padding reserved for avatar */
+		  padding: 20px 35px 20px 35px;
+		}
+
+		/* Right-aligned adjustments when avatar is hidden */
+		.alignright .no-avatar .hl-name {
+		  right: 20px;
+		  left: unset;
+		  margin-left: 0;
 		}
 
 		/* Adjustments for source icon in no avatar mode */
@@ -1523,6 +1533,13 @@
 				avatar = false;
 				document.documentElement.style.setProperty("--comment-padding", "20px 35px 20px 35px");
 				document.documentElement.style.setProperty("--author-left", "20px");
+			}
+
+			// New: hide only placeholder/default avatar when the user has no real avatar
+			// Usage: add &noavatarifmissing to the URL
+			var noAvatarIfMissing = false;
+			if (urlParams.has("noavatarifmissing")) {
+				noAvatarIfMissing = true;
 			}
 
 			// Lazy initialize audioContext to handle autoplay policy
@@ -2443,6 +2460,11 @@
 					if (!data.chatimg) {
 					  data.chatimg = "";
 					}
+					// Per-message avatar override: hide avatar only if missing and URL flag set
+					let avatarForMessage = avatar;
+					if (noAvatarIfMissing && !data.chatimg && avatar) {
+					  avatarForMessage = false;
+					}
 					var showType = "";
 					
 					if (!data.type) {
@@ -2453,18 +2475,18 @@
 					}
 
 					var customSourceClass = "sourceOffset";
-					if (showType && showsource && avatar) {
+					if (showType && showsource && avatarForMessage) {
 					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
-					} else if (showType && showsource && !avatar) {
+					} else if (showType && showsource && !avatarForMessage) {
 					  showType = '<img src="./sources/images/' + showType + '.png" class="icon sourcetype noavatar-source" data-icon-name="' + showType + '" onerror="this.style.display=\'none\'" />';
 					} else {
 					  customSourceClass = "";
 					  showType = "";
 					}
 
-					if (data.sourceImg && customSource && avatar) {
+					if (data.sourceImg && customSource && avatarForMessage) {
 					  showType += '<img src="./sources/images/' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
-					} else if (data.sourceImg && customSource && !avatar) {
+					} else if (data.sourceImg && customSource && !avatarForMessage) {
 					  showType += '<img src="./sources/images/' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 					}
 
@@ -2499,7 +2521,7 @@
 					  }
 					  data.membership = data.hasMembership.toString();
 					  
-					  if (avatar) {
+					  if (avatarForMessage) {
 						memebershipHTML = data.membership;
 					  } else {
 						// No avatar membership display
@@ -2512,7 +2534,7 @@
 						data.membership = data.membership.toString();
 					  }
 					  
-					  if (avatar) {
+					  if (avatarForMessage) {
 						if (data.subtitle) {
 						  memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
 						} else {
@@ -2532,7 +2554,7 @@
 						}
 					  }
 					} else if (data.subtitle) {
-					  if (avatar) {
+					  if (avatarForMessage) {
 						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
 					  } else {
 						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.subtitle + '</div></div>';
@@ -2549,7 +2571,7 @@
 						  donationTitle = data.title;
 						}
 						
-						if (avatar) {
+						if (avatarForMessage) {
 						  donationHTML = '<div class="donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
 						} else {
 						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ donationTitle +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
@@ -2560,7 +2582,7 @@
 						  donationTitle = data.title;
 						}
 						
-						if (avatar) {
+						if (avatarForMessage) {
 						  if (memebershipHTML) {
 							donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
 						  } else {
@@ -2578,12 +2600,12 @@
 						  }
 						}
 					  } else if (data.title) {
-						if (avatar) {
+						if (avatarForMessage) {
 						  donationHTML = '<div class="donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + "</div></div>";
 						} else {
 						  donationHTML = '<div class="no-avatar-donation"><div class="donation-title">'+ data.title +'</div><div class="subtitle">' + data.hasDonation + '</div></div>';
 						}
-					  } else if (avatar) {
+					  } else if (avatarForMessage) {
 						donationHTML = '<div class="donation">' + data.hasDonation + "</div>";
 					  } else {
 						donationHTML = '<div class="no-avatar-donation single-item"><div class="subtitle">' + data.hasDonation + '</div></div>';
@@ -2630,7 +2652,7 @@
 					}
 
 					var avatarImg = "";
-					if (avatar) {
+					if (avatarForMessage) {
 					  if (data.backupChatimg) {
 						avatarImg = '<div class="hl-img" ' + styleOverrideName + '><img id="img_' + data.id + '" src="' + data.chatimg + '" class="hl-profile-pic" data-backup-image="' + data.backupChatimg + '" data-username="' + (data.username || data.chatname || '') + '" onload="handleAvatarLoad(this);" onerror="errorImage(this);"></div>';
 					  } else {
@@ -2668,7 +2690,7 @@
 					}
 
 					// ADD NO-AVATAR CLASS TO CONTAINER
-					var noAvatarClass = avatar ? "" : " no-avatar";
+					var noAvatarClass = avatarForMessage ? "" : " no-avatar";
 
 					if (stacking) {
 					  try {
@@ -2713,7 +2735,7 @@
 					  }
 					  
 					  // Add donation or membership HTML after the message for no-avatar mode
-					  if (!avatar && (donationHTML || memebershipHTML)) {
+					  if (!avatarForMessage && (donationHTML || memebershipHTML)) {
 						const donationWrapper = document.createElement('div');
 						donationWrapper.style.marginTop = '5px';
 						donationWrapper.innerHTML = donationHTML || memebershipHTML;
@@ -2794,7 +2816,7 @@
 					}
 
 					var username = data.username || data.chatname;
-					if ((data.type == "twitch") && avatar && username) {
+					if ((data.type == "twitch") && avatarForMessage && username) {
 					  if (!data.chatimg || data.chatimg.startsWith("https://api.socialstream.ninja")){
 						// Check cache first
 						const cachedUrl = getCachedAvatar(username);
