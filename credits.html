@@ -52,7 +52,8 @@
 		/* Minimal style */
 		@keyframes minimalScroll {
 			0% {
-				transform: translateY(100vh);
+				/* Use dynamic start offset; fallback keeps old behavior */
+				transform: translateY(var(--start-offset, 100vh));
 				opacity: 0;
 			}
 			
@@ -65,7 +66,8 @@
 			}
 			
 			100% {
-				transform: translateY(-300vh);
+				/* Use dynamic end offset; fallback keeps old behavior */
+				transform: translateY(calc(-1 * var(--end-offset, 300vh)));
 				opacity: 0;
 			}
 		}
@@ -73,7 +75,8 @@
 		/* Elegant style */
 		@keyframes elegantFade {
 			0% {
-				transform: translateY(50vh);
+				/* Use dynamic start offset; fallback keeps old behavior */
+				transform: translateY(var(--start-offset, 50vh));
 				opacity: 0;
 			}
 			
@@ -86,7 +89,8 @@
 			}
 			
 			100% {
-				transform: translateY(-300vh);
+				/* Use dynamic end offset; fallback keeps old behavior */
+				transform: translateY(calc(-1 * var(--end-offset, 300vh)));
 				opacity: 0;
 			}
 		}
@@ -438,11 +442,13 @@
 		/* Adjust standardRoll animation to fit shorter duration */
 		@keyframes standardRoll {
 			0% {
-				transform: translateY(100vh);
+				/* Use dynamic start offset; fallback keeps old behavior */
+				transform: translateY(var(--start-offset, 100vh));
 			}
 			
 			100% {
-				transform: translateY(-300vh);
+				/* Use dynamic end offset; fallback keeps old behavior */
+				transform: translateY(calc(-1 * var(--end-offset, 300vh)));
 			}
 		}
 		
@@ -764,9 +770,14 @@
 
 	// Set animation speed
 	const speed = parseFloat(urlParams.get('speed') || "1");
+	const durationParam = parseFloat(urlParams.get('duration') || "");
 
-	// Set different default speeds based on style
-	if (speed !== 1) {
+	// Duration has priority over speed if provided
+	if (Number.isFinite(durationParam) && durationParam > 0) {
+		const fixedDuration = `${durationParam}s`;
+		document.documentElement.style.setProperty('--animation-speed', fixedDuration);
+		document.documentElement.style.setProperty('--standard-speed', fixedDuration);
+	} else if (speed !== 1) {
 		// If speed parameter is provided, apply it to both animation types
 		const starWarsSpeed = `${600 / speed}s`;
 		const standardSpeed = `${60 / speed}s`;
@@ -852,17 +863,40 @@
 			// Generate and insert credits content
 			const creditsContent = document.getElementById('credits-content');
 			creditsContent.innerHTML = generateCreditsContent();
-			
-			// Force a reflow before starting animation
-			void textContainer.offsetWidth;
-			
-			// Ensure fadeout class is removed
-			textContainer.classList.remove('fadeout');
-			
-			// Small delay before adding animation class
-			setTimeout(() => {
+
+			// Prepare dynamic scroll offsets (non-Star Wars styles)
+			const startAnimation = () => {
+				try {
+					const viewportHeight = appElement.clientHeight || window.innerHeight;
+					const paddingTop = parseFloat(getComputedStyle(textContainer).paddingTop) || 0;
+					const creditsEl = document.getElementById('credits-content');
+					const contentHeight = creditsEl ? creditsEl.scrollHeight : 0;
+					const footerHeight = footerText ? footerText.scrollHeight : 0;
+					const startPx = (creditsStyle === 'elegant') ? (0.5 * viewportHeight) : (1.0 * viewportHeight);
+					const extraOutPx = Math.round(0.25 * viewportHeight);
+					const endPx = paddingTop + contentHeight + footerHeight + extraOutPx;
+
+					// Apply start/end offsets for adaptive distance
+					textContainer.style.setProperty('--start-offset', `${Math.round(startPx)}px`);
+					textContainer.style.setProperty('--end-offset', `${Math.max(0, Math.round(endPx))}px`);
+				} catch (e) {
+					console.warn('Could not compute adaptive scroll offsets:', e);
+				}
+
+				// Force a reflow before starting animation
+				void textContainer.offsetWidth;
+				// Ensure fadeout class is removed
+				textContainer.classList.remove('fadeout');
+				// Start animation
 				textContainer.classList.add('animate');
-			}, 50);
+			};
+
+			// Wait for fonts to be ready so measurements are accurate
+			if (document.fonts && document.fonts.ready) {
+				document.fonts.ready.then(startAnimation).catch(startAnimation);
+			} else {
+				setTimeout(startAnimation, 100);
+			}
 		} else {
 			// Page becomes hidden
 			document.body.classList.remove('visible');
