@@ -118,11 +118,6 @@ class EventFlowEditor {
                             <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📥 Import</button>
                             <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📤 Export All</button>
                         </div>
-                        <div style="margin-top: 10px;">
-                            <button id="help-btn" class="btn" style="width: 100%; padding: 8px 12px; font-size: 14px; background: #667eea;">
-                                ❓ State Nodes Guide
-                            </button>
-                        </div>
                     </div>
                     <div class="node-palette">
                         <h3>Triggers</h3>
@@ -156,6 +151,11 @@ class EventFlowEditor {
                                     ${stateNode.name}
                                 </div>
                             `).join('')}
+                        </div>
+						<div style="margin-top: 10px;">
+                            <button id="help-btn" class="btn" style="width: 100%; padding: 8px 12px; font-size: 14px; background: #667eea;">
+                                ❓ State Nodes Guide
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -197,7 +197,7 @@ class EventFlowEditor {
         document.getElementById('import-flow-btn').addEventListener('click', () => this.importFlows());
         document.getElementById('export-all-btn').addEventListener('click', () => this.exportAllFlows());
         document.getElementById('help-btn').addEventListener('click', () => {
-            window.open('state-nodes-guide.html', '_blank');
+            window.open('actions/state-nodes-guide.html', '_blank');
         });
 
         document.getElementById('flow-active').addEventListener('change', (e) => {

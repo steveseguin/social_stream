@@ -10263,6 +10263,8 @@ window.fetchWithTimeout = fetchWithTimeout;
 window.sanitizeRelay = sanitizeRelay;
 window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
 window.handleMessageStore = handleMessageStore;
+// Expose P2P targeting helper so EventFlowSystem can reach specific overlay pages (e.g., actions)
+window.sendTargetP2P = sendTargetP2P;
 
 
 let tmp = new EventFlowSystem({
