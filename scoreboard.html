@@ -413,8 +413,12 @@
 		document.getElementById("waitlisttitle").classList.add("hidden");
 	}
 	
-	if (urlParams.get("font")){
-		document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", 'Sora', Roboto, Arial, sans-serif");
+			
+	if (urlParams.get('font')) {
+		const raw = urlParams.get('font').trim();
+		const clean = raw.replace(/^['"]|['"]$/g, '');
+		const escaped = clean.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+		document.documentElement.style.setProperty('--font-family', `"${escaped}", Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`);
 	}
 
 	if (urlParams.has("opacity")) {
