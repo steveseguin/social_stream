@@ -1,0 +1,493 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Installed Font Detector — Preview installed fonts and generate ?font links</title>
+    <meta name="description" content="Detect installed fonts in your browser, preview live samples, and copy URL parameter links (?font=) compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja." />
+    <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+    <meta name="author" content="Installed Font Detector" />
+    <meta name="keywords" content="fonts, installed fonts, detect fonts, browser fonts, font preview, url parameter, vdo.ninja, socialstream.ninja, caption.ninja" />
+    <meta name="theme-color" content="#0f1221" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Installed Font Detector" />
+    <meta property="og:description" content="Preview your system fonts and generate ?font= links compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja." />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Installed Font Detector" />
+    <meta name="twitter:description" content="Preview installed fonts and copy ?font= links for Ninja apps." />
+
+    <!-- Structured data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Installed Font Detector",
+      "applicationCategory": "Utility",
+      "operatingSystem": "Windows, macOS, Linux, ChromeOS",
+      "isAccessibleForFree": true,
+      "inLanguage": "en",
+      "description": "Detects installed fonts in your browser, previews them, and generates ?font= URL parameters compatible with VDO.Ninja, SocialStream.Ninja, and Caption.Ninja.",
+      "featureList": [
+        "Detect installed fonts via text-metric comparison",
+        "Optional Local Fonts API for precise enumeration",
+        "Generate ?font=<family> links",
+        "Compatibility with VDO.Ninja, SocialStream.Ninja, Caption.Ninja"
+      ],
+      "softwareRequirements": "Optional Local Fonts API requires Chromium-based browser on HTTPS/localhost and user permission.",
+      "sameAs": [
+        "https://vdo.ninja",
+        "https://socialstream.ninja",
+        "https://caption.ninja"
+      ]
+    }
+    </script>
+    <style>
+      :root {
+        --font-family: Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif;
+        --bg: #0f1221;
+        --panel: #171a2b;
+        --text: #e7e9f4;
+        --muted: #a8aec9;
+        --accent: #7ab6ff;
+        --ok: #47d16a;
+        --warn: #ffb020;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        --radius: 10px;
+      }
+
+      html, body {
+        height: 100%;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-family);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      .wrap {
+        max-width: 1100px;
+        margin: 24px auto 80px;
+        padding: 0 16px;
+      }
+
+      header h1 {
+        margin: 0 0 6px 0;
+        font-size: 28px;
+      }
+
+      header p {
+        margin: 0 0 16px 0;
+        color: var(--muted);
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 10px;
+        align-items: center;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 12px;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      .controls input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #2a2e44;
+        background: #0f1221;
+        color: var(--text);
+      }
+
+      .controls button, .controls a.button {
+        padding: 10px 12px;
+        border-radius: 8px;
+        border: 1px solid #2a2e44;
+        background: #0f1221;
+        color: var(--text);
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .controls .count {
+        color: var(--muted);
+        font-variant-numeric: tabular-nums;
+      }
+
+      .results {
+        margin-top: 16px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+        align-items: center;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 12px;
+        border: 1px solid #20243a;
+      }
+
+      .sample {
+        font-size: 18px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      .meta {
+        display: grid;
+        gap: 6px;
+        justify-items: end;
+      }
+
+      .fontname {
+        font-weight: 600;
+      }
+
+      .link {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--muted);
+        user-select: all;
+      }
+
+      .link a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      .badge {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 999px;
+        border: 1px solid #2a2e44;
+        color: var(--muted);
+      }
+
+      .footer {
+        margin-top: 40px;
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 24px 28px;
+        border: 1px solid #20243a;
+        line-height: 1.6;
+      }
+
+      .footer h2 {
+        margin: 0 0 12px 0;
+        font-size: 18px;
+      }
+
+      .footer ul {
+        margin: 12px 0 0 24px;
+        padding: 0;
+        color: var(--muted);
+      }
+
+      .footer li { margin: 6px 0; }
+
+      .footer code {
+        font-family: var(--mono);
+        background: #0f1221;
+        padding: 2px 6px;
+        border-radius: 6px;
+        border: 1px solid #2a2e44;
+        color: #cfe2ff;
+      }
+
+      .note {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 14px;
+      }
+
+      @media (min-width: 900px) {
+        .results {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>Installed Font Detector</h1>
+        <p>Lists fonts your browser can use, shows a live sample, and provides a URL parameter to apply the font site‑wide.</p>
+      </header>
+
+      <div class="controls">
+        <input id="filter" type="text" placeholder="Filter fonts (e.g. Segoe, Mono, Arabic)" />
+        <button id="tryLocalFonts" title="Requests permission (if supported) to list local fonts via the Local Fonts API">Try Local Fonts API</button>
+        <div class="count" id="count">Detecting…</div>
+      </div>
+
+      <div class="results" id="results" role="list"></div>
+
+      <div class="footer">
+        <h2>Using a specific font via URL</h2>
+        <ul>
+          <li><b>Param:</b> Append <code>?font=&lt;Font%20Family%20Name&gt;</code> to the URL. Spaces and symbols must be URL‑encoded.</li>
+          <li><b>Applies to CSS var:</b> Your site uses <code>--font-family</code>; this page also respects it. Example: <code>?font=Segoe%20UI</code>.</li>
+          <li><b>Quotes not needed:</b> Do not include quotes in the parameter; they are not required in the CSS variable.</li>
+          <li><b>Installed only:</b> The parameter only works for fonts already installed on your system. It does not download webfonts.</li>
+        </ul>
+
+        <h2>Compatibility (Ninja apps)</h2>
+        <ul>
+          <li><b>VDO.Ninja:</b> Generated <code>?font=</code> links work with overlays/scenes that honor the <code>--font-family</code> variable.</li>
+          <li><b>SocialStream.Ninja:</b> Use the same <code>?font=</code> parameter to override the default font in supported widgets.</li>
+          <li><b>Caption.Ninja:</b> Apply <code>?font=</code> to caption overlays that support custom font families.</li>
+        </ul>
+        <p class="note">These apps accept a font-family override when the <code>?font=</code> parameter is supported in their URLs or embed links. This tool generates properly encoded values for drop‑in use.</p>
+
+        <h2>Troubleshooting (Windows)</h2>
+        <ul>
+          <li><b>Exact family name:</b> Use the font’s <i>family</i> name (not file name). Check Settings → Personalization → Fonts for the proper family label.</li>
+          <li><b>Right install scope:</b> If you installed a font for a different Windows user or via an admin account only, your browser session may not see it. Install “for all users” if needed.</li>
+          <li><b>Supported formats:</b> Browsers use TrueType/OpenType/WOFF. Legacy Type 1 and some bitmap fonts won’t work.</li>
+          <li><b>Weight/style availability:</b> If only Bold is installed, Normal text may fall back. Try a bold sample or install Regular as well.</li>
+          <li><b>Privacy limits:</b> Browsers don’t allow full font enumeration without permission. This page detects from a large known list and optional Local Fonts API.</li>
+          <li><b>Local Fonts API:</b> In Chromium on secure origins (https/localhost), clicking “Try Local Fonts API” can list your exact installed families after permission.</li>
+        </ul>
+
+        <h2>Manual usage tips</h2>
+        <ul>
+          <li><b>Force a font:</b> In your CSS: <code>font-family: "Your Family", Avenir Next, Sora, Roboto, Helvetica, Arial, sans-serif;</code></li>
+          <li><b>Test an arbitrary name:</b> Use the search box to try any family; if found, it appears in results with a sample.</li>
+          <li><b>Encoding:</b> Build links like: <code>?font=<span id="egFont">Segoe%20UI</span></code> (generated links below use proper encoding).</li>
+          <li><b>CJK and script fonts:</b> The sample includes Latin, numerals, and symbols. Replace with script‑specific text to verify shaping.</li>
+        </ul>
+        <p class="note">Note: This page does not install or download fonts; it only detects and previews families already available to your browser.</p>
+      </div>
+    </div>
+
+    <script>
+      // Respect the provided code for applying a font from URL params
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get("font")) {
+        document.documentElement.style.setProperty(
+          "--font-family",
+          urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif"
+        );
+      }
+
+      const resultsEl = document.getElementById('results');
+      const countEl = document.getElementById('count');
+      const filterEl = document.getElementById('filter');
+
+      // A broad list of common fonts across Windows/macOS/Linux + popular developer/Google fonts.
+      // Detection works by comparing text metrics against generic base families.
+      const CANDIDATE_FONTS = Array.from(new Set([
+        // Windows core UI/text
+        'Segoe UI','Segoe UI Variable','Segoe UI Emoji','Segoe UI Historic','Segoe UI Symbol','Bahnschrift','Ebrima','Gadugi','Javanese Text','Leelawadee UI','Lucida Sans Unicode','Malgun Gothic','Meiryo','Microsoft Himalaya','Microsoft JhengHei','Microsoft New Tai Lue','Microsoft PhagsPa','Microsoft Sans Serif','Microsoft Tai Le','Microsoft Uighur','Microsoft YaHei','Microsoft Yi Baiti','MingLiU-ExtB','Mongolian Baiti','MS Gothic','MS PGothic','MS UI Gothic','NSimSun','PMingLiU-ExtB','SimSun','SimSun-ExtB','Yu Gothic','Yu Gothic UI',
+        // Windows Latin staples
+        'Arial','Arial Black','Calibri','Cambria','Candara','Comic Sans MS','Consolas','Constantia','Corbel','Courier New','Franklin Gothic Medium','Gabriola','Georgia','Impact','Palatino Linotype','Tahoma','Times New Roman','Trebuchet MS','Verdana','Symbol','Webdings','Wingdings','Wingdings 2','Wingdings 3','Sitka Banner','Sitka Display','Sitka Heading','Sitka Small','Sitka Subheading','Sitka Text','Lucida Console',
+        // Developer favorites / code
+        'Cascadia Code','Cascadia Mono','Fira Code','Fira Mono','JetBrains Mono','Source Code Pro','IBM Plex Mono','Ubuntu Mono','Inconsolata','Monaspace Neon','Monaspace Argon',
+        // Popular sans/serif families
+        'Inter','Roboto','Open Sans','Noto Sans','Noto Serif','Noto Sans JP','Noto Sans KR','Noto Sans SC','Noto Serif JP','Noto Naskh Arabic','Lato','Montserrat','Poppins','Oswald','Raleway','Nunito','Merriweather','Playfair Display','PT Sans','PT Serif','Source Sans 3','Source Serif 4','Source Sans Pro','Source Serif Pro','IBM Plex Sans','IBM Plex Serif','Ubuntu','Work Sans','Sora','Avenir','Avenir Next','SF Pro Text','SF Pro Display','Helvetica Neue','Helvetica','Gill Sans',
+        // Other common
+        'Book Antiqua','Century Gothic','Garamond','Didot','Bodoni MT','Perpetua','Rockwell','Goudy Old Style','Copperplate','Brush Script MT','Candara',
+      ].sort((a,b)=>a.localeCompare(b))))
+
+      // Base families used for measuring vs installed font.
+      const BASES = ['serif','sans-serif','monospace'];
+
+      // Measurement string chosen to amplify dimension differences
+      const TEST_STRING = 'mmmmmmmmmmlliWWQy #@ 0123456789 The quick brown fox';
+      const TEST_SIZE = '72px';
+
+      function createMeasureSpan(base) {
+        const s = document.createElement('span');
+        s.textContent = TEST_STRING;
+        s.style.position = 'absolute';
+        s.style.left = '-9999px';
+        s.style.top = '-9999px';
+        s.style.fontSize = TEST_SIZE;
+        s.style.fontVariantLigatures = 'none';
+        s.style.whiteSpace = 'nowrap';
+        s.style.fontFamily = base;
+        document.body.appendChild(s);
+        return s;
+      }
+
+      function metricsFor(base) {
+        const el = createMeasureSpan(base);
+        const w = el.offsetWidth;
+        const h = el.offsetHeight;
+        el.remove();
+        return { w, h };
+      }
+
+      // Detect if a font is available by comparing width/height against all base families.
+      function isFontAvailable(fontName) {
+        try {
+          const baseline = BASES.map(b => metricsFor(b));
+          // If any base differs once we prepend the font, it's likely installed
+          return BASES.some((b, i) => {
+            const el = createMeasureSpan(`"${fontName}", ${b}`);
+            const different = el.offsetWidth !== baseline[i].w || el.offsetHeight !== baseline[i].h;
+            el.remove();
+            return different;
+          });
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function applyFilter(filter, items) {
+        if (!filter) return items;
+        const q = filter.trim().toLowerCase();
+        if (!q) return items;
+        return items.filter(name => name.toLowerCase().includes(q));
+      }
+
+      function makeRow(name) {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const sample = document.createElement('div');
+        sample.className = 'sample';
+        sample.style.fontFamily = `"${name}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`;
+        sample.textContent = `${name} — The quick brown fox jumps over the lazy dog 0123456789`;
+        row.appendChild(sample);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+
+        const fontname = document.createElement('div');
+        fontname.className = 'fontname';
+        fontname.textContent = name;
+
+        const link = document.createElement('div');
+        link.className = 'link';
+        const enc = encodeURIComponent(name);
+        const url = `${location.origin}${location.pathname}?font=${enc}`;
+        link.innerHTML = `<span class="badge">Param</span> <a href="?font=${enc}">?font=${enc}</a>`;
+
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'button';
+        copyBtn.textContent = 'Copy link';
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(url);
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => (copyBtn.textContent = 'Copy link'), 1200);
+          } catch {
+            window.prompt('Copy link:', url);
+          }
+        });
+
+        meta.appendChild(fontname);
+        meta.appendChild(link);
+        meta.appendChild(copyBtn);
+        row.appendChild(meta);
+        return row;
+      }
+
+      function render(list) {
+        resultsEl.innerHTML = '';
+        const frag = document.createDocumentFragment();
+        list.forEach(name => frag.appendChild(makeRow(name)));
+        resultsEl.appendChild(frag);
+        countEl.textContent = `${list.length} font(s) detected`;
+      }
+
+      async function detectFromCandidates(candidates) {
+        const seen = new Set();
+        const found = [];
+        for (const name of candidates) {
+          if (seen.has(name)) continue;
+          seen.add(name);
+          if (isFontAvailable(name)) found.push(name);
+        }
+        found.sort((a,b)=>a.localeCompare(b));
+        return found;
+      }
+
+      // Optional: Use Local Fonts API if supported + permitted
+      async function tryLocalFontsAPI() {
+        if (!('queryLocalFonts' in window)) {
+          alert('Local Fonts API not supported in this browser. Use recent Chromium on HTTPS/localhost.');
+          return [];
+        }
+        try {
+          const families = new Set();
+          const fonts = await window.queryLocalFonts();
+          for (const f of fonts) {
+            if (f.family) families.add(f.family);
+          }
+          return Array.from(families).sort((a,b)=>a.localeCompare(b));
+        } catch (err) {
+          console.warn('Local Fonts API error:', err);
+          alert('Could not access local fonts. The browser may require HTTPS/localhost and user approval.');
+          return [];
+        }
+      }
+
+      // Initial detection
+      (async function init() {
+        // If a font is set via URL param, reflect it in example in the “Manual usage tips”
+        const eg = document.getElementById('egFont');
+        if (eg) eg.textContent = encodeURIComponent(urlParams.get('font') || 'Segoe UI');
+
+        countEl.textContent = 'Detecting…';
+        const detected = await detectFromCandidates(CANDIDATE_FONTS);
+        window.__ALL_DETECTED__ = detected; // for debugging/filtering
+        render(detected);
+
+        // Filter UI
+        filterEl.addEventListener('input', () => {
+          const list = applyFilter(filterEl.value, window.__ALL_DETECTED__ || []);
+          render(list);
+        });
+
+        // Allow trying arbitrary names by typing and pressing Enter
+        filterEl.addEventListener('keydown', async (e) => {
+          if (e.key === 'Enter') {
+            const name = filterEl.value.trim();
+            if (!name) return;
+            if (!window.__ALL_DETECTED__.includes(name) && isFontAvailable(name)) {
+              window.__ALL_DETECTED__ = [...window.__ALL_DETECTED__, name].sort((a,b)=>a.localeCompare(b));
+            }
+            const list = applyFilter(filterEl.value, window.__ALL_DETECTED__);
+            render(list);
+          }
+        });
+
+        // Local Fonts API button
+        document.getElementById('tryLocalFonts').addEventListener('click', async () => {
+          const families = await tryLocalFontsAPI();
+          if (families.length) {
+            // Merge Local Fonts API results with detected list
+            const merged = Array.from(new Set([...(window.__ALL_DETECTED__||[]), ...families]));
+            merged.sort((a,b)=>a.localeCompare(b));
+            window.__ALL_DETECTED__ = merged;
+            const list = applyFilter(filterEl.value, merged);
+            render(list);
+          }
+        });
+      })();
+    </script>
+  </body>
+  </html>
