@@ -1154,7 +1154,11 @@ class EventFlowSystem {
         const { triggerType, config } = triggerNode;
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
-        
+		
+		if (message.event && ("meta" in message) && !message.chatname && !message.chatmessage){
+			return false;
+		}
+		
         // Get the message text for comparison
         let messageText = message.chatmessage;
         if (message && messageText && typeof messageText === 'string') {
@@ -1770,6 +1774,64 @@ class EventFlowSystem {
             blocked
         };
     }
+	
+	sanitizeSendMessage(text, textonly = false, alt = false) {
+		if (!text || !text.trim()) {
+			return alt || text;
+		}
+
+		// Extract all emojis from image alt attributes before stripping HTML
+		const emojiMap = new Map();
+		if (!textonly) {
+			const tempDiv = document.createElement('div');
+			tempDiv.innerHTML = text;
+
+			// Collect all image elements with alt text that appears to be an emoji
+			const imgElements = tempDiv.querySelectorAll('img');
+			imgElements.forEach((img, index) => {
+				const altText = img.getAttribute('alt');
+				if (altText && isEmoji(altText)) {
+					const placeholder = `__EMOJI_PLACEHOLDER_${index}__`;
+					emojiMap.set(placeholder, altText);
+					img.outerHTML = placeholder;
+				}
+			});
+
+			// Get the potentially modified HTML
+			text = tempDiv.innerHTML;
+
+			// Convert to text from HTML
+			const textArea = document.createElement('textarea');
+			textArea.innerHTML = text;
+			text = textArea.value;
+		}
+
+		// Strip HTML and other unwanted characters
+		text = text.replace(/(<([^>]+)>)/gi, "");
+		text = text.replace(/[!#@]/g, "");
+		text = text.replace(/cheer\d+/gi, " ");
+
+		// Replace periods unless surrounded by non-space characters
+		// (so URLs like example.com are preserved)
+		text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
+			const prev = offset > 0 ? str[offset - 1] : "";
+			const next = str[offset + 1] || "";
+			if (/\S/.test(prev) && /\S/.test(next)) {
+				return "."; // keep the period (inside URL/word)
+			}
+			return " "; // replace with space otherwise
+		});
+
+		// Replace all emoji placeholders with their actual emojis
+		emojiMap.forEach((emoji, placeholder) => {
+			text = text.replace(placeholder, emoji);
+		});
+
+		if (!text.trim() && alt) {
+			return alt;
+		}
+		return text.trim();
+	}
     
     async executeAction(actionNode, message) {
         const { actionType, config } = actionNode;
@@ -1883,12 +1945,6 @@ class EventFlowSystem {
                     break;
                 }
                 
-                // Skip metadata-only updates (like viewer count updates)
-                if (message && message.meta && !message.chatmessage && !message.chatname) {
-                    //console.log('[SEND MESSAGE - Action] Skipping - metadata-only update');
-                    break;
-                }
-                
                 // Check if we have the required functions
                 if (!this.sendMessageToTabs) {
                     console.error('[SEND MESSAGE - Action] CRITICAL: sendMessageToTabs is not available!');
@@ -1907,7 +1963,7 @@ class EventFlowSystem {
                 processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
                 
                 // Sanitize the message
-                let sanitizedSendMessage = this.sanitizeRelay ? this.sanitizeRelay(processedTemplate, false).trim() : processedTemplate.trim();
+                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, true).trim();
                 
                 // Check if sanitized message is empty
                 if (!sanitizedSendMessage) {
