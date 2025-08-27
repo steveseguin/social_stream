@@ -1440,9 +1440,12 @@
 				var currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
 				document.documentElement.style.setProperty("--font-family", "'" + fontName.replaceAll("+", " ") + "', " + currentFont);
 			}
-
-			if (urlParams.get("font")) {
-				document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif");
+			
+			if (urlParams.get('font')) {
+				const raw = urlParams.get('font').trim();
+				const clean = raw.replace(/^['"]|['"]$/g, '');
+				const escaped = clean.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+				document.documentElement.style.setProperty('--font-family', `"${escaped}", Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`);
 			}
 
 			if (urlParams.get("googlefont")) {

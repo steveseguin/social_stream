@@ -492,8 +492,12 @@
 		const BASE_DISPLAY_DURATION = 10000; // 10 seconds base duration
 		const DURATION_PER_DOLLAR = 1000; // Additional 1 second per dollar
 		
-		if (urlParams.get("font")) {
-			document.documentElement.style.setProperty("--font-family", urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif");
+			
+		if (urlParams.get('font')) {
+			const raw = urlParams.get('font').trim();
+			const clean = raw.replace(/^['"]|['"]$/g, '');
+			const escaped = clean.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+			document.documentElement.style.setProperty('--font-family', `"${escaped}", Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`);
 		}
 
 		if (urlParams.get("googlefont")) {

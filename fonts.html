@@ -91,7 +91,7 @@
 
       .controls {
         display: grid;
-        grid-template-columns: 1fr auto auto;
+        grid-template-columns: 1fr auto auto auto;
         gap: 10px;
         align-items: center;
         background: var(--panel);
@@ -238,6 +238,9 @@
       <div class="controls">
         <input id="filter" type="text" placeholder="Filter fonts (e.g. Segoe, Mono, Arabic)" />
         <button id="tryLocalFonts" title="Requests permission (if supported) to list local fonts via the Local Fonts API">Try Local Fonts API</button>
+        <label class="count" style="display:flex;align-items:center;gap:6px;white-space:nowrap;">
+          <input id="facesToggle" type="checkbox" /> Show faces
+        </label>
         <div class="count" id="count">Detecting…</div>
       </div>
 
@@ -285,15 +288,19 @@
       // Respect the provided code for applying a font from URL params
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("font")) {
+        const rawFont = urlParams.get("font").trim();
+        // Strip any surrounding quotes from the param and quote the family in CSS
+        const cleanFont = rawFont.replace(/^['"]|['"]$/g, "");
         document.documentElement.style.setProperty(
           "--font-family",
-          urlParams.get("font") + ", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif"
+          `"${cleanFont}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`
         );
       }
 
       const resultsEl = document.getElementById('results');
       const countEl = document.getElementById('count');
       const filterEl = document.getElementById('filter');
+      const facesToggleEl = document.getElementById('facesToggle');
 
       // A broad list of common fonts across Windows/macOS/Linux + popular developer/Google fonts.
       // Detection works by comparing text metrics against generic base families.
@@ -359,17 +366,29 @@
         if (!filter) return items;
         const q = filter.trim().toLowerCase();
         if (!q) return items;
-        return items.filter(name => name.toLowerCase().includes(q));
+        return items.filter(item => {
+          if (typeof item === 'string') return item.toLowerCase().includes(q);
+          const hay = [item.family, item.fullName, item.style, item.weight, item.postscriptName].filter(Boolean).join(' ').toLowerCase();
+          return hay.includes(q);
+        });
       }
 
-      function makeRow(name) {
+      function makeRow(item) {
+        const isFace = typeof item === 'object' && item && 'family' in item;
+        const name = isFace ? item.family : item;
         const row = document.createElement('div');
         row.className = 'row';
 
         const sample = document.createElement('div');
         sample.className = 'sample';
         sample.style.fontFamily = `"${name}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`;
-        sample.textContent = `${name} — The quick brown fox jumps over the lazy dog 0123456789`;
+        if (isFace) {
+          if (item.weight) sample.style.fontWeight = String(item.weight);
+          if (item.style) sample.style.fontStyle = item.style;
+          if (item.stretch) sample.style.fontStretch = item.stretch;
+        }
+        const faceSuffix = isFace ? ` (${[item.style||'normal', item.weight||'400'].filter(Boolean).join(', ')})` : '';
+        sample.textContent = `${name}${faceSuffix} — The quick brown fox jumps over the lazy dog 0123456789`;
         row.appendChild(sample);
 
         const meta = document.createElement('div');
@@ -377,24 +396,25 @@
 
         const fontname = document.createElement('div');
         fontname.className = 'fontname';
-        fontname.textContent = name;
+        fontname.textContent = name + (isFace && item.fullName ? ` — ${item.fullName}` : '');
 
         const link = document.createElement('div');
         link.className = 'link';
         const enc = encodeURIComponent(name);
-        const url = `${location.origin}${location.pathname}?font=${enc}`;
-        link.innerHTML = `<span class="badge">Param</span> <a href="?font=${enc}">?font=${enc}</a>`;
+        const param = `?font=${enc}`;
+        const url = `${location.origin}${location.pathname}${param}`;
+        link.innerHTML = `<span class="badge">Param</span> <a href="${param}">${param}</a>`;
 
         const copyBtn = document.createElement('button');
         copyBtn.className = 'button';
-        copyBtn.textContent = 'Copy link';
+        copyBtn.textContent = 'Copy param';
         copyBtn.addEventListener('click', async () => {
           try {
-            await navigator.clipboard.writeText(url);
+            await navigator.clipboard.writeText(param);
             copyBtn.textContent = 'Copied!';
-            setTimeout(() => (copyBtn.textContent = 'Copy link'), 1200);
+            setTimeout(() => (copyBtn.textContent = 'Copy param'), 1200);
           } catch {
-            window.prompt('Copy link:', url);
+            window.prompt('Copy param:', param);
           }
         });
 
@@ -408,9 +428,9 @@
       function render(list) {
         resultsEl.innerHTML = '';
         const frag = document.createDocumentFragment();
-        list.forEach(name => frag.appendChild(makeRow(name)));
+        list.forEach(item => frag.appendChild(makeRow(item)));
         resultsEl.appendChild(frag);
-        countEl.textContent = `${list.length} font(s) detected`;
+        countEl.textContent = `${list.length} item(s)`;
       }
 
       async function detectFromCandidates(candidates) {
@@ -434,6 +454,15 @@
         try {
           const families = new Set();
           const fonts = await window.queryLocalFonts();
+          // Keep faces for optional detailed listing
+          window.__FACES__ = fonts.map(f => ({
+            family: f.family,
+            fullName: f.fullName,
+            postscriptName: f.postscriptName,
+            style: f.style,
+            weight: f.weight,
+            stretch: f.stretch,
+          }));
           for (const f of fonts) {
             if (f.family) families.add(f.family);
           }
@@ -445,6 +474,20 @@
         }
       }
 
+      async function getLocalFontsIfGranted() {
+        if (!('queryLocalFonts' in window) || !('permissions' in navigator)) return [];
+        try {
+          const status = await navigator.permissions.query({ name: 'local-fonts' });
+          if (status.state === 'granted') {
+            const families = await tryLocalFontsAPI();
+            return families;
+          }
+        } catch (e) {
+          // Ignore if permissions API doesn't recognize 'local-fonts'
+        }
+        return [];
+      }
+
       // Initial detection
       (async function init() {
         // If a font is set via URL param, reflect it in example in the “Manual usage tips”
@@ -453,12 +496,24 @@
 
         countEl.textContent = 'Detecting…';
         const detected = await detectFromCandidates(CANDIDATE_FONTS);
-        window.__ALL_DETECTED__ = detected; // for debugging/filtering
-        render(detected);
+        window.__ALL_DETECTED__ = detected; // families
+
+        // If permission already granted, auto-merge Local Fonts API
+        const grantedFamilies = await getLocalFontsIfGranted();
+        if (grantedFamilies.length) {
+          const merged = Array.from(new Set([...(window.__ALL_DETECTED__||[]), ...grantedFamilies]));
+          merged.sort((a,b)=>a.localeCompare(b));
+          window.__ALL_DETECTED__ = merged;
+        }
+
+        const initialList = (facesToggleEl && facesToggleEl.checked && window.__FACES__) ? window.__FACES__ : window.__ALL_DETECTED__;
+        render(initialList);
 
         // Filter UI
         filterEl.addEventListener('input', () => {
-          const list = applyFilter(filterEl.value, window.__ALL_DETECTED__ || []);
+          const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+          const base = facesOn ? window.__FACES__ : (window.__ALL_DETECTED__ || []);
+          const list = applyFilter(filterEl.value, base);
           render(list);
         });
 
@@ -470,7 +525,9 @@
             if (!window.__ALL_DETECTED__.includes(name) && isFontAvailable(name)) {
               window.__ALL_DETECTED__ = [...window.__ALL_DETECTED__, name].sort((a,b)=>a.localeCompare(b));
             }
-            const list = applyFilter(filterEl.value, window.__ALL_DETECTED__);
+            const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : window.__ALL_DETECTED__;
+            const list = applyFilter(filterEl.value, base);
             render(list);
           }
         });
@@ -483,10 +540,22 @@
             const merged = Array.from(new Set([...(window.__ALL_DETECTED__||[]), ...families]));
             merged.sort((a,b)=>a.localeCompare(b));
             window.__ALL_DETECTED__ = merged;
-            const list = applyFilter(filterEl.value, merged);
+            const facesOn = facesToggleEl && facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : merged;
+            const list = applyFilter(filterEl.value, base);
             render(list);
           }
         });
+
+        // Faces toggle
+        if (facesToggleEl) {
+          facesToggleEl.addEventListener('change', () => {
+            const facesOn = facesToggleEl.checked && window.__FACES__;
+            const base = facesOn ? window.__FACES__ : (window.__ALL_DETECTED__ || []);
+            const list = applyFilter(filterEl.value, base);
+            render(list);
+          });
+        }
       })();
     </script>
   </body>

@@ -978,7 +978,11 @@ function loadSettings(item, resave = false) {
 
 	if (settings.addkarma) {
 		if (!sentimentAnalysisLoaded) {
-			loadSentimentAnalysis();
+			try {
+				loadSentimentAnalysis();
+			} catch(e){
+				console.error(e);
+			}
 		}
 	}
 	
@@ -3128,7 +3132,11 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "addkarma") {
 				if (request.value) {
 					if (!sentimentAnalysisLoaded) {
-						loadSentimentAnalysis();
+						try {
+							loadSentimentAnalysis();
+						} catch(e){
+							console.error(e);
+						}
 					}
 				}
 			}
@@ -10281,9 +10289,11 @@ let tmp = new EventFlowSystem({
 
 
 tmp.initPromise.then(() => {
-	window.eventFlowSystem = tmp;
+    window.eventFlowSystem = tmp;
+    // Start periodic scheduler so time-based triggers (timeInterval/timeOfDay) work without incoming messages
+    try { tmp.startScheduler && tmp.startScheduler(); } catch (e) { console.warn('Failed to start Event Flow scheduler', e); }
 }).catch(error => {
-	console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
+    console.error('Failed to initialize Event Flow System for Social Stream Ninja:', error);
 });
 
 window.addEventListener('beforeunload', async function() {

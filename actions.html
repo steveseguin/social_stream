@@ -467,7 +467,15 @@
             switch (payload.actionType) {
                 case 'play_media':
                     if (payload.url) {
-                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || 10000);
+                        const opts = {
+                            width: payload.width,
+                            height: payload.height,
+                            x: payload.x,
+                            y: payload.y,
+                            randomX: payload.randomX,
+                            randomY: payload.randomY
+                        };
+                        playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || 10000, opts);
                     } else {
                         console.warn("Play media action received without a URL.");
                     }
@@ -713,15 +721,83 @@
             }
         }
 
-        // Function to play media in fullscreen
-		function playMediaFullscreen(url, mediaType, duration = 10000) {
+        // Function to play media with optional positioned area (percent-based)
+		function playMediaFullscreen(url, mediaType, duration = 10000, opts = {}) {
 			mediaContainer.innerHTML = ''; // Clear previous media
+
+			const toNum = (v, def) => {
+				const n = Number(v);
+				return Number.isFinite(n) ? n : def;
+			};
+
+			const optsProvided = (
+				typeof opts?.width !== 'undefined' ||
+				typeof opts?.height !== 'undefined' ||
+				typeof opts?.x !== 'undefined' ||
+				typeof opts?.y !== 'undefined' ||
+				opts?.randomX === true || opts?.randomY === true ||
+				opts?.randomPositionX === true || opts?.randomPositionY === true
+			);
+			let widthPct = Math.max(0, Math.min(100, toNum(opts.width, 100)));
+			let heightPct = Math.max(0, Math.min(100, toNum(opts.height, 100)));
+			let randomX = !!opts.randomX || !!opts.randomPositionX; // support legacy naming if any
+			let randomY = !!opts.randomY || !!opts.randomPositionY;
+			let maxX = Math.max(0, 100 - widthPct);
+			let maxY = Math.max(0, 100 - heightPct);
+			let xPct = randomX ? Math.random() * maxX : Math.max(0, Math.min(maxX, toNum(opts.x, 0)));
+			let yPct = randomY ? Math.random() * maxY : Math.max(0, Math.min(maxY, toNum(opts.y, 0)));
+
+			// If no positioning/size provided, use legacy centered behavior
+			if (!optsProvided) {
+				let mediaElement;
+				if (mediaType === 'image') {
+					mediaElement = document.createElement('img');
+					mediaElement.src = url;
+					mediaElement.style.maxWidth = '95%';
+					mediaElement.style.maxHeight = '95%';
+					mediaElement.style.objectFit = 'contain';
+				} else {
+					mediaElement = document.createElement('iframe');
+					mediaElement.src = url;
+					mediaElement.setAttribute('allow', 'autoplay; fullscreen');
+					mediaElement.setAttribute('frameborder', '0');
+					mediaElement.setAttribute('allowtransparency', 'true');
+					mediaElement.style.width = '100%';
+					mediaElement.style.height = '100%';
+					mediaElement.style.overflow = 'hidden';
+					mediaElement.style.backgroundColor = 'transparent';
+				}
+				mediaContainer.appendChild(mediaElement);
+				mediaContainer.style.display = 'flex';
+				const hideLegacy = () => {
+					mediaContainer.style.display = 'none';
+					mediaContainer.innerHTML = '';
+					statusMessage.style.display = 'block';
+				};
+				if (Number(duration) > 0) setTimeout(hideLegacy, duration);
+				return;
+			}
+
+			// Create wrapper positioned relative to viewport/container
+			const wrapper = document.createElement('div');
+			wrapper.style.position = 'absolute';
+			wrapper.style.left = xPct + 'vw';
+			wrapper.style.top = yPct + 'vh';
+			wrapper.style.width = widthPct + 'vw';
+			wrapper.style.height = heightPct + 'vh';
+			wrapper.style.overflow = 'hidden';
+			wrapper.style.pointerEvents = 'none'; // let clicks pass through overlay by default
 
 			let mediaElement;
 			if (mediaType === 'image') {
 				mediaElement = document.createElement('img');
 				mediaElement.src = url;
-			} else { // Default to iframe for videos/gifs
+				mediaElement.style.width = '100%';
+				mediaElement.style.height = '100%';
+				mediaElement.style.objectFit = 'contain';
+				mediaElement.style.maxWidth = '100%'; // override global css
+				mediaElement.style.maxHeight = '100%';
+			} else { // Default to iframe for videos/embeds
 				mediaElement = document.createElement('iframe');
 				mediaElement.src = url;
 				mediaElement.setAttribute('allow', 'autoplay; fullscreen');
@@ -732,16 +808,20 @@
 				mediaElement.style.overflow = 'hidden';
 				mediaElement.style.backgroundColor = 'transparent';
 			}
-			
-			mediaContainer.appendChild(mediaElement);
-			mediaContainer.style.display = 'flex';
+
+			wrapper.appendChild(mediaElement);
+			mediaContainer.appendChild(wrapper);
+			mediaContainer.style.display = 'block';
 
 			// Hide after specified duration
-			setTimeout(() => {
+			const hide = () => {
 				mediaContainer.style.display = 'none';
 				mediaContainer.innerHTML = ''; // Clean up
 				statusMessage.style.display = 'block'; // Show status message again
-			}, duration);
+			};
+			if (Number(duration) > 0) {
+				setTimeout(hide, duration);
+			}
 		}
 
         // Function to play audio
