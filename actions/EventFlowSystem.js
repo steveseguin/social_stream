@@ -30,6 +30,11 @@ class EventFlowSystem {
 		this.messageQueues = new Map(); // Queue storage for queue nodes
 		this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
 		this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+
+        // Internal scheduler for time-based triggers
+        this._tickHandle = null;
+        this._tickRunning = false;
+        this._tickMs = options.tickFrequencyMs || 1000; // default 1s
 		
         //console.log('[EventFlowSystem Constructor] Initialized with:');
         //console.log('  - sendMessageToTabs:', this.sendMessageToTabs ? 'Function provided' : 'NULL - Relay will not work!');
@@ -41,6 +46,50 @@ class EventFlowSystem {
         //console.log('  - handleMessageStore:', this.handleMessageStore ? 'Function provided' : 'NULL');
         
         this.initPromise = this.initDatabase();
+    }
+
+    // Start periodic evaluation for time-based triggers (timeInterval/timeOfDay)
+    startScheduler() {
+        if (this._tickHandle) return; // already running
+        this._tickHandle = setInterval(() => this._runTimeBasedTick(), this._tickMs);
+    }
+
+    // Stop periodic evaluation
+    stopScheduler() {
+        if (this._tickHandle) {
+            clearInterval(this._tickHandle);
+            this._tickHandle = null;
+        }
+    }
+
+    // Determine if a flow has any time-based triggers
+    _flowHasTimeBasedTriggers(flow) {
+        if (!flow || !Array.isArray(flow.nodes)) return false;
+        return flow.nodes.some(n => n.type === 'trigger' && (n.triggerType === 'timeInterval' || n.triggerType === 'timeOfDay'));
+    }
+
+    // Tick handler: evaluate only flows with time-based triggers, with a null message context
+    async _runTimeBasedTick() {
+        if (this._tickRunning) return; // avoid overlapping ticks
+        this._tickRunning = true;
+        try {
+            // Ensure flows are loaded
+            if (!this.flows || this.flows.length === 0) {
+                // no-op
+            } else {
+                const activeTimeFlows = this.flows.filter(f => f && f.active && this._flowHasTimeBasedTriggers(f));
+                // Evaluate each candidate flow with a null message so only time-based triggers can fire
+                for (const flow of activeTimeFlows) {
+                    try {
+                        await this.evaluateFlow(flow, null);
+                    } catch (e) {
+                        console.warn('[EventFlowSystem] Time-based tick evaluation error:', e);
+                    }
+                }
+            }
+        } finally {
+            this._tickRunning = false;
+        }
     }
 	
 	// MIDI Methods
@@ -1155,12 +1204,13 @@ class EventFlowSystem {
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
-		if (message.event && ("meta" in message) && !message.chatname && !message.chatmessage){
+		// If message is null/undefined (scheduler tick), avoid property access
+		if (message && message.event && ("meta" in message) && !message.chatname && !message.chatmessage){
 			return false;
 		}
 		
         // Get the message text for comparison
-        let messageText = message.chatmessage;
+        let messageText = message && message.chatmessage;
         if (message && messageText && typeof messageText === 'string') {
             // If textonly flag is set, the message is already plain text
             if (!message.textonly) {
@@ -1844,19 +1894,19 @@ class EventFlowSystem {
               //console.log(`[ExecuteAction - blockMessage] Set result.blocked to true.`);
                 break;
                 
-		case 'modifyMessage':
-			if (typeof config.newMessage !== 'string') {
-				console.warn(`[ExecuteAction - modifyMessage] 'newMessage' not configured or not a string for node ${actionNode.id}. Using original message.`);
-				// No change, or set an error, or use a default template.
-			} else {
-				result.message = {
-					...message,
-					chatmessage: config.newMessage // Placeholder replacement would be an advanced feature here
-				};
-				result.modified = true;
-			}
-			//console.log(`[ExecuteAction - modifyMessage] Modified message to: "${result.message.chatmessage}"`);
-			break;
+            case 'modifyMessage':
+                if (typeof config.newMessage !== 'string') {
+                    console.warn(`[ExecuteAction - modifyMessage] 'newMessage' not configured or not a string for node ${actionNode.id}. Using original message.`);
+                    // No change, or set an error, or use a default template.
+                } else {
+                    result.message = {
+                        ...(message || {}),
+                        chatmessage: config.newMessage // Placeholder replacement would be an advanced feature here
+                    };
+                    result.modified = true;
+                }
+                //console.log(`[ExecuteAction - modifyMessage] Modified message to: "${result.message.chatmessage}"`);
+                break;
                 
             case 'setProperty':
                 // Process value with template variables
@@ -1864,31 +1914,36 @@ class EventFlowSystem {
                 
                 // Replace template variables if value is a string
                 if (typeof processedValue === 'string') {
-                    processedValue = processedValue.replace(/\{source\}/g, message.type || '');
-                    processedValue = processedValue.replace(/\{type\}/g, message.type || '');
-                    processedValue = processedValue.replace(/\{username\}/g, message.chatname || '');
-                    processedValue = processedValue.replace(/\{chatname\}/g, message.chatname || '');
-                    processedValue = processedValue.replace(/\{message\}/g, message.chatmessage || '');
-                    processedValue = processedValue.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                    const _src = (message && message.type) || '';
+                    const _uname = (message && message.chatname) || '';
+                    const _msg = (message && message.chatmessage) || '';
+                    processedValue = processedValue.replace(/\{source\}/g, _src);
+                    processedValue = processedValue.replace(/\{type\}/g, _src);
+                    processedValue = processedValue.replace(/\{username\}/g, _uname);
+                    processedValue = processedValue.replace(/\{chatname\}/g, _uname);
+                    processedValue = processedValue.replace(/\{message\}/g, _msg);
+                    processedValue = processedValue.replace(/\{chatmessage\}/g, _msg);
                 }
                 
                 result.message = {
-                    ...message,
+                    ...(message || {}),
                     [config.property]: processedValue
                 };
                 result.modified = true;
                 break;
                 
             case 'addPrefix':
-                if (config.prefix && message.chatmessage) {
+                if (config.prefix && message && message.chatmessage) {
                     // Replace placeholders
                     let prefix = config.prefix;
-                    prefix = prefix.replace(/\{username\}/g, message.chatname || '');
-                    prefix = prefix.replace(/\{source\}/g, message.type || '');
-                    prefix = prefix.replace(/\{chatname\}/g, message.chatname || '');
+                    const _src = (message && message.type) || '';
+                    const _uname = (message && message.chatname) || '';
+                    prefix = prefix.replace(/\{username\}/g, _uname);
+                    prefix = prefix.replace(/\{source\}/g, _src);
+                    prefix = prefix.replace(/\{chatname\}/g, _uname);
                     
                     result.message = {
-                        ...message,
+                        ...(message || {}),
                         chatmessage: prefix + message.chatmessage
                     };
                     result.modified = true;
@@ -1896,15 +1951,17 @@ class EventFlowSystem {
                 break;
                 
             case 'addSuffix':
-                if (config.suffix && message.chatmessage) {
+                if (config.suffix && message && message.chatmessage) {
                     // Replace placeholders
                     let suffix = config.suffix;
-                    suffix = suffix.replace(/\{username\}/g, message.chatname || '');
-                    suffix = suffix.replace(/\{source\}/g, message.type || '');
-                    suffix = suffix.replace(/\{chatname\}/g, message.chatname || '');
+                    const _src = (message && message.type) || '';
+                    const _uname = (message && message.chatname) || '';
+                    suffix = suffix.replace(/\{username\}/g, _uname);
+                    suffix = suffix.replace(/\{source\}/g, _src);
+                    suffix = suffix.replace(/\{chatname\}/g, _uname);
                     
                     result.message = {
-                        ...message,
+                        ...(message || {}),
                         chatmessage: message.chatmessage + suffix
                     };
                     result.modified = true;
@@ -1912,7 +1969,7 @@ class EventFlowSystem {
                 break;
                 
             case 'findReplace':
-                if (config.find && message.chatmessage) {
+                if (config.find && message && message.chatmessage) {
                     try {
                         // Create regex with proper escaping for literal search
                         const flags = config.caseSensitive ? 'g' : 'gi';
@@ -1920,7 +1977,7 @@ class EventFlowSystem {
                         const regex = new RegExp(escapedFind, flags);
                         
                         result.message = {
-                            ...message,
+                            ...(message || {}),
                             chatmessage: message.chatmessage.replace(regex, config.replace || '')
                         };
                         
@@ -1955,12 +2012,15 @@ class EventFlowSystem {
                 let processedTemplate = config.template || 'Hello from {source}!';
                 
                 // Replace all occurrences of template variables
-                processedTemplate = processedTemplate.replace(/\{source\}/g, message.type || '');
-                processedTemplate = processedTemplate.replace(/\{type\}/g, message.type || '');
-                processedTemplate = processedTemplate.replace(/\{username\}/g, message.chatname || '');
-                processedTemplate = processedTemplate.replace(/\{chatname\}/g, message.chatname || '');
-                processedTemplate = processedTemplate.replace(/\{message\}/g, message.chatmessage || '');
-                processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                const _src = (message && message.type) || '';
+                const _uname = (message && message.chatname) || '';
+                const _msg = (message && message.chatmessage) || '';
+                processedTemplate = processedTemplate.replace(/\{source\}/g, _src);
+                processedTemplate = processedTemplate.replace(/\{type\}/g, _src);
+                processedTemplate = processedTemplate.replace(/\{username\}/g, _uname);
+                processedTemplate = processedTemplate.replace(/\{chatname\}/g, _uname);
+                processedTemplate = processedTemplate.replace(/\{message\}/g, _msg);
+                processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, _msg);
                 
                 // Sanitize the message
                 let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, true).trim();
@@ -1983,7 +2043,7 @@ class EventFlowSystem {
                 
                 if (config.destination === 'reply') {
                     // Reply to source: send back to the tab that triggered the event
-                    if (message.tid !== undefined && message.tid !== null) {
+                    if (message && message.tid !== undefined && message.tid !== null) {
                         sendMsg.tid = message.tid;
                         reverse = false;  // Don't exclude source, we're replying to it
                         relayMode = false;  // Not a broadcast
@@ -2001,7 +2061,7 @@ class EventFlowSystem {
                     // Send to all platforms EXCLUDING source
                     reverse = true;  // Exclude source tab
                     relayMode = true;  // This is a broadcast
-                    if (message.tid) {
+                    if (message && message.tid) {
                         sendMsg.tid = message.tid;  // Pass source tid for exclusion
                     }
                     //console.log('[SEND MESSAGE - Action] Mode: Send to all platforms (excluding source)');
@@ -2010,7 +2070,7 @@ class EventFlowSystem {
                     sendMsg.destination = config.destination;
                     reverse = true;  // Exclude source tab by default for platform sends
                     relayMode = true;  // This is a broadcast
-                    if (message.tid) {
+                    if (message && message.tid) {
                         sendMsg.tid = message.tid;  // Pass source tid for exclusion
                     }
                     //console.log('[SEND MESSAGE - Action] Mode: Send to platform:', config.destination);
