@@ -1564,7 +1564,7 @@ class EventFlowEditor {
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
 				case 'playTenorGiphy':
-					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000 };
+					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000, width: 100, height: 100, x: 0, y: 0, randomX: false, randomY: false };
 					break;
 				case 'triggerOBSScene':
 					node.config = { sceneName: 'Your Scene Name' };
@@ -2841,8 +2841,8 @@ class EventFlowEditor {
 				</div>
 				<p class="property-help">💡 <strong>Simple counter:</strong> Counts up by 1 each time a message passes. Triggers at your target number. Example: "Every 5th !hello"</p>`;
 				break;
-			case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
-				html += `<div class="property-group">
+				case 'playTenorGiphy': // This is node.actionType if node.type is 'action'
+					html += `<div class="property-group">
 							 <label class="property-label">Media URL (TENOR/GIPHY)</label>
 							 <div style="display: flex; gap: 5px;">
 								 <input type="url" class="property-input" id="prop-mediaUrl" value="${node.config.mediaUrl || ''}" style="flex: 1;">
@@ -2861,8 +2861,40 @@ class EventFlowEditor {
 							<label class="property-label">Duration (ms, 0 for manual close)</label>
 							<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 10000}" min="0">
 							<div class="property-help">How long the media stays on screen. 0 means it stays until the next 'play_media' action or manual intervention.</div>
+						</div>
+						<div class="property-group">
+							<label class="property-label">Position and Size (0–100)</label>
+							<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+								<div>
+									<label style="display:block; font-size: 12px; opacity: 0.8;">Width (%)</label>
+									<input type="number" class="property-input" id="prop-width" value="${(node.config.width ?? 100)}" min="0" max="100">
+								</div>
+								<div>
+									<label style="display:block; font-size: 12px; opacity: 0.8;">Height (%)</label>
+									<input type="number" class="property-input" id="prop-height" value="${(node.config.height ?? 100)}" min="0" max="100">
+								</div>
+								<div>
+									<label style="display:block; font-size: 12px; opacity: 0.8;">X (%)</label>
+									<input type="number" class="property-input" id="prop-x" value="${(node.config.x ?? 0)}" min="0" max="100">
+								</div>
+								<div>
+									<label style="display:block; font-size: 12px; opacity: 0.8;">Y (%)</label>
+									<input type="number" class="property-input" id="prop-y" value="${(node.config.y ?? 0)}" min="0" max="100">
+								</div>
+							</div>
+							<div style="display:flex; gap: 16px; margin-top: 8px;">
+								<label style="display:flex; align-items:center; gap:6px;">
+									<input type="checkbox" class="property-input" id="prop-randomX" ${node.config.randomX ? 'checked' : ''}>
+									<span>Randomize X</span>
+								</label>
+								<label style="display:flex; align-items:center; gap:6px;">
+									<input type="checkbox" class="property-input" id="prop-randomY" ${node.config.randomY ? 'checked' : ''}>
+									<span>Randomize Y</span>
+								</label>
+							</div>
+							<div class="property-help">Percent values are relative to the page. Randomize X/Y keeps the media within bounds based on its width/height.</div>
 						</div>`;
-				break;
+					break;
 
 			case 'triggerOBSScene':
 				html += `<div class="property-group">
