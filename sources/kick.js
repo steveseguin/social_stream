@@ -1131,7 +1131,7 @@
 	
 	console.log("Social stream injected - " + (isPopoutChat ? "new popout" : "old chatroom"));
 	
-	var xxx = setInterval(function(){
+	var xxx = setInterval(async function(){ 
 		if (isPopoutChat) {
 			// New popout chat
 			if (document.querySelectorAll("#chatroom-messages > div").length){
@@ -1169,6 +1169,26 @@
 				},3000);
 			}
 		}
+		
+		try {
+			let kickUsername = extractKickUsername(window.location.href);
+			if (kickUsername && document.querySelector('[data-testid="not-found"]')){
+				if (kickUsername.includes("_")){
+					kickUsername = kickUsername.replaceAll("_","-");
+					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat`;
+					window.location.replace(newUrl); // Use replace to avoid history issues
+					throw new Error('Redirecting to new Kick URL format');
+				} else if (kickUsername.includes("-")){
+					kickUsername = kickUsername.replaceAll("-","_");
+					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat`;
+					window.location.replace(newUrl); // Use replace to avoid history issues
+					throw new Error('Redirecting to new Kick URL format');
+				}
+			}
+		}catch(e){
+			console.error(e);
+		}
+		
 	},1000);
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this twitch tab when not visible.
