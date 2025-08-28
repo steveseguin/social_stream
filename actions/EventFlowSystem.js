@@ -2179,52 +2179,74 @@ class EventFlowSystem {
 						console.warn(`[ExecuteAction - webhook] URL is not configured for node ${actionNode.id}`);
 						result.message = { ...message, webhookError: "URL not configured" };
 						result.modified = true;
-						// result.blocked = true; // Optionally block
 						break;
 					}
 
 					const method = config.method || 'POST';
-					const headers = { 'Content-Type': 'application/json', ...(config.headers || {}) }; // Allow custom headers from config
+					const headers = { 'Content-Type': 'application/json', ...(config.headers || {}) };
 					const body = config.includeMessage ? JSON.stringify(message) : (config.body || '{}');
-					const webhookTimeout = config.timeout || 8000; // Make timeout configurable per node, default 8s
+					const webhookTimeout = config.timeout || 8000;
 
 					// Prepare fetch options
-					const fetchOpts = {
-						method,
-						headers
-					};
+					const fetchOpts = { method, headers };
 					if (method !== 'GET' && method !== 'HEAD') {
 						fetchOpts.body = body;
 					}
 
-					//console.log(`[ExecuteAction - webhook] Calling ${method} ${url} with timeout ${webhookTimeout}ms`);
-					const response = await this.fetchWithTimeout(url, fetchOpts, webhookTimeout); // Use the injected function
-
-					if (!response.ok) {
-						const errorText = await response.text();
-						console.error(`[ExecuteAction - webhook] Webhook for ${url} failed with status ${response.status}: ${errorText}`);
-						result.message = { ...message, webhookError: `Webhook failed: ${response.status} - ${errorText.substring(0, 200)}` };
-						result.modified = true;
-						result.blocked = config.blockOnFailure !== undefined ? !!config.blockOnFailure : true; // Block on failure by default, make it configurable
-					} else {
-						//console.log(`[ExecuteAction - webhook] Webhook to ${url} successful.`);
+					if (config.syncMode) {
+						// Synchronous mode: await and optionally block on failure
 						try {
-							const responseData = await response.json(); // Attempt to parse as JSON
-							result.message = { ...message, webhookResponse: responseData, webhookStatus: response.status };
-						} catch (e) { // If not JSON, take as text
-							const responseText = await response.text(); // This won't work if response.json() already consumed the body. Need to handle this better.
-																	  // A better way is to clone the response if you need to read body multiple times or in different formats.
-																	  // For simplicity now: let's assume we primarily want JSON or care about success status.
-							result.message = { ...message, webhookResponseText: responseText.substring(0, 500), webhookStatus: response.status };
+							const response = await this.fetchWithTimeout(url, fetchOpts, webhookTimeout);
+							let responseText = '';
+							try { responseText = await response.text(); } catch (e) { responseText = ''; }
+
+							if (!response.ok) {
+								console.error(`[ExecuteAction - webhook] Webhook for ${url} failed with status ${response.status}: ${responseText}`);
+								result.message = { ...message, webhookError: `Webhook failed: ${response.status} - ${responseText.substring(0, 200)}` };
+								result.modified = true;
+								if (config.blockOnFailure) {
+									result.blocked = true;
+								}
+							} else {
+								// Try parse JSON from text; if fails, keep text
+								let parsed = null;
+								try { parsed = responseText ? JSON.parse(responseText) : null; } catch (e) { parsed = null; }
+								if (parsed !== null) {
+									result.message = { ...message, webhookResponse: parsed, webhookStatus: response.status };
+								} else {
+									result.message = { ...message, webhookResponseText: responseText.substring(0, 500), webhookStatus: response.status };
+								}
+								result.modified = true;
+							}
+						} catch (err) {
+							console.error(`[ExecuteAction - webhook] Error executing webhook for node ${actionNode.id}:`, err.message);
+							result.message = { ...message, webhookError: `Webhook execution error: ${err.message}` };
+							result.modified = true;
+							if (config.blockOnFailure) {
+								result.blocked = true;
+							}
 						}
-						result.modified = true;
+					} else {
+						// Asynchronous mode: fire-and-forget; do not block message processing
+						this.fetchWithTimeout(url, fetchOpts, webhookTimeout)
+							.then(async (response) => {
+								let responseText = '';
+								try { responseText = await response.text(); } catch (e) { responseText = ''; }
+								if (!response.ok) {
+									console.error(`[ExecuteAction - webhook] Webhook for ${url} failed with status ${response.status}: ${responseText}`);
+									return;
+								}
+								// Optionally parse for logging
+								try { JSON.parse(responseText); } catch (e) {}
+							})
+							.catch((error) => {
+								console.error(`[ExecuteAction - webhook] Error executing webhook for node ${actionNode.id}:`, error.message);
+							});
+						// Do not modify or block in async mode
 					}
 
-				} catch (error) { // This catch is for errors from fetchWithTimeout (e.g., timeout, network error)
-					console.error(`[ExecuteAction - webhook] Error executing webhook for node ${actionNode.id}:`, error.message);
-					result.message = { ...message, webhookError: `Webhook execution error: ${error.message}` };
-					result.modified = true;
-					result.blocked = config.blockOnFailure !== undefined ? !!config.blockOnFailure : true; // Block on failure by default
+				} catch (error) {
+					console.error(`[ExecuteAction - webhook] Unexpected error preparing webhook for node ${actionNode.id}:`, error.message);
 				}
 				break;
                 
