@@ -1662,16 +1662,19 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
         }
 
         // Process number settings
-        const numSettingKey = `numbersetting${paramNum}`;
-        if (numSettingKey in settingObj) {
-            const ele = document.querySelector(`input[data-${numSettingKey}='${key}']`);
+        // Special case: for param 1, the stored key is 'numbersetting' and the DOM attribute is 'data-numbersetting'
+        const isParamOne = String(paramNum) === '1';
+        const storedNumKey = isParamOne ? 'numbersetting' : `numbersetting${paramNum}`;
+        const attrNumSuffix = isParamOne ? '' : String(paramNum);
+        if (storedNumKey in settingObj) {
+            const ele = document.querySelector(`input[data-numbersetting${attrNumSuffix}='${key}']`);
             if (ele) {
-                ele.value = settingObj[numSettingKey];
+                ele.value = settingObj[storedNumKey];
                 updateSettings(ele, sync);
 
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
-                    updateSettings(paramEle, false, parseFloat(settingObj[numSettingKey]));
+                    updateSettings(paramEle, false, parseFloat(settingObj[storedNumKey]));
                 }
             }
         }
