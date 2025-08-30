@@ -254,37 +254,39 @@
 	var channelName = false;
 	var msgCount = 0;
 
-	function parseDonationMessage(message) {
-		if (!validateTikTokDonationMessage(message)) return null;
-		const tempDiv = document.createElement('div');
-		tempDiv.innerHTML = message.trim();
-		const nodes = Array.from(tempDiv.childNodes);
-		const word = nodes[0].textContent.trim();
-		const imageSrc = nodes[1].getAttribute('src');
-		const quantity = parseInt(nodes[2].textContent.slice(1), 10);
-		return {
-			word,
-			imageSrc,
-			quantity,
-			isValid: true
-		};
-	}
+function parseDonationMessage(message) {
+    if (!validateTikTokDonationMessage(message)) return null;
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = message.trim();
+    const nodes = Array.from(tempDiv.childNodes);
+    const word = nodes[0].textContent.trim();
+    const imageSrc = nodes[1].getAttribute('src');
+    // Extract numeric quantity robustly (supports 'x5', '×5', '× 5')
+    const trailingText = nodes[2].textContent.trim();
+    const quantity = parseInt(trailingText.replace(/[^0-9]/g, ''), 10);
+    return {
+        word,
+        imageSrc,
+        quantity,
+        isValid: Number.isFinite(quantity)
+    };
+}
 
-	function validateTikTokDonationMessage(message) {
-		const tempDiv = document.createElement('div');
-		tempDiv.innerHTML = message.trim();
-		const nodes = Array.from(tempDiv.childNodes);
-		if (nodes.length !== 3) return false;
-		if (nodes[0].nodeType !== Node.TEXT_NODE) return false;
-		const imgElement = nodes[1];
-		if (!(imgElement instanceof HTMLImageElement)) return false;
-		const imgSrc = imgElement.getAttribute('src');
-		if (!imgSrc || !imgSrc.includes('tiktokcdn.com')) return false;
-		const lastText = nodes[2].textContent.trim();
-		const xNumberPattern = /^x\d+$/;
-		if (!xNumberPattern.test(lastText)) return false;
-		return true;
-	}
+function validateTikTokDonationMessage(message) {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = message.trim();
+    const nodes = Array.from(tempDiv.childNodes);
+    if (nodes.length !== 3) return false;
+    if (nodes[0].nodeType !== Node.TEXT_NODE) return false;
+    const imgElement = nodes[1];
+    if (!(imgElement instanceof HTMLImageElement)) return false;
+    const imgSrc = imgElement.getAttribute('src');
+    if (!imgSrc || !imgSrc.includes('tiktokcdn.com')) return false;
+    const lastText = nodes[2].textContent.trim();
+    const indicatorPattern = /^[x×]\s*\d+$/i; // support 'x5' or '× 5'
+    if (!indicatorPattern.test(lastText)) return false;
+    return true;
+}
 	let giftMapping = {
 		"485175fda92f4d2f862e915cbcf8f5c4": {
 			"name": "Star",
@@ -798,26 +800,30 @@
 		if (chatmessage == "Moderator") {
 			chatmessage = "";
 		}
-		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.nextElementSibling) {
+		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.parentElement?.parentElement) {
 			ital = "gift";
-			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").nextElementSibling);
+			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").parentElement.parentElement);
+			if (chatmessage) {
+				chatmessage = chatmessage.trim();
+				if (chatname && chatmessage.startsWith(chatname))
+					chatmessage = chatmessage.slice(chatname.length + 1);
+			}
 		}
 		var hasdonation = "";
 		try {
-			if ( (chatmessage.includes("x") || chatmessage.includes("×") || chatmessage.includes("&times")) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
+			// Normalize HTML entity to multiplication sign
+			if (chatmessage) chatmessage = chatmessage.replace(/&times;?/g, '×');
+			if (chatmessage.includes("×") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
 				chatmessage = chatmessage.replace("<img src=", " <img src=");
 				chatmessage = chatmessage.replace('.png">x', '.png"> x');
 				chatmessage = chatmessage.replace(".png'>x", ".png'> x");
-				chatmessage = chatmessage.replace('.png">×', '.png"> x');
-				chatmessage = chatmessage.replace(".png'>×", ".png'> x");
-				chatmessage = chatmessage.replace('.png">&times', '.png"> x');
-				chatmessage = chatmessage.replace(".png'>&times", ".png'> x");
+				// keep original × symbol for accurate parsing
 				
 				if (settings.tiktokdonations || !settings.notiktokdonations) {
 					// Extract image URL and quantity directly
-					var imgMatch = chatmessage.match(/<img src="([^"]+\.tiktokcdn\.com\/img\/[^"]+)"[^>]*>\s*x(\d+)/i);
+					var imgMatch = chatmessage.match(/<img src="([^"]+\.tiktokcdn\.com\/img\/[^"]+)"[^>]*>\s*×\s*(\d+)/i);
 					if (!imgMatch) {
-						imgMatch = chatmessage.match(/<img src='([^']+\.tiktokcdn\.com\/img\/[^']+)'[^>]*>\s*x(\d+)/i);
+						imgMatch = chatmessage.match(/<img src='([^']+\.tiktokcdn\.com\/img\/[^']+)'[^>]*>\s*×\s*(\d+)/i);
 					}
 					
 					if (imgMatch) {
@@ -996,15 +1002,14 @@
 		var ital = true;
 		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']"))) {
 			ital = "gift";
-			try {
-				if ((chatmessage.includes("x") || chatmessage.includes("×") || chatmessage.includes("&times")) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
-					chatmessage = chatmessage.replace("<img src=", " <img src=");
-					chatmessage = chatmessage.replace('.png">x', '.png"> x');
-					chatmessage = chatmessage.replace(".png'>x", ".png'> x");
-					chatmessage = chatmessage.replace('.png">×', '.png"> x');
-					chatmessage = chatmessage.replace(".png'>×", ".png'> x");
-					chatmessage = chatmessage.replace('.png">&times', '.png"> x');
-					chatmessage = chatmessage.replace(".png'>&times", ".png'> x");
+					try {
+						// Normalize HTML entity to multiplication sign
+						if (chatmessage) chatmessage = chatmessage.replace(/&times;?/g, '×');
+						if ((chatmessage.includes("×")) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
+						chatmessage = chatmessage.replace("<img src=", " <img src=");
+						chatmessage = chatmessage.replace('.png">x', '.png"> x');
+						chatmessage = chatmessage.replace(".png'>x", ".png'> x");
+						// keep original × for matching and parsing
 					
 					if (settings.tiktokdonations || !settings.notiktokdonations) {
 						if (validateTikTokDonationMessage(chatmessage)) {
