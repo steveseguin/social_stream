@@ -804,10 +804,14 @@
 		}
 		var hasdonation = "";
 		try {
-			if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
+			if ( (chatmessage.includes("x") || chatmessage.includes("×") || chatmessage.includes("&times")) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
 				chatmessage = chatmessage.replace("<img src=", " <img src=");
 				chatmessage = chatmessage.replace('.png">x', '.png"> x');
 				chatmessage = chatmessage.replace(".png'>x", ".png'> x");
+				chatmessage = chatmessage.replace('.png">×', '.png"> x');
+				chatmessage = chatmessage.replace(".png'>×", ".png'> x");
+				chatmessage = chatmessage.replace('.png">&times', '.png"> x');
+				chatmessage = chatmessage.replace(".png'>&times", ".png'> x");
 				
 				if (settings.tiktokdonations || !settings.notiktokdonations) {
 					// Extract image URL and quantity directly
@@ -993,10 +997,15 @@
 		if (chatmessage && (ele.classList.contains("DivGiftMessage") || ele.querySelector("[class*='SpanGiftCount']"))) {
 			ital = "gift";
 			try {
-				if (chatmessage.includes("x") && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
+				if ((chatmessage.includes("x") || chatmessage.includes("×") || chatmessage.includes("&times")) && chatmessage.includes("<img src=") && chatmessage.includes(".tiktokcdn.com/img/")) {
 					chatmessage = chatmessage.replace("<img src=", " <img src=");
 					chatmessage = chatmessage.replace('.png">x', '.png"> x');
 					chatmessage = chatmessage.replace(".png'>x", ".png'> x");
+					chatmessage = chatmessage.replace('.png">×', '.png"> x');
+					chatmessage = chatmessage.replace(".png'>×", ".png'> x");
+					chatmessage = chatmessage.replace('.png">&times', '.png"> x');
+					chatmessage = chatmessage.replace(".png'>&times", ".png'> x");
+					
 					if (settings.tiktokdonations || !settings.notiktokdonations) {
 						if (validateTikTokDonationMessage(chatmessage)) {
 							var donation = parseDonationMessage(chatmessage);
