@@ -534,9 +534,12 @@
 
     <script>
 	
-	// Get URL parameters
-	const urlParams = new URLSearchParams(window.location.search);
-	const donationPriority = urlParams.has('donationpriority');
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const donationPriority = urlParams.has('donationpriority');
+    // Session security and network options
+    const password = urlParams.get('password') || 'false';
+    const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
 	
 	// User tracking
 	const users = new Map();
@@ -715,9 +718,9 @@
 	}
 
 	// IFRAME setup for Social Stream Ninja
-	const iframe = document.createElement("iframe");
-	const filename = "dock";
-	iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=false&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
+    const iframe = document.createElement("iframe");
+    const filename = "dock";
+    iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=" + encodeURIComponent(password) + lanonly + "&solo&view=" + urlParams.get('session') + "&novideo&noaudio&label=" + filename + "&cleanoutput&room=" + urlParams.get('session');
 	iframe.style.width = "0px";
 	iframe.style.height = "0px";
 	iframe.style.position = "fixed";
@@ -840,18 +843,53 @@
 		}
 	}
 
-	// Handle message events
-	const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
-	const eventer = window[eventMethod];
-	const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
-	eventer(messageEvent, function (e) {
-		if (e.source != iframe.contentWindow) return;
-		if ("dataReceived" in e.data) {
-			if ("overlayNinja" in e.data.dataReceived) {
-				processData(e.data.dataReceived.overlayNinja);
-			}
-		}
-	});
+    // Handle message events
+    const eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+    const eventer = window[eventMethod];
+    const messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+    eventer(messageEvent, function (e) {
+        if (e.source != iframe.contentWindow) return;
+        if ("dataReceived" in e.data) {
+            if ("overlayNinja" in e.data.dataReceived) {
+                processData(e.data.dataReceived.overlayNinja);
+            }
+        }
+    });
+
+    // Optional: Extension server relay (server2/server3) for dock-labeled pages
+    (function setupExtensionSocket(){
+        if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
+        let serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+        let socket = null;
+        let attempts = 1;
+        function connect(){
+            if (socket) {
+                socket.onclose = null; try { socket.close(); } catch(e){}
+            }
+            socket = new WebSocket(serverURL);
+            socket.onopen = function(){
+                attempts = 1;
+                const session = (urlParams.get('session') || '').split(',')[0];
+                socket.send(JSON.stringify({ join: session, out: 3, in: 4 }));
+            };
+            socket.onclose = function(){
+                setTimeout(connect, 100 * attempts++);
+            };
+            socket.onerror = function(){ try { socket.close(); } catch(e){} };
+            socket.addEventListener('message', function(event){
+                if (!event.data) return;
+                try {
+                    const data = JSON.parse(event.data);
+                    processData(data);
+                    if (data.get) {
+                        const ret = { callback: { get: data.get, result: true } };
+                        socket.send(JSON.stringify(ret));
+                    }
+                } catch(e) { /* ignore parse errors */ }
+            });
+        }
+        connect();
+    })();
 
 	// Handle visibility changes
 	document.addEventListener('visibilitychange', function() {

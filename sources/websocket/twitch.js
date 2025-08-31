@@ -2,7 +2,20 @@ try{
 	var isExtensionOn = true;
 	var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
 	var redirectURI = window.location.href.split("/twitch")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
-	var scope = 'chat:read+chat:edit+channel:read:subscriptions+bits:read+moderator:read:followers+moderator:read:chatters';
+	var scope = [
+		'chat:read',
+		'chat:edit',
+		'bits:read',
+		'moderator:read:followers',
+		'moderator:read:chatters',
+		'channel:read:subscriptions',
+		// New scopes for moderation, ads, and redemptions
+		'moderator:manage:banned_users',
+		'moderator:manage:chat_messages',
+		'channel:read:ads',
+		'channel:manage:ads',
+		'channel:read:redemptions'
+	].join('+');
 	var ws;
 	var channel = '';
 	var username = "SocialStreamNinja"; // Not supported at the moment
@@ -479,6 +492,28 @@ try{
 		}
 	  });
 	}
+
+	// Listen for UI moderation/ad requests from twitch.html
+	window.addEventListener('message', async (ev) => {
+		if (!ev?.data || ev.data.source !== 'twitch-ws-ui') return;
+		const { action, payload } = ev.data;
+		try {
+			if (action === 'ban') {
+				const ok = await banUser(payload?.login, payload?.seconds || 0, payload?.reason || '');
+				if (!ok) console.warn('Ban/timeout failed');
+			} else if (action === 'unban') {
+				const ok = await unbanUser(payload?.login);
+				if (!ok) console.warn('Unban failed');
+			} else if (action === 'ad') {
+				const ok = await startAdBreak(payload?.length || 60);
+				if (!ok) console.warn('Ad request failed');
+			} else if (action === 'ad_schedule') {
+				await fetchAdSchedule();
+			}
+		} catch (e) {
+			console.error('UI action error', e);
+		}
+	});
 
 	async function checkChannelPermissions(token, userId, channelId) {
 		try {
@@ -1748,6 +1783,18 @@ try{
 				}
 			}
 
+			// Resubscription message (months, streak)
+			if (permissions.canViewSubscribers && permissions.hasSubscriptionProgram && !activeSubscriptions.has('channel.subscription.message')) {
+				subscriptionTypes.push({
+					type: 'channel.subscription.message',
+					version: '1',
+					condition: {
+						broadcaster_user_id: broadcasterId
+					}
+				});
+			}
+
+			// Cheering
 			if ((permissions.isBroadcaster || permissions.isModerator) && !activeSubscriptions.has('channel.cheer')) {
 				subscriptionTypes.push({
 					type: 'channel.cheer',
@@ -1755,6 +1802,48 @@ try{
 					condition: {
 						broadcaster_user_id: broadcasterId
 					}
+				});
+			}
+
+			// Channel points redemptions
+			if (!activeSubscriptions.has('channel.channel_points_custom_reward_redemption.add')) {
+				subscriptionTypes.push({
+					type: 'channel.channel_points_custom_reward_redemption.add',
+					version: '1',
+					condition: {
+						broadcaster_user_id: broadcasterId
+					}
+				});
+			}
+
+			// Raids to this channel
+			if (!activeSubscriptions.has('channel.raid')) {
+				subscriptionTypes.push({
+					type: 'channel.raid',
+					version: '1',
+					condition: {
+						to_broadcaster_user_id: broadcasterId
+					}
+				});
+			}
+
+			// Stream status
+			for (const t of ['stream.online', 'stream.offline']) {
+				if (!activeSubscriptions.has(t)) {
+					subscriptionTypes.push({
+						type: t,
+						version: '1',
+						condition: { broadcaster_user_id: broadcasterId }
+					});
+				}
+			}
+
+			// Ad break begin
+			if (!activeSubscriptions.has('channel.ad_break.begin')) {
+				subscriptionTypes.push({
+					type: 'channel.ad_break.begin',
+					version: '1',
+					condition: { broadcaster_user_id: broadcasterId }
 				});
 			}
 
@@ -1826,6 +1915,7 @@ try{
 					chatname: event.user_name,
 					userid: event.user_id,
 					timestamp: event.followed_at,
+					meta: { userId: event.user_id, followedAt: event.followed_at },
 					textonly: settings.textonlymode || false
 				});
 				// Add to recent events
@@ -1841,10 +1931,29 @@ try{
 					userid: event.user_id,
 					tier: event.tier,
 					isGift: event.is_gift,
+					meta: { userId: event.user_id, tier: event.tier, isGift: event.is_gift },
 					textonly: settings.textonlymode || false
 				});
 				// Add to recent events
 				addEvent(`Subscribe: ${event.user_name} (Tier ${event.tier})`);
+				break;
+
+			case 'channel.subscription.message':
+				pushMessage({
+					type: 'twitch',
+					event: 'resub',
+					chatname: event.user_name,
+					userid: event.user_id,
+					chatmessage: event.message?.text || `${event.user_name} resubscribed`,
+					meta: {
+						userId: event.user_id,
+						tier: event.tier,
+						streakMonths: event.streak_months,
+						cumulativeMonths: event.cumulative_months
+					},
+					textonly: settings.textonlymode || false
+				});
+				addEvent(`Resub: ${event.user_name} (${event.cumulative_months} months)`);
 				break;
 
 			case 'channel.subscription.gift':
@@ -1856,6 +1965,7 @@ try{
 					userid: event.user_id,
 					total: event.total,
 					tier: event.tier,
+					meta: { userId: event.user_id, total: event.total, tier: event.tier },
 					textonly: settings.textonlymode || false
 				});
 				// Add to recent events
@@ -1871,6 +1981,7 @@ try{
 					bits: event.bits,
 					chatmessage: event.message,
 					hasDonation: event.bits + " bits",
+					meta: { userId: event.user_id, bits: event.bits },
 					title: "CHEERS",
 					textonly: settings.textonlymode || false
 				});
@@ -1904,13 +2015,135 @@ try{
 						status: event.status
 					},
 					timestamp: event.redeemed_at,
+					meta: {
+						userId: event.user_id,
+						rewardId: event.reward.id,
+						cost: rewardCost,
+						alias: 'reward'
+					},
 					textonly: settings.textonlymode || false
 				});
 				
 				// Add to recent events
 				addEvent(`Channel Points: ${event.user_name} redeemed ${rewardTitle}`);
 				break;
+
+			case 'channel.raid':
+				pushMessage({
+					type: 'twitch',
+					event: 'raid',
+					chatname: event.from_broadcaster_user_name,
+					userid: event.from_broadcaster_user_id,
+					chatmessage: `Raiding with ${event.viewers} viewers!`,
+					meta: {
+						fromId: event.from_broadcaster_user_id,
+						fromLogin: event.from_broadcaster_user_login,
+						viewers: event.viewers
+					},
+					textonly: settings.textonlymode || false
+				});
+				addEvent(`Raid: ${event.from_broadcaster_user_name} with ${event.viewers} viewers`);
+				break;
+
+			case 'stream.online':
+				pushMessage({ type: 'twitch', event: 'stream_online', meta: { startedAt: event.started_at } });
+				addEvent('Stream Online');
+				break;
+			case 'stream.offline':
+				pushMessage({ type: 'twitch', event: 'stream_offline', meta: {} });
+				addEvent('Stream Offline');
+				break;
+
+			case 'channel.ad_break.begin':
+				pushMessage({
+					type: 'twitch',
+					event: 'ad_break',
+					chatmessage: `Ad break started (${event.duration_seconds}s)`,
+					meta: {
+						duration: event.duration_seconds,
+						isAutomatic: event.is_automatic,
+						requester: event.requester_login
+					}
+				});
+				addEvent(`Ad Break: ${event.duration_seconds}s`);
+				break;
 		}
+	}
+
+	// --- Moderation & Ads (stubs + API wiring) ---
+	async function getUserIdByLogin(login) {
+		const info = await getUserInfo(login);
+		return info?.id || null;
+	}
+
+	async function banUser(login, duration = 0, reason = '') {
+		try {
+			const token = getStoredToken();
+			if (!token || !currentChannelId) return false;
+			const moderator = await validateToken(token);
+			const userId = await getUserIdByLogin(login);
+			if (!userId) return false;
+			const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}`,
+				{
+					method: 'POST',
+					headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+					body: JSON.stringify({ data: { user_id: userId, duration: duration || undefined, reason: reason || undefined } })
+				}
+			);
+			return res.ok;
+		} catch(e) { console.error('banUser error', e); return false; }
+	}
+
+	async function unbanUser(login) {
+		try {
+			const token = getStoredToken();
+			if (!token || !currentChannelId) return false;
+			const moderator = await validateToken(token);
+			const userId = await getUserIdByLogin(login);
+			if (!userId) return false;
+			const res = await fetch(`https://api.twitch.tv/helix/moderation/bans?broadcaster_id=${currentChannelId}&moderator_id=${moderator.user_id}&user_id=${userId}`,
+				{ method: 'DELETE', headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}` } }
+			);
+			return res.ok;
+		} catch(e) { console.error('unbanUser error', e); return false; }
+	}
+
+	async function startAdBreak(duration = 60) {
+		try {
+			const token = getStoredToken();
+			if (!token || !currentChannelId) return false;
+			const res = await fetch('https://api.twitch.tv/helix/channels/ads', {
+				method: 'POST',
+				headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+				body: JSON.stringify({ broadcaster_id: currentChannelId, length: duration })
+			});
+			const data = await res.json().catch(()=>({}));
+			if (res.ok) {
+				addEvent(`Ad Break requested: ${duration}s`);
+				pushMessage({ type: 'twitch', event: 'ad_request', meta: data?.data?.[0] || { length: duration } });
+				return true;
+			}
+			console.error('startAdBreak failed', data);
+			return false;
+		} catch(e) { console.error('startAdBreak error', e); return false; }
+	}
+
+	async function fetchAdSchedule() {
+		try {
+			const token = getStoredToken();
+			if (!token || !currentChannelId) return null;
+			const res = await fetch(`https://api.twitch.tv/helix/channels/ads?broadcaster_id=${currentChannelId}`, {
+				headers: { 'Client-ID': clientId, 'Authorization': `Bearer ${token}` }
+			});
+			const data = await res.json();
+			if (res.ok) {
+				pushMessage({ type: 'twitch', event: 'ad_schedule', meta: data?.data?.[0] || data });
+				addEvent('Ad Schedule updated');
+				return data;
+			}
+			console.error('fetchAdSchedule failed', data);
+			return null;
+		} catch(e) { console.error('fetchAdSchedule error', e); return null; }
 	}
 
 
@@ -1966,17 +2199,22 @@ try{
 		const isBroadcaster = channelId === userId;
 		const isModerator = await getModeratorStatus(channelId, userId);
 		const broadcasterInfo = await getBroadcasterStatus(channelId);
+		const tokenInfo = await validateToken(getStoredToken());
+		const scopes = (tokenInfo?.scopes || []).reduce((acc, s) => { acc[s] = true; return acc; }, {});
 		
 		return {
 			isBroadcaster,
 			isModerator,
 			canViewFollowers: true, // Followers are public info
-			canManageChat: isBroadcaster || isModerator,
-			canBanUsers: isBroadcaster || isModerator,
-			canDeleteMessages: isBroadcaster || isModerator,
+			canManageChat: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),
+			canBanUsers: (isBroadcaster || isModerator) && (scopes['moderator:manage:banned_users'] || isBroadcaster),
+			canDeleteMessages: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),
 			canViewSubscribers: isBroadcaster || isModerator,
 			hasSubscriptionProgram: broadcasterInfo?.partner || broadcasterInfo?.broadcaster_type === 'affiliate',
 			canModerate: isBroadcaster || isModerator,
+			canManageAds: !!scopes['channel:manage:ads'],
+			canReadAds: !!scopes['channel:read:ads'],
+			canReadRedemptions: !!scopes['channel:read:redemptions'],
 			broadcasterType: broadcasterInfo?.broadcaster_type || 'none'
 		};
 	}
@@ -2021,6 +2259,9 @@ try{
 			{ name: 'Can Ban Users', value: permissions.canBanUsers ? '✓' : '✗' },
 			{ name: 'Can Delete Messages', value: permissions.canDeleteMessages ? '✓' : '✗' },
 			{ name: 'Can View Subscribers', value: permissions.canViewSubscribers ? '✓' : '✗' },
+			{ name: 'Can Manage Ads', value: permissions.canManageAds ? '✓' : '✗' },
+			{ name: 'Can Read Ads', value: permissions.canReadAds ? '✓' : '✗' },
+			{ name: 'Can Read Redemptions', value: permissions.canReadRedemptions ? '✓' : '✗' },
 			{ name: 'Channel Type', value: permissions.broadcasterType === 'none' ? 'Regular' : permissions.broadcasterType }
 		];
 

@@ -29,7 +29,10 @@ class EventFlowSystem {
 		this.stateTimers = new Map(); // Timeout management for auto-resets
 		this.messageQueues = new Map(); // Queue storage for queue nodes
 		this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
-		this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+        this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+        
+        // Reflection control (per Event Flow) for "allow-first" windows
+        this.reflectionSeen = new Map();
 
         // Internal scheduler for time-based triggers
         this._tickHandle = null;
@@ -967,8 +970,8 @@ class EventFlowSystem {
         return this.flows.find(flow => flow.id === flowId) || null;
     }
     
-	async processMessage(message) {
-		
+    async processMessage(message) {
+        
         if (!message) {
             ////console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
             return message;
@@ -1893,6 +1896,86 @@ class EventFlowSystem {
                 result.blocked = true;
               //console.log(`[ExecuteAction - blockMessage] Set result.blocked to true.`);
                 break;
+
+            case 'reflectionFilter': {
+                // Apply only to reflected messages
+                if (!message || !message.reflection) {
+                    break;
+                }
+
+                const policy = config.policy || 'block-all'; // 'block-all' | 'allow-first' | 'allow-all'
+                const sourceMode = config.sourceMode || 'none'; // 'none' | 'allow' | 'block'
+                const rawTypes = (config.sourceTypes || '').toString();
+                const typeList = rawTypes
+                    .split(',')
+                    .map(t => t.trim().toLowerCase())
+                    .filter(Boolean);
+                const msgType = (message.type || '').toLowerCase();
+
+                // Source-type allow/block pre-filter
+                if (sourceMode === 'block' && typeList.length && typeList.includes(msgType)) {
+                    result.blocked = true;
+                    break;
+                }
+                if (sourceMode === 'allow' && typeList.length && !typeList.includes(msgType)) {
+                    result.blocked = true;
+                    break;
+                }
+
+                if (policy === 'allow-all') {
+                    // Never block reflections via this node
+                    break;
+                }
+
+                if (policy === 'block-all') {
+                    result.blocked = true;
+                    break;
+                }
+
+                // allow-first
+                const windowMs = parseInt(config.windowMs || 10000, 10) || 10000;
+                let basis = '';
+                try {
+                    // Use sanitized text basis for matching
+                    if (message.chatmessage) {
+                        if (typeof this.sanitizeSendMessage === 'function') {
+                            basis = this.sanitizeSendMessage(message.chatmessage, true) || '';
+                        } else if (typeof this.sanitizeRelay === 'function') {
+                            basis = this.sanitizeRelay(message.chatmessage, true) || '';
+                        } else {
+                            basis = (message.chatmessage || '').toString();
+                        }
+                    }
+                } catch (e) {
+                    basis = (message.chatmessage || '').toString();
+                }
+                basis = basis.trim().toLowerCase();
+                if (!basis) {
+                    // No content to compare; treat as first (allow)
+                    break;
+                }
+
+                const now = Date.now();
+                // Cleanup old entries
+                try {
+                    for (const [k, ts] of this.reflectionSeen) {
+                        if (now - ts > Math.max(10000, windowMs)) {
+                            this.reflectionSeen.delete(k);
+                        }
+                    }
+                } catch (e) {}
+
+                const lastSeen = this.reflectionSeen.get(basis);
+                if (!lastSeen || (now - lastSeen > windowMs)) {
+                    // Allow first occurrence in window, record it
+                    this.reflectionSeen.set(basis, now);
+                    // Not blocked
+                } else {
+                    // Within window and seen already → block
+                    result.blocked = true;
+                }
+                break;
+            }
                 
             case 'modifyMessage':
                 if (typeof config.newMessage !== 'string') {
@@ -2146,6 +2229,10 @@ class EventFlowSystem {
                 if (config.destination && config.destination !== 'all') {
                     // Relay to specific platform/destination
                     relayMessage.destination = config.destination;
+                    // Pass source tid so reverse=true can exclude the source tab
+                    if (message.tid) {
+                        relayMessage.tid = message.tid;
+                    }
                     //console.log('[RELAY DEBUG - Action] Mode: Relay to specific platform:', config.destination);
                 } else {
                     // Relay to all platforms (excluding source)

@@ -9,6 +9,9 @@ try {
 
 var isExtensionOn = false;
 var iframe = null;
+// Optional: Use VDONinjaSDK instead of iframe transport to reduce memory
+var ninjaBridge = null;
+var useNinjaSDK = false; // toggled via URL param &sdk, or can be wired to settings in future
 
 var settings = {};
 var messageTimeout = {};
@@ -30,6 +33,9 @@ var isSSAPP = false;
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
+var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
+// initial default (may be recalculated when settings load)
+useNinjaSDK = false;
 
 var FacebookDupes = "";
 var FacebookDupesTime = null;
@@ -957,9 +963,24 @@ function loadSettings(item, resave = false) {
 			// we're saving below instead
 		}
 	}
-	if (reloadNeeded) {
-		updateExtensionState(false);
-	}
+    // Recompute effective SDK usage on settings load
+    try {
+        const settingsSDK = (settings?.sdk?.setting === true) || (settings?.sdk === true) || (settings?.usesdk?.setting === true);
+        const effective = !!settingsSDK;
+        if (lastUseNinjaSDK === undefined) {
+            lastUseNinjaSDK = effective;
+        } else if (effective !== lastUseNinjaSDK) {
+            lastUseNinjaSDK = effective;
+            useNinjaSDK = effective;
+            reloadNeeded = true; // transport mode changed → reinit
+        } else {
+            useNinjaSDK = effective;
+        }
+    } catch(e) {}
+
+    if (reloadNeeded) {
+        updateExtensionState(false);
+    }
 	
 	try {
 		if (isSSAPP && ipcRenderer) {
@@ -1669,15 +1690,20 @@ function updateExtensionState(sync = true) {
 		if (chrome.action && chrome.action.setIcon){
 			chrome.action.setIcon({ path: "/icons/on.png" });
 		}
-		if (streamID) {
-			loadIframe(streamID, password);
-		}
+        if (streamID) {
+            initTransport(streamID, password);
+        }
 		setupSocket();
 		setupSocketDock();
 	} else {
 		
 		// document.title = "Idle - Social Stream Ninja";
 		
+		if (ninjaBridge) {
+			try { ninjaBridge.destroy(); } catch(e){}
+			ninjaBridge = null;
+		}
+
 		if (iframe) {
 			iframe.src = null;
 			iframe.remove();
@@ -2871,6 +2897,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			});
 			chrome.runtime.lastError;
 
+			// If SDK setting changed, reinitialize transport if extension is ON
+			try {
+				if (request.setting === 'sdk' && isExtensionOn && streamID) {
+					initTransport(streamID, password);
+				}
+			} catch(e) { console.warn(e); }
+
 			sendResponse({ state: isExtensionOn });
 			
 			if (request.target){
@@ -2910,7 +2943,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						iframe = null;
 					}
 					if (isExtensionOn) {
-						loadIframe(streamID, password);
+                        initTransport(streamID, password);
 					}
 				} else {
 					if (iframe) {
@@ -2922,7 +2955,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						iframe = null;
 					}
 					if (isExtensionOn) {
-						loadIframe(streamID, password);
+                        initTransport(streamID, password);
 					}
 				}
 			}
@@ -3523,7 +3556,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				iframe = null;
 			}
 			if (isExtensionOn) {
-				loadIframe(streamID, password);
+                initTransport(streamID, password);
 			}
 			
 			if (isSSAPP){
@@ -5591,21 +5624,31 @@ function setupSocketDock() {
 		socketserverDock.close();
 	};
 
-	socketserverDock.onclose = function () {
-		if ((settings.server2 || settings.server3) && isExtensionOn) {
-			reconnectionTimeoutDock = setTimeout(function () {
-				if ((settings.server2 || settings.server3) && isExtensionOn) {
-					conConDock += 1;
-					socketserverDock = new WebSocket(serverURLDock);
-					setupSocketDock();
-				} else {
-					socketserverDock = false;
-				}
-			}, 100 * conConDock);
-		} else {
-			socketserverDock = false;
-		}
-	};
+    socketserverDock.onclose = function () {
+        if ((settings.server2 || settings.server3) && isExtensionOn) {
+            // Fast first retry, then exponential backoff with jitter (cap 30s)
+            const nextAttempt = Math.min(conConDock + 1, 10);
+            let delay;
+            if (nextAttempt === 1) {
+                delay = 50 + Math.floor(Math.random() * 100); // ~50–150ms
+            } else {
+                const base = Math.min(30000, 1000 * Math.pow(2, Math.min(nextAttempt - 1, 6)));
+                const jitter = Math.floor(Math.random() * 500);
+                delay = base + jitter;
+            }
+            conConDock = nextAttempt;
+            reconnectionTimeoutDock = setTimeout(function () {
+                if ((settings.server2 || settings.server3) && isExtensionOn) {
+                    socketserverDock = new WebSocket(serverURLDock);
+                    setupSocketDock();
+                } else {
+                    socketserverDock = false;
+                }
+            }, delay);
+        } else {
+            socketserverDock = false;
+        }
+    };
 	socketserverDock.onopen = function () {
 		conConDock = 0;
 		socketserverDock.send(JSON.stringify({ join: streamID, out: 4, in: 3 }));
@@ -5659,20 +5702,30 @@ function setupSocket() {
 		socketserver.close();
 	};
 
-	socketserver.onclose = function () {
-		if (settings.socketserver && isExtensionOn) {
-			reconnectionTimeout = setTimeout(function () {
-				if (settings.socketserver && isExtensionOn) {
-					conCon += 1;
-					setupSocket();
-				} else {
-					socketserver = false;
-				}
-			}, 100 * conCon);
-		} else {
-			socketserver = false;
-		}
-	};
+    socketserver.onclose = function () {
+        if (settings.socketserver && isExtensionOn) {
+            // Fast first retry, then exponential backoff with jitter (cap 30s)
+            const nextAttempt = Math.min(conCon + 1, 10);
+            let delay;
+            if (nextAttempt === 1) {
+                delay = 50 + Math.floor(Math.random() * 100); // ~50–150ms
+            } else {
+                const base = Math.min(30000, 1000 * Math.pow(2, Math.min(nextAttempt - 1, 6)));
+                const jitter = Math.floor(Math.random() * 500);
+                delay = base + jitter;
+            }
+            conCon = nextAttempt;
+            reconnectionTimeout = setTimeout(function () {
+                if (settings.socketserver && isExtensionOn) {
+                    setupSocket();
+                } else {
+                    socketserver = false;
+                }
+            }, delay);
+        } else {
+            socketserver = false;
+        }
+    };
 	socketserver.onopen = function () {
 		conCon = 0;
 		socketserver.send(JSON.stringify({ join: streamID, out: 2, in: 1 }));
@@ -6457,9 +6510,9 @@ async function openchat(target = null, force = false) {
 }
 
 function sendDataP2P(data, UUID = false) {
-	// function to send data to the DOCk via the VDO.Ninja API
+    // function to send data to the DOCk via the VDO.Ninja API
 
-	if (!UUID && settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
+    if (!UUID && settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
 		try {
 			if (data.out){
 				delete data.out;
@@ -6472,14 +6525,38 @@ function sendDataP2P(data, UUID = false) {
 		}
 	}
 
-	var msg = {};
-	msg.overlayNinja = data;
+    var msg = {};
+    msg.overlayNinja = data;
 
-	if (iframe) {
-		if (UUID && connectedPeers) {
-			try {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
-			} catch (e) {
+    // Prefer SDK transport if active
+    if (ninjaBridge && ninjaBridge.isReady()) {
+        try {
+            if (UUID) {
+                ninjaBridge.send(data, UUID);
+                return;
+            }
+            // Prefer sending to docks; if none known yet, broadcast
+            var hasDock = false;
+            try {
+                var peers = ninjaBridge.getPeers();
+                for (var k in peers) { if (peers[k] === 'dock') { hasDock = true; break; } }
+            } catch(e){}
+            if (hasDock) {
+                ninjaBridge.sendToLabel(data, 'dock');
+            } else {
+                ninjaBridge.send(data); // broadcast
+            }
+            return;
+        } catch (e) {
+            console.warn('SDK sendDataP2P failed; falling back to iframe', e);
+        }
+    }
+
+    if (iframe) {
+        if (UUID && connectedPeers) {
+            try {
+                iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+            } catch (e) {
 				console.error(e);
 			}
 		} else if (connectedPeers) {
@@ -6667,7 +6744,18 @@ function combineHypeData() {
     return result;
 }
 function sendHypeP2P(data, uid = null) {
-  // function to send data to the DOCK via the VDO.Ninja API
+  // function to send data to the HYPE overlay via the transport
+  if (ninjaBridge && ninjaBridge.isReady()) {
+    try {
+      if (!uid) {
+        ninjaBridge.sendToLabel({ hype: data }, 'hype');
+      } else {
+        ninjaBridge.send({ hype: data }, uid);
+      }
+      return;
+    } catch (e) { console.warn('SDK sendHypeP2P failed', e); }
+  }
+
   if (iframe) {
     if (!uid) {
       var keys = Object.keys(connectedPeers);
@@ -6690,44 +6778,61 @@ function sendHypeP2P(data, uid = null) {
 }
 //////
 function sendTargetP2P(data, target) {
-	// function to send data to the DOCk via the VDO.Ninja API
+    // function to send data to the DOCk via the VDO.Ninja API
+    if (ninjaBridge && ninjaBridge.isReady()) {
+        try {
+            ninjaBridge.sendToLabel(data, target);
+            return;
+        } catch (e) { console.warn('SDK sendTargetP2P failed', e); }
+    }
 
-	if (iframe) {
-		var keys = Object.keys(connectedPeers);
-		for (var i = 0; i < keys.length; i++) {
-			try {
-				var UUID = keys[i];
-				var label = connectedPeers[UUID];
-				if (label === target) {
-					iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
-				}
-			} catch (e) {}
-		}
-	
-	}
+    if (iframe) {
+        var keys = Object.keys(connectedPeers);
+        for (var i = 0; i < keys.length; i++) {
+            try {
+                var UUID = keys[i];
+                var label = connectedPeers[UUID];
+                if (label === target) {
+                    iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "pcs", UUID: UUID }, "*");
+                }
+            } catch (e) {}
+        }
+    
+    }
 }
 function sendTickerP2P(data, uid = null) {
-	// function to send data to the DOCk via the VDO.Ninja API
+    // function to send data to the DOCk via the VDO.Ninja API
 
-	if (iframe) {
-		if (!uid) {
-			var keys = Object.keys(connectedPeers);
-			for (var i = 0; i < keys.length; i++) {
-				try {
-					var UUID = keys[i];
-					var label = connectedPeers[UUID];
-					if (label === "ticker") {
-						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "*");
-					}
-				} catch (e) {}
-			}
-		} else {
-			var label = connectedPeers[uid];
-			if (label === "ticker") {
-				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "*");
-			}
-		}
-	}
+    if (ninjaBridge && ninjaBridge.isReady()) {
+        try {
+            if (!uid) {
+                ninjaBridge.sendToLabel({ ticker: data }, 'ticker');
+            } else {
+                ninjaBridge.send({ ticker: data }, uid);
+            }
+            return;
+        } catch (e) { console.warn('SDK sendTickerP2P failed', e); }
+    }
+
+    if (iframe) {
+        if (!uid) {
+            var keys = Object.keys(connectedPeers);
+            for (var i = 0; i < keys.length; i++) {
+                try {
+                    var UUID = keys[i];
+                    var label = connectedPeers[UUID];
+                    if (label === "ticker") {
+                        iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: UUID }, "*");
+                    }
+                } catch (e) {}
+            }
+        } else {
+            var label = connectedPeers[uid];
+            if (label === "ticker") {
+                iframe.contentWindow.postMessage({ sendData: { overlayNinja: { ticker: data } }, type: "pcs", UUID: uid }, "*");
+            }
+        }
+    }
 }
 
 //////////
@@ -7193,30 +7298,163 @@ function sendToDisk(data) {
 	}
 }
 
-function loadIframe(streamID, pass = false) {
+async function initTransport(streamID, pass = false) {
 	// this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
-	log("LOAD IFRAME VDON BG");
 
-	var lanonly = "";
-	if (settings["lanonly"]) {
-		lanonly = "&lanonly";
-	}
+    // Re-evaluate effective SDK flag each init, based on flexible truthy parsing
+    try {
+        const raw = (settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk));
+        let flag = false;
+        if (typeof raw === 'boolean') {
+            flag = raw;
+        } else if (raw && typeof raw === 'object') {
+            // supports { setting: true/"true"/1 }
+            const v = raw.setting;
+            flag = (v === true) || (v === 1) || (typeof v === 'string' && /^(1|true|on|yes)$/i.test(v));
+        } else if (typeof raw === 'string') {
+            flag = /^(1|true|on|yes)$/i.test(raw);
+        } else if (raw === 1) {
+            flag = true;
+        }
+        useNinjaSDK = !!flag;
+    } catch(e) { useNinjaSDK = false; }
 
-	if (iframe) {
-		if (!pass) {
-			pass = "false";
-		}
-		//iframe.allow = "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + streamID + "&push=" + streamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
-	} else {
-		iframe = document.createElement("iframe");
-		//iframe.allow =  "document-domain;encrypted-media;sync-xhr;usb;web-share;cross-origin-isolated;accelerometer;midi;geolocation;autoplay;camera;microphone;fullscreen;picture-in-picture;display-capture;";
-		if (!pass) {
-			pass = "false";
-		}
-		iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + streamID + "&push=" + streamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream"; // don't listen to any inbound events
-		document.body.appendChild(iframe);
-	}
+	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
+
+    // If SDK is enabled and available, use it (lazy-load SDK/bridge if needed)
+    if (useNinjaSDK) {
+        try {
+            // Lazy load SDK and bridge if not present
+            await ensureNinjaSDKLoaded();
+            if (typeof NinjaBridge === 'undefined') throw new Error('NinjaBridge unavailable');
+            // Clean any existing iframe (graceful teardown to release streamID)
+            if (iframe) {
+                try { iframe.src = 'about:blank'; } catch(e){}
+                // allow the page to close sockets cleanly
+                try { await new Promise(r => setTimeout(r, 300)); } catch(e){}
+                try { iframe.remove(); } catch(e){}
+                iframe = null;
+            }
+            // Reuse existing bridge if room changes? Destroy and recreate for safety
+            if (ninjaBridge) {
+                try { await ninjaBridge.destroy(); } catch(e){}
+                ninjaBridge = null;
+            }
+            // short wait to let signaling release prior streamID
+            try { await new Promise(r => setTimeout(r, 600)); } catch(e){}
+            ninjaBridge = new NinjaBridge({ debug: devmode });
+            try { window.ninjaBridge = ninjaBridge; } catch(e){}
+            ninjaBridge.addEventListener('peerLabel', (ev) => {
+                try {
+                    const { uuid, label } = ev.detail || {};
+                    if (!uuid || !label) return;
+                    // Call initializers similar to iframe message handling
+                    if (label === 'hype') {
+                        try { processHype2(); } catch(e){}
+                    } else if (label === 'ticker') {
+                        try { processTicker(); } catch(e){}
+                    } else if (label === 'waitlist') {
+                        try { initializeWaitlist(); } catch(e){}
+                    } else if (label === 'poll') {
+                        try { initializePoll(); } catch(e){}
+                    }
+                } catch (e) { console.warn(e); }
+            });
+            // Try initializing SDK; if it fails (eg, streamID still in use), retry once
+            try {
+                await ninjaBridge.init({ room: streamID, password: pass, streamID: streamID });
+            } catch (e1) {
+                console.warn('SDK init failed; retrying after short delay…', e1?.message || e1);
+                try { await new Promise(r => setTimeout(r, 900)); } catch(e){}
+                try { await ninjaBridge.destroy(); } catch(e){}
+                ninjaBridge = new NinjaBridge({ debug: devmode });
+                try { window.ninjaBridge = ninjaBridge; } catch(e){}
+                ninjaBridge.addEventListener('peerLabel', (ev) => {
+                    try {
+                        const { uuid, label } = ev.detail || {};
+                        if (!uuid || !label) return;
+                        if (label === 'hype') { try { processHype2(); } catch(e){} }
+                        else if (label === 'ticker') { try { processTicker(); } catch(e){} }
+                        else if (label === 'waitlist') { try { initializeWaitlist(); } catch(e){} }
+                        else if (label === 'poll') { try { initializePoll(); } catch(e){} }
+                    } catch (e) { console.warn(e); }
+                });
+                await ninjaBridge.init({ room: streamID, password: pass, streamID: streamID });
+            }
+            try {
+                // Receive overlay messages via SDK (support both event names and wrapper passthrough)
+                const handleSDKData = (ev) => {
+                    try {
+                        const pkt = ev.detail && (ev.detail.data || ev.detail);
+                        const data = pkt && (pkt.detail?.data || pkt.data || pkt);
+                        const uuid = ev.detail && (ev.detail.uuid || ev.detail.peer || ev.detail.id);
+                        if (!data) return;
+                        if (data.overlayNinja) {
+                            processIncomingRequest(data.overlayNinja, uuid);
+                        }
+                    } catch(e) { console.warn(e); }
+                };
+                ninjaBridge.vdo.addEventListener('data', handleSDKData);
+                ninjaBridge.vdo.addEventListener('dataReceived', handleSDKData);
+                ninjaBridge.addEventListener('data', handleSDKData);
+            } catch (e) { console.warn(e); }
+            return; // success
+        } catch (e) {
+            console.warn('Falling back to iframe transport:', e);
+            // If SDK fails, fall through to iframe
+        }
+    }
+
+    // IFRAME fallback
+    // Ensure SDK bridge is torn down before creating iframe, to avoid streamID collision
+    if (ninjaBridge) {
+        try { await ninjaBridge.destroy(); } catch(e){}
+        ninjaBridge = null;
+        try { window.ninjaBridge = null; } catch(e){}
+        // small delay to allow signaling server to release streamID
+        try { await new Promise(r => setTimeout(r, 600)); } catch(e){}
+    }
+    var lanonly = "";
+    try { if (settings["lanonly"]) { lanonly = "&lanonly"; } } catch(e){}
+    if (iframe) {
+        if (!pass) { pass = "false"; }
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + streamID + "&push=" + streamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+    } else {
+        iframe = document.createElement("iframe");
+        if (!pass) { pass = "false"; }
+        iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + pass + lanonly + "&room=" + streamID + "&push=" + streamID + "&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream";
+        document.body.appendChild(iframe);
+    }
+}
+
+// Lazy-load VDO.Ninja SDK and NinjaBridge only when needed
+async function ensureNinjaSDKLoaded() {
+    function dynamicLoadScript(src) {
+        return new Promise((resolve, reject) => {
+            try {
+                const s = document.createElement('script');
+                s.src = src;
+                s.onload = () => resolve();
+                s.onerror = (e) => reject(e);
+                document.body.appendChild(s);
+            } catch (e) { reject(e); }
+        });
+    }
+
+    if (typeof window.VDONinjaSDK === 'undefined') {
+        if (typeof window.loadScript === 'function') {
+            await window.loadScript('./thirdparty/vdoninja-sdk.js');
+        } else {
+            await dynamicLoadScript('./thirdparty/vdoninja-sdk.js');
+        }
+    }
+    if (typeof window.NinjaBridge === 'undefined') {
+        if (typeof window.loadScript === 'function') {
+            await window.loadScript('./js/ninja-transport.js');
+        } else {
+            await dynamicLoadScript('./js/ninja-transport.js');
+        }
+    }
 }
 
 var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent"; // lets us listen to the VDO.Ninja IFRAME API; ie: lets us talk to the dock

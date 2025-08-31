@@ -43,22 +43,23 @@ class EventFlowEditor {
             { id: 'messageProperties', name: '⚙️ Message Properties Filter' }
         ];
 
-		this.actionTypes = [
-			{ id: 'blockMessage', name: '🚫 Block Message' },
-			{ id: 'returnMessage', name: '✅ Return Message' },
-			{ id: 'modifyMessage', name: '✏️ Modify Message' },
-			{ id: 'addPrefix', name: '⬅️ Add Prefix' },
-			{ id: 'addSuffix', name: '➡️ Add Suffix' },
-			{ id: 'findReplace', name: '🔄 Find & Replace' },
-			{ id: 'removeText', name: '✂️ Remove Text' },
-			{ id: 'setProperty', name: '🎨 Set Property' },
-			{ id: 'sendMessage', name: '💬 Send Message' },
-			{ id: 'relay', name: '📢 Relay Chat' },
-			{ id: 'webhook', name: '🌐 Call Webhook' },
-			{ id: 'addPoints', name: '⬆️ Add Points' },
-			{ id: 'spendPoints', name: '⬇️ Spend Points' },
-			{ id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
-			{ id: 'triggerOBSScene', name: '🎬 Trigger OBS Scene' },
+        this.actionTypes = [
+            { id: 'blockMessage', name: '🚫 Block Message' },
+            { id: 'returnMessage', name: '✅ Return Message' },
+            { id: 'modifyMessage', name: '✏️ Modify Message' },
+            { id: 'addPrefix', name: '⬅️ Add Prefix' },
+            { id: 'addSuffix', name: '➡️ Add Suffix' },
+            { id: 'findReplace', name: '🔄 Find & Replace' },
+            { id: 'removeText', name: '✂️ Remove Text' },
+            { id: 'setProperty', name: '🎨 Set Property' },
+            { id: 'sendMessage', name: '💬 Send Message' },
+            { id: 'relay', name: '📢 Relay Chat' },
+            { id: 'reflectionFilter', name: '🪞 Reflection Filter' },
+            { id: 'webhook', name: '🌐 Call Webhook' },
+            { id: 'addPoints', name: '⬆️ Add Points' },
+            { id: 'spendPoints', name: '⬇️ Spend Points' },
+            { id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
+            { id: 'triggerOBSScene', name: '🎬 Trigger OBS Scene' },
 			{ id: 'playAudioClip', name: '🔊 Play Audio Clip' },
 			{ id: 'delay', name: '⏱️ Delay' },
 			{ id: 'obsChangeScene', name: '🎬 OBS: Change Scene' },
@@ -1164,6 +1165,14 @@ class EventFlowEditor {
                 }
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
+                case 'reflectionFilter': {
+                    const policyMap = { 'block-all': 'Block All', 'allow-first': 'Allow First', 'allow-all': 'Allow All' };
+                    const srcMode = node.config.sourceMode || 'none';
+                    const srcList = (node.config.sourceTypes || '').toString();
+                    const pol = policyMap[node.config.policy] || policyMap['block-all'];
+                    if (srcMode === 'none') return `Reflections: ${pol}`;
+                    return `Reflections: ${pol} (${srcMode}: ${srcList || '—'})`;
+                }
                 case 'addPoints': return `Add: ${node.config.amount || 100} points`;
                 case 'spendPoints': return `Spend: ${node.config.amount || 100} points`;
                 case 'delay': return `Delay: ${node.config.delayMs || 1000}ms`;
@@ -1553,9 +1562,9 @@ class EventFlowEditor {
 					node.config = { removeType: 'removeCommand' }; break;
                 case 'setProperty':
 					node.config = { property: 'nameColor', value: '#FF0000' }; break;
-                case 'sendMessage':
+            case 'sendMessage':
 					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0 }; break;
-                case 'relay':
+            case 'relay':
 					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true, syncMode: false, blockOnFailure: false }; break;
@@ -2626,13 +2635,15 @@ class EventFlowEditor {
 								   value="${isCustomSend ? node.config.destination : ''}" 
 								   style="display: ${currentSendDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
 								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
-							<div class="property-help">Send generated messages (e.g., "Thank you" for donations, announcements, bot responses)</div>
-						</div>
-						<div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || 'Thank you {username}!'}</textarea><div class="property-help">Use {username}, {message}, {source} placeholders</div></div>
-						<div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>`;
+                    <div class="property-help">Send generated messages (e.g., "Thank you" for donations, announcements, bot responses).</div>
+                </div>
+                <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || 'Thank you {username}!'}</textarea><div class="property-help">Use {username}, {message}, {source} placeholders</div></div>
+                <div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>
+                <div class="property-help">Destinations: <strong>Reply to Source</strong> posts back only to the originating tab; <strong>All</strong> includes the source; <strong>All (Excluding Source)</strong> prevents posting back to the origin.</div>
+                <div class="property-help">Reflections: Sent messages are tagged as reflections when they re‑enter via the extension (to avoid loops). Add a <strong>Reflection Filter</strong> node in this flow to control whether those reflected posts appear in the dock/overlays: <em>Block All</em> hides them, <em>Allow First</em> lets only the first show within the window, <em>Allow All</em> shows all. The filter does not change sending; it only controls display on re‑ingest.</div>`;
 				break;
-			case 'relay':
-				// Relay is for forwarding chat messages to other platforms
+            case 'relay':
+                // Relay is for forwarding chat messages to other platforms
 				const relayPlatforms = [
 					{ value: '', label: 'All Platforms (Excluding Source)' },
 					{ value: 'youtube', label: 'YouTube' },
@@ -2677,11 +2688,51 @@ class EventFlowEditor {
 								   value="${isCustomRelayDest ? node.config.destination : ''}" 
 								   style="display: ${currentDestination === 'custom' ? 'block' : 'none'}; margin-top: 5px;"
 								   placeholder="Enter custom destination (e.g., 'arenasocial', 'channel_name')">
-							<div class="property-help">Relays chat messages to other platforms. Source is always excluded to prevent loops.</div>
-						</div>
-						<div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || '[{source}] {username}: {message}'}</textarea></div>
-						<div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>`;
-				break;
+                    <div class="property-help">Relays chat messages to other platforms. Source is always excluded to prevent loops.</div>
+                </div>
+                <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || '[{source}] {username}: {message}'}</textarea></div>
+                <div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>
+                <div class="property-help">Behavior: Relayed chats are injected to target platform(s) and are tagged as reflections when read back by the extension. They won’t be re‑relayed. To control whether those reflections appear in the dock/overlays, add a <strong>Reflection Filter</strong> node to this flow. The filter doesn’t change what gets relayed; it only decides if the “echo” is shown after it comes back.</div>
+                <div class="property-help">Destinations: Default <strong>All Platforms (Excluding Source)</strong> prevents echo loops. When targeting a specific platform, the origin tab is still excluded (using the source tab ID) to avoid posting back to origin.</div>`;
+                break;
+
+            case 'reflectionFilter':
+                // Reflection control for Event Flow
+                {
+                    const policy = node.config.policy || 'block-all';
+                    const sourceMode = node.config.sourceMode || 'none';
+                    const windowMs = node.config.windowMs ?? 10000;
+                    const sourceTypesText = (node.config.sourceTypes || '').toString();
+                    html += `
+                        <div class="property-group">
+                            <label class="property-label">Reflection Policy</label>
+                            <select class="property-input" id="prop-policy">
+                                <option value="block-all" ${policy === 'block-all' ? 'selected' : ''}>Block All Reflections</option>
+                                <option value="allow-first" ${policy === 'allow-first' ? 'selected' : ''}>Allow First Only (windowed)</option>
+                                <option value="allow-all" ${policy === 'allow-all' ? 'selected' : ''}>Allow All Reflections</option>
+                            </select>
+                        </div>
+                        <div class="property-group" id="reflection-window-group" style="${policy === 'allow-first' ? '' : 'display:none;'}">
+                            <label class="property-label">First-Only Window (ms)</label>
+                            <input type="number" class="property-input" id="prop-windowMs" value="${windowMs}" min="100" step="100">
+                            <div class="property-help">How long to treat the first matching reflection as allowed before blocking repeats.</div>
+                        </div>
+                        <div class="property-group">
+                            <label class="property-label">Source Type Filter</label>
+                            <select class="property-input" id="prop-sourceMode">
+                                <option value="none" ${sourceMode === 'none' ? 'selected' : ''}>No Source Filter</option>
+                                <option value="allow" ${sourceMode === 'allow' ? 'selected' : ''}>Allow Only Listed</option>
+                                <option value="block" ${sourceMode === 'block' ? 'selected' : ''}>Block Listed</option>
+                            </select>
+                            <input type="text" class="property-input" id="prop-sourceTypes" value="${sourceTypesText}" placeholder="Comma-separated types (e.g., youtube,twitch)">
+                            <div class="property-help">Type values match message.type (youtube, twitch, kick, discord, etc.).</div>
+                        </div>
+                        <div class="property-group">
+                            <div class="property-help"><strong>How it works with Relay/Send:</strong> This action applies only to <em>reflections</em> — messages previously sent/relayed by this system and then re‑ingested. Place it early in the flow to control dock/overlay visibility of relayed posts: <em>Block All</em> hides every reflection; <em>Allow First</em> shows one per window; <em>Allow All</em> shows all. It does not affect original incoming messages, and it does not change what Relay/Send transmit — those actions already skip when processing reflections.</div>
+                            <div class="property-help">Global filters (e.g., “First Source Only”) remain unchanged and apply independently.</div>
+                        </div>`;
+                }
+                break;
 			case 'webhook':
 				html += `<div class="property-group"><label class="property-label">URL</label><input type="url" class="property-input" id="prop-url" value="${node.config.url || ''}"></div>
 						 <div class="property-group"><label class="property-label">Method</label><select class="property-input" id="prop-method">${['POST', 'GET', 'PUT', 'DELETE', 'PATCH'].map(m => `<option value="${m}" ${node.config.method === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
@@ -3316,6 +3367,21 @@ class EventFlowEditor {
             
             destinationCustom.addEventListener('input', (e) => {
                 nodeData.config.destination = e.target.value;
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for reflectionFilter window visibility
+        const policySelect = document.getElementById('prop-policy');
+        const windowGroup = document.getElementById('reflection-window-group');
+        if (policySelect && windowGroup) {
+            policySelect.addEventListener('change', (e) => {
+                windowGroup.style.display = (e.target.value === 'allow-first') ? '' : 'none';
+                // ensure config refresh
+                if (nodeData && nodeData.config) {
+                    nodeData.config.policy = e.target.value;
+                }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
             });

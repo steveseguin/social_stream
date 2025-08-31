@@ -218,10 +218,9 @@
 		 if (replyMessage){
 			data.initial = replyMessage;
 		}
-	   if (originalMessage){
+	    if (originalMessage){
 			data.reply = originalMessage;
 		}
-		
 		
 		pushMessageIfNew(data, ele, send);
 	}
@@ -464,9 +463,7 @@
 
 	  return { markIfNew };
 	})();
-
-
-
+	
 	function startCheck(){
 		if (isExtensionOn && checking){return;}
 
@@ -481,8 +478,6 @@
 				if (!container.marked){
 					container.marked=true;
 					
-					
-
 					console.log("CONNECTED chat detected");
 
 					setTimeout(()=>{

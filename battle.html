@@ -225,9 +225,12 @@ if (urlParams.has("session")){
 }
 
 var password = "false";
-if (urlParams.has("password")){
-	password = urlParams.get("password") || "false";
-}
+    if (urlParams.has("password")){
+        password = urlParams.get("password") || "false";
+    }
+
+    // LAN-only P2P option
+    var lanonly = urlParams.has("lanonly") ? "&lanonly" : "";
 
 
 var addComputers = true;
@@ -422,7 +425,7 @@ function processInput(data){
 }
 
 var iframe = document.createElement("iframe"); // we can leave it called "dock", as it will get all the same messages the dock gets. This could be optimized of course..
-iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password="+password+"&solo&view="+roomID+"&novideo&noaudio&label=dock&cleanoutput&room="+roomID; // view only connection (data two way of course)
+iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password="+encodeURIComponent(password)+lanonly+"&solo&view="+roomID+"&novideo&noaudio&label=dock&cleanoutput&room="+roomID; // view only connection (data two way of course)
 iframe.style.width = "0px";
 iframe.style.height = "0px";
 iframe.style.position = "fixed";

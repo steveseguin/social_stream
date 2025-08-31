@@ -283,6 +283,24 @@
                 <h4>Recent Events</h4>
                 <div id="events-list"></div>
             </div>
+            <div class="moderation-controls" style="background:#fff; padding:12px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.1);">
+                <h4 style="margin:0 0 8px 0;">Moderation & Ads</h4>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; align-items:center;">
+                    <input type="text" id="mod-username" class="channel-input" placeholder="Username">
+                    <input type="number" id="mod-seconds" class="channel-input" placeholder="Timeout (s)">
+                    <input type="text" id="mod-reason" class="channel-input" placeholder="Reason (optional)">
+                    <div style="display:flex; gap:6px;">
+                        <button id="btn-ban" class="connect-button" style="background:#b23;">Ban</button>
+                        <button id="btn-timeout" class="connect-button" style="background:#c62;">Timeout</button>
+                        <button id="btn-unban" class="connect-button" style="background:#2b6;">Unban</button>
+                    </div>
+                </div>
+                <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+                    <button id="btn-ad-60" class="connect-button">Start 60s Ad</button>
+                    <button id="btn-ad-90" class="connect-button">Start 90s Ad</button>
+                    <button id="btn-ad-schedule" class="connect-button" style="background:#555;">Fetch Ad Schedule</button>
+                </div>
+            </div>
         </div>
     </div>
     <script>
@@ -342,6 +360,18 @@
                     localStorage.setItem('twitchUserAlias', this.value);
                 });
             }
+
+            // Hook moderation & ads buttons (forward to content script via window.postMessage)
+            function post(action, payload) {
+                window.postMessage({ source: 'twitch-ws-ui', action, payload }, '*');
+            }
+            const g = id => document.getElementById(id);
+            g('btn-ban')?.addEventListener('click', () => post('ban', { login: g('mod-username')?.value, seconds: 0, reason: g('mod-reason')?.value }));
+            g('btn-timeout')?.addEventListener('click', () => post('ban', { login: g('mod-username')?.value, seconds: parseInt(g('mod-seconds')?.value||'600'), reason: g('mod-reason')?.value }));
+            g('btn-unban')?.addEventListener('click', () => post('unban', { login: g('mod-username')?.value }));
+            g('btn-ad-60')?.addEventListener('click', () => post('ad', { length: 60 }));
+            g('btn-ad-90')?.addEventListener('click', () => post('ad', { length: 90 }));
+            g('btn-ad-schedule')?.addEventListener('click', () => post('ad_schedule', {}));
         });
 
         // The rest of your existing JavaScript code goes here
