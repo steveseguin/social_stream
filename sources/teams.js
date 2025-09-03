@@ -210,7 +210,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		
 		//console.log(chatimg);
 		if (!ele.querySelector(".fui-ChatMyMessage")){
-			console.log(ele);
+			//console.log(ele);
 			chatimg = "";
 			
 			if (!chatimg && ele.querySelector('[data-tid="message-avatar"] img[src], profile-picture img[src]')){
