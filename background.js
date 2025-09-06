@@ -5653,22 +5653,33 @@ function setupSocketDock() {
 		conConDock = 0;
 		socketserverDock.send(JSON.stringify({ join: streamID, out: 4, in: 3 }));
 	};
-	socketserverDock.addEventListener("message", async function (event) {
-		if (event.data) {
-			try {
-				if (settings.server3 && isExtensionOn) {
-					try {
-						var data = JSON.parse(event.data);
-						processIncomingRequest(data);
-					} catch (e) {
-						console.error(e);
-					}
-				}
-			} catch (e) {
-				log(e);
-			}
-		}
-	});
+socketserverDock.addEventListener("message", async function (event) {
+    if (!event.data) { return; }
+    let data = null;
+    try { data = JSON.parse(event.data); } catch (e) { return; }
+
+    // Only handle inbound messages when allowed
+    if (!(settings.server3 && isExtensionOn)) { return; }
+
+    // Lightweight API: allow requesting a Hype snapshot and respond on the same paired channel
+    // Expected request formats:
+    //  - { action: "getHype", get: "token123" }
+    //  - { get: "hype" }  // shorthand
+    if ((data && data.action === "getHype") || (data && data.get === "hype")) {
+        try {
+            const snapshot = combineHypeData();
+            const ret = { callback: { get: (data.get || "hype"), result: { hype: snapshot } } };
+            socketserverDock && socketserverDock.send(JSON.stringify(ret));
+        } catch (e) { console.warn("Failed to respond to getHype on /dock", e); }
+        return; // handled
+    }
+
+    try {
+        processIncomingRequest(data);
+    } catch (e) {
+        console.error(e);
+    }
+});
 }
 //
 
@@ -5730,23 +5741,38 @@ function setupSocket() {
 		conCon = 0;
 		socketserver.send(JSON.stringify({ join: streamID, out: 2, in: 1 }));
 	};
-	socketserver.addEventListener("message", async function (event) {
-		if (event.data) {
-			var resp = false;
+socketserver.addEventListener("message", async function (event) {
+    if (event.data) {
+        var resp = false;
 
-			try {
-				var data = JSON.parse(event.data);
-			} catch (e) {
-				console.error(e);
-				return;
-			}
-			
-			if (data.target && (data.target==='null')){
-				data.target = "";
-			}
-			
+        let data;
+        try {
+            data = JSON.parse(event.data);
+        } catch (e) {
+            console.error(e);
+            return;
+        }
 
-			if (data.action && data.action === "sendChat" && data.value) {
+        // Lightweight API: allow requesting a Hype snapshot and respond on the same paired channel
+        // Expected request formats:
+        //  - { action: "getHype", get: "token123" }
+        //  - { get: "hype" }  // shorthand
+        try {
+            if ((data && data.action === "getHype") || (data && data.get === "hype")) {
+                try {
+                    const snapshot = combineHypeData();
+                    const ret = { callback: { get: (data.get || "hype"), result: { hype: snapshot } } };
+                    socketserver && socketserver.send(JSON.stringify(ret));
+                } catch (e) { console.warn("Failed to respond to getHype on /api", e); }
+                return; // handled
+            }
+        } catch (e) { /* ignore */ }
+
+        if (data.target && (data.target==='null')){
+            data.target = "";
+        }
+
+        if (data.action && data.action === "sendChat" && data.value) {
 				var msg = {};
 				msg.response = data.value;
 				if (data.target) {
@@ -7544,7 +7570,7 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 					});
 				});
 			});
-		} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type) {
+	} else if (request.action === "getUserHistory" && request.value && request.value.chatname && request.value.type) {
 			if (isExtensionOn) {
 				getMessagesDB(request.value.userid || request.value.chatname, request.value.type, (page = 0), (pageSize = 100), function (response) {
 					if (isExtensionOn) {

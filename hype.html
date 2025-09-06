@@ -634,6 +634,23 @@ var conCon = 1;
 var socketserver = false;
 var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
 
+// Allow custom channel pair via URL params
+// Defaults for Hype overlay are out:3, in:4
+var outChannel = 3;
+var inChannel = 4;
+try {
+    if (urlParams.has("out")) {
+        outChannel = parseInt(urlParams.get("out")) || outChannel;
+    } else if (urlParams.has("outchan")) {
+        outChannel = parseInt(urlParams.get("outchan")) || outChannel;
+    }
+    if (urlParams.has("in")) {
+        inChannel = parseInt(urlParams.get("in")) || inChannel;
+    } else if (urlParams.has("inchan")) {
+        inChannel = parseInt(urlParams.get("inchan")) || inChannel;
+    }
+} catch(e) {}
+
 function setupSocket() {
     socketserver.onclose = function() {
         setTimeout(function() {
@@ -644,10 +661,11 @@ function setupSocket() {
     };
     socketserver.onopen = function() {
         conCon = 1;
+        // Join with the configured channel pair
         socketserver.send(JSON.stringify({
             "join": roomID,
-            "out": 3,
-            "in": 4
+            "out": outChannel,
+            "in": inChannel
         }));
     };
     socketserver.addEventListener('message', function(event) {
