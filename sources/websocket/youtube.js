@@ -1,4 +1,105 @@
 
+// --- APPEND-ONLY: YouTube WSS status hooks (non-invasive) ---
+(function(){
+  try {
+    if (window.__YT_WSS_STATUS_PATCH__) return; // idempotent
+    window.__YT_WSS_STATUS_PATCH__ = true;
+
+    var TAB_ID = (typeof window.__SSAPP_TAB_ID__ !== 'undefined') ? window.__SSAPP_TAB_ID__ : null;
+
+    function __ssNotifyApp(status, message){
+      try {
+        var payload = { wssStatus: { platform: 'youtube', status: status, message: message } };
+        if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
+          window.chrome.runtime.sendMessage(window.chrome.runtime.id, payload, function(){});
+        } else if (window.ninjafy && window.ninjafy.sendMessage) {
+          window.ninjafy.sendMessage(null, payload, null, TAB_ID);
+        } else {
+          // Plain postMessage fallback
+          var data = Object.assign({}, payload);
+          if (TAB_ID !== null) data.__tabID__ = TAB_ID;
+          window.postMessage(data, '*');
+        }
+      } catch(e) { /* noop */ }
+    }
+
+    // Optional: expose for upstream usage
+    window.ssWssNotify = __ssNotifyApp;
+
+    // 1) Initial sign-in check
+    function initialCheck(){
+      try {
+        var hasToken = !!localStorage.getItem('youtubeOAuthToken');
+        if (!hasToken) __ssNotifyApp('signin_required','Sign in with YouTube to continue');
+      } catch(_){}
+    }
+
+    // 2) Watch for live chat connect/disconnect via global liveChatId
+    function watchLiveChat(){
+      try {
+        var prev = null;
+        setInterval(function(){
+          try {
+            var cur = (typeof window.liveChatId !== 'undefined') ? window.liveChatId : null;
+            if (cur && !prev) __ssNotifyApp('connected','Connected to YouTube live chat');
+            if (!cur && prev) __ssNotifyApp('disconnected','Disconnected from YouTube live chat');
+            prev = cur;
+          } catch(_){}
+        }, 1500);
+      } catch(_){}
+    }
+
+    // 3) Patch fetch for YouTube Data API errors and forward as error status
+    function patchFetchErrors(){
+      try {
+        if (window.__ss_fetch_patched__) return; window.__ss_fetch_patched__ = true;
+        var _orig = window.fetch;
+        if (typeof _orig !== 'function') return;
+        var lastAt = 0;
+        var throttle = 3000; // 3s
+        var ping = function(status, msg){
+          var now = Date.now();
+          if (now - lastAt > throttle) { __ssNotifyApp('error', msg || ('YouTube API error: ' + status)); lastAt = now; }
+        };
+        window.fetch = async function(input, init){
+          try {
+            var res = await _orig(input, init);
+            var url = (typeof input === 'string') ? input : (input && input.url) || '';
+            if (url.indexOf('googleapis.com/youtube') !== -1 || url.indexOf('youtube.googleapis.com') !== -1){
+              if (!res.ok){
+                var msg = 'YouTube API ' + res.status;
+                try {
+                  var body = await res.clone().json().catch(function(){ return null; });
+                  if (body && body.error) {
+                    var emsg = body.error.message || '';
+                    var reason = (body.error.errors && body.error.errors[0] && body.error.errors[0].reason) || '';
+                    if (emsg) msg = emsg;
+                    if (reason) msg += ' (' + reason + ')';
+                  }
+                } catch(e){}
+                ping(res.status, msg);
+              }
+            }
+            return res;
+          } catch(e){
+            ping('network_error', (e && e.message) ? e.message : 'Network error');
+            throw e;
+          }
+        };
+      } catch(_){}
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(initialCheck, 0);
+    } else {
+      document.addEventListener('DOMContentLoaded', function(){ setTimeout(initialCheck, 0); });
+    }
+    watchLiveChat();
+    patchFetchErrors();
+  } catch(e){}
+})();
+// --- END APPEND-ONLY BLOCK ---
+
 var settings = {};
 
 // Message queue and throttling
