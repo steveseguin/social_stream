@@ -529,12 +529,22 @@ try {
 		localStorage.removeItem('youtubeChannel');
         localStorage.removeItem('youtubeVideoId');
 	}
+    function notifyApp(status, message = '') {
+        try {
+            if (window.chrome && chrome.runtime && chrome.runtime.id) {
+                chrome.runtime.sendMessage(chrome.runtime.id, {
+                    wssStatus: { platform: 'youtube', status, message }
+                }, function(){});
+            }
+        } catch(e) { /* noop */ }
+    }
     function showAuthButton() {
         const authElement = document.querySelector('.auth');
         if (authElement) authElement.classList.remove("hidden");
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.remove('hidden');
+        notifyApp('signin_required', 'Sign in with YouTube to continue');
     }
     function showSocketInterface() {
         const authElement = document.querySelector('.auth');
@@ -542,6 +552,8 @@ try {
         if (authElement) authElement.classList.add("hidden");
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.add('hidden');
+        // Only a readiness signal — actual connection will update separately
+        notifyApp('ready', 'Signed in. Use popup to connect to a target');
     }
 	function handleVisibilityChange() {
 		const wasVisible = isPageVisible;
@@ -1112,6 +1124,7 @@ try {
         document.getElementById('permissions-info').innerHTML = '';
         document.getElementById('channel-input').value = '';
         console.log('Signed out successfully');
+        notifyApp('signed_out', 'Signed out of YouTube');
     }
     function handleEnterKey(event) {
         if (event.key === 'Enter') handleSendMessage(event);
@@ -1469,7 +1482,7 @@ try {
             console.error('Error fetching subscriber count:', error);
         }
     }
-	function clearPolling() {
+function clearPolling() {
 		// Clear all tracked timeouts
 		activeTimeouts.forEach(timeout => {
 			try {
@@ -1480,14 +1493,14 @@ try {
 		});
 		activeTimeouts.clear();
 		
-		if (pollInterval) clearInterval(pollInterval);
-		if (channelStatsInterval) clearInterval(channelStatsInterval);
+    if (pollInterval) clearInterval(pollInterval);
+    if (channelStatsInterval) clearInterval(channelStatsInterval);
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
 		}
 		
 		foregroundPollingInterval = null;
-		pollInterval = null;
+    pollInterval = null;
 		channelStatsInterval = null;
 		fetchTimeout = null;
 		
@@ -1497,7 +1510,8 @@ try {
 			lastConnectedVideoId = currentStream.id;
 		}
 		
-		liveChatId = null;
+    liveChatId = null;
+    notifyApp('disconnected', 'Disconnected from YouTube live chat');
 		nextPageToken = null;
 		lastMessageTime = null;
 		isPolling = false;
@@ -1684,9 +1698,10 @@ try {
                 await getSubscriberCount(effectiveChannelIdToUse);
             }
            if (liveChatId) {
-				const chatAvailableMessage = document.createElement("div");
-				chatAvailableMessage.innerText = "Connected to live chat.";
-				document.getElementById('textarea').appendChild(chatAvailableMessage);
+                const chatAvailableMessage = document.createElement("div");
+                chatAvailableMessage.innerText = "Connected to live chat.";
+                document.getElementById('textarea').appendChild(chatAvailableMessage);
+                notifyApp('connected', 'Connected to YouTube live chat');
 				// Update connect button to show disconnect
 				const connectButton = document.getElementById('connect-button');
 				if (connectButton) {
