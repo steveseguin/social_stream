@@ -21,10 +21,10 @@
                     <h1 class="landing-title">Social Stream for YouTube</h1>
                     <p class="landing-subtitle">Connect to YouTube Live Chat</p>
                     
-                    <div class="auth-section">
-                        <a id="auth-link" class="auth-button">Sign in with YouTube</a>
-                        <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
-                    </div>
+            <div class="auth-section">
+                <a id="auth-link" class="auth-button">Sign in with YouTube</a>
+                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
+            </div>
                     
                     <div class="landing-description">
                         <p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
@@ -43,12 +43,17 @@
                                 <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
                             </div>
                             <div class="credentials-help">
-                                <p>
-                                    To avoid shared quota limits, you can provide your own Google Cloud OAuth Client ID for YouTube Data API v3.
-                                    Create an OAuth client (type Web Application) in Google Cloud Console and add this page URL as an authorized redirect URI:
-                                </p>
+                                <p><strong>How to set up in Google Cloud:</strong></p>
+                                <ul>
+                                    <li>Create or select a project at console.cloud.google.com</li>
+                                    <li>Enable the “YouTube Data API v3” in APIs & Services</li>
+                                    <li>Configure OAuth consent screen (External), add yourself as a test user or publish</li>
+                                    <li>Create Credentials → OAuth client ID → Web application</li>
+                                    <li>Add the following to Authorized redirect URIs:</li>
+                                </ul>
                                 <code id="redirect-uri-hint"></code>
-                                <p>After saving, sign in again to use your credentials.</p>
+                                <p>Save and copy your Client ID (ends with .apps.googleusercontent.com) into the field above. API Key is optional.</p>
+                                <p>After saving, sign out and sign in again to use your credentials.</p>
                             </div>
                         </div>
                     </details>
@@ -130,6 +135,10 @@
                         <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
                     </div>
                     <div class="credentials-note">Changes take effect next sign-in. Use Reset to return to defaults.</div>
+                    <div class="credentials-help" style="margin-top:8px;">
+                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add this Authorized redirect URI:</p>
+                        <code id="redirect-uri-hint-2"></code>
+                    </div>
                 </div>
             </div>
             <div class="recent-events">
@@ -2400,6 +2409,8 @@ try {
 			const openCreds = function() {
 				const details = document.getElementById('credentials-details');
 				if (details) details.open = true;
+				const warn = document.getElementById('quota-warning');
+				if (warn) warn.classList.add('hidden');
 				window.scrollTo({ top: 0, behavior: 'smooth' });
 			};
 			quotaBtn.addEventListener('click', openCreds);
@@ -2571,8 +2582,11 @@ try {
 
 	function initCredentialsUI() {
 		try {
+			const redirectValue = window.location.href.split('/youtube')[0] + '/youtube.html';
 			const redirectEl = document.getElementById('redirect-uri-hint');
-			if (redirectEl) redirectEl.textContent = window.location.href.split('/youtube')[0] + '/youtube.html';
+			if (redirectEl) redirectEl.textContent = redirectValue;
+			const redirectEl2 = document.getElementById('redirect-uri-hint-2');
+			if (redirectEl2) redirectEl2.textContent = redirectValue;
 			const storedId = localStorage.getItem('ytClientIdOverride') || '';
 			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
 			const useCustom = !!storedId;
