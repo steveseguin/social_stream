@@ -2292,3 +2292,108 @@ try{
 } catch(e){
 	console.error(e);
 }
+
+// --- APPEND-ONLY: Twitch WSS status hooks (non-invasive) ---
+(function(){
+  try {
+    if (window.__TWITCH_WSS_STATUS_PATCH__) return; // idempotent
+    window.__TWITCH_WSS_STATUS_PATCH__ = true;
+
+    var TAB_ID = (typeof window.__SSAPP_TAB_ID__ !== 'undefined') ? window.__SSAPP_TAB_ID__ : null;
+
+    function __tw_notifyApp(status, message){
+      try {
+        var payload = { wssStatus: { platform: 'twitch', status: status, message: message } };
+        if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
+          window.chrome.runtime.sendMessage(window.chrome.runtime.id, payload, function(){});
+        } else if (window.ninjafy && window.ninjafy.sendMessage) {
+          window.ninjafy.sendMessage(null, payload, null, TAB_ID);
+        } else {
+          var data = Object.assign({}, payload);
+          if (TAB_ID !== null) data.__tabID__ = TAB_ID;
+          window.postMessage(data, '*');
+        }
+      } catch(e){}
+    }
+
+    // Expose for optional upstream use
+    window.ssWssNotifyTwitch = __tw_notifyApp;
+
+    // 1) Initial sign-in check
+    function __tw_initialCheck(){
+      try {
+        var hasToken = !!localStorage.getItem('twitchOAuthToken');
+        if (!hasToken) __tw_notifyApp('signin_required','Please sign in');
+      } catch(_){ }
+    }
+
+    // 2) Patch showAuthButton to emit signin_required whenever UI shows auth prompt
+    try {
+      if (typeof showAuthButton === 'function') {
+        var __tw_origShowAuth = showAuthButton;
+        showAuthButton = function(){
+          try { __tw_notifyApp('signin_required','Please sign in'); } catch(_){ }
+          return __tw_origShowAuth.apply(this, arguments);
+        };
+      }
+    } catch(_){ }
+
+    // 3) Watch WebSocket(s) for connected/disconnected
+    try {
+      var __tw_prevAnyOpen = false;
+      setInterval(function(){
+        try {
+          var ws = (typeof window.websocket !== 'undefined') ? window.websocket : null;
+          var ev = (typeof window.eventSocket !== 'undefined') ? window.eventSocket : null;
+          var isOpen = !!(ws && ws.readyState === 1);
+          var isEvOpen = !!(ev && ev.readyState === 1);
+          var anyOpen = isOpen || isEvOpen;
+          if (anyOpen && !__tw_prevAnyOpen) __tw_notifyApp('connected','Connected to Twitch');
+          if (!anyOpen && __tw_prevAnyOpen) __tw_notifyApp('disconnected','Disconnected from Twitch');
+          __tw_prevAnyOpen = anyOpen;
+        } catch(_){ }
+      }, 1500);
+    } catch(_){ }
+
+    // 4) Intercept Twitch API errors and forward as error status
+    try {
+      if (!window.__tw_fetch_patched__) {
+        window.__tw_fetch_patched__ = true;
+        var _origFetch = window.fetch;
+        if (typeof _origFetch === 'function') {
+          var lastAt = 0;
+          var throttle = 3000;
+          var ping = function(status, msg){ var now = Date.now(); if (now - lastAt > throttle) { __tw_notifyApp('error', msg || ('Twitch API error: ' + status)); lastAt = now; } };
+          window.fetch = async function(input, init){
+            try {
+              var res = await _origFetch(input, init);
+              var url = (typeof input === 'string') ? input : (input && input.url) || '';
+              if (url.indexOf('api.twitch.tv') !== -1 || url.indexOf('id.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1) {
+                if (!res.ok) {
+                  var msg = 'Twitch API ' + res.status;
+                  try {
+                    var body = await res.clone().json().catch(function(){ return null; });
+                    if (body) {
+                      if (body.message) msg = body.message; // Helix common
+                      if (body.error_description) msg = body.error_description; // OAuth common
+                      else if (body.error && typeof body.error === 'string') msg = body.error;
+                    }
+                  } catch(_){ }
+                  ping(res.status, msg);
+                }
+              }
+              return res;
+            } catch(e) {
+              ping('network_error', e && e.message ? e.message : 'Network error');
+              throw e;
+            }
+          };
+        }
+      }
+    } catch(_){ }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') setTimeout(__tw_initialCheck, 0);
+    else document.addEventListener('DOMContentLoaded', function(){ setTimeout(__tw_initialCheck, 0); });
+  } catch(e){}
+})();
+// --- END APPEND-ONLY BLOCK ---
