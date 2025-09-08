@@ -2580,6 +2580,13 @@ try {
 		} catch(_){}
 	}
 
+	function hideQuotaBanner() {
+		try {
+			const el = document.getElementById('quota-warning');
+			if (el) el.classList.add('hidden');
+		} catch(_){}
+	}
+
 	function initCredentialsUI() {
 		try {
 			const redirectValue = window.location.href.split('/youtube')[0] + '/youtube.html';
@@ -2595,6 +2602,7 @@ try {
 			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
 			const indicator = document.getElementById('custom-cred-indicator');
 			if (indicator) indicator.classList.toggle('hidden', !useCustom);
+			if (useCustom) hideQuotaBanner();
 			// Wire buttons
 			const save = async function(primary=true){
 				const cid = (document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '';
@@ -2606,6 +2614,7 @@ try {
 				if (cid) localStorage.setItem('ytClientIdOverride', cid); else localStorage.removeItem('ytClientIdOverride');
 				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
 				alert('Saved. Please sign out and sign in again to apply your credentials.');
+				hideQuotaBanner();
 				initCredentialsUI();
 			};
 			const clear = function(){

@@ -6,11 +6,12 @@
       "height": 450
     },
     "signin": {
-      "userAgent": "Chrome",
-      "size": {
-        "width": 600,
-        "height": 600
-      }
+		"userAgent": "Chrome",
+		"size": {
+			"width": 600,
+			"height": 600
+		},
+		"allowPopups": true
     }
   },
   "streamelements": {
@@ -61,11 +62,10 @@
 	"closeOnNavigateMode": "exact",
 	"signin": {
 	  "url": "https://tiktok.com",
-	  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
-	  "preload": "kasada",
-	  "monitorAntiBot": false,
-	  "useSystemBrowser": false,
-	  "useTLSProxy": false
+	  "userAgent": "Chrome",
+	  "preload": "full",
+	  "closeOnNavigate": true,
+	  "allowPopups": false
 	},
 	"wss": {
 	  "size": {
@@ -374,6 +374,60 @@
 		  "height": 1050
 		}
 	}
+  },
+  "kick": {
+    "userAgent": "Chrome",
+    "mockUserAgentData": {
+	  "brands": [
+		{
+		  "brand": "Not;A=Brand",
+		  "version": "99"
+		},
+		{
+		  "brand": "Google Chrome",
+		  "version": "140"
+		},
+		{
+		  "brand": "Chromium",
+		  "version": "140"
+		}
+	  ],
+	  "mobile": false,
+	  "platform": "Windows",
+	  "fullVersionList": [
+		{
+		  "brand": "Not;A=Brand",
+		  "version": "99.0.0.0"
+		},
+		{
+		  "brand": "Google Chrome",
+		  "version": "140.0.7339.41"
+		},
+		{
+		  "brand": "Chromium",
+		  "version": "140.0.7339.41"
+		}
+	  ],
+	  "architecture": "x86",
+	  "bitness": "64",
+	  "model": "",
+	  "platformVersion": "19.0.0",
+	  "uaFullVersion": "140.0.7339.41",
+	  "wow64": false,
+	  "enhancedHeaders": true
+	},
+    "signin": {
+      "url": "https://kick.com",
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+	  "size": {
+        "width": 1920,
+        "height": 1080
+      },
+	  "preload": "kasasda",
+      "monitorAntiBot": false,
+	  "useSystemBrowser": false,
+	  "useTLSProxy": false
+    }
   },
   "parti": {
     "signin": {
