@@ -2539,7 +2539,7 @@ function getTargetMap() {
 		'poll': 16,
 		'eventsdashboard': 17,
 		'flowactions': 18,
-		'scoreboard': 20
+		'scoreboard': 21
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -2671,25 +2671,37 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         }, function (response) {});
 
         // Save associated text/number/option value if applicable, using the key part
-        const associatedInput = document.querySelector(`[data-numbersetting${paramNum}='${keyOnly}'], [data-optionparam${paramNum}='${keyOnly}'], [data-textparam${paramNum}='${keyOnly}']`);
+        const numberSettingSuffixSave = paramNum === '1' ? '' : paramNum;
+        const associatedInput = document.querySelector(
+            `[data-numbersetting${numberSettingSuffixSave}='${keyOnly}'], ` +
+            `[data-optionparam${paramNum}='${keyOnly}'], ` +
+            `[data-textparam${paramNum}='${keyOnly}']`
+        );
         if (associatedInput && (associatedInput.value !== undefined || associatedInput.code !== undefined)) {
-             const inputType = associatedInput.dataset.numbersetting ? `numbersetting${paramNum}` : associatedInput.dataset.optionparam ? `optionparam${paramNum}` : `textparam${paramNum}`;
-             chrome.runtime.sendMessage({
-                 cmd: "saveSetting",
-                 type: inputType,
-                 target: ele.dataset.target || null,
-                 setting: keyOnly,
-                 value: associatedInput.code || associatedInput.value
-             }, function (response) {});
+            const isNum = associatedInput.hasAttribute(`data-numbersetting${numberSettingSuffixSave}`);
+            const isOpt = associatedInput.hasAttribute(`data-optionparam${paramNum}`);
+            const inputType = isNum
+                ? (paramNum === '1' ? 'numbersetting' : `numbersetting${paramNum}`)
+                : (isOpt ? `optionparam${paramNum}` : `textparam${paramNum}`);
+            chrome.runtime.sendMessage({
+                cmd: "saveSetting",
+                type: inputType,
+                target: ele.dataset.target || null,
+                setting: keyOnly,
+                value: associatedInput.code || associatedInput.value
+            }, function (response) {});
         }
     }
 
     // Handle "siblings" with the same param prefix
+    // Only uncheck related toggles that control the same key (e.g., opacity=..., scale=...)
     const paramPrefix = paramValue.split('=')[0];
-    // Only handle siblings if the param contains '=' (like scale=2, scale=0.77)
-    if (paramValue.includes('=') || paramValue=="scale") {
-        document.querySelectorAll(`input[data-${paramType}]:not([data-${paramType}='${paramValue}']),input[data-${paramType}^='${paramPrefix}=']:not([data-${paramType}='${paramValue}'])`).forEach(ele1 => {
-            if (ele1 && ele1.checked) {
+    // Only handle siblings if the param contains '=' (like scale=2, opacity=0.3) or the bare key itself
+    if (paramValue.includes('=') || paramValue === paramPrefix) {
+        // Select only inputs that control the same key for this param group, excluding the current element
+        const selector = `input[data-${paramType}^='${paramPrefix}='], input[data-${paramType}='${paramPrefix}']`;
+        document.querySelectorAll(selector).forEach(ele1 => {
+            if (ele1 !== ele && ele1.checked) {
                 ele1.checked = false;
                 updateSettings(ele1, sync);
             }
