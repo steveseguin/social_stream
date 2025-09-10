@@ -106,7 +106,7 @@
 	var channelName = "";
 	
 	function processMessage(ele, send=true){
-	//	console.log(ele);
+		console.log(ele);
 		if (!ele || !ele.isConnected){
 		//	console.log("no connected");
 			return;
@@ -474,7 +474,7 @@
 		}
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector(".right-0 .bg-sidebar [style*='scrollbar-width']");
+				var container = document.querySelector('path[d="m12 5 7 7-7 7"]');
 				if (!container.marked){
 					container.marked=true;
 					
@@ -482,12 +482,12 @@
 
 					setTimeout(()=>{
 						
-						container.childNodes.forEach(node=>{
-							processMessage(node, false);
+						container.parentNode.parentNode.nextSibling.childNodes.forEach(node=>{
+							processMessage(node,false);
 						});
 						
 						dataIndex = 0;
-						onElementInserted(container);
+						onElementInserted(container.parentNode.parentNode.nextSibling);
 					},2000);
 				}
 				checkViewers();
