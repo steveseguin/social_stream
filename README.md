@@ -108,6 +108,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - zoom.us (web version)
 - owncast demo page (`watch.owncast.online`, or for a pop-out chat version, open `https://watch.owncast.online/embed/chat/readwrite/`  )
 - crowdcast.io
+- lfg.tv
 - livestream.com
 - mixcloud.com (pop out chat)
 - ms teams (teams.live.com and teams.microsoft.com)

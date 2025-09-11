@@ -345,6 +345,7 @@ Social Stream Ninja supports capturing live chat from a wide range of platforms:
 - **Facebook (Live & Static Comments)**
 - **Workplace.com**
 - **Zoom.us**
+- **LFG.tv**
 - **Owncast**
 - **Crowdcast.io**
 - **Livestream.com**
