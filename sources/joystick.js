@@ -77,7 +77,10 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 		 return;
 	  }
 	  
+	  chatname = chatname.replace(":","");
+	  
 	  chatname = chatname.trim();
+	  
 	  if (!chatname){return;}
 	  
 	  try {
@@ -126,6 +129,14 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	  if (!chatmessage && !hasDonation){
 		return;
 	  }
+	  
+	  let eevent = false;
+	  if (chatname=="notice"){
+		  eevent = true;
+	  }
+	  if (chatname=="joystick.tv bot"){
+		  bot = true;
+	  }
 
 	  var data = {};
 	  data.chatname = chatname;
@@ -137,6 +148,9 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	  data.membership = "";
 	  data.textonly = settings.textonlymode || false;
 	  data.type = "joystick";
+	  if (eevent){
+		  data.event = "notice";
+	  }
 	  if (bot){
 		data.bot = bot;
 	  }
