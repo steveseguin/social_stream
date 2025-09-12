@@ -164,6 +164,13 @@ span:empty,
 	const MAX_MESSAGES = 20;
 	const ANIMATION_DURATION = 500;
 
+	// Allow custom auto-remove timing via URL: &showtime=milliseconds
+	// Use 0 to disable auto-removal. Default to 30000ms (30s)
+	const SHOWTIME = (() => {
+		const v = parseInt(urlParams.get('showtime') || '30000');
+		return isNaN(v) ? 30000 : v;
+	})();
+
 	function cleanupOldMessages() {
 		const messages = Array.from(chatContainer.children);
 		if (messages.length > MAX_MESSAGES) {
@@ -234,17 +241,18 @@ span:empty,
             });
         }, 500); 
 		
-		// Handle removal after 10 seconds
-		setTimeout(() => {
-			messageContainer.classList.add('removing');
-			
-			// Remove from DOM after transition completes
+		// Handle removal after SHOWTIME ms (0 disables auto-removal)
+		if (SHOWTIME > 0) {
 			setTimeout(() => {
-				if (messageContainer.parentNode) {
-					messageContainer.parentNode.removeChild(messageContainer);
-				}
-			}, 500); // Match the transition duration
-		}, 10000);
+				messageContainer.classList.add('removing');
+				// Remove from DOM after transition completes
+				setTimeout(() => {
+					if (messageContainer.parentNode) {
+						messageContainer.parentNode.removeChild(messageContainer);
+					}
+				}, 500); // Match the transition duration
+			}, SHOWTIME);
+		}
     }
 	
 	// The IFrame allows for peer to peer mode; used by default.  It may have issues if self-hosting this page though while using OBS v31 due to same-origin strict policies in CEF

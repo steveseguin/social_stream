@@ -770,6 +770,23 @@
 		document.body.style.backgroundImage = "none";
 	}
 
+	// Optional: force transparent/no background
+	if (urlParams.has('nobg')) {
+		// Ensure the body itself is transparent
+		document.body.style.background = '#0000';
+		document.body.style.backgroundImage = 'none';
+		// Hide overlay background layers that might still be visible
+		const bgLayer = document.querySelector('.background');
+		if (bgLayer) bgLayer.style.display = 'none';
+		const fadeLayer = document.querySelector('.fade');
+		if (fadeLayer) fadeLayer.style.display = 'none';
+		// Keep star field for Star Wars only; hide stars otherwise
+		if (creditsStyle !== 'starwars') {
+			const spaceEl = document.getElementById('space');
+			if (spaceEl) spaceEl.style.display = 'none';
+		}
+	}
+
 
 	// Set animation speed
 	const speed = parseFloat(urlParams.get('speed') || "1");

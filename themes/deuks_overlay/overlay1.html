@@ -134,6 +134,13 @@
 
     const chatContainer = document.getElementById('chat-container');
 
+    // Allow custom auto-remove timing via URL: &showtime=milliseconds
+    // Use 0 to disable auto-removal. Default to 30000ms (30s)
+    const SHOWTIME = (() => {
+        const v = parseInt(urlParams.get('showtime') || '30000');
+        return isNaN(v) ? 30000 : v;
+    })();
+
 	function addMessageToOverlay(data) {
 		const messageContainer = document.createElement('div');
 		messageContainer.classList.add('message-container');
@@ -185,17 +192,19 @@
 			chatContainer.scrollTop = chatContainer.scrollHeight;
 		}
 
-		// Handle removal after 10 seconds
-		setTimeout(() => {
-			messageContainer.classList.add('removing');
-			
-			// Remove from DOM after transition completes
-			setTimeout(() => {
-				if (messageContainer.parentNode) {
-					messageContainer.parentNode.removeChild(messageContainer);
-				}
-			}, 500); // Match the transition duration
-		}, 10000);
+        // Handle removal after SHOWTIME ms (0 disables auto-removal)
+        if (SHOWTIME > 0) {
+            setTimeout(() => {
+                messageContainer.classList.add('removing');
+                
+                // Remove from DOM after transition completes
+                setTimeout(() => {
+                    if (messageContainer.parentNode) {
+                        messageContainer.parentNode.removeChild(messageContainer);
+                    }
+                }, 500); // Match the transition duration
+            }, SHOWTIME);
+        }
 	}
 
     // Initialize iframe for Social Stream Ninja
