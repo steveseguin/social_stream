@@ -905,12 +905,31 @@ function processInput(data) {
         combinedData = newCombinedData;
     }
     
+    // Normalize keys by collapsing variants like "kick-123" → "kick"
+    // Sum viewer counts for the same base type and keep the max of chatters to avoid double counting
+    if (combinedData && typeof combinedData === 'object') {
+        const normalizedCombined = {};
+        for (const key of Object.keys(combinedData)) {
+            const entry = combinedData[key];
+            if (!entry || typeof entry !== 'object') continue;
+            const base = getSourceImage(key);
+            if (!normalizedCombined[base]) {
+                normalizedCombined[base] = { chatters: 0, viewers: 0 };
+            }
+            const v = parseInt(entry.viewers);
+            const c = parseInt(entry.chatters);
+            if (!isNaN(v)) normalizedCombined[base].viewers += v;
+            if (!isNaN(c)) normalizedCombined[base].chatters = Math.max(normalizedCombined[base].chatters, c);
+        }
+        combinedData = normalizedCombined;
+    }
+    
     const sourceKeys = Object.keys(combinedData);
 	sourceKeys.sort();
     let hasContentToDisplay = false;
     const now = Date.now();
-    // Track which sources are present this tick for cleanup/reordering
-    const presentTypes = new Set(sourceKeys);
+    // Track which sources are present this tick for cleanup/reordering (normalized)
+    const presentTypes = new Set(sourceKeys.map(getSourceImage));
 
     for (let i = 0; i < sourceKeys.length; i++) {
         const sourceType = sourceKeys[i];
@@ -938,12 +957,14 @@ function processInput(data) {
             const sourceImgName = getSourceImage(sourceType);
             const sourceImgSrc = "./sources/images/" + sourceImgName + ".png";
 
+            // Work with normalized data-type to avoid duplicates like kick-123 vs kick-456
+            const normalizedType = sourceImgName;
             // Upsert holder for this source without replacing the image element
-            let holder = hypeContainer.querySelector(".sourceStatHolder[data-type='" + sourceType + "']");
+            let holder = hypeContainer.querySelector(".sourceStatHolder[data-type='" + normalizedType + "']");
             if (!holder) {
                 holder = document.createElement("div");
                 holder.className = "sourceStatHolder";
-                holder.dataset.type = sourceType;
+                holder.dataset.type = normalizedType;
 
                 const img = document.createElement("img");
                 img.className = "sourceicons";
@@ -955,38 +976,38 @@ function processInput(data) {
                 if (showViewers) {
                     const v = document.createElement("span");
                     v.dataset.viewers = "true";
-                    v.dataset.type = sourceType;
+                    v.dataset.type = normalizedType;
                     holder.appendChild(v);
                 }
                 if (showChatters) {
                     const c = document.createElement("span");
                     c.dataset.chatters = "true";
-                    c.dataset.type = sourceType;
+                    c.dataset.type = normalizedType;
                     holder.appendChild(c);
                 }
             } else {
                 // Ensure the expected spans exist if toggles changed since creation
-                if (showViewers && !holder.querySelector("span[data-viewers][data-type='" + sourceType + "']")) {
+                if (showViewers && !holder.querySelector("span[data-viewers][data-type='" + normalizedType + "']")) {
                     const v = document.createElement("span");
                     v.dataset.viewers = "true";
-                    v.dataset.type = sourceType;
+                    v.dataset.type = normalizedType;
                     holder.appendChild(v);
                 }
-                if (showChatters && !holder.querySelector("span[data-chatters][data-type='" + sourceType + "']")) {
+                if (showChatters && !holder.querySelector("span[data-chatters][data-type='" + normalizedType + "']")) {
                     const c = document.createElement("span");
                     c.dataset.chatters = "true";
-                    c.dataset.type = sourceType;
+                    c.dataset.type = normalizedType;
                     holder.appendChild(c);
                 }
             }
 
             // Update text values (including zero)
             if (showViewers) {
-                const v = holder.querySelector("span[data-viewers][data-type='" + sourceType + "']");
+                const v = holder.querySelector("span[data-viewers][data-type='" + normalizedType + "']");
                 if (v) v.textContent = isNaN(viewerCount) ? "0" : String(viewerCount);
             }
             if (showChatters) {
-                const c = holder.querySelector("span[data-chatters][data-type='" + sourceType + "']");
+                const c = holder.querySelector("span[data-chatters][data-type='" + normalizedType + "']");
                 if (c) c.textContent = isNaN(chatterCount) ? "0" : String(chatterCount);
             }
 
@@ -1000,7 +1021,11 @@ function processInput(data) {
         aggKeys.sort();
         for (let i = 0; i < aggKeys.length; i++) {
             const type = aggKeys[i];
+            // Skip if normalized base already represented by any existing holder (eg: kick-123 present)
             if (presentTypes.has(type)) continue; // already handled via combinedData
+            if (hypeContainer.querySelector(".sourceStatHolder[data-type='" + type + "'], .sourceStatHolder[data-type^='" + type + "-']")) {
+                continue;
+            }
 
             hasContentToDisplay = true;
             const sourceImgName = getSourceImage(type);
