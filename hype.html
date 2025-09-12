@@ -179,7 +179,7 @@ div > span {
   display:none!important;
 }
 [data-viewers]::before {
-  content: "views: "; // YouTube's API requires "views" instead of "👁️" .. 🤷
+  content: "views: "; /* YouTube's API requires "views" instead of "👁️" */
 }
 
 [data-chatters] {
@@ -811,6 +811,7 @@ function getSourceImage(type) {
 var lastUpdated = {};
 var hasViewerCount = {};
 var activeChatters = {};
+var aggregatedViewers = {};
 
 function handleClearAction(clearAction) {
     if (!clearAction || !clearAction.action) return;
@@ -818,6 +819,8 @@ function handleClearAction(clearAction) {
         activeChatters = {};
         hasViewerCount = {};
         lastUpdated = {};
+        const hypeEl = document.getElementById("hype");
+        if (hypeEl) hypeEl.innerHTML = "";
         document.getElementById("parentHolder").classList.add("hidden");
         console.log("Hype.html: Cleared local state due to refreshSources action.");
     }
@@ -840,7 +843,7 @@ function processInput(data) {
         console.error("hype.html: 'hype' container element not found!");
         return;
     }
-    hypeContainer.innerHTML = "";
+    // Do not clear and rebuild on each update — avoid flicker
     const parentHolder = document.getElementById("parentHolder");
     if (!parentHolder) {
         console.error("hype.html: 'parentHolder' element not found!");
@@ -906,6 +909,9 @@ function processInput(data) {
 	sourceKeys.sort();
     let hasContentToDisplay = false;
     const now = Date.now();
+    // Track which sources are present this tick for cleanup/reordering
+    const presentTypes = new Set(sourceKeys);
+
     for (let i = 0; i < sourceKeys.length; i++) {
         const sourceType = sourceKeys[i];
         if (sourceType === "uniqueId" || typeof combinedData[sourceType] !== 'object') {
@@ -931,20 +937,119 @@ function processInput(data) {
             hasContentToDisplay = true;
             const sourceImgName = getSourceImage(sourceType);
             const sourceImgSrc = "./sources/images/" + sourceImgName + ".png";
-            let viewersHTML = "";
+
+            // Upsert holder for this source without replacing the image element
+            let holder = hypeContainer.querySelector(".sourceStatHolder[data-type='" + sourceType + "']");
+            if (!holder) {
+                holder = document.createElement("div");
+                holder.className = "sourceStatHolder";
+                holder.dataset.type = sourceType;
+
+                const img = document.createElement("img");
+                img.className = "sourceicons";
+                img.src = sourceImgSrc;
+                img.decoding = "async";
+                img.loading = "eager";
+                holder.appendChild(img);
+
+                if (showViewers) {
+                    const v = document.createElement("span");
+                    v.dataset.viewers = "true";
+                    v.dataset.type = sourceType;
+                    holder.appendChild(v);
+                }
+                if (showChatters) {
+                    const c = document.createElement("span");
+                    c.dataset.chatters = "true";
+                    c.dataset.type = sourceType;
+                    holder.appendChild(c);
+                }
+            } else {
+                // Ensure the expected spans exist if toggles changed since creation
+                if (showViewers && !holder.querySelector("span[data-viewers][data-type='" + sourceType + "']")) {
+                    const v = document.createElement("span");
+                    v.dataset.viewers = "true";
+                    v.dataset.type = sourceType;
+                    holder.appendChild(v);
+                }
+                if (showChatters && !holder.querySelector("span[data-chatters][data-type='" + sourceType + "']")) {
+                    const c = document.createElement("span");
+                    c.dataset.chatters = "true";
+                    c.dataset.type = sourceType;
+                    holder.appendChild(c);
+                }
+            }
+
+            // Update text values (including zero)
             if (showViewers) {
-                viewersHTML = "<span data-viewers='true' data-type='" + sourceType + "'>" + viewerCount + "</span>";
+                const v = holder.querySelector("span[data-viewers][data-type='" + sourceType + "']");
+                if (v) v.textContent = isNaN(viewerCount) ? "0" : String(viewerCount);
             }
-            let chattersHTML = "";
             if (showChatters) {
-                chattersHTML = "<span data-chatters='true' data-type='" + sourceType + "'>" + chatterCount + "</span>";
+                const c = holder.querySelector("span[data-chatters][data-type='" + sourceType + "']");
+                if (c) c.textContent = isNaN(chatterCount) ? "0" : String(chatterCount);
             }
-            if (viewersHTML || chattersHTML) {
-                hypeContainer.innerHTML += "<div class='sourceStatHolder'><img class='sourceicons' src='" +
-                    sourceImgSrc + "'>" + viewersHTML + chattersHTML + "</div>";
-            } else if (showViewers === false && showChatters === false) {}
+
+            // Maintain stable ordering without re-creating nodes
+            hypeContainer.appendChild(holder);
         }
     }
+    // Also reflect any aggregated viewer updates (ensures 0s still display like dock.html)
+    if (showViewers && aggregatedViewers && typeof aggregatedViewers === 'object') {
+        const aggKeys = Object.keys(aggregatedViewers);
+        aggKeys.sort();
+        for (let i = 0; i < aggKeys.length; i++) {
+            const type = aggKeys[i];
+            if (presentTypes.has(type)) continue; // already handled via combinedData
+
+            hasContentToDisplay = true;
+            const sourceImgName = getSourceImage(type);
+            const sourceImgSrc = "./sources/images/" + sourceImgName + ".png";
+
+            let holder = hypeContainer.querySelector(".sourceStatHolder[data-type='" + type + "']");
+            if (!holder) {
+                holder = document.createElement("div");
+                holder.className = "sourceStatHolder";
+                holder.dataset.type = type;
+
+                const img = document.createElement("img");
+                img.className = "sourceicons";
+                img.src = sourceImgSrc;
+                img.decoding = "async";
+                img.loading = "eager";
+                holder.appendChild(img);
+
+                if (showViewers) {
+                    const v = document.createElement("span");
+                    v.dataset.viewers = "true";
+                    v.dataset.type = type;
+                    holder.appendChild(v);
+                }
+                if (showChatters) {
+                    const c = document.createElement("span");
+                    c.dataset.chatters = "true";
+                    c.dataset.type = type;
+                    holder.appendChild(c);
+                }
+            }
+
+            // Update values (chatters unknown here; default 0 if present)
+            const v = holder.querySelector("span[data-viewers][data-type='" + type + "']");
+            if (v) v.textContent = String(aggregatedViewers[type] || 0);
+            const c = holder.querySelector("span[data-chatters][data-type='" + type + "']");
+            if (c && !c.textContent) c.textContent = "0";
+
+            hypeContainer.appendChild(holder);
+            presentTypes.add(type);
+        }
+    }
+    // Optional cleanup: remove holders for sources not in the current payload
+    hypeContainer.querySelectorAll('.sourceStatHolder').forEach(function(node){
+        const t = node.dataset.type;
+        if (!presentTypes.has(t)) {
+            node.remove();
+        }
+    });
     if (hasContentToDisplay) {
         parentHolder.classList.remove("hidden");
     } else {
@@ -981,28 +1086,42 @@ eventer(messageEvent, function(e) {
         if ("overlayNinja" in e.data.dataReceived) {
             var data = e.data.dataReceived.overlayNinja;
             
-            // Handle new viewer_updates format by converting to hype format
+            // Handle new viewer_updates format by caching aggregated counts (incl. zeros)
             if (data.event === "viewer_updates" && data.meta && typeof data.meta === "object") {
-                // Since viewer counts are now handled upstream, we just need to update our local tracking
-                // The actual hype data will come through the regular hype updates
-                console.log("Received aggregated viewer updates:", data.meta);
-                
-                // Update lastUpdated to prevent sources from being hidden prematurely
+                const meta = data.meta || {};
                 const now = Date.now();
-                Object.keys(data.meta).forEach(function(platform) {
-                    if (data.meta[platform] > 0) {
-                        // If combining YouTube, only track "youtube" not "youtubeshorts"
-                        if (combineYouTube && platform === "youtubeshorts") {
-                            lastUpdated["youtube"] = now;
-                            hasViewerCount["youtube"] = true;
+
+                // Build aggregated viewers map honoring combine flags
+                let nextAgg = {};
+                if (combineAll) {
+                    let total = 0;
+                    Object.keys(meta).forEach(k => { total += parseInt(meta[k]) || 0; });
+                    nextAgg = { global: total };
+                } else if (combineYouTube) {
+                    let yt = 0;
+                    Object.keys(meta).forEach(k => {
+                        const val = parseInt(meta[k]) || 0;
+                        if (k === 'youtube' || k === 'youtubeshorts') {
+                            yt += val;
                         } else {
-                            lastUpdated[platform] = now;
-                            hasViewerCount[platform] = true;
+                            nextAgg[k] = val;
                         }
+                    });
+                    nextAgg.youtube = yt;
+                } else {
+                    Object.keys(meta).forEach(k => { nextAgg[k] = parseInt(meta[k]) || 0; });
+                }
+                aggregatedViewers = nextAgg;
+
+                // Update tracking info (kept for potential staleness logic)
+                Object.keys(aggregatedViewers).forEach(function(platform) {
+                    if (aggregatedViewers[platform] >= 0) {
+                        lastUpdated[platform] = now;
+                        hasViewerCount[platform] = aggregatedViewers[platform] > 0;
                     }
                 });
-                
-                // Don't process this as hype data, wait for the actual hype update
+
+                // Do not short-circuit; allow subsequent hype updates to render.
                 return;
             }
             
