@@ -862,14 +862,14 @@
 	  if (settings.replyingto){
 		  let reply = ele.querySelector(".text-xs button");
 		  if (reply){
-				reply = getAllContentNodes(reply).trim();
+				reply = getAllContentNodes(reply.parentNode).trim();
 				if (reply){
 					replyMessage = reply;
 					originalMessage = chatmessage;
 					if (settings.textonlymode) {
-						chatmessage = "@"+reply + ": " + chatmessage;
+						chatmessage = reply + ": " + chatmessage;
 					} else {
-						chatmessage = "<i><small>@"+reply + ":&nbsp;</small></i> " + chatmessage;
+						chatmessage = "<i><small>"+reply + ":&nbsp;</small></i> " + chatmessage;
 					}
 				}
 		  }
