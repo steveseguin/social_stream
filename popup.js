@@ -1909,15 +1909,17 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 						dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
 					}
 					
-					// Hide classic dock customization options
-					document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
-						wrapper.style.display = 'none';
-					});
+                    // Hide ONLY the streaming chat (dock) option wrappers
+                    document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
+                        const wrapper = inp.closest('.wrapper');
+                        if (wrapper) wrapper.style.display = 'none';
+                    });
 				} else {
-					// Show classic dock customization options when no overlay is selected
-					document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
-						wrapper.style.display = '';
-					});
+                    // Show ONLY the streaming chat (dock) option wrappers when no overlay is selected
+                    document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
+                        const wrapper = inp.closest('.wrapper');
+                        if (wrapper) wrapper.style.display = '';
+                    });
 				}
 			 }
         }
@@ -5882,10 +5884,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					configSection.style.display = 'block';
 				}
 				
-				// Hide classic dock options when an overlay theme is selected
-				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
-					wrapper.style.display = 'none';
-				});
+        // Hide ONLY the streaming chat (dock) option wrappers when an overlay theme is selected
+        document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
+            const wrapper = inp.closest('.wrapper');
+            if (wrapper) wrapper.style.display = 'none';
+        });
 			} else {
 				// Classic dock.html selected - restore all parameters
 				let existingParams = '';
@@ -5905,10 +5908,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					dockLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
 				}
 				
-				// Show classic dock customization options
-				document.querySelectorAll('.wrapper:has(.options_group.streaming_chat)').forEach(wrapper => {
-					wrapper.style.display = '';
-				});
+        // Show ONLY the streaming chat (dock) option wrappers
+        document.querySelectorAll("input.collapsible-input[id^='wrapper-chat-']").forEach(inp => {
+            const wrapper = inp.closest('.wrapper');
+            if (wrapper) wrapper.style.display = '';
+        });
 			}
 		});
 	}
