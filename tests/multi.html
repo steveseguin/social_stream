@@ -1,0 +1,51 @@
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+		<meta content="utf-8" http-equiv="encoding" />
+		<title>Social Stream - Dashboard</title>
+		<meta name="title" content="Social Stream - Dashboard" />
+		<link rel="icon" href="./favicon.ico" />
+		<link href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous" />
+		<meta name="robots" content="noindex">
+		<style>
+			body {
+				margin:0;
+				padding:0;
+				border:0;
+				background-color:black;
+				overflow:auto;
+			}
+			iframe {
+				width:100%;height:100px;margin:0;padding:0 0 10px 0;border:0;
+			}
+		</style>
+	</head>
+	<body>
+	<script>
+		var urlParams = new URLSearchParams(window.location.search);
+		var session = urlParams.get("session");
+		document.body.innerHTML = `
+		
+		
+		
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&compact&showtime=20000&hideshadow&color&bolder&animatein=bounceInLeft&animateout=fadeOut&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&compact&alignright"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&largeavatar&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&twolines"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&emoji"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&emoji&compact&bubble"></iframe>
+		
+		<iframe style="border:3px solid red;" src="dock.html?hidemenu&session=${session}&activelinks&alignbottom&chatonly&color&compact&hideshadow&nomemberhighlight&nodonohighlight&unhighlight&nofeaturedhightlight&swipeleft&trivialevents&unhighlight&hidesource&limitbadges=2&notime&twolines&animateout=fadeOut&shortlink&alignright"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&noavatar&horizontal"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&hidebadge&horizontal&compact&alignright"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&nosource&hidesource&alignright"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&nooutline&noout&unhighlight&twolines&activelinks&scale=0.8&darkmode&alignright"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&nooutline&noout&unhighlight&twolines&activelinks&scale=0.8&darkmode&compact&alignright"></iframe>
+		<iframe src="dock.html?hidemenu&session=${session}&bubble&twolines&bubble&hideshadow&nomemberhighlight&nodonohighlight&fadein&swipeleft&fadeout&striplinks&color&hidesource&limitbadges=2&emoji=200&compact&alignright"></iframe>
+		`;
+	</script>
+	</body>
+</html>
