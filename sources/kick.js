@@ -862,14 +862,14 @@
 	  if (settings.replyingto){
 		  let reply = ele.querySelector(".text-xs button");
 		  if (reply){
-				reply = getAllContentNodes(reply).trim();
+				reply = getAllContentNodes(reply.parentNode).trim();
 				if (reply){
 					replyMessage = reply;
 					originalMessage = chatmessage;
 					if (settings.textonlymode) {
-						chatmessage = "@"+reply + ": " + chatmessage;
+						chatmessage = reply + ": " + chatmessage;
 					} else {
-						chatmessage = "<i><small>@"+reply + ":&nbsp;</small></i> " + chatmessage;
+						chatmessage = "<i><small>"+reply + ":&nbsp;</small></i> " + chatmessage;
 					}
 				}
 		  }
@@ -1174,13 +1174,18 @@
 			let kickUsername = extractKickUsername(window.location.href);
 			if (kickUsername && document.querySelector('[data-testid="not-found"]')){
 				if (kickUsername.includes("_")){
-					kickUsername = kickUsername.replaceAll("_","-");
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat`;
+					kickUsername = kickUsername.replaceAll("_","-").toLowerCase();
+					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
 					window.location.replace(newUrl); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
 				} else if (kickUsername.includes("-")){
-					kickUsername = kickUsername.replaceAll("-","_");
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat`;
+					kickUsername = kickUsername.replaceAll("-","_").toLowerCase();
+					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
+					window.location.replace(newUrl); // Use replace to avoid history issues
+					throw new Error('Redirecting to new Kick URL format');
+				} else if (kickUsername.toLowerCase() !== kickUsername){
+					kickUsername = kickUsername.toLowerCase();
+					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
 					window.location.replace(newUrl); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
 				}

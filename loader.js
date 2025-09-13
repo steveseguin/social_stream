@@ -13,6 +13,8 @@ function loadScript(src) {
 }
 
 async function loadScriptsInOrder() {
+    // Core app scripts; SDK is now lazily loaded by background.js when needed
+
     const scripts = [
 		'./actions/EventFlowSystem.js?v=1',
         './actions/EventFlowEditor.js?v=1',

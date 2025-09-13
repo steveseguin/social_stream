@@ -1445,7 +1445,7 @@ input:checked + .slider:before {
         <div class="container">
             <div class="link" title="This link will display chat messages as a streaming list. Use as an overlay or as a control dock.">
                 <h2 class="streaming_chat_title">
-                    <span data-translate="streaming-chat-dockable">Streaming chat (dock & overlay) </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">💬</span><span data-translate="streaming-chat-dockable">Streaming chat (dock & overlay) </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#streaming-chat-options" title="Jump to dockable streaming chat link options."><span data-translate="options">[options]</span></a>
 					
@@ -1540,12 +1540,21 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="make-the-font-icons-and-menu-smaller">🔎➖ Make the font, icons, and menu smaller </span>
                                 </div>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="scale" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-messages-after-20s">
+                                        or Custom font size/scale factor <input type="number" style="max-width: 5ch;" max="10" min="0.1" value="1.0" size="4" data-numbersetting="scale" />x
+                                    </span>
+                                </div>
                                 <div title="Use &chroma=0000 instead if you want to have a transparent background with the scroll bar still showing" data-keywords="alpha opacity see-through clear invisible OBS streamlabs chroma key green screen remove background">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="transparent" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="force-transparent-background">⭕ Force transparent background (and hide scrollbar) </span>
+                                    <span data-translate="force-transparent-background">⭕ Force transparent background </span>
                                 </div>
                                 <div title="This won't work in Chrome">
                                     <label class="switch">
@@ -1635,7 +1644,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-messages-after-20s">
-                                        ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="20000" size="6" data-numbersetting="showtime" />ms
+                                        ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting="showtime" />ms
                                     </span>
                                 </div>
 								<div title="This option gives you time to delete a message with another dock that doesn't have the delay; censorship-friendly then">
@@ -1694,7 +1703,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="alignright" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="messages-align-right">👇 Messages align to the right-side </span>
+                                    <span data-translate="messages-align-right">👉🧱 Messages align to the right-side </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -1765,7 +1774,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="auto-show-time">
-                                        ⌚ Custom auto-select show time <input type="number" style="max-width: 8ch;" max="999999" min="1" value="10000" size="6" data-numbersetting="autoshowtime" />ms
+                                        ⌚ Custom auto-select show time <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting="autoshowtime" />ms
                                     </span>
                                 </div>
                                 <div>
@@ -2039,7 +2048,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param1="hosttts" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="bottts">🕺 Only hosts can have messages read</span>
+									<span data-translate="hosttts">🕺 Only hosts can have messages read</span>
 								</div>
 								<div>
 									<label class="switch">
@@ -2752,14 +2761,14 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="showonlydonos" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="show-only-donos">🤑 Show only messages with donations </span>
+                                    <span data-translate="donos-only">🪙 Only show if includes a donation </span>
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="showonlymembers" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="show-only-donos">🤩 Show only messages from members </span>
+                                    <span data-translate="show-only-members">🤩 Show only messages from members </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -2804,7 +2813,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="striphtml" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="strip-html-from-messages-and-donations">📤 Strip HTML from messages and donations </span>
+                                    <span data-translate="strip-html-from-messages-and-donations">📤 Strip HTML/images from messages and donations </span>
                                 </div>
                                 <div title="HTML is removed from messages, donations, and names for this dock only.">
                                     <label class="switch">
@@ -3086,10 +3095,10 @@ input:checked + .slider:before {
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam1="googlefont" />
-                                    <label for="googlefont"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                    <label for="googlefont"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
                             </div>
                         </div>
@@ -3323,7 +3332,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-hostbot-options" />
-                    <label class="collapsible-label" for="wrapper-hostbot-options"><span data-translate="identify-hosts">👁️ Options — 🦸 Host, mod, streambots, VIPs</span></label>
+                    <label class="collapsible-label" for="wrapper-hostbot-options"><span data-translate="identify-hosts">🦸 Identify who is a host, mod, bot, VIP</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
@@ -3355,14 +3364,14 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="hidebots" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-show-bot-messages">🤖🚫 Do not show bot messages </span>
+                                    <span data-translate="do-not-show-bot-messages">🤖🚫 Filter out messages for listed bots </span>
                                 </div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidehosts" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-show-bot-messages">🙍🚫 Do not show host messages </span>
+                                    <span data-translate="do-not-show-host-messages">🙍🚫 Filter out messages for listed hosts </span>
                                 </div>
 								<div>
                                     <label class="switch">
@@ -3427,7 +3436,7 @@ input:checked + .slider:before {
 			</div>
             <div class="link" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
                 <h2 class="single_message_title">
-                    <span data-translate="featured-chat-overlay">Featured chat overlay </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🌟</span><span data-translate="featured-chat-overlay">Featured chat overlay </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
                     <a class="options-link rounded_area" href="#single-message-options" title="Jump to single message overlay link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -3496,7 +3505,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="scale=2" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="make-overlay-smaller">🔍➕ Make overlay larger </span>
+                                    <span data-translate="make-overlay-larger">🔍➕ Make overlay larger </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3538,7 +3547,7 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-overlay-after-20s">
-                                        ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="20000" size="6" data-numbersetting2="showtime" />ms
+                                        ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting2="showtime" />ms
                                     </span>
                                 </div>
 
@@ -3556,7 +3565,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="beep" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="beep-when-there-is-a-new-message">🔔💬 Beep when there is a new message </span>		
+                                    <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>		
                                 </div>
 								<div title="Note: You must first interact with the dock-page for any audio to be audible.">
                                     <label class="switch">
@@ -3596,7 +3605,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="autoshow" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="text-align-right">🌠🌠 Auto-show messages without needing the dock </span>
+                                    <span data-translate="auto-show-without-dock">🌠 Auto-show messages without needing the dock </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3683,14 +3692,14 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="simpletts" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-say-says-or-someone-says-with-tts">🗣️ Do not say "says" or "someone says" with TTS </span> 
+                                    <span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "someone says" with TTS </span> 
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-param2="simpletts2" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🗣️ Do not read out chatname and "someone says" when using TTS. </span>
+                                    <span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out chatname and "someone says" when using TTS. </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -4139,7 +4148,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param2="fontfit" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="round-edges">🆎 Reduce font-size if message gets too long </span>
+                                    <span data-translate="reduce-font-size-if-message-too-long">🆎 Reduce font-size if message gets too long </span>
                                 </div>
 
                                 <div>
@@ -4194,7 +4203,7 @@ input:checked + .slider:before {
 
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont2" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam2="googlefont" />
-                                    <label for="googlefont2"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                    <label for="googlefont2"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
                             </div>
                         </div>
@@ -4327,9 +4336,9 @@ input:checked + .slider:before {
 				</div>
 			</div>
 			
-			 <div class="chatbot_category_title">
-                <h2 class="chatbot_wall_title"
-                    <span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span>
+                 <div class="chatbot_category_title">
+                <h2 class="chatbot_wall_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🤖</span><span data-translate="chatbot-settings-and-tools">Chat Bots and AI services</span></span>
                     <a class="options-link rounded_area" href="#chatbot-settings-and-tools-options" title="Jump to the chatbot settings and tools."><span data-translate="options">[options]</span></a>
                 </h2>
                 <div id="chatbotsettings" class="chatbot_settings"></div>
@@ -4398,11 +4407,11 @@ input:checked + .slider:before {
 								<div id="ollamamodel">
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: gemma3:1b" data-textsetting="ollamamodel" />
-										<label for="ollamamodel"><span data-translate="ollama-model">&gt; Ollama Model to use</span></label>
+										<label for="ollamamodel"><span data-translate="ollama-model-to-use">&gt; Ollama Model to use</span></label>
 									</div>
 								</div>
 								<div id="ollamaKeepAlive" title="Time to keep the model in memory; -1 unlimited. In minutes">
-									⏱️<span data-translate="ollama-model">Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
+									<span data-translate="ollama-keepalive-minutes">⏱️ Keep-alive model time (minutes)</span> <input type="number" min="-1" max="99999999" value="5" data-numbersetting="ollamaKeepAlive" />
 								</div>
 								
 								<div id="geminimodel" class="hidden">
@@ -4496,7 +4505,7 @@ input:checked + .slider:before {
 								<div>
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" id="ollamabotname" class="textInput" autocomplete="off" placeholder="The default bot name is '🤖💬'" data-textsetting="ollamabotname" />
-										<label for="ollamabotname"><span data-translate="ollama-bot-name">&gt; Customize bot name</span></label>
+										<label for="ollamabotname"><span data-translate="customize-bot-name">&gt; Customize bot name</span></label>
 									</div>
 								</div>
 								<br />
@@ -4643,12 +4652,12 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-message-tts-options">
-						<span data-translate="message---tts">🗣️ Overlay Page and TTS for Chat Bot</span>
+						<span data-translate="overlay-tts-chatbot">🗣️ Overlay Page and TTS for Chat Bot</span>
 					</label>  
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
-								<h3><span data-translate="local-censor-bot">Primary Chat Bot</span></h3>
+								<h3><span data-translate="public-chatbot">🤖 Chat Bot — Primary</span></h3>
 							
 								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
 									<div id="chatbot" data-raw="" class="single_message">
@@ -4688,14 +4697,14 @@ input:checked + .slider:before {
 										<input type="checkbox" data-param10="simpletts" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "The bot says" with TTS </span>
+									<span data-translate="do-not-say-says-or-the-bot-says-with-tts">🚫🗣️ Do not say "says" or "The bot says" with TTS </span>
 								</div>
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param10="simpletts2" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out bot name or "The bot says" when using TTS. </span>
+									<span data-translate="do-not-read-out-botname-or-the-bot-says-when-using-tts">🚫🗣️ Do not read out bot name or "The bot says" when using TTS. </span>
 								</div>
 								
 							</div>
@@ -5283,7 +5292,7 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Monitor donation events and activity in real-time">
 				<h2 class="events_dashboard_title">
-					<span data-translate="eventsdashboard">Events Dashboard</span>
+					<span class="title-group"><span class="emoji" aria-hidden="true">📊</span><span data-translate="eventsdashboard">Events Dashboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#eventsdashboard-options" title="Jump to the events dashboard options."><span data-translate="options">[options]</span></a>
 				</h2>
@@ -5386,7 +5395,7 @@ input:checked + .slider:before {
 									<label for="googlefont17"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
 								</div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
 							</div>
 						</div>
@@ -5397,8 +5406,7 @@ input:checked + .slider:before {
 
             <div class="link" title="This link will only show the inbound emotes, bouncing them around the full page.">
                 <h2 class="emotes_wall_title">
-					
-                    <span data-translate="emotes-wall">Emotes wall </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">😄</span><span data-translate="emotes-wall">Emotes wall </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#emote-wall-options" title="Jump to the emote wall link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -5493,8 +5501,8 @@ input:checked + .slider:before {
             </div>
 
             <div class="link" title="This link shows a score for recent chat activity per chat source">
-                <h2 class="hype_mode_title">
-                    <span data-translate="hype-meter">Hype Meter and Viewer Count</span>
+				<h2 class="hype_mode_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">🔥</span><span data-translate="hype-meter">Hype Meter and Viewer Count</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#hype-meter" title="Jump to the hype meter link options."><span data-translate="options">[options]</span></a>
 					
@@ -5619,10 +5627,10 @@ input:checked + .slider:before {
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont4" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam4="googlefont" />
-                                    <label for="googlefont4"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                    <label for="googlefont4"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
 								<h3><span data-translate="source-combination-options">Source Combination Options</span></h3>
 								<div>
@@ -5651,8 +5659,8 @@ input:checked + .slider:before {
 			
 			
 			<div class="link" title="This link shows a tally of donations recieved">
-                <h2 class="tipjar_title">
-                    <span data-translate="tipjar">Tip Jar and Goal Meter</span>
+				<h2 class="tipjar_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">💰</span><span data-translate="tipjar">Tip Jar and Goal Meter</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#tipjarhref" title="Jump to the tip jar link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -5667,7 +5675,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-tipjar-general-options" />
-                    <label class="collapsible-label" for="wrapper-tipjar-general-options"><span data-translate="enable-and-customize">📊 Customize</span></label>
+                    <label class="collapsible-label" for="wrapper-tipjar-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group tipjar">
@@ -5703,7 +5711,7 @@ input:checked + .slider:before {
                                 
                                 <h3><span data-translate="style-and-theme">Style and Theme</span></h3>
                                 <div>
-                                    <label><span data-translate="display-style">Display Style:</span></label>
+                                    <label><span data-translate="display-style">Display Style</span></label>
                                     <select data-optionparam12="style" class="textInput">
                                         <option value="jar" selected><span data-translate="jar-style">Jar (Default)</span></option>
                                         <option value="meter"><span data-translate="meter-style">Goal Meter</span></option>
@@ -5750,7 +5758,7 @@ input:checked + .slider:before {
 
             <div class="link" title="This link shows a list of names representing users in a waiting list">
                 <h2 class="waitlist_mode_title">
-                    <span data-translate="wait-list">Wait List / Winner Draw</span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🏆</span><span data-translate="wait-list">Wait List / Winner Draw</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#waitlist" title="Jump to the waitlist link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -5938,10 +5946,10 @@ input:checked + .slider:before {
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont5" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam5="googlefont" />
-                                    <label for="googlefont5"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                    <label for="googlefont5"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
 								
                             </div>
@@ -5953,14 +5961,12 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Flow Actions Overlay Page">
                 <h2 class="flowactions_mode_title">
-                    <span data-translate="flowactions">Flow Actions Tool</span>
+                    <span data-translate="flowactions">🔄 Flow actions</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#flowactions" title="Jump to the Flow Actions link options."><span data-translate="options">[options]</span></a>
                 </h2>
 				<h3>
-                    <span data-translate="flowactions">
-                       This page is the output for actions triggered by the Flow Editor page. 
-                    </span>
+                    <span data-translate="flowactions-description">This page is the output for actions triggered by the Flow Editor page.</span>
                     <br>
                     <span style="color: #888; font-size: 0.9em;">
                        Note: To access the Event Flow Editor, <a href="#" id="open-event-flow-editor-link" style="color: #4a9eff;">click here</a>.
@@ -5995,7 +6001,7 @@ input:checked + .slider:before {
 			
 			<div class="link hidden" title="Giveaway Tool" style="display:none;">
                 <h2 class="giveaway_mode_title">
-                    <span data-translate="giveaway">Giveaway Tool</span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🎁</span><span data-translate="giveaway">Giveaway Tool</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#giveaway" title="Jump to the giveaway link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -6010,7 +6016,7 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Polling system">
                 <h2 class="poll_mode_title">
-                    <span data-translate="pollmeter">Graphical Poll </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🗳️</span><span data-translate="pollmeter">Graphical Poll </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#poll" title="Jump to the poll link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -6121,8 +6127,8 @@ input:checked + .slider:before {
 			</div>
 			
 			<div class="link" title="End credits roll">
-				<h2 class="credits_mode_title">
-					<span data-translate="creditsmeter">Credits roll</span>
+                <h2 class="credits_mode_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🎬</span><span data-translate="creditsmeter">Credits roll</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#credits" title="Jump to the credits link options."><span data-translate="options">[options]</span></a>
 				</h2>
@@ -6140,7 +6146,7 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group credits">
-								<h3><span data-translate="other-customization-options">Customization options</span></h3>
+                                <h3><span data-translate="other-customization-options">Other customization options</span></h3>
 								<div>
 									<div>
 										<label class="switch">
@@ -6191,6 +6197,13 @@ input:checked + .slider:before {
 											<option value="elegant">Elegant</option>
 										</select>
 									</div>
+									<div title="Hides page backgrounds; keeps star field on Star Wars style">
+										<label class="switch">
+											<input type="checkbox" data-param13="nobg" />
+											<span class="slider round"></span>
+										</label>
+										<span>🧼 Transparent background (hide overlay background)</span>
+									</div>
 									<br>
 									<span data-translate="font-family">
 										Font Family
@@ -6203,10 +6216,10 @@ input:checked + .slider:before {
 								<br>
 								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
 									<input type="text" id="googlefont13" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam13="googlefont" />
-									<label for="googlefont13"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+									<label for="googlefont13"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
 								</div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
 								<br>
 								<div>
@@ -6269,8 +6282,8 @@ input:checked + .slider:before {
 			</div>
 			
 			<div class="link" title="Interactive leaderboard display">
-				<h2 class="leaderboard_mode_title">
-					<span data-translate="leaderboardmeter">Leaderboard</span>
+                <h2 class="leaderboard_mode_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🏅</span><span data-translate="leaderboardmeter">Leaderboard</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#leaderboard" title="Jump to the leaderboard link options."><span data-translate="options">[options]</span></a>
 				</h2>
@@ -6326,22 +6339,22 @@ input:checked + .slider:before {
 								</div>
 								
 								<div style="margin-top: 15px;">
-									<div>
-										<label class="switch">
-											<input type="checkbox" data-param19="maxentries" checked />
-											<span class="slider round"></span>
-										</label>
-										<span data-translate="max-entries">
-											Maximum entries to show
-										</span>
-										<input type="number" style="max-width: 8ch;" max="100" min="3" value="10" size="3" data-numbersetting19="maxentries" />
-									</div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param19="maxentries" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="max-entries">
+                                        Maximum entries to show
+                                    </span>
+                                    <input type="number" style="max-width: 8ch;" max="100" min="3" value="10" size="3" data-numbersetting19="maxentries" />
+                                </div>
 									<br>
 									
 									<div>
-										<span data-translate="update-interval">
-											⏱️ Update interval <input type="number" style="max-width: 8ch;" max="60" min="1" value="5" size="3" data-numbersetting19="updateinterval" /> seconds (0 = disabled)
-										</span>
+                                    <span data-translate="update-interval">
+                                        ⏱️ Update interval <input type="number" style="max-width: 8ch;" max="60" min="0" value="0" size="3" data-numbersetting19="updateinterval" /> seconds (0 = disabled)
+                                    </span>
 									</div>
 								</div>
 								<br>
@@ -6351,20 +6364,20 @@ input:checked + .slider:before {
 									<span data-translate="topbar-note">These settings only apply when using the "Top Header Bar" layout</span><br>
 									<span style="opacity: 0.8;">ℹ️ Animations and donation tracking are automatically enabled for this layout</span>
 								</div>
-								<div>
-									<span data-translate="topbar-category">
-										Display Mode
-									</span>
-									<select data-optionparam19="category">
-										<option value="rotate">🔄 Rotate through selected views</option>
-										<option value="combined">Combined (Gifts + Donations)</option>
-										<option value="gifts">Top Gifters Only</option>
-										<option value="donations">Top Donors Only</option>
-										<option value="engagement">Most Active Users</option>
-										<option value="recent_gifts">Recent Gifters</option>
-										<option value="recent_donations">Recent Donors</option>
-									</select>
-								</div>
+                                <div>
+                                    <span data-translate="topbar-category">
+                                        Display Mode
+                                    </span>
+                                    <select data-optionparam19="category">
+                                        <option value="combined" selected>Combined (Gifts + Donations)</option>
+                                        <option value="rotate">🔄 Rotate through selected views</option>
+                                        <option value="gifts">Top Gifters Only</option>
+                                        <option value="donations">Top Donors Only</option>
+                                        <option value="engagement">Most Active Users</option>
+                                        <option value="recent_gifts">Recent Gifters</option>
+                                        <option value="recent_donations">Recent Donors</option>
+                                    </select>
+                                </div>
 								<br>
 								
 								<div style="background: rgba(255,255,255,0.05); padding: 10px; border-radius: 5px; margin: 10px 0;">
@@ -6426,15 +6439,15 @@ input:checked + .slider:before {
 										</span>
 									</div>
 									<div style="margin-left: 30px;">
-										<span data-translate="ticker-scroll-speed">
-											Scroll Speed
-										</span>
-										<select data-optionparam19="scrollspeed">
-											<option value="slow">Slow</option>
-											<option value="normal">Normal</option>
-											<option value="fast">Fast</option>
-										</select>
-									</div>
+                                    <span data-translate="ticker-scroll-speed">
+                                        Scroll Speed
+                                    </span>
+                                    <select data-optionparam19="scrollspeed">
+                                        <option value="slow">Slow</option>
+                                        <option value="normal" selected>Normal</option>
+                                        <option value="fast">Fast</option>
+                                    </select>
+                                </div>
 								</div>
 								<br>
 								
@@ -6475,7 +6488,7 @@ input:checked + .slider:before {
 				</div>
 			</div>
 			
-			<div class="link" title="Points system scoreboard display">
+                                <div class="link" title="Points system scoreboard display">
 				<h2 class="scoreboard_mode_title">
 					<span data-translate="scoreboard">Scoreboard (🚧 Work in Progress)</span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -6491,7 +6504,7 @@ input:checked + .slider:before {
 			<div class="wrapper">
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-scoreboard-general-options" />
-					<label class="collapsible-label" for="wrapper-scoreboard-general-options"><span data-translate="enable-and-customize">🏆 Enable and customize</span></label>
+					<label class="collapsible-label" for="wrapper-scoreboard-general-options"><span data-translate="enable-and-customize">📊 Enable and customize</span></label>
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group scoreboard">
@@ -6500,7 +6513,7 @@ input:checked + .slider:before {
 									<span data-translate="display-layout-scoreboard">
 										Layout Style
 									</span>
-									<select data-optionparam20="layout">
+                                    <select data-optionparam21="layout">
 										<option value="sidebar">Sidebar Widget</option>
 										<option value="ticker">Ticker Bar</option>
 										<option value="fullscreen">Full Screen</option>
@@ -6513,53 +6526,53 @@ input:checked + .slider:before {
 									<span data-translate="max-users-display">
 										Maximum users to display
 									</span>
-									<input type="number" style="max-width: 8ch;" max="50" min="3" value="10" size="3" data-numbersetting20="maxusers" />
+                                    <input type="number" style="max-width: 8ch;" max="50" min="3" value="10" size="3" data-numbersetting21="maxusers" />
 								</div>
 								<br>
 								
 								<h3><span data-translate="points-configuration">Points Configuration</span></h3>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param20="showpoints" checked />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="show-points-value">
-										🔢 Show points values
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param20="showrank" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="show-rank-number">
-										🏅 Show rank numbers
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param20="showavatar" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="show-user-avatar">
-										👤 Show user avatars
-									</span>
-								</div>
-								<div>
-									<label class="switch">
-										<input type="checkbox" data-param20="showplatform" />
-										<span class="slider round"></span>
-									</label>
-									<span data-translate="show-platform-icon">
-										🌐 Show platform icons
-									</span>
-								</div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param21="hidepoints" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-points-value">
+                                        🔢 Hide points values
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param21="hiderank" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-rank-number">
+                                        🏅 Hide rank numbers
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param21="hideavatar" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-user-avatar">
+                                        👤 Hide user avatars
+                                    </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param21="hideplatform" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hide-platform-icon">
+                                        🌐 Hide platform icons
+                                    </span>
+                                </div>
 								<br>
 								
 								<h3><span data-translate="update-behavior">Update Behavior</span></h3>
 								<div>
-									<label class="switch">
-										<input type="checkbox" data-param20="realtime" checked />
+                                    <label class="switch">
+                                        <input type="checkbox" data-param21="realtime" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="realtime-updates">
@@ -6568,7 +6581,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param20="animations" />
+                                        <input type="checkbox" data-param21="animations" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="enable-animations-scoreboard">
@@ -6577,7 +6590,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param20="highlightchanges" />
+                                        <input type="checkbox" data-param21="highlightchanges" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="highlight-score-changes">
@@ -6591,7 +6604,7 @@ input:checked + .slider:before {
 									<span data-translate="theme-style-scoreboard">
 										Theme Style
 									</span>
-									<select data-optionparam20="theme">
+                                    <select data-optionparam21="theme">
 										<option value="modern">Modern</option>
 										<option value="classic">Classic</option>
 										<option value="gaming">Gaming</option>
@@ -6605,49 +6618,49 @@ input:checked + .slider:before {
 								<span data-translate="font-family">
 									Font Family
 								</span>
-								<select data-optionparam20="font">
+                                    <select data-optionparam21="font">
 									<option value="Sora" style="font-family: 'Sora';">Sora - abc123XYZ</option>
 									<option value="opendyslexic" style="font-family: 'opendyslexic';">Open Dyslexic - abc123XYZ</option>
 								</select>
 								<br><br>
 								
 								<div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
-									<input type="text" id="googlefont20" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam20="googlefont" />
-									<label for="googlefont20"><span data-translate="googlefont">&gt; specify a Google Font name</span></label>
+                                    <input type="text" id="googlefont20" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam21="googlefont" />
+									<label for="googlefont20"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
 								</div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
 								<br>
 								
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param20="bgcolor" />
+                                        <input type="checkbox" data-param21="bgcolor" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="background-color">
 										🎨 Background color
 									</span>
-									<input type="text" style="width: 50px;" data-palette="bg_color_palette20" id="bg_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam20="bgcolor" />
+                                    <input type="text" style="width: 50px;" data-palette="bg_color_palette20" id="bg_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam21="bgcolor" />
 									<input type="color" data-color="bg_color20" id="bg_color_palette20" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param20="textcolor" />
+                                        <input type="checkbox" data-param21="textcolor" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="text-color">
 										🎨 Text color
 									</span>
-									<input type="text" style="width: 50px;" data-palette="text_color_palette20" id="text_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam20="textcolor" />
+                                    <input type="text" style="width: 50px;" data-palette="text_color_palette20" id="text_color20" class="textInput" autocomplete="off" placeholder="HEX value" data-textparam21="textcolor" />
 									<input type="color" data-color="text_color20" id="text_color_palette20" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 								</div>
 								<br>
 								
 								<h3><span data-translate="points-triggers">Points Triggers</span></h3>
 								<div>
-									<label class="switch">
-										<input type="checkbox" data-param20="chatpoints" checked />
+                                    <label class="switch">
+                                        <input type="checkbox" data-param21="chatpoints" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="points-for-chat">
@@ -6656,7 +6669,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param20="donationpoints" />
+                                        <input type="checkbox" data-param21="donationpoints" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="points-for-donations">
@@ -6665,7 +6678,7 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param20="customtriggers" />
+                                        <input type="checkbox" data-param21="customtriggers" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="custom-point-triggers">
@@ -6675,13 +6688,13 @@ input:checked + .slider:before {
 								<br>
 								
 								<div class="textInputContainer" style="width: 95%;" title="Custom title for the scoreboard">
-									<input type="text" id="title20" class="textInput instant" autocomplete="off" placeholder="eg: Points Leaderboard" value="Scoreboard" data-textparam20="title" />
+                                    <input type="text" id="title20" class="textInput instant" autocomplete="off" placeholder="eg: Points Leaderboard" value="Scoreboard" data-textparam21="title" />
 									<label for="title20"><span data-translate="scoreboard-title">&gt; Custom scoreboard title</span></label>
 								</div>
 								<br>
 								
 								<div class="textInputContainer" style="width: 95%;" title="Minimum points required to appear on scoreboard">
-									<input type="text" id="minpoints20" class="textInput instant" autocomplete="off" placeholder="eg: 10" value="0" data-textparam20="minpoints" />
+                                    <input type="text" id="minpoints20" class="textInput instant" autocomplete="off" placeholder="eg: 10" value="0" data-textparam21="minpoints" />
 									<label for="minpoints20"><span data-translate="minimum-points">&gt; Minimum points threshold</span></label>
 								</div>
 							</div>
@@ -7196,7 +7209,7 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Battle Royal">
                 <h2 class="battle_mode_title">
-                    <span data-translate="pollmeter">Battle Royal </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">⚔️</span><span data-translate="battlemeter">Battle Royal </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#battle" title="Jump to the battle royal link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -7251,7 +7264,7 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Customizable ticker banner bar">
                 <h2 class="ticker_mode_title">
-                    <span data-translate="tickermeter">Ticker </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">📰</span><span data-translate="tickermeter">Ticker </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#ticker" title="Jump to the ticker link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -7278,7 +7291,7 @@ input:checked + .slider:before {
                                     <span data-translate="enable-the-ticker">🚦 Enable </span>
 									<div>
 										<button class="glowingButton" data-action="loadtickerfile">
-											<span style="height:20px"><span data-translate="choose-location">📄 Select the ticker source file</span></span>
+											<span style="height:20px"><span data-translate="select-ticker-source-file">📄 Select the ticker source file</span></span>
 										</button>
 									</div>
                                 </div>
@@ -7321,10 +7334,10 @@ input:checked + .slider:before {
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont6" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam6="googlefont" />
-                                    <label for="googlefont6"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                    <label for="googlefont6"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
                             </div>
                         </div>
@@ -7334,7 +7347,7 @@ input:checked + .slider:before {
 			
 			<div class="link" title="Word cloud overlay">
                 <h2 class="wordcloud_mode_title">
-                    <span data-translate="wordcloudmeter">Word Cloud </span>
+                    <span class="title-group"><span class="emoji" aria-hidden="true">☁️</span><span data-translate="wordcloudmeter">Word Cloud </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#wordcloud" title="Jump to the wordcloud link options."><span data-translate="options">[options]</span></a>
                 </h2>
@@ -7374,10 +7387,10 @@ input:checked + .slider:before {
 								<br>
                                 <div class="textInputContainer" style="width: 95%;" title="Load a font family from Google Fonts">
                                     <input type="text" id="googlefont7" class="textInput instant" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textparam7="googlefont" />
-                                    <label for="googlefont7"><span data-translate="googlefont">&gt; a specify a Google Font name</span></label>
+                                    <label for="googlefont7"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href='https://socialstream.ninja/fonts.html' target="_blank" class="lightblue">here</a></i>
+									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
 								<br>
 								<div>
@@ -7406,8 +7419,8 @@ input:checked + .slider:before {
             </div>
 			
 			<div class="link" title="Custom GIF Commands">
-				<h2 class="custom_gif_commands_title">
-					<span data-translate="custom-gif-commands">Custom GIF Commands </span>
+                <h2 class="custom_gif_commands_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🖼️</span><span data-translate="custom-gif-commands">Custom GIF Commands </span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
 					<a class="options-link rounded_area" href="#custom-gif-commands" title="Jump to the custom GIF commands options."><span data-translate="options">[options]</span></a>
 				</h2>
@@ -7465,6 +7478,30 @@ input:checked + .slider:before {
                 <div id="globalsettings" class="global_settings"></div>
             </div>
             <a href="" id="global-settings-and-tools-options"></a>
+
+            <div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-beta-sdk-options" />
+                    <label class="collapsible-label" for="wrapper-beta-sdk-options">🧪 <span>Beta Features</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group">
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="sdk" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Use SDK transport (beta)</span>
+                                </div>
+                                <small style="opacity: 0.75; display:block; margin-top:6px;">
+                                    When enabled, background uses the Ninja SDK instead of a hidden iframe.
+                                    You can also enable via URL with &sdk or &beta.
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="wrapper">
                 <div class="collapsible">
@@ -7864,7 +7901,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="addkarma" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="filter-out-messages-with-bad-karma"> 😈😇 Add sentiment scores to messages </span>
+                                    <span data-translate="add-sentiment-scores-to-messages"> 😈😇 Add sentiment scores to messages </span>
                                 </div>
 								<div>
                                     <label class="switch">
@@ -8209,7 +8246,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" id="autohi" data-setting="autohi" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="auto-reply-to">👋 Auto-reply to "</span><b><span data-translate="hi">hi</span></b><span data-translate="messages">" messages </span>
+                                    <span data-translate="auto-reply-to">👋 Auto-reply to "</span><b><span data-translate="hi">hi</span></b><span data-translate="messages"> messages </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -8353,14 +8390,14 @@ input:checked + .slider:before {
                                         <input type="checkbox" id="giphy" data-setting="giphy" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="include-a-gif-when"> Include a Giphy GIF when </span><b><span data-translate="giphy">!giphy</span></b><span data-translate="is-used"> is used </span>
+                                    <span data-translate="include-a-gif-when"> Include a GIF when </span><b><span data-translate="giphy">!giphy</span></b><span data-translate="is-used"> is used </span>
                                 </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" id="tenor" data-setting="tenor" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="include-a-gif-when"> Include a Tenor GIF when </span><b><span data-translate="tenor">!tenor</span></b><span data-translate="is-used"> is used </span>
+                                    <span data-translate="include-a-gif-when"> Include a GIF when </span><b><span data-translate="tenor">!tenor</span></b><span data-translate="is-used"> is used </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -8706,7 +8743,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-privhostbot-options-ext" />
 					<label class="collapsible-label" for="wrapper-privhostbot-options-ext">
-						<span data-translate="identify-hosts">🦸 Manage blocked users, hosts, mods, bots, VIPs</span>
+						<span data-translate="identify-hosts">🦸 Identify who is a host, mod, bot, VIP</span>
 					</label>
 					<div class="collapsible-text">
 						<div class="options">
@@ -8823,7 +8860,7 @@ input:checked + .slider:before {
 										<input type="checkbox" data-setting="hidehostsext" />
 										<span class="slider round"></span>
 									</label>
-									<span data-translate="do-not-show-host-messages">🤖🚫 Filter out messages for listed hosts</span>
+									<span data-translate="do-not-show-host-messages">🙍🚫 Filter out messages for listed hosts</span>
 								</div>
 								<div>
 									<label class="switch">
@@ -9213,7 +9250,7 @@ input:checked + .slider:before {
                                         <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
                                     </button>
                                     <button class="glowingButton"  data-action="singlesaveStop">
-                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving (if active)</span></span>
+                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
                                     </button>
                                 </div>
 
@@ -9226,7 +9263,7 @@ input:checked + .slider:before {
                                         <span style="font-size: 0.8em;"><span data-translate="choose-location">💾 Choose location</span></span>
                                     </button>
                                     <button class="glowingButton"  data-action="excelsaveStop">
-                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving (if active)</span></span>
+                                        <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
                                     </button>
                                 </div>
 

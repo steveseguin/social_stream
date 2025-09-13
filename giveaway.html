@@ -1231,9 +1231,11 @@
     
     <script>
 	
-		const urlParams = new URLSearchParams(window.location.search);
+        const urlParams = new URLSearchParams(window.location.search);
         const isDisplayMode = urlParams.get('display') === 'true';
         const roomID = urlParams.get('session') || urlParams.get('s') || urlParams.get('id') || '';
+        const password = urlParams.get('password') || 'false';
+        const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
         console.log("Session ID (roomID):", roomID);
         console.log("Display mode:", isDisplayMode ? "OBS Display" : "Admin Panel");
         if (isDisplayMode) {
@@ -1540,10 +1542,10 @@
                 }
                 console.log('Setting up iframe connection with session ID:', roomID);
 				if (isDisplayMode){
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=false&dataonly&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&view=" +
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password="+encodeURIComponent(password)+lanonly+"&dataonly&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&view=" +
 						roomID + "Giveway&label=giveaway&room=" + roomID;
 				} else {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=false&dataonly&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&view=" +
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password="+encodeURIComponent(password)+lanonly+"&dataonly&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&view=" +
 						roomID + "&push="+roomID+"Giveway&label=dock&room=" + roomID;
 				}
                 iframe.style.width = "0px";
@@ -2896,7 +2898,7 @@
                     }
                 }
                 setupConnection();
-				
+				 
 				window.addEventListener("message", function(event) {
 					try {
 						if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
@@ -2909,6 +2911,26 @@
 						console.error("Error handling window message:", err);
 					}
 				});
+
+				// Optional: Extension relay for dock-labeled mode (non-display)
+				(function setupExtensionSocket(){
+					if (isDisplayMode) return; // only relevant when this page is the controller (label=dock)
+					if (!(urlParams.has('server2') || urlParams.has('server3'))) return;
+					let serverURL = urlParams.has('server2') ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension') : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+					let socket = null; let attempts = 1;
+					function connect(){
+						if (socket){ socket.onclose=null; try{socket.close();}catch(e){} }
+						socket = new WebSocket(serverURL);
+						socket.onopen = function(){ attempts = 1; socket.send(JSON.stringify({ join: (roomID||'').split(',')[0], out:3, in:4 })); };
+						socket.onclose = function(){ setTimeout(connect, 100*attempts++); };
+						socket.onerror = function(){ try{socket.close();}catch(e){} };
+						socket.addEventListener('message', function(event){
+							if (!event.data) return;
+							try{ const data = JSON.parse(event.data); processData(data); if (data.get){ socket.send(JSON.stringify({callback:{get:data.get,result:true}})); } }catch(e){}
+						});
+					}
+					connect();
+				})();
 				
                 renderGiveaways();
                 applySettings();

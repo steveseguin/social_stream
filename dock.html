@@ -8680,7 +8680,7 @@
 					} else if (autoshow && !bot) {
 						if (doNotAutoshowFiltered && node.classList.contains("hide")) {
 							// pass auto show, since filtered out
-						} else if (!(autoshowdonos || autoshowmembers) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership) || (autoshowcontentimages && data.contentimg)) {
+						} else if (!(autoshowdonos || autoshowmembers || autoshowcontentimages) || (autoshowdonos && data.hasDonation) || (autoshowmembers && data.membership) || (autoshowcontentimages && data.contentimg)) {
 							// dono or not to dono.
 							if (autoTimeoutEnabled) {
 								autoShowQueue.push(node);

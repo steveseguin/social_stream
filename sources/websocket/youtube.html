@@ -10,6 +10,10 @@
 </head>
 <body>
     <div class="container">
+        <div id="quota-warning" class="quota-warning hidden">
+            <span id="quota-warning-text">We've hit the default YouTube API quota. You can use your own Google API project to continue without interruptions.</span>
+            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My Credentials</button>
+        </div>
         <div class="main-content">
             <div class="auth">
                 <div class="landing-container">
@@ -17,14 +21,42 @@
                     <h1 class="landing-title">Social Stream for YouTube</h1>
                     <p class="landing-subtitle">Connect to YouTube Live Chat</p>
                     
-                    <div class="auth-section">
-                        <a id="auth-link" class="auth-button">Sign in with YouTube</a>
-                    </div>
+            <div class="auth-section">
+                <a id="auth-link" class="auth-button">Sign in with YouTube</a>
+                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
+            </div>
                     
                     <div class="landing-description">
                         <p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
                         <p><strong>Note:</strong> Events related to subscriptions, memberships, and followers are only available for your own channel. Chat functionality will work across most public channels.</p>
                     </div>
+
+                    <details id="credentials-details" class="credentials-details">
+                        <summary>Advanced: Use your own Google API credentials</summary>
+                        <div class="credentials-form">
+                            <label for="custom-client-id">OAuth Client ID</label>
+                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" />
+                            <label for="custom-api-key">API Key (optional)</label>
+                            <input id="custom-api-key" type="text" placeholder="AIza... (optional)" />
+                            <div class="credentials-actions">
+                                <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
+                                <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
+                            </div>
+                            <div class="credentials-help">
+                                <p><strong>How to set up in Google Cloud:</strong></p>
+                                <ul>
+                                    <li>Create or select a project at console.cloud.google.com</li>
+                                    <li>Enable the “YouTube Data API v3” in APIs & Services</li>
+                                    <li>Configure OAuth consent screen (External), add yourself as a test user or publish</li>
+                                    <li>Create Credentials → OAuth client ID → Web application</li>
+                                    <li>Add the following to Authorized redirect URIs:</li>
+                                </ul>
+                                <code id="redirect-uri-hint"></code>
+                                <p>Save and copy your Client ID (ends with .apps.googleusercontent.com) into the field above. API Key is optional.</p>
+                                <p>After saving, sign out and sign in again to use your credentials.</p>
+                            </div>
+                        </div>
+                    </details>
                 </div>
             </div>
             
@@ -91,6 +123,24 @@
 
         <div class="sidebar hidden socket">
             <div class="permissions-container" id="permissions-info"></div>
+            <div class="credentials-container" id="credentials-container-signedin">
+                <div class="permissions-header">Use Your Own Credentials</div>
+                <div class="credentials-form inline">
+                    <label for="custom-client-id-2">OAuth Client ID</label>
+                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com" />
+                    <label for="custom-api-key-2">API Key (optional)</label>
+                    <input id="custom-api-key-2" type="text" placeholder="AIza... (optional)" />
+                    <div class="credentials-actions">
+                        <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
+                        <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
+                    </div>
+                    <div class="credentials-note">Changes take effect next sign-in. Use Reset to return to defaults.</div>
+                    <div class="credentials-help" style="margin-top:8px;">
+                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add this Authorized redirect URI:</p>
+                        <code id="redirect-uri-hint-2"></code>
+                    </div>
+                </div>
+            </div>
             <div class="recent-events">
                 <h4>Recent Events</h4>
                 <div id="events-list"></div>
@@ -127,6 +177,20 @@ try {
      */
     
     var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var apiKeyOverride = '';
+    try {
+        // Allow overrides via localStorage or URL for advanced users
+        const storedId = localStorage.getItem('ytClientIdOverride');
+        const storedKey = localStorage.getItem('ytApiKeyOverride');
+        const qp = new URLSearchParams(window.location.search);
+        const hp = new URLSearchParams(window.location.hash.slice(1));
+        const urlClient = qp.get('client_id') || hp.get('client_id');
+        const urlKey = qp.get('api_key') || hp.get('api_key');
+        if (storedId) clientId = storedId;
+        if (storedKey) apiKeyOverride = storedKey;
+        if (urlClient) { clientId = urlClient; }
+        if (urlKey) { apiKeyOverride = urlKey; }
+    } catch {}
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
     var scope = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl';
     var username = "";
@@ -645,9 +709,10 @@ try {
 					// Check if it's a quota error
 					try {
 						const errorData = await response.json();
-						if (errorData.error && errorData.error.errors && errorData.error.errors[0].reason === 'quotaExceeded') {
-							console.error('YouTube API quota exceeded');
-							isPolling = false;
+							if (errorData.error && errorData.error.errors && errorData.error.errors[0].reason === 'quotaExceeded') {
+								console.error('YouTube API quota exceeded');
+								showQuotaBanner();
+								isPolling = false;
 							// Show quota error in chat with alternative
 							const textarea = document.querySelector("#textarea");
 							if (textarea) {
@@ -671,6 +736,7 @@ try {
 					return;
 				} else if (status === 429) {
 					console.warn('Rate limited by YouTube API');
+					showQuotaBanner();
 					isPolling = false;
 					// Use exponential backoff for rate limits
 					const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000); // Max 5 minutes
@@ -2287,6 +2353,8 @@ try {
 	}
 	
 	function initializePage() {
+		// Initialize credentials UI and indicators
+		initCredentialsUI();
 		
 		urlParams = new URLSearchParams(window.location.search);
 		hashParams = new URLSearchParams(window.location.hash.slice(1));
@@ -2335,6 +2403,18 @@ try {
 			};
 			authLink.addEventListener('click', authHandler);
 			registerCleanup(() => authLink.removeEventListener('click', authHandler));
+		}
+		const quotaBtn = document.getElementById('quota-open-credentials');
+		if (quotaBtn) {
+			const openCreds = function() {
+				const details = document.getElementById('credentials-details');
+				if (details) details.open = true;
+				const warn = document.getElementById('quota-warning');
+				if (warn) warn.classList.add('hidden');
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+			};
+			quotaBtn.addEventListener('click', openCreds);
+			registerCleanup(() => quotaBtn.removeEventListener('click', openCreds));
 		}
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		registerCleanup(() => document.removeEventListener('visibilitychange', handleVisibilityChange));
@@ -2458,8 +2538,23 @@ try {
 			clearTimeout(timeout_id);
 			//console.log('Response status:', response.status, response.statusText);
 			if (!response.ok) {
-				const errorText = await response.text();
-				console.error('API error response:', errorText);
+				// Try to parse error for quota/rate limit signals
+				let errorText = '';
+				let quotaHit = false;
+				try {
+					const cloned = response.clone();
+					const json = await cloned.json();
+					const reason = json?.error?.errors?.[0]?.reason || '';
+					const message = json?.error?.message || '';
+					errorText = JSON.stringify(json);
+					if (response.status === 403 || response.status === 429) {
+						if (/quota|rateLimit|dailyLimit/i.test(reason) || /quota|rate/i.test(message)) quotaHit = true;
+					}
+				} catch(e) {
+					try { errorText = await response.text(); } catch(_) {}
+				}
+				if (quotaHit) showQuotaBanner();
+				console.error('API error response:', errorText || (response.status + ' ' + response.statusText));
 				throw new Error(`API error: ${response.status} ${response.statusText}`);
 			}
 			return response;
@@ -2475,6 +2570,64 @@ try {
 		} finally {
 			clearTimeout(timeout_id);
 		}
+	}
+
+	function showQuotaBanner() {
+		try {
+			const el = document.getElementById('quota-warning');
+			if (!el) return;
+			el.classList.remove('hidden');
+		} catch(_){}
+	}
+
+	function hideQuotaBanner() {
+		try {
+			const el = document.getElementById('quota-warning');
+			if (el) el.classList.add('hidden');
+		} catch(_){}
+	}
+
+	function initCredentialsUI() {
+		try {
+			const redirectValue = window.location.href.split('/youtube')[0] + '/youtube.html';
+			const redirectEl = document.getElementById('redirect-uri-hint');
+			if (redirectEl) redirectEl.textContent = redirectValue;
+			const redirectEl2 = document.getElementById('redirect-uri-hint-2');
+			if (redirectEl2) redirectEl2.textContent = redirectValue;
+			const storedId = localStorage.getItem('ytClientIdOverride') || '';
+			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
+			const useCustom = !!storedId;
+			// Populate both forms
+			['custom-client-id','custom-client-id-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedId; });
+			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
+			const indicator = document.getElementById('custom-cred-indicator');
+			if (indicator) indicator.classList.toggle('hidden', !useCustom);
+			if (useCustom) hideQuotaBanner();
+			// Wire buttons
+			const save = async function(primary=true){
+				const cid = (document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '';
+				const akey = (document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '';
+				if (cid && !/\.apps\.googleusercontent\.com$/.test(cid)) {
+					alert('That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com');
+					return;
+				}
+				if (cid) localStorage.setItem('ytClientIdOverride', cid); else localStorage.removeItem('ytClientIdOverride');
+				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
+				alert('Saved. Please sign out and sign in again to apply your credentials.');
+				hideQuotaBanner();
+				initCredentialsUI();
+			};
+			const clear = function(){
+				localStorage.removeItem('ytClientIdOverride');
+				localStorage.removeItem('ytApiKeyOverride');
+				alert('Custom credentials cleared. Default project will be used.');
+				initCredentialsUI();
+			};
+			const s1 = document.getElementById('save-credentials'); if (s1) s1.onclick = () => save(true);
+			const r1 = document.getElementById('clear-credentials'); if (r1) r1.onclick = clear;
+			const s2 = document.getElementById('save-credentials-2'); if (s2) s2.onclick = () => save(false);
+			const r2 = document.getElementById('clear-credentials-2'); if (r2) r2.onclick = clear;
+		} catch(_){}
 	}
     document.addEventListener('DOMContentLoaded', initializePage);
 } catch(e) {

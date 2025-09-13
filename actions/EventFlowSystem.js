@@ -29,7 +29,10 @@ class EventFlowSystem {
 		this.stateTimers = new Map(); // Timeout management for auto-resets
 		this.messageQueues = new Map(); // Queue storage for queue nodes
 		this.semaphoreStates = new Map(); // Track concurrent operations for semaphore nodes
-		this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+        this.throttleStates = new Map(); // Track rate limiting for throttle nodes
+        
+        // Reflection control (per Event Flow) for "allow-first" windows
+        this.reflectionSeen = new Map();
 
         // Internal scheduler for time-based triggers
         this._tickHandle = null;
@@ -967,8 +970,8 @@ class EventFlowSystem {
         return this.flows.find(flow => flow.id === flowId) || null;
     }
     
-	async processMessage(message) {
-		
+    async processMessage(message) {
+        
         if (!message) {
             ////console.log("[RELAY DEBUG - ProcessMessage] Message is null/undefined at start.");
             return message;
@@ -1893,6 +1896,86 @@ class EventFlowSystem {
                 result.blocked = true;
               //console.log(`[ExecuteAction - blockMessage] Set result.blocked to true.`);
                 break;
+
+            case 'reflectionFilter': {
+                // Apply only to reflected messages
+                if (!message || !message.reflection) {
+                    break;
+                }
+
+                const policy = config.policy || 'block-all'; // 'block-all' | 'allow-first' | 'allow-all'
+                const sourceMode = config.sourceMode || 'none'; // 'none' | 'allow' | 'block'
+                const rawTypes = (config.sourceTypes || '').toString();
+                const typeList = rawTypes
+                    .split(',')
+                    .map(t => t.trim().toLowerCase())
+                    .filter(Boolean);
+                const msgType = (message.type || '').toLowerCase();
+
+                // Source-type allow/block pre-filter
+                if (sourceMode === 'block' && typeList.length && typeList.includes(msgType)) {
+                    result.blocked = true;
+                    break;
+                }
+                if (sourceMode === 'allow' && typeList.length && !typeList.includes(msgType)) {
+                    result.blocked = true;
+                    break;
+                }
+
+                if (policy === 'allow-all') {
+                    // Never block reflections via this node
+                    break;
+                }
+
+                if (policy === 'block-all') {
+                    result.blocked = true;
+                    break;
+                }
+
+                // allow-first
+                const windowMs = parseInt(config.windowMs || 10000, 10) || 10000;
+                let basis = '';
+                try {
+                    // Use sanitized text basis for matching
+                    if (message.chatmessage) {
+                        if (typeof this.sanitizeSendMessage === 'function') {
+                            basis = this.sanitizeSendMessage(message.chatmessage, true) || '';
+                        } else if (typeof this.sanitizeRelay === 'function') {
+                            basis = this.sanitizeRelay(message.chatmessage, true) || '';
+                        } else {
+                            basis = (message.chatmessage || '').toString();
+                        }
+                    }
+                } catch (e) {
+                    basis = (message.chatmessage || '').toString();
+                }
+                basis = basis.trim().toLowerCase();
+                if (!basis) {
+                    // No content to compare; treat as first (allow)
+                    break;
+                }
+
+                const now = Date.now();
+                // Cleanup old entries
+                try {
+                    for (const [k, ts] of this.reflectionSeen) {
+                        if (now - ts > Math.max(10000, windowMs)) {
+                            this.reflectionSeen.delete(k);
+                        }
+                    }
+                } catch (e) {}
+
+                const lastSeen = this.reflectionSeen.get(basis);
+                if (!lastSeen || (now - lastSeen > windowMs)) {
+                    // Allow first occurrence in window, record it
+                    this.reflectionSeen.set(basis, now);
+                    // Not blocked
+                } else {
+                    // Within window and seen already → block
+                    result.blocked = true;
+                }
+                break;
+            }
                 
             case 'modifyMessage':
                 if (typeof config.newMessage !== 'string') {
@@ -2146,6 +2229,10 @@ class EventFlowSystem {
                 if (config.destination && config.destination !== 'all') {
                     // Relay to specific platform/destination
                     relayMessage.destination = config.destination;
+                    // Pass source tid so reverse=true can exclude the source tab
+                    if (message.tid) {
+                        relayMessage.tid = message.tid;
+                    }
                     //console.log('[RELAY DEBUG - Action] Mode: Relay to specific platform:', config.destination);
                 } else {
                     // Relay to all platforms (excluding source)
@@ -2179,52 +2266,74 @@ class EventFlowSystem {
 						console.warn(`[ExecuteAction - webhook] URL is not configured for node ${actionNode.id}`);
 						result.message = { ...message, webhookError: "URL not configured" };
 						result.modified = true;
-						// result.blocked = true; // Optionally block
 						break;
 					}
 
 					const method = config.method || 'POST';
-					const headers = { 'Content-Type': 'application/json', ...(config.headers || {}) }; // Allow custom headers from config
+					const headers = { 'Content-Type': 'application/json', ...(config.headers || {}) };
 					const body = config.includeMessage ? JSON.stringify(message) : (config.body || '{}');
-					const webhookTimeout = config.timeout || 8000; // Make timeout configurable per node, default 8s
+					const webhookTimeout = config.timeout || 8000;
 
 					// Prepare fetch options
-					const fetchOpts = {
-						method,
-						headers
-					};
+					const fetchOpts = { method, headers };
 					if (method !== 'GET' && method !== 'HEAD') {
 						fetchOpts.body = body;
 					}
 
-					//console.log(`[ExecuteAction - webhook] Calling ${method} ${url} with timeout ${webhookTimeout}ms`);
-					const response = await this.fetchWithTimeout(url, fetchOpts, webhookTimeout); // Use the injected function
-
-					if (!response.ok) {
-						const errorText = await response.text();
-						console.error(`[ExecuteAction - webhook] Webhook for ${url} failed with status ${response.status}: ${errorText}`);
-						result.message = { ...message, webhookError: `Webhook failed: ${response.status} - ${errorText.substring(0, 200)}` };
-						result.modified = true;
-						result.blocked = config.blockOnFailure !== undefined ? !!config.blockOnFailure : true; // Block on failure by default, make it configurable
-					} else {
-						//console.log(`[ExecuteAction - webhook] Webhook to ${url} successful.`);
+					if (config.syncMode) {
+						// Synchronous mode: await and optionally block on failure
 						try {
-							const responseData = await response.json(); // Attempt to parse as JSON
-							result.message = { ...message, webhookResponse: responseData, webhookStatus: response.status };
-						} catch (e) { // If not JSON, take as text
-							const responseText = await response.text(); // This won't work if response.json() already consumed the body. Need to handle this better.
-																	  // A better way is to clone the response if you need to read body multiple times or in different formats.
-																	  // For simplicity now: let's assume we primarily want JSON or care about success status.
-							result.message = { ...message, webhookResponseText: responseText.substring(0, 500), webhookStatus: response.status };
+							const response = await this.fetchWithTimeout(url, fetchOpts, webhookTimeout);
+							let responseText = '';
+							try { responseText = await response.text(); } catch (e) { responseText = ''; }
+
+							if (!response.ok) {
+								console.error(`[ExecuteAction - webhook] Webhook for ${url} failed with status ${response.status}: ${responseText}`);
+								result.message = { ...message, webhookError: `Webhook failed: ${response.status} - ${responseText.substring(0, 200)}` };
+								result.modified = true;
+								if (config.blockOnFailure) {
+									result.blocked = true;
+								}
+							} else {
+								// Try parse JSON from text; if fails, keep text
+								let parsed = null;
+								try { parsed = responseText ? JSON.parse(responseText) : null; } catch (e) { parsed = null; }
+								if (parsed !== null) {
+									result.message = { ...message, webhookResponse: parsed, webhookStatus: response.status };
+								} else {
+									result.message = { ...message, webhookResponseText: responseText.substring(0, 500), webhookStatus: response.status };
+								}
+								result.modified = true;
+							}
+						} catch (err) {
+							console.error(`[ExecuteAction - webhook] Error executing webhook for node ${actionNode.id}:`, err.message);
+							result.message = { ...message, webhookError: `Webhook execution error: ${err.message}` };
+							result.modified = true;
+							if (config.blockOnFailure) {
+								result.blocked = true;
+							}
 						}
-						result.modified = true;
+					} else {
+						// Asynchronous mode: fire-and-forget; do not block message processing
+						this.fetchWithTimeout(url, fetchOpts, webhookTimeout)
+							.then(async (response) => {
+								let responseText = '';
+								try { responseText = await response.text(); } catch (e) { responseText = ''; }
+								if (!response.ok) {
+									console.error(`[ExecuteAction - webhook] Webhook for ${url} failed with status ${response.status}: ${responseText}`);
+									return;
+								}
+								// Optionally parse for logging
+								try { JSON.parse(responseText); } catch (e) {}
+							})
+							.catch((error) => {
+								console.error(`[ExecuteAction - webhook] Error executing webhook for node ${actionNode.id}:`, error.message);
+							});
+						// Do not modify or block in async mode
 					}
 
-				} catch (error) { // This catch is for errors from fetchWithTimeout (e.g., timeout, network error)
-					console.error(`[ExecuteAction - webhook] Error executing webhook for node ${actionNode.id}:`, error.message);
-					result.message = { ...message, webhookError: `Webhook execution error: ${error.message}` };
-					result.modified = true;
-					result.blocked = config.blockOnFailure !== undefined ? !!config.blockOnFailure : true; // Block on failure by default
+				} catch (error) {
+					console.error(`[ExecuteAction - webhook] Unexpected error preparing webhook for node ${actionNode.id}:`, error.message);
 				}
 				break;
                 
