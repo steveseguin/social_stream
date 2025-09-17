@@ -4344,6 +4344,74 @@ function sendToH2R(data) {
         }
     }
 }
+
+const WEBHOOK_RELAY_SOURCES = new Set(["stripe", "kofi", "bmac", "fourthwall"]);
+
+function normalizeWebhookRelayUrl(rawUrl) {
+    if (!rawUrl) {
+        return null;
+    }
+
+    let url = String(rawUrl).trim();
+    if (!url) {
+        return null;
+    }
+
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+        return url;
+    }
+
+    if (url.startsWith("127.0.0.1") || url.startsWith("localhost")) {
+        return "http://" + url;
+    }
+
+    return "https://" + url;
+}
+
+function relayIncomingWebhook(source, payload) {
+    if (!WEBHOOK_RELAY_SOURCES.has(source)) {
+        return;
+    }
+    if (!settings.webhookrelay || !settings.webhookrelayurl || !settings.webhookrelayurl.textsetting) {
+        return;
+    }
+    if (!payload) {
+        return;
+    }
+
+    const endpoint = normalizeWebhookRelayUrl(settings.webhookrelayurl.textsetting);
+    if (!endpoint) {
+        return;
+    }
+
+    let body;
+    let contentType = "application/json";
+    if (typeof payload === "string") {
+        body = payload;
+        contentType = "text/plain";
+    } else {
+        try {
+            body = JSON.stringify(payload);
+        } catch (e) {
+            console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
+            return;
+        }
+    }
+
+    try {
+        fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "Content-Type": contentType,
+                "X-SSN-Webhook-Source": source
+            },
+            body
+        }).catch(err => console.warn(`[WebhookRelay] Request failed for ${source}:`, err));
+    } catch (err) {
+        console.warn(`[WebhookRelay] Unexpected error relaying ${source}:`, err);
+    }
+}
+
 function sanitizeRelay(text, textonly=false, alt = false) {
     if (!text || !text.trim()) {
         return alt || text;
@@ -5905,6 +5973,8 @@ socketserver.addEventListener("message", async function (event) {
 					
 					console.log(data.stripe);
 
+					relayIncomingWebhook("stripe", data.stripe);
+
 					var message = {};
 					message.chatname = "";
 					message.chatmessage = "";
@@ -6030,6 +6100,8 @@ socketserver.addEventListener("message", async function (event) {
 					if (!data.kofi.data) {
 						return false;
 					}
+
+					relayIncomingWebhook("kofi", data.kofi);
 					try {
 						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
 					} catch (e) {
@@ -6104,6 +6176,7 @@ socketserver.addEventListener("message", async function (event) {
 					}
 					else {
 						var bmac = data.bmac; 
+						relayIncomingWebhook("bmac", data.bmac);
 						var message = {};
 						if (bmac.type === "membership.started") {
 							message.chatname = bmac.data.supporter_name || "Anonymous"; 
@@ -6164,6 +6237,8 @@ socketserver.addEventListener("message", async function (event) {
 				if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
 				  return false;
 				}
+				
+				relayIncomingWebhook("fourthwall", data.fourthwall);
 				
 				const fourthwallData = data.fourthwall.data;
 				

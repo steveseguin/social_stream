@@ -1453,7 +1453,7 @@ input:checked + .slider:before {
                 <div id="dock" data-raw="" class="streaming_chat"></div>
 					
 					<!-- Stream Overlay Preset Selector -->
-					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;overflow:hidden;">
 						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
 							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
 						</label>
@@ -8037,6 +8037,16 @@ input:checked + .slider:before {
                                     <div class="textInputContainer" style="display: inline-block; width: 250px;">
                                         <input type="text" id="h2rserver" class="textInput" autocomplete="off" placeholder="Provide ID or full URL" data-textsetting="h2rserver" />
                                         <label for="h2rserver"><span data-translate="send-all-to-h2r-server">&gt; Send all to H2R server</span></label>
+                                    </div>
+                                </div>
+                                <div title="Relay Ko-fi, Stripe, Buy Me a Coffee, and Fourthwall webhook payloads to your custom endpoint">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="webhookrelay" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                        <input type="text" id="webhookrelayurl" class="textInput" autocomplete="off" placeholder="https://thirdparty.com/api" data-textsetting="webhookrelayurl" />
+                                        <label for="webhookrelayurl"><span>&gt; Relay incoming webhooks</span></label>
                                     </div>
                                 </div>
                                 <div>
