@@ -2713,8 +2713,9 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
-    if (paramType !== 'param1' && paramType !== 'param5') return;
-    
+    const exclusiveTypes = ['param1', 'param4', 'param5'];
+    if (!exclusiveTypes.includes(paramType)) return;
+
     // Handle exclusive settings like darkmode/lightmode
     const exclusiveMap = {
         param1: {
@@ -2723,13 +2724,17 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'onlytwitch': 'hidetwitch',
             'hidetwitch': 'onlytwitch'
         },
+        param4: {
+            'alignright': 'align=center',
+            'align=center': 'alignright'
+        },
         param5: {
             'alignright': 'aligncenter',
             'aligncenter': 'alignright'
         }
     };
-    
-    if (exclusiveMap[paramType][paramValue]) {
+
+    if (exclusiveMap[paramType] && exclusiveMap[paramType][paramValue]) {
         const oppositeKey = exclusiveMap[paramType][paramValue];
         const oppositeEle = document.querySelector(`input[data-${paramType}='${oppositeKey}']`);
         if (oppositeEle && oppositeEle.checked) {
