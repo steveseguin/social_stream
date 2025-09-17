@@ -4384,29 +4384,69 @@ function relayIncomingWebhook(source, payload) {
         return;
     }
 
-    let body;
-    let contentType = "application/json";
-    if (typeof payload === "string") {
-        body = payload;
-        contentType = "text/plain";
-    } else {
-        try {
-            body = JSON.stringify(payload);
-        } catch (e) {
-            console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
+    let requestInit;
+
+    if (source === "kofi") {
+        if (typeof payload !== "object") {
+            console.warn("[WebhookRelay] Unexpected Ko-fi payload type", typeof payload);
             return;
         }
-    }
 
-    try {
-        fetch(endpoint, {
+        const params = new URLSearchParams();
+        Object.entries(payload).forEach(([key, value]) => {
+            if (value === undefined || value === null) {
+                return;
+            }
+
+            let stringValue = String(value);
+            if (key === "data") {
+                try {
+                    stringValue = decodeURIComponent(stringValue.replace(/\+/g, " "));
+                } catch (e) {
+                    // If decoding fails, fall back to original encoded value
+                    stringValue = String(value);
+                }
+            }
+
+            params.append(key, stringValue);
+        });
+
+        requestInit = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-SSN-Webhook-Source": source
+            },
+            body: params.toString()
+        };
+    } else {
+        let body;
+        let contentType = "application/json";
+
+        if (typeof payload === "string") {
+            body = payload;
+            contentType = "text/plain";
+        } else {
+            try {
+                body = JSON.stringify(payload);
+            } catch (e) {
+                console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
+                return;
+            }
+        }
+
+        requestInit = {
             method: "POST",
             headers: {
                 "Content-Type": contentType,
                 "X-SSN-Webhook-Source": source
             },
             body
-        }).catch(err => console.warn(`[WebhookRelay] Request failed for ${source}:`, err));
+        };
+    }
+
+    try {
+        fetch(endpoint, requestInit).catch(err => console.warn(`[WebhookRelay] Request failed for ${source}:`, err));
     } catch (err) {
         console.warn(`[WebhookRelay] Unexpected error relaying ${source}:`, err);
     }
