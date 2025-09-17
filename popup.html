@@ -8354,19 +8354,27 @@ input:checked + .slider:before {
                                     <span data-translate="enable-dice-rolls">🎲 Respond with a random dice roll on !dice</span>
                                 </div>
 								
-								<div style="display: inline-block;" title="Automatically identifies questions in chat messages based on keywords like ?, how, what, etc." data-keywords="Q&A QA Q and A ask query queries FAQ help support">
+                                <div style="display: inline-block;" title="Automatically identifies questions in chat messages based on keywords like ?, how, what, etc." data-keywords="Q&A QA Q and A ask query queries FAQ help support">
                                     <label class="switch">
                                         <input type="checkbox" id="identifyQuestions" data-setting="identifyQuestions" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="identify-questions">❓ Identify questions in chat messages</span>
                                 </div>
-								
-								<div style="display: inline-block; margin-left: 30px;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
-									<label class="switch">
-										<input type="checkbox" data-setting="questionKeywords" />
-										<span class="slider round"></span>
-									</label>
+
+                                <div style="display: inline-block;" title="Highlight messages that mention a host name" data-keywords="host mention highlight trivial">
+                                    <label class="switch">
+                                        <input type="checkbox" id="highlightHostMentions" data-setting="highlightHostMentions" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="mark-host-mentions-trivial">🔦 Mark @host messages as trivial events</span>
+                                </div>
+
+                                <div style="display: inline-block; margin-left: 30px;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="questionKeywords" />
+                                        <span class="slider round"></span>
+                                    </label>
 									<div class="textInputContainer" style="display: inline-block; width: 200px;">
 										<input type="text" id="questionKeywords" class="textInput" autocomplete="off" placeholder="?,how,what,when,why" data-textsetting="questionKeywords" />
 										<label for="questionKeywords"><span data-translate="question-keywords">&gt; Custom question keywords</span></label>
