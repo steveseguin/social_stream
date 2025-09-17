@@ -9528,15 +9528,39 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
-			const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
-			const messageText = data.textContent || data.chatmessage;
-			if (wordTexts.some(text => messageText.includes(text))) {
-				data.highlightColor = "#fff387";
+			if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
+				const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
+				const messageText = data.textContent || data.chatmessage;
+				if (wordTexts.some(text => messageText.includes(text))) {
+					data.highlightColor = "#fff387";
+				}
 			}
-		}
 
-		if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
+			if (settings.highlightHostMentions && settings.hostnamesext?.textsetting && data.chatmessage) {
+				const rawHosts = settings.hostnamesext.textsetting.split(',');
+				const messageText = (data.textContent || data.chatmessage || '').toLowerCase();
+
+				const hasMention = rawHosts.some(entry => {
+					const trimmed = entry.trim();
+					if (!trimmed) {
+						return false;
+					}
+
+					const [name] = trimmed.toLowerCase().split(':');
+					if (!name) {
+						return false;
+					}
+
+					const handle = name.startsWith('@') ? name : `@${name}`;
+					return messageText.includes(handle);
+				});
+
+				if (hasMention) {
+					data.highlightColor = data.highlightColor || "#fff387";
+				}
+			}
+
+			if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
 			//if (Date.now() - messageTimeout > 100) {
 				// respond to "1" with a "1" automatically; at most 1 time per 100ms.
 
