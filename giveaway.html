@@ -4,60 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giveaway Wheel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'spin-fast': 'spin 0.5s linear infinite',
+                        'bounce-gentle': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'wheel-spin': 'wheel-spin 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+                    },
+                    keyframes: {
+                        'wheel-spin': {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(1800deg)' }
+                        }
+                    },
+                    colors: {
+                        'wheel-primary': '#667eea',
+                        'wheel-secondary': '#764ba2',
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            color: white;
-        }
-
-        .container {
-            text-align: center;
-            max-width: 800px;
-            width: 100%;
-            padding: 20px;
-        }
-
-        h1 {
-            margin-bottom: 30px;
-            font-size: 2.5em;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-        }
-
-        .wheel-container {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            margin: 20px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wheel-canvas {
-            border-radius: 50%;
-            box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            transition: transform 0.1s ease-out;
-        }
-
+        /* Keep essential wheel-specific styles that can't be easily replicated with Tailwind */
         .wheel-pointer {
             position: absolute;
             top: 50%;
             right: -15px;
             width: 0;
             height: 0;
-            border-left: 20px solid #ff4444;
+            border-left: 20px solid #ef4444;
             border-top: 15px solid transparent;
             border-bottom: 15px solid transparent;
             z-index: 10;
@@ -71,139 +52,15 @@
             left: 50%;
             width: 40px;
             height: 40px;
-            background: #333;
+            background: #374151;
             border-radius: 50%;
             transform: translate(-50%, -50%);
             z-index: 5;
-            border: 3px solid #fff;
+            border: 3px solid #ffffff;
             box-shadow: 0 0 10px rgba(0,0,0,0.3);
         }
 
-        .controls {
-            margin: 30px 0;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        input[type="text"] {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            min-width: 200px;
-        }
-
-        select {
-            padding: 10px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            background: white;
-        }
-
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(45deg, #74b9ff, #0984e3);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .btn-success {
-            background: linear-gradient(45deg, #00b894, #00a085);
-            color: white;
-        }
-
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-        }
-
-        .entrants-list {
-            background: rgba(255,255,255,0.1);
-            border-radius: 10px;
-            padding: 20px;
-            margin: 20px 0;
-            backdrop-filter: blur(10px);
-        }
-
-        .entrant-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 8px 12px;
-            margin: 5px 0;
-            background: rgba(255,255,255,0.1);
-            border-radius: 5px;
-            transition: background 0.3s ease;
-        }
-
-        .entrant-item:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .platform-badge {
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-left: 8px;
-        }
-
-        .platform-twitch { background: #9146ff; color: white; }
-        .platform-youtube { background: #ff0000; color: white; }
-        .platform-facebook { background: #1877f2; color: white; }
-        .platform-instagram { background: #e4405f; color: white; }
-        .platform-tiktok { background: #000000; color: white; }
-        .platform-discord { background: #5865f2; color: white; }
-        .platform-kick { background: #53fc18; color: black; }
-
-        .winner-display {
-            background: linear-gradient(45deg, #ffd700, #ffed4e);
-            color: #333;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-            font-size: 1.5em;
-            font-weight: bold;
-            text-shadow: none;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            display: none;
-        }
+        /* Minimal custom styles for elements that can't be easily replicated with Tailwind */
 
         .confetti {
             position: fixed;
@@ -257,37 +114,48 @@
         }
     </style>
 </head>
-<body>
-    <div class="container">
-        <h1>🎯 Giveaway Wheel</h1>
+<body class="min-h-screen bg-gradient-to-br from-wheel-primary via-purple-600 to-wheel-secondary flex flex-col items-center justify-center text-white font-sans">
+    <div class="text-center max-w-4xl w-full px-6 py-8">
+        <h1 class="text-5xl md:text-6xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-600 drop-shadow-lg animate-pulse-slow">
+            🎯 Giveaway Wheel
+        </h1>
         
-        <div class="wheel-container" id="wheel-container">
-            <div class="wheel-pointer"></div>
-            <canvas id="wheel-canvas" class="wheel-canvas" width="400" height="400"></canvas>
-            <div class="wheel-center"></div>
+        <div class="relative w-96 h-96 md:w-[400px] md:h-[400px] mx-auto my-8 flex items-center justify-center group">
+            <div class="wheel-pointer transition-all duration-300 "></div>
+            <canvas id="wheel-canvas" class="rounded-full shadow-2xl transition-transform duration-100 ease-out hover:scale-105" width="400" height="400"></canvas>
+            <div class="wheel-center transition-all duration-300 "></div>
         </div>
 
-        <div class="winner-display" id="winner-display"></div>
+        <div class="hidden bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-gray-900 p-6 rounded-2xl my-6 text-2xl font-bold shadow-2xl border-4 border-yellow-300 animate-bounce-gentle" id="winner-display"></div>
 
-        <div class="controls">
-            <div class="keyword-section" style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px;">
-                <h3>🔑 Entry Keyword</h3>
-                <div style="font-size: 1.5em; color: #FFD700; margin: 10px 0;">
-                    Current Keyword: <strong id="current-keyword">ENTER</strong>
+        <div class="space-y-6 mt-8">
+            <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl">
+                <h3 class="text-2xl font-bold mb-4 text-center">🔑 Entry Keyword</h3>
+                <div class="text-2xl text-yellow-400 font-bold text-center my-4">
+                    Current Keyword: <span class="bg-yellow-400 text-gray-900 px-3 py-1 rounded-lg" id="current-keyword">ENTER</span>
                 </div>
-                <div style="font-size: 0.9em; color: #ccc; margin-bottom: 10px;">
+                <div class="text-sm text-gray-300 text-center mb-4">
                     Viewers type this keyword in chat to enter the giveaway
                 </div>
-                <div style="margin: 10px 0;">
-                    <input type="text" id="keyword-input" placeholder="Enter new keyword..." style="padding: 8px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
-                    <button class="btn-secondary" onclick="setKeyword()">Set Keyword</button>
+                <div class="flex flex-col sm:flex-row gap-3 items-center justify-center mb-4">
+                    <input type="text" id="keyword-input" placeholder="Enter new keyword..." 
+                           class="px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium min-w-0 flex-1">
+                    <button onclick="setKeyword()" 
+                            class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                        Set Keyword
+                    </button>
                 </div>
-                <button class="btn-secondary" onclick="openOBSWidget()">📺 Open OBS Widget</button>
+                <button onclick="openOBSWidget()" 
+                        class="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                    📺 Open OBS Widget
+                </button>
             </div>
 
-            <div class="input-group">
-                <input type="text" id="entrant-name" placeholder="Enter participant name">
-                <select id="platform-select">
+            <div class="flex flex-col sm:flex-row gap-3 items-center justify-center">
+                <input type="text" id="entrant-name" placeholder="Enter participant name" 
+                       class="px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium min-w-0 flex-1">
+                <select id="platform-select" 
+                        class="px-4 py-3 rounded-lg border-2 border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-900 font-medium">
                     <option value="twitch">Twitch</option>
                     <option value="youtube">YouTube</option>
                     <option value="facebook">Facebook</option>
@@ -296,20 +164,37 @@
                     <option value="discord">Discord</option>
                     <option value="kick">Kick</option>
                 </select>
-                <button class="btn-secondary" onclick="addEntrant()">Add Participant</button>
+                <button onclick="addEntrant()" 
+                        class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                    Add Participant
+                </button>
             </div>
             
-            <div class="input-group">
-                <button class="btn-primary" onclick="spinWheel()" id="spin-btn">🎯 Spin the Wheel!</button>
-                <button class="btn-success" onclick="clearEntrants()">Clear All</button>
-                <button class="btn-secondary" onclick="addTestData()">Add Test Data</button>
-                <button onclick="clearAllEntries()" style="background-color: #dc3545; color: white; padding: 12px 24px; border: none; border-radius: 5px; font-size: 16px; font-weight: bold; cursor: pointer;">🗑️ Clear All Entries</button>
+            <div class="flex flex-wrap gap-3 items-center justify-center">
+                <button onclick="spinWheel()" id="spin-btn" 
+                        class="px-8 py-4 bg-gradient-to-r from-red-500 via-pink-500 to-red-600 hover:from-red-600 hover:via-pink-600 hover:to-red-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-110 hover:shadow-2xl text-lg motion-safe:hover:animate-pulse">
+                    🎯 Spin the Wheel!
+                </button>
+                <button onclick="clearEntrants()" 
+                        class="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                    Clear All
+                </button>
+                <button onclick="addTestData()" 
+                        class="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                    Add Test Data
+                </button>
+                <button onclick="clearAllEntries()" 
+                        class="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-bold rounded-lg transition-all duration-200 transform hover:scale-105 hover:shadow-lg">
+                    🗑️ Clear All Entries
+                </button>
             </div>
         </div>
 
-        <div class="entrants-list">
-            <h3>Participants (<span id="entrant-count">0</span>)</h3>
-            <div id="entrants-container"></div>
+        <div class="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 shadow-xl mt-8">
+            <h3 class="text-2xl font-bold mb-4 text-center">
+                Participants (<span class="text-yellow-400" id="entrant-count">0</span>)
+            </h3>
+            <div id="entrants-container" class="space-y-2 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent"></div>
         </div>
     </div>
 
@@ -973,23 +858,29 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
                 
-                // Draw text and platform badge
+                // Draw text and platform badge at the edge of the circle
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(startAngle + segmentAngle / 2);
-                ctx.textAlign = 'left';
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 14px Arial';
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-                ctx.shadowBlur = 2;
-                ctx.shadowOffsetX = 1;
-                ctx.shadowOffsetY = 1;
                 
-                const textX = radius * 0.3;
-                const maxTextWidth = radius * 0.6;
+                // Position elements at the outer edge of the circle
+                const edgeRadius = radius - 45; // Position near the outer edge with some padding
+                const textX = edgeRadius; // Position at the edge
+                const maxTextWidth = radius * 0.4; // Limit text width for edge positioning
+                
+                // Set up text styling for edge positioning
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 18px Arial'; // Larger font for better visibility at edge
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                ctx.shadowBlur = 4;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                
                 const userName = entrant.name || 'Anonymous';
                 
-                // Truncate text if too long
+                // Truncate text if too long for edge positioning
                 let displayText = userName;
                 if (ctx.measureText(displayText).width > maxTextWidth) {
                     while (ctx.measureText(displayText + '...').width > maxTextWidth && displayText.length > 1) {
@@ -998,37 +889,52 @@
                     displayText += '...';
                 }
                 
-                ctx.fillText(displayText, textX, 5);
+                // Draw username at the edge of the circle
+                ctx.fillText(displayText, textX, -12);
                 
-                // Draw platform icon
+                // Draw platform icon at the edge
                 if (entrant.platform) {
                     const platformIcon = platformIconCache[entrant.platform];
                     
                     if (platformIcon) {
-                        // Draw platform icon from cache
-                        const iconSize = 16;
-                        const iconX = textX;
-                        const iconY = 15;
+                        // Draw platform icon at the edge below text
+                        const iconSize = 24; // Larger icon for edge visibility
+                        const iconX = textX - iconSize/2; // Center the icon
+                        const iconY = 8; // Position below text
                         
-                        // Draw icon background circle
+                        // Draw icon background circle with stronger contrast
                         ctx.beginPath();
-                        ctx.arc(iconX + iconSize/2, iconY + iconSize/2, iconSize/2 + 2, 0, 2 * Math.PI);
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.arc(textX, iconY + iconSize/2, iconSize/2 + 4, 0, 2 * Math.PI);
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
                         ctx.fill();
-                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-                        ctx.lineWidth = 1;
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                        ctx.lineWidth = 3;
                         ctx.stroke();
                         
                         // Draw platform icon
                         ctx.drawImage(platformIcon, iconX, iconY, iconSize, iconSize);
                     } else {
-                        // Fallback to text if icon failed to load or doesn't exist
-                        const platformText = entrant.platform.substring(0, 2).toUpperCase();
-                        ctx.font = 'bold 10px Arial';
-                        ctx.fillStyle = '#000';
-                        ctx.fillRect(textX, 15, 20, 12);
+                        // Fallback to text badge at the edge
+                        const platformText = entrant.platform.substring(0, 3).toUpperCase();
+                        ctx.font = 'bold 14px Arial';
+                        
+                        // Draw badge background with stronger contrast for edge visibility
+                        const badgeWidth = 36;
+                        const badgeHeight = 20;
+                        const badgeX = textX - badgeWidth/2;
+                        const badgeY = 8;
+                        
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+                        ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                        ctx.lineWidth = 2;
+                        ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
+                        
+                        // Draw badge text
                         ctx.fillStyle = '#fff';
-                        ctx.fillText(platformText, textX + 2, 25);
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(platformText, textX, badgeY + badgeHeight/2);
                     }
                 }
                 
@@ -1048,12 +954,33 @@
             }
             
             isSpinning = true;
-            document.getElementById('spin-btn').disabled = true;
-            document.getElementById('winner-display').style.display = 'none';
+            const spinBtn = document.getElementById('spin-btn');
+            const winnerDisplay = document.getElementById('winner-display');
+            
+            // Add loading state to button
+            spinBtn.disabled = true;
+            spinBtn.innerHTML = `
+                <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Spinning...
+            `;
+            spinBtn.classList.add('opacity-75', 'cursor-not-allowed');
+            
+            // Hide winner display
+            winnerDisplay.classList.add('hidden');
+            winnerDisplay.classList.remove('block');
             
             const segmentAngle = 360 / entrantsList.length;
             const winnerIndex = Math.floor(Math.random() * entrantsList.length);
-            const targetAngle = (winnerIndex * segmentAngle) + (segmentAngle / 2);
+            
+            // Calculate target angle to align winner segment with pointer (at 0 degrees / 3 o'clock position)
+            // The pointer is at 0 degrees, so we need to rotate the wheel so the winner segment center aligns with it
+            const winnerSegmentCenter = (winnerIndex * segmentAngle) + (segmentAngle / 2);
+            // We want the winner segment center to be at 0 degrees (where the pointer is)
+            // So we need to rotate by negative of the winner segment center angle
+            const targetAngle = 360 - winnerSegmentCenter;
             const totalRotation = 360 * 5 + targetAngle; // 5 full rotations plus target
             
             // Convert to radians for OBS widget
@@ -1090,7 +1017,12 @@
                     const winner = entrantsList[winnerIndex];
                     showWinner(winner);
                     isSpinning = false;
-                    document.getElementById('spin-btn').disabled = false;
+                    
+                    // Restore button state
+                    const spinBtn = document.getElementById('spin-btn');
+                    spinBtn.disabled = false;
+                    spinBtn.innerHTML = '🎯 Spin the Wheel!';
+                    spinBtn.classList.remove('opacity-75', 'cursor-not-allowed');
                     
                     // Clear spin state
                     localStorage.removeItem('wheelSpinState');
@@ -1104,12 +1036,13 @@
         function showWinner(winner) {
             const winnerDisplay = document.getElementById('winner-display');
             const platformBadge = winner.platform ? 
-                `<span class="platform-badge platform-${winner.platform}">${winner.platform.toUpperCase()}</span>` : '';
+                `<span class="inline-block px-2 py-1 ml-2 text-xs font-bold rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white">${winner.platform.toUpperCase()}</span>` : '';
             
             winnerDisplay.innerHTML = `
-                🎉 Winner: <strong>${winner.name}</strong> ${platformBadge}
+                🎉 Winner: <strong class="text-gray-900">${winner.name}</strong> ${platformBadge}
             `;
-            winnerDisplay.style.display = 'block';
+            winnerDisplay.classList.remove('hidden');
+            winnerDisplay.classList.add('block');
             
             // Broadcast winner to OBS widget
             const winnerData = {
@@ -1247,13 +1180,16 @@
             
             Object.entries(entrants).forEach(([id, entrant]) => {
                 const entrantDiv = document.createElement('div');
-                entrantDiv.className = 'entrant-item';
+                entrantDiv.className = 'flex justify-between items-center p-3 bg-white/5 hover:bg-white/10 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-200 group';
                 entrantDiv.innerHTML = `
-                    <span>
-                        ${entrant.name}
-                        <span class="platform-badge platform-${entrant.platform}">${entrant.platform.toUpperCase()}</span>
+                    <span class="flex items-center gap-2">
+                        <span class="font-medium text-white">${entrant.name}</span>
+                        <span class="inline-block px-2 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-blue-500 to-purple-500 text-white">${entrant.platform.toUpperCase()}</span>
                     </span>
-                    <button onclick="removeEntrant('${id}')" style="background: #ff4444; color: white; border: none; border-radius: 3px; padding: 4px 8px; cursor: pointer;">Remove</button>
+                    <button onclick="removeEntrant('${id}')" 
+                            class="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-md transition-all duration-200 transform hover:scale-105 opacity-0 group-hover:opacity-100">
+                        Remove
+                    </button>
                 `;
                 entrantsContainer.appendChild(entrantDiv);
             });
