@@ -4,6 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giveaway Wheel - OBS Widget</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    animation: {
+                        'spin-slow': 'spin 3s linear infinite',
+                        'spin-fast': 'spin 0.5s linear infinite',
+                        'bounce-gentle': 'bounce 2s infinite',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'wheel-spin': 'wheel-spin 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
+                        'winner-celebration': 'winner-celebration 2s ease-in-out infinite',
+                    },
+                    keyframes: {
+                        'wheel-spin': {
+                            '0%': { transform: 'rotate(0deg)' },
+                            '100%': { transform: 'rotate(1800deg)' }
+                        },
+                        'winner-celebration': {
+                            '0%, 100%': { transform: 'scale(1) rotate(0deg)', opacity: '1', filter: 'hue-rotate(0deg)' },
+                            '25%': { transform: 'scale(1.1) rotate(5deg)', opacity: '0.9', filter: 'hue-rotate(90deg)' },
+                            '50%': { transform: 'scale(1.2) rotate(-5deg)', opacity: '1', filter: 'hue-rotate(180deg)' },
+                            '75%': { transform: 'scale(1.1) rotate(3deg)', opacity: '0.9', filter: 'hue-rotate(270deg)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
         * {
             margin: 0;
@@ -16,25 +45,6 @@
             background: transparent;
             color: white;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .wheel-container {
-            position: relative;
-            width: 400px;
-            height: 400px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wheel-canvas {
-            border-radius: 50%;
-            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
-            transition: transform 0.1s ease-out;
         }
 
         .wheel-pointer {
@@ -166,25 +176,25 @@
         }
     </style>
 </head>
-<body>
-    <div class="status-indicator"></div>
+<body class="min-h-screen flex flex-col items-center justify-center">
+    <div class="fixed top-4 left-4 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
     
-    <div class="keyword-display">
-        <div class="keyword-label">Entry Keyword:</div>
-        <div class="keyword-value" id="current-keyword">ENTER</div>
+    <div class="mb-6 text-center">
+        <div class="text-lg font-semibold text-gray-300 mb-2">Entry Keyword:</div>
+        <div class="text-3xl font-bold text-yellow-400 bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-yellow-400/30" id="current-keyword">ENTER</div>
     </div>
 
-    <div class="wheel-container" id="wheel-container">
-        <div class="wheel-pointer"></div>
-        <canvas id="wheel-canvas" class="wheel-canvas" width="400" height="400"></canvas>
-        <div class="wheel-center"></div>
+    <div class="relative w-[400px] h-[400px] flex items-center justify-center group">
+        <div class="wheel-pointer transition-all duration-300 "></div>
+        <canvas id="wheel-canvas" class="rounded-full shadow-2xl transition-transform duration-100 ease-out hover:scale-105" width="400" height="400"></canvas>
+        <div class="wheel-center transition-all duration-300 "></div>
         
-        <div class="winner-display" id="winner-display">
-            <div class="winner-text">🎉 WINNER! 🎉</div>
-            <div class="winner-name" id="winner-name"></div>
+        <div class="absolute inset-0 flex flex-col items-center justify-center text-center hidden animate-winner-celebration" id="winner-display">
+            <div class="text-4xl font-bold mb-2 text-yellow-400 drop-shadow-lg">🎉 WINNER! 🎉</div>
+            <div class="text-2xl font-bold text-white bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent" id="winner-name"></div>
         </div>
         
-        <div class="no-participants" id="no-participants">
+        <div class="absolute inset-0 flex items-center justify-center text-2xl text-gray-400 font-semibold" id="no-participants">
             Waiting for participants...
         </div>
     </div>
@@ -380,7 +390,7 @@
             }
 
             drawWheelWithIcons() {
-                const centerX = this.canvas.width / 2;
+                const centerX = this.canvas.width / 2 ;
                 const centerY = this.canvas.height / 2;
                 const radius = Math.min(centerX, centerY) - 10;
                 
@@ -414,23 +424,29 @@
                     this.ctx.lineWidth = 2;
                     this.ctx.stroke();
                     
-                    // Draw text and platform badge
+                    // Draw text and platform badge at the edge of the circle
                     this.ctx.save();
                     this.ctx.translate(centerX, centerY);
                     this.ctx.rotate(startAngle + segmentAngle / 2);
-                    this.ctx.textAlign = 'left';
-                    this.ctx.fillStyle = '#fff';
-                    this.ctx.font = 'bold 14px Arial';
-                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
-                    this.ctx.shadowBlur = 2;
-                    this.ctx.shadowOffsetX = 1;
-                    this.ctx.shadowOffsetY = 1;
                     
-                    const textX = radius * 0.3;
-                    const maxTextWidth = radius * 0.6;
+                    // Position elements at the outer edge of the circle
+                    const edgeRadius = radius - 45; // Position near the outer edge with some padding
+                    const textX = edgeRadius; // Position at the edge
+                    const maxTextWidth = radius * 0.4; // Limit text width for edge positioning
+                    
+                    // Set up text styling for edge positioning
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.font = 'bold 18px Arial'; // Larger font for better visibility at edge
+                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+                    this.ctx.shadowBlur = 4;
+                    this.ctx.shadowOffsetX = 2;
+                    this.ctx.shadowOffsetY = 2;
+                    
                     const userName = entrant.name || 'Anonymous';
                     
-                    // Truncate text if too long
+                    // Truncate text if too long for edge positioning
                     let displayText = userName;
                     if (this.ctx.measureText(displayText).width > maxTextWidth) {
                         while (this.ctx.measureText(displayText + '...').width > maxTextWidth && displayText.length > 1) {
@@ -439,36 +455,52 @@
                         displayText += '...';
                     }
                     
-                    this.ctx.fillText(displayText, textX, 5);
+                    // Draw username at the edge of the circle
+                    this.ctx.fillText(displayText, textX, -12);
                     
-                    // Draw platform icon
+                    // Draw platform icon at the edge
                     if (entrant.platform) {
                         const platformIcon = this.platformIconCache[entrant.platform];
                         
                         if (platformIcon) {
-                            const iconSize = 16;
-                            const iconX = textX;
-                            const iconY = 15;
+                            // Draw platform icon at the edge below text
+                            const iconSize = 24; // Larger icon for edge visibility
+                            const iconX = textX - iconSize/2; // Center the icon
+                            const iconY = 8; // Position below text
                             
-                            // Draw icon background circle
+                            // Draw icon background circle with stronger contrast
                             this.ctx.beginPath();
-                            this.ctx.arc(iconX + iconSize/2, iconY + iconSize/2, iconSize/2 + 2, 0, 2 * Math.PI);
-                            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            this.ctx.arc(textX, iconY + iconSize/2, iconSize/2 + 4, 0, 2 * Math.PI);
+                            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
                             this.ctx.fill();
-                            this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-                            this.ctx.lineWidth = 1;
+                            this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
+                            this.ctx.lineWidth = 3;
                             this.ctx.stroke();
                             
                             // Draw platform icon
                             this.ctx.drawImage(platformIcon, iconX, iconY, iconSize, iconSize);
                         } else {
-                            // Fallback to text
-                            const platformText = entrant.platform.substring(0, 2).toUpperCase();
-                            this.ctx.font = 'bold 10px Arial';
-                            this.ctx.fillStyle = '#000';
-                            this.ctx.fillRect(textX, 15, 20, 12);
+                            // Fallback to text badge at the edge
+                            const platformText = entrant.platform.substring(0, 3).toUpperCase();
+                            this.ctx.font = 'bold 14px Arial';
+                            
+                            // Draw badge background with stronger contrast for edge visibility
+                            const badgeWidth = 36;
+                            const badgeHeight = 20;
+                            const badgeX = textX - badgeWidth/2;
+                            const badgeY = 8;
+                            
+                            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+                            this.ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
+                            this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                            this.ctx.lineWidth = 2;
+                            this.ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
+                            
+                            // Draw badge text
                             this.ctx.fillStyle = '#fff';
-                            this.ctx.fillText(platformText, textX + 2, 25);
+                            this.ctx.textAlign = 'center';
+                            this.ctx.textBaseline = 'middle';
+                            this.ctx.fillText(platformText, textX, badgeY + badgeHeight/2);
                         }
                     }
                     
