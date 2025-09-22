@@ -1297,31 +1297,54 @@ TTS.speechMeta = function(data, allow = false) {
     }
     try {
         var isCommand = false;
-        var msgPlain = document.getElementById("content_" + data.id);
+        var msgPlainElement = document.getElementById("content_" + data.id);
+        var msgPlain = "";
 
-        if (msgPlain) {
-            msgPlain = (msgPlain.textContent || msgPlain.innerText || "") // Remove emojis, underscores, and @ symbols
-                .replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
-                .replace(/_/g, " ")
-                .replace(/@/g, " ")
-                
-            if (TTS.ttscommand && msgPlain.includes(TTS.ttscommand+" ")) {
-                msgPlain = msgPlain.split(TTS.ttscommand+" ")[1].trim();
-                allow = true;
+        if (msgPlainElement) {
+            msgPlain = msgPlainElement.textContent || msgPlainElement.innerText || "";
+        } else if (data.chatmessage) {
+            var tempContainer = document.createElement("div");
+            tempContainer.innerHTML = data.chatmessage;
+
+            // Drop embedded media so TTS never reads their attributes or data URLs
+            tempContainer.querySelectorAll("img, video, audio, source, picture, canvas, svg, iframe, object, embed, lottie-player").forEach(function(node) {
+                if (node && node.parentNode) {
+                    node.parentNode.removeChild(node);
+                }
+            });
+
+            msgPlain = tempContainer.textContent || tempContainer.innerText || "";
+
+            if (!msgPlain.trim()) {
+                msgPlain = "";
             }
-            
-            msgPlain = msgPlain.replace(/^!/, ""); // check if it starts with '!'
-            msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
-            msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
-            if (TTS.beepwords) {
-                msgPlain = msgPlain.replace(/\*+/g, ' beep ');
-            } else {
-                msgPlain = msgPlain.replace(/\*/g, '');
-            }
-            msgPlain = msgPlain.trim();
-        } else if (data.chatmessage){
-			msgPlain = data.chatmessage;
-		}
+        }
+
+        msgPlain = msgPlain || "";
+        msgPlain = msgPlain
+            .replace(/[\u2700-\u27BF\uE000-\uF8FF\uD83C\uD800-\uDFFF\uD83E\uD810-\uDFFF\u2011-\u26FF]/g, "")
+            .replace(/_/g, " ")
+            .replace(/@/g, " ");
+
+        msgPlain = msgPlain.replace(/data:[^\s]+;base64,[^\s]*/gi, " ");
+        msgPlain = msgPlain.replace(/base64,[^\s]*/gi, " ");
+
+        if (TTS.ttscommand && msgPlain.includes(TTS.ttscommand+" ")) {
+            msgPlain = msgPlain.split(TTS.ttscommand+" " )[1].trim();
+            allow = true;
+        }
+
+        msgPlain = msgPlain.replace(/^!/, ""); // check if it starts with '!'
+        msgPlain = msgPlain.replace(/!+/g, " "); // Replace multiple '!' with a single space
+        msgPlain = msgPlain.replace(/catJAM/gi, ""); // Remove 'catJAM' case-insensitively
+        if (TTS.beepwords) {
+            msgPlain = msgPlain.replace(/\*+/g, ' beep ');
+        } else {
+            msgPlain = msgPlain.replace(/\*/g, '');
+        }
+        msgPlain = msgPlain.replace(/\s{2,}/g, " ");
+
+        msgPlain = msgPlain.trim();
 
         var chatname = "";
         if (TTS.ttsSpeakChatname && data.chatname) {
