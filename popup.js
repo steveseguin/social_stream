@@ -6085,4 +6085,28 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		};
 	}
+
+	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
+	if (uploadFeaturedFallbackBtn) {
+		uploadFeaturedFallbackBtn.onclick = function() {
+			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadFeaturedFallback', 'width=640,height=640');
+			window.addEventListener('message', function handleMessage(event) {
+				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+				if (event.data && event.data.type === 'media-uploaded') {
+					const fallbackInput = document.getElementById('featuredFallbackImage');
+					if (fallbackInput) {
+						fallbackInput.value = event.data.url;
+						fallbackInput.dispatchEvent(new Event('input', { bubbles: true }));
+						fallbackInput.dispatchEvent(new Event('change', { bubbles: true }));
+					}
+					const fallbackToggle = document.querySelector('input[data-param2="fallbackimg"]');
+					if (fallbackToggle && !fallbackToggle.checked) {
+						fallbackToggle.checked = true;
+						fallbackToggle.dispatchEvent(new Event('change', { bubbles: true }));
+					}
+					window.removeEventListener('message', handleMessage);
+				}
+			});
+		};
+	}
 });

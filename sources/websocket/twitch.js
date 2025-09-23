@@ -2355,7 +2355,7 @@ try{
       }, 1500);
     } catch(_){ }
 
-    // 4) Intercept Twitch API errors and forward as error status
+    // 4) Intercept Twitch API errors and forward as status updates
     try {
       if (!window.__tw_fetch_patched__) {
         window.__tw_fetch_patched__ = true;
@@ -2363,7 +2363,13 @@ try{
         if (typeof _origFetch === 'function') {
           var lastAt = 0;
           var throttle = 3000;
-          var ping = function(status, msg){ var now = Date.now(); if (now - lastAt > throttle) { __tw_notifyApp('error', msg || ('Twitch API error: ' + status)); lastAt = now; } };
+          var emit = function(status, msg){
+            var now = Date.now();
+            if (now - lastAt > throttle) {
+              __tw_notifyApp(status, msg);
+              lastAt = now;
+            }
+          };
           window.fetch = async function(input, init){
             try {
               var res = await _origFetch(input, init);
@@ -2379,12 +2385,24 @@ try{
                       else if (body.error && typeof body.error === 'string') msg = body.error;
                     }
                   } catch(_){ }
-                  ping(res.status, msg);
+                  // Classification:
+                  // - OAuth (id.twitch.tv) 401 => auth expired / sign-in required
+                  // - Helix/GQL (api.twitch.tv / gql.twitch.tv) 401/403 => warn: insufficient scope/role
+                  // - Otherwise, generic error
+                  var isOAuth = url.indexOf('id.twitch.tv') !== -1;
+                  var isHelixOrGql = url.indexOf('api.twitch.tv') !== -1 || url.indexOf('gql.twitch.tv') !== -1;
+                  if (isOAuth && res.status === 401) {
+                    emit('signin_required', 'Twitch auth expired');
+                  } else if (isHelixOrGql && (res.status === 401 || res.status === 403)) {
+                    emit('warn', 'insufficient_scope');
+                  } else {
+                    emit('error', msg);
+                  }
                 }
               }
               return res;
             } catch(e) {
-              ping('network_error', e && e.message ? e.message : 'Network error');
+              emit('error', e && e.message ? e.message : 'Network error');
               throw e;
             }
           };
