@@ -1453,7 +1453,7 @@ input:checked + .slider:before {
                 <div id="dock" data-raw="" class="streaming_chat"></div>
 					
 					<!-- Stream Overlay Preset Selector -->
-					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+					<div class="overlay-selector" style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;overflow:hidden;">
 						<label for="overlay-preset-select" style="display: inline-block; margin-right: 10px;">
 							<span data-translate="select-overlay">🎨 Select Preset Overlay Theme:</span>
 						</label>
@@ -5551,6 +5551,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="align-overly-to-the-right-side">➡️ Align overlay to the right-side </span>
                                 </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param4="align=center" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>↔️ Align overlay to the center</span>
+                                </div>
 								
 								<div>
 									<label class="switch">
@@ -6011,7 +6018,7 @@ input:checked + .slider:before {
                 </div>
             </div>
 			
-			<div class="link hidden" title="Giveaway Tool" style="display:none;">
+			<div class="link" title="Giveaway Tool">
                 <h2 class="giveaway_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎁</span><span data-translate="giveaway">Giveaway Tool</span></span>
 					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
@@ -8044,6 +8051,16 @@ input:checked + .slider:before {
                                         <label for="h2rserver"><span data-translate="send-all-to-h2r-server">&gt; Send all to H2R server</span></label>
                                     </div>
                                 </div>
+                                <div title="Relay Ko-fi, Stripe, Buy Me a Coffee, and Fourthwall webhook payloads to your custom endpoint">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="webhookrelay" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
+                                        <input type="text" id="webhookrelayurl" class="textInput" autocomplete="off" placeholder="https://thirdparty.com/api" data-textsetting="webhookrelayurl" />
+                                        <label for="webhookrelayurl"><span>&gt; Relay incoming webhooks</span></label>
+                                    </div>
+                                </div>
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="post" />
@@ -8366,19 +8383,27 @@ input:checked + .slider:before {
                                     <span data-translate="enable-dice-rolls">🎲 Respond with a random dice roll on !dice</span>
                                 </div>
 								
-								<div style="display: inline-block;" title="Automatically identifies questions in chat messages based on keywords like ?, how, what, etc." data-keywords="Q&A QA Q and A ask query queries FAQ help support">
+                                <div style="display: inline-block;" title="Automatically identifies questions in chat messages based on keywords like ?, how, what, etc." data-keywords="Q&A QA Q and A ask query queries FAQ help support">
                                     <label class="switch">
                                         <input type="checkbox" id="identifyQuestions" data-setting="identifyQuestions" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="identify-questions">❓ Identify questions in chat messages</span>
                                 </div>
-								
-								<div style="display: inline-block; margin-left: 30px;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
-									<label class="switch">
-										<input type="checkbox" data-setting="questionKeywords" />
-										<span class="slider round"></span>
-									</label>
+
+                                <div style="display: inline-block;" title="Highlight messages that mention a host name" data-keywords="host mention highlight trivial">
+                                    <label class="switch">
+                                        <input type="checkbox" id="highlightHostMentions" data-setting="highlightHostMentions" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="mark-host-mentions-trivial">🔦 Mark @host messages as trivial events</span>
+                                </div>
+
+                                <div style="display: inline-block; margin-left: 30px;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="questionKeywords" />
+                                        <span class="slider round"></span>
+                                    </label>
 									<div class="textInputContainer" style="display: inline-block; width: 200px;">
 										<input type="text" id="questionKeywords" class="textInput" autocomplete="off" placeholder="?,how,what,when,why" data-textsetting="questionKeywords" />
 										<label for="questionKeywords"><span data-translate="question-keywords">&gt; Custom question keywords</span></label>

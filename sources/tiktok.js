@@ -665,6 +665,7 @@
 	  }
 	};
 
+
 	function getIdFromUrl(url) {
 		let resourceMatch = url.match(/resource\/([^.]+)(?:\.png|\.webp)/);
 		if (resourceMatch) return resourceMatch[1];
