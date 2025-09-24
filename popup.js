@@ -1560,6 +1560,86 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   }
 }
 
+function applyFeaturedOverlayPreset(presetValue) {
+	const overlayDiv = document.getElementById('overlay');
+	const overlayLink = document.getElementById('overlaylink');
+	const presetSelector = document.getElementById('featured-preset-select');
+
+	if (!overlayDiv || !overlayLink) {
+		return;
+	}
+
+	if (typeof presetValue === 'string' && presetSelector && presetSelector.value !== presetValue) {
+		presetSelector.value = presetValue;
+	}
+
+	document.querySelectorAll('.preset-config-section').forEach(section => {
+		section.style.display = 'none';
+	});
+
+	const toggleClassicOptions = (show) => {
+		document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
+			wrapper.style.display = show ? '' : 'none';
+		});
+	};
+
+	if (presetValue) {
+		const presetUrl = baseURL + presetValue;
+		let currentParams = overlayDiv.raw?.split('?')[1] || '';
+		let session = '';
+
+		if (currentParams) {
+			const params = new URLSearchParams(currentParams);
+			session = params.get('session') || params.get('room') || '';
+		}
+
+		if (!session) {
+			const sessionInput = document.getElementById('sessionid');
+			if (sessionInput && sessionInput.value) {
+				session = sessionInput.value;
+			}
+		}
+
+		let newUrl = presetUrl;
+		if (session) {
+			newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
+		}
+
+		overlayDiv.raw = newUrl;
+		overlayLink.href = newUrl;
+		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : newUrl;
+
+		toggleClassicOptions(false);
+
+		const presetType = presetValue.match(/featured-(\w+)\.html/)?.[1];
+		if (presetType) {
+			const presetConfigSection = document.getElementById(`preset-config-${presetType}`);
+			if (presetConfigSection) {
+				presetConfigSection.style.display = 'block';
+			}
+		}
+	} else {
+		let currentParams = overlayDiv.raw?.split('?')[1] || '';
+
+		if (!currentParams) {
+			const sessionInput = document.getElementById('sessionid');
+			if (sessionInput && sessionInput.value) {
+				currentParams = 'session=' + sessionInput.value;
+			}
+		}
+
+		const classicUrl = baseURL + 'featured.html' + (currentParams ? '?' + currentParams : '');
+
+		overlayDiv.raw = classicUrl;
+		overlayLink.href = classicUrl;
+		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : classicUrl;
+
+		toggleClassicOptions(true);
+	}
+
+	refreshLinks();
+}
+
 function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
   
@@ -1878,9 +1958,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             } else if (key == "ttsProvider") {
                 handleTTSProviderVisibility(ele.value);
             } else if (key == "featuredOverlayStyle" ) {
-				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-					wrapper.style.display = 'none';
-				});
+				applyFeaturedOverlayPreset(ele.value);
 			 } else if (key == "overlayPreset") {
 				// Update the dock URL to match the saved overlay preset
 				const dockDiv = document.getElementById('dock');
@@ -5700,65 +5778,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const presetSelector = document.getElementById('featured-preset-select');
 	if (presetSelector) {
 		presetSelector.addEventListener('change', function() {
-			const overlayDiv = document.getElementById('overlay');
-			const overlayLink = document.getElementById('overlaylink');
-			
-			if (!overlayDiv || !overlayLink) return;
-			
-			// Hide all preset configuration sections first
-			document.querySelectorAll('.preset-config-section').forEach(section => {
-				section.style.display = 'none';
-			});
-			
-			if (this.value) {
-				// A preset is selected - use the preset URL
-				const presetUrl = baseURL + this.value;
-				
-				// Get the current parameters from the classic featured.html
-				const currentParams = overlayDiv.raw?.split('?')[1] || '';
-				
-				// Extract session/room parameter
-				const urlParams = new URLSearchParams(currentParams);
-				const session = urlParams.get('session') || urlParams.get('room') || '';
-				
-				// Build the new URL with session parameter
-				let newUrl = presetUrl;
-				if (session) {
-					newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
-				}
-				
-				// Update the display
-				overlayDiv.raw = newUrl;
-				overlayLink.href = newUrl;
-				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-				
-				// Hide classic customization options
-				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-					wrapper.style.display = 'none';
-				});
-				
-				// Show the specific preset configuration based on selection
-				const presetType = this.value.match(/featured-(\w+)\.html/)?.[1];
-				if (presetType) {
-					const presetConfigSection = document.getElementById(`preset-config-${presetType}`);
-					if (presetConfigSection) {
-						presetConfigSection.style.display = 'block';
-					}
-				}
-			} else {
-				// Classic mode selected - restore featured.html
-				const currentParams = overlayDiv.raw?.split('?')[1] || '';
-				const classicUrl = baseURL + 'featured.html' + (currentParams ? '?' + currentParams : '');
-				
-				overlayDiv.raw = classicUrl;
-				overlayLink.href = classicUrl;
-				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : classicUrl;
-				
-				// Show classic customization options
-				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-					wrapper.style.display = '';
-				});
-			}
+			applyFeaturedOverlayPreset(this.value);
 		});
 	}
 
