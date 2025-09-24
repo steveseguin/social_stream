@@ -935,6 +935,9 @@
 		if (chatmessage && (chatmessage === "----")) {
 			return;
 		}
+		if (chatmessage && (chatmessage === "**")) {
+			return;
+		}
 		if (chatname && (chatimg || chatbadges || membership)) {
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
 		}
@@ -1118,6 +1121,9 @@
 			chatmessage = chatmessage.trim();
 		}
 		if (!chatmessage || (chatmessage === "----")) {
+			return;
+		}
+		if (chatmessage && (chatmessage === "**")) {
 			return;
 		}
 		if ((ital === true) && chatmessage && (chatmessage.includes("joined"))) {
