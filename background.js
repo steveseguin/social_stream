@@ -9967,24 +9967,24 @@ async function applyBotActions(data, tab = false) {
 	}
 
 	if (settings.comment_background) {
-		if (!data.backgroundColor) {
+		//if (!data.backgroundColor) {
 			data.backgroundColor = settings.comment_background.textsetting;
-		}
+		//}
 	}
 	if (settings.comment_color) {
-		if (!data.textColor) {
+		//if (!data.textColor) {
 			data.textColor = settings.comment_color.textsetting;
-		}
+		//}
 	}
 	if (settings.name_background) {
-		if (!data.backgroundNameColor) {
+		//if (!data.backgroundNameColor) {
 			data.backgroundNameColor = "background-color:" + settings.name_background.textsetting + ";";
-		}
+		//}
 	}
 	if (settings.name_color) {
-		if (!data.textNameColor) {
+		//if (!data.textNameColor) {
 			data.textNameColor = "color:" + settings.name_color.textsetting + ";";
-		}
+		//}
 	}
 
 	if (settings.defaultavatar) {

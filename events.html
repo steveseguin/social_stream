@@ -347,7 +347,7 @@ body.light-mode .message.active {
 
 	// Add parameters for display options
 	var donationsOnly = urlParams.has("donationsonly");
-	var minValue = urlParams.has("minvalue") ? parseInt(urlParams.get("minvalue")) : 5;
+	var minValue = urlParams.has("minvalue") ? (parseInt(urlParams.get("minvalue"))||5) : 0;
 	var giftSubsOnly = urlParams.has("giftedsubsonly");
 	var showUSD = urlParams.has("currency") ? true : false;
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
@@ -447,23 +447,25 @@ body.light-mode .message.active {
 		// Calculate USD value if donation
 		let usdValue = 0;
 		if (data.hasDonation) {
-			usdValue = convertToUSD(data.hasDonation, data.type);
-			
-			// Add value-based class if highlighting is enabled
-			if (highlightValue) {
-				if (usdValue >= 50) {
-					messageDiv.classList.add('high-value');
-				} else if (usdValue >= 10) {
-					messageDiv.classList.add('medium-value');
+			try {
+				usdValue = convertToUSD(data.hasDonation, data.type);
+				
+				// Add value-based class if highlighting is enabled
+				if (highlightValue) {
+					if (usdValue >= 50) {
+						messageDiv.classList.add('high-value');
+					} else if (usdValue >= 10) {
+						messageDiv.classList.add('medium-value');
+					}
 				}
-			}
-			
-			if (minValue && (usdValue < minValue)){
-				return;
-			}
-			if (!showUSD){
-				usdValue = 0;
-			}
+				
+				if (minValue && (usdValue < minValue)){
+					return;
+				}
+				if (!showUSD){
+					usdValue = 0;
+				}
+			} catch(e){console.error(e);}
 		}
 		
 		messageDiv.innerHTML = `
