@@ -1123,6 +1123,9 @@
 		if (!chatmessage || (chatmessage === "----")) {
 			return;
 		}
+		if (chatmessage && (chatmessage === "**")) {
+			return;
+		}
 		if ((ital === true) && chatmessage && (chatmessage.includes("joined"))) {
 			if (!settings.capturejoinedevent) {
 				return;
