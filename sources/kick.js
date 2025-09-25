@@ -141,7 +141,7 @@
 	
 	// Persistent cache configuration
 	const CACHE_KEY = 'kick_user_profiles_cache';
-	const CACHE_EXPIRY_DAYS = 30;
+	const CACHE_EXPIRY_DAYS = 1;
 	const CACHE_EXPIRY_MS = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
 	
 	// Load cached profiles from localStorage on startup
