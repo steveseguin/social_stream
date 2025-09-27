@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Templates Gallery - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/templates.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet"  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+    <meta name="description" content="Browse and download custom templates for Social Stream Ninja to enhance your streaming experience.">
+</head>
+<body>
+	<header>
+		<div class="container">
+			<div class="logo">
+				<a href="../index.html">
+					<img src="data:image/svg+xml;base64,PHN2ZyBpZD0iQ2FwYV8xIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MTIgNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGc+PGc+PHBhdGggZD0ibTI4NS41NzcgMTQyLjc2OGgtMjI2LjgyM2MtMjguMzExIDAtNTEuMjYyIDIyLjk1MS01MS4yNjIgNTEuMjYydjE5My44NDVjMCAyOC4zMTEgMjIuOTUxIDUxLjI2MyA1MS4yNjMgNTEuMjYzaDEzLjQ0NGM0LjY5NSAwIDguODIyIDMuMjA0IDkuODk0IDcuNzc1IDQuMTE3IDE3LjU0Ny0xMC43NDYgMzQuMTEzLTIwLjE4OCA0Mi41ODItMi4yNjYgMi4wMzItLjY2MSA1Ljc2MSAyLjM3NSA1LjU2NCA1Mi41NTMtMy40MSA2OC40MTktMzQuNjMgNzIuOTQ2LTQ4Ljg4MyAxLjMzNi00LjIwNSA1LjI2Ni03LjAzOCA5LjY3OC03LjAzOGgxMzguNjc0YzI4LjMxMSAwIDUxLjI2Mi0yMi45NTEgNTEuMjYyLTUxLjI2MnYtMTkzLjg0NmMtLjAwMS0yOC4zMTEtMjIuOTUyLTUxLjI2Mi01MS4yNjMtNTEuMjYyeiIgZmlsbD0iI2ZlN2FiNiIvPjwvZz48Zz48cGF0aCBkPSJtMTI1LjkzMiA0MzkuMTMzaDIwLjk3NGMtNC40MTUgMC04LjM1IDIuODM3LTkuNjc4IDcuMDQxLTQuNTM0IDE0LjI1Mi0yMC4zOTUgNDUuNDc0LTcyLjk0OSA0OC44NzktMS43MTguMTEtMi45NzYtMS4wMjktMy4zMzYtMi40MDcgMzguNjIyLTguMzU5IDUxLjMyNi0zMy45NTggNTUuMzExLTQ2LjQ3MiAxLjMyOC00LjIwNSA1LjI2My03LjA0MSA5LjY3OC03LjA0MXoiIGZpbGw9IiNmZTVjYTciLz48L2c+PGc+PHBhdGggZD0ibTMzNi44NCAxOTQuMDI3djE5My44NDljMCAyOC4zMDUtMjIuOTUxIDUxLjI1Ni01MS4yNjYgNTEuMjU2aC0yMC45NzRjMjguMzE1IDAgNTEuMjY2LTIyLjk1MSA1MS4yNjYtNTEuMjU2di0xOTMuODQ5YzAtMjguMzA1LTIyLjk1MS01MS4yNTYtNTEuMjY2LTUxLjI1NmgyMC45NzRjMjguMzE0IDAgNTEuMjY2IDIyLjk1MSA1MS4yNjYgNTEuMjU2eiIgZmlsbD0iI2ZlNWNhNyIvPjwvZz48Zz48cGF0aCBkPSJtNDUzLjI0NyAxNi45MzVoLTIyNi44MjNjLTI4LjMxMSAwLTUxLjI2MiAyMi45NTEtNTEuMjYyIDUxLjI2MnYxOTMuODQ1YzAgMjguMzExIDIyLjk1MSA1MS4yNjMgNTEuMjYzIDUxLjI2M2gxMzguNjczYzQuNDEyIDAgOC4zNDMgMi44MzMgOS42NzggNy4wMzggNC41MjcgMTQuMjUzIDIwLjM5MyA0NS40NzMgNzIuOTQ2IDQ4Ljg4MyAzLjAzNy4xOTcgNC42NDEtMy41MzMgMi4zNzUtNS41NjQtOS40NDItOC40NjgtMjQuMzA2LTI1LjAzNC0yMC4xODgtNDIuNTgyIDEuMDcyLTQuNTcxIDUuMTk5LTcuNzc1IDkuODk0LTcuNzc1aDEzLjQ0NGMyOC4zMTEgMCA1MS4yNjItMjIuOTUxIDUxLjI2Mi01MS4yNjJ2LTE5My44NDZjMC0yOC4zMTEtMjIuOTUtNTEuMjYyLTUxLjI2Mi01MS4yNjJ6IiBmaWxsPSIjNmVkNWExIi8+PC9nPjxnPjxwYXRoIGQ9Im01MDQuNTEyIDY4LjE5M3YxOTMuODQ5YzAgMjguMzE1LTIyLjk1MSA1MS4yNjYtNTEuMjY2IDUxLjI2NmgtMTMuNDQzYy00LjY5NCAwLTguODE5IDMuMTk2LTkuODk4IDcuNzctNC4xMTUgMTcuNTQ4IDEwLjc0NyAzNC4xMTggMjAuMTk1IDQyLjU3NyAyLjI2NyAyLjAzOC42NTkgNS43NjMtMi4zNzcgNS41NzMtNi4wNDMtLjM5LTExLjU5Ni0xLjE0OS0xNi42OTktMi4yMTcuMzctMS4xMDguMTUtMi40MTctLjg5OS0zLjM1Ni05LjQ0OC04LjQ1OS0yNC4zMS0yNS4wMjktMjAuMTk1LTQyLjU3NyAxLjA3OS00LjU3NCA1LjIwNC03Ljc3IDkuODk4LTcuNzdoMTMuNDQzYzI4LjMxNSAwIDUxLjI2Ni0yMi45NTEgNTEuMjY2LTUxLjI2NnYtMTkzLjg0OWMwLTI4LjMwNS0yMi45NTEtNTEuMjU2LTUxLjI2Ni01MS4yNTZoMTkuOTc1YzI4LjMxNCAwIDUxLjI2NiAyMi45NTIgNTEuMjY2IDUxLjI1NnoiIGZpbGw9IiM0NmNjOGQiLz48L2c+PGc+PHBhdGggZD0ibTM1MC41ODkgODkuNzE3IDE3LjE5MSAzNC44MzJjMS43NDcgMy41MzkgNS4xMjMgNS45OTMgOS4wMjkgNi41NmwzOC40NCA1LjU4NmM5LjgzNiAxLjQyOSAxMy43NjQgMTMuNTE3IDYuNjQ2IDIwLjQ1NWwtMjcuODE1IDI3LjExM2MtMi44MjYgMi43NTUtNC4xMTYgNi43MjQtMy40NDkgMTAuNjE1bDYuNTY2IDM4LjI4NGMxLjY4IDkuNzk2LTguNjAyIDE3LjI2Ny0xNy40IDEyLjY0MmwtMzQuMzgxLTE4LjA3NWMtMy40OTQtMS44MzctNy42NjctMS44MzctMTEuMTYxIDBsLTM0LjM4MSAxOC4wNzVjLTguNzk4IDQuNjI1LTE5LjA4LTIuODQ1LTE3LjQtMTIuNjQybDYuNTY2LTM4LjI4NGMuNjY3LTMuODktLjYyMy03Ljg2LTMuNDQ5LTEwLjYxNWwtMjcuODE1LTI3LjExM2MtNy4xMTgtNi45MzgtMy4xOS0xOS4wMjYgNi42NDYtMjAuNDU1bDM4LjQ0LTUuNTg2YzMuOTA2LS41NjggNy4yODMtMy4wMjEgOS4wMjktNi41NmwxNy4xOTEtMzQuODMyYzQuMzk5LTguOTEzIDE3LjEwOC04LjkxMyAyMS41MDcgMHoiIGZpbGw9IiNmZWRmMzAiLz48L2c+PGc+PHBhdGggZD0ibTM5NC4wNzkgMTg0LjI1OWMtMi44MjcgMi43NTctNC4xMTUgNi43MzItMy40NDYgMTAuNjE3bDYuNTYyIDM4LjI4MmMxLjY3OCA5Ljc5OC04LjU5OSAxNy4yNjktMTcuMzk4IDEyLjY0NGwtMTMuNjMzLTcuMTcxYzMuNjg1LTIuNDU3IDYuMDIzLTYuOTExIDUuMTU0LTExLjk4NWwtNi41NzItMzguMjkyYy0uNjU5LTMuODg1LjYyOS03Ljg1IDMuNDU2LTEwLjYwN2wyNy44MTUtMjcuMTE2YzQuOTU0LTQuODM0IDQuNTU0LTEyLjE1NS41MzktMTYuNjQ5bDE4LjY5NyAyLjcxN2M5LjgyOCAxLjQyOCAxMy43NjMgMTMuNTEzIDYuNjQyIDIwLjQ1NXoiIGZpbGw9IiNmYWM2MDAiLz48L2c+PGc+PHBhdGggZD0ibTg0LjE5NCAyNTEuMDIxaDU0LjQ1MmM0LjEzNyAwIDcuNDkxLTMuMzU0IDcuNDkxLTcuNDkxcy0zLjM1My03LjQ5MS03LjQ5MS03LjQ5MWgtNTQuNDUyYy00LjEzNyAwLTcuNDkxIDMuMzU0LTcuNDkxIDcuNDkxLjAwMSA0LjEzNyAzLjM1NCA3LjQ5MSA3LjQ5MSA3LjQ5MXoiLz48cGF0aCBkPSJtODQuMTk0IDI4Mi42MzZoNTQuNDUyYzQuMTM3IDAgNy40OTEtMy4zNTQgNy40OTEtNy40OTFzLTMuMzUzLTcuNDkxLTcuNDkxLTcuNDkxaC01NC40NTJjLTQuMTM3IDAtNy40OTEgMy4zNTQtNy40OTEgNy40OTEuMDAxIDQuMTM3IDMuMzU0IDcuNDkxIDcuNDkxIDcuNDkxeiIvPjxwYXRoIGQ9Im04NC4xOTQgMzE0LjI1aDU0LjQ1MmM0LjEzNyAwIDcuNDkxLTMuMzU0IDcuNDkxLTcuNDkxcy0zLjM1My03LjQ5MS03LjQ5MS03LjQ5MWgtNTQuNDUyYy00LjEzNyAwLTcuNDkxIDMuMzU0LTcuNDkxIDcuNDkxczMuMzU0IDcuNDkxIDcuNDkxIDcuNDkxeiIvPjxwYXRoIGQ9Im04NC4xOTQgMzQ1Ljg2NWg5OC42NzNjNC4xMzcgMCA3LjQ5MS0zLjM1NCA3LjQ5MS03LjQ5MXMtMy4zNTMtNy40OTEtNy40OTEtNy40OTFoLTk4LjY3M2MtNC4xMzcgMC03LjQ5MSAzLjM1NC03LjQ5MSA3LjQ5MXMzLjM1NCA3LjQ5MSA3LjQ5MSA3LjQ5MXoiLz48cGF0aCBkPSJtNDUzLjI0NyA5LjQ0NWgtMjI2LjgyM2MtMzIuMzk2IDAtNTguNzUzIDI2LjM1Ni01OC43NTMgNTguNzUzdjY3LjA4aC0xMDguOTE4Yy0zMi4zOTYtLjAwMS01OC43NTMgMjYuMzU2LTU4Ljc1MyA1OC43NTJ2MTA5LjkwNGMwIDQuMTM3IDMuMzUzIDcuNDkxIDcuNDkxIDcuNDkxczcuNDkxLTMuMzU0IDcuNDkxLTcuNDkxdi0xMDkuOTA0YzAtMjQuMTM1IDE5LjYzNi00My43NzEgNDMuNzcyLTQzLjc3MWgxMDguOTE3djExMS43ODNjMCAzMi4zOTcgMjYuMzU3IDU4Ljc1MyA1OC43NTMgNTguNzUzaDEwMi45MjV2NjcuMDhjMCAyNC4xMzYtMTkuNjM2IDQzLjc3MS00My43NzIgNDMuNzcxaC0xMzguNjczYy03LjczMSAwLTE0LjQ4OSA0LjkyNy0xNi44MTggMTIuMjYtNC4zNCAxMy42NjQtMTcuMTEyIDM2LjEyNy01NC40NzIgNDIuMzM1IDguOTY1LTEwLjM0OCAxNy41MjQtMjUuMDQ5IDEzLjc3MS00MS4wNC0xLjg3Mi03Ljk4MS04LjkzOS0xMy41NTUtMTcuMTg3LTEzLjU1NWgtMTMuNDQ1Yy0yNC4xMzYgMC00My43NzItMTkuNjM2LTQzLjc3Mi00My43NzJ2LTQ5LjVjMC00LjEzNy0zLjM1My03LjQ5MS03LjQ5MS03LjQ5MXMtNy40OSAzLjM1NS03LjQ5IDcuNDkydjQ5LjVjMCAzMi4zOTcgMjYuMzU3IDU4Ljc1MyA1OC43NTMgNTguNzUzaDEzLjQ0NGMxLjIzNiAwIDIuMzMuODM5IDIuNjAxIDEuOTk1IDEuMzk0IDUuOTM4LjkyMiAxOC40MTgtMTcuODk3IDM1LjI5NC0zLjQzNiAzLjA4My00LjUwMSA3LjgyMy0yLjcxMyAxMi4wNzggMS42NzkgMy45OTIgNS41OSA2LjU2MSA5Ljg3OCA2LjU2MS4yMzEgMCAuNDYzLS4wMDcuNjk2LS4wMjIgNTcuNTIyLTMuNzMyIDc0LjgzLTM5LjA3IDc5LjYwMS01NC4wOTEuMzQ0LTEuMDg1IDEuMzY1LTEuODE0IDIuNTM5LTEuODE0aDEzOC42NzRjMzIuMzk2IDAgNTguNzUzLTI2LjM1NiA1OC43NTMtNTguNzUzdi02Ny4wOGgyMC43NjdjMS4xNzQgMCAyLjE5NS43MjkgMi41MzkgMS44MTQgNC43NzEgMTUuMDIxIDIyLjA3NiA1MC4zNTggNzkuNjAxIDU0LjA5MSA0LjM5Mi4yODUgOC44MTMtMi4zNDkgMTAuNTc1LTYuNTM5IDEuNzg5LTQuMjU0LjcyNC04Ljk5NC0yLjcxMi0xMi4wNzctMTguODE5LTE2Ljg3Ny0xOS4yOTEtMjkuMzU3LTE3Ljg5OC0zNS4yOTQuMjcxLTEuMTU2IDEuMzY2LTEuOTk1IDIuNjAxLTEuOTk1aDEzLjQ0NGMzMi4zOTYgMCA1OC43NTMtMjYuMzU2IDU4Ljc1My01OC43NTN2LTE5My44NDZjLjAwMS0zMi4zOTYtMjYuMzU2LTU4Ljc1Mi01OC43NTItNTguNzUyem00My43NzIgMjUyLjU5N2MwIDI0LjEzNi0xOS42MzYgNDMuNzcyLTQzLjc3MiA0My43NzJoLTEzLjQ0NGMtOC4yNDYgMC0xNS4zMTMgNS41NzMtMTcuMTg3IDEzLjU1NC0xLjg1NiA3LjkxMi0yLjA2NSAyMi45MDYgMTMuNzE4IDQxLjAzMi0zNy4zMTUtNi4yMjMtNTAuMDgxLTI4LjY2OS01NC40MTktNDIuMzI3LTIuMzMtNy4zMzMtOS4wODgtMTIuMjYtMTYuODE3LTEyLjI2aC0xMzguNjc0Yy0yNC4xMzYgMC00My43NzItMTkuNjM2LTQzLjc3Mi00My43NzJ2LTE5My44NDRjMC0yNC4xMzUgMTkuNjM2LTQzLjc3MSA0My43NzItNDMuNzcxaDIyNi44MjNjMjQuMTM2IDAgNDMuNzcyIDE5LjYzNiA0My43NzIgNDMuNzcxeiIvPjxwYXRoIGQ9Im00MTYuMzI2IDEyOS4yODItMzguNDM5LTUuNTg1Yy0xLjg4OS0uMjc1LTIuOTg4LTEuNjQ3LTMuNzQ4LTMuMTg4LTEuODI5LTMuNzEtNi4zMTktNS4yMzUtMTAuMDMtMy40MDYtMy43MSAxLjgyOS01LjIzNiA2LjMyLTMuNDA2IDEwLjAzMSAyLjkyNyA1LjkzNiA4LjI1IDEwLjQwNCAxNS4wMyAxMS4zODkgMCAwIDM4LjM5MyA1LjU3OSAzOC40NCA1LjU4NSAzLjQ0Ni41MDEgNS4yMjkgNS4wMTIgMi40OTQgNy42NzhsLTI3LjgxNSAyNy4xMTNjLTQuNTkyIDQuNDc3LTYuNjg3IDEwLjkyNC01LjYwMiAxNy4yNDUgMCAwIDYuNTY2IDM4LjI4NSA2LjU2NiAzOC4yODUuNjMxIDMuNjg4LTMuMjQ2IDYuNDczLTYuNTMyIDQuNzQ0bC0zNC4zODEtMTguMDc1Yy01LjY4LTIuOTg1LTEyLjQ1Ny0yLjk4My0xOC4xMzMgMGwtMzQuMzgxIDE4LjA3NWMtMy4zMjMgMS43NS03LjEwNS0xLjQtNi41MzItNC43NDUuMDEyLS4wNyA2LjU2Ny0zOC4yODQgNi41NjctMzguMjg0IDEuMDg0LTYuMzIxLTEuMDExLTEyLjc2OC01LjYwMy0xNy4yNDVsLTI3LjgxNS0yNy4xMTNjLTIuNjc0LTIuNjA3LTEuMjE5LTcuMTM4IDIuNDk0LTcuNjc4bDM4LjQzOS01LjU4NWM2LjM0OC0uOTIyIDExLjgzMS00LjkwNiAxNC42Ny0xMC42NTdsMTcuMTktMzQuODMyYzEuNjU3LTMuMzU4IDYuNDM1LTMuMzIgOC4wNzMgMGwxLjYgMy4yNDFjMS44MzEgMy43MDkgNi4zMiA1LjIzNSAxMC4wMzIgMy40MDMgMy43MDktMS44MzEgNS4yMzMtNi4zMjIgMy40MDItMTAuMDMybC0xLjYtMy4yNDJjLTMuMzA2LTYuNjk5LTEwLTEwLjg2MS0xNy40Ny0xMC44NjEtNy40NzEgMC0xNC4xNjUgNC4xNjItMTcuNDcyIDEwLjg2MWwtMTcuMTkgMzQuODMyYy0uNjU2IDEuMzI5LTEuOTIzIDIuMjUtMy4zODkgMi40NjNsLTM4LjQ0IDUuNTg1Yy03LjM5MiAxLjA3NC0xMy40MTggNi4xNTUtMTUuNzI3IDEzLjI1OXMtLjQxOSAxNC43NTggNC45MjkgMTkuOTcybDI3LjgxNSAyNy4xMTNjMS4wNjEgMS4wMzQgMS41NDUgMi41MjQgMS4yOTUgMy45ODVsLTYuNTY2IDM4LjI4NGMtMS4yNjMgNy4zNjIgMS43MDYgMTQuNjY0IDcuNzUgMTkuMDU1IDYuMDQ0IDQuMzkzIDEzLjkwNiA0Ljk1OSAyMC41MTggMS40ODNsMzQuMzgxLTE4LjA3NWMxLjMxLS42ODkgMi44NzctLjY5IDQuMTg5IDAgMCAwIDM0LjM2NSAxOC4wNjcgMzQuMzgxIDE4LjA3NSAxMy44OSA3LjMwMiAzMC45NjEtNC44NDEgMjguMjY5LTIwLjUzOC0uMDAzLS4wMTktNi41NjYtMzguMjg1LTYuNTY2LTM4LjI4NS0uMjUtMS40Ni4yMzQtMi45NSAxLjI5NS0zLjk4NWwyNy44MTUtMjcuMTEzYzUuMzQ5LTUuMjE1IDcuMjM4LTEyLjg2OCA0LjkyOS0xOS45NzMtMi4zMDctNy4xMDQtOC4zMzMtMTIuMTg1LTE1LjcyNi0xMy4yNTl6Ii8+PC9nPjwvZz48L3N2Zz4=" alt="Social Stream Ninja Logo">
+					<span>Social Stream Ninja</span>
+				</a>
+			</div>
+			<nav>
+				<ul>
+					<li><a href="../index.html">Home</a></li>
+					<li><a href="../docs/features.html">Features</a></li>
+					<li><a href="../docs/download.html">Download</a></li>
+					<li><a href="../docs/guides.html">Guides</a></li>
+					<li><a href="../docs/commands.html">Commands & API</a></li>
+					<li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+					<li><a href="../docs/templates.html" class="active">Templates</a></li>
+					<li><a href="../docs/support.html">Support</a></li>
+				</ul>
+			</nav>
+			<div class="header-controls">
+				<button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+					<svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+					</svg>
+					<svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+						<circle cx="12" cy="12" r="5"></circle>
+						<line x1="12" y1="1" x2="12" y2="3"></line>
+						<line x1="12" y1="21" x2="12" y2="23"></line>
+						<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+						<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+						<line x1="1" y1="12" x2="3" y2="12"></line>
+						<line x1="21" y1="12" x2="23" y2="12"></line>
+						<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+						<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+					</svg>
+				</button>
+				<div class="mobile-nav-toggle">
+					<span></span>
+					<span></span>
+					<span></span>
+				</div>
+			</div>
+		</div>
+	</header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Templates Gallery</h1>
+            <p>Browse, download, and customize chat overlays for your streams</p>
+        </div>
+    </section>
+
+    <section class="template-banner">
+        <div class="container">
+            <h2>Enhance Your Streams with Custom Templates</h2>
+            <p>Choose from our collection of professionally designed templates or create your own to match your brand aesthetic. All templates are fully customizable and work with OBS, Streamlabs, and other streaming software.</p>
+            <div class="hero-buttons">
+                <a href="#themed-packages" class="btn btn-primary">Browse Templates</a>
+                <a href="#how-to-use" class="btn btn-secondary">How to Use</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="template-details">
+        <div class="container">
+            <h2>Why Use Custom Templates?</h2>
+            <p class="section-subtitle">Stand out from the crowd with professional overlays</p>
+            
+            <div class="template-features">
+                <div class="template-feature">
+                    <h4>Professional Look</h4>
+                    <p>Give your streams a polished, professional appearance with custom-designed overlays that match your brand.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>Better Engagement</h4>
+                    <p>Highlight viewer messages in an attractive way that encourages more audience participation.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>Easy Setup</h4>
+                    <p>Just add your session ID to the template URL and add as a browser source in OBS or other streaming software.</p>
+                </div>
+                <div class="template-feature">
+                    <h4>Fully Customizable</h4>
+                    <p>Modify colors, animations, positions, and styles to perfectly match your stream's aesthetic.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="template-library" class="template-library">
+        <div class="container">
+            <h2>Template Library</h2>
+            <p class="section-subtitle">Find the perfect template for your stream</p>
+            
+            <div class="template-search">
+                <input type="text" id="template-search-input" placeholder="Search templates by name, type, or feature...">
+            </div>
+            
+            <div class="tag-filters">
+                <div class="filter-tag active" data-filter="all">All Templates</div>
+                <div class="filter-tag" data-filter="gaming">Gaming</div>
+                <div class="filter-tag" data-filter="minimal">Minimal</div>
+                <div class="filter-tag" data-filter="animated">Animated</div>
+                <div class="filter-tag" data-filter="retro">Retro</div>
+                <div class="filter-tag" data-filter="modern">Modern</div>
+                <div class="filter-tag" data-filter="youtube-compatible">YouTube Compatible</div>
+            </div>
+            
+            <div id="themed-packages" class="template-category">
+                <div class="category-header">
+                    <h3>Themed Packages</h3>
+                </div>
+                <p>Complete themed packages with documentation, sample images, and guides</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="gaming animated modern">
+                        <div class="template-badge badge-featured">Featured</div>
+                        <div class="template-preview">
+                            <img src="../media/deuks.png" alt="Deuk's Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Complete Package</span>
+                            <h3>Deuk's Theme</h3>
+                            <p class="template-description">A sophisticated, fully animated theme with customizable colors and smooth transitions. Perfect for gaming streams.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Deuk</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/deuks_overlay" class="btn btn-primary">Get</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="retro">
+                        <div class="template-badge badge-new">New</div>
+                        <div class="template-preview">
+                            <img src="../media/windows.png" alt="Windows 3.1 Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Retro Style</span>
+                            <h3>Windows 3.1 Theme</h3>
+                            <p class="template-description">Nostalgic Windows 3.1 style chat overlay with classic window design and pixel-perfect detailing.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By RetroTech</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/tree/main/themes/Windows3.1" class="btn btn-primary">Get</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="modern animated">
+                        <div class="template-preview">
+                            <img src="../media/neutron.png" alt="Neutron Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Modern Design</span>
+                            <h3>Neutron Theme</h3>
+                            <p class="template-description">Clean, modern design with smooth animations and excellent readability. Customizable color schemes.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By NeutronStudio</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/Neutron/" class="btn btn-primary">Get</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Simple Drop-in Templates</h3>
+                </div>
+                <p>Ready-to-use templates that only require your session ID</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-badge badge-popular">Popular</div>
+                        <div class="template-preview">
+                            <img src="../media/simple.png" alt="Sample Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Minimal</span>
+                            <h3>Sample Template</h3>
+                            <p class="template-description">A clean, lightweight template with essential features. Perfect starting point for customization.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/sampleoverlay.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Use</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="animated modern">
+                        <div class="template-preview">
+                            <img src="../media/prettyoverlay.png" alt="Pretty Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Animated</span>
+                            <h3>Pretty Template</h3>
+                            <p class="template-description">Elegant design with smooth animations and visual effects. Eye-catching yet not distracting.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONIDHERE" class="btn btn-primary">Use</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="gaming">
+                        <div class="template-preview">
+                            <img src="../media/t3nk3y.png" alt="t3nk3y's Theme">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Gaming</span>
+                            <h3>t3nk3y's Theme</h3>
+                            <p class="template-description">Bold, high-contrast theme designed for gaming streams with excellent visibility even in fast-paced content.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By t3nk3y</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/themes/t3nk3y/?session=YOURSESSIONIDHERE" class="btn btn-primary">Use</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>YouTube-CSS Compatible Templates</h3>
+                </div>
+                <p>Templates that work with YouTube CSS styles</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="youtube-compatible">
+                        <div class="template-preview">
+                            <img src="../media/septapus.png" alt="YouTube-CSS Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">YouTube Compatible</span>
+                            <h3>YouTube-CSS Template</h3>
+                            <p class="template-description">Use CSS designed for YouTube with our YouTube-structured overlay page. Compatible with Septapus styles.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://socialstream.ninja/septapus" class="btn btn-primary">Setup</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="template-category">
+                <div class="category-header">
+                    <h3>Developer Templates</h3>
+                </div>
+                <p>Starting points for creating your own custom overlays</p>
+                
+                <div class="templates-main-grid">
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img  alt="Bare Template">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Developer</span>
+                            <h3>Bare Template</h3>
+                            <p class="template-description">Minimal code needed to create your own overlay from scratch. Perfect for developers and LLM-assisted coding.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/baretempate.html" target="_blank" class="btn btn-primary">Source Code</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="template-card" data-tags="minimal">
+                        <div class="template-preview">
+                            <img src="../media/simple.png" alt="Sample Overlay">
+                            <div class="template-overlay"></div>
+                        </div>
+                        <div class="template-content">
+                            <span class="template-type">Developer</span>
+                            <h3>Sample Overlay Template</h3>
+                            <p class="template-description">A more complete starting point with comments and documentation to help you build your own custom overlays.</p>
+                            <div class="template-footer">
+                                <div class="template-author">By Social Stream Ninja</div>
+                                <div class="template-actions">
+                                    <a href="https://github.com/steveseguin/social_stream/blob/main/sampleoverlay.html" class="btn btn-primary">Source Code</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="submit-template">
+                <h3>Have a Template to Share?</h3>
+                <p>Created an awesome template for Social Stream Ninja? Share it with the community by submitting a pull request to our GitHub repository.</p>
+                <a href="https://github.com/steveseguin/social_stream" target="_blank" class="btn btn-primary">Submit on GitHub</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-to-use" class="how-to-use">
+        <div class="container">
+            <h2>How to Use Templates</h2>
+            <p class="section-subtitle">Follow these simple steps to get started</p>
+            
+            <div class="steps-container">
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Choose Your Template</h4>
+                        <p>Browse the template library and select one that fits your stream style. Each template has a preview option to see how it looks before downloading.</p>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Add Your Session ID</h4>
+                        <p>Replace <code>YOURSESSIONID</code> in the template URL with your actual Social Stream Ninja session ID found in the dashboard.</p>
+                        <div class="code-block">
+                            <code>https://socialstream.ninja/themes/pretty.html?session=YOURSESSIONID</code>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Add to OBS/Streamlabs</h4>
+                        <p>Add the modified URL as a Browser Source in your streaming software:</p>
+                        <ol>
+                            <li>In OBS, click the + under Sources and select "Browser"</li>
+                            <li>Name your source and click OK</li>
+                            <li>Paste your template URL with session ID</li>
+                            <li>Set width and height (recommended: 1920×1080)</li>
+                            <li>Click OK to add it to your scene</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="step-card">
+                    <div class="step-number"></div>
+                    <div class="step-content">
+                        <h4>Customize Your Template</h4>
+                        <p>Personalize your overlay with custom CSS in one of these ways:</p>
+                        <ul>
+                            <li><strong>OBS Custom CSS:</strong> Add your CSS in the Browser Source properties</li>
+                            <li><strong>URL Parameter:</strong> Append <code>&css=URL_TO_YOUR_CSS_FILE</code> to your template URL</li>
+                            <li><strong>Base64 CSS:</strong> For inline CSS, use <code>&b64css=YOUR_BASE64_ENCODED_CSS</code></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="guide-section alt">
+        <div class="container">
+            <h2>Video Tutorial</h2>
+            <p class="section-subtitle">Learn how to create a custom chat overlay with AI assistance</p>
+            
+            <div style="max-width: 800px; margin: 0 auto; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <iframe width="100%" height="100%" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/GDy5ijQPTkU" title="Creating a Custom Chat Overlay for Social Stream Ninja" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            
+            <div style="max-width: 800px; margin: 3rem auto 0;">
+                <h3>Quick Guide from the Video</h3>
+                <ol class="guide-steps">
+                    <li>Find the sample overlay template (sampleoverlay.html)</li>
+                    <li>Copy the template code to your clipboard</li>
+                    <li>Use an AI assistant like Claude to help customize it</li>
+                    <li>Prompt the AI to modify the CSS for your preferred style</li>
+                    <li>Configure OBS to use your customized template</li>
+                    <li>Apply your custom CSS through OBS browser source settings</li>
+                </ol>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CSS Modal (hidden by default) -->
+    <div id="css-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); z-index: 1000; overflow: auto;">
+        <div style="background-color: var(--background-card); margin: 10% auto; padding: 20px; width: 80%; max-width: 800px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="css-modal-title" style="margin: 0;">CSS Snippet</h2>
+                <button onclick="closeCssModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">&times;</button>
+            </div>
+            <pre id="css-modal-content" style="background-color: var(--background-dark); padding: 20px; border-radius: var(--radius-sm); overflow-x: auto; max-height: 60vh;"></pre>
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="copyCss()" class="btn btn-primary">Copy to Clipboard</button>
+                <button onclick="closeCssModal()" class="btn btn-secondary">Close</button>
+            </div>
+        </div>
+    </div>
+
+        <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Consolidates your live social messaging streams and more. Free and open source.</p>
+                    <div class="social-links">
+                        <a href="https://github.com/steveseguin/social_stream" target="_blank"><img src="../icons/github.svg" alt="GitHub"></a>
+                        <a href="https://discord.socialstream.ninja" target="_blank"><img src="../icons/discord.svg" alt="Discord"></a>
+						<a href="https://x.com/ninjafytools" target="_blank"><img src="../icons/x.svg" alt="X.com"></a>
+					<a href="https://bsky.app/profile/ninjafytools.com" target="_blank"><img src="../icons/bsky.svg" alt="Bluesky"></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../docs/features.html">Features</a></li>
+                        <li><a href="../docs/download.html">Download</a></li>
+                        <li><a href="../docs/guides.html">Guides</a></li>
+                        <li><a href="../docs/commands.html">Commands & API</a></li>
+                        <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                        <li><a href="../docs/templates.html">Templates</a></li>
+                        <li><a href="../docs/support.html">Support</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="../docs/guides.html#installation">Installation Guide</a></li>
+                        <li><a href="../docs/guides.html#customization">Customization Guide</a></li>
+                        <li><a href="../docs/guides.html#faq">FAQ</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
+                        <li><a href="../privacy.html">Privacy Policy</a></li>
+                        <li><a href="../TOS.html">Terms of Service</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank">Join our Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank">GitHub Repository</a></li>
+                        <li><a href="../docs/support.html#contribute">Contribute</a></li>
+						<li><a href="https://github.com/sponsors/steveseguin" target="_blank">Donate</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License. Created by <a href="https://github.com/steveseguin" target="_blank">Steve Seguin</a> with contributions from the community.</p>
+            </div>
+        </div>
+    </footer>
+	<script src="js/main.js"></script>
+    <script>
+        // Current year for copyright
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        // Template filtering
+        const filterTags = document.querySelectorAll('.filter-tag');
+        const templateCards = document.querySelectorAll('.template-card');
+        
+        filterTags.forEach(tag => {
+            tag.addEventListener('click', () => {
+                // Update active class on tags
+                filterTags.forEach(t => t.classList.remove('active'));
+                tag.classList.add('active');
+                
+                const filter = tag.getAttribute('data-filter');
+                
+                // Filter templates
+                templateCards.forEach(card => {
+                    const cardTags = card.getAttribute('data-tags');
+                    if (filter === 'all' || cardTags.includes(filter)) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+        
+        // Template search
+        const searchInput = document.getElementById('template-search-input');
+        if (searchInput) {
+            searchInput.addEventListener('input', () => {
+                const searchValue = searchInput.value.toLowerCase();
+                
+                templateCards.forEach(card => {
+                    const cardTitle = card.querySelector('h3').textContent.toLowerCase();
+                    const cardDesc = card.querySelector('.template-description').textContent.toLowerCase();
+                    const cardTags = card.getAttribute('data-tags');
+                    
+                    if (cardTitle.includes(searchValue) || 
+                        cardDesc.includes(searchValue) || 
+                        cardTags.includes(searchValue)) {
+                        card.style.display = 'flex';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        }
+        
+        function showCssModal(cssType) {
+            const modal = document.getElementById('css-modal');
+            const title = document.getElementById('css-modal-title');
+            const content = document.getElementById('css-modal-content');
+            
+            title.textContent = cssType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase()) + ' CSS';
+            content.textContent = cssSnippets[cssType] || 'CSS not found';
+            
+            modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeCssModal() {
+            document.getElementById('css-modal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+        
+		function copyCss() {
+            const content = document.getElementById('css-modal-content').textContent;
+            navigator.clipboard.writeText(content)
+                .then(() => {
+                    alert('CSS copied to clipboard!');
+                })
+                .catch(err => {
+                    console.error('Could not copy text: ', err);
+                    alert('Failed to copy. Try selecting and copying manually.');
+                });
+        }
+		
+		
+        
+       document.addEventListener('DOMContentLoaded', () => {
+            // Number the steps
+            const stepNumbers = document.querySelectorAll('.step-number');
+            stepNumbers.forEach((el, index) => {
+                el.textContent = (index + 1).toString();
+            });
+            
+            // Auto-scroll to sections when clicking nav links
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const targetId = this.getAttribute('href');
+                    if (targetId === '#') return;
+                    
+                    const targetElement = document.querySelector(targetId);
+                    if (targetElement) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+ </script>
+</body>
+</html>

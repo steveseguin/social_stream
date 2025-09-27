@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giveaway Wheel - OBS Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: transparent;
+            color: white;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wheel-canvas {
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            transition: transform 0.1s ease-out;
+        }
+
+        .wheel-pointer {
+            position: absolute;
+            top: 50%;
+            right: -15px;
+            width: 0;
+            height: 0;
+            border-left: 20px solid #ff4444;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            z-index: 10;
+            transform: translateY(-50%);
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 40px;
+            height: 40px;
+            background: #333;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 5;
+            border: 3px solid #fff;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .winner-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            border: 3px solid #4CAF50;
+            box-shadow: 0 0 30px rgba(76, 175, 80, 0.5);
+            z-index: 100;
+            display: none;
+            animation: winnerPop 0.5s ease-out;
+        }
+
+        @keyframes winnerPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+        }
+
+        .winner-text {
+            margin-bottom: 10px;
+            color: #4CAF50;
+        }
+
+        .winner-name {
+            font-size: 1.2em;
+            color: #FFD700;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+            z-index: 50;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .keyword-display {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 2px solid #FFD700;
+            font-size: 16px;
+            z-index: 50;
+        }
+
+        .keyword-label {
+            color: #ccc;
+            font-size: 12px;
+        }
+
+        .keyword-value {
+            color: #FFD700;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        /* Hide everything when no participants */
+        .no-participants {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #888;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-indicator"></div>
+    
+    <div class="keyword-display">
+        <div class="keyword-label">Entry Keyword:</div>
+        <div class="keyword-value" id="current-keyword">ENTER</div>
+    </div>
+
+    <div class="wheel-container" id="wheel-container">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheel-canvas" class="wheel-canvas" width="400" height="400"></canvas>
+        <div class="wheel-center"></div>
+        
+        <div class="winner-display" id="winner-display">
+            <div class="winner-text">🎉 WINNER! 🎉</div>
+            <div class="winner-name" id="winner-name"></div>
+        </div>
+        
+        <div class="no-participants" id="no-participants">
+            Waiting for participants...
+        </div>
+    </div>
+
+    <script>
+        class OBSWheelWidget {
+            constructor() {
+                this.entrants = {};
+                this.currentKeyword = 'ENTER';
+                this.isSpinning = false;
+                this.currentRotation = 0;
+                this.platformIconCache = {};
+                
+                this.canvas = document.getElementById('wheel-canvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.init();
+            }
+
+            init() {
+                this.loadState();
+                this.loadKeyword();
+                this.drawWheel();
+                this.startListening();
+            }
+
+            loadState() {
+                try {
+                    // Load from main giveaway app state
+                    const wheelState = localStorage.getItem('giveawayWheelState');
+                    if (wheelState) {
+                        const state = JSON.parse(wheelState);
+                        if (state.entrants) {
+                            this.entrants = state.entrants;
+                        }
+                    }
+
+                    // Also check for giveaway_state (from entries widget)
+                    const giveawayState = localStorage.getItem('giveaway_state');
+                    if (giveawayState) {
+                        const state = JSON.parse(giveawayState);
+                        if (state.participants) {
+                            // Convert participants array to entrants object
+                            this.entrants = {};
+                            state.participants.forEach((participant, index) => {
+                                this.entrants[`participant_${index}`] = {
+                                    name: participant.name,
+                                    platform: participant.platform
+                                };
+                            });
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading state:', error);
+                }
+            }
+
+            loadKeyword() {
+                const savedKeyword = localStorage.getItem('giveaway_keyword');
+                if (savedKeyword) {
+                    this.currentKeyword = savedKeyword;
+                    document.getElementById('current-keyword').textContent = this.currentKeyword;
+                }
+            }
+
+            startListening() {
+                // Listen for storage changes
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'giveawayWheelState' || e.key === 'giveaway_state') {
+                        this.loadState();
+                        this.drawWheel();
+                    }
+                    
+                    if (e.key === 'giveaway_keyword') {
+                        this.loadKeyword();
+                    }
+
+                    if (e.key === 'wheelSpinState') {
+                        this.handleSpinState(e.newValue);
+                    }
+
+                    if (e.key === 'wheelWinner') {
+                        this.showWinner(e.newValue);
+                    }
+                });
+
+                // Auto-refresh every 2 seconds
+                setInterval(() => {
+                    this.loadState();
+                    this.loadKeyword();
+                    this.drawWheel();
+                }, 2000);
+            }
+
+            handleSpinState(spinStateJson) {
+                if (!spinStateJson) return;
+                
+                try {
+                    const spinState = JSON.parse(spinStateJson);
+                    if (spinState.isSpinning) {
+                        this.startSpin(spinState.targetRotation, spinState.duration);
+                    }
+                } catch (error) {
+                    console.error('Error handling spin state:', error);
+                }
+            }
+
+            showWinner(winnerJson) {
+                if (!winnerJson) return;
+                
+                try {
+                    const winner = JSON.parse(winnerJson);
+                    const winnerDisplay = document.getElementById('winner-display');
+                    const winnerName = document.getElementById('winner-name');
+                    
+                    winnerName.textContent = winner.name;
+                    winnerDisplay.style.display = 'block';
+                    
+                    // Create confetti
+                    this.createConfetti();
+                    
+                    // Hide winner after 5 seconds
+                    setTimeout(() => {
+                        winnerDisplay.style.display = 'none';
+                    }, 5000);
+                } catch (error) {
+                    console.error('Error showing winner:', error);
+                }
+            }
+
+            getPlatformColor(platform, index) {
+                const platformColors = {
+                    'twitch': '#9146ff',
+                    'youtube': '#ff0000',
+                    'facebook': '#1877f2',
+                    'instagram': '#e4405f',
+                    'tiktok': '#000000',
+                    'discord': '#5865f2',
+                    'kick': '#53fc18'
+                };
+                return platformColors[platform?.toLowerCase()] || `hsl(${index * 137.5 % 360}, 70%, 60%)`;
+            }
+
+            preloadPlatformIcons(entrants, callback) {
+                const entrantsList = Object.values(entrants);
+                const uniquePlatforms = [...new Set(entrantsList.map(e => e.platform).filter(p => p))];
+                let loadedCount = 0;
+                const totalCount = uniquePlatforms.length;
+                
+                if (totalCount === 0) {
+                    callback();
+                    return;
+                }
+                
+                uniquePlatforms.forEach(platform => {
+                    if (this.platformIconCache[platform]) {
+                        loadedCount++;
+                        if (loadedCount === totalCount) callback();
+                        return;
+                    }
+                    
+                    const img = new Image();
+                    img.onload = () => {
+                        this.platformIconCache[platform] = img;
+                        loadedCount++;
+                        if (loadedCount === totalCount) callback();
+                    };
+                    img.onerror = () => {
+                        this.platformIconCache[platform] = null;
+                        loadedCount++;
+                        if (loadedCount === totalCount) callback();
+                    };
+                    img.src = `./sources/images/${platform.toLowerCase()}.png`;
+                });
+            }
+
+            drawWheel() {
+                const entrantsList = Object.values(this.entrants);
+                const noParticipants = document.getElementById('no-participants');
+                
+                if (entrantsList.length === 0) {
+                    noParticipants.style.display = 'block';
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    return;
+                }
+                
+                noParticipants.style.display = 'none';
+                
+                // Preload platform icons first, then draw
+                this.preloadPlatformIcons(this.entrants, () => {
+                    this.drawWheelWithIcons();
+                });
+            }
+
+            drawWheelWithIcons() {
+                const centerX = this.canvas.width / 2;
+                const centerY = this.canvas.height / 2;
+                const radius = Math.min(centerX, centerY) - 10;
+                
+                const entrantsList = Object.values(this.entrants);
+                const segmentAngle = (2 * Math.PI) / entrantsList.length;
+                
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Apply current rotation
+                this.ctx.save();
+                this.ctx.translate(centerX, centerY);
+                this.ctx.rotate(this.currentRotation);
+                this.ctx.translate(-centerX, -centerY);
+                
+                // Draw wheel segments
+                entrantsList.forEach((entrant, index) => {
+                    const startAngle = index * segmentAngle;
+                    const endAngle = (index + 1) * segmentAngle;
+                    
+                    // Get platform-specific color
+                    const segmentColor = this.getPlatformColor(entrant.platform, index);
+                    
+                    // Draw segment
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(centerX, centerY);
+                    this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                    this.ctx.closePath();
+                    this.ctx.fillStyle = segmentColor;
+                    this.ctx.fill();
+                    this.ctx.strokeStyle = '#fff';
+                    this.ctx.lineWidth = 2;
+                    this.ctx.stroke();
+                    
+                    // Draw text and platform badge
+                    this.ctx.save();
+                    this.ctx.translate(centerX, centerY);
+                    this.ctx.rotate(startAngle + segmentAngle / 2);
+                    this.ctx.textAlign = 'left';
+                    this.ctx.fillStyle = '#fff';
+                    this.ctx.font = 'bold 14px Arial';
+                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+                    this.ctx.shadowBlur = 2;
+                    this.ctx.shadowOffsetX = 1;
+                    this.ctx.shadowOffsetY = 1;
+                    
+                    const textX = radius * 0.3;
+                    const maxTextWidth = radius * 0.6;
+                    const userName = entrant.name || 'Anonymous';
+                    
+                    // Truncate text if too long
+                    let displayText = userName;
+                    if (this.ctx.measureText(displayText).width > maxTextWidth) {
+                        while (this.ctx.measureText(displayText + '...').width > maxTextWidth && displayText.length > 1) {
+                            displayText = displayText.slice(0, -1);
+                        }
+                        displayText += '...';
+                    }
+                    
+                    this.ctx.fillText(displayText, textX, 5);
+                    
+                    // Draw platform icon
+                    if (entrant.platform) {
+                        const platformIcon = this.platformIconCache[entrant.platform];
+                        
+                        if (platformIcon) {
+                            const iconSize = 16;
+                            const iconX = textX;
+                            const iconY = 15;
+                            
+                            // Draw icon background circle
+                            this.ctx.beginPath();
+                            this.ctx.arc(iconX + iconSize/2, iconY + iconSize/2, iconSize/2 + 2, 0, 2 * Math.PI);
+                            this.ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                            this.ctx.fill();
+                            this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                            this.ctx.lineWidth = 1;
+                            this.ctx.stroke();
+                            
+                            // Draw platform icon
+                            this.ctx.drawImage(platformIcon, iconX, iconY, iconSize, iconSize);
+                        } else {
+                            // Fallback to text
+                            const platformText = entrant.platform.substring(0, 2).toUpperCase();
+                            this.ctx.font = 'bold 10px Arial';
+                            this.ctx.fillStyle = '#000';
+                            this.ctx.fillRect(textX, 15, 20, 12);
+                            this.ctx.fillStyle = '#fff';
+                            this.ctx.fillText(platformText, textX + 2, 25);
+                        }
+                    }
+                    
+                    this.ctx.restore();
+                });
+                
+                this.ctx.restore();
+            }
+
+            startSpin(targetRotation, duration) {
+                if (this.isSpinning) return;
+                
+                this.isSpinning = true;
+                const startRotation = this.currentRotation;
+                const startTime = Date.now();
+                
+                const animate = () => {
+                    const elapsed = Date.now() - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Easing function
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    
+                    this.currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
+                    this.drawWheel();
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        this.isSpinning = false;
+                        this.currentRotation = targetRotation;
+                    }
+                };
+                
+                animate();
+            }
+
+            createConfetti() {
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff'];
+                
+                for (let i = 0; i < 50; i++) {
+                    setTimeout(() => {
+                        const confetti = document.createElement('div');
+                        confetti.className = 'confetti';
+                        confetti.style.left = Math.random() * window.innerWidth + 'px';
+                        confetti.style.top = '-10px';
+                        confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                        
+                        document.body.appendChild(confetti);
+                        
+                        // Animate confetti falling
+                        let pos = -10;
+                        const fall = setInterval(() => {
+                            pos += 5;
+                            confetti.style.top = pos + 'px';
+                            confetti.style.transform += ` translateX(${Math.sin(pos * 0.01) * 100}px)`;
+                            
+                            if (pos > window.innerHeight) {
+                                clearInterval(fall);
+                                confetti.remove();
+                            }
+                        }, 50);
+                    }, i * 100);
+                }
+            }
+        }
+
+        // Initialize the OBS wheel widget
+        const obsWidget = new OBSWheelWidget();
+    </script>
+</body>
+</html>
