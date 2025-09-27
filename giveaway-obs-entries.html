@@ -4,35 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Giveaway Wheel - OBS Widget</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    animation: {
-                        'spin-slow': 'spin 3s linear infinite',
-                        'spin-fast': 'spin 0.5s linear infinite',
-                        'bounce-gentle': 'bounce 2s infinite',
-                        'pulse-slow': 'pulse 3s infinite',
-                        'wheel-spin': 'wheel-spin 4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards',
-                        'winner-celebration': 'winner-celebration 2s ease-in-out infinite',
-                    },
-                    keyframes: {
-                        'wheel-spin': {
-                            '0%': { transform: 'rotate(0deg)' },
-                            '100%': { transform: 'rotate(1800deg)' }
-                        },
-                        'winner-celebration': {
-                            '0%, 100%': { transform: 'scale(1) rotate(0deg)', opacity: '1', filter: 'hue-rotate(0deg)' },
-                            '25%': { transform: 'scale(1.1) rotate(5deg)', opacity: '0.9', filter: 'hue-rotate(90deg)' },
-                            '50%': { transform: 'scale(1.2) rotate(-5deg)', opacity: '1', filter: 'hue-rotate(180deg)' },
-                            '75%': { transform: 'scale(1.1) rotate(3deg)', opacity: '0.9', filter: 'hue-rotate(270deg)' }
-                        }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
         * {
             margin: 0;
@@ -45,6 +16,25 @@
             background: transparent;
             color: white;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .wheel-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wheel-canvas {
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            transition: transform 0.1s ease-out;
         }
 
         .wheel-pointer {
@@ -176,30 +166,47 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-center">
-    <div class="fixed top-4 left-4 w-3 h-3 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
+<body>
+    <div class="status-indicator"></div>
     
-    <div class="mb-6 text-center">
-        <div class="text-lg font-semibold text-gray-300 mb-2">Entry Keyword:</div>
-        <div class="text-3xl font-bold text-yellow-400 bg-black/50 px-4 py-2 rounded-lg backdrop-blur-sm border border-yellow-400/30" id="current-keyword">ENTER</div>
+    <div class="keyword-display">
+        <div class="keyword-label">Entry Keyword:</div>
+        <div class="keyword-value" id="current-keyword">ENTER</div>
     </div>
 
-    <div class="relative w-[400px] h-[400px] flex items-center justify-center group">
-        <div class="wheel-pointer transition-all duration-300 "></div>
-        <canvas id="wheel-canvas" class="rounded-full shadow-2xl transition-transform duration-100 ease-out hover:scale-105" width="400" height="400"></canvas>
-        <div class="wheel-center transition-all duration-300 "></div>
+    <div class="wheel-container" id="wheel-container">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheel-canvas" class="wheel-canvas" width="400" height="400"></canvas>
+        <div class="wheel-center"></div>
         
-        <div class="absolute inset-0 flex flex-col items-center justify-center text-center hidden animate-winner-celebration" id="winner-display">
-            <div class="text-4xl font-bold mb-2 text-yellow-400 drop-shadow-lg">🎉 WINNER! 🎉</div>
-            <div class="text-2xl font-bold text-white bg-gradient-to-r from-yellow-400 to-orange-500 bg-clip-text text-transparent" id="winner-name"></div>
+        <div class="winner-display" id="winner-display">
+            <div class="winner-text">🎉 WINNER! 🎉</div>
+            <div class="winner-name" id="winner-name"></div>
         </div>
         
-        <div class="absolute inset-0 flex items-center justify-center text-2xl text-gray-400 font-semibold" id="no-participants">
+        <div class="no-participants" id="no-participants">
             Waiting for participants...
         </div>
     </div>
 
     <script>
+        // Get session parameters from URL (same as other Social Stream files)
+        const urlParams = new URLSearchParams(window.location.search);
+        let roomID = "test";
+        let password = "false";
+        
+        if (urlParams.has("session")) {
+            roomID = urlParams.get("session");
+        } else if (urlParams.has("s")) {
+            roomID = urlParams.get("s");
+        } else if (urlParams.has("id")) {
+            roomID = urlParams.get("id");
+        }
+        
+        if (urlParams.has("password")) {
+            password = urlParams.get("password") || "false";
+        }
+
         class OBSWheelWidget {
             constructor() {
                 this.entrants = {};
@@ -207,6 +214,8 @@
                 this.isSpinning = false;
                 this.currentRotation = 0;
                 this.platformIconCache = {};
+                this.iframe = null;
+                this.socketserver = null;
                 
                 this.canvas = document.getElementById('wheel-canvas');
                 this.ctx = this.canvas.getContext('2d');
@@ -218,33 +227,19 @@
                 this.loadState();
                 this.loadKeyword();
                 this.drawWheel();
-                this.startListening();
+                this.setupLocalCommunication();
+                this.setupWebRTCConnection();
+                this.setupWebSocketConnection();
             }
 
             loadState() {
                 try {
-                    // Load from main giveaway app state
+                    // Load from localStorage for backward compatibility
                     const wheelState = localStorage.getItem('giveawayWheelState');
                     if (wheelState) {
                         const state = JSON.parse(wheelState);
                         if (state.entrants) {
                             this.entrants = state.entrants;
-                        }
-                    }
-
-                    // Also check for giveaway_state (from entries widget)
-                    const giveawayState = localStorage.getItem('giveaway_state');
-                    if (giveawayState) {
-                        const state = JSON.parse(giveawayState);
-                        if (state.participants) {
-                            // Convert participants array to entrants object
-                            this.entrants = {};
-                            state.participants.forEach((participant, index) => {
-                                this.entrants[`participant_${index}`] = {
-                                    name: participant.name,
-                                    platform: participant.platform
-                                };
-                            });
                         }
                     }
                 } catch (error) {
@@ -260,53 +255,165 @@
                 }
             }
 
-            startListening() {
-                // Listen for storage changes
-                window.addEventListener('storage', (e) => {
-                    if (e.key === 'giveawayWheelState' || e.key === 'giveaway_state') {
-                        this.loadState();
-                        this.drawWheel();
-                    }
+            setupLocalCommunication() {
+                // Use BroadcastChannel API for local communication between tabs
+                if (typeof BroadcastChannel !== 'undefined') {
+                    this.channel = new BroadcastChannel('giveaway_' + roomID);
                     
-                    if (e.key === 'giveaway_keyword') {
-                        this.loadKeyword();
-                    }
-
-                    if (e.key === 'wheelSpinState') {
-                        this.handleSpinState(e.newValue);
-                    }
-
-                    if (e.key === 'wheelWinner') {
-                        this.showWinner(e.newValue);
-                    }
-                });
-
-                // Auto-refresh every 2 seconds
-                setInterval(() => {
-                    this.loadState();
-                    this.loadKeyword();
-                    this.drawWheel();
-                }, 2000);
+                    const self = this;
+                    this.channel.addEventListener('message', function(event) {
+                        console.log('📥 OBS Widget received local broadcast:', event.data);
+                        self.handleWebRTCMessage(event.data);
+                    });
+                    
+                    console.log('📡 OBS Widget local communication channel established');
+                } else {
+                    // Fallback to localStorage for older browsers
+                    console.log('📡 OBS Widget using localStorage fallback for local communication');
+                    const self = this;
+                    window.addEventListener('storage', function(e) {
+                        if (e.key === 'giveaway_broadcast_' + roomID) {
+                            try {
+                                const data = JSON.parse(e.newValue);
+                                self.handleWebRTCMessage(data);
+                            } catch (error) {
+                                console.error('Error processing localStorage message:', error);
+                            }
+                        }
+                    });
+                }
             }
 
-            handleSpinState(spinStateJson) {
-                if (!spinStateJson) return;
+            setupWebRTCConnection() {
+                console.log('🚀 Setting up WebRTC connection for OBS widget...');
+                
+                if (!roomID || roomID === "test") {
+                    console.log("⚠️ Using test session - OBS widget will use local communication only");
+                    return;
+                }
+                
+                // Create hidden iframe for WebRTC connection (same pattern as other files)
+                this.iframe = document.createElement('iframe');
+                this.iframe.style.width = "0px";
+                this.iframe.style.height = "0px";
+                this.iframe.style.position = "fixed";
+                this.iframe.style.left = "-100px";
+                this.iframe.style.top = "-100px";
+                this.iframe.id = "obs-frame";
+                this.iframe.allow = "midi;geolocation;microphone;";
+                
+                // Connect to receive giveaway updates
+                this.iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&view&label=giveaway-obs&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+                
+                document.body.appendChild(this.iframe);
+                
+                // Set up message listener for WebRTC data
+                const self = this;
+                window.addEventListener('message', function(e) {
+                    if (e.source != self.iframe.contentWindow) {
+                        return;
+                    }
+                    
+                    if ("dataReceived" in e.data) {
+                        if ("overlayNinja" in e.data.dataReceived) {
+                            self.handleWebRTCMessage(e.data.dataReceived.overlayNinja);
+                        }
+                    } else if (e.data.overlayNinja) {
+                        self.handleWebRTCMessage(e.data.overlayNinja);
+                    }
+                });
+                
+                console.log('🎯 OBS Widget connected to Social Stream WebRTC');
+            }
+
+            setupWebSocketConnection() {
+                if (!urlParams.has("server")) return;
+                
+                const serverURL = urlParams.get("server") || "wss://io.socialstream.ninja/api";
+                this.socketserver = new WebSocket(serverURL);
+                
+                const self = this;
+                this.socketserver.onopen = function() {
+                    // Listen on channel 6 for giveaway updates
+                    self.socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 6, in: 5 }));
+                    console.log("OBS Widget WebSocket: listening on channel 6");
+                };
+                
+                this.socketserver.addEventListener('message', function(event) {
+                    if (event.data) {
+                        try {
+                            const data = JSON.parse(event.data);
+                            self.handleWebRTCMessage(data);
+                        } catch (e) {
+                            console.error("Error processing WebSocket message:", e);
+                        }
+                    }
+                });
+            }
+
+            handleWebRTCMessage(data) {
+                if (data.action === 'giveaway_update') {
+                    this.handleGiveawayUpdate(data.data);
+                } else if (data.action === 'keyword_update') {
+                    this.handleKeywordUpdate(data.keyword);
+                } else if (data.action === 'spin_update') {
+                    this.handleSpinState(data.data);
+                } else if (data.action === 'winner_update') {
+                    this.handleWinnerUpdate(data.data);
+                }
+            }
+
+            handleGiveawayUpdate(data) {
+                if (data && data.entrants) {
+                    console.log('📥 OBS Widget received giveaway update');
+                    this.entrants = data.entrants;
+                    this.drawWheel();
+                }
+            }
+
+            handleKeywordUpdate(keyword) {
+                if (keyword) {
+                    console.log('📥 OBS Widget received keyword update:', keyword);
+                    this.currentKeyword = keyword;
+                    document.getElementById('current-keyword').textContent = this.currentKeyword;
+                }
+            }
+
+            handleWinnerUpdate(winnerData) {
+                if (winnerData && winnerData.name) {
+                    console.log('📥 OBS Widget received winner update:', winnerData.name);
+                    this.showWinner(JSON.stringify(winnerData));
+                }
+            }
+
+            handleSpinState(spinState) {
+                if (!spinState) return;
                 
                 try {
-                    const spinState = JSON.parse(spinStateJson);
                     if (spinState.isSpinning) {
-                        this.startSpin(spinState.targetRotation, spinState.duration);
+                        console.log('🎡 Starting synchronized spin with:', spinState);
+                        this.startSpin(
+                            spinState.targetRotation, 
+                            spinState.duration, 
+                            spinState.startTime, 
+                            spinState.targetRotationDegrees,
+                            spinState.initialRotation || 0
+                        );
                     }
                 } catch (error) {
                     console.error('Error handling spin state:', error);
                 }
             }
 
-            showWinner(winnerJson) {
-                if (!winnerJson) return;
+            showWinner(winner) {
+                if (!winner) return;
                 
                 try {
-                    const winner = JSON.parse(winnerJson);
+                    // Handle both JSON string (backward compatibility) and object
+                    if (typeof winner === 'string') {
+                        winner = JSON.parse(winner);
+                    }
+                    
                     const winnerDisplay = document.getElementById('winner-display');
                     const winnerName = document.getElementById('winner-name');
                     
@@ -390,14 +497,26 @@
             }
 
             drawWheelWithIcons() {
-                const centerX = this.canvas.width / 2 ;
+                const centerX = this.canvas.width / 2;
                 const centerY = this.canvas.height / 2;
-                const radius = Math.min(centerX, centerY) - 10;
+                const radius = Math.min(centerX, centerY) - 20;
                 
                 const entrantsList = Object.values(this.entrants);
                 const segmentAngle = (2 * Math.PI) / entrantsList.length;
                 
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw outer shadow for depth
+                this.ctx.save();
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.shadowBlur = 20;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 8;
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.fill();
+                this.ctx.restore();
                 
                 // Apply current rotation
                 this.ctx.save();
@@ -405,48 +524,78 @@
                 this.ctx.rotate(this.currentRotation);
                 this.ctx.translate(-centerX, -centerY);
                 
-                // Draw wheel segments
+                // Draw wheel segments with modern material design
                 entrantsList.forEach((entrant, index) => {
                     const startAngle = index * segmentAngle;
                     const endAngle = (index + 1) * segmentAngle;
                     
-                    // Get platform-specific color
-                    const segmentColor = this.getPlatformColor(entrant.platform, index);
+                    // Get modern platform-specific color
+                    const segmentColor = this.getModernPlatformColor(entrant.platform, index);
                     
-                    // Draw segment
+                    // Draw segment with gradient
                     this.ctx.beginPath();
                     this.ctx.moveTo(centerX, centerY);
                     this.ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                     this.ctx.closePath();
-                    this.ctx.fillStyle = segmentColor;
+                    
+                    // Create radial gradient for depth
+                    const midAngle = startAngle + segmentAngle / 2;
+                    const gradientX = centerX + Math.cos(midAngle) * radius * 0.3;
+                    const gradientY = centerY + Math.sin(midAngle) * radius * 0.3;
+                    const gradient = this.ctx.createRadialGradient(gradientX, gradientY, 0, centerX, centerY, radius);
+                    gradient.addColorStop(0, segmentColor.light);
+                    gradient.addColorStop(0.7, segmentColor.main);
+                    gradient.addColorStop(1, segmentColor.dark);
+                    
+                    this.ctx.fillStyle = gradient;
                     this.ctx.fill();
-                    this.ctx.strokeStyle = '#fff';
-                    this.ctx.lineWidth = 2;
+                    
+                    // Modern border with subtle shadow
+                    this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                    this.ctx.lineWidth = 3;
                     this.ctx.stroke();
                     
-                    // Draw text and platform badge at the edge of the circle
+                    // Add inner shadow for depth
+                    this.ctx.save();
+                    this.ctx.clip();
+                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                    this.ctx.shadowBlur = 8;
+                    this.ctx.shadowOffsetX = 0;
+                    this.ctx.shadowOffsetY = 2;
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(centerX, centerY);
+                    this.ctx.arc(centerX, centerY, radius - 2, startAngle, endAngle);
+                    this.ctx.closePath();
+                    this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.stroke();
+                    this.ctx.restore();
+                    
+                    // Draw modern text and platform badge
                     this.ctx.save();
                     this.ctx.translate(centerX, centerY);
                     this.ctx.rotate(startAngle + segmentAngle / 2);
                     
-                    // Position elements at the outer edge of the circle
-                    const edgeRadius = radius - 45; // Position near the outer edge with some padding
-                    const textX = edgeRadius; // Position at the edge
-                    const maxTextWidth = radius * 0.4; // Limit text width for edge positioning
+                    // Position elements with modern spacing
+                    const textRadius = radius - 60; // More space for modern design
+                    const textX = textRadius;
+                    const maxTextWidth = radius * 0.5;
                     
-                    // Set up text styling for edge positioning
+                    // Modern typography with better contrast
                     this.ctx.textAlign = 'center';
                     this.ctx.textBaseline = 'middle';
-                    this.ctx.fillStyle = '#fff';
-                    this.ctx.font = 'bold 18px Arial'; // Larger font for better visibility at edge
-                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-                    this.ctx.shadowBlur = 4;
-                    this.ctx.shadowOffsetX = 2;
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.font = '600 20px "Segoe UI", system-ui, -apple-system, sans-serif';
+                    
+                    // Modern text shadow for depth
+                    this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                    this.ctx.shadowBlur = 6;
+                    this.ctx.shadowOffsetX = 0;
                     this.ctx.shadowOffsetY = 2;
                     
                     const userName = entrant.name || 'Anonymous';
                     
-                    // Truncate text if too long for edge positioning
+                    // Smart text truncation
                     let displayText = userName;
                     if (this.ctx.measureText(displayText).width > maxTextWidth) {
                         while (this.ctx.measureText(displayText + '...').width > maxTextWidth && displayText.length > 1) {
@@ -455,8 +604,8 @@
                         displayText += '...';
                     }
                     
-                    // Draw username at the edge of the circle
-                    this.ctx.fillText(displayText, textX, -12);
+                    // Draw username with modern styling
+                    this.ctx.fillText(displayText, textX, -15);
                     
                     // Draw platform icon at the edge
                     if (entrant.platform) {
@@ -508,34 +657,172 @@
                 });
                 
                 this.ctx.restore();
+                
+                // Draw modern center hub
+                this.drawModernCenterHub(centerX, centerY);
+                
+                // Draw modern pointer
+                this.drawModernPointer(centerX, centerY, radius);
             }
 
-            startSpin(targetRotation, duration) {
+            // Modern color palette function (identical to main page)
+            getModernPlatformColor(platform, index) {
+                const modernColors = {
+                    'twitch': { main: '#9146ff', light: '#b794ff', dark: '#6b2db8' },
+                    'youtube': { main: '#ff0000', light: '#ff4444', dark: '#cc0000' },
+                    'discord': { main: '#5865f2', light: '#7983f5', dark: '#4752c4' },
+                    'facebook': { main: '#1877f2', light: '#4b9cff', dark: '#0d5dbf' },
+                    'instagram': { main: '#e4405f', light: '#ff6b8a', dark: '#c13584' },
+                    'tiktok': { main: '#000000', light: '#333333', dark: '#000000' },
+                    'kick': { main: '#53fc18', light: '#7dff4d', dark: '#3eb813' },
+                    'default': [
+                        { main: '#667eea', light: '#8fa5ff', dark: '#4c63d2' },
+                        { main: '#764ba2', light: '#9d7bc7', dark: '#5a3780' },
+                        { main: '#f093fb', light: '#ffb3ff', dark: '#e066f0' },
+                        { main: '#4facfe', light: '#7cc8ff', dark: '#2196f3' },
+                        { main: '#43e97b', light: '#6eff9f', dark: '#00e676' },
+                        { main: '#fa709a', light: '#ff9dc6', dark: '#f06292' },
+                        { main: '#fee140', light: '#ffeb70', dark: '#fbc02d' },
+                        { main: '#a8edea', light: '#c8f7f5', dark: '#80cbc4' }
+                    ]
+                };
+                
+                if (platform && modernColors[platform.toLowerCase()]) {
+                    return modernColors[platform.toLowerCase()];
+                }
+                
+                return modernColors.default[index % modernColors.default.length];
+            }
+
+            // Draw modern center hub with material design (identical to main page)
+            drawModernCenterHub(centerX, centerY) {
+                const hubRadius = 25;
+                
+                // Hub shadow
+                this.ctx.save();
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 6;
+                
+                // Hub gradient
+                const hubGradient = this.ctx.createRadialGradient(centerX, centerY - 5, 0, centerX, centerY, hubRadius);
+                hubGradient.addColorStop(0, '#ffffff');
+                hubGradient.addColorStop(0.7, '#f8f9fa');
+                hubGradient.addColorStop(1, '#e9ecef');
+                
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, hubRadius, 0, 2 * Math.PI);
+                this.ctx.fillStyle = hubGradient;
+                this.ctx.fill();
+                this.ctx.restore();
+                
+                // Hub border
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, hubRadius, 0, 2 * Math.PI);
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Inner hub detail
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, hubRadius - 8, 0, 2 * Math.PI);
+                this.ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+                this.ctx.lineWidth = 1;
+                this.ctx.stroke();
+            }
+
+            // Draw modern pointer with material design (identical to main page)
+            drawModernPointer(centerX, centerY, radius) {
+                const pointerLength = 40;
+                const pointerWidth = 20;
+                
+                // Pointer shadow
+                this.ctx.save();
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                this.ctx.shadowBlur = 12;
+                this.ctx.shadowOffsetX = 2;
+                this.ctx.shadowOffsetY = 6;
+                
+                // Draw pointer triangle
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX + radius - 5, centerY); // Point at edge
+                this.ctx.lineTo(centerX + radius - pointerLength, centerY - pointerWidth/2); // Top
+                this.ctx.lineTo(centerX + radius - pointerLength, centerY + pointerWidth/2); // Bottom
+                this.ctx.closePath();
+                
+                // Pointer gradient
+                const pointerGradient = this.ctx.createLinearGradient(
+                    centerX + radius - pointerLength, centerY - pointerWidth/2,
+                    centerX + radius - 5, centerY
+                );
+                pointerGradient.addColorStop(0, '#ff6b6b');
+                pointerGradient.addColorStop(0.5, '#ff5252');
+                pointerGradient.addColorStop(1, '#f44336');
+                
+                this.ctx.fillStyle = pointerGradient;
+                this.ctx.fill();
+                this.ctx.restore();
+                
+                // Pointer border
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX + radius - 5, centerY);
+                this.ctx.lineTo(centerX + radius - pointerLength, centerY - pointerWidth/2);
+                this.ctx.lineTo(centerX + radius - pointerLength, centerY + pointerWidth/2);
+                this.ctx.closePath();
+                this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                this.ctx.lineWidth = 2;
+                this.ctx.stroke();
+                
+                // Pointer highlight
+                this.ctx.beginPath();
+                this.ctx.moveTo(centerX + radius - 5, centerY);
+                this.ctx.lineTo(centerX + radius - pointerLength, centerY - pointerWidth/2);
+                this.ctx.lineTo(centerX + radius - pointerLength + 8, centerY);
+                this.ctx.closePath();
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                this.ctx.fill();
+            }
+
+            startSpin(targetRotation, duration, startTime = null, targetDegrees = null, initialRotation = 0) {
                 if (this.isSpinning) return;
                 
                 this.isSpinning = true;
-                const startRotation = this.currentRotation;
-                const startTime = Date.now();
                 
-                const animate = () => {
-                    const elapsed = Date.now() - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
-                    
-                    // Easing function
-                    const easeOut = 1 - Math.pow(1 - progress, 3);
-                    
-                    this.currentRotation = startRotation + (targetRotation - startRotation) * easeOut;
-                    this.drawWheel();
-                    
-                    if (progress < 1) {
-                        requestAnimationFrame(animate);
-                    } else {
-                        this.isSpinning = false;
-                        this.currentRotation = targetRotation;
-                    }
-                };
+                // Reset to synchronized initial rotation
+                this.currentRotation = (initialRotation * Math.PI) / 180; // Convert to radians
+                this.drawWheel(); // Immediately show reset position
                 
-                animate();
+                const syncStartTime = startTime || Date.now();
+                
+                // Use degrees if provided for consistency with main page
+                const finalRotation = targetDegrees !== null ? targetDegrees : (targetRotation * 180 / Math.PI);
+                
+                // Wait until sync start time to ensure both wheels start together
+                const delay = Math.max(0, syncStartTime - Date.now());
+                setTimeout(() => {
+                    const animate = () => {
+                        const elapsed = Date.now() - syncStartTime;
+                        const progress = Math.min(elapsed / duration, 1);
+                        
+                        // Easing function (identical to main page)
+                        const easeOut = 1 - Math.pow(1 - progress, 3);
+                        
+                        // Calculate rotation in degrees for consistency, starting from initialRotation
+                        const currentRotationDegrees = initialRotation + (finalRotation - initialRotation) * easeOut;
+                        this.currentRotation = (currentRotationDegrees * Math.PI) / 180; // Convert to radians for canvas
+                        this.drawWheel();
+                        
+                        if (progress < 1) {
+                            requestAnimationFrame(animate);
+                        } else {
+                            this.isSpinning = false;
+                            this.currentRotation = (finalRotation * Math.PI) / 180; // Final position in radians
+                        }
+                    };
+                    
+                    animate();
+                }, delay);
             }
 
             createConfetti() {
