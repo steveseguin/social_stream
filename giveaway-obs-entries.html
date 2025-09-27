@@ -302,25 +302,53 @@
                 this.iframe.id = "obs-frame";
                 this.iframe.allow = "midi;geolocation;microphone;";
                 
-                // Connect to receive giveaway updates
-                this.iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&view&label=giveaway-obs&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
+                // Connect to receive giveaway updates (use same parameters as main page for sync)
+                this.iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
                 
                 document.body.appendChild(this.iframe);
                 
                 // Set up message listener for WebRTC data
                 const self = this;
                 window.addEventListener('message', function(e) {
+                    console.log('🔥🔥🔥 OBS WIDGET: RAW MESSAGE RECEIVED 🔥🔥🔥');
+                    console.log('📨 Full event object:', e);
+                    console.log('📦 Event data:', e.data);
+                    console.log('🌐 Event origin:', e.origin);
+                    console.log('📍 Event source:', e.source);
+                    console.log('🖼️ Iframe source check:', e.source === self.iframe.contentWindow);
+                    console.log('⏰ Timestamp:', new Date().toISOString());
+                    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                    
                     if (e.source != self.iframe.contentWindow) {
+                        console.log('❌ OBS WIDGET: REJECTED - Message not from our iframe');
                         return;
                     }
                     
+                    console.log('✅ OBS WIDGET: MESSAGE SOURCE VERIFIED - Processing...');
+                    
                     if ("dataReceived" in e.data) {
+                        console.log('🎯 OBS WIDGET: WEBRTC DATA RECEIVED STRUCTURE DETECTED!');
+                        console.log('📋 Full dataReceived:', e.data.dataReceived);
+                        
                         if ("overlayNinja" in e.data.dataReceived) {
+                            console.log('🎉 OBS WIDGET: FOUND CHAT MESSAGE via WebRTC!');
+                            console.log('💬 Chat data:', e.data.dataReceived.overlayNinja);
                             self.handleWebRTCMessage(e.data.dataReceived.overlayNinja);
+                        } else {
+                            console.log('❓ OBS WIDGET: dataReceived exists but no overlayNinja property');
+                            console.log('🔍 dataReceived keys:', Object.keys(e.data.dataReceived));
                         }
                     } else if (e.data.overlayNinja) {
+                        console.log('🎉 OBS WIDGET: FOUND DIRECT OVERLAY MESSAGE!');
+                        console.log('💬 Overlay data:', e.data.overlayNinja);
                         self.handleWebRTCMessage(e.data.overlayNinja);
+                    } else {
+                        console.log('❓ OBS WIDGET: UNKNOWN MESSAGE FORMAT - NOT PROCESSING');
+                        console.log('🔍 Data type:', typeof e.data);
+                        console.log('🔍 Data keys:', e.data ? Object.keys(e.data) : 'No data object');
+                        console.log('🔍 Raw data:', JSON.stringify(e.data, null, 2));
                     }
+                    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
                 });
                 
                 console.log('🎯 OBS Widget connected to Social Stream WebRTC');
@@ -351,16 +379,36 @@
                 });
             }
 
+
+
             handleWebRTCMessage(data) {
+                console.log('🎯🎯🎯 OBS WIDGET: HANDLE WEBRTC MESSAGE CALLED 🎯🎯🎯');
+                console.log('📦 Input data:', data);
+                console.log('🔍 Data type:', typeof data);
+                console.log('🔍 Data keys:', data ? Object.keys(data) : 'No data object');
+                console.log('⏰ Timestamp:', new Date().toISOString());
+                
                 if (data.action === 'giveaway_update') {
+                    console.log('🎉 OBS WIDGET: Processing giveaway_update');
+                    console.log('📋 Update data:', data.data);
                     this.handleGiveawayUpdate(data.data);
                 } else if (data.action === 'keyword_update') {
+                    console.log('🎉 OBS WIDGET: Processing keyword_update');
+                    console.log('🔑 New keyword:', data.keyword);
                     this.handleKeywordUpdate(data.keyword);
                 } else if (data.action === 'spin_update') {
+                    console.log('🎉 OBS WIDGET: Processing spin_update');
+                    console.log('🎡 Spin data:', data.data);
                     this.handleSpinState(data.data);
                 } else if (data.action === 'winner_update') {
+                    console.log('🎉 OBS WIDGET: Processing winner_update');
+                    console.log('🏆 Winner data:', data.data);
                     this.handleWinnerUpdate(data.data);
+                } else {
+                    console.log('❓ OBS WIDGET: Unknown action type:', data.action);
+                    console.log('🔍 Full data:', JSON.stringify(data, null, 2));
                 }
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
             }
 
             handleGiveawayUpdate(data) {
