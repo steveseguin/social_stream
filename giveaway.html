@@ -31,33 +31,64 @@
         }
     </script>
     <style>
-        /* Keep essential wheel-specific styles that can't be easily replicated with Tailwind */
-        .wheel-pointer {
-            position: absolute;
-            top: 50%;
-            right: -15px;
-            width: 0;
-            height: 0;
-            border-left: 20px solid #ef4444;
-            border-top: 15px solid transparent;
-            border-bottom: 15px solid transparent;
-            z-index: 10;
-            transform: translateY(-50%);
-            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        /* Modern wheel styles with material design */
+        #wheel-canvas {
+            border: none;
+            border-radius: 50%;
+            background: transparent;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            filter: drop-shadow(0 8px 32px rgba(0, 0, 0, 0.15));
         }
-
-        .wheel-center {
+        
+        #wheel-canvas:hover {
+            filter: drop-shadow(0 12px 40px rgba(0, 0, 0, 0.2));
+            transform: scale(1.02);
+        }
+        
+        .wheel-container {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .wheel-glow {
             position: absolute;
             top: 50%;
             left: 50%;
-            width: 40px;
-            height: 40px;
-            background: #374151;
-            border-radius: 50%;
             transform: translate(-50%, -50%);
-            z-index: 5;
-            border: 3px solid #ffffff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(103, 126, 234, 0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+            50% { opacity: 0.8; transform: translate(-50%, -50%) scale(1.05); }
+        }
+        
+        .spinning {
+            animation: none !important;
+        }
+        
+        .winner-announcement {
+            animation: winnerPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        @keyframes winnerPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Legacy pointer and center (hidden since we draw them on canvas now) */
+        .wheel-pointer {
+            display: none;
+        }
+
+        .wheel-center {
+            display: none;
         }
 
         /* Minimal custom styles for elements that can't be easily replicated with Tailwind */
@@ -120,10 +151,9 @@
             🎯 Giveaway Wheel
         </h1>
         
-        <div class="relative w-96 h-96 md:w-[400px] md:h-[400px] mx-auto my-8 flex items-center justify-center group">
-            <div class="wheel-pointer transition-all duration-300 "></div>
-            <canvas id="wheel-canvas" class="rounded-full shadow-2xl transition-transform duration-100 ease-out hover:scale-105" width="400" height="400"></canvas>
-            <div class="wheel-center transition-all duration-300 "></div>
+        <div class="wheel-container relative w-96 h-96 md:w-[400px] md:h-[400px] mx-auto my-8 flex items-center justify-center group">
+            <div class="wheel-glow"></div>
+            <canvas id="wheel-canvas" class="rounded-full transition-transform duration-100 ease-out" width="400" height="400"></canvas>
         </div>
 
         <div class="hidden bg-gradient-to-r from-yellow-400 via-yellow-500 to-amber-500 text-gray-900 p-6 rounded-2xl my-6 text-2xl font-bold shadow-2xl border-4 border-yellow-300 animate-bounce-gentle" id="winner-display"></div>
@@ -214,6 +244,7 @@
         let isSpinning = false;
         let isOBSMode = false;
         let currentKeyword = 'ENTER';
+        let currentRotation = 0; // Track wheel rotation in radians (same as OBS widget)
         
         // Social Stream WebRTC integration
         let iframe = null;
@@ -255,243 +286,199 @@
         
         // WebRTC iframe setup for Social Stream integration
         function setupWebRTCConnection() {
+            console.log('🚀 Setting up WebRTC connection for giveaway...');
+            console.log('📋 Session ID:', roomID);
+            console.log('🔑 Password:', password);
+            
+            // Always set up local communication channel first
+            setupLocalCommunication();
+            
             if (!roomID || roomID === "test") {
-                console.log("No session ID provided. Add ?session=YOUR_SESSION_ID to URL to connect to Social Stream");
+                console.log("⚠️ Using test session - WebRTC will use local communication only");
                 return;
             }
             
-            console.log('🚀 STARTING WEBRTC CONNECTION SETUP...');
-            console.log('📋 Session ID:', roomID);
-            console.log('🔑 Password:', password);
-            console.log('🌐 Current URL:', window.location.href);
+            console.log('🔧🔧🔧 CREATING WEBRTC IFRAME 🔧🔧🔧');
+            console.log('📋 Session ID (roomID):', roomID);
+            console.log('🔐 Password:', password);
             
-            // Create hidden iframe for WebRTC connection
+            // Create hidden iframe for WebRTC connection (same pattern as dock.html)
             iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
             iframe.allow = "midi;geolocation;microphone;"; // microphone needed for Safari WebRTC P2P connections
-            iframe.connectedPeers = {};
             
-            // Connect as a view-only client to receive chat messages
+            console.log('🖼️ Iframe element created with ID:', iframe.id);
+            
+            // Connect as a view-only client to receive chat messages (same as sampleoverlay.html pattern)
             iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password="+password+"&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room="+roomID;
             
-            console.log('🔗 Iframe URL:', iframe.src);
-            console.log('📏 URL Length:', iframe.src.length);
+            console.log('🔗🔗🔗 IFRAME CONNECTION URL 🔗🔗🔗');
+            console.log('📍 Full URL:', iframe.src);
+            console.log('🏠 Base URL: https://vdo.socialstream.ninja/');
+            console.log('🎯 Room parameter: room=' + roomID);
+            console.log('🔐 Password parameter: password=' + password);
+            console.log('🏷️ Label parameter: label=giveaway');
+            console.log('⚙️ Other parameters: ln&salt=vdo.ninja&push&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput');
             
-            // Add detailed load event listeners
-            iframe.onload = function() {
-                console.log('✅ Iframe loaded successfully!');
-                console.log('📍 Iframe contentWindow:', !!iframe.contentWindow);
-                
-                // Enhanced connection diagnostics
-                setTimeout(() => {
-                    console.log('🔍 ENHANCED CONNECTION DIAGNOSTICS:');
-                    console.log('  📊 Iframe ready state:', iframe.readyState);
-                    console.log('  🌐 Iframe src:', iframe.src);
-                    console.log('  📏 Iframe src length:', iframe.src.length);
-                    console.log('  🔗 Content window available:', !!iframe.contentWindow);
-                    
-                    // Test iframe communication
-                    try {
-                        iframe.contentWindow.postMessage({test: 'ping', timestamp: Date.now()}, '*');
-                        console.log('📤 Test message sent to iframe');
-                    } catch (e) {
-                        console.error('❌ Failed to send test message to iframe:', e);
-                    }
-                    
-                    // Check if iframe is actually loading Social Stream
-                    if (iframe.contentWindow) {
-                        try {
-                            console.log('🔍 Iframe location:', iframe.contentWindow.location.href);
-                        } catch (e) {
-                            console.log('🔒 Iframe location blocked (cross-origin) - this is expected');
-                        }
-                    }
-                }, 2000);
-                
-                // Set up periodic connection check
-                const connectionCheck = setInterval(() => {
-                    if (iframe.contentWindow) {
-                        try {
-                            iframe.contentWindow.postMessage({heartbeat: true, timestamp: Date.now()}, '*');
-                            console.log('💓 Heartbeat sent to iframe');
-                        } catch (e) {
-                            console.error('💔 Heartbeat failed:', e);
-                            clearInterval(connectionCheck);
-                        }
-                    } else {
-                        console.error('💔 Iframe content window lost');
-                        clearInterval(connectionCheck);
-                    }
-                }, 10000); // Check every 10 seconds
-                
-                // Try to communicate with iframe after load
-                setTimeout(() => {
-                    console.log('🔄 Attempting to ping iframe...');
-                    try {
-                        iframe.contentWindow.postMessage({type: 'ping', from: 'giveaway'}, '*');
-                    } catch (e) {
-                        console.error('❌ Failed to ping iframe:', e);
-                    }
-                }, 1000);
-            };
-            
-            iframe.onerror = function(e) {
-                console.error('❌ Iframe failed to load:', e);
-            };
-            
-            // Track when iframe is added to DOM
-            console.log('📎 Adding iframe to document body...');
             document.body.appendChild(iframe);
-            console.log('✅ Iframe added to DOM');
+            console.log('✅ Iframe added to document body');
             
-            // Add heartbeat to show page is active
-            let heartbeatCount = 0;
-            setInterval(() => {
-                heartbeatCount++;
-                console.log(`💓 HEARTBEAT #${heartbeatCount} - Page active, listening for messages...`);
-                console.log(`📊 Messages received so far: ${messageCount}`);
-            }, 10000); // Every 10 seconds
+            // Add iframe load event listener
+            iframe.onload = function() {
+                console.log('🎉 IFRAME LOADED SUCCESSFULLY!');
+                console.log('📍 Iframe contentWindow:', iframe.contentWindow);
+            };
             
-            // Listen for messages from the iframe (enhanced debugging version)
-            window.addEventListener('message', function(e) {
-                messageCount++;
-                const timeSinceLoad = (new Date() - debugStartTime) / 1000;
-                
-                console.log(`🔔 === MESSAGE #${messageCount} (${timeSinceLoad.toFixed(1)}s since load) ===`);
-                console.log('📦 RAW Message event:', e);
-                console.log('📦 Message data:', e.data);
-                console.log('🔍 Message source:', e.source === iframe.contentWindow ? 'IFRAME' : 'OTHER');
-                console.log('🌍 Message origin:', e.origin);
-                console.log('📊 Data type:', typeof e.data);
-                console.log('📊 Data JSON:', JSON.stringify(e.data, null, 2));
-                
-                // Enhanced structure analysis
-                if (e.data && typeof e.data === 'object') {
-                    console.log('🔑 Data keys:', Object.keys(e.data));
-                    
-                    // Check for nested structures
-                    if (e.data.dataReceived) {
-                        console.log('📦 dataReceived structure:', Object.keys(e.data.dataReceived));
-                        if (e.data.dataReceived.overlayNinja) {
-                            console.log('🎯 overlayNinja found in dataReceived');
-                        }
-                    }
-                    
-                    // Check for direct chat properties
-                    if (e.data.chatname || e.data.chatmessage || e.data.type) {
-                        console.log('💬 Direct chat properties found:', {
-                            chatname: !!e.data.chatname,
-                            chatmessage: !!e.data.chatmessage,
-                            type: e.data.type
-                        });
-                    }
-                    
-                    // Check for action field
-                    if (e.data.action) {
-                        console.log('⚡ Action field:', e.data.action);
-                    }
-                }
+            iframe.onerror = function(error) {
+                console.log('❌ IFRAME LOAD ERROR:', error);
+            };
+            
+            // Set up message listener for WebRTC data (same simple pattern as sampleoverlay.html)
+            window.addEventListener("message", function (e) {
+                console.log('🔥🔥🔥 RAW MESSAGE RECEIVED FROM IFRAME 🔥🔥🔥');
+                console.log('📨 Full event object:', e);
+                console.log('📦 Event data:', e.data);
+                console.log('🌐 Event origin:', e.origin);
+                console.log('📍 Event source:', e.source);
+                console.log('🖼️ Iframe source check:', e.source === iframe.contentWindow);
+                console.log('⏰ Timestamp:', new Date().toISOString());
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
                 
                 if (e.source != iframe.contentWindow) {
-                    console.log('❌ Message not from iframe, ignoring');
+                    console.log('❌ REJECTED: Message not from our iframe');
                     return;
-                }
+                } // reject messages send from other iframes
                 
-                // Use the same simple logic as working sampleoverlay.html
+                console.log('✅ MESSAGE SOURCE VERIFIED - Processing...');
+                
                 if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
-                    console.log('✅ FOUND CHAT MESSAGE!', e.data.dataReceived.overlayNinja);
+                    console.log('🎉 FOUND CHAT MESSAGE via WebRTC! (sampleoverlay pattern)');
+                    console.log('💬 Chat data:', e.data.dataReceived.overlayNinja);
                     processGiveawayMessage(e.data.dataReceived.overlayNinja);
-                } else if (e.data.overlayNinja) {
-                    console.log('✅ FOUND DIRECT OVERLAY MESSAGE!', e.data.overlayNinja);
-                    processGiveawayMessage(e.data.overlayNinja);
-                } else if (e.data.chatname || e.data.chatmessage) {
-                    console.log('✅ FOUND DIRECT CHAT DATA!', e.data);
-                    processGiveawayMessage(e.data);
                 } else {
-                    console.log('ℹ️ Non-chat message:', e.data);
+                    console.log('❓ UNKNOWN MESSAGE FORMAT - NOT PROCESSING');
+                    console.log('🔍 Data type:', typeof e.data);
+                    console.log('🔍 Data keys:', e.data ? Object.keys(e.data) : 'No data object');
+                    console.log('🔍 Raw data:', JSON.stringify(e.data, null, 2));
                 }
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
             });
-            
-            // Add periodic connection and message status checks
-            setTimeout(() => {
-                console.log('📊 === 5-SECOND STATUS CHECK ===');
-                console.log('🔗 Iframe still exists:', !!iframe);
-                console.log('📍 Iframe contentWindow:', !!iframe?.contentWindow);
-                console.log('🔗 Iframe src:', iframe ? iframe.src : 'N/A');
-                console.log('📨 Messages received so far:', messageCount);
-                console.log('⏱️ Time since load:', ((new Date() - debugStartTime) / 1000).toFixed(1) + 's');
-                console.log('================================');
-            }, 5000);
-            
-            // Add a longer status check
-            setTimeout(() => {
-                console.log('📊 === 15-SECOND STATUS CHECK ===');
-                console.log('📨 Total messages received:', messageCount);
-                console.log('📈 Message rate:', (messageCount / 15).toFixed(2) + ' msg/sec');
-                if (messageCount === 0) {
-                    console.log('⚠️ NO MESSAGES RECEIVED YET!');
-                    console.log('🔍 Possible issues:');
-                    console.log('  1. Wrong session ID');
-                    console.log('  2. No active chat in the session');
-                    console.log('  3. WebRTC connection failed');
-                    console.log('  4. Iframe blocked by browser');
-                }
-                console.log('================================');
-            }, 15000);
             
             console.log(`🎯 Giveaway connected to Social Stream WebRTC with session: ${roomID}`);
         }
+
+        // Local communication setup for when WebRTC session is not available
+        function setupLocalCommunication() {
+            // Use BroadcastChannel API for local communication between tabs
+            if (typeof BroadcastChannel !== 'undefined') {
+                const channel = new BroadcastChannel('giveaway_' + roomID);
+                
+                channel.addEventListener('message', function(event) {
+                    console.log('📥 Received local broadcast:', event.data);
+                    handleLocalMessage(event.data);
+                });
+                
+                // Store channel for broadcasting
+                window.giveawayChannel = channel;
+                console.log('📡 Local communication channel established');
+            } else {
+                // Fallback to localStorage for older browsers
+                console.log('📡 Using localStorage fallback for local communication');
+                window.addEventListener('storage', function(e) {
+                    if (e.key === 'giveaway_broadcast_' + roomID) {
+                        try {
+                            const data = JSON.parse(e.newValue);
+                            handleLocalMessage(data);
+                        } catch (error) {
+                            console.error('Error processing localStorage message:', error);
+                        }
+                    }
+                });
+            }
+        }
+
+        // Handle messages from local communication
+        function handleLocalMessage(data) {
+            if (data.action === 'giveaway_update') {
+                handleGiveawayUpdate(data.data);
+            } else if (data.action === 'keyword_update') {
+                handleKeywordUpdate(data.keyword);
+            } else if (data.action === 'spin_update') {
+                handleSpinUpdate(data.data);
+            } else if (data.action === 'winner_update') {
+                handleWinnerUpdate(data.data);
+            }
+        }
         
-        // WebSocket fallback implementation (from sampleoverlay.html)
+        // WebSocket fallback implementation (same pattern as dock.html)
         var conCon = 1;
         var socketserver = false;
-        var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja";
+        var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
+        var reconnectionTimeout = null;
         
         function setupSocket() {
-            console.log('🔌 Setting up WebSocket connection to:', serverURL);
-            
-            socketserver.onclose = function() {
-                console.log('🔌 WebSocket closed, attempting reconnect...');
-                setTimeout(function() {
+            // Clear any existing reconnection timeout
+            if (reconnectionTimeout) {
+                clearTimeout(reconnectionTimeout);
+                reconnectionTimeout = null;
+            }
+
+            if (socketserver) {
+                socketserver.onclose = null;
+                socketserver.close();
+                socketserver = null;
+            }
+            socketserver = new WebSocket(serverURL);
+
+            socketserver.onclose = function () {
+                reconnectionTimeout = setTimeout(function () {
                     conCon += 1;
-                    socketserver = new WebSocket(serverURL);
                     setupSocket();
                 }, 100 * conCon);
             };
-            
-            socketserver.onopen = function() {
-                console.log('✅ WebSocket connected successfully!');
+            socketserver.onopen = function () {
                 conCon = 1;
-                const joinMessage = {"join": roomID, "out": 3, "in": 4};
-                console.log('📤 Sending join message:', joinMessage);
-                socketserver.send(JSON.stringify(joinMessage));
+                // Use channel 5 for giveaway communication (out: 5, in: 6)
+                socketserver.send(JSON.stringify({ join: roomID.split(",")[0], out: 5, in: 6 }));
+                console.log("Giveaway WebSocket: output channel: 5, input channel: 6");
             };
-            
-            socketserver.addEventListener('message', function(event) {
-                console.log('📨 WebSocket message received:', event.data);
+
+            socketserver.onerror = function (error) {
+                console.error("WebSocket error:", error);
+                socketserver.close();
+            };
+
+            socketserver.addEventListener("message", function (event) {
                 if (event.data) {
                     try {
                         var data = JSON.parse(event.data);
-                        if (data) {
-                            console.log('🎯 WEBSOCKET CHAT MESSAGE:', data);
+                        // Handle giveaway-specific messages
+                        if (data.action === 'giveaway_update') {
+                            handleGiveawayUpdate(data.data);
+                        } else if (data.action === 'keyword_update') {
+                            handleKeywordUpdate(data.keyword);
+                        } else if (data.action === 'spin_update') {
+                            handleSpinUpdate(data.data);
+                        } else if (data.action === 'winner_update') {
+                            handleWinnerUpdate(data.data);
+                        } else if (data.chatname || data.chatmessage) {
                             processGiveawayMessage(data);
                         }
-                    } catch (error) {
-                        console.error("❌ Error processing WebSocket message:", error, "Data:", event.data);
+                    } catch (e) {
+                        console.error("Error processing WebSocket message:", e);
                     }
                 }
             });
-            
-            socketserver.onerror = function(error) {
-                console.error('❌ WebSocket error:', error);
-            };
         }
         
-        // Enable WebSocket if server parameter is provided or for testing
-        if (urlParams.has("server") || urlParams.has("server2") || urlParams.has("websocket")) {
-            console.log('🔌 WebSocket mode enabled');
-            serverURL = urlParams.get("server") || urlParams.get("server2") || serverURL;
-            socketserver = new WebSocket(serverURL);
+        // Enable WebSocket if server parameter is provided
+        if (urlParams.has("server")) {
+            serverURL = urlParams.get("server") || serverURL;
             setupSocket();
         }
         
@@ -566,7 +553,9 @@
         
         // Process incoming chat messages for giveaway entries
         function processGiveawayMessage(data) {
-            console.log("🚀 processGiveawayMessage called with:", data);
+            console.log("🚀🚀🚀 PROCESS GIVEAWAY MESSAGE CALLED 🚀🚀🚀");
+            console.log("⏰ Timestamp:", new Date().toISOString());
+            console.log("📦 Input data:", data);
             console.log("🔍 RAW DATA TYPE:", typeof data);
             console.log("🔍 RAW DATA STRUCTURE:", JSON.stringify(data, null, 2));
             
@@ -815,72 +804,129 @@
             const ctx = canvas.getContext('2d');
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
-            const radius = Math.min(centerX, centerY) - 10;
+            const radius = Math.min(centerX, centerY) - 20;
             
             const entrantsList = Object.values(entrants);
             const segmentAngle = (2 * Math.PI) / entrantsList.length;
             
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
+            // Draw outer shadow for depth
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 8;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+            ctx.fillStyle = '#ffffff';
+            ctx.fill();
+            ctx.restore();
+            
             if (entrantsList.length === 0) {
-                // Draw empty wheel
+                // Draw modern empty wheel
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                ctx.fillStyle = '#ddd';
+                
+                // Modern gradient background
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+                gradient.addColorStop(0, '#f8f9fa');
+                gradient.addColorStop(1, '#e9ecef');
+                ctx.fillStyle = gradient;
                 ctx.fill();
-                ctx.strokeStyle = '#999';
-                ctx.lineWidth = 2;
+                
+                // Modern border
+                ctx.strokeStyle = '#dee2e6';
+                ctx.lineWidth = 3;
                 ctx.stroke();
                 
-                ctx.fillStyle = '#666';
-                ctx.font = 'bold 20px Arial';
+                // Modern typography
+                ctx.fillStyle = '#6c757d';
+                ctx.font = '600 24px "Segoe UI", system-ui, sans-serif';
                 ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
                 ctx.fillText('Add participants to spin!', centerX, centerY);
                 return;
             }
             
-            // Draw wheel segments
+            // Apply current rotation to wheel content (same as OBS widget)
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(currentRotation);
+            ctx.translate(-centerX, -centerY);
+            
+            // Draw wheel segments with modern material design
             entrantsList.forEach((entrant, index) => {
                 const startAngle = index * segmentAngle;
                 const endAngle = (index + 1) * segmentAngle;
                 
-                // Get platform-specific color or generate one
-                const segmentColor = getPlatformColor(entrant.platform, index);
+                // Get modern platform-specific color
+                const segmentColor = getModernPlatformColor(entrant.platform, index);
                 
-                // Draw segment
+                // Draw segment with gradient
                 ctx.beginPath();
                 ctx.moveTo(centerX, centerY);
                 ctx.arc(centerX, centerY, radius, startAngle, endAngle);
                 ctx.closePath();
-                ctx.fillStyle = segmentColor;
+                
+                // Create radial gradient for depth
+                const midAngle = startAngle + segmentAngle / 2;
+                const gradientX = centerX + Math.cos(midAngle) * radius * 0.3;
+                const gradientY = centerY + Math.sin(midAngle) * radius * 0.3;
+                const gradient = ctx.createRadialGradient(gradientX, gradientY, 0, centerX, centerY, radius);
+                gradient.addColorStop(0, segmentColor.light);
+                gradient.addColorStop(0.7, segmentColor.main);
+                gradient.addColorStop(1, segmentColor.dark);
+                
+                ctx.fillStyle = gradient;
                 ctx.fill();
-                ctx.strokeStyle = '#fff';
-                ctx.lineWidth = 2;
+                
+                // Modern border with subtle shadow
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+                ctx.lineWidth = 3;
                 ctx.stroke();
                 
-                // Draw text and platform badge at the edge of the circle
+                // Add inner shadow for depth
+                ctx.save();
+                ctx.clip();
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctx.shadowBlur = 8;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 2;
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius - 2, startAngle, endAngle);
+                ctx.closePath();
+                ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.restore();
+                
+                // Draw modern text and platform badge
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(startAngle + segmentAngle / 2);
                 
-                // Position elements at the outer edge of the circle
-                const edgeRadius = radius - 45; // Position near the outer edge with some padding
-                const textX = edgeRadius; // Position at the edge
-                const maxTextWidth = radius * 0.4; // Limit text width for edge positioning
+                // Position elements with modern spacing
+                const textRadius = radius - 60; // More space for modern design
+                const textX = textRadius;
+                const maxTextWidth = radius * 0.5;
                 
-                // Set up text styling for edge positioning
+                // Modern typography with better contrast
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 18px Arial'; // Larger font for better visibility at edge
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-                ctx.shadowBlur = 4;
-                ctx.shadowOffsetX = 2;
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '600 20px "Segoe UI", system-ui, -apple-system, sans-serif';
+                
+                // Modern text shadow for depth
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                ctx.shadowBlur = 6;
+                ctx.shadowOffsetX = 0;
                 ctx.shadowOffsetY = 2;
                 
                 const userName = entrant.name || 'Anonymous';
                 
-                // Truncate text if too long for edge positioning
+                // Smart text truncation
                 let displayText = userName;
                 if (ctx.measureText(displayText).width > maxTextWidth) {
                     while (ctx.measureText(displayText + '...').width > maxTextWidth && displayText.length > 1) {
@@ -889,49 +935,71 @@
                     displayText += '...';
                 }
                 
-                // Draw username at the edge of the circle
-                ctx.fillText(displayText, textX, -12);
+                // Draw username with modern styling
+                ctx.fillText(displayText, textX, -15);
                 
-                // Draw platform icon at the edge
+                // Draw modern platform icon
                 if (entrant.platform) {
                     const platformIcon = platformIconCache[entrant.platform];
                     
                     if (platformIcon) {
-                        // Draw platform icon at the edge below text
-                        const iconSize = 24; // Larger icon for edge visibility
-                        const iconX = textX - iconSize/2; // Center the icon
-                        const iconY = 8; // Position below text
+                        // Modern icon design with material elevation
+                        const iconSize = 28;
+                        const iconX = textX - iconSize/2;
+                        const iconY = 10;
                         
-                        // Draw icon background circle with stronger contrast
+                        // Draw modern icon background with elevation
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                        ctx.shadowBlur = 8;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 4;
+                        
                         ctx.beginPath();
-                        ctx.arc(textX, iconY + iconSize/2, iconSize/2 + 4, 0, 2 * Math.PI);
-                        ctx.fillStyle = 'rgba(255, 255, 255, 0.98)';
+                        ctx.arc(textX, iconY + iconSize/2, iconSize/2 + 6, 0, 2 * Math.PI);
+                        ctx.fillStyle = '#ffffff';
                         ctx.fill();
-                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.6)';
-                        ctx.lineWidth = 3;
+                        ctx.restore();
+                        
+                        // Draw subtle border
+                        ctx.beginPath();
+                        ctx.arc(textX, iconY + iconSize/2, iconSize/2 + 6, 0, 2 * Math.PI);
+                        ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                        ctx.lineWidth = 1;
                         ctx.stroke();
                         
                         // Draw platform icon
                         ctx.drawImage(platformIcon, iconX, iconY, iconSize, iconSize);
                     } else {
-                        // Fallback to text badge at the edge
+                        // Modern text badge design
                         const platformText = entrant.platform.substring(0, 3).toUpperCase();
-                        ctx.font = 'bold 14px Arial';
+                        ctx.font = '600 12px "Segoe UI", system-ui, sans-serif';
                         
-                        // Draw badge background with stronger contrast for edge visibility
-                        const badgeWidth = 36;
-                        const badgeHeight = 20;
+                        // Modern badge with material design
+                        const badgeWidth = 40;
+                        const badgeHeight = 24;
                         const badgeX = textX - badgeWidth/2;
                         const badgeY = 8;
                         
-                        ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
+                        // Badge shadow
+                        ctx.save();
+                        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                        ctx.shadowBlur = 6;
+                        ctx.shadowOffsetX = 0;
+                        ctx.shadowOffsetY = 3;
+                        
+                        // Badge background with rounded corners effect
+                        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
                         ctx.fillRect(badgeX, badgeY, badgeWidth, badgeHeight);
-                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-                        ctx.lineWidth = 2;
+                        ctx.restore();
+                        
+                        // Badge border
+                        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                        ctx.lineWidth = 1;
                         ctx.strokeRect(badgeX, badgeY, badgeWidth, badgeHeight);
                         
-                        // Draw badge text
-                        ctx.fillStyle = '#fff';
+                        // Badge text
+                        ctx.fillStyle = '#ffffff';
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
                         ctx.fillText(platformText, textX, badgeY + badgeHeight/2);
@@ -940,7 +1008,135 @@
                 
                 ctx.restore();
             });
+            
+            // Restore canvas context after wheel rotation
+            ctx.restore();
+            
+            // Draw modern center hub (not rotated)
+            drawModernCenterHub(ctx, centerX, centerY);
+            
+            // Draw modern pointer (not rotated)
+            drawModernPointer(ctx, centerX, centerY, radius);
         }
+
+        // Modern color palette function
+        function getModernPlatformColor(platform, index) {
+            const modernColors = {
+                'twitch': { main: '#9146ff', light: '#b794ff', dark: '#6b2db8' },
+                'youtube': { main: '#ff0000', light: '#ff4444', dark: '#cc0000' },
+                'discord': { main: '#5865f2', light: '#7983f5', dark: '#4752c4' },
+                'facebook': { main: '#1877f2', light: '#4b9cff', dark: '#0d5dbf' },
+                'instagram': { main: '#e4405f', light: '#ff6b8a', dark: '#c13584' },
+                'tiktok': { main: '#000000', light: '#333333', dark: '#000000' },
+                'kick': { main: '#53fc18', light: '#7dff4d', dark: '#3eb813' },
+                'default': [
+                    { main: '#667eea', light: '#8fa5ff', dark: '#4c63d2' },
+                    { main: '#764ba2', light: '#9d7bc7', dark: '#5a3780' },
+                    { main: '#f093fb', light: '#ffb3ff', dark: '#e066f0' },
+                    { main: '#4facfe', light: '#7cc8ff', dark: '#2196f3' },
+                    { main: '#43e97b', light: '#6eff9f', dark: '#00e676' },
+                    { main: '#fa709a', light: '#ff9dc6', dark: '#f06292' },
+                    { main: '#fee140', light: '#ffeb70', dark: '#fbc02d' },
+                    { main: '#a8edea', light: '#c8f7f5', dark: '#80cbc4' }
+                ]
+            };
+            
+            if (platform && modernColors[platform.toLowerCase()]) {
+                return modernColors[platform.toLowerCase()];
+            }
+            
+            return modernColors.default[index % modernColors.default.length];
+        }
+
+        // Draw modern center hub with material design
+        function drawModernCenterHub(ctx, centerX, centerY) {
+            const hubRadius = 25;
+            
+            // Hub shadow
+            ctx.save();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+            ctx.shadowBlur = 15;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 6;
+            
+            // Hub gradient
+            const hubGradient = ctx.createRadialGradient(centerX, centerY - 5, 0, centerX, centerY, hubRadius);
+            hubGradient.addColorStop(0, '#ffffff');
+            hubGradient.addColorStop(0.7, '#f8f9fa');
+            hubGradient.addColorStop(1, '#e9ecef');
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, hubRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = hubGradient;
+            ctx.fill();
+            ctx.restore();
+            
+            // Hub border
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, hubRadius, 0, 2 * Math.PI);
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Inner hub detail
+             ctx.beginPath();
+             ctx.arc(centerX, centerY, hubRadius - 8, 0, 2 * Math.PI);
+             ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
+             ctx.lineWidth = 1;
+             ctx.stroke();
+         }
+
+         // Draw modern pointer with material design
+         function drawModernPointer(ctx, centerX, centerY, radius) {
+             const pointerLength = 40;
+             const pointerWidth = 20;
+             
+             // Pointer shadow
+             ctx.save();
+             ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+             ctx.shadowBlur = 12;
+             ctx.shadowOffsetX = 2;
+             ctx.shadowOffsetY = 6;
+             
+             // Draw pointer triangle
+             ctx.beginPath();
+             ctx.moveTo(centerX + radius - 5, centerY); // Point at edge
+             ctx.lineTo(centerX + radius - pointerLength, centerY - pointerWidth/2); // Top
+             ctx.lineTo(centerX + radius - pointerLength, centerY + pointerWidth/2); // Bottom
+             ctx.closePath();
+             
+             // Pointer gradient
+             const pointerGradient = ctx.createLinearGradient(
+                 centerX + radius - pointerLength, centerY - pointerWidth/2,
+                 centerX + radius - 5, centerY
+             );
+             pointerGradient.addColorStop(0, '#ff6b6b');
+             pointerGradient.addColorStop(0.5, '#ff5252');
+             pointerGradient.addColorStop(1, '#f44336');
+             
+             ctx.fillStyle = pointerGradient;
+             ctx.fill();
+             ctx.restore();
+             
+             // Pointer border
+             ctx.beginPath();
+             ctx.moveTo(centerX + radius - 5, centerY);
+             ctx.lineTo(centerX + radius - pointerLength, centerY - pointerWidth/2);
+             ctx.lineTo(centerX + radius - pointerLength, centerY + pointerWidth/2);
+             ctx.closePath();
+             ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+             ctx.lineWidth = 2;
+             ctx.stroke();
+             
+             // Pointer highlight
+             ctx.beginPath();
+             ctx.moveTo(centerX + radius - 5, centerY);
+             ctx.lineTo(centerX + radius - pointerLength, centerY - pointerWidth/2);
+             ctx.lineTo(centerX + radius - pointerLength + 8, centerY);
+             ctx.closePath();
+             ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+             ctx.fill();
+         }
 
         // Spin wheel function
         function spinWheel() {
@@ -956,6 +1152,9 @@
             isSpinning = true;
             const spinBtn = document.getElementById('spin-btn');
             const winnerDisplay = document.getElementById('winner-display');
+            
+            // Add spinning class to disable hover effects
+            canvas.classList.add('spinning');
             
             // Add loading state to button
             spinBtn.disabled = true;
@@ -986,50 +1185,66 @@
             // Convert to radians for OBS widget
             const targetRotationRadians = (totalRotation * Math.PI) / 180;
             
-            // Broadcast spin state to OBS widget
+            // Reset both wheels to 0 rotation before spinning
+            currentRotation = 0;
+            drawWheel(canvas, entrants); // Redraw wheel at 0 rotation
+            
+            // Broadcast spin state to OBS widget via WebRTC
             const spinState = {
                 isSpinning: true,
                 targetRotation: targetRotationRadians,
+                targetRotationDegrees: totalRotation, // Also send degrees for consistency
                 duration: 4000,
                 winnerIndex: winnerIndex,
+                startTime: Date.now() + 200, // Start 200ms in future for sync
+                initialRotation: 0, // Both wheels start from 0
                 timestamp: Date.now()
             };
-            localStorage.setItem('wheelSpinState', JSON.stringify(spinState));
+            broadcastSpinState(spinState);
             
-            let currentRotation = 0;
+            // Reset global currentRotation to 0 (don't redeclare)
+            currentRotation = 0;
             const duration = 4000; // 4 seconds
-            const startTime = Date.now();
+            const syncStartTime = spinState.startTime; // Use synchronized start time
             
-            function animate() {
-                const elapsed = Date.now() - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                
-                // Easing function for smooth deceleration
-                const easeOut = 1 - Math.pow(1 - progress, 3);
-                currentRotation = totalRotation * easeOut;
-                
-                canvas.style.transform = `rotate(${currentRotation}deg)`;
-                
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
-                } else {
-                    // Animation complete, show winner
-                    const winner = entrantsList[winnerIndex];
-                    showWinner(winner);
-                    isSpinning = false;
+            // Wait until sync start time to ensure both wheels start together
+            const delay = Math.max(0, syncStartTime - Date.now());
+            setTimeout(() => {
+                function animate() {
+                    const elapsed = Date.now() - syncStartTime;
+                    const progress = Math.min(elapsed / duration, 1);
                     
-                    // Restore button state
-                    const spinBtn = document.getElementById('spin-btn');
-                    spinBtn.disabled = false;
-                    spinBtn.innerHTML = '🎯 Spin the Wheel!';
-                    spinBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                    // Easing function for smooth deceleration (identical to OBS widget)
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const rotationDegrees = totalRotation * easeOut;
+                    currentRotation = (rotationDegrees * Math.PI) / 180; // Convert to radians
                     
-                    // Clear spin state
-                    localStorage.removeItem('wheelSpinState');
+                    // Redraw wheel with new rotation
+                    drawWheel(canvas, entrants);
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        // Animation complete, show winner
+                        const winner = entrantsList[winnerIndex];
+                        showWinner(winner);
+                        isSpinning = false;
+                        
+                        // Restore button state
+                        const spinBtn = document.getElementById('spin-btn');
+                        const canvas = document.getElementById('wheel-canvas');
+                        spinBtn.disabled = false;
+                        spinBtn.innerHTML = '🎯 Spin the Wheel!';
+                        spinBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+                        canvas.classList.remove('spinning');
+                        
+                        // Clear spin state via WebRTC
+                        broadcastSpinState({ isSpinning: false, timestamp: Date.now() });
+                    }
                 }
-            }
-            
-            animate();
+                
+                requestAnimationFrame(animate);
+            }, delay);
         }
 
         // Show winner
@@ -1042,26 +1257,21 @@
                 🎉 Winner: <strong class="text-gray-900">${winner.name}</strong> ${platformBadge}
             `;
             winnerDisplay.classList.remove('hidden');
-            winnerDisplay.classList.add('block');
+            winnerDisplay.classList.add('block', 'winner-announcement');
             
-            // Broadcast winner to OBS widget
+            // Broadcast winner to OBS widget via WebRTC
             const winnerData = {
                 name: winner.name,
                 platform: winner.platform,
                 timestamp: Date.now()
             };
-            localStorage.setItem('wheelWinner', JSON.stringify(winnerData));
+            broadcastWinner(winnerData);
             
             // Create confetti effect
             createConfetti();
             
-            // Save to localStorage for OBS integration
+            // Save state and broadcast updates
             saveState();
-            
-            // Clear winner data after 6 seconds (longer than OBS display)
-            setTimeout(() => {
-                localStorage.removeItem('wheelWinner');
-            }, 6000);
         }
 
         // Create confetti effect
@@ -1195,25 +1405,227 @@
             });
         }
 
-        // Save state to localStorage for project integration
+        // Save state and broadcast via WebRTC
         function saveState() {
             const state = {
                 entrants: entrants,
                 timestamp: Date.now()
             };
-            localStorage.setItem('giveawayWheelState', JSON.stringify(state));
             
-            // Broadcast to other instances (OBS integration)
-            localStorage.setItem('giveawayWheelUpdate', JSON.stringify({
-                timestamp: Date.now(),
-                data: state
-            }));
-            setTimeout(() => {
-                localStorage.removeItem('giveawayWheelUpdate');
-            }, 100);
+            // Broadcast to other giveaway instances via WebRTC
+            broadcastGiveawayUpdate(state);
         }
 
-        // Load state from localStorage
+        // Broadcast giveaway updates via WebRTC and local communication
+        function broadcastGiveawayUpdate(data) {
+            const message = {
+                action: 'giveaway_update',
+                data: data,
+                timestamp: Date.now()
+            };
+            
+            // Send via local communication (BroadcastChannel or localStorage)
+            broadcastLocal(message);
+            
+            // Send via WebSocket if available
+            if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+                socketserver.send(JSON.stringify(message));
+                console.log('📤 Broadcasted giveaway update via WebSocket');
+            }
+            
+            // Send via WebRTC iframe if available
+            if (iframe && iframe.contentWindow) {
+                try {
+                    iframe.contentWindow.postMessage({
+                        dataToSend: message,
+                        target: 'giveaway'
+                    }, '*');
+                    console.log('📤 Broadcasted giveaway update via WebRTC');
+                } catch (e) {
+                    console.error('❌ Failed to broadcast via WebRTC:', e);
+                }
+            }
+        }
+
+        // Local broadcast function
+        function broadcastLocal(message) {
+            // Use BroadcastChannel if available
+            if (window.giveawayChannel) {
+                window.giveawayChannel.postMessage(message);
+                console.log('📤 Broadcasted via BroadcastChannel:', message.action);
+            } else {
+                // Fallback to localStorage
+                const key = 'giveaway_broadcast_' + roomID;
+                localStorage.setItem(key, JSON.stringify(message));
+                console.log('📤 Broadcasted via localStorage:', message.action);
+                // Clear after a short delay to trigger storage event
+                setTimeout(() => {
+                    localStorage.removeItem(key);
+                }, 100);
+            }
+        }
+
+        // Handle incoming giveaway updates from other instances
+        function handleGiveawayUpdate(data) {
+            if (data && data.entrants) {
+                console.log('📥 Received giveaway update from other instance');
+                entrants = data.entrants;
+                updateDisplay();
+            }
+        }
+
+        // Handle keyword updates from other instances
+        function handleKeywordUpdate(keyword) {
+            if (keyword) {
+                console.log('📥 Received keyword update from other instance:', keyword);
+                currentKeyword = keyword;
+                document.getElementById('current-keyword').textContent = currentKeyword;
+            }
+        }
+
+        // Handle spin updates from other instances
+        function handleSpinUpdate(spinData) {
+            if (spinData && spinData.isSpinning) {
+                console.log('📥 Received spin update from other instance');
+                // Trigger spin animation if not already spinning
+                if (!isSpinning && spinData.targetRotation && spinData.duration) {
+                    startSpinFromRemote(spinData);
+                }
+            }
+        }
+
+        // Handle winner updates from other instances
+        function handleWinnerUpdate(winnerData) {
+            if (winnerData && winnerData.name) {
+                console.log('📥 Received winner update from other instance:', winnerData.name);
+                showWinnerFromRemote(winnerData);
+            }
+        }
+
+        // Start spin animation from remote trigger
+        function startSpinFromRemote(spinData) {
+            const canvas = document.getElementById('wheel-canvas');
+            const entrantsList = Object.values(entrants);
+            
+            if (isSpinning || entrantsList.length === 0) return;
+            
+            isSpinning = true;
+            
+            // Reset to initial rotation
+            currentRotation = (spinData.initialRotation || 0) * Math.PI / 180;
+            drawWheel(canvas, entrants); // Redraw at initial position
+            
+            const syncStartTime = spinData.startTime || Date.now();
+            const duration = spinData.duration || 4000;
+            const finalRotationDegrees = spinData.targetRotationDegrees || (spinData.targetRotation * 180 / Math.PI);
+            const finalRotationRadians = (finalRotationDegrees * Math.PI) / 180;
+            
+            // Wait until sync start time to ensure perfect synchronization
+            const delay = Math.max(0, syncStartTime - Date.now());
+            setTimeout(() => {
+                function animate() {
+                    const elapsed = Date.now() - syncStartTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Easing function for smooth deceleration (identical to main spin)
+                    const easeOut = 1 - Math.pow(1 - progress, 3);
+                    const rotationDegrees = finalRotationDegrees * easeOut;
+                    currentRotation = (rotationDegrees * Math.PI) / 180;
+                    
+                    // Redraw wheel with new rotation
+                    drawWheel(canvas, entrants);
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        isSpinning = false;
+                        currentRotation = finalRotationRadians; // Final position
+                    }
+                }
+                
+                animate();
+            }, delay);
+        }
+
+        // Show winner from remote trigger
+        function showWinnerFromRemote(winnerData) {
+            const winnerDisplay = document.getElementById('winner-display');
+            const platformBadge = winnerData.platform ? 
+                `<span class="inline-block px-2 py-1 ml-2 text-xs font-bold rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white">${winnerData.platform.toUpperCase()}</span>` : '';
+            
+            winnerDisplay.innerHTML = `
+                🎉 Winner: <strong class="text-gray-900">${winnerData.name}</strong> ${platformBadge}
+            `;
+            winnerDisplay.classList.remove('hidden');
+            winnerDisplay.classList.add('block');
+            
+            // Create confetti effect
+            createConfetti();
+        }
+
+        // Broadcast spin state via WebRTC and local communication
+        function broadcastSpinState(spinData) {
+            const message = {
+                action: 'spin_update',
+                data: spinData,
+                timestamp: Date.now()
+            };
+            
+            // Send via local communication first
+            broadcastLocal(message);
+            
+            // Send via WebSocket if available
+            if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+                socketserver.send(JSON.stringify(message));
+                console.log('📤 Broadcasted spin state via WebSocket');
+            }
+            
+            // Send via WebRTC iframe if available
+            if (iframe && iframe.contentWindow) {
+                try {
+                    iframe.contentWindow.postMessage({
+                        dataToSend: message,
+                        target: 'giveaway'
+                    }, '*');
+                    console.log('📤 Broadcasted spin state via WebRTC');
+                } catch (e) {
+                    console.error('❌ Failed to broadcast spin state via WebRTC:', e);
+                }
+            }
+        }
+
+        // Broadcast winner via WebRTC and local communication
+        function broadcastWinner(winnerData) {
+            const message = {
+                action: 'winner_update',
+                data: winnerData,
+                timestamp: Date.now()
+            };
+            
+            // Send via local communication first
+            broadcastLocal(message);
+            
+            // Send via WebSocket if available
+            if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+                socketserver.send(JSON.stringify(message));
+                console.log('📤 Broadcasted winner via WebSocket');
+            }
+            
+            // Send via WebRTC iframe if available
+            if (iframe && iframe.contentWindow) {
+                try {
+                    iframe.contentWindow.postMessage({
+                        dataToSend: message,
+                        target: 'giveaway'
+                    }, '*');
+                    console.log('📤 Broadcasted winner via WebRTC');
+                } catch (e) {
+                    console.error('❌ Failed to broadcast winner via WebRTC:', e);
+                }
+            }
+        }
+
+        // Load state from localStorage (for backward compatibility)
         function loadState() {
             try {
                 const savedState = localStorage.getItem('giveawayWheelState');
@@ -1229,21 +1641,6 @@
             }
         }
 
-        // Listen for state updates from other instances
-        window.addEventListener('storage', function(e) {
-            if (e.key === 'giveawayWheelUpdate') {
-                try {
-                    const update = JSON.parse(e.newValue);
-                    if (update && update.data && update.data.entrants) {
-                        entrants = update.data.entrants;
-                        updateDisplay();
-                    }
-                } catch (error) {
-                    console.error('Error processing state update:', error);
-                }
-            }
-        });
-
         // User-controlled keyword system
         function setKeyword() {
             const keywordInput = document.getElementById('keyword-input');
@@ -1253,15 +1650,43 @@
                 currentKeyword = newKeyword;
                 document.getElementById('current-keyword').textContent = currentKeyword;
                 
-                // Save keyword for OBS widget
-                localStorage.setItem('giveaway_keyword', currentKeyword);
-                localStorage.setItem('giveaway_keyword_timestamp', Date.now().toString());
+                // Broadcast keyword change via WebRTC
+                broadcastKeywordUpdate(currentKeyword);
                 
                 // Clear input
                 keywordInput.value = '';
                 
                 console.log(`Keyword set to: ${currentKeyword}`);
-                updateGiveawayState();
+            }
+        }
+
+        function broadcastKeywordUpdate(keyword) {
+            const message = {
+                action: 'keyword_update',
+                keyword: keyword,
+                timestamp: Date.now()
+            };
+            
+            // Send via local communication first
+            broadcastLocal(message);
+            
+            // Send via WebSocket if available
+            if (socketserver && socketserver.readyState === WebSocket.OPEN) {
+                socketserver.send(JSON.stringify(message));
+                console.log('📤 Broadcasted keyword update via WebSocket');
+            }
+            
+            // Send via WebRTC iframe if available
+            if (iframe && iframe.contentWindow) {
+                try {
+                    iframe.contentWindow.postMessage({
+                        dataToSend: message,
+                        target: 'giveaway'
+                    }, '*');
+                    console.log('📤 Broadcasted keyword update via WebRTC');
+                } catch (e) {
+                    console.error('❌ Failed to broadcast keyword via WebRTC:', e);
+                }
             }
         }
 
@@ -1273,25 +1698,33 @@
             }
         }
 
-        function updateGiveawayState() {
-            const state = {
-                participants: Object.values(entrants).map(entrant => ({
-                    name: entrant.name,
-                    platform: entrant.platform,
-                    timestamp: Date.now(),
-                    id: Date.now() + Math.random()
-                })),
-                title: 'Giveaway Entries',
-                keyword: currentKeyword,
-                timestamp: Date.now()
-            };
-            
-            localStorage.setItem('giveaway_state', JSON.stringify(state));
-        }
+
 
         function openOBSWidget() {
-            const obsUrl = window.location.origin + window.location.pathname.replace('giveaway.html', 'giveaway-obs-entries.html');
+            const obsUrl = window.location.origin + window.location.pathname.replace('giveaway.html', 'giveaway-obs-entries.html') + `?session=${roomID}&password=${password}`;
             window.open(obsUrl, '_blank', 'width=800,height=600');
+            
+            // Broadcast existing entries and keyword to the OBS widget after a short delay
+            // This ensures the OBS widget has time to set up its listeners
+            setTimeout(() => {
+                console.log('📤 Broadcasting existing entries to OBS widget...');
+                
+                // Broadcast current entries
+                if (Object.keys(entrants).length > 0) {
+                    const state = {
+                        entrants: entrants,
+                        timestamp: Date.now()
+                    };
+                    broadcastGiveawayUpdate(state);
+                    console.log('📤 Sent existing entries to OBS widget:', Object.keys(entrants).length, 'entries');
+                }
+                
+                // Broadcast current keyword
+                if (currentKeyword) {
+                    broadcastKeywordUpdate(currentKeyword);
+                    console.log('📤 Sent current keyword to OBS widget:', currentKeyword);
+                }
+            }, 1000); // 1 second delay to allow OBS widget to initialize
         }
 
         // Simulate chat message processing for keyword entries
@@ -1300,7 +1733,6 @@
             entrants = {};
             updateDisplay();
             saveState();
-            updateGiveawayState();
             console.log('All entries cleared');
         }
 
@@ -1377,24 +1809,15 @@
             }
         });
 
-        // Override saveState to also update giveaway state
-        const originalSaveState = saveState;
-        saveState = function() {
-            originalSaveState();
-            updateGiveawayState();
-        };
+
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             loadState();
             loadKeyword();
             updateDisplay();
-            updateGiveawayState();
             
-            // Add WebSocket test button for debugging
-            addWebSocketTestButton();
-            
-            // Connect to Social Stream WebRTC if session ID is provided
+            // Connect to Social Stream WebRTC (always, for communication with other giveaway instances)
             setupWebRTCConnection();
         });
     </script>
