@@ -3231,6 +3231,40 @@ function handleOptionSetting(ele, sync) {
     return true;
 }
 
+function updateRangeDisplay(ele) {
+    if (!ele || ele.type !== 'range') {
+        return;
+    }
+
+    const displayId = ele.dataset.rangeDisplay;
+    if (!displayId) {
+        return;
+    }
+
+    const displayEle = document.getElementById(displayId);
+    if (!displayEle) {
+        return;
+    }
+
+    const suffix = ele.dataset.rangeSuffix || '';
+    const rawValue = parseFloat(ele.value);
+    if (Number.isNaN(rawValue)) {
+        return;
+    }
+
+    let formattedValue;
+    if (suffix === '%') {
+        formattedValue = `${Math.round(rawValue)}${suffix}`;
+    } else {
+        formattedValue = rawValue.toFixed(2);
+        if (suffix) {
+            formattedValue += suffix;
+        }
+    }
+
+    displayEle.textContent = formattedValue;
+}
+
 function handleNumberSetting(ele, sync) {
     // Get the target map to determine which indices are valid
     const targetMap = getTargetMap();
@@ -3272,6 +3306,10 @@ function handleNumberSetting(ele, sync) {
             targetElement.raw = updateURL(`${settingValue}=${ele.value}`, targetElement.raw);
         }
         
+        if (ele.type === 'range') {
+            ele.dataset.rangePrevValue = ele.value;
+        }
+        updateRangeDisplay(ele);
         return true;
     }
     
@@ -3550,6 +3588,25 @@ function refreshLinks(){
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
   }
+}
+
+function handleRangeInput(event) {
+    const rangeEle = event?.target || this;
+    if (!rangeEle) {
+        return;
+    }
+
+    updateRangeDisplay(rangeEle);
+
+    const currentValue = rangeEle.value;
+    const lastValue = rangeEle.dataset.rangePrevValue;
+    const shouldSync = !event || event.type !== 'change' || lastValue !== currentValue;
+
+    if (shouldSync) {
+        updateSettings.call(rangeEle, event);
+    }
+
+    rangeEle.dataset.rangePrevValue = currentValue;
 }
 
 if (!chrome.browserAction){
@@ -5726,6 +5783,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	var iii = document.querySelectorAll("input[type='text'][class*='instant']");
 	for (var i=0;i<iii.length;i++){
 		iii[i].oninput = updateSettings;
+	}
+	
+	var iii = document.querySelectorAll("input[type='range']");
+	for (var i=0;i<iii.length;i++){
+		updateRangeDisplay(iii[i]);
+		iii[i].dataset.rangePrevValue = iii[i].value;
+		iii[i].oninput = handleRangeInput;
+		iii[i].onchange = handleRangeInput;
 	}
 	
 	var iii = document.querySelectorAll("input[type='number']");

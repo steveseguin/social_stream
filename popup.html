@@ -196,6 +196,21 @@ hr {
 	max-height: 18px;
 	max-width: 18px;
 }
+input[type="range"] {
+    accent-color: var(--color-accent);
+}
+
+.options input[type="range"] {
+    vertical-align: middle;
+    margin: 0 8px;
+}
+
+.range-value {
+    display: inline-block;
+    text-align: right;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
 .add-username-container input {
   width: 150px;
 }
@@ -1530,25 +1545,13 @@ input:checked + .slider:before {
                             <div class="options_group streaming_chat">
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="scale=2" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="magnify-the-view-larger-fontimages">🔍➕ Magnify the view (larger font/images) </span>
-                                </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param1="scale=0.77" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="make-the-font-icons-and-menu-smaller">🔎➖ Make the font, icons, and menu smaller </span>
-                                </div>
-								<div>
-                                    <label class="switch">
                                         <input type="checkbox" data-param1="scale" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="hide-messages-after-20s">
-                                        or Custom font size/scale factor <input type="number" style="max-width: 5ch;" max="10" min="0.1" value="1.0" size="4" data-numbersetting="scale" />x
+                                    <span>
+                                        🔍 Font Size (Scale) 
+                                        <input type="range" id="dock-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting="scale" data-range-display="dock-scale-display" data-range-suffix="x" />
+                                        <span class="range-value" id="dock-scale-display">1.00x</span>
                                     </span>
                                 </div>
                                 <div title="Use &chroma=0000 instead if you want to have a transparent background with the scroll bar still showing" data-keywords="alpha opacity see-through clear invisible OBS streamlabs chroma key green screen remove background">
@@ -1560,10 +1563,14 @@ input:checked + .slider:before {
                                 </div>
                                 <div title="This won't work in Chrome">
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="opacity=0.3" />
+                                        <input type="checkbox" data-param1="opacity" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="make-entire-page-partially-transparent">👻 Make entire page partially transparent </span>
+                                    <span>
+                                        👻 Page opacity
+                                        <input type="range" id="dock-opacity-range" min="0" max="1" step="0.05" value="0.3" style="width: 150px;" data-numbersetting="opacity" data-range-display="dock-opacity-display" />
+                                        <span class="range-value" id="dock-opacity-display">0.30</span>
+                                    </span>
                                 </div>
                                 <div title="This won't work in Chrome">
                                     <label class="switch">
@@ -1728,12 +1735,16 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>
                                 </div>
-                                <div title="Lower the beep's volume by 50%">
+                                <div title="Lower the beep's volume">
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="beepvolume=30" />
+                                        <input type="checkbox" data-param1="beepvolume" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30% </span>
+                                    <span>
+                                        🔔🔉 Beep volume
+                                        <input type="range" id="dock-beep-volume-range" min="0" max="100" step="5" value="30" style="width: 120px;" data-numbersetting="beepvolume" data-range-display="dock-beep-volume-display" data-range-suffix="%" />
+                                        <span class="range-value" id="dock-beep-volume-display">30%</span>
+                                    </span>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam1="custombeep" />
@@ -3495,19 +3506,16 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group single_message">
-                                <div title="Zoom out of overlay by 2x.">
+                                <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param2="scale=0.5" />
+                                        <input type="checkbox" data-param2="scale" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="make-overlay-smaller">🔍➖ Make overlay smaller </span>
-                                </div>
-								<div title="Zoom In on the overlay by 2x.">
-                                    <label class="switch">
-                                        <input type="checkbox" data-param2="scale=2" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="make-overlay-larger">🔍➕ Make overlay larger </span>
+                                    <span>
+                                        🔍 Scale multiplier
+                                        <input type="range" id="overlay-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting2="scale" data-range-display="overlay-scale-display" data-range-suffix="x" />
+                                        <span class="range-value" id="overlay-scale-display">1.00x</span>
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3576,12 +3584,16 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="beep-when-there-is-a-new-donation">🔔💵 Beep when there is a new donation </span>		
                                 </div>
-                                <div title="Lower the beep's volume by 50%">
+                                <div title="Lower the beep's volume">
                                     <label class="switch">
-                                        <input type="checkbox" data-param2="beepvolume=30" />
+                                        <input type="checkbox" data-param2="beepvolume" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="reduce-the-beeps-volume">🔔🔉 Reduce the beep's volume to 30% </span>
+                                    <span>
+                                        🔔🔉 Beep volume
+                                        <input type="range" id="overlay-beep-volume-range" min="0" max="100" step="5" value="30" style="width: 150px;" data-numbersetting2="beepvolume" data-range-display="overlay-beep-volume-display" data-range-suffix="%" />
+                                        <span class="range-value" id="overlay-beep-volume-display">30%</span>
+                                    </span>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%; position: relative;" title="Specify a URL for a custom beep audio file">
                                     <input type="text" id="custombeep2" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/beep.wav" data-translate="placeholder-audio-url" data-textparam2="custombeep" />
@@ -5465,17 +5477,14 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param3="scale=0.5" />
+                                        <input type="checkbox" data-param3="scale" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="make-all-emojis-half-the-size">🤏 Make all emojis half the size </span>
-                                </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param3="scale=2" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="make-all-emojis-twice-the-size">🐘 Make all emojis twice the size </span>
+                                    <span>
+                                        🔍 Emoji scale
+                                        <input type="range" id="emotes-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting3="scale" data-range-display="emotes-scale-display" data-range-suffix="x" />
+                                        <span class="range-value" id="emotes-scale-display">1.00x</span>
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5594,20 +5603,16 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="disable-text-outlining">🔳 Disable text outlining </span>
                                 </div>
-
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param4="scale=2" />
+                                        <input type="checkbox" data-param4="scale" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="magnify-the-view-larger-fontimages">🔍➕ Magnify the view (larger font/images) </span>
-                                </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param4="scale=0.77" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="make-the-font-icons-and-menu-smaller">🔎➖ Make the font, icons, and menu smaller </span>
+                                    <span>
+                                        🔍 Scale multiplier
+                                        <input type="range" id="hype-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting4="scale" data-range-display="hype-scale-display" data-range-suffix="x" />
+                                        <span class="range-value" id="hype-scale-display">1.00x</span>
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5618,10 +5623,14 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param4="opacity=0.3" />
+                                        <input type="checkbox" data-param4="opacity" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="make-entire-page-partially-transparent">👻 Make entire page partially transparent </span>
+                                    <span>
+                                        👻 Page opacity
+                                        <input type="range" id="hype-opacity-range" min="0" max="1" step="0.05" value="0.3" style="width: 150px;" data-numbersetting4="opacity" data-range-display="hype-opacity-display" />
+                                        <span class="range-value" id="hype-opacity-display">0.30</span>
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5878,12 +5887,16 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="sound-when-there-is-selection">🎵 Play a sound when there a name selected </span>
                                 </div>
-                                <div title="Lower the 🎵's volume by 50%">
+                                <div title="Lower the 🎵 volume">
                                     <label class="switch">
-                                        <input type="checkbox" data-param5="soundvolume=30" />
+                                        <input type="checkbox" data-param5="soundvolume" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="reduce-the-sounds-volume">🎵🔉 Reduce the sound's volume to 30% </span>
+                                    <span>
+                                        🎵🔉 Sound volume
+                                        <input type="range" id="waitlist-sound-volume-range" min="0" max="100" step="5" value="30" style="width: 150px;" data-numbersetting5="soundvolume" data-range-display="waitlist-sound-volume-display" data-range-suffix="%" />
+                                        <span class="range-value" id="waitlist-sound-volume-display">30%</span>
+                                    </span>
                                 </div>
                                 <div class="textInputContainer" style="width: 95%;" title="Specify a URL for a custom sound audio file">
                                     <input type="text" id="customsound" class="textInput instant" autocomplete="off" placeholder="eg: https://www.yourdomain.com/sound.wav" data-textparam5="customsound" />
@@ -5891,17 +5904,14 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param5="scale=2" />
+                                        <input type="checkbox" data-param5="scale" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="magnify-the-view-larger-fontimages">🔍➕ Magnify the view (larger font/images) </span>
-                                </div>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" data-param5="scale=0.77" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="make-the-font-icons-and-menu-smaller">🔎➖ Make the font, icons, and menu smaller </span>
+                                    <span>
+                                        🔍 Scale multiplier
+                                        <input type="range" id="waitlist-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting5="scale" data-range-display="waitlist-scale-display" data-range-suffix="x" />
+                                        <span class="range-value" id="waitlist-scale-display">1.00x</span>
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -5912,10 +5922,14 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param5="opacity=0.3" />
+                                        <input type="checkbox" data-param5="opacity" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="make-entire-page-partially-transparent">👻 Make entire page partially transparent </span>
+                                    <span>
+                                        👻 Page opacity
+                                        <input type="range" id="waitlist-opacity-range" min="0" max="1" step="0.05" value="0.3" style="width: 150px;" data-numbersetting5="opacity" data-range-display="waitlist-opacity-display" />
+                                        <span class="range-value" id="waitlist-opacity-display">0.30</span>
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -7416,10 +7430,14 @@ input:checked + .slider:before {
 								<br>
 								<div>
 									<label class="switch">
-										<input type="checkbox" data-param7="scale=2" />
+										<input type="checkbox" data-param7="scale" />
 										<span class="slider round"></span>
 									</label>
-									2️⃣✖️<span data-translate="largerwordcloud"> Double the font size</span>
+									<span>
+										🔍 Word cloud scale
+										<input type="range" id="wordcloud-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting7="scale" data-range-display="wordcloud-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="wordcloud-scale-display">1.00x</span>
+									</span>
 								</div>
 								<br>
 								<div>
