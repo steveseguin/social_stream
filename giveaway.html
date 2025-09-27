@@ -1436,9 +1436,10 @@
             // Send via WebRTC iframe if available
             if (iframe && iframe.contentWindow) {
                 try {
+                    // Use the proper Social Stream WebRTC API for broadcasting
                     iframe.contentWindow.postMessage({
-                        dataToSend: message,
-                        target: 'giveaway'
+                        sendData: { overlayNinja: message },
+                        type: "rpcs"
                     }, '*');
                     console.log('📤 Broadcasted giveaway update via WebRTC');
                 } catch (e) {
@@ -1584,8 +1585,8 @@
             if (iframe && iframe.contentWindow) {
                 try {
                     iframe.contentWindow.postMessage({
-                        dataToSend: message,
-                        target: 'giveaway'
+                        sendData: { overlayNinja: message },
+                        type: "rpcs"
                     }, '*');
                     console.log('📤 Broadcasted spin state via WebRTC');
                 } catch (e) {
@@ -1615,8 +1616,8 @@
             if (iframe && iframe.contentWindow) {
                 try {
                     iframe.contentWindow.postMessage({
-                        dataToSend: message,
-                        target: 'giveaway'
+                        sendData: { overlayNinja: message },
+                        type: "rpcs"
                     }, '*');
                     console.log('📤 Broadcasted winner via WebRTC');
                 } catch (e) {
@@ -1680,8 +1681,8 @@
             if (iframe && iframe.contentWindow) {
                 try {
                     iframe.contentWindow.postMessage({
-                        dataToSend: message,
-                        target: 'giveaway'
+                        sendData: { overlayNinja: message },
+                        type: "rpcs"
                     }, '*');
                     console.log('📤 Broadcasted keyword update via WebRTC');
                 } catch (e) {
