@@ -5456,10 +5456,13 @@ input:checked + .slider:before {
                                 </div>
                                 <div>
                                     <label class="switch">
-                                        <input type="checkbox" data-param3="limit=10" />
+                                        <input type="checkbox" data-param3="limit" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="limit-to-10-emotes-at-a-time">🔢 Limit to 10 emotes at a time </span>
+                                    <span>
+                                        <span data-translate="limit-emotes-count">🔢 Limit emotes shown:</span>
+                                        <input type="number" style="max-width: 5ch;" min="1" max="50" value="5" size="3" data-numbersetting3="limit" />
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">

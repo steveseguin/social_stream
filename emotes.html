@@ -248,8 +248,18 @@
 	}
 	
 	var maxShow = false;
-	if (urlParams.has("max") || urlParams.has("limit")) {
-		maxShow = parseInt(urlParams.has("limit")) || parseInt(urlParams.get("max")) || 0;
+	if (urlParams.has("limit")) {
+		var limitParam = parseInt(urlParams.get("limit"), 10);
+		if (!Number.isNaN(limitParam) && limitParam > 0) {
+			maxShow = limitParam;
+			customNodeLimit = limitParam;
+		}
+	}
+	if (!maxShow && urlParams.has("max")) {
+		var maxParam = parseInt(urlParams.get("max"), 10);
+		if (!Number.isNaN(maxParam) && maxParam > 0) {
+			maxShow = maxParam;
+		}
 	}
 	
 	var membersonly = false;
@@ -317,8 +327,8 @@
 	};
 
 
-	if (urlParams.has("limit")){
-		customNodeLimit = parseInt(urlParams.get("limit")) || 100;
+	if (maxShow && !customNodeLimit){
+		customNodeLimit = maxShow;
 	}
 	
 	var badEmotes = false;

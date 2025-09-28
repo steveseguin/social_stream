@@ -2213,6 +2213,19 @@ function update(response, sync = true) {
 function processParam(key, paramNum, settingObj, sync) {
     let paramKey = `param${paramNum}`;
     let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
+
+    if (!ele && paramNum === 3 && key.startsWith('limit=')) {
+        const legacyValue = parseInt(key.split('=')[1], 10);
+        ele = document.querySelector(`input[data-${paramKey}='limit']`);
+        if (ele && !Number.isNaN(legacyValue)) {
+            const suffix = paramNum === 1 ? '' : paramNum;
+            const numberInput = document.querySelector(`input[data-numbersetting${suffix}='limit']`);
+            if (numberInput) {
+                numberInput.value = legacyValue;
+            }
+        }
+    }
+
     if (!ele) return;
 
     ele.checked = settingObj[paramKey]; // Set the checked state based on loaded setting.
