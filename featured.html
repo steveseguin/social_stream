@@ -1139,6 +1139,26 @@
 					};
 			})(window);
 			var urlParams = new URLSearchParams(window.location.search);
+			var fallbackAvatarURL = "./sources/images/unknown.png";
+			if (urlParams.has("fallbackimg")) {
+				var fallbackParam = urlParams.get("fallbackimg");
+				if (fallbackParam) {
+					fallbackParam = fallbackParam.trim();
+					if (fallbackParam) {
+						var fallbackParamLower = fallbackParam.toLowerCase();
+						if (
+							fallbackParamLower.startsWith("http://") ||
+							fallbackParamLower.startsWith("https://") ||
+							fallbackParam.startsWith("//") ||
+							fallbackParamLower.startsWith("data:image/") ||
+							fallbackParam.startsWith("./") ||
+							fallbackParam.startsWith("../")
+						) {
+							fallbackAvatarURL = fallbackParam;
+						}
+					}
+				}
+			}
 			
 			function validateRoomId(roomId) {
 				if (roomId == null || roomId === '') {
@@ -2226,7 +2246,7 @@
 
 			try {
 				var fallbackImage = new Image(); // preload it.
-				fallbackImage.src = "./sources/images/unknown.png";
+				fallbackImage.src = fallbackAvatarURL;
 				fallbackImage.onerror = function () {
 					fallbackImage = false;
 				};
@@ -2242,7 +2262,7 @@
 				if (ele.dataset.backupImage) {
 					ele.src = ele.dataset.backupImage;
 				} else if (fallbackImage) {
-					ele.src = "./sources/images/unknown.png";
+					ele.src = fallbackAvatarURL;
 				} else {
 					ele.style.display = "none";
 				}
@@ -2664,7 +2684,7 @@
 						  if (!data.chatname && data.event){
 							chatimg = "./icons/announcement.png";
 						  } else {
-							chatimg = "./sources/images/unknown.png";
+							chatimg = fallbackAvatarURL;
 						  }
 						} else {
 						  chatimg = data.chatimg

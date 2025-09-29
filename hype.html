@@ -248,6 +248,32 @@ span.zero-width-parent img.zero-width-emote {
 .short .sourceStatHolder {
 	height: 74px;
 }
+.align-left {
+  display: block;
+  margin-left: 0;
+  margin-right: auto;
+  text-align: left;
+}
+.align-right {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
+  text-align: right;
+}
+.align-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+.align-center .sourceStatHolder {
+  justify-content: center;
+}
+.align-center [data-viewers],
+.align-center [data-chatters] {
+  text-align: center !important;
+  justify-content: center;
+}
 .sourceStatHolder img {
   width: calc(var(--width) );
   height: calc(var(--width) );
@@ -518,6 +544,9 @@ var customNodeLimit = false;
 var body = document.body;
 var html = document.documentElement;
 var mainOutputWindow = document.getElementById("output");
+var parentHolder = document.getElementById("parentHolder");
+var hypeContainer = document.getElementById("hype");
+var hypeTitle = document.getElementById("hypetitle");
 var showdupes = true;
 var hidereplies = false;
 var uniqueId = "";
@@ -620,12 +649,21 @@ if (urlParams.has("fontsize")) {
     const scaleValue = parseFloat(urlParams.get("fontsize")) || 1.0;
     document.documentElement.style.setProperty("--scale", scaleValue);
 }
-if (urlParams.has("alignright")) {
-    document.getElementById("parentHolder").style.position = "absolute";
-    document.getElementById("parentHolder").style.right = "0";
+var alignment = null;
+var alignRightLegacy = urlParams.has("alignright");
+if (urlParams.has("align")) {
+    var requestedAlignment = (urlParams.get("align") || "").toLowerCase();
+    if (requestedAlignment === "left" || requestedAlignment === "center" || requestedAlignment === "right") {
+        alignment = requestedAlignment;
+    }
+}
+if (alignment === null && alignRightLegacy) {
+    alignment = "right";
 }
 if (urlParams.has("hidetitle")) {
-    document.getElementById("hypetitle").classList.add("hidden");
+    if (hypeTitle) {
+        hypeTitle.classList.add("hidden");
+    }
 }
 if (urlParams.has("opacity")) {
     getById("output").style.opacity = urlParams.get("opacity") || 0.3
@@ -731,12 +769,16 @@ var showChatters = true;
 if (urlParams.has("viewersonly")) {
     showViewers = true;
     showChatters = false;
-    document.getElementById("hype").classList.add("short");
+    if (hypeContainer) {
+        hypeContainer.classList.add("short");
+    }
 }
 if (urlParams.has("chattersonly")) {
     showViewers = false;
     showChatters = true;
-    document.getElementById("hype").classList.add("short");
+    if (hypeContainer) {
+        hypeContainer.classList.add("short");
+    }
 }
 var titleText = "";
 if (showViewers && showChatters) {
@@ -746,7 +788,9 @@ if (showViewers && showChatters) {
 } else {
     titleText = "Active chatters in the last 5-minutes";
 }
-document.getElementById("hypetitle").textContent = titleText;
+if (hypeTitle) {
+    hypeTitle.textContent = titleText;
+}
 let style = "default";
 if (urlParams.has("style")) {
     style = urlParams.get("style");
@@ -765,7 +809,9 @@ if (urlParams.has("combineall")) {
 }
 
 // Apply the style to the parent holder
-document.getElementById("parentHolder").classList.add("style-" + style);
+if (parentHolder) {
+    parentHolder.classList.add("style-" + style);
+}
 
 let scale = 1;
 if (urlParams.has("scale")) {
@@ -785,15 +831,65 @@ if (urlParams.has("style")) {
         case "minimal":
             document.documentElement.style.setProperty("--padding", "6px");
             document.documentElement.style.setProperty("--width", "20px");
-            document.getElementById("hypetitle").classList.add("hidden");
+            if (hypeTitle) {
+                hypeTitle.classList.add("hidden");
+            }
             scale = scale * 3;
             break;
         case "topbar":
-            document.getElementById("parentHolder").style.position = "fixed";
-            document.getElementById("parentHolder").style.right = "0";
-            document.getElementById("parentHolder").style.top = "0";
-            document.getElementById("hypetitle").classList.add("hidden");
+            if (parentHolder) {
+                parentHolder.style.position = "fixed";
+                parentHolder.style.top = "0";
+                parentHolder.style.left = "";
+                parentHolder.style.right = "";
+                parentHolder.style.transform = "";
+                var topbarAlignment = alignment || "right";
+                if (topbarAlignment === "center") {
+                    parentHolder.style.left = "50%";
+                    parentHolder.style.transform = "translateX(-50%)";
+                    if (hypeContainer) {
+                        hypeContainer.style.justifyContent = "center";
+                    }
+                } else if (topbarAlignment === "left") {
+                    parentHolder.style.left = "0";
+                } else {
+                    parentHolder.style.right = "0";
+                }
+            }
+            if (hypeTitle) {
+                hypeTitle.classList.add("hidden");
+            }
             break;
+    }
+}
+
+if (alignment && parentHolder) {
+    if (style !== "topbar") {
+        parentHolder.classList.add("align-" + alignment);
+        if (alignment === "left") {
+            parentHolder.style.marginLeft = "0";
+            parentHolder.style.marginRight = "auto";
+            parentHolder.style.textAlign = "left";
+        } else if (alignment === "right") {
+            parentHolder.style.marginLeft = "auto";
+            parentHolder.style.marginRight = "0";
+            parentHolder.style.textAlign = "right";
+        } else {
+            parentHolder.style.marginLeft = "auto";
+            parentHolder.style.marginRight = "auto";
+            parentHolder.style.textAlign = "center";
+			parentHolder.style.width = "100%";
+        }
+        if (alignRightLegacy) {
+            parentHolder.style.position = "absolute";
+            parentHolder.style.right = "0";
+            parentHolder.style.left = "";
+        }
+        if (alignment === "center" && hypeContainer) {
+            hypeContainer.style.justifyContent = "center";
+        }
+    } else if (alignment === "left" || alignment === "right") {
+        parentHolder.classList.add("align-" + alignment);
     }
 }
 document.body.style.transform = `scale(${scale})`;
@@ -821,7 +917,9 @@ function handleClearAction(clearAction) {
         lastUpdated = {};
         const hypeEl = document.getElementById("hype");
         if (hypeEl) hypeEl.innerHTML = "";
-        document.getElementById("parentHolder").classList.add("hidden");
+        if (parentHolder) {
+            parentHolder.classList.add("hidden");
+        }
         console.log("Hype.html: Cleared local state due to refreshSources action.");
     }
 }

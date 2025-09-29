@@ -4344,6 +4344,114 @@ function sendToH2R(data) {
         }
     }
 }
+
+const WEBHOOK_RELAY_SOURCES = new Set(["stripe", "kofi", "bmac", "fourthwall"]);
+
+function normalizeWebhookRelayUrl(rawUrl) {
+    if (!rawUrl) {
+        return null;
+    }
+
+    let url = String(rawUrl).trim();
+    if (!url) {
+        return null;
+    }
+
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+        return url;
+    }
+
+    if (url.startsWith("127.0.0.1") || url.startsWith("localhost")) {
+        return "http://" + url;
+    }
+
+    return "https://" + url;
+}
+
+function relayIncomingWebhook(source, payload) {
+    if (!WEBHOOK_RELAY_SOURCES.has(source)) {
+        return;
+    }
+    if (!settings.webhookrelay || !settings.webhookrelayurl || !settings.webhookrelayurl.textsetting) {
+        return;
+    }
+    if (!payload) {
+        return;
+    }
+
+    const endpoint = normalizeWebhookRelayUrl(settings.webhookrelayurl.textsetting);
+    if (!endpoint) {
+        return;
+    }
+
+    let requestInit;
+
+    if (source === "kofi") {
+        if (typeof payload !== "object") {
+            console.warn("[WebhookRelay] Unexpected Ko-fi payload type", typeof payload);
+            return;
+        }
+
+        const params = new URLSearchParams();
+        Object.entries(payload).forEach(([key, value]) => {
+            if (value === undefined || value === null) {
+                return;
+            }
+
+            let stringValue = String(value);
+            if (key === "data") {
+                try {
+                    stringValue = decodeURIComponent(stringValue.replace(/\+/g, " "));
+                } catch (e) {
+                    // If decoding fails, fall back to original encoded value
+                    stringValue = String(value);
+                }
+            }
+
+            params.append(key, stringValue);
+        });
+
+        requestInit = {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                "X-SSN-Webhook-Source": source
+            },
+            body: params.toString()
+        };
+    } else {
+        let body;
+        let contentType = "application/json";
+
+        if (typeof payload === "string") {
+            body = payload;
+            contentType = "text/plain";
+        } else {
+            try {
+                body = JSON.stringify(payload);
+            } catch (e) {
+                console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
+                return;
+            }
+        }
+
+        requestInit = {
+            method: "POST",
+            headers: {
+                "Content-Type": contentType,
+                "X-SSN-Webhook-Source": source
+            },
+            body
+        };
+    }
+
+    try {
+        fetch(endpoint, requestInit).catch(err => console.warn(`[WebhookRelay] Request failed for ${source}:`, err));
+    } catch (err) {
+        console.warn(`[WebhookRelay] Unexpected error relaying ${source}:`, err);
+    }
+}
+
 function sanitizeRelay(text, textonly=false, alt = false) {
     if (!text || !text.trim()) {
         return alt || text;
@@ -5905,6 +6013,8 @@ socketserver.addEventListener("message", async function (event) {
 					
 					console.log(data.stripe);
 
+					relayIncomingWebhook("stripe", data.stripe);
+
 					var message = {};
 					message.chatname = "";
 					message.chatmessage = "";
@@ -6030,6 +6140,8 @@ socketserver.addEventListener("message", async function (event) {
 					if (!data.kofi.data) {
 						return false;
 					}
+
+					relayIncomingWebhook("kofi", data.kofi);
 					try {
 						var kofi = JSON.parse(decodeURIComponent(data.kofi.data).replace(/\+/g, " "));
 					} catch (e) {
@@ -6104,6 +6216,7 @@ socketserver.addEventListener("message", async function (event) {
 					}
 					else {
 						var bmac = data.bmac; 
+						relayIncomingWebhook("bmac", data.bmac);
 						var message = {};
 						if (bmac.type === "membership.started") {
 							message.chatname = bmac.data.supporter_name || "Anonymous"; 
@@ -6164,6 +6277,8 @@ socketserver.addEventListener("message", async function (event) {
 				if (!data.fourthwall.data || data.fourthwall.type !== "ORDER_PLACED") {
 				  return false;
 				}
+				
+				relayIncomingWebhook("fourthwall", data.fourthwall);
 				
 				const fourthwallData = data.fourthwall.data;
 				
@@ -9528,15 +9643,39 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
-			const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
-			const messageText = data.textContent || data.chatmessage;
-			if (wordTexts.some(text => messageText.includes(text))) {
-				data.highlightColor = "#fff387";
+			if (settings.highlightword && settings.highlightword.textsetting.trim() && data.chatmessage) {
+				const wordTexts = settings.highlightword.textsetting.split(',').map(text => text.trim());
+				const messageText = data.textContent || data.chatmessage;
+				if (wordTexts.some(text => messageText.includes(text))) {
+					data.highlightColor = "#fff387";
+				}
 			}
-		}
 
-		if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
+			if (settings.highlightHostMentions && settings.hostnamesext?.textsetting && data.chatmessage) {
+				const rawHosts = settings.hostnamesext.textsetting.split(',');
+				const messageText = (data.textContent || data.chatmessage || '').toLowerCase();
+
+				const hasMention = rawHosts.some(entry => {
+					const trimmed = entry.trim();
+					if (!trimmed) {
+						return false;
+					}
+
+					const [name] = trimmed.toLowerCase().split(':');
+					if (!name) {
+						return false;
+					}
+
+					const handle = name.startsWith('@') ? name : `@${name}`;
+					return messageText.includes(handle);
+				});
+
+				if (hasMention) {
+					data.highlightColor = data.highlightColor || "#fff387";
+				}
+			}
+
+			if (settings.relaydonos && data.hasDonation && data.chatname && data.type) {
 			//if (Date.now() - messageTimeout > 100) {
 				// respond to "1" with a "1" automatically; at most 1 time per 100ms.
 
@@ -9828,24 +9967,24 @@ async function applyBotActions(data, tab = false) {
 	}
 
 	if (settings.comment_background) {
-		if (!data.backgroundColor) {
+		//if (!data.backgroundColor) {
 			data.backgroundColor = settings.comment_background.textsetting;
-		}
+		//}
 	}
 	if (settings.comment_color) {
-		if (!data.textColor) {
+		//if (!data.textColor) {
 			data.textColor = settings.comment_color.textsetting;
-		}
+		//}
 	}
 	if (settings.name_background) {
-		if (!data.backgroundNameColor) {
+		//if (!data.backgroundNameColor) {
 			data.backgroundNameColor = "background-color:" + settings.name_background.textsetting + ";";
-		}
+		//}
 	}
 	if (settings.name_color) {
-		if (!data.textNameColor) {
+		//if (!data.textNameColor) {
 			data.textNameColor = "color:" + settings.name_color.textsetting + ";";
-		}
+		//}
 	}
 
 	if (settings.defaultavatar) {

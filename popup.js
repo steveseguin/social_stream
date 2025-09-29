@@ -1560,6 +1560,86 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   }
 }
 
+function applyFeaturedOverlayPreset(presetValue) {
+	const overlayDiv = document.getElementById('overlay');
+	const overlayLink = document.getElementById('overlaylink');
+	const presetSelector = document.getElementById('featured-preset-select');
+
+	if (!overlayDiv || !overlayLink) {
+		return;
+	}
+
+	if (typeof presetValue === 'string' && presetSelector && presetSelector.value !== presetValue) {
+		presetSelector.value = presetValue;
+	}
+
+	document.querySelectorAll('.preset-config-section').forEach(section => {
+		section.style.display = 'none';
+	});
+
+	const toggleClassicOptions = (show) => {
+		document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
+			wrapper.style.display = show ? '' : 'none';
+		});
+	};
+
+	if (presetValue) {
+		const presetUrl = baseURL + presetValue;
+		let currentParams = overlayDiv.raw?.split('?')[1] || '';
+		let session = '';
+
+		if (currentParams) {
+			const params = new URLSearchParams(currentParams);
+			session = params.get('session') || params.get('room') || '';
+		}
+
+		if (!session) {
+			const sessionInput = document.getElementById('sessionid');
+			if (sessionInput && sessionInput.value) {
+				session = sessionInput.value;
+			}
+		}
+
+		let newUrl = presetUrl;
+		if (session) {
+			newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
+		}
+
+		overlayDiv.raw = newUrl;
+		overlayLink.href = newUrl;
+		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : newUrl;
+
+		toggleClassicOptions(false);
+
+		const presetType = presetValue.match(/featured-(\w+)\.html/)?.[1];
+		if (presetType) {
+			const presetConfigSection = document.getElementById(`preset-config-${presetType}`);
+			if (presetConfigSection) {
+				presetConfigSection.style.display = 'block';
+			}
+		}
+	} else {
+		let currentParams = overlayDiv.raw?.split('?')[1] || '';
+
+		if (!currentParams) {
+			const sessionInput = document.getElementById('sessionid');
+			if (sessionInput && sessionInput.value) {
+				currentParams = 'session=' + sessionInput.value;
+			}
+		}
+
+		const classicUrl = baseURL + 'featured.html' + (currentParams ? '?' + currentParams : '');
+
+		overlayDiv.raw = classicUrl;
+		overlayLink.href = classicUrl;
+		overlayLink.innerText = document.body.classList.contains('hidelinks') ? 'Click to open link' : classicUrl;
+
+		toggleClassicOptions(true);
+	}
+
+	refreshLinks();
+}
+
 function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
   
@@ -1878,9 +1958,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
             } else if (key == "ttsProvider") {
                 handleTTSProviderVisibility(ele.value);
             } else if (key == "featuredOverlayStyle" ) {
-				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-					wrapper.style.display = 'none';
-				});
+				applyFeaturedOverlayPreset(ele.value);
 			 } else if (key == "overlayPreset") {
 				// Update the dock URL to match the saved overlay preset
 				const dockDiv = document.getElementById('dock');
@@ -2135,6 +2213,19 @@ function update(response, sync = true) {
 function processParam(key, paramNum, settingObj, sync) {
     let paramKey = `param${paramNum}`;
     let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
+
+    if (!ele && paramNum === 3 && key.startsWith('limit=')) {
+        const legacyValue = parseInt(key.split('=')[1], 10);
+        ele = document.querySelector(`input[data-${paramKey}='limit']`);
+        if (ele && !Number.isNaN(legacyValue)) {
+            const suffix = paramNum === 1 ? '' : paramNum;
+            const numberInput = document.querySelector(`input[data-numbersetting${suffix}='limit']`);
+            if (numberInput) {
+                numberInput.value = legacyValue;
+            }
+        }
+    }
+
     if (!ele) return;
 
     ele.checked = settingObj[paramKey]; // Set the checked state based on loaded setting.
@@ -2713,8 +2804,9 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     return true;
 }
 function handleExclusiveCases(ele, paramType, paramValue, sync) {
-    if (paramType !== 'param1' && paramType !== 'param5') return;
-    
+    const exclusiveTypes = ['param1', 'param4', 'param5'];
+    if (!exclusiveTypes.includes(paramType)) return;
+
     // Handle exclusive settings like darkmode/lightmode
     const exclusiveMap = {
         param1: {
@@ -2723,13 +2815,17 @@ function handleExclusiveCases(ele, paramType, paramValue, sync) {
             'onlytwitch': 'hidetwitch',
             'hidetwitch': 'onlytwitch'
         },
+        param4: {
+            'alignright': 'align=center',
+            'align=center': 'alignright'
+        },
         param5: {
             'alignright': 'aligncenter',
             'aligncenter': 'alignright'
         }
     };
-    
-    if (exclusiveMap[paramType][paramValue]) {
+
+    if (exclusiveMap[paramType] && exclusiveMap[paramType][paramValue]) {
         const oppositeKey = exclusiveMap[paramType][paramValue];
         const oppositeEle = document.querySelector(`input[data-${paramType}='${oppositeKey}']`);
         if (oppositeEle && oppositeEle.checked) {
@@ -3148,6 +3244,40 @@ function handleOptionSetting(ele, sync) {
     return true;
 }
 
+function updateRangeDisplay(ele) {
+    if (!ele || ele.type !== 'range') {
+        return;
+    }
+
+    const displayId = ele.dataset.rangeDisplay;
+    if (!displayId) {
+        return;
+    }
+
+    const displayEle = document.getElementById(displayId);
+    if (!displayEle) {
+        return;
+    }
+
+    const suffix = ele.dataset.rangeSuffix || '';
+    const rawValue = parseFloat(ele.value);
+    if (Number.isNaN(rawValue)) {
+        return;
+    }
+
+    let formattedValue;
+    if (suffix === '%') {
+        formattedValue = `${Math.round(rawValue)}${suffix}`;
+    } else {
+        formattedValue = rawValue.toFixed(2);
+        if (suffix) {
+            formattedValue += suffix;
+        }
+    }
+
+    displayEle.textContent = formattedValue;
+}
+
 function handleNumberSetting(ele, sync) {
     // Get the target map to determine which indices are valid
     const targetMap = getTargetMap();
@@ -3189,6 +3319,10 @@ function handleNumberSetting(ele, sync) {
             targetElement.raw = updateURL(`${settingValue}=${ele.value}`, targetElement.raw);
         }
         
+        if (ele.type === 'range') {
+            ele.dataset.rangePrevValue = ele.value;
+        }
+        updateRangeDisplay(ele);
         return true;
     }
     
@@ -3467,6 +3601,25 @@ function refreshLinks(){
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
   }
+}
+
+function handleRangeInput(event) {
+    const rangeEle = event?.target || this;
+    if (!rangeEle) {
+        return;
+    }
+
+    updateRangeDisplay(rangeEle);
+
+    const currentValue = rangeEle.value;
+    const lastValue = rangeEle.dataset.rangePrevValue;
+    const shouldSync = !event || event.type !== 'change' || lastValue !== currentValue;
+
+    if (shouldSync) {
+        updateSettings.call(rangeEle, event);
+    }
+
+    rangeEle.dataset.rangePrevValue = currentValue;
 }
 
 if (!chrome.browserAction){
@@ -5645,6 +5798,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		iii[i].oninput = updateSettings;
 	}
 	
+	var iii = document.querySelectorAll("input[type='range']");
+	for (var i=0;i<iii.length;i++){
+		updateRangeDisplay(iii[i]);
+		iii[i].dataset.rangePrevValue = iii[i].value;
+		iii[i].oninput = handleRangeInput;
+		iii[i].onchange = handleRangeInput;
+	}
+	
 	var iii = document.querySelectorAll("input[type='number']");
 	for (var i=0;i<iii.length;i++){
 		iii[i].onchange = updateSettings;
@@ -5695,65 +5856,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const presetSelector = document.getElementById('featured-preset-select');
 	if (presetSelector) {
 		presetSelector.addEventListener('change', function() {
-			const overlayDiv = document.getElementById('overlay');
-			const overlayLink = document.getElementById('overlaylink');
-			
-			if (!overlayDiv || !overlayLink) return;
-			
-			// Hide all preset configuration sections first
-			document.querySelectorAll('.preset-config-section').forEach(section => {
-				section.style.display = 'none';
-			});
-			
-			if (this.value) {
-				// A preset is selected - use the preset URL
-				const presetUrl = baseURL + this.value;
-				
-				// Get the current parameters from the classic featured.html
-				const currentParams = overlayDiv.raw?.split('?')[1] || '';
-				
-				// Extract session/room parameter
-				const urlParams = new URLSearchParams(currentParams);
-				const session = urlParams.get('session') || urlParams.get('room') || '';
-				
-				// Build the new URL with session parameter
-				let newUrl = presetUrl;
-				if (session) {
-					newUrl += (presetUrl.includes('?') ? '&' : '?') + 'session=' + session;
-				}
-				
-				// Update the display
-				overlayDiv.raw = newUrl;
-				overlayLink.href = newUrl;
-				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : newUrl;
-				
-				// Hide classic customization options
-				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-					wrapper.style.display = 'none';
-				});
-				
-				// Show the specific preset configuration based on selection
-				const presetType = this.value.match(/featured-(\w+)\.html/)?.[1];
-				if (presetType) {
-					const presetConfigSection = document.getElementById(`preset-config-${presetType}`);
-					if (presetConfigSection) {
-						presetConfigSection.style.display = 'block';
-					}
-				}
-			} else {
-				// Classic mode selected - restore featured.html
-				const currentParams = overlayDiv.raw?.split('?')[1] || '';
-				const classicUrl = baseURL + 'featured.html' + (currentParams ? '?' + currentParams : '');
-				
-				overlayDiv.raw = classicUrl;
-				overlayLink.href = classicUrl;
-				overlayLink.innerText = document.body.classList.contains("hidelinks") ? "Click to open link" : classicUrl;
-				
-				// Show classic customization options
-				document.querySelectorAll('.wrapper:has(.options_group.single_message)').forEach(wrapper => {
-					wrapper.style.display = '';
-				});
-			}
+			applyFeaturedOverlayPreset(this.value);
 		});
 	}
 
@@ -6080,6 +6183,30 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}
 					
 					// Remove this specific listener
+					window.removeEventListener('message', handleMessage);
+				}
+			});
+		};
+	}
+
+	const uploadFeaturedFallbackBtn = document.getElementById('uploadFeaturedFallbackBtn');
+	if (uploadFeaturedFallbackBtn) {
+		uploadFeaturedFallbackBtn.onclick = function() {
+			window.open('https://fileuploads.socialstream.ninja/popup/upload', 'uploadFeaturedFallback', 'width=640,height=640');
+			window.addEventListener('message', function handleMessage(event) {
+				if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+				if (event.data && event.data.type === 'media-uploaded') {
+					const fallbackInput = document.getElementById('featuredFallbackImage');
+					if (fallbackInput) {
+						fallbackInput.value = event.data.url;
+						fallbackInput.dispatchEvent(new Event('input', { bubbles: true }));
+						fallbackInput.dispatchEvent(new Event('change', { bubbles: true }));
+					}
+					const fallbackToggle = document.querySelector('input[data-param2="fallbackimg"]');
+					if (fallbackToggle && !fallbackToggle.checked) {
+						fallbackToggle.checked = true;
+						fallbackToggle.dispatchEvent(new Event('change', { bubbles: true }));
+					}
 					window.removeEventListener('message', handleMessage);
 				}
 			});

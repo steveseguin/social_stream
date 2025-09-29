@@ -143,6 +143,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - bilibili.com (just regular view page /w chat; no pop out.)
 - Amazon Chime (https://app.chime.aws/meetings/xxxxxxxxx)
 - Locals.com (no pop out needed)
+- retake.tv
 - Nimo.TV (pop out chat, ie: https://www.nimo.tv/popout/chat/xxxx)
 - kick.com (pop out chat)
 - quickchannel.com (https://play.quickchannel.com/*)
