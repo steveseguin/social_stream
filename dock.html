@@ -364,6 +364,50 @@
 				width: 100%;
 				margin-bottom: calc((46px  + var(--locked-chatbar)) / var(--scale-output)); /* Same as menu height + menu padding-top + menu padding-bottom */
 			}
+
+			.horizontal-ticker-root {
+				position: relative;
+				width: 100%;
+				overflow: visible;
+			}
+
+			.horizontal-ticker-viewport {
+				position: relative;
+				width: 100%;
+				overflow: hidden;
+			}
+
+			.horizontal-ticker-track {
+				display: inline-flex;
+				align-items: stretch;
+				gap: var(--horizontal-ticker-gap, 12px);
+				transition: transform var(--horizontal-ticker-duration, 0.55s) var(--horizontal-ticker-ease, cubic-bezier(0.22, 0.61, 0.36, 1));
+				will-change: transform;
+			}
+
+			.horizontal-ticker-track[data-direction="ltr"] {
+				flex-direction: row;
+			}
+
+			.horizontal-ticker-track[data-direction="rtl"] {
+				flex-direction: row;
+			}
+
+			.horizontal-ticker-item {
+				display: inline-flex;
+				flex-shrink: 0;
+				opacity: 1;
+				transition: opacity 0.25s linear;
+			}
+
+			.horizontal-ticker-item.horizontal-ticker-pending {
+				opacity: 0;
+			}
+
+			.horizontal-ticker-track .highlight-chat {
+				animation: none !important;
+			}
+
 			
 			@media only screen and (min-width: 700.001px) { 
 				#output  {
@@ -2758,6 +2802,8 @@
 			var showbadges = true;
 			var colorized = false;
 			var horizontal = false;
+			var horizontalReverse = false;
+			var horizontalTickerState = null;
 			var autoTimeoutEnabled = true;
 			var autoScrollCatch = 200;
 
@@ -3641,52 +3687,50 @@
 
 			var flexOrNotToFlex = "flex";
 
-			if (urlParams.has("horizontal")) { 
-				
+			if (urlParams.has("horizontal")) {
 				tainted = true;
 				horizontal = true;
+				horizontalReverse = urlParams.has("horizontalreverse");
 				flexOrNotToFlex = "inline-block";
 				document.documentElement.style.setProperty("--list-or-horizontal", flexOrNotToFlex);
-				getById("output").style.width = "10000%";
-				getById("output").style.right = "0";
-				if (twoLines) {
-					getById("output").style.maxHeight = "70px";
-					//getById("menu").style.top = "72px";
-					getById("output").style.overflow = "visible";
-				} else if (stylizeEmoji) {
-					getById("output").style.maxHeight = "70px";
-					//getById("menu").style.top = "42px";
-					getById("output").style.overflow = "hidden";
-				} else {
-					getById("output").style.maxHeight = "60px";
-					//getById("menu").style.top = "42px";
-					getById("output").style.overflow = "hidden";
-				}
-				if (largeavatar){
-					if (twoLines){
-						getById("output").style.maxHeight = "140px";
+
+				const outputNode = getById("output");
+				if (outputNode) {
+					outputNode.style.width = "100%";
+					outputNode.style.position = "absolute";
+					outputNode.style.right = "";
+					outputNode.style.left = "";
+					outputNode.style.textAlign = "";
+					outputNode.style.overflow = "visible";
+					if (twoLines) {
+						outputNode.style.maxHeight = "70px";
+					} else if (stylizeEmoji) {
+						outputNode.style.maxHeight = "70px";
 					} else {
-						getById("output").style.maxHeight = "120px";
+						outputNode.style.maxHeight = "60px";
 					}
+					if (largeavatar) {
+						if (twoLines) {
+							outputNode.style.maxHeight = "140px";
+						} else {
+							outputNode.style.maxHeight = "120px";
+						}
+					}
+					if (!(urlParams.has("compact") || urlParams.has("overlaymode"))) {
+						outputNode.style.whiteSpace = "nowrap";
+					} else {
+						outputNode.style.maxHeight = "200px";
+						outputNode.classList.add("allowfat");
+						outputNode.style.whiteSpace = "nowrap";
+					}
+					outputNode.classList.add("horizontal", "horizontal-ticker-root");
 				}
 
-				getById("output").style.position = "absolute";
-				getById("output").style.textAlign = "right";
-				
-				if (!(urlParams.has("compact") || urlParams.has("overlaymode"))) {
-					getById("output").style.whiteSpace = "nowrap"
-				} else {
-					getById("output").style.maxHeight = "200px";
-					getById("output").classList.add("allowfat");
-					getById("output").style.whiteSpace = "nowrap"
-				}
-				
-				getById("output").classList.add('horizontal');
-				
 				document.body.classList.remove("notcompactmode");
 				compactmode = true;
 				document.documentElement.style.setProperty("--padding-rows", "2px");
-				customNodeLimit = 15;
+				customNodeLimit = parseInt(urlParams.get("limit")) || 15;
+				initializeHorizontalTicker();
 			}
 
 			var avatars = true;
@@ -4889,26 +4933,38 @@
 
 			function redoOdd() {
 				odd = false;
-				var nodes = mainOutputWindow.childNodes;
+				var nodes;
+				if (horizontal && horizontalTickerState && horizontalTickerState.track) {
+					nodes = horizontalGetMessages();
+				} else {
+					nodes = Array.from(mainOutputWindow.childNodes || []).filter(function (child) {
+					return child && child.nodeType === 1;
+				});
+				}
+
 				for (var i = 0; i < nodes.length; i++) {
-					applyHiddenState(nodes[i]);
-					var style = window.getComputedStyle(nodes[i]);
+					var node = nodes[i];
+					if (!node) {
+						continue;
+					}
+					applyHiddenState(node);
+					var style = window.getComputedStyle(node);
 					if (style.visibility !== "hidden" && style.display !== "none") {
 						if (odd) {
 							if (bubble && largeavatar) {
-								nodes[i].querySelector(".hl-rightside").classList.add("odd");
+								node.querySelector(".hl-rightside").classList.add("odd");
 							} else if (bubble) {
-								nodes[i].querySelector(".hl-message").classList.add("odd");
+								node.querySelector(".hl-message").classList.add("odd");
 							} else {
-								nodes[i].classList.add("odd");
+								node.classList.add("odd");
 							}
 						} else {
 							if (bubble && largeavatar) {
-								nodes[i].querySelector(".hl-rightside").classList.remove("odd");
+								node.querySelector(".hl-rightside").classList.remove("odd");
 							} else if (bubble) {
-								nodes[i].querySelector(".hl-message").classList.remove("odd");
+								node.querySelector(".hl-message").classList.remove("odd");
 							} else {
-								nodes[i].classList.remove("odd");
+								node.classList.remove("odd");
 							}
 						}
 						odd = !odd;
@@ -7291,6 +7347,10 @@
 			}
 
 			function cleanUpOldNodes() {
+				if (horizontal) {
+					horizontalPruneMessages();
+					return;
+				}
 				var nodes = document.querySelectorAll("#output>div:not(.queued)");
 				var total2Remove = 0;
 				if (isOBSBrowserSource && !doubleLimit) {
@@ -7392,7 +7452,11 @@
 
 			function nodeRemove(node = null) {
 				if (node) {
-					node.remove();
+					if (horizontal) {
+						horizontalDetachNode(node);
+					} else {
+						node.remove();
+					}
 				}
 				if (!(reversed && !forceAutoscroll)) {
 					if (alignbottom || fadetop) {
@@ -7683,6 +7747,283 @@
 				}
 			}
 			
+			function initializeHorizontalTicker() {
+				if (!horizontal) {
+					return;
+				}
+
+				var outputNode = getById("output");
+				if (!outputNode) {
+					return;
+				}
+
+				if (!horizontalTickerState) {
+					horizontalTickerState = {
+						viewport: null,
+						track: null,
+						direction: horizontalReverse ? "ltr" : "rtl",
+						gap: 12,
+						maxMessages: customNodeLimit || 15,
+						transitionDuration: 520,
+						transitionEasing: "cubic-bezier(0.22, 0.61, 0.36, 1)",
+						currentTranslate: 0,
+						resizeHandler: null
+					};
+				} else {
+					horizontalTickerState.direction = horizontalReverse ? "ltr" : "rtl";
+					horizontalTickerState.maxMessages = customNodeLimit || horizontalTickerState.maxMessages || 15;
+				}
+
+				var viewport = outputNode.querySelector(".horizontal-ticker-viewport");
+				var track = viewport ? viewport.querySelector(".horizontal-ticker-track") : null;
+
+				if (!viewport || !track) {
+					viewport = document.createElement("div");
+					viewport.className = "horizontal-ticker-viewport";
+
+					track = document.createElement("div");
+					track.className = "horizontal-ticker-track";
+					track.style.setProperty("--horizontal-ticker-gap", horizontalTickerState.gap + "px");
+					track.style.setProperty("--horizontal-ticker-duration", horizontalTickerState.transitionDuration + "ms");
+					track.style.setProperty("--horizontal-ticker-ease", horizontalTickerState.transitionEasing);
+
+					viewport.appendChild(track);
+
+					var existingNodes = Array.from(outputNode.children);
+					outputNode.innerHTML = "";
+					outputNode.appendChild(viewport);
+
+					existingNodes.forEach(function (child) {
+						if (child && child.nodeType === 1) {
+							horizontalPrepareNode(child);
+							track.appendChild(child);
+						}
+					});
+				} else {
+					track.style.setProperty("--horizontal-ticker-gap", horizontalTickerState.gap + "px");
+					track.style.setProperty("--horizontal-ticker-duration", horizontalTickerState.transitionDuration + "ms");
+					track.style.setProperty("--horizontal-ticker-ease", horizontalTickerState.transitionEasing);
+				}
+
+				horizontalTickerState.viewport = viewport;
+				horizontalTickerState.track = track;
+				horizontalTickerState.direction = horizontalReverse ? "ltr" : "rtl";
+				horizontalTickerState.maxMessages = customNodeLimit || horizontalTickerState.maxMessages || 15;
+				horizontalTickerState.gap = horizontalGetGap();
+				track.dataset.direction = horizontalTickerState.direction;
+
+				if (horizontalTickerState.resizeHandler) {
+					window.removeEventListener("resize", horizontalTickerState.resizeHandler);
+				}
+
+				horizontalTickerState.resizeHandler = function () {
+					horizontalRealign(true);
+				};
+				window.addEventListener("resize", horizontalTickerState.resizeHandler);
+
+				horizontalRealign(true);
+				horizontalPruneMessages();
+			}
+
+			function horizontalGetGap() {
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					return 0;
+				}
+				var gap = horizontalTickerState.gap;
+				if (gap == null) {
+					var styles = window.getComputedStyle(horizontalTickerState.track);
+					gap = parseFloat(styles.columnGap || styles.gap || "0");
+					if (!isFinite(gap)) {
+						gap = 0;
+					}
+					horizontalTickerState.gap = gap;
+				}
+				return gap;
+			}
+
+			function horizontalPrepareNode(node) {
+				if (!node) {
+					return;
+				}
+				node.classList.add("horizontal-ticker-item");
+				node.style.flexShrink = "0";
+			}
+
+			function horizontalCaptureCurrentTranslate() {
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					return 0;
+				}
+				var transform = window.getComputedStyle(horizontalTickerState.track).transform;
+				var value = 0;
+				if (transform && transform !== "none") {
+					var match = transform.match(/matrix(3d)?\(([^)]+)\)/);
+					if (match) {
+						var parts = match[2].split(",");
+						value = match[1] ? parseFloat(parts[12]) : parseFloat(parts[4]);
+					}
+				}
+				if (!isFinite(value)) {
+					value = 0;
+				}
+				horizontalTickerState.currentTranslate = value;
+				return value;
+			}
+
+			function horizontalSetImmediateTransform(value) {
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					return;
+				}
+				var track = horizontalTickerState.track;
+				track.style.transition = "none";
+				track.style.transform = "translateX(" + value + "px)";
+				track.offsetWidth;
+				horizontalTickerState.currentTranslate = value;
+			}
+
+			function horizontalAnimateTo(value) {
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					return;
+				}
+				var track = horizontalTickerState.track;
+				track.style.transition = "transform " + horizontalTickerState.transitionDuration + "ms " + horizontalTickerState.transitionEasing;
+				track.style.transform = "translateX(" + value + "px)";
+				horizontalTickerState.currentTranslate = value;
+			}
+
+			function horizontalCalculateTarget() {
+				if (!horizontalTickerState || !horizontalTickerState.track || !horizontalTickerState.viewport) {
+					return 0;
+				}
+				var trackWidth = horizontalTickerState.track.scrollWidth;
+				var viewportWidth = horizontalTickerState.viewport.clientWidth;
+				if (horizontalTickerState.direction === "rtl") {
+					if (trackWidth <= viewportWidth) {
+						return 0;
+					}
+					return viewportWidth - trackWidth;
+				}
+				return 0;
+			}
+
+			function horizontalRealign(immediate) {
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					return;
+				}
+				var target = horizontalCalculateTarget();
+				if (immediate) {
+					horizontalSetImmediateTransform(target);
+					return;
+				}
+				var current = horizontalCaptureCurrentTranslate();
+				horizontalSetImmediateTransform(current);
+				requestAnimationFrame(function () {
+					horizontalAnimateTo(target);
+				});
+			}
+
+			function horizontalGetMessages() {
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					return [];
+				}
+				return Array.prototype.filter.call(horizontalTickerState.track.children, function (child) {
+					return child && child.nodeType === 1 && child.classList.contains("horizontal-ticker-item");
+				});
+			}
+
+			function horizontalDetachNode(node) {
+				if (!node) {
+					return;
+				}
+				if (!horizontalTickerState || !horizontalTickerState.track || node.parentNode !== horizontalTickerState.track) {
+					if (node.parentNode) {
+						node.remove();
+					}
+					return;
+				}
+				var current = horizontalCaptureCurrentTranslate();
+				node.remove();
+				var target = horizontalTickerState.direction === "rtl" ? horizontalCalculateTarget() : 0;
+				horizontalSetImmediateTransform(current);
+				requestAnimationFrame(function () {
+					horizontalAnimateTo(target);
+				});
+			}
+
+			function horizontalPruneMessages() {
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					return;
+				}
+				var limit = customNodeLimit || horizontalTickerState.maxMessages || 15;
+				horizontalTickerState.maxMessages = limit;
+				var messages = horizontalGetMessages();
+				var removed = false;
+				while (messages.length > limit) {
+					var node = horizontalTickerState.direction === "rtl" ? messages.shift() : messages.pop();
+					if (!node) {
+						break;
+					}
+					node.remove();
+					removed = true;
+				}
+				if (removed) {
+					horizontalRealign(false);
+				}
+			}
+
+			function horizontalAddNodeToTicker(node) {
+				if (!horizontalTickerState) {
+					initializeHorizontalTicker();
+				}
+				if (!horizontalTickerState || !horizontalTickerState.track) {
+					if (mainOutputWindow) {
+						mainOutputWindow.appendChild(node);
+					}
+					return;
+				}
+				horizontalPrepareNode(node);
+				node.classList.add("horizontal-ticker-pending");
+				node.style.opacity = "0";
+
+				var track = horizontalTickerState.track;
+				var direction = horizontalTickerState.direction;
+				if (direction === "rtl") {
+					track.appendChild(node);
+					var current = horizontalCaptureCurrentTranslate();
+					var target = horizontalCalculateTarget();
+					horizontalSetImmediateTransform(current);
+					requestAnimationFrame(function () {
+						horizontalAnimateTo(target);
+					});
+				} else {
+					var firstChild = track.firstChild;
+					if (firstChild) {
+						track.insertBefore(node, firstChild);
+					} else {
+						track.appendChild(node);
+					}
+					var current = horizontalCaptureCurrentTranslate();
+					var gap = horizontalGetGap();
+					var width = node.getBoundingClientRect().width;
+					if (!width) {
+						width = node.offsetWidth || node.scrollWidth || 0;
+					}
+					var hasSibling = track.children.length > 1;
+					var shift = width + (hasSibling ? gap : 0);
+					var target = horizontalCalculateTarget();
+					horizontalSetImmediateTransform(current - shift);
+					requestAnimationFrame(function () {
+						horizontalAnimateTo(target);
+					});
+				}
+
+				requestAnimationFrame(function () {
+					node.classList.remove("horizontal-ticker-pending");
+					node.style.opacity = "";
+				});
+
+				horizontalPruneMessages();
+			}
+
 			function processSmoothMessageBuffer() {
 				if (messageBuffer.length === 0) {
 					// No messages to process, check again later
@@ -8514,7 +8855,11 @@
 						},waitToReveal,node)
 					}
 
-					mainOutputWindow.appendChild(node);
+					if (horizontal) {
+						horizontalAddNodeToTicker(node);
+					} else {
+						mainOutputWindow.appendChild(node);
+					}
 
 					let hlMessage = node.querySelector(".hl-message");
 
