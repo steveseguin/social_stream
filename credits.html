@@ -908,72 +908,111 @@
         connect();
     })();
 
-	// Handle visibility changes
-	document.addEventListener('visibilitychange', function() {
-		if (!document.hidden) {
-			// Page becomes visible
-			document.body.classList.add('visible');
-			appElement.classList.add('visible');
-			
-			// Generate and insert credits content
-			const creditsContent = document.getElementById('credits-content');
-			creditsContent.innerHTML = generateCreditsContent();
+	// Shared helpers for visibility toggles
+	const creditsContent = document.getElementById('credits-content');
 
-			// Prepare dynamic scroll offsets (non-Star Wars styles)
-			const startAnimation = () => {
-				try {
-					const viewportHeight = appElement.clientHeight || window.innerHeight;
-					const paddingTop = parseFloat(getComputedStyle(textContainer).paddingTop) || 0;
-					const creditsEl = document.getElementById('credits-content');
-					const contentHeight = creditsEl ? creditsEl.scrollHeight : 0;
-					const footerHeight = footerText ? footerText.scrollHeight : 0;
-					const startPx = (creditsStyle === 'elegant') ? (0.5 * viewportHeight) : (1.0 * viewportHeight);
-					const extraOutPx = Math.round(0.25 * viewportHeight);
-					const endPx = paddingTop + contentHeight + footerHeight + extraOutPx;
+	function applyAdaptiveOffsets() {
+		try {
+			const viewportHeight = appElement.clientHeight || window.innerHeight;
+			const paddingTop = parseFloat(getComputedStyle(textContainer).paddingTop) || 0;
+			const contentHeight = creditsContent ? creditsContent.scrollHeight : 0;
+			const footerHeightValue = footerText ? footerText.scrollHeight : 0;
+			const startPx = (creditsStyle === 'elegant') ? (0.5 * viewportHeight) : (1.0 * viewportHeight);
+			const extraOutPx = Math.round(0.25 * viewportHeight);
+			const endPx = paddingTop + contentHeight + footerHeightValue + extraOutPx;
 
-					// Apply start/end offsets for adaptive distance
-					textContainer.style.setProperty('--start-offset', `${Math.round(startPx)}px`);
-					textContainer.style.setProperty('--end-offset', `${Math.max(0, Math.round(endPx))}px`);
-				} catch (e) {
-					console.warn('Could not compute adaptive scroll offsets:', e);
+			textContainer.style.setProperty('--start-offset', `${Math.round(startPx)}px`);
+			textContainer.style.setProperty('--end-offset', `${Math.max(0, Math.round(endPx))}px`);
+		} catch (e) {
+			console.warn('Could not compute adaptive scroll offsets:', e);
+		}
+	}
+
+	function restartScrollAnimation() {
+		textContainer.classList.remove('fadeout');
+		textContainer.classList.remove('animate');
+		void textContainer.offsetWidth;
+		textContainer.classList.add('animate');
+	}
+
+	function startCredits() {
+		creditsContent.innerHTML = generateCreditsContent();
+		document.body.classList.add('visible');
+		appElement.classList.add('visible');
+
+		const startAnimation = () => {
+			applyAdaptiveOffsets();
+			restartScrollAnimation();
+		};
+
+		if (document.fonts && document.fonts.ready) {
+			document.fonts.ready.then(startAnimation).catch(startAnimation);
+		} else {
+			setTimeout(startAnimation, 100);
+		}
+	}
+
+	function stopCredits(options = {}) {
+		const keepFadeout = options.keepFadeout || false;
+		if (!keepFadeout) {
+			textContainer.classList.remove('fadeout');
+		}
+		textContainer.classList.remove('animate');
+		appElement.classList.remove('visible');
+		document.body.classList.remove('visible');
+	}
+
+	function handleVisibilityState(visible) {
+		if (visible) {
+			startCredits();
+		} else {
+			stopCredits();
+		}
+	}
+
+	document.addEventListener('visibilitychange', function () {
+		handleVisibilityState(!document.hidden);
+	});
+
+	if (window.obsstudio) {
+		try {
+			const existingVisibilityHandler = window.obsstudio.onVisibilityChange;
+			window.obsstudio.onVisibilityChange = function (visible) {
+				handleVisibilityState(!!visible);
+				if (typeof existingVisibilityHandler === 'function') {
+					existingVisibilityHandler(visible);
 				}
-
-				// Force a reflow before starting animation
-				void textContainer.offsetWidth;
-				// Ensure fadeout class is removed
-				textContainer.classList.remove('fadeout');
-				// Start animation
-				textContainer.classList.add('animate');
 			};
 
-			// Wait for fonts to be ready so measurements are accurate
-			if (document.fonts && document.fonts.ready) {
-				document.fonts.ready.then(startAnimation).catch(startAnimation);
-			} else {
-				setTimeout(startAnimation, 100);
+			if ('onActiveChange' in window.obsstudio) {
+				const existingActiveHandler = window.obsstudio.onActiveChange;
+				window.obsstudio.onActiveChange = function (active) {
+					if (typeof active === 'boolean') {
+						handleVisibilityState(active);
+					}
+					if (typeof existingActiveHandler === 'function') {
+						existingActiveHandler(active);
+					}
+				};
 			}
-		} else {
-			// Page becomes hidden
-			document.body.classList.remove('visible');
-			appElement.classList.remove('visible');
-			textContainer.classList.remove('fadeout');
-			
-			// Remove animation class to reset position
-			textContainer.classList.remove('animate');
+		} catch (err) {
+			console.warn('OBS visibility callbacks unavailable:', err);
 		}
-	});
+	} else if (!document.hidden) {
+		// Non-OBS environments: start immediately so manual previews still work.
+		startCredits();
+	}
 
 	// Handle animation end
 	document.querySelector('.text-container').addEventListener('animationend', function() {
 		// Clear collected names when animation completes
 		users.clear();
-		
+
 		// Apply fadeout class
 		this.classList.add('fadeout');
-		
-		// Hide the app
-		document.getElementById('app').classList.remove('visible');
-		document.body.classList.remove('visible');
+
+		// Hide the app while keeping the fadeout applied
+		stopCredits({ keepFadeout: true });
 	});
     </script>
 </body>

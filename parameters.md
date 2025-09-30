@@ -58,6 +58,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | Parameter | Values | Description |
 |-----------|---------|-------------|
 | `horizontal` | boolean | Makes messages scroll horizontally |
+| `horizontalreverse` | boolean | When horizontal is enabled, enters left-to-right mode so newest messages slide in from the left |
 | `alignbottom` | boolean | Makes messages start from bottom |
 | `alignright` | boolean | Aligns messages to the right side |
 | `rtl` | boolean | Enables right-to-left text direction |
