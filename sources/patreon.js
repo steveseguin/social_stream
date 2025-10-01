@@ -73,6 +73,9 @@
 	var channelName = "";
 	var messageHistory = [];
 	
+	var lastMg = {};
+	var mxchat = 0;
+	
 	function processMessage(ele){
 		//console.log(ele);
 		if (!ele || !ele.isConnected){return;}
@@ -92,7 +95,7 @@
 		
 		var id = false
 		if (ele.dataset){
-			id = ele.dataset?.index ;
+			id = ele.dataset?.index;
 		}
 		
 		if (id!==false){
@@ -108,20 +111,11 @@
 		
 		var chatimg = ""
 		try {
-			name = escapeHtml(ele.querySelector("picture img[src]").src);
-		} catch(e){
-			//console.error(e);
-		}
-		var name="";
-		try {
-			name = escapeHtml(ele.querySelector("strong").textContent);
+			chatimg = escapeHtml(ele.querySelector("picture img[src]").src);
 		} catch(e){
 			//console.error(e);
 		}
 		
-		var namecolor="";
-		
-		var badges=[];
 		var msg="";
 		try {
 			msg = getAllContentNodes(ele.querySelector('[data-tag="chat-message-text-content"]')).trim()
@@ -131,28 +125,59 @@
 		}
 		
 		
+		var name="";
+		
+			while (!name && ele){
+				try {
+					name = escapeHtml(ele.querySelector("strong").textContent);
+				} catch(e){
+					//console.error(e);
+				}
+				if (name){break;}
+				if (!ele.previousSibling){break;}
+				ele = ele.previousSibling;
+			}
+		
+		
+		
+		var badges=[];
+		
 		var contentImg = "";
 		
+		try {
+			contentImg = escapeHtml(ele.querySelector("picture img[src][alt='User posted image']").src);
+		} catch(e){}
 		
-		if (!name || !msg){
-			//console.error("SIP");
+		if (!(msg || contentImg)){
+			console.error("SIP");
 			return;
 		}
 		
 		
 		var data = {};
-		data.chatname = name;
+		data.chatname = name || lastMg.chatname;
 		data.chatbadges = badges;
-		data.backgroundColor = "";
-		data.textColor = "";
-		data.nameColor = namecolor;
 		data.chatmessage = msg;
-		data.chatimg = chatimg;
+		if (!name && lastMg.chatname){
+			data.chatimg = chatimg || lastMg.chatimg;
+		} else {
+			data.chatimg = chatimg;
+		}
 		data.hasDonation = "";
 		data.membership = "";
-		data.contentimg = "";
+		data.contentimg = contentImg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "patreon";
+		
+		lastMg = data;
+		
+		if (id!==false){
+			if (parseInt(id)<mxchat){
+				return;
+			} else {
+				mxchat = parseInt(id);
+			}
+		}
 		
 		
 		pushMessage(data);
