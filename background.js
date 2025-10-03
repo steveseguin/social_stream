@@ -4368,19 +4368,46 @@ function normalizeWebhookRelayUrl(rawUrl) {
     return "https://" + url;
 }
 
+function getWebhookRelayEndpoints(settings) {
+    if (!settings) {
+        return [];
+    }
+
+    const endpoints = new Set();
+
+    Object.keys(settings).forEach(key => {
+        if (!key.startsWith("webhookrelayurl")) {
+            return;
+        }
+
+        const entry = settings[key];
+        const rawValue = typeof entry === "string" ? entry : entry?.textsetting;
+        if (typeof rawValue !== "string") {
+            return;
+        }
+
+        const normalized = normalizeWebhookRelayUrl(rawValue);
+        if (normalized) {
+            endpoints.add(normalized);
+        }
+    });
+
+    return Array.from(endpoints);
+}
+
 function relayIncomingWebhook(source, payload) {
     if (!WEBHOOK_RELAY_SOURCES.has(source)) {
         return;
     }
-    if (!settings.webhookrelay || !settings.webhookrelayurl || !settings.webhookrelayurl.textsetting) {
+    if (!settings.webhookrelay) {
         return;
     }
     if (!payload) {
         return;
     }
 
-    const endpoint = normalizeWebhookRelayUrl(settings.webhookrelayurl.textsetting);
-    if (!endpoint) {
+    const endpoints = getWebhookRelayEndpoints(settings);
+    if (endpoints.length === 0) {
         return;
     }
 
@@ -4403,7 +4430,6 @@ function relayIncomingWebhook(source, payload) {
                 try {
                     stringValue = decodeURIComponent(stringValue.replace(/\+/g, " "));
                 } catch (e) {
-                    // If decoding fails, fall back to original encoded value
                     stringValue = String(value);
                 }
             }
@@ -4445,11 +4471,17 @@ function relayIncomingWebhook(source, payload) {
         };
     }
 
-    try {
-        fetch(endpoint, requestInit).catch(err => console.warn(`[WebhookRelay] Request failed for ${source}:`, err));
-    } catch (err) {
-        console.warn(`[WebhookRelay] Unexpected error relaying ${source}:`, err);
-    }
+    endpoints.forEach(endpoint => {
+        try {
+            const init = {
+                ...requestInit,
+                headers: { ...requestInit.headers }
+            };
+            fetch(endpoint, init).catch(err => console.warn(`[WebhookRelay] Request failed for ${source} -> ${endpoint}:`, err));
+        } catch (err) {
+            console.warn(`[WebhookRelay] Unexpected error relaying ${source} -> ${endpoint}:`, err);
+        }
+    });
 }
 
 function sanitizeRelay(text, textonly=false, alt = false) {

@@ -36,27 +36,41 @@
 		}
 	};
 	const messageLog = {
-		_log: [],
+		_entries: new Map(),
+		_order: [],
 		_mode: 'count',
-		_maxMessages: 400,
-		_timeWindow: 10000,
+		_maxMessages: 20000,
+		_timeWindow: null,
 		_cleanupInterval: null,
 		init(options = {}) {
 			this._mode = options.mode || 'count';
-			this._maxMessages = options.maxMessages || 400;
-			this._timeWindow = options.timeWindow || 10000;
+			this._maxMessages = options.maxMessages || 20000;
+			this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
 			this.destroy();
 			this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
 		},
 		cleanup() {
 			const currentTime = Date.now();
-			if (this._mode === 'time') {
-				this._log = this._log.filter(entry =>
-					(currentTime - entry.time) <= this._timeWindow
-				);
-			} else {
-				if (this._log.length > this._maxMessages) {
-					this._log = this._log.slice(-this._maxMessages);
+			if (this._mode === 'time' || (this._timeWindow && this._mode !== 'count')) {
+				while (this._order.length) {
+					const key = this._order[0];
+					const entry = this._entries.get(key);
+					if (!entry) {
+						this._order.shift();
+						continue;
+					}
+					if (!this._timeWindow || (currentTime - entry.time) <= this._timeWindow) {
+						break;
+					}
+					this._entries.delete(key);
+					this._order.shift();
+				}
+			}
+			if (this._maxMessages && this._entries.size > this._maxMessages) {
+				const overflow = this._entries.size - this._maxMessages;
+				for (let i = 0; i < overflow && this._order.length; i++) {
+					const key = this._order.shift();
+					this._entries.delete(key);
 				}
 			}
 		},
@@ -64,26 +78,28 @@
 			if (!name && !message) return true;
 			const currentTime = Date.now();
 			const messageKey = `${name}:${message}`;
-			let duplicate = false;
-			if (this._mode === 'time') {
-				duplicate = this._log.some(entry =>
-					entry.key === messageKey &&
-					(currentTime - entry.time) <= this._timeWindow
-				);
-			} else {
-				duplicate = this._log.some(entry =>
-					entry.key === messageKey
-				);
+			const existing = this._entries.get(messageKey);
+			if (existing) {
+				if (!this._timeWindow || (currentTime - existing.time) <= this._timeWindow) {
+					return true;
+				}
+				// The message is older than the window; drop the stale entry before continuing.
+				this._entries.delete(messageKey);
+				const index = this._order.indexOf(messageKey);
+				if (index !== -1) {
+					this._order.splice(index, 1);
+				}
 			}
-			if (duplicate) {
-				return true;
-			}
-			this._log.push({
-				key: messageKey,
-				time: currentTime
-			});
-			if (this._mode === 'count' && this._log.length > this._maxMessages) {
-				this._log = this._log.slice(-this._maxMessages);
+			this._entries.set(messageKey, { time: currentTime });
+			this._order.push(messageKey);
+			if (this._timeWindow && this._mode === 'time') {
+				this.cleanup();
+			} else if (this._entries.size > this._maxMessages) {
+				const overflow = this._entries.size - this._maxMessages;
+				for (let i = 0; i < overflow && this._order.length; i++) {
+					const key = this._order.shift();
+					this._entries.delete(key);
+				}
 			}
 			return false;
 		},
@@ -92,18 +108,21 @@
 				clearInterval(this._cleanupInterval);
 				this._cleanupInterval = null;
 			}
-			this._log = [];
+			this._entries.clear();
+			this._order = [];
 		},
 		configure(options = {}) {
 			if (options.mode !== undefined) this._mode = options.mode;
 			if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
-			if (options.timeWindow !== undefined) this._timeWindow = options.timeWindow;
+			if (options.timeWindow !== undefined) {
+				this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
+			}
 			this.cleanup();
 		}
 	};
 	messageLog.init({
 		mode: 'count',
-		maxMessages: 421
+		maxMessages: 20000
 	});
 
 	function pushMessage(data) {

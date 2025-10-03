@@ -8081,16 +8081,7 @@ input:checked + .slider:before {
                                         <label for="h2rserver"><span data-translate="send-all-to-h2r-server">&gt; Send all to H2R server</span></label>
                                     </div>
                                 </div>
-                                <div title="Relay Ko-fi, Stripe, Buy Me a Coffee, and Fourthwall webhook payloads to your custom endpoint">
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="webhookrelay" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
-                                        <input type="text" id="webhookrelayurl" class="textInput" autocomplete="off" placeholder="https://thirdparty.com/api" data-textsetting="webhookrelayurl" />
-                                        <label for="webhookrelayurl"><span>&gt; Relay incoming webhooks</span></label>
-                                    </div>
-                                </div>
+                               
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="post" />
@@ -8122,6 +8113,18 @@ input:checked + .slider:before {
                                     </div>
                                 </div>
 
+								 <div title="Relay Ko-fi, Stripe, Buy Me a Coffee, and Fourthwall webhook payloads to your custom endpoint">
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-setting="webhookrelay">
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="relay-the-incoming">&gt; Relay incoming webhooks</span>
+									</div>
+                                    <div class="webhook-relay-destinations" style="display: inline-block; width: 320px; max-width: 100%;">
+                                        <div id="webhookRelayUrls"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -8429,7 +8432,7 @@ input:checked + .slider:before {
                                     <span data-translate="mark-host-mentions-trivial">🔦 Mark @host messages as trivial events</span>
                                 </div>
 
-                                <div style="display: inline-block; margin-left: 30px;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
+                                <div style="display: inline-block;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="questionKeywords" />
                                         <span class="slider round"></span>
