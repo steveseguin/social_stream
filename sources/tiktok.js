@@ -3,7 +3,7 @@
 	console.log("Social stream injected");
 	const avatarCache = {
 		_cache: {},
-		MAX_SIZE: 500,
+		MAX_SIZE: 501,
 		CLEANUP_COUNT: 50,
 		add(chatname, chatimg, badges = null, membership = null, nameColor = null) {
 			if (!chatname) return;
@@ -39,12 +39,12 @@
 		_entries: new Map(),
 		_order: [],
 		_mode: 'count',
-		_maxMessages: 20000,
+		_maxMessages: 501,
 		_timeWindow: null,
 		_cleanupInterval: null,
 		init(options = {}) {
 			this._mode = options.mode || 'count';
-			this._maxMessages = options.maxMessages || 20000;
+			this._maxMessages = options.maxMessages || 501;
 			this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
 			this.destroy();
 			this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
@@ -122,7 +122,7 @@
 	};
 	messageLog.init({
 		mode: 'count',
-		maxMessages: 20000
+		maxMessages: 501
 	});
 
 	function pushMessage(data) {
