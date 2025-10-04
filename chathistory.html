@@ -27,8 +27,27 @@
         #filter-options {
             display: flex;
             flex-wrap: wrap;
-            align-items: center;
+            align-items: flex-end;
             gap: 10px;
+            row-gap: 15px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+            gap: 4px;
+        }
+        .filter-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .filter-checkboxes label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: normal;
         }
         #messages-container {
             flex-grow: 1;
@@ -68,6 +87,10 @@
             color: green;
             font-weight: bold;
         }
+        .membership {
+            color: #0d47a1;
+            font-weight: bold;
+        }
         img, svg, video {
             max-width: 20px;
             max-height: 20px;
@@ -89,7 +112,7 @@
             border: none;
             cursor: pointer;
         }
-        select, input[type="date"] {
+        select, input[type="date"], input[type="text"] {
             padding: 4px;
         }
         #date-filter-container {
@@ -104,8 +127,41 @@
 </head>
 <body>
     <div id="search-container">
-        <input type="text" id="search-input" placeholder="Search messages...">
+        <input type="text" id="search-input" placeholder="Search by name, id, message, or type...">
         <div id="filter-options">
+            <div class="filter-group">
+                <span class="filter-label">Source:</span>
+                <select id="type-filter">
+                    <option value="">All Sources</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Username:</span>
+                <input type="text" id="username-filter" placeholder="eg: streamer123">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Keyword:</span>
+                <input type="text" id="keyword-filter" placeholder="Search message text">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Date Range:</span>
+                <div>
+                    <input type="date" id="message-date-from">
+                    <span>to</span>
+                    <input type="date" id="message-date-to">
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Highlights:</span>
+                <div class="filter-checkboxes">
+                    <label><input type="checkbox" id="donation-filter">Donations</label>
+                    <label><input type="checkbox" id="membership-filter">Memberships</label>
+                </div>
+            </div>
+            <div class="filter-group" style="min-width: auto;">
+                <span class="filter-label">&nbsp;</span>
+                <button id="clear-filters" type="button">Reset Filters</button>
+            </div>
             <div class="export-container">
                 <span class="filter-label">Format:</span>
                 <select id="export-format">
