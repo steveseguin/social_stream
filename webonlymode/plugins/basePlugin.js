@@ -18,7 +18,8 @@ export class BasePlugin {
       onActivity = () => {},
       onStatus = () => {},
       autoConnect = false,
-      controls = {}
+      controls = {},
+      icon = null
     } = options || {};
 
     if (!id || !messenger) {
@@ -35,6 +36,7 @@ export class BasePlugin {
     this.autoConnect = Boolean(autoConnect);
     const defaultControls = { connect: true, disconnect: true };
     this.controls = { ...defaultControls, ...controls };
+    this.icon = icon;
 
     this.state = 'idle';
     this.card = null;
@@ -61,9 +63,23 @@ export class BasePlugin {
     const header = document.createElement('div');
     header.className = 'source-card__header';
 
+    const identity = document.createElement('div');
+    identity.className = 'source-card__identity';
+
+    if (this.icon) {
+      const icon = document.createElement('img');
+      icon.className = 'source-card__icon';
+      icon.src = this.icon;
+      icon.alt = `${this.name || this.id} icon`;
+      icon.loading = 'lazy';
+      icon.decoding = 'async';
+      identity.appendChild(icon);
+    }
+
     const title = document.createElement('div');
     title.className = 'source-card__title';
     title.textContent = this.name;
+    identity.appendChild(title);
 
     const headerControls = document.createElement('div');
     headerControls.className = 'source-card__header-controls';
@@ -76,7 +92,7 @@ export class BasePlugin {
     const settingsButton = createSettingsButton(`Show ${this.name} options`);
 
     headerControls.append(status, settingsButton);
-    header.append(title, headerControls);
+    header.append(identity, headerControls);
 
     const body = document.createElement('div');
     body.className = 'source-card__body';

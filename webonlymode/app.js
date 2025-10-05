@@ -260,6 +260,7 @@ function init() {
   plugins = [
     new YoutubePlugin({
       messenger,
+      icon: '../sources/images/youtube.png',
       onActivity: addActivity,
       onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
       autoConnect: true,
@@ -267,6 +268,7 @@ function init() {
     }),
     new TwitchPlugin({
       messenger,
+      icon: '../sources/images/twitch.png',
       onActivity: addActivity,
       onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
       autoConnect: true,
