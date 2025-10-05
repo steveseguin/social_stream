@@ -49,23 +49,23 @@ const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-re
 
 const testMessagePresets = [
   () => ({
-    platform: 'youtube',
+    type: 'youtube',
     chatname: 'John Doe',
     chatmessage: 'Looking good! 😘😘😊 This is a test message. 🎶🎵🔨',
     chatimg: '',
     chatbadges: []
   }),
   () => ({
-    platform: 'youtube',
+    type: 'youtube',
     chatname: 'Bob',
     chatmessage: 'Appreciate the stream! Have a coffee on me ☕',
     chatimg: '',
-    hasDonation: true,
+    hasDonation: '$5.00',
     donationAmount: '$5.00',
     donationCurrency: 'USD'
   }),
   () => ({
-    platform: 'twitch',
+    type: 'twitch',
     chatname: 'BobTheBuilder',
     chatmessage: 'Thanks for the stream! Here are some bits ✨',
     chatimg: 'https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png',
@@ -75,7 +75,7 @@ const testMessagePresets = [
     isModerator: true
   }),
   () => ({
-    platform: 'discord',
+    type: 'discord',
     chatname: 'Sir Drinks-a-lot',
     chatmessage: '☕☕☕ COFFEE!',
     chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
@@ -85,13 +85,13 @@ const testMessagePresets = [
     private: true
   }),
   () => ({
-    platform: 'youtubeshorts',
+    type: 'youtubeshorts',
     chatname: `Lucy_${Math.floor(Math.random() * 999)}`,
     chatmessage: 'Short and sweet! ✨',
     chatimg: Math.random() > 0.5 ? 'https://socialstream.ninja/media/sampleavatar.png' : ''
   }),
   () => ({
-    platform: 'facebook',
+    type: 'facebook',
     chatname: `Steve_${Math.floor(Math.random() * 9000)}`,
     chatmessage: '!join The only way to do great work is to love what you do. ❤️',
     chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
@@ -99,14 +99,14 @@ const testMessagePresets = [
     membership: 'SPONSORSHIP'
   }),
   () => ({
-    platform: 'zoom',
+    type: 'zoom',
     chatname: 'Nich Lass',
     question: true,
     chatmessage: 'Is this a test question?  🤓🤓🤓',
     chatimg: 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj'
   }),
   () => ({
-    platform: 'twitch',
+    type: 'twitch',
     chatname: 'VDO.Ninja',
     chatmessage: '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png" alt="icon"> 😁 🇨🇦 https://vdo.ninja/',
     chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
@@ -114,7 +114,7 @@ const testMessagePresets = [
     chatbadges: ['https://socialstream.ninja/icons/bot.png', 'https://socialstream.ninja/icons/announcement.png']
   }),
   () => ({
-    platform: 'youtube',
+    type: 'youtube',
     chatname: 'ChannelBot',
     chatmessage: '',
     contentimg: 'https://socialstream.ninja/media/logo.png',
@@ -294,43 +294,46 @@ function createTestMessage() {
   } while (
     attempts < 4 &&
     candidate &&
-    lastTestMessageSignature === `${candidate.platform || 'twitch'}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`
+    lastTestMessageSignature === `${candidate.type || candidate.platform || 'twitch'}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`
   );
 
   if (!candidate) {
     candidate = {
-      platform: 'twitch',
+      type: 'twitch',
       chatname: 'Test User',
       chatmessage: 'Hello from Social Stream test message!',
       event: 'message'
     };
   }
-  lastTestMessageSignature = `${candidate.platform || 'twitch'}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`;
+  const type = candidate.type || candidate.platform || 'twitch';
+  lastTestMessageSignature = `${type}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`;
 
-  const platform = candidate.platform || 'twitch';
-  const hasDonation = Boolean(candidate.hasDonation || candidate.donationAmount || candidate.bits);
-  const event = candidate.event || (candidate.bits ? 'bits' : hasDonation ? 'donation' : 'message');
+  const bits = candidate.bits ? Number(candidate.bits) : 0;
+  const donationText =
+    typeof candidate.hasDonation === 'string'
+      ? candidate.hasDonation
+      : candidate.hasDonation
+        ? candidate.donationAmount || ''
+        : '';
+  const event = candidate.event || (bits ? 'bits' : donationText ? 'donation' : 'message');
 
   const message = {
     id: `test-${now}-${Math.floor(Math.random() * 1000)}`,
-    platform,
-    type: platform,
-    chatname: candidate.chatname,
+    type,
+    chatname: candidate.chatname || 'Test User',
     chatmessage: candidate.chatmessage || '',
     chatimg: candidate.chatimg || '',
     timestamp: now,
-    hasDonation,
     event,
-    bits: candidate.bits ? Number(candidate.bits) : 0,
     textonly: Boolean(candidate.textonly),
     raw: { test: true }
   };
 
-  if (candidate.badges) {
-    message.badges = candidate.badges;
+  if (bits) {
+    message.bits = bits;
   }
-  if (Array.isArray(candidate.chatbadges) && candidate.chatbadges.length) {
-    message.chatbadges = candidate.chatbadges;
+  if (donationText) {
+    message.hasDonation = donationText;
   }
   if (candidate.donationAmount) {
     message.donationAmount = candidate.donationAmount;
@@ -340,6 +343,12 @@ function createTestMessage() {
   }
   if (candidate.membership) {
     message.membership = candidate.membership;
+  }
+  if (candidate.badges && typeof candidate.badges === 'object') {
+    message.badges = candidate.badges;
+  }
+  if (Array.isArray(candidate.chatbadges) && candidate.chatbadges.length) {
+    message.chatbadges = candidate.chatbadges;
   }
   if (candidate.nameColor) {
     message.nameColor = candidate.nameColor;

@@ -37,10 +37,10 @@ export class DockMessenger {
     this.sessionId = trimmed;
     this.pending = [];
     this.ready = false;
-    const params = new URLSearchParams({ session: trimmed, liteRelay: '1', cleanoutput: '1' });
-    const base = '../dock.html';
+
+    const pass = 'false';
     const extra = dockParams ? `&${dockParams.replace(/^&+/, '')}` : '';
-    const nextSrc = `${base}?${params.toString()}${extra}`;
+    const nextSrc = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${pass}&room=${trimmed}&push=${trimmed}&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream${extra}`;
 
     this.frame.src = nextSrc;
     this.frame.hidden = this.frameHidden;
