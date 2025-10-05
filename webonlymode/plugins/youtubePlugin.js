@@ -38,39 +38,21 @@ export class YoutubePlugin extends BasePlugin {
     this.liveChatId = storage.get(CHAT_ID_KEY, '');
   }
 
-  renderBody(body) {
-    const status = document.createElement('div');
-    status.className = 'plugin-status';
-
-    const chatRow = document.createElement('div');
-    chatRow.className = 'field';
-    const chatLabel = document.createElement('span');
-    chatLabel.className = 'field__label';
-    chatLabel.textContent = 'Live Chat ID (optional)';
-    const chatInput = document.createElement('input');
-    chatInput.type = 'text';
-    chatInput.placeholder = 'Overrides automatic broadcast detection';
-    chatInput.value = this.liveChatId || '';
-    chatInput.addEventListener('change', () => {
-      this.liveChatId = chatInput.value.trim();
-      storage.set(CHAT_ID_KEY, this.liveChatId);
-    });
-    chatRow.append(chatLabel, chatInput);
+  renderPrimary(container) {
+    const statusWrap = document.createElement('div');
+    statusWrap.className = 'plugin-status';
 
     const statusLabel = document.createElement('div');
     statusLabel.className = 'source-card__subtext';
-    statusLabel.innerHTML = 'Not signed in.';
+    statusLabel.textContent = '';
+    statusLabel.hidden = true;
 
     const streamLabel = document.createElement('div');
     streamLabel.className = 'source-card__subtext';
-    streamLabel.innerHTML = '';
-
-    const signOut = document.createElement('button');
-    signOut.type = 'button';
-    signOut.className = 'btn btn--ghost';
-    signOut.textContent = 'Sign out';
-    signOut.addEventListener('click', () => this.signOut());
-    signOut.disabled = !this.token;
+    streamLabel.hidden = !this.liveChatId;
+    if (this.liveChatId) {
+      streamLabel.textContent = `Live chat ID: ${this.liveChatId}`;
+    }
 
     const controls = document.createElement('div');
     controls.className = 'plugin-actions';
@@ -81,21 +63,51 @@ export class YoutubePlugin extends BasePlugin {
     authButton.textContent = 'Sign in to YouTube';
     authButton.addEventListener('click', () => this.handleConnect());
 
+    const signOut = document.createElement('button');
+    signOut.type = 'button';
+    signOut.className = 'btn btn--ghost';
+    signOut.textContent = 'Sign out';
+    signOut.addEventListener('click', () => this.signOut());
+    signOut.disabled = !this.token;
+
     controls.append(authButton, signOut);
+    statusWrap.append(statusLabel, streamLabel, controls);
 
-    status.append(chatRow, statusLabel, streamLabel, controls);
+    container.append(statusWrap);
 
-    this.clientIdInput = null;
-    this.chatIdInput = chatInput;
     this.statusLabel = statusLabel;
     this.streamLabel = streamLabel;
     this.signOutBtn = signOut;
     this.authButton = authButton;
 
     this.refreshStatus();
+    return statusWrap;
+  }
 
-    body.append(status);
-    return status;
+  renderSettings(container) {
+    const chatRow = document.createElement('div');
+    chatRow.className = 'field';
+
+    const chatLabel = document.createElement('span');
+    chatLabel.className = 'field__label';
+    chatLabel.textContent = 'Live Chat ID (optional)';
+
+    const chatInput = document.createElement('input');
+    chatInput.type = 'text';
+    chatInput.placeholder = 'Overrides automatic broadcast detection';
+    chatInput.value = this.liveChatId || '';
+    chatInput.addEventListener('change', () => {
+      this.liveChatId = chatInput.value.trim();
+      storage.set(CHAT_ID_KEY, this.liveChatId);
+      this.refreshStatus();
+    });
+
+    chatRow.append(chatLabel, chatInput);
+    container.append(chatRow);
+
+    this.chatIdInput = chatInput;
+
+    return container;
   }
 
   refreshStatus() {
@@ -103,16 +115,20 @@ export class YoutubePlugin extends BasePlugin {
       if (this.token && !this.isTokenExpired()) {
         const channelName = this.channelInfo?.title || 'Your channel';
         this.statusLabel.innerHTML = `Authorized as <strong>${safeHtml(channelName)}</strong>`;
+        this.statusLabel.hidden = false;
       } else {
-        this.statusLabel.textContent = 'Not signed in.';
+        this.statusLabel.textContent = '';
+        this.statusLabel.hidden = true;
       }
     }
 
     if (this.streamLabel) {
       if (this.liveChatId) {
         this.streamLabel.textContent = `Live chat ID: ${this.liveChatId}`;
+        this.streamLabel.hidden = false;
       } else {
-        this.streamLabel.textContent = 'Live chat will be detected automatically when you go live.';
+        this.streamLabel.textContent = '';
+        this.streamLabel.hidden = true;
       }
     }
 

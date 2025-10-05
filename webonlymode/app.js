@@ -8,6 +8,10 @@ const elements = {
   sessionInput: document.getElementById('session-id'),
   sessionApply: document.getElementById('session-apply'),
   sessionCopy: document.getElementById('session-copy'),
+  sessionToggle: document.getElementById('session-options-toggle'),
+  sessionAdvanced: document.getElementById('session-advanced'),
+  sessionIndicator: document.getElementById('session-indicator'),
+  sessionOpen: document.getElementById('session-open'),
   sessionStatus: document.getElementById('session-status'),
   sourceList: document.getElementById('source-list'),
   activityLog: document.getElementById('activity-log'),
@@ -23,19 +27,38 @@ const activity = [];
 let plugins = [];
 
 function updateSessionStatus(message, tone = 'info', { html = false } = {}) {
-  if (!elements.sessionStatus) return;
-  if (html) {
-    elements.sessionStatus.innerHTML = message;
-  } else {
-    elements.sessionStatus.textContent = message;
+  const target = elements.sessionStatus;
+  if (!target) return;
+  if (!message) {
+    target.hidden = true;
+    target.removeAttribute('data-tone');
+    target.innerHTML = '';
+    return;
   }
-  elements.sessionStatus.dataset.tone = tone;
+
+  target.hidden = false;
+  if (html) {
+    target.innerHTML = message;
+  } else {
+    target.textContent = message;
+  }
+  target.dataset.tone = tone;
 }
 
 function sessionUrl(sessionId) {
   const url = new URL('../dock.html', window.location.href);
   url.searchParams.set('session', sessionId);
   return url.toString();
+}
+
+function setSessionIndicator(state, label) {
+  const indicator = elements.sessionIndicator;
+  if (!indicator) return;
+  indicator.dataset.state = state || 'idle';
+  const sr = indicator.querySelector('.sr-only');
+  if (sr) {
+    sr.textContent = label || `Session ${state || 'idle'}`;
+  }
 }
 
 function startSession(sessionId) {
@@ -53,12 +76,13 @@ function startSession(sessionId) {
   messenger.setSessionId(value);
 
   const dockLink = sessionUrl(value);
-  const safeLink = safeHtml(dockLink);
-  updateSessionStatus(
-    `Overlay link ready: <a href="${safeLink}" target="_blank" rel="noopener">Open dock overlay</a>. Keep this page open for the relay to stay active.`,
-    'info',
-    { html: true }
-  );
+  if (elements.sessionOpen) {
+    elements.sessionOpen.href = dockLink;
+    elements.sessionOpen.dataset.sessionId = value;
+  }
+
+  setSessionIndicator('ready', 'Overlay link ready');
+  updateSessionStatus('');
 
   const sessionChanged = !previous || previous !== value;
 
@@ -83,12 +107,11 @@ function handleCopyLink() {
   }
   const url = sessionUrl(sessionId);
   const safeLink = safeHtml(url);
-  const safeId = safeHtml(sessionId);
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard.writeText(url)
       .then(() => {
         updateSessionStatus(
-          `Dock link copied to clipboard. <a href="${safeLink}" target="_blank" rel="noopener">Open dock</a> (session ${safeId}).`,
+          `Dock link copied. <a href="${safeLink}" target="_blank" rel="noopener">Open dock overlay</a>.`,
           'success',
           { html: true }
         );
@@ -189,16 +212,16 @@ function processOAuthCallback(pluginMap) {
 }
 
 function init() {
+  setSessionIndicator('idle', 'Session idle');
   elements.dockFrame.addEventListener('load', () => {
     if (messenger.getSessionId()) {
       const sessionId = messenger.getSessionId();
       const dockLink = sessionUrl(sessionId);
-      const safeLink = safeHtml(dockLink);
-      updateSessionStatus(
-        `Relay active: <a href="${safeLink}" target="_blank" rel="noopener">Open dock overlay</a>. Keep this page open.`,
-        'success',
-        { html: true }
-      );
+      setSessionIndicator('connected', 'Relay active');
+      updateSessionStatus('');
+      if (elements.sessionOpen) {
+        elements.sessionOpen.href = dockLink;
+      }
     }
   });
 
@@ -213,6 +236,21 @@ function init() {
   elements.sessionApply.addEventListener('click', () => startSession());
   elements.sessionCopy.addEventListener('click', () => handleCopyLink());
   elements.activityClear.addEventListener('click', clearActivity);
+
+  if (elements.sessionToggle && elements.sessionAdvanced) {
+    elements.sessionToggle.addEventListener('click', () => {
+      const expanded = elements.sessionToggle.getAttribute('aria-expanded') === 'true';
+      const next = !expanded;
+      elements.sessionToggle.setAttribute('aria-expanded', String(next));
+      elements.sessionAdvanced.hidden = !next;
+      if (next && elements.sessionInput) {
+        window.requestAnimationFrame(() => {
+          elements.sessionInput.focus();
+          elements.sessionInput.select();
+        });
+      }
+    });
+  }
 
   const storedSession = storage.get(sessionKey, '');
   if (storedSession) {

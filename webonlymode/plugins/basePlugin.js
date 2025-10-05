@@ -42,6 +42,9 @@ export class BasePlugin {
     this.bodyNode = null;
     this.connectBtn = null;
     this.disconnectBtn = null;
+    this.primaryNode = null;
+    this.settingsNode = null;
+    this.settingsToggle = null;
   }
 
   mount(container) {
@@ -62,24 +65,58 @@ export class BasePlugin {
     title.className = 'source-card__title';
     title.textContent = this.name;
 
+    const headerControls = document.createElement('div');
+    headerControls.className = 'source-card__header-controls';
+
     const status = document.createElement('div');
     status.className = 'source-card__status';
     status.dataset.state = this.state;
     status.textContent = STATE_LABEL[this.state] || this.state;
 
-    header.append(title, status);
+    const settingsButton = createSettingsButton(`Show ${this.name} options`);
+
+    headerControls.append(status, settingsButton);
+    header.append(title, headerControls);
 
     const body = document.createElement('div');
     body.className = 'source-card__body';
+
+    const primary = document.createElement('div');
+    primary.className = 'source-card__primary';
+
+    const settings = document.createElement('div');
+    const settingsId = `${this.id}-settings`;
+    settings.id = settingsId;
+    settings.className = 'source-card__settings';
+    settings.hidden = true;
+
+    settingsButton.setAttribute('aria-controls', settingsId);
 
     if (this.description) {
       const desc = document.createElement('p');
       desc.className = 'source-card__description';
       desc.innerHTML = safeHtml(this.description);
-      body.appendChild(desc);
+      primary.appendChild(desc);
     }
 
-    const custom = this.renderBody(body) || null;
+    if (typeof this.renderPrimary === 'function') {
+      const renderResult = this.renderPrimary(primary);
+      if (renderResult && renderResult !== primary) {
+        primary.append(renderResult);
+      }
+    } else if (typeof this.renderBody === 'function') {
+      const legacyResult = this.renderBody(primary);
+      if (legacyResult && legacyResult !== primary) {
+        primary.append(legacyResult);
+      }
+    }
+
+    if (typeof this.renderSettings === 'function') {
+      const settingsResult = this.renderSettings(settings);
+      if (settingsResult && settingsResult !== settings) {
+        settings.append(settingsResult);
+      }
+    }
 
     let actions = null;
     if (this.controls.connect || this.controls.disconnect) {
@@ -110,21 +147,47 @@ export class BasePlugin {
     }
 
     if (actions && actions.childNodes.length > 0) {
-      body.append(actions);
+      primary.append(actions);
     }
+
+    if (!settings.hasChildNodes()) {
+      settingsButton.hidden = true;
+      settingsButton.disabled = true;
+    } else {
+      settingsButton.addEventListener('click', () => {
+        this.toggleSettings();
+      });
+    }
+
+    body.append(primary);
+    body.append(settings);
 
     wrapper.append(header, body);
 
     this.card = wrapper;
     this.bodyNode = body;
     this.statusNode = status;
+    this.primaryNode = primary;
+    this.settingsNode = settings;
+    this.settingsToggle = settingsButton;
 
     container.appendChild(wrapper);
   }
 
   renderBody() {
-    // Subclasses can override to append extra controls.
+    // Legacy hook; subclasses should override renderPrimary / renderSettings instead.
     return null;
+  }
+
+  toggleSettings(forceState) {
+    if (!this.settingsNode || !this.settingsToggle || this.settingsToggle.disabled) {
+      return;
+    }
+    const expandedAttr = this.settingsToggle.getAttribute('aria-expanded');
+    const expanded = expandedAttr === 'true';
+    const next = typeof forceState === 'boolean' ? forceState : !expanded;
+    this.settingsToggle.setAttribute('aria-expanded', String(next));
+    this.settingsNode.hidden = !next;
   }
 
   setState(next, meta) {
@@ -237,4 +300,15 @@ export class BasePlugin {
   shouldAutoConnect() {
     return this.state === 'idle' && Boolean(this.messenger.getSessionId());
   }
+}
+
+const GEAR_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 8.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm9.46 3-1.07-.83a7.07 7.07 0 0 0 0-1.34l1.07-.83a1 1 0 0 0 .24-1.3l-1.9-3.3a1 1 0 0 0-1.25-.44l-1.26.5a7.13 7.13 0 0 0-1.16-.67l-.19-1.35a1 1 0 0 0-1-.86h-3.8a1 1 0 0 0-1 .86l-.19 1.35a7.13 7.13 0 0 0-1.16.67l-1.26-.5a1 1 0 0 0-1.25.44l-1.9 3.3a1 1 0 0 0 .24 1.3l1.07.83a6.8 6.8 0 0 0 0 1.34l-1.07.83a1 1 0 0 0-.24 1.3l1.9 3.3a1 1 0 0 0 1.25.44l1.26-.5c.37.26.76.49 1.16.67l.19 1.35a1 1 0 0 0 1 .86h3.8a1 1 0 0 0 1-.86l.19-1.35a7.13 7.13 0 0 0 1.16-.67l1.26.5a1 1 0 0 0 1.25-.44l1.9-3.3a1 1 0 0 0-.24-1.3z"/></svg>';
+
+function createSettingsButton(label) {
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'icon-button';
+  btn.setAttribute('aria-expanded', 'false');
+  btn.innerHTML = `<span class="sr-only">${label}</span>${GEAR_SVG}`;
+  return btn;
 }

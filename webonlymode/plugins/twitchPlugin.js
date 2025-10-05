@@ -47,32 +47,16 @@ export class TwitchPlugin extends BasePlugin {
     this.client = null;
   }
 
-  renderBody(body) {
-    const channelRow = document.createElement('div');
-    channelRow.className = 'field';
-    const channelLabel = document.createElement('span');
-    channelLabel.className = 'field__label';
-    channelLabel.textContent = 'Channel (optional)';
-    const channelInput = document.createElement('input');
-    channelInput.type = 'text';
-    channelInput.placeholder = 'Defaults to the authenticated channel';
-    channelInput.value = storage.get(CHANNEL_KEY, '');
-    channelInput.addEventListener('change', () => {
-      storage.set(CHANNEL_KEY, channelInput.value.trim());
-    });
-    channelRow.append(channelLabel, channelInput);
-
+  renderPrimary(container) {
     const statusLabel = document.createElement('div');
     statusLabel.className = 'source-card__subtext';
+    statusLabel.textContent = '';
+    statusLabel.hidden = true;
+
     const channelStatus = document.createElement('div');
     channelStatus.className = 'source-card__subtext';
-
-    const signOut = document.createElement('button');
-    signOut.type = 'button';
-    signOut.className = 'btn btn--ghost';
-    signOut.textContent = 'Sign out';
-    signOut.addEventListener('click', () => this.signOut());
-    signOut.disabled = !this.token;
+    channelStatus.textContent = '';
+    channelStatus.hidden = true;
 
     const controls = document.createElement('div');
     controls.className = 'plugin-actions';
@@ -83,19 +67,49 @@ export class TwitchPlugin extends BasePlugin {
     authButton.textContent = 'Sign in to Twitch';
     authButton.addEventListener('click', () => this.handleConnect());
 
+    const signOut = document.createElement('button');
+    signOut.type = 'button';
+    signOut.className = 'btn btn--ghost';
+    signOut.textContent = 'Sign out';
+    signOut.addEventListener('click', () => this.signOut());
+    signOut.disabled = !this.token;
+
     controls.append(authButton, signOut);
 
-    body.append(channelRow, statusLabel, channelStatus, controls);
+    container.append(statusLabel, channelStatus, controls);
 
-    this.clientIdInput = null;
-    this.channelInput = channelInput;
     this.statusLabel = statusLabel;
     this.channelLabel = channelStatus;
     this.signOutBtn = signOut;
     this.authButton = authButton;
 
     this.refreshStatus();
-    return body;
+    return container;
+  }
+
+  renderSettings(container) {
+    const channelRow = document.createElement('div');
+    channelRow.className = 'field';
+
+    const channelLabel = document.createElement('span');
+    channelLabel.className = 'field__label';
+    channelLabel.textContent = 'Channel (optional)';
+
+    const channelInput = document.createElement('input');
+    channelInput.type = 'text';
+    channelInput.placeholder = 'Defaults to the authenticated channel';
+    channelInput.value = storage.get(CHANNEL_KEY, '');
+    channelInput.addEventListener('change', () => {
+      storage.set(CHANNEL_KEY, channelInput.value.trim());
+      this.refreshStatus();
+    });
+
+    channelRow.append(channelLabel, channelInput);
+    container.append(channelRow);
+
+    this.channelInput = channelInput;
+
+    return container;
   }
 
   refreshStatus() {
@@ -103,8 +117,10 @@ export class TwitchPlugin extends BasePlugin {
       if (this.token && !this.isTokenExpired()) {
         const name = this.identity?.display_name || this.identity?.login;
         this.statusLabel.innerHTML = name ? `Authorized as <strong>${safeHtml(name)}</strong>` : 'Authorized.';
+        this.statusLabel.hidden = false;
       } else {
-        this.statusLabel.textContent = 'Not signed in.';
+        this.statusLabel.textContent = '';
+        this.statusLabel.hidden = true;
       }
     }
 
@@ -112,8 +128,10 @@ export class TwitchPlugin extends BasePlugin {
       const channel = this.channelInput?.value.trim();
       if (channel) {
         this.channelLabel.textContent = `Configured channel: ${channel}`;
+        this.channelLabel.hidden = false;
       } else {
-        this.channelLabel.textContent = 'Channel will default to the authenticated account.';
+        this.channelLabel.textContent = '';
+        this.channelLabel.hidden = true;
       }
     }
 
