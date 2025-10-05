@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Social Stream Ninja Lite</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="layout">
+    <header class="masthead">
+      <div class="masthead__title">Social Stream Ninja Lite</div>
+      <p class="masthead__subtitle">Lightweight web-first control panel for relaying chats to overlays.</p>
+    </header>
+
+    <section class="card session" aria-labelledby="session-heading">
+      <div class="card__header">
+        <h2 id="session-heading">Session Link</h2>
+      </div>
+      <div class="session__content">
+        <label class="field">
+          <span class="field__label">Session ID</span>
+          <input id="session-id" name="session" type="text" autocomplete="off" spellcheck="false" placeholder="Enter a custom session ID (optional)" />
+        </label>
+        <div class="session__actions">
+          <button type="button" id="session-apply" class="btn">Update session ID</button>
+          <button type="button" id="session-copy" class="btn btn--ghost">Copy dock link</button>
+        </div>
+        <output id="session-status" class="session__status" role="status" aria-live="polite">Awaiting session start...</output>
+        <p class="session__hint">Open <code>dock.html</code> with the link above to monitor incoming messages and keep this page open while streaming.</p>
+      </div>
+    </section>
+
+    <section class="card sources" aria-labelledby="sources-heading">
+      <div class="card__header">
+        <h2 id="sources-heading">Sources</h2>
+      </div>
+      <div id="source-list" class="sources__grid" role="list"></div>
+    </section>
+
+    <section class="card activity" aria-labelledby="activity-heading">
+      <div class="card__header">
+        <h2 id="activity-heading">Activity</h2>
+        <button type="button" id="activity-clear" class="btn btn--ghost">Clear</button>
+      </div>
+      <div id="activity-log" class="activity__log" aria-live="polite"></div>
+    </section>
+  </main>
+
+  <iframe id="dock-relay" title="Dock relay" class="dock-relay" hidden aria-hidden="true"></iframe>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
