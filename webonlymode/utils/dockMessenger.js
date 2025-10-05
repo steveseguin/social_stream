@@ -1,3 +1,13 @@
+export function buildDockUrl(sessionId, { dockParams = '' } = {}) {
+  const trimmed = (sessionId || '').trim();
+  if (!trimmed) {
+    return '';
+  }
+
+  const extra = dockParams ? `&${dockParams.replace(/^&+/, '')}` : '';
+  return `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=false&room=${encodeURIComponent(trimmed)}&push=${encodeURIComponent(trimmed)}&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream${extra}`;
+}
+
 export class DockMessenger {
   constructor(frame, { debug = false, onDebug = null } = {}) {
     this.frame = frame;
@@ -38,10 +48,7 @@ export class DockMessenger {
     this.pending = [];
     this.ready = false;
 
-    const pass = 'false';
-    const extra = dockParams ? `&${dockParams.replace(/^&+/, '')}` : '';
-    const nextSrc = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${pass}&room=${trimmed}&push=${trimmed}&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream${extra}`;
-
+    const nextSrc = buildDockUrl(trimmed, { dockParams });
     this.frame.src = nextSrc;
     this.frame.hidden = this.frameHidden;
     this.debugLog('Updated dock session', { sessionId: trimmed, src: nextSrc });
