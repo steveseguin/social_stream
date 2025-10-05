@@ -74,7 +74,8 @@ export class YoutubePlugin extends BasePlugin {
     statusWrap.append(statusLabel, streamLabel, controls);
 
     container.append(statusWrap);
-
+    this.clientIdInput = null;
+    this.chatIdInput = null;
     this.statusLabel = statusLabel;
     this.streamLabel = streamLabel;
     this.signOutBtn = signOut;

@@ -77,7 +77,8 @@ export class TwitchPlugin extends BasePlugin {
     controls.append(authButton, signOut);
 
     container.append(statusLabel, channelStatus, controls);
-
+    this.clientIdInput = null;
+    this.channelInput = null;
     this.statusLabel = statusLabel;
     this.channelLabel = channelStatus;
     this.signOutBtn = signOut;
