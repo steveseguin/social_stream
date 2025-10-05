@@ -13,7 +13,13 @@
       <p class="masthead__subtitle">Lightweight web-first control panel for relaying chats to overlays.</p>
     </header>
 
-    <section class="card session" aria-labelledby="session-heading">
+    <nav class="mobile-nav" aria-label="Primary sections">
+      <button type="button" class="mobile-nav__btn is-active" data-mobile-nav-target="session" aria-pressed="true">Session</button>
+      <button type="button" class="mobile-nav__btn" data-mobile-nav-target="sources" aria-pressed="false">Sources</button>
+      <button type="button" class="mobile-nav__btn" data-mobile-nav-target="activity" aria-pressed="false">Activity</button>
+    </nav>
+
+    <section id="session" class="card session" aria-labelledby="session-heading">
       <div class="card__header">
         <h2 id="session-heading">Chat Overlay Link</h2>
         <div class="card__header-controls">
@@ -49,14 +55,14 @@
       </div>
     </section>
 
-    <section class="card sources" aria-labelledby="sources-heading">
+    <section id="sources" class="card sources" aria-labelledby="sources-heading">
       <div class="card__header">
         <h2 id="sources-heading">Sources</h2>
       </div>
       <div id="source-list" class="sources__grid" role="list"></div>
     </section>
 
-    <section class="card activity" aria-labelledby="activity-heading">
+    <section id="activity" class="card activity" aria-labelledby="activity-heading">
       <div class="card__header">
         <h2 id="activity-heading">Activity</h2>
         <button type="button" id="activity-clear" class="btn btn--ghost">Clear</button>

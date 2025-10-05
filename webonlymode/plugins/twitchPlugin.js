@@ -358,9 +358,9 @@ export class TwitchPlugin extends BasePlugin {
         message,
         self
       });
-      if (self) return;
-      const payload = this.transformChatMessage(channel, tags, message);
-      this.publish(payload, { silent: true });
+      const payload = this.transformChatMessage(channel, tags, message, self);
+      const preview = this.formatChatPreview(payload);
+      this.publish(payload, { silent: true, preview });
     });
 
     client.on('subscription', (chan, username, method, message, userstate) => {
@@ -441,7 +441,31 @@ export class TwitchPlugin extends BasePlugin {
     });
   }
 
-  transformChatMessage(channel, tags, message) {
+  formatChatPreview(chat) {
+    if (!chat) {
+      return 'New Twitch message';
+    }
+
+    const name = chat.chatname || 'Twitch user';
+    const trimmed = (chat.chatmessage || '')
+      .toString()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (chat.event === 'bits' && chat.bits) {
+      const bits = Number.isFinite(chat.bits) ? chat.bits : parseInt(chat.bits, 10);
+      const bitLabel = Number.isFinite(bits) ? `${bits} bit${bits === 1 ? '' : 's'}` : 'bits';
+      return trimmed ? `${name} cheered ${bitLabel}: ${trimmed}` : `${name} cheered ${bitLabel}`;
+    }
+
+    if (chat.event && chat.event !== 'message' && !trimmed) {
+      return `${name} ${chat.event}`;
+    }
+
+    return trimmed ? `${name}: ${trimmed}` : name;
+  }
+
+  transformChatMessage(channel, tags, message, isSelf = false) {
     const displayName = tags['display-name'] || tags.username || 'Twitch User';
     const userId = tags['user-id'];
     const badges = tags.badges || {};
@@ -462,6 +486,7 @@ export class TwitchPlugin extends BasePlugin {
       isSubscriber: 'subscriber' in badges,
       userId,
       event: tags.bits ? 'bits' : 'message',
+      isSelf: Boolean(isSelf),
       raw: { channel, tags }
     };
   }

@@ -16,7 +16,8 @@ const elements = {
   sourceList: document.getElementById('source-list'),
   activityLog: document.getElementById('activity-log'),
   activityClear: document.getElementById('activity-clear'),
-  dockFrame: document.getElementById('dock-relay')
+  dockFrame: document.getElementById('dock-relay'),
+  mobileNavButtons: Array.from(document.querySelectorAll('[data-mobile-nav-target]'))
 };
 
 const sessionKey = 'session.currentId';
@@ -43,6 +44,7 @@ const messenger = new DockMessenger(elements.dockFrame, {
 });
 const activity = [];
 let plugins = [];
+const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 function updateSessionStatus(message, tone = 'info', { html = false } = {}) {
   const target = elements.sessionStatus;
@@ -200,6 +202,67 @@ function notifyPluginsOfSession(sessionId) {
   });
 }
 
+function initMobileNav() {
+  const buttons = elements.mobileNavButtons || [];
+  if (!buttons.length) return;
+
+  const sections = new Map();
+  let activeId = null;
+
+  const setActive = (id) => {
+    if (!id || activeId === id) return;
+    activeId = id;
+    buttons.forEach((button) => {
+      const match = button.dataset.mobileNavTarget === id;
+      button.classList.toggle('is-active', match);
+      button.setAttribute('aria-pressed', String(match));
+      if (match) {
+        button.setAttribute('aria-current', 'page');
+      } else {
+        button.removeAttribute('aria-current');
+      }
+    });
+  };
+
+  buttons.forEach((button) => {
+    const targetId = button.dataset.mobileNavTarget;
+    if (!targetId) return;
+    const section = document.getElementById(targetId);
+    if (!section) return;
+    sections.set(targetId, section);
+
+    button.addEventListener('click', () => {
+      setActive(targetId);
+      section.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    });
+  });
+
+  if (!sections.size) return;
+
+  const defaultTarget = buttons.find((button) => sections.has(button.dataset.mobileNavTarget));
+  if (defaultTarget) {
+    setActive(defaultTarget.dataset.mobileNavTarget);
+  }
+
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting && entry.target.id) {
+          setActive(entry.target.id);
+        }
+      });
+    }, {
+      rootMargin: '-20% 0px -55% 0px',
+      threshold: 0.25
+    });
+
+    sections.forEach((section) => observer.observe(section));
+  }
+}
+
 function processOAuthCallback(pluginMap) {
   if (!window.location.hash) return;
   const params = new URLSearchParams(window.location.hash.slice(1));
@@ -304,6 +367,7 @@ function init() {
 
   startSession(storedSession);
   processOAuthCallback(pluginMap);
+  initMobileNav();
 }
 
 init();

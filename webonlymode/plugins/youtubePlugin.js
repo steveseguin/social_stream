@@ -405,7 +405,8 @@ export class YoutubePlugin extends BasePlugin {
       message.color = snippet.superChatDetails.tier || snippet.superChatDetails.tier || null;
     }
 
-    this.publish(message, { silent: true });
+    const preview = this.formatChatPreview(message);
+    this.publish(message, { silent: true, preview });
   }
 
   resolveEvent(snippet) {
@@ -416,6 +417,32 @@ export class YoutubePlugin extends BasePlugin {
     if (snippet.membershipGiftingDetails) return 'gift';
     if (snippet.type === 'fanFundingEvent') return 'donation';
     return snippet.type || null;
+  }
+
+  formatChatPreview(chat) {
+    if (!chat) {
+      return 'New YouTube message';
+    }
+
+    const name = chat.chatname || 'YouTube user';
+    const trimmed = (chat.chatmessage || '')
+      .toString()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (chat.event === 'superchat') {
+      return trimmed ? `${name} sent a Super Chat: ${trimmed}` : `${name} sent a Super Chat`;
+    }
+
+    if (chat.event === 'supersticker') {
+      return `${name} sent a Super Sticker`; // stickers rarely include text
+    }
+
+    if (chat.event && chat.event !== 'chat' && !trimmed) {
+      return `${name} ${chat.event}`;
+    }
+
+    return trimmed ? `${name}: ${trimmed}` : name;
   }
 
   shouldAutoConnect() {

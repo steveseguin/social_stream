@@ -261,7 +261,12 @@ export class BasePlugin {
   }
 
   publish(payload, options = {}) {
-    const { silent = false, note } = options;
+    const {
+      silent = false,
+      note,
+      preview,
+      previewDetail
+    } = options;
     try {
       this.debugLog('Publishing payload to dock', { payload, silent, note });
       this.messenger.send(payload);
@@ -274,6 +279,8 @@ export class BasePlugin {
             .slice(0, 80)
         };
         this.log(note || 'Message relayed', summary);
+      } else if (preview) {
+        this.log(preview, previewDetail);
       }
     } catch (err) {
       this.reportError(err);
