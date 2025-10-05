@@ -55,7 +55,7 @@ function startSession(sessionId) {
   const dockLink = sessionUrl(value);
   const safeLink = safeHtml(dockLink);
   updateSessionStatus(
-    `Active session: <strong>${safeHtml(value)}</strong> | <a href="${safeLink}" target="_blank" rel="noopener">Open dock</a> (relay loading... keep this page open)`,
+    `Overlay link ready: <a href="${safeLink}" target="_blank" rel="noopener">Open dock overlay</a>. Keep this page open for the relay to stay active.`,
     'info',
     { html: true }
   );
@@ -195,7 +195,7 @@ function init() {
       const dockLink = sessionUrl(sessionId);
       const safeLink = safeHtml(dockLink);
       updateSessionStatus(
-        `Active session: <strong>${safeHtml(sessionId)}</strong> | <a href="${safeLink}" target="_blank" rel="noopener">Open dock</a> (relay ready - keep this page open)`,
+        `Relay active: <a href="${safeLink}" target="_blank" rel="noopener">Open dock overlay</a>. Keep this page open.`,
         'success',
         { html: true }
       );

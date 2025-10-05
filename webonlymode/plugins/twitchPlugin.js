@@ -62,25 +62,6 @@ export class TwitchPlugin extends BasePlugin {
     });
     channelRow.append(channelLabel, channelInput);
 
-    const advanced = document.createElement('details');
-    advanced.className = 'advanced';
-    const advancedSummary = document.createElement('summary');
-    advancedSummary.textContent = 'Advanced: Custom Client ID';
-    const clientField = document.createElement('div');
-    clientField.className = 'field';
-    const clientLabel = document.createElement('span');
-    clientLabel.className = 'field__label';
-    clientLabel.textContent = 'Client ID';
-    const clientInput = document.createElement('input');
-    clientInput.type = 'text';
-    clientInput.placeholder = 'Your Twitch application client ID';
-    clientInput.value = storage.get(CLIENT_ID_KEY, DEFAULT_CLIENT_ID);
-    clientInput.addEventListener('change', () => {
-      storage.set(CLIENT_ID_KEY, clientInput.value.trim());
-    });
-    clientField.append(clientLabel, clientInput);
-    advanced.append(advancedSummary, clientField);
-
     const statusLabel = document.createElement('div');
     statusLabel.className = 'source-card__subtext';
     const channelStatus = document.createElement('div');
@@ -104,9 +85,9 @@ export class TwitchPlugin extends BasePlugin {
 
     controls.append(authButton, signOut);
 
-    body.append(channelRow, advanced, statusLabel, channelStatus, controls);
+    body.append(channelRow, statusLabel, channelStatus, controls);
 
-    this.clientIdInput = clientInput;
+    this.clientIdInput = null;
     this.channelInput = channelInput;
     this.statusLabel = statusLabel;
     this.channelLabel = channelStatus;
@@ -179,7 +160,8 @@ export class TwitchPlugin extends BasePlugin {
   }
 
   beginAuth() {
-    const clientId = this.clientIdInput?.value.trim() || DEFAULT_CLIENT_ID;
+    const storedClientId = (storage.get(CLIENT_ID_KEY, '') || '').trim();
+    const clientId = storedClientId || DEFAULT_CLIENT_ID;
     storage.set(CLIENT_ID_KEY, clientId);
 
     const redirectUri = new URL(window.location.href.split('#')[0]).toString();

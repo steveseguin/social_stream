@@ -57,25 +57,6 @@ export class YoutubePlugin extends BasePlugin {
     });
     chatRow.append(chatLabel, chatInput);
 
-    const advanced = document.createElement('details');
-    advanced.className = 'advanced';
-    const advancedSummary = document.createElement('summary');
-    advancedSummary.textContent = 'Advanced: Custom OAuth Client ID';
-    const authField = document.createElement('div');
-    authField.className = 'field';
-    const authLabel = document.createElement('span');
-    authLabel.className = 'field__label';
-    authLabel.textContent = 'OAuth Client ID';
-    const authInput = document.createElement('input');
-    authInput.type = 'text';
-    authInput.placeholder = 'xxxx.apps.googleusercontent.com';
-    authInput.value = storage.get(CLIENT_ID_KEY, DEFAULT_CLIENT_ID);
-    authInput.addEventListener('change', () => {
-      storage.set(CLIENT_ID_KEY, authInput.value.trim());
-    });
-    authField.append(authLabel, authInput);
-    advanced.append(advancedSummary, authField);
-
     const statusLabel = document.createElement('div');
     statusLabel.className = 'source-card__subtext';
     statusLabel.innerHTML = 'Not signed in.';
@@ -102,9 +83,9 @@ export class YoutubePlugin extends BasePlugin {
 
     controls.append(authButton, signOut);
 
-    status.append(chatRow, advanced, statusLabel, streamLabel, controls);
+    status.append(chatRow, statusLabel, streamLabel, controls);
 
-    this.clientIdInput = authInput;
+    this.clientIdInput = null;
     this.chatIdInput = chatInput;
     this.statusLabel = statusLabel;
     this.streamLabel = streamLabel;
@@ -170,7 +151,8 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   beginAuth() {
-    const clientId = this.clientIdInput?.value.trim() || DEFAULT_CLIENT_ID;
+    const storedClientId = (storage.get(CLIENT_ID_KEY, '') || '').trim();
+    const clientId = storedClientId || DEFAULT_CLIENT_ID;
     storage.set(CLIENT_ID_KEY, clientId);
 
     const redirectUri = new URL(window.location.href.split('#')[0]).toString();
