@@ -18,7 +18,8 @@ const TWITCH_SCOPES = [
 ];
 
 const TMI_SOURCES = [
-  // GitHub CDN keeps the built browser bundle even when npm mirrors drop dist/
+  './vendor/tmi-1.8.5.min.js',
+  // Remote mirrors included for legacy support if the bundled copy is unavailable.
   'https://cdn.jsdelivr.net/gh/tmijs/tmi.js@1.8.5/dist/tmi.min.js',
   'https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/dist/tmi.min.js',
   'https://unpkg.com/tmi.js@1.8.5/dist/tmi.min.js'

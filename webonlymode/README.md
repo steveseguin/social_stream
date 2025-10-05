@@ -44,6 +44,8 @@ webonlymode/
 |   |-- dockMessenger.js # Dock iframe bridge helper
 |   |-- helpers.js       # Common helpers (IDs, formatting)
 |   `-- storage.js       # Namespaced localStorage helpers
+|-- vendor/
+|   `-- tmi-1.8.5.min.js # Bundled Twitch client fallback (avoids broken CDN dist/ links)
 `-- plugins/
     |-- basePlugin.js    # Shared card + lifecycle logic
     |-- youtubePlugin.js # YouTube Data API integration
@@ -53,5 +55,6 @@ webonlymode/
 ## Development Notes
 
 - The page is built as ES modules without a bundler; load it via HTTP(S) so OAuth redirects succeed.
+- `tmi.js` is vendored under `webonlymode/vendor/` because the npm package no longer ships `dist/` bundles on CDNs.
 - Messages relayed to the dock follow the existing `overlayNinja` payload conventions (e.g., `type`, `chatname`, `chatmessage`).
 - Activity logging is intentionally lightweight; adjust in `app.js` if you need more verbose diagnostics.
