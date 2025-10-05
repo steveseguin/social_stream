@@ -57,4 +57,5 @@ webonlymode/
 - The page is built as ES modules without a bundler; load it via HTTP(S) so OAuth redirects succeed.
 - `tmi.js` is vendored under `webonlymode/vendor/` because the npm package no longer ships `dist/` bundles on CDNs.
 - Messages relayed to the dock follow the existing `overlayNinja` payload conventions (e.g., `type`, `chatname`, `chatmessage`).
-- Activity logging is intentionally lightweight; adjust in `app.js` if you need more verbose diagnostics.
+- Append `?debug=1` to the Lite URL (persisted in local storage) to surface verbose relay logs in the browser console and activity feed; use `?debug=0` to turn it back off.
+- Activity logging stays lightweight unless debug mode is enabled; adjust in `app.js` if you need deeper instrumentation.

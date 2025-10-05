@@ -1,9 +1,11 @@
 export class DockMessenger {
-  constructor(frame) {
+  constructor(frame, { debug = false, onDebug = null } = {}) {
     this.frame = frame;
     this.sessionId = null;
     this.pending = [];
     this.ready = false;
+    this.debug = Boolean(debug);
+    this.onDebug = typeof onDebug === 'function' ? onDebug : null;
 
     if (!this.frame) {
       throw new Error('DockMessenger requires an iframe element.');
@@ -12,6 +14,7 @@ export class DockMessenger {
     this.frameHidden = this.frame.hasAttribute('hidden');
     this.frame.addEventListener('load', () => {
       this.ready = true;
+      this.debugLog('Dock iframe loaded', { pending: this.pending.length });
       this.flush();
     });
   }
@@ -41,6 +44,7 @@ export class DockMessenger {
 
     this.frame.src = nextSrc;
     this.frame.hidden = this.frameHidden;
+    this.debugLog('Updated dock session', { sessionId: trimmed, src: nextSrc });
   }
 
   getSessionId() {
@@ -54,6 +58,10 @@ export class DockMessenger {
 
     if (!this.ready || !this.frame.contentWindow) {
       this.pending.push(message);
+      this.debugLog('Queued message until dock is ready', {
+        pending: this.pending.length,
+        message
+      });
       return;
     }
 
@@ -63,6 +71,7 @@ export class DockMessenger {
   post(message) {
     try {
       const payload = { sendData: { overlayNinja: message }, type: 'pcs' };
+      this.debugLog('Posting message to dock iframe', { payload });
       this.frame.contentWindow.postMessage(payload, '*');
     } catch (err) {
       console.error('Failed to post message to dock iframe', err);
@@ -73,9 +82,35 @@ export class DockMessenger {
     if (!this.ready || !this.frame.contentWindow) {
       return;
     }
+    if (this.pending.length > 0) {
+      this.debugLog('Flushing queued messages to dock', { count: this.pending.length });
+    }
     while (this.pending.length) {
       const msg = this.pending.shift();
       this.post(msg);
+    }
+  }
+
+  debugLog(message, detail) {
+    if (!this.debug) {
+      return;
+    }
+    if (detail !== undefined) {
+      console.debug('[DockMessenger]', message, detail);
+    } else {
+      console.debug('[DockMessenger]', message);
+    }
+    if (this.onDebug) {
+      try {
+        this.onDebug({
+          plugin: 'system',
+          message: `[debug] ${message}`,
+          detail,
+          timestamp: Date.now()
+        });
+      } catch (err) {
+        console.warn('DockMessenger debug callback failed', err);
+      }
     }
   }
 }

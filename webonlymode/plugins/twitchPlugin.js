@@ -257,6 +257,7 @@ export class TwitchPlugin extends BasePlugin {
       throw new Error('Start a session before connecting Twitch.');
     }
     try {
+      this.debugLog('Validating Twitch token before chat connect');
       await this.validateToken();
       const channelName = this.resolveChannel();
       storage.set(CHANNEL_KEY, channelName);
@@ -264,6 +265,10 @@ export class TwitchPlugin extends BasePlugin {
       const tmi = await ensureTmiClient();
 
       const joinChannel = `#${channelName}`;
+      this.debugLog('Creating Twitch client', {
+        joinChannel,
+        identity: this.identity?.login
+      });
       const client = new tmi.Client({
         options: { debug: false, skipUpdatingEmotesets: true },
         identity: {
@@ -280,6 +285,7 @@ export class TwitchPlugin extends BasePlugin {
       this.setState('connected');
       this.log('Connected to Twitch chat.', { channel: channelName });
     } catch (err) {
+      this.debugLog('Twitch connectToChat failed', { error: err?.message || err });
       this.reportError(err);
     }
   }
@@ -303,6 +309,11 @@ export class TwitchPlugin extends BasePlugin {
       display_name: data.login,
       scopes: data.scopes || []
     };
+    this.debugLog('Validated Twitch token response', {
+      login: data.login,
+      userId: data.user_id,
+      scopes: data.scopes
+    });
 
     if (this.statusLabel) {
       this.statusLabel.innerHTML = `Authorized as <strong>${safeHtml(this.identity.login)}</strong>`;
@@ -322,55 +333,109 @@ export class TwitchPlugin extends BasePlugin {
   bindClientEvents(client, channel) {
     client.on('connected', () => {
       this.log('Twitch socket connected.', { server: client.opts?.connection?.server });
+      this.debugLog('Twitch socket connected (debug)', {
+        channel,
+        server: client.opts?.connection?.server
+      });
     });
 
     client.on('disconnected', (reason) => {
       this.log('Twitch socket disconnected', { reason });
       this.client = null;
       this.setState('idle');
+      this.debugLog('Twitch socket disconnected (debug)', { reason });
     });
 
     client.on('reconnect', () => {
       this.log('Twitch socket reconnecting...');
+      this.debugLog('Twitch attempting reconnect');
     });
 
     client.on('message', (chan, tags, message, self) => {
+      this.debugLog('Received Twitch chat message', {
+        channel: chan,
+        tags,
+        message,
+        self
+      });
       if (self) return;
       const payload = this.transformChatMessage(channel, tags, message);
       this.publish(payload, { silent: true });
     });
 
     client.on('subscription', (chan, username, method, message, userstate) => {
+      this.debugLog('Received Twitch subscription', {
+        channel: chan,
+        username,
+        method,
+        message,
+        userstate
+      });
       const payload = this.transformSubscription(channel, username, method, message, userstate, 'subscription');
       this.publish(payload, { silent: false, note: 'New Twitch subscription' });
     });
 
     client.on('resub', (chan, username, months, message, userstate, methods) => {
+      this.debugLog('Received Twitch resubscription', {
+        channel: chan,
+        username,
+        months,
+        message,
+        userstate,
+        methods
+      });
       const payload = this.transformSubscription(channel, username, methods, message, userstate, 'resub');
       this.publish(payload, { silent: false, note: 'Twitch resubscription' });
     });
 
     client.on('subgift', (chan, recipient, method, userstate) => {
+      this.debugLog('Received Twitch gifted sub', {
+        channel: chan,
+        recipient,
+        method,
+        userstate
+      });
       const payload = this.transformGift(channel, recipient, userstate, false);
       this.publish(payload, { silent: false, note: 'Twitch gifted sub' });
     });
 
     client.on('anonsubgift', (chan, recipient, method, userstate) => {
+      this.debugLog('Received Twitch anonymous gifted sub', {
+        channel: chan,
+        recipient,
+        method,
+        userstate
+      });
       const payload = this.transformGift(channel, recipient, userstate, true);
       this.publish(payload, { silent: false, note: 'Anonymous gifted sub' });
     });
 
     client.on('raided', (chan, username, viewers) => {
+      this.debugLog('Received Twitch raid', {
+        channel: chan,
+        username,
+        viewers
+      });
       const payload = this.transformRaid(channel, username, viewers);
       this.publish(payload, { silent: false, note: 'Incoming raid' });
     });
 
     client.on('cheer', (chan, userstate, message) => {
+      this.debugLog('Received Twitch cheer', {
+        channel: chan,
+        userstate,
+        message
+      });
       const payload = this.transformCheer(channel, userstate, message);
       this.publish(payload, { silent: false, note: 'Twitch cheer' });
     });
 
     client.on('hosted', (chan, username, viewers) => {
+      this.debugLog('Received Twitch host event', {
+        channel: chan,
+        username,
+        viewers
+      });
       const payload = this.transformHost(channel, username, viewers);
       this.publish(payload, { silent: false, note: 'New host' });
     });

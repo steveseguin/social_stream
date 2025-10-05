@@ -19,7 +19,8 @@ export class BasePlugin {
       onStatus = () => {},
       autoConnect = false,
       controls = {},
-      icon = null
+      icon = null,
+      debug = false
     } = options || {};
 
     if (!id || !messenger) {
@@ -37,6 +38,7 @@ export class BasePlugin {
     const defaultControls = { connect: true, disconnect: true };
     this.controls = { ...defaultControls, ...controls };
     this.icon = icon;
+    this.debug = Boolean(debug);
 
     this.state = 'idle';
     this.card = null;
@@ -211,7 +213,9 @@ export class BasePlugin {
       return;
     }
 
+    const previous = this.state;
     this.state = next;
+    this.debugLog('State changed', { previous, next, meta });
     if (this.statusNode) {
       this.statusNode.dataset.state = next;
       this.statusNode.textContent = STATE_LABEL[next] || next;
@@ -259,6 +263,7 @@ export class BasePlugin {
   publish(payload, options = {}) {
     const { silent = false, note } = options;
     try {
+      this.debugLog('Publishing payload to dock', { payload, silent, note });
       this.messenger.send(payload);
       if (!silent) {
         const summary = {
@@ -276,9 +281,33 @@ export class BasePlugin {
   }
 
   log(message, detail) {
+    if (this.debug) {
+      if (detail !== undefined) {
+        console.debug(`[${this.id}] ${message}`, detail);
+      } else {
+        console.debug(`[${this.id}] ${message}`);
+      }
+    }
     this.onActivity({
       plugin: this.id,
       message,
+      detail,
+      timestamp: Date.now()
+    });
+  }
+
+  debugLog(message, detail) {
+    if (!this.debug) {
+      return;
+    }
+    if (detail !== undefined) {
+      console.debug(`[${this.id}] ${message}`, detail);
+    } else {
+      console.debug(`[${this.id}] ${message}`);
+    }
+    this.onActivity({
+      plugin: this.id,
+      message: `[debug] ${message}`,
       detail,
       timestamp: Date.now()
     });

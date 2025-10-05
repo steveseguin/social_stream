@@ -21,8 +21,26 @@ const elements = {
 
 const sessionKey = 'session.currentId';
 const activityLimit = 80;
+const debugStorageKey = 'debug.enabled';
 
-const messenger = new DockMessenger(elements.dockFrame);
+const url = new URL(window.location.href);
+const debugParam = url.searchParams.get('debug');
+let debugEnabled = storage.get(debugStorageKey, false);
+if (debugParam !== null) {
+  const normalized = (debugParam || '').toLowerCase();
+  debugEnabled = normalized === '' || (!['0', 'false', 'off', 'no'].includes(normalized));
+  storage.set(debugStorageKey, debugEnabled);
+}
+if (debugEnabled) {
+  console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL to disable.');
+} else {
+  console.info('Social Stream Lite debug logging disabled. Add ?debug=1 to the URL to enable.');
+}
+
+const messenger = new DockMessenger(elements.dockFrame, {
+  debug: debugEnabled,
+  onDebug: debugEnabled ? addActivity : null
+});
 const activity = [];
 let plugins = [];
 
@@ -261,6 +279,7 @@ function init() {
     new YoutubePlugin({
       messenger,
       icon: '../sources/images/youtube.png',
+      debug: debugEnabled,
       onActivity: addActivity,
       onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
       autoConnect: true,
@@ -269,6 +288,7 @@ function init() {
     new TwitchPlugin({
       messenger,
       icon: '../sources/images/twitch.png',
+      debug: debugEnabled,
       onActivity: addActivity,
       onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
       autoConnect: true,
