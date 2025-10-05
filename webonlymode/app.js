@@ -49,24 +49,33 @@ const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-re
 
 const testMessagePresets = [
   () => ({
-    type: 'youtube',
+    platform: 'youtube',
     chatname: 'John Doe',
     chatmessage: 'Looking good! 😘😘😊 This is a test message. 🎶🎵🔨',
     chatimg: '',
-    chatbadges: [],
-    event: 'message'
+    chatbadges: []
   }),
   () => ({
-    type: 'twitch',
+    platform: 'youtube',
+    chatname: 'Bob',
+    chatmessage: 'Appreciate the stream! Have a coffee on me ☕',
+    chatimg: '',
+    hasDonation: true,
+    donationAmount: '$5.00',
+    donationCurrency: 'USD'
+  }),
+  () => ({
+    platform: 'twitch',
     chatname: 'BobTheBuilder',
     chatmessage: 'Thanks for the stream! Here are some bits ✨',
     chatimg: 'https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png',
+    badges: { moderator: '1' },
     chatbadges: ['https://socialstream.ninja/icons/announcement.png'],
     bits: 500,
-    event: 'bits'
+    isModerator: true
   }),
   () => ({
-    type: 'discord',
+    platform: 'discord',
     chatname: 'Sir Drinks-a-lot',
     chatmessage: '☕☕☕ COFFEE!',
     chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
@@ -76,46 +85,40 @@ const testMessagePresets = [
     private: true
   }),
   () => ({
-    type: 'youtubeshorts',
+    platform: 'youtubeshorts',
     chatname: `Lucy_${Math.floor(Math.random() * 999)}`,
     chatmessage: 'Short and sweet! ✨',
-    chatimg: Math.random() > 0.5 ? 'https://socialstream.ninja/media/sampleavatar.png' : '',
-    membership: '',
-    event: 'message'
+    chatimg: Math.random() > 0.5 ? 'https://socialstream.ninja/media/sampleavatar.png' : ''
   }),
   () => ({
-    type: 'facebook',
+    platform: 'facebook',
     chatname: `Steve_${Math.floor(Math.random() * 9000)}`,
     chatmessage: '!join The only way to do great work is to love what you do. ❤️',
     chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
     nameColor: '#107516',
-    membership: 'SPONSORSHIP',
-    event: 'message'
+    membership: 'SPONSORSHIP'
   }),
   () => ({
-    type: 'zoom',
+    platform: 'zoom',
     chatname: 'Nich Lass',
     question: true,
-    chatmessage: 'Is this a test question?  🤓🤓🤓🤓🤓',
-    chatimg: 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj',
-    event: 'message'
+    chatmessage: 'Is this a test question?  🤓🤓🤓',
+    chatimg: 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj'
   }),
   () => ({
-    type: 'twitch',
+    platform: 'twitch',
     chatname: 'VDO.Ninja',
     chatmessage: '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png" alt="icon"> 😁 🇨🇦 https://vdo.ninja/',
     chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
     vip: true,
-    chatbadges: ['https://socialstream.ninja/icons/bot.png', 'https://socialstream.ninja/icons/announcement.png'],
-    event: 'message'
+    chatbadges: ['https://socialstream.ninja/icons/bot.png', 'https://socialstream.ninja/icons/announcement.png']
   }),
   () => ({
-    type: 'youtube',
+    platform: 'youtube',
     chatname: 'ChannelBot',
     chatmessage: '',
     contentimg: 'https://socialstream.ninja/media/logo.png',
-    chatimg: 'https://socialstream.ninja/media/user1.jpg',
-    event: 'message'
+    chatimg: 'https://socialstream.ninja/media/user1.jpg'
   })
 ];
 
@@ -291,47 +294,82 @@ function createTestMessage() {
   } while (
     attempts < 4 &&
     candidate &&
-    lastTestMessageSignature === `${candidate.type}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`
+    lastTestMessageSignature === `${candidate.platform || 'twitch'}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`
   );
 
   if (!candidate) {
     candidate = {
-      type: 'test',
+      platform: 'twitch',
       chatname: 'Test User',
       chatmessage: 'Hello from Social Stream test message!',
       event: 'message'
     };
   }
+  lastTestMessageSignature = `${candidate.platform || 'twitch'}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`;
 
-  lastTestMessageSignature = `${candidate.type}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`;
-
+  const platform = candidate.platform || 'twitch';
   const hasDonation = Boolean(candidate.hasDonation || candidate.donationAmount || candidate.bits);
   const event = candidate.event || (candidate.bits ? 'bits' : hasDonation ? 'donation' : 'message');
 
-  return {
+  const message = {
     id: `test-${now}-${Math.floor(Math.random() * 1000)}`,
-    platform: candidate.type,
-    type: candidate.type,
+    platform,
+    type: platform,
     chatname: candidate.chatname,
     chatmessage: candidate.chatmessage || '',
     chatimg: candidate.chatimg || '',
     timestamp: now,
-    badges: candidate.badges || {},
-    chatbadges: candidate.chatbadges || [],
     hasDonation,
-    donationAmount: candidate.donationAmount || null,
-    membership: candidate.membership || null,
     event,
-    nameColor: candidate.nameColor || null,
-    backgroundColor: candidate.backgroundColor || null,
-    highlightColor: candidate.highlightColor || null,
-    subtitle: candidate.subtitle || null,
-    contentimg: candidate.contentimg || null,
-    private: Boolean(candidate.private),
-    question: Boolean(candidate.question),
-    bits: candidate.bits || 0,
-    vip: Boolean(candidate.vip)
+    bits: candidate.bits ? Number(candidate.bits) : 0,
+    textonly: Boolean(candidate.textonly),
+    raw: { test: true }
   };
+
+  if (candidate.badges) {
+    message.badges = candidate.badges;
+  }
+  if (Array.isArray(candidate.chatbadges) && candidate.chatbadges.length) {
+    message.chatbadges = candidate.chatbadges;
+  }
+  if (candidate.donationAmount) {
+    message.donationAmount = candidate.donationAmount;
+  }
+  if (candidate.donationCurrency) {
+    message.donationCurrency = candidate.donationCurrency;
+  }
+  if (candidate.membership) {
+    message.membership = candidate.membership;
+  }
+  if (candidate.nameColor) {
+    message.nameColor = candidate.nameColor;
+  }
+  if (candidate.backgroundColor) {
+    message.backgroundColor = candidate.backgroundColor;
+  }
+  if (candidate.highlightColor) {
+    message.highlightColor = candidate.highlightColor;
+  }
+  if (candidate.subtitle) {
+    message.subtitle = candidate.subtitle;
+  }
+  if (candidate.contentimg) {
+    message.contentimg = candidate.contentimg;
+  }
+  if (candidate.private) {
+    message.private = true;
+  }
+  if (candidate.question) {
+    message.question = true;
+  }
+  if (candidate.vip) {
+    message.vip = true;
+  }
+  if (candidate.isModerator) {
+    message.isModerator = true;
+  }
+
+  return message;
 }
 
 function handleSendTestMessage() {
