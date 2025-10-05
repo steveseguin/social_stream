@@ -8,6 +8,7 @@ const elements = {
   sessionInput: document.getElementById('session-id'),
   sessionApply: document.getElementById('session-apply'),
   sessionCopy: document.getElementById('session-copy'),
+  sessionTest: document.getElementById('session-test'),
   sessionToggle: document.getElementById('session-options-toggle'),
   sessionAdvanced: document.getElementById('session-advanced'),
   sessionIndicator: document.getElementById('session-indicator'),
@@ -45,6 +46,80 @@ const messenger = new DockMessenger(elements.dockFrame, {
 const activity = [];
 let plugins = [];
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const testMessagePresets = [
+  () => ({
+    type: 'youtube',
+    chatname: 'John Doe',
+    chatmessage: 'Looking good! 😘😘😊 This is a test message. 🎶🎵🔨',
+    chatimg: '',
+    chatbadges: [],
+    event: 'message'
+  }),
+  () => ({
+    type: 'twitch',
+    chatname: 'BobTheBuilder',
+    chatmessage: 'Thanks for the stream! Here are some bits ✨',
+    chatimg: 'https://static-cdn.jtvnw.net/jtv_user_pictures/52f459a5-7f13-4430-8684-b6b43d1e6bba-profile_image-50x50.png',
+    chatbadges: ['https://socialstream.ninja/icons/announcement.png'],
+    bits: 500,
+    event: 'bits'
+  }),
+  () => ({
+    type: 'discord',
+    chatname: 'Sir Drinks-a-lot',
+    chatmessage: '☕☕☕ COFFEE!',
+    chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
+    membership: 'Coffee Addiction',
+    highlightColor: 'pink',
+    nameColor: '#9C27B0',
+    private: true
+  }),
+  () => ({
+    type: 'youtubeshorts',
+    chatname: `Lucy_${Math.floor(Math.random() * 999)}`,
+    chatmessage: 'Short and sweet! ✨',
+    chatimg: Math.random() > 0.5 ? 'https://socialstream.ninja/media/sampleavatar.png' : '',
+    membership: '',
+    event: 'message'
+  }),
+  () => ({
+    type: 'facebook',
+    chatname: `Steve_${Math.floor(Math.random() * 9000)}`,
+    chatmessage: '!join The only way to do great work is to love what you do. ❤️',
+    chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
+    nameColor: '#107516',
+    membership: 'SPONSORSHIP',
+    event: 'message'
+  }),
+  () => ({
+    type: 'zoom',
+    chatname: 'Nich Lass',
+    question: true,
+    chatmessage: 'Is this a test question?  🤓🤓🤓🤓🤓',
+    chatimg: 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj',
+    event: 'message'
+  }),
+  () => ({
+    type: 'twitch',
+    chatname: 'VDO.Ninja',
+    chatmessage: '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png" alt="icon"> 😁 🇨🇦 https://vdo.ninja/',
+    chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
+    vip: true,
+    chatbadges: ['https://socialstream.ninja/icons/bot.png', 'https://socialstream.ninja/icons/announcement.png'],
+    event: 'message'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'ChannelBot',
+    chatmessage: '',
+    contentimg: 'https://socialstream.ninja/media/logo.png',
+    chatimg: 'https://socialstream.ninja/media/user1.jpg',
+    event: 'message'
+  })
+];
+
+let lastTestMessageSignature = null;
 
 function updateSessionStatus(message, tone = 'info', { html = false } = {}) {
   const target = elements.sessionStatus;
@@ -94,6 +169,10 @@ function startSession(sessionId) {
 
   storage.set(sessionKey, value);
   messenger.setSessionId(value);
+
+  if (elements.sessionTest) {
+    elements.sessionTest.disabled = !value;
+  }
 
   const dockLink = sessionUrl(value);
   if (elements.sessionOpen) {
@@ -192,6 +271,86 @@ function renderActivity() {
 function clearActivity() {
   activity.length = 0;
   renderActivity();
+}
+
+function pickRandom(list) {
+  if (!Array.isArray(list) || !list.length) {
+    return null;
+  }
+  return list[Math.floor(Math.random() * list.length)];
+}
+
+function createTestMessage() {
+  const now = Date.now();
+  let attempts = 0;
+  let candidate = null;
+  do {
+    const presetFactory = pickRandom(testMessagePresets);
+    candidate = typeof presetFactory === 'function' ? presetFactory() : null;
+    attempts += 1;
+  } while (
+    attempts < 4 &&
+    candidate &&
+    lastTestMessageSignature === `${candidate.type}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`
+  );
+
+  if (!candidate) {
+    candidate = {
+      type: 'test',
+      chatname: 'Test User',
+      chatmessage: 'Hello from Social Stream test message!',
+      event: 'message'
+    };
+  }
+
+  lastTestMessageSignature = `${candidate.type}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`;
+
+  const hasDonation = Boolean(candidate.hasDonation || candidate.donationAmount || candidate.bits);
+  const event = candidate.event || (candidate.bits ? 'bits' : hasDonation ? 'donation' : 'message');
+
+  return {
+    id: `test-${now}-${Math.floor(Math.random() * 1000)}`,
+    platform: candidate.type,
+    type: candidate.type,
+    chatname: candidate.chatname,
+    chatmessage: candidate.chatmessage || '',
+    chatimg: candidate.chatimg || '',
+    timestamp: now,
+    badges: candidate.badges || {},
+    chatbadges: candidate.chatbadges || [],
+    hasDonation,
+    donationAmount: candidate.donationAmount || null,
+    membership: candidate.membership || null,
+    event,
+    nameColor: candidate.nameColor || null,
+    backgroundColor: candidate.backgroundColor || null,
+    highlightColor: candidate.highlightColor || null,
+    subtitle: candidate.subtitle || null,
+    contentimg: candidate.contentimg || null,
+    private: Boolean(candidate.private),
+    question: Boolean(candidate.question),
+    bits: candidate.bits || 0,
+    vip: Boolean(candidate.vip)
+  };
+}
+
+function handleSendTestMessage() {
+  if (!messenger.getSessionId()) {
+    updateSessionStatus('Start a session before sending a test message.', 'warn');
+    return;
+  }
+
+  const message = createTestMessage();
+  messenger.send(message);
+
+  addActivity({
+    plugin: 'system',
+    message: `Sent test message (${message.type || 'test'})`,
+    detail: message,
+    timestamp: Date.now()
+  });
+
+  updateSessionStatus('Test message sent to dock overlay.', 'success');
 }
 
 function notifyPluginsOfSession(sessionId) {
@@ -316,6 +475,7 @@ function init() {
   elements.sessionInput.addEventListener('change', () => startSession());
   elements.sessionApply.addEventListener('click', () => startSession());
   elements.sessionCopy.addEventListener('click', () => handleCopyLink());
+  elements.sessionTest?.addEventListener('click', () => handleSendTestMessage());
   elements.activityClear.addEventListener('click', clearActivity);
 
   if (elements.sessionToggle && elements.sessionAdvanced) {
@@ -336,6 +496,10 @@ function init() {
   const storedSession = storage.get(sessionKey, '');
   if (storedSession) {
     elements.sessionInput.value = storedSession;
+  }
+
+  if (elements.sessionTest) {
+    elements.sessionTest.disabled = !storedSession;
   }
 
   plugins = [

@@ -73,6 +73,21 @@ export class DockMessenger {
       const payload = { sendData: { overlayNinja: message }, type: 'pcs' };
       this.debugLog('Posting message to dock iframe', { payload });
       this.frame.contentWindow.postMessage(payload, '*');
+
+      const target = this.frame.contentWindow;
+      if (target && typeof target.processInput === 'function') {
+        try {
+          target.processInput(message);
+        } catch (err) {
+          this.debugLog('Direct processInput relay failed', { error: err?.message || err });
+        }
+      } else if (target && typeof target.processData === 'function') {
+        try {
+          target.processData({ contents: message });
+        } catch (err) {
+          this.debugLog('Direct processData relay failed', { error: err?.message || err });
+        }
+      }
     } catch (err) {
       console.error('Failed to post message to dock iframe', err);
     }
