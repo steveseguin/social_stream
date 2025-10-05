@@ -351,16 +351,35 @@ export class TwitchPlugin extends BasePlugin {
       this.debugLog('Twitch attempting reconnect');
     });
 
-    client.on('message', (chan, tags, message, self) => {
+    const processChatEvent = (chan, tags, message, self, fallbackType = null) => {
+      const messageType = tags?.['message-type'] || fallbackType || null;
       this.debugLog('Received Twitch chat message', {
-        channel: chan,
+        sourceChannel: chan,
+        resolvedChannel: channel,
+        messageType: messageType || (tags?.bits ? 'bits' : 'message'),
         tags,
         message,
         self
       });
-      const payload = this.transformChatMessage(channel, tags, message, self);
+      const payload = this.transformChatMessage(channel, tags, message, self, messageType);
       const preview = this.formatChatPreview(payload);
       this.publish(payload, { silent: true, preview });
+    };
+
+    client.on('chat', (chan, tags, message, self) => {
+      processChatEvent(chan, tags, message, self, 'chat');
+    });
+
+    client.on('action', (chan, tags, message, self) => {
+      processChatEvent(chan, tags, message, self, 'action');
+    });
+
+    client.on('message', (chan, tags, message, self) => {
+      const type = tags?.['message-type'];
+      if (type === 'chat' || type === 'action') {
+        return;
+      }
+      processChatEvent(chan, tags, message, self, type || 'message');
     });
 
     client.on('subscription', (chan, username, method, message, userstate) => {
@@ -465,10 +484,12 @@ export class TwitchPlugin extends BasePlugin {
     return trimmed ? `${name}: ${trimmed}` : name;
   }
 
-  transformChatMessage(channel, tags, message, isSelf = false) {
+  transformChatMessage(channel, tags, message, isSelf = false, messageType = null) {
     const displayName = tags['display-name'] || tags.username || 'Twitch User';
     const userId = tags['user-id'];
     const badges = tags.badges || {};
+    const normalizedType = messageType || tags['message-type'] || null;
+    const event = tags.bits ? 'bits' : normalizedType === 'action' ? 'action' : 'message';
 
     return {
       id: tags.id || `${channel}-${tags['tmi-sent-ts'] || Date.now()}`,
@@ -485,7 +506,7 @@ export class TwitchPlugin extends BasePlugin {
       isOwner: 'broadcaster' in badges,
       isSubscriber: 'subscriber' in badges,
       userId,
-      event: tags.bits ? 'bits' : 'message',
+      event,
       isSelf: Boolean(isSelf),
       raw: { channel, tags }
     };
