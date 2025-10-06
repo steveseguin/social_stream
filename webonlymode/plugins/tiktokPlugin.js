@@ -334,10 +334,54 @@ export class TikTokPlugin extends BasePlugin {
       return;
     }
 
-    const uniqueId = normalizeUniqueId(this.uniqueIdInput ? this.uniqueIdInput.value : storage.get(UNIQUE_ID_KEY, ''));
+    if (this.uniqueIdInput) {
+      this.uniqueIdInput.setCustomValidity('');
+    }
+
+    let uniqueId = normalizeUniqueId(this.uniqueIdInput ? this.uniqueIdInput.value : storage.get(UNIQUE_ID_KEY, ''));
     if (!uniqueId) {
-      this.reportError(new Error('Enter the TikTok username to monitor.'));
-      return;
+      // Prompt for username
+      const response = window.prompt('Enter the TikTok username to monitor (without @):', '');
+
+      // User cancelled the prompt
+      if (response === null) {
+        return;
+      }
+
+      const normalized = normalizeUniqueId(response);
+
+      // Check if empty after normalization
+      if (!normalized) {
+        if (this.uniqueIdInput) {
+          this.toggleSettings?.(true);
+          this.uniqueIdInput.focus();
+          if (typeof this.uniqueIdInput.setCustomValidity === 'function') {
+            this.uniqueIdInput.setCustomValidity('Enter the TikTok username to monitor.');
+            this.uniqueIdInput.reportValidity?.();
+          }
+        }
+        this.reportError(new Error('Enter the TikTok username to monitor.'));
+        return;
+      }
+
+      // Check for spaces in the original response (before normalization)
+      if (response.trim().includes(' ')) {
+        if (this.uniqueIdInput) {
+          this.toggleSettings?.(true);
+          this.uniqueIdInput.focus();
+          if (typeof this.uniqueIdInput.setCustomValidity === 'function') {
+            this.uniqueIdInput.setCustomValidity('TikTok usernames cannot contain spaces.');
+            this.uniqueIdInput.reportValidity?.();
+          }
+        }
+        this.reportError(new Error('TikTok usernames cannot contain spaces.'));
+        return;
+      }
+
+      uniqueId = normalized;
+      if (this.uniqueIdInput) {
+        this.uniqueIdInput.value = normalized;
+      }
     }
     storage.set(UNIQUE_ID_KEY, uniqueId);
 

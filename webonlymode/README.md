@@ -33,6 +33,16 @@ The implicit flow appends `#access_token=...` to this page, which the plugins ca
 - The Twitch integration defaults to the authenticated channel unless a custom channel name is provided.
 - Token refresh is not implemented (implicit flow tokens expire); the UI prompts for re-auth when required.
 
+### TikTok LIVE via proxy
+
+The TikTok plugin relies on a small Socket.IO proxy that speaks the TikTok Chat Reader wire format. A ready-to-run implementation lives in `webonlymode/tiktok-proxy/`:
+
+1. Install dependencies with `npm install` while inside that folder.
+2. Start the service (`npm start`) and note the port (defaults to `http://localhost:8089`).
+3. In the TikTok card inside Web-only mode, paste the proxy URL into **Proxy server URL** and click **Connect**.
+
+You can deploy the proxy anywhere Node.js 18 is available (local machine, VPS, Docker, etc.). Harden CORS or authentication as needed if exposing it publicly.
+
 ## Directory Overview
 
 ```
@@ -46,6 +56,9 @@ webonlymode/
 |   `-- storage.js       # Namespaced localStorage helpers
 |-- vendor/
 |   `-- tmi-1.8.5.min.js # Bundled Twitch client fallback (avoids broken CDN dist/ links)
+|-- tiktok-proxy/
+|   |-- package.json      # Minimal Node service for TikTok Chat Reader proxying
+|   `-- server.js         # Socket.IO bridge (see README for details)
 `-- plugins/
     |-- basePlugin.js    # Shared card + lifecycle logic
     |-- youtubePlugin.js # YouTube Data API integration

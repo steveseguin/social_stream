@@ -269,17 +269,45 @@ main.layout {
   color: var(--danger);
 }
 
-.session__hint {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--text-secondary);
-}
-
 .session__advanced {
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   padding-top: 1rem;
   display: grid;
   gap: 0.75rem;
+}
+
+.session__toggle-group {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(14, 18, 30, 0.45);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.session__toggle-group legend {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0 0 0.25rem;
+}
+
+.session__toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.session__toggle input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--accent);
+}
+
+.session__toggle-note {
+  margin: 0.25rem 0 0;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
 .session__advanced[hidden] {
@@ -316,6 +344,13 @@ main.layout {
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.sources__footnote {
+  margin: 1rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  text-align: center;
 }
 
 .source-card {

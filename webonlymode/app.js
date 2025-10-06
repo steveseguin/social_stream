@@ -7,6 +7,12 @@ import { TwitchPlugin } from './plugins/twitchPlugin.js';
 import { TikTokPlugin } from './plugins/tiktokPlugin.js';
 import { KickPlugin } from './plugins/kickPlugin.js';
 
+const overlayToggleDefs = [
+  { key: 'transparent', id: 'session-opt-transparent', params: ['transparent'] },
+  { key: 'noavatar', id: 'session-opt-noavatar', params: ['noavatar'] },
+  { key: 'reverse', id: 'session-opt-reverse', params: ['reverse'] }
+];
+
 const elements = {
   sessionInput: document.getElementById('session-id'),
   sessionApply: document.getElementById('session-apply'),
@@ -31,8 +37,25 @@ const elements = {
   mobileNavButtons: Array.from(document.querySelectorAll('[data-mobile-nav-target]'))
 };
 
+const overlayToggleInputs = overlayToggleDefs.reduce((acc, def) => {
+  acc[def.key] = document.getElementById(def.id);
+  return acc;
+}, {});
+
 const sessionKey = 'session.currentId';
+const overlayToggleStorageKey = 'session.overlayOptions';
 const activityLimit = 80;
+
+const overlayToggleDefaults = overlayToggleDefs.reduce((acc, def) => {
+  acc[def.key] = false;
+  return acc;
+}, {});
+
+let overlayToggleState = { ...overlayToggleDefaults };
+const storedOverlayToggleState = storage.get(overlayToggleStorageKey, null);
+if (storedOverlayToggleState && typeof storedOverlayToggleState === 'object' && !Array.isArray(storedOverlayToggleState)) {
+  overlayToggleState = { ...overlayToggleState, ...storedOverlayToggleState };
+}
 
 const url = new URL(window.location.href);
 const debugParam = url.searchParams.get('debug');
@@ -208,7 +231,7 @@ function updateSessionStatus(message, tone = 'info', { html = false } = {}) {
   target.dataset.tone = tone;
 }
 
-function sessionUrl(sessionId) {
+function sessionUrl(sessionId, toggleState = overlayToggleState) {
   if (!sessionId) {
     return '#';
   }
@@ -222,7 +245,54 @@ function sessionUrl(sessionId) {
   url.searchParams.set('nodonohighlight', "");
   url.searchParams.set('notime', "");
   url.searchParams.set('color', "");
+  if (toggleState) {
+    overlayToggleDefs.forEach(({ key, params }) => {
+      if (toggleState[key]) {
+        params.forEach((entry) => {
+          if (!entry) {
+            return;
+          }
+          const [name, value = ''] = entry.split('=');
+          url.searchParams.set(name, value);
+        });
+      }
+    });
+  }
   return url.toString();
+}
+
+function updateSessionLink(sessionId) {
+  if (!elements.sessionOpen) {
+    return;
+  }
+  const effectiveSession = sessionId || messenger.getSessionId() || (elements.sessionInput?.value || '').trim();
+  if (!effectiveSession) {
+    elements.sessionOpen.href = '#';
+    delete elements.sessionOpen.dataset.sessionId;
+    return;
+  }
+  const dockLink = sessionUrl(effectiveSession);
+  elements.sessionOpen.href = dockLink;
+  elements.sessionOpen.dataset.sessionId = effectiveSession;
+}
+
+function handleOverlayToggleChange(key, checked) {
+  overlayToggleState = { ...overlayToggleState, [key]: Boolean(checked) };
+  storage.set(overlayToggleStorageKey, overlayToggleState);
+  updateSessionLink();
+}
+
+function initOverlayToggleControls() {
+  overlayToggleDefs.forEach(({ key }) => {
+    const input = overlayToggleInputs[key];
+    if (!input) {
+      return;
+    }
+    input.checked = Boolean(overlayToggleState[key]);
+    input.addEventListener('change', (event) => {
+      handleOverlayToggleChange(key, event?.target?.checked);
+    });
+  });
 }
 
 function setSessionIndicator(state, label) {
@@ -253,11 +323,7 @@ function startSession(sessionId) {
     elements.sessionTest.disabled = !value;
   }
 
-  const dockLink = sessionUrl(value);
-  if (elements.sessionOpen) {
-    elements.sessionOpen.href = dockLink;
-    elements.sessionOpen.dataset.sessionId = value;
-  }
+  updateSessionLink(value);
 
   setSessionIndicator('ready', 'Overlay link ready');
   updateSessionStatus('');
@@ -1371,16 +1437,14 @@ function processOAuthCallback(pluginMap) {
 
 function init() {
   setSessionIndicator('idle', 'Session idle');
+  initOverlayToggleControls();
   document.addEventListener('fullscreenchange', handleFullscreenChange);
   elements.dockFrame.addEventListener('load', () => {
     if (messenger.getSessionId()) {
       const sessionId = messenger.getSessionId();
-      const dockLink = sessionUrl(sessionId);
       setSessionIndicator('connected', 'Relay active');
       updateSessionStatus('');
-      if (elements.sessionOpen) {
-        elements.sessionOpen.href = dockLink;
-      }
+      updateSessionLink(sessionId);
     }
   });
 

@@ -43,7 +43,6 @@
         <div class="session__status-row">
           <output id="session-status" class="session__status" role="status" aria-live="polite" hidden></output>
         </div>
-        <p class="session__hint">Keep this page open so your chats continue to relay to the overlay.</p>
         <div id="session-advanced" class="session__advanced" hidden>
           <label class="field">
             <span class="field__label">Custom Session ID</span>
@@ -52,6 +51,22 @@
           <div class="session__actions">
             <button type="button" id="session-apply" class="btn">Save session ID</button>
           </div>
+          <fieldset class="session__toggle-group">
+            <legend>Quick overlay tweaks</legend>
+            <label class="session__toggle" for="session-opt-transparent">
+              <input type="checkbox" id="session-opt-transparent" />
+              <span>Transparent background</span>
+            </label>
+            <label class="session__toggle" for="session-opt-noavatar">
+              <input type="checkbox" id="session-opt-noavatar" />
+              <span>Hide viewer avatars</span>
+            </label>
+            <label class="session__toggle" for="session-opt-reverse">
+              <input type="checkbox" id="session-opt-reverse" />
+              <span>Newest messages at the top</span>
+            </label>
+            <p class="session__toggle-note">Looking for deeper overlay controls? The standalone app and browser extension include far more customization options.</p>
+          </fieldset>
         </div>
       </div>
     </section>
@@ -61,6 +76,7 @@
         <h2 id="sources-heading">Sources</h2>
       </div>
       <div id="source-list" class="sources__grid" role="list"></div>
+      <p class="sources__footnote">Need additional platforms? The standalone app or browser extension support over 100 sources.</p>
     </section>
 
     <section id="activity" class="card activity" aria-labelledby="activity-heading">
