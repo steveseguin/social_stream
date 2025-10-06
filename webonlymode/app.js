@@ -3,6 +3,8 @@ import { storage } from './utils/storage.js';
 import { randomSessionId, formatTime, safeHtml } from './utils/helpers.js';
 import { YoutubePlugin } from './plugins/youtubePlugin.js';
 import { TwitchPlugin } from './plugins/twitchPlugin.js';
+import { TikTokPlugin } from './plugins/tiktokPlugin.js';
+import { KickPlugin } from './plugins/kickPlugin.js';
 
 const elements = {
   sessionInput: document.getElementById('session-id'),
@@ -570,6 +572,20 @@ function init() {
       onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
       autoConnect: true,
       controls: { connect: false, disconnect: true }
+    }),
+    new KickPlugin({
+      messenger,
+      icon: '../sources/images/kick.png',
+      debug: debugEnabled,
+      onActivity: addActivity,
+      onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
+    }),
+    new TikTokPlugin({
+      messenger,
+      icon: '../sources/images/tiktok.png',
+      debug: debugEnabled,
+      onActivity: addActivity,
+      onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
     })
   ];
 

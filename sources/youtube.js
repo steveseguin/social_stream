@@ -1395,45 +1395,58 @@
 		return fetch('https://www.youtube.com/watch?v=' + videoId)
 			.then(response => response.text())
 			.then(html => {
+				let viewerCount = 0; // Default to 0 if not found
 				try {
 					// Look for the pattern in the HTML - matches any number in originalViewCount
 					const viewerMatch = html.match(/"isLive"\s*:\s*true\s*,\s*"originalViewCount"\s*:\s*"(\d+)"/);
-					
+
 					if (viewerMatch && viewerMatch[1]) {
-						const viewerCount = parseInt(viewerMatch[1]);
-						
+						const parsedCount = parseInt(viewerMatch[1]);
+
 						// Validate the viewer count is reasonable
-						if (!isNaN(viewerCount) && viewerCount >= 0 && viewerCount < 1000000000) {
+						if (!isNaN(parsedCount) && parsedCount >= 0 && parsedCount < 1000000000) {
+							viewerCount = parsedCount;
 							console.log("Successfully scraped viewer count:", viewerCount);
-							
-							// Send the viewer count update
-							chrome.runtime.sendMessage(
-								chrome.runtime.id,
-								({message:{
-										type: (youtubeShorts ? "youtubeshorts" : "youtube"),
-										event: 'viewer_update',
-										meta: viewerCount
-									}
-								}),
-								function (e) {}
-							);
-							
-							return { viewers: viewerCount };
 						} else {
-							console.log("Invalid viewer count scraped:", viewerCount);
+							console.log("Invalid viewer count scraped:", parsedCount);
 						}
 					} else {
-						console.log("Could not find viewer count in page HTML");
+						console.log("Could not find viewer count in page HTML, defaulting to 0");
 					}
 				} catch (e) {
 					console.error("Error parsing viewer count from page:", e);
 				}
-				
-				return null;
+
+				// Always send the viewer count update (even if 0)
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+							type: (youtubeShorts ? "youtubeshorts" : "youtube"),
+							event: 'viewer_update',
+							meta: viewerCount
+						}
+					}),
+					function (e) {}
+				);
+
+				return { viewers: viewerCount };
 			})
 			.catch(error => {
 				console.error("Error fetching YouTube page for viewer count:", error);
-				return null;
+
+				// Send 0 on fetch error to clear stale counts
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+							type: (youtubeShorts ? "youtubeshorts" : "youtube"),
+							event: 'viewer_update',
+							meta: 0
+						}
+					}),
+					function (e) {}
+				);
+
+				return { viewers: 0 };
 			});
 	}
 	

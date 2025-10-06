@@ -1322,37 +1322,40 @@
 					// not active
 				} else if (counter%15==1){
 					var viewerCount = document.querySelector("[data-e2e='live-people-count'], .flex.justify-start.items-center .P4-Regular.text-UIText3");
+					let views = 0; // Default to 0 if not found
 
 					if (viewerCount && viewerCount.textContent) {
-						let views = viewerCount.textContent;
-						
-						if (views.startsWith("· ")){
-							views = views.replace("· ","");
+						let viewText = viewerCount.textContent;
+
+						if (viewText.startsWith("· ")){
+							viewText = viewText.replace("· ","");
 						}
-						
+
 						let multiplier = 1;
-						if (views.includes("K")) {
+						if (viewText.includes("K")) {
 							multiplier = 1000;
-							views = views.replace("K", "");
-						} else if (views.includes("M")) {
+							viewText = viewText.replace("K", "");
+						} else if (viewText.includes("M")) {
 							multiplier = 1000000;
-							views = views.replace("M", "");
+							viewText = viewText.replace("M", "");
 						}
-						if (views == parseFloat(views)) {
-							views = parseFloat(views) * multiplier;
-							chrome.runtime.sendMessage(
-								chrome.runtime.id,
-								({
-									message: {
-										type: 'tiktok',
-										event: 'viewer_update',
-										meta: views
-									}
-								}),
-								function(e) {}
-							);
+						if (viewText == parseFloat(viewText)) {
+							views = parseFloat(viewText) * multiplier;
 						}
 					}
+
+					// Always send viewer update (even if 0) to clear stale counts
+					chrome.runtime.sendMessage(
+						chrome.runtime.id,
+						({
+							message: {
+								type: 'tiktok',
+								event: 'viewer_update',
+								meta: views
+							}
+						}),
+						function(e) {}
+					);
 				}
 			} catch (e) {
 				////console.error(e);
