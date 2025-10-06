@@ -974,15 +974,19 @@ body.activity-fallback-fullscreen main.layout {
   }
 
   .card__header {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
   }
 
+  .card__header h2 {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .card__header-controls {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
+    flex-shrink: 0;
     gap: 0.5rem;
   }
 
@@ -998,22 +1002,23 @@ body.activity-fallback-fullscreen main.layout {
   }
 
   .activity__controls {
-    flex-direction: column;
-    align-items: stretch;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 0.4rem;
   }
 
   .activity__controls .btn {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: fit-content;
   }
 
   .activity-toggle {
-    width: 100%;
-    justify-content: space-between;
+    flex: 1 1 auto;
+    min-width: fit-content;
   }
 
   .activity-menu {
-    align-self: flex-end;
+    flex-shrink: 0;
   }
 
   .activity-menu__panel {
@@ -1068,9 +1073,18 @@ body.activity-fallback-fullscreen main.layout {
     font-size: 0.95rem;
   }
 
-  .source-card__header,
+  .source-card__header {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .source-card__identity {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
   .source-card__header-controls {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-shrink: 0;
   }
 }

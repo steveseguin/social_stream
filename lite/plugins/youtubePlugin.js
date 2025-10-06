@@ -282,25 +282,48 @@ export class YoutubePlugin extends BasePlugin {
     };
 
     // Step 1: Fetch active live broadcasts for the authenticated channel.
-    const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,contentDetails,status&broadcastStatus=active&broadcastType=all&mine=true', { headers });
+    // Note: Cannot use both 'mine' and 'broadcastStatus' together - use separate calls
+    const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,contentDetails,status&mine=true', { headers });
     if (!broadcastRes.ok) {
       const errBody = await broadcastRes.json().catch(() => ({}));
       throw this.createApiError(errBody, broadcastRes.status, 'liveBroadcasts');
     }
     const broadcastData = await broadcastRes.json();
     if (broadcastData.items && broadcastData.items.length) {
-      const live = broadcastData.items.find(item => item.snippet?.liveChatId) || broadcastData.items[0];
-      this.channelInfo = {
-        id: live?.snippet?.channelId,
-        title: live?.snippet?.channelTitle,
-        thumbnail: live?.snippet?.thumbnails?.default?.url
-      };
-      storage.set(CHANNEL_KEY, this.channelInfo);
-      return live?.snippet?.liveChatId || null;
+      // Filter for active broadcasts
+      const activeItems = broadcastData.items.filter(item =>
+        item.status?.lifeCycleStatus === 'live' ||
+        item.status?.lifeCycleStatus === 'liveStarting'
+      );
+      if (activeItems.length) {
+        const live = activeItems.find(item => item.snippet?.liveChatId) || activeItems[0];
+        this.channelInfo = {
+          id: live?.snippet?.channelId,
+          title: live?.snippet?.channelTitle,
+          thumbnail: live?.snippet?.thumbnails?.default?.url
+        };
+        storage.set(CHANNEL_KEY, this.channelInfo);
+        return live?.snippet?.liveChatId || null;
+      }
     }
 
-    // No active broadcasts found. Attempt to fetch upcoming (to give better info)
-    const upcomingRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&broadcastStatus=upcoming&mine=true', { headers });
+    // No active broadcasts found. Check if we got upcoming broadcasts
+    if (broadcastData.items && broadcastData.items.length) {
+      const upcomingItems = broadcastData.items.filter(item =>
+        item.status?.lifeCycleStatus === 'ready' ||
+        item.status?.lifeCycleStatus === 'testing'
+      );
+      if (upcomingItems.length) {
+        this.channelInfo = {
+          id: upcomingItems[0]?.snippet?.channelId,
+          title: upcomingItems[0]?.snippet?.channelTitle
+        };
+        storage.set(CHANNEL_KEY, this.channelInfo);
+      }
+    }
+
+    // For backwards compatibility, also try the old approach
+    const upcomingRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&mine=true', { headers });
     if (upcomingRes.ok) {
       const upcomingData = await upcomingRes.json();
       if (upcomingData.items && upcomingData.items.length) {
