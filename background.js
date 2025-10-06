@@ -2986,6 +2986,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "textonlymode") { 
 				pushSettingChange();
 			}
+			if (request.setting == "youtubeLargerFont") { 
+				pushSettingChange();
+			}
 			if (request.setting == "vdoninjadiscord") { 
 				pushSettingChange();
 			}

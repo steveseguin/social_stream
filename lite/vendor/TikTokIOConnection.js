@@ -58,3 +58,11 @@ class TikTokIOConnection {
         this.socket.on(eventName, eventHandler);
     }
 }
+
+if (typeof window !== 'undefined') {
+    window.TikTokIOConnection = TikTokIOConnection;
+}
+
+if (typeof globalThis !== 'undefined') {
+    globalThis.TikTokIOConnection = TikTokIOConnection;
+}

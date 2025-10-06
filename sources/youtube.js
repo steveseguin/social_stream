@@ -1033,6 +1033,12 @@
 						captureDelay = 200;
 						//console.log(captureDelay);
 					}
+					// Apply or remove larger font when settings change
+					if (settings.youtubeLargerFont) {
+						applyLargerFont();
+					} else {
+						removeLargerFont();
+					}
 					return;
 				}
 				if ("SEVENTV" in request) {
@@ -1105,7 +1111,7 @@
 		
 		if ("settings" in response) {
 			settings = response.settings;
-			
+
 			if (settings.bttv && !BTTV) {
 				chrome.runtime.sendMessage(chrome.runtime.id, { getBTTV: true }, function (response) {
 					//	console.log(response);
@@ -1121,13 +1127,18 @@
 					//	console.log(response);
 				});
 			}
-			
+
 			if (settings.delayyoutube){
 				captureDelay = 2000;
 				//console.log(captureDelay);
 			} else {
 				captureDelay = 200;
 				//console.log(captureDelay);
+			}
+
+			// Apply larger font if enabled on startup
+			if (settings.youtubeLargerFont) {
+				applyLargerFont();
 			}
 		}
 	});
@@ -1190,7 +1201,32 @@
 
 	console.log("Social stream inserted");
 	var marked = false;
-	
+	var largerFontApplied = false;
+
+	function applyLargerFont() {
+		if (!largerFontApplied) {
+			var style = document.createElement("style");
+			style.id = "youtube-larger-font-style";
+			style.innerHTML = `
+				yt-live-chat-text-message-renderer {
+					font-size: 24px !important;
+				}
+			`;
+			document.head.appendChild(style);
+			largerFontApplied = true;
+		}
+	}
+
+	function removeLargerFont() {
+		if (largerFontApplied) {
+			var styleElement = document.getElementById("youtube-larger-font-style");
+			if (styleElement) {
+				styleElement.remove();
+			}
+			largerFontApplied = false;
+		}
+	}
+
 	const checkTimer = setInterval(function () {
 	  let ele = document.querySelector("yt-live-chat-app #items.yt-live-chat-item-list-renderer");
 	  
@@ -1292,6 +1328,13 @@
 	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
 		  document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "unset";
 		  marked = false;
+	  }
+
+	  // Apply or remove larger font based on settings
+	  if (settings.youtubeLargerFont) {
+		  applyLargerFont();
+	  } else {
+		  removeLargerFont();
 	  }
 	}, 1000);
 

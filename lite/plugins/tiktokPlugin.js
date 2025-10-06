@@ -16,6 +16,7 @@ const SOCKET_IO_SOURCES = [
 ];
 
 const CONNECTOR_SOURCES = [
+  './vendor/TikTokIOConnection.js?v=20240211',
   './vendor/TikTokIOConnection.js',
   'https://raw.githubusercontent.com/zerodytrash/TikTok-Chat-Reader/main/public/connection.js',
   'https://cdn.jsdelivr.net/gh/zerodytrash/TikTok-Chat-Reader@latest/public/connection.js'
@@ -102,7 +103,6 @@ export class TikTokPlugin extends BasePlugin {
     this.includeFollowsInput = null;
     this.includeLikesInput = null;
     this.statusLabel = null;
-    this.detailsLabel = null;
 
     this.connector = null;
     this.connectorLoaded = false;
@@ -114,13 +114,8 @@ export class TikTokPlugin extends BasePlugin {
     statusLabel.className = 'source-card__subtext';
     statusLabel.hidden = true;
 
-    const detailsLabel = document.createElement('div');
-    detailsLabel.className = 'source-card__subtext';
-    detailsLabel.hidden = true;
-
-    container.append(statusLabel, detailsLabel);
+    container.append(statusLabel);
     this.statusLabel = statusLabel;
-    this.detailsLabel = detailsLabel;
     this.refreshStatus();
     return container;
   }
@@ -240,16 +235,6 @@ export class TikTokPlugin extends BasePlugin {
       this.statusLabel.textContent = '';
     }
 
-    if (this.detailsLabel) {
-      const server = normalizeServerUrl(this.serverInput ? this.serverInput.value : storage.get(SERVER_URL_KEY, ''));
-      if (server) {
-        this.detailsLabel.hidden = false;
-        this.detailsLabel.textContent = `Proxy: ${server}`;
-      } else {
-        this.detailsLabel.hidden = true;
-        this.detailsLabel.textContent = '';
-      }
-    }
   }
 
   async ensureConnectorLoaded(customSources) {
