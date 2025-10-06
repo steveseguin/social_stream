@@ -1,4 +1,4 @@
-import { DockMessenger, buildDockUrl } from './utils/dockMessenger.js';
+import { DockMessenger } from './utils/dockMessenger.js';
 import { storage } from './utils/storage.js';
 import { randomSessionId, formatTime, safeHtml } from './utils/helpers.js';
 import { YoutubePlugin } from './plugins/youtubePlugin.js';
@@ -144,7 +144,12 @@ function updateSessionStatus(message, tone = 'info', { html = false } = {}) {
 }
 
 function sessionUrl(sessionId) {
-  return buildDockUrl(sessionId) || '#';
+  if (!sessionId) {
+    return '#';
+  }
+  const url = new URL('../dock.html', window.location.href);
+  url.searchParams.set('session', sessionId);
+  return url.toString();
 }
 
 function setSessionIndicator(state, label) {

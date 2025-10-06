@@ -426,6 +426,7 @@ main.layout {
   display: grid;
   gap: 0.6rem;
   font-size: 0.95rem;
+  overflow-wrap: anywhere;
 }
 
 .activity-entry {
@@ -444,6 +445,19 @@ main.layout {
 
 .activity-entry__message {
   margin: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.activity-entry__detail {
+  margin: 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .dock-relay {
