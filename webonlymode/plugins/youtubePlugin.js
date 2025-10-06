@@ -1,6 +1,6 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
-import { randomSessionId, safeHtml } from '../utils/helpers.js';
+import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
 
 const TOKEN_KEY = 'youtube.token';
 const CLIENT_ID_KEY = 'youtube.clientId';
@@ -260,6 +260,7 @@ export class YoutubePlugin extends BasePlugin {
       this.refreshStatus();
       this.setState('connected');
       this.log('Connected to YouTube live chat.', { liveChatId: this.liveChatId });
+      await this.prepareEmotesForChannel();
       this.pollChat();
     } catch (err) {
       this.reportError(err);
@@ -284,7 +285,7 @@ export class YoutubePlugin extends BasePlugin {
     const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,contentDetails,status&broadcastStatus=active&broadcastType=all&mine=true', { headers });
     if (!broadcastRes.ok) {
       const errBody = await broadcastRes.json().catch(() => ({}));
-      throw new Error(errBody?.error?.message || `YouTube liveBroadcasts error (${broadcastRes.status})`);
+      throw this.createApiError(errBody, broadcastRes.status, 'liveBroadcasts');
     }
     const broadcastData = await broadcastRes.json();
     if (broadcastData.items && broadcastData.items.length) {
@@ -352,7 +353,7 @@ export class YoutubePlugin extends BasePlugin {
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err?.error?.message || `liveChat.messages failed (${res.status})`);
+        throw this.createApiError(err, res.status, 'liveChat.messages');
       }
 
       const data = await res.json();
@@ -362,8 +363,18 @@ export class YoutubePlugin extends BasePlugin {
       this.nextPageToken = data.nextPageToken || null;
       this.pollInterval = data.pollingIntervalMillis ? Math.max(data.pollingIntervalMillis, 1200) : this.pollInterval;
 
-      if (Array.isArray(data.items)) {
-        data.items.forEach(item => this.transformAndPublish(item));
+      if (Array.isArray(data.items) && data.items.length) {
+        await Promise.all(
+          data.items.map((item) =>
+            this.transformAndPublish(item).catch((err) => {
+              this.debugLog('Failed to process YouTube chat item', {
+                error: err?.message || err,
+                itemId: item?.id
+              });
+              return null;
+            })
+          )
+        );
       }
     } catch (err) {
       this.reportError(err);
@@ -376,19 +387,43 @@ export class YoutubePlugin extends BasePlugin {
     this.pollTimer = window.setTimeout(() => this.pollChat(), this.pollInterval);
   }
 
-  transformAndPublish(item) {
+  createApiError(body, status, endpoint) {
+    const errorInfo = body?.error || {};
+    const firstError = Array.isArray(errorInfo.errors) ? errorInfo.errors[0] : null;
+    const reason = firstError?.reason || errorInfo.status || '';
+    const rawMessage = typeof errorInfo.message === 'string' ? errorInfo.message : '';
+    const scrubbedMessage = rawMessage.replace(/<[^>]*>/g, '').trim();
+    const fallback = endpoint ? `YouTube ${endpoint} error (${status})` : `YouTube API error (${status})`;
+
+    let message = scrubbedMessage || fallback;
+    const messageLower = scrubbedMessage.toLowerCase();
+    if (reason === 'quotaExceeded' || reason === 'dailyLimitExceeded' || messageLower.includes('quota')) {
+      message = 'YouTube API quota exhausted. Please wait for the daily quota reset or add your own YouTube API credentials in Settings.';
+    }
+
+    const error = new Error(message);
+    error.detail = body;
+    error.status = status;
+    error.reason = reason;
+    error.endpoint = endpoint;
+    return error;
+  }
+
+  async transformAndPublish(item) {
     if (!item) {
       return;
     }
     const snippet = item.snippet || {};
     const author = item.authorDetails || {};
+    const rawMessage = snippet.displayMessage || '';
+    const sanitizedMessage = safeHtml(rawMessage);
 
     const message = {
       id: item.id,
       platform: 'youtube',
       type: 'youtube',
       chatname: author.displayName || 'YouTube User',
-      chatmessage: snippet.displayMessage || '',
+      chatmessage: sanitizedMessage,
       chatimg: author.profileImageUrl || '',
       timestamp: Date.parse(snippet.publishedAt || new Date().toISOString()),
       hasDonation: Boolean(snippet.superChatDetails || snippet.superStickerDetails),
@@ -398,15 +433,63 @@ export class YoutubePlugin extends BasePlugin {
       isOwner: !!author.isChatOwner,
       isMember: !!author.isChatSponsor,
       event: this.resolveEvent(snippet),
-      raw: item
+      raw: item,
+      previewText: rawMessage
     };
 
     if (snippet.superChatDetails) {
       message.color = snippet.superChatDetails.tier || snippet.superChatDetails.tier || null;
     }
 
-    const preview = this.formatChatPreview(message);
-    this.publish(message, { silent: true, preview });
+    await this.publishWithEmotes(message, { silent: true });
+  }
+
+  async publishWithEmotes(message, options = {}) {
+    if (!message) {
+      return;
+    }
+    const { silent = true, note = null } = options;
+
+    if (typeof message.previewText !== 'string' || !message.previewText.length) {
+      message.previewText = htmlToText(message.chatmessage || '');
+    }
+
+    if (this.emotes && message.chatmessage && !message.textonly) {
+      try {
+        message.chatmessage = await this.emotes.render(message.chatmessage, this.buildEmoteContext());
+      } catch (err) {
+        this.debugLog('Failed to render YouTube emotes', { error: err?.message || err });
+      }
+    }
+
+    const publishOptions = { silent, preview: this.formatChatPreview(message) };
+    if (note) {
+      publishOptions.note = note;
+    }
+    this.publish(message, publishOptions);
+  }
+
+  buildEmoteContext() {
+    const context = { platform: 'youtube' };
+    if (this.channelInfo?.title) {
+      context.channelName = this.channelInfo.title.toLowerCase();
+    }
+    if (this.channelInfo?.id) {
+      context.channelId = this.channelInfo.id;
+      context.userId = this.channelInfo.id;
+    }
+    return context;
+  }
+
+  async prepareEmotesForChannel() {
+    if (!this.emotes) {
+      return;
+    }
+    const context = this.buildEmoteContext();
+    if (!context.channelId && !context.channelName) {
+      return;
+    }
+    await this.emotes.prepareChannel(context).catch(() => {});
   }
 
   resolveEvent(snippet) {
@@ -425,8 +508,8 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     const name = chat.chatname || 'YouTube user';
-    const trimmed = (chat.chatmessage || '')
-      .toString()
+    const baseText = (chat.previewText ?? chat.chatmessage ?? '').toString();
+    const trimmed = htmlToText(baseText)
       .replace(/\s+/g, ' ')
       .trim();
 

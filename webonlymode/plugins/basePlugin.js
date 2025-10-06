@@ -1,4 +1,4 @@
-import { formatTime, safeHtml } from '../utils/helpers.js';
+import { formatTime, safeHtml, htmlToText } from '../utils/helpers.js';
 
 const STATE_LABEL = {
   idle: 'Idle',
@@ -20,7 +20,8 @@ export class BasePlugin {
       autoConnect = false,
       controls = {},
       icon = null,
-      debug = false
+      debug = false,
+      emotes = null
     } = options || {};
 
     if (!id || !messenger) {
@@ -39,6 +40,7 @@ export class BasePlugin {
     this.controls = { ...defaultControls, ...controls };
     this.icon = icon;
     this.debug = Boolean(debug);
+    this.emotes = emotes || null;
 
     this.state = 'idle';
     this.card = null;
@@ -215,10 +217,21 @@ export class BasePlugin {
 
     const previous = this.state;
     this.state = next;
+    this.stateMeta = meta || null;
     this.debugLog('State changed', { previous, next, meta });
     if (this.statusNode) {
       this.statusNode.dataset.state = next;
-      this.statusNode.textContent = STATE_LABEL[next] || next;
+      if (next === 'error' && meta && meta.message) {
+        const message = String(meta.message).trim();
+        const normalized = message.toLowerCase().startsWith('error') ? message : `Error: ${message}`;
+        this.statusNode.textContent = normalized;
+        this.statusNode.title = message;
+        this.statusNode.classList.add('source-card__status--has-detail');
+      } else {
+        this.statusNode.textContent = STATE_LABEL[next] || next;
+        this.statusNode.title = '';
+        this.statusNode.classList.remove('source-card__status--has-detail');
+      }
     }
 
     if (this.connectBtn) {
@@ -271,12 +284,11 @@ export class BasePlugin {
       this.debugLog('Publishing payload to dock', { payload, silent, note });
       this.messenger.send(payload);
       if (!silent) {
+        const previewSource = (payload?.previewText ?? payload?.chatmessage ?? '').toString();
+        const normalized = htmlToText(previewSource).replace(/\s+/g, ' ').trim();
         const summary = {
           id: payload?.id || null,
-          preview: (payload?.chatmessage || '')
-            .toString()
-            .replace(/\s+/g, ' ')
-            .slice(0, 80)
+          preview: normalized.slice(0, 80)
         };
         this.log(note || 'Message relayed', summary);
       } else if (preview) {
@@ -327,7 +339,9 @@ export class BasePlugin {
     console.error(`${this.id} plugin error`, error);
     const description = error && error.message ? error.message : 'Unexpected error';
     this.setState('error', { message: description });
-    const detail = error instanceof Error ? error.stack || error.message : error;
+    const detail = error && Object.prototype.hasOwnProperty.call(error, 'detail')
+      ? error.detail
+      : (error instanceof Error ? error.stack || error.message : error);
     this.log(`Error: ${description}`, detail, { kind: 'error' });
   }
 

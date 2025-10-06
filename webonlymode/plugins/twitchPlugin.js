@@ -1,6 +1,6 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
-import { randomSessionId, safeHtml } from '../utils/helpers.js';
+import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
 import { loadScriptSequential } from '../utils/scriptLoader.js';
 
 const TOKEN_KEY = 'twitch.token';
@@ -42,6 +42,7 @@ export class TwitchPlugin extends BasePlugin {
     this.token = storage.get(TOKEN_KEY, null);
     this.identity = null;
     this.client = null;
+    this.channelUserId = null;
   }
 
   renderPrimary(container) {
@@ -280,6 +281,13 @@ export class TwitchPlugin extends BasePlugin {
 
       this.bindClientEvents(client, channelName);
       this.channelName = channelName;
+
+      await this.resolveChannelUserId(channelName);
+      if (this.emotes) {
+        const context = this.buildEmoteContext(channelName);
+        await this.emotes.prepareChannel(context).catch(() => {});
+      }
+
       await client.connect();
       this.client = client;
       this.setState('connected');
@@ -352,18 +360,9 @@ export class TwitchPlugin extends BasePlugin {
     });
 
     const processChatEvent = (chan, tags, message, self, fallbackType = null) => {
-      const messageType = tags?.['message-type'] || fallbackType || null;
-      this.debugLog('Received Twitch chat message', {
-        sourceChannel: chan,
-        resolvedChannel: channel,
-        messageType: messageType || (tags?.bits ? 'bits' : 'message'),
-        tags,
-        message,
-        self
+      this.handleChatEvent(channel, chan, tags, message, self, fallbackType).catch((err) => {
+        this.debugLog('Failed to handle Twitch chat event', { error: err?.message || err });
       });
-      const payload = this.transformChatMessage(channel, tags, message, self, messageType);
-      const preview = this.formatChatPreview(payload);
-      this.publish(payload, { silent: true, preview });
     };
 
     client.on('chat', (chan, tags, message, self) => {
@@ -383,81 +382,265 @@ export class TwitchPlugin extends BasePlugin {
     });
 
     client.on('subscription', (chan, username, method, message, userstate) => {
-      this.debugLog('Received Twitch subscription', {
-        channel: chan,
+      this.handleSubscriptionEvent({
+        channel,
         username,
-        method,
+        methods: method,
         message,
-        userstate
-      });
-      const payload = this.transformSubscription(channel, username, method, message, userstate, 'subscription');
-      this.publish(payload, { silent: false, note: 'New Twitch subscription' });
+        userstate,
+        note: 'New Twitch subscription',
+        eventType: 'subscription'
+      }).catch((err) => this.debugLog('Failed to handle Twitch subscription', { error: err?.message || err }));
     });
 
     client.on('resub', (chan, username, months, message, userstate, methods) => {
-      this.debugLog('Received Twitch resubscription', {
-        channel: chan,
+      this.handleSubscriptionEvent({
+        channel,
         username,
-        months,
+        methods,
         message,
         userstate,
-        methods
-      });
-      const payload = this.transformSubscription(channel, username, methods, message, userstate, 'resub');
-      this.publish(payload, { silent: false, note: 'Twitch resubscription' });
+        note: 'Twitch resubscription',
+        eventType: 'resub'
+      }).catch((err) => this.debugLog('Failed to handle Twitch resubscription', { error: err?.message || err }));
     });
 
     client.on('subgift', (chan, recipient, method, userstate) => {
-      this.debugLog('Received Twitch gifted sub', {
-        channel: chan,
+      this.handleGiftEvent({
+        channel,
         recipient,
-        method,
-        userstate
-      });
-      const payload = this.transformGift(channel, recipient, userstate, false);
-      this.publish(payload, { silent: false, note: 'Twitch gifted sub' });
+        userstate,
+        anonymous: false,
+        note: 'Twitch gifted sub'
+      }).catch((err) => this.debugLog('Failed to handle Twitch gifted sub', { error: err?.message || err }));
     });
 
     client.on('anonsubgift', (chan, recipient, method, userstate) => {
-      this.debugLog('Received Twitch anonymous gifted sub', {
-        channel: chan,
+      this.handleGiftEvent({
+        channel,
         recipient,
-        method,
-        userstate
-      });
-      const payload = this.transformGift(channel, recipient, userstate, true);
-      this.publish(payload, { silent: false, note: 'Anonymous gifted sub' });
+        userstate,
+        anonymous: true,
+        note: 'Anonymous gifted sub'
+      }).catch((err) => this.debugLog('Failed to handle anonymous gifted sub', { error: err?.message || err }));
     });
 
     client.on('raided', (chan, username, viewers) => {
-      this.debugLog('Received Twitch raid', {
-        channel: chan,
+      this.handleRaidEvent({
+        channel,
         username,
-        viewers
-      });
-      const payload = this.transformRaid(channel, username, viewers);
-      this.publish(payload, { silent: false, note: 'Incoming raid' });
+        viewers,
+        note: 'Incoming raid'
+      }).catch((err) => this.debugLog('Failed to handle Twitch raid', { error: err?.message || err }));
     });
 
     client.on('cheer', (chan, userstate, message) => {
-      this.debugLog('Received Twitch cheer', {
-        channel: chan,
+      this.handleCheerEvent({
+        channel,
         userstate,
-        message
-      });
-      const payload = this.transformCheer(channel, userstate, message);
-      this.publish(payload, { silent: false, note: 'Twitch cheer' });
+        message,
+        note: 'Twitch cheer'
+      }).catch((err) => this.debugLog('Failed to handle Twitch cheer', { error: err?.message || err }));
     });
 
     client.on('hosted', (chan, username, viewers) => {
-      this.debugLog('Received Twitch host event', {
-        channel: chan,
+      this.handleHostEvent({
+        channel,
         username,
-        viewers
-      });
-      const payload = this.transformHost(channel, username, viewers);
-      this.publish(payload, { silent: false, note: 'New host' });
+        viewers,
+        note: 'New host'
+      }).catch((err) => this.debugLog('Failed to handle Twitch host', { error: err?.message || err }));
     });
+  }
+
+  async handleChatEvent(channel, sourceChannel, tags, message, self, fallbackType) {
+    const messageType = tags?.['message-type'] || fallbackType || null;
+    this.debugLog('Received Twitch chat message', {
+      sourceChannel,
+      resolvedChannel: channel,
+      messageType: messageType || (tags?.bits ? 'bits' : 'message'),
+      tags,
+      message,
+      self
+    });
+    const payload = this.transformChatMessage(channel, tags, message, self, messageType);
+    await this.publishWithDecorations(payload, {
+      channel,
+      overrides: { userId: tags?.['room-id'] || tags?.roomId },
+      rawMessage: typeof message === 'string' ? message : '',
+      silent: true
+    });
+  }
+
+  async handleSubscriptionEvent({ channel, username, methods, message, userstate, note, eventType }) {
+    this.debugLog('Received Twitch subscription', {
+      channel,
+      username,
+      methods,
+      message,
+      userstate,
+      eventType
+    });
+    const payload = this.transformSubscription(channel, username, methods, message, userstate, eventType);
+    await this.publishWithDecorations(payload, {
+      channel,
+      overrides: { userId: userstate?.['room-id'] || userstate?.roomId },
+      rawMessage: typeof message === 'string' ? message : '',
+      silent: false,
+      note
+    });
+  }
+
+  async handleGiftEvent({ channel, recipient, userstate, anonymous, note }) {
+    this.debugLog('Received Twitch gifted sub', {
+      channel,
+      recipient,
+      anonymous,
+      userstate
+    });
+    const payload = this.transformGift(channel, recipient, userstate, anonymous);
+    await this.publishWithDecorations(payload, {
+      channel,
+      overrides: { userId: userstate?.['room-id'] || userstate?.roomId },
+      silent: false,
+      note
+    });
+  }
+
+  async handleRaidEvent({ channel, username, viewers, note }) {
+    this.debugLog('Received Twitch raid', {
+      channel,
+      username,
+      viewers
+    });
+    const payload = this.transformRaid(channel, username, viewers);
+    await this.publishWithDecorations(payload, {
+      channel,
+      silent: false,
+      note
+    });
+  }
+
+  async handleCheerEvent({ channel, userstate, message, note }) {
+    this.debugLog('Received Twitch cheer', {
+      channel,
+      userstate,
+      message
+    });
+    const payload = this.transformCheer(channel, userstate, message);
+    await this.publishWithDecorations(payload, {
+      channel,
+      overrides: { userId: userstate?.['room-id'] || userstate?.roomId },
+      rawMessage: typeof message === 'string' ? message : '',
+      silent: false,
+      note
+    });
+  }
+
+  async handleHostEvent({ channel, username, viewers, note }) {
+    this.debugLog('Received Twitch host event', {
+      channel,
+      username,
+      viewers
+    });
+    const payload = this.transformHost(channel, username, viewers);
+    await this.publishWithDecorations(payload, {
+      channel,
+      silent: false,
+      note
+    });
+  }
+
+  async publishWithDecorations(payload, { channel, overrides = {}, rawMessage = '', silent = true, note = null } = {}) {
+    if (!payload) {
+      return;
+    }
+
+    if (typeof rawMessage === 'string' && rawMessage.length) {
+      payload.previewText = rawMessage;
+    } else if (typeof payload.previewText !== 'string' || !payload.previewText.length) {
+      payload.previewText = htmlToText(payload.chatmessage || '');
+    }
+
+    const context = this.buildEmoteContext(channel, overrides);
+    if (this.emotes && payload.chatmessage && !payload.textonly) {
+      try {
+        payload.chatmessage = await this.emotes.render(payload.chatmessage, context);
+      } catch (err) {
+        this.debugLog('Failed to render Twitch emotes', { error: err?.message || err });
+      }
+    }
+
+    const options = { silent };
+    if (note) {
+      options.note = note;
+    }
+    options.preview = this.formatChatPreview(payload);
+    this.publish(payload, options);
+  }
+
+  buildEmoteContext(channel, overrides = {}) {
+    const context = {
+      platform: 'twitch'
+    };
+    const normalizedChannel = channel ? sanitizeChannel(channel) : (this.channelName ? sanitizeChannel(this.channelName) : '');
+    if (normalizedChannel) {
+      context.channelName = normalizedChannel;
+    }
+
+    const overrideId = overrides?.userId || overrides?.channelId;
+    if (overrideId) {
+      this.channelUserId = String(overrideId);
+    }
+
+    if (!this.channelUserId && this.identity?.userId && normalizedChannel && sanitizeChannel(this.identity.login) === normalizedChannel) {
+      this.channelUserId = String(this.identity.userId);
+    }
+
+    if (this.channelUserId) {
+      context.userId = String(this.channelUserId);
+      context.channelId = String(this.channelUserId);
+    }
+
+    return context;
+  }
+
+  async resolveChannelUserId(channelName) {
+    const normalized = sanitizeChannel(channelName || '');
+    if (!normalized) {
+      return null;
+    }
+    if (this.channelUserId) {
+      return this.channelUserId;
+    }
+    if (this.identity?.userId && sanitizeChannel(this.identity.login || '') === normalized) {
+      this.channelUserId = String(this.identity.userId);
+      return this.channelUserId;
+    }
+    try {
+      const fetched = await this.fetchTwitchUserId(normalized);
+      if (fetched) {
+        this.channelUserId = String(fetched);
+        return this.channelUserId;
+      }
+    } catch (err) {
+      this.debugLog('Twitch user ID lookup failed', { error: err?.message || err });
+    }
+    return null;
+  }
+
+  async fetchTwitchUserId(username) {
+    if (!username) {
+      return null;
+    }
+    const url = `https://api.socialstream.ninja/twitch/user?username=${encodeURIComponent(username)}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Lookup failed (${response.status})`);
+    }
+    const data = await response.json().catch(() => null);
+    const id = data && data.data && data.data[0] && data.data[0].id ? data.data[0].id : null;
+    return id ? String(id) : null;
   }
 
   formatChatPreview(chat) {
@@ -466,8 +649,8 @@ export class TwitchPlugin extends BasePlugin {
     }
 
     const name = chat.chatname || 'Twitch user';
-    const trimmed = (chat.chatmessage || '')
-      .toString()
+    const baseText = (chat.previewText ?? chat.chatmessage ?? '').toString();
+    const trimmed = htmlToText(baseText)
       .replace(/\s+/g, ' ')
       .trim();
 
@@ -490,13 +673,14 @@ export class TwitchPlugin extends BasePlugin {
     const badges = tags.badges || {};
     const normalizedType = messageType || tags['message-type'] || null;
     const event = tags.bits ? 'bits' : normalizedType === 'action' ? 'action' : 'message';
+    const sanitizedMessage = safeHtml(message ?? '');
 
     return {
       id: tags.id || `${channel}-${tags['tmi-sent-ts'] || Date.now()}`,
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
-      chatmessage: message,
+      chatmessage: sanitizedMessage,
       chatimg: avatarUrl(displayName),
       timestamp: Number(tags['tmi-sent-ts'] || Date.now()),
       badges,
@@ -514,12 +698,13 @@ export class TwitchPlugin extends BasePlugin {
 
   transformCheer(channel, userstate, message) {
     const displayName = userstate['display-name'] || userstate.username || 'Anonymous';
+    const sanitizedMessage = safeHtml(message ?? '');
     return {
       id: userstate.id || `${channel}-cheer-${Date.now()}`,
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
-      chatmessage: message,
+      chatmessage: sanitizedMessage,
       chatimg: avatarUrl(displayName),
       timestamp: Number(userstate['tmi-sent-ts'] || Date.now()),
       hasDonation: true,
@@ -531,13 +716,15 @@ export class TwitchPlugin extends BasePlugin {
 
   transformSubscription(channel, username, method, message, userstate, eventType) {
     const displayName = username || userstate['display-name'] || 'Subscriber';
+    const fallback = `${displayName} subscribed!`;
+    const sanitizedMessage = safeHtml(message ?? fallback);
     const cumulative = parseInt(userstate['msg-param-cumulative-months'] || userstate['msg-param-months'] || '0', 10) || null;
     return {
       id: userstate.id || `${channel}-${eventType}-${Date.now()}`,
       platform: 'twitch',
       type: 'twitch',
       chatname: displayName,
-      chatmessage: message || `${displayName} subscribed!`,
+      chatmessage: sanitizedMessage,
       chatimg: avatarUrl(displayName),
       timestamp: Number(userstate['tmi-sent-ts'] || Date.now()),
       hasDonation: false,
@@ -549,12 +736,13 @@ export class TwitchPlugin extends BasePlugin {
 
   transformGift(channel, recipient, userstate, anonymous) {
     const gifter = anonymous ? 'Anonymous' : userstate['display-name'] || userstate.username || 'Viewer';
+    const summary = `${gifter} gifted a sub to ${recipient}!`;
     return {
       id: userstate.id || `${channel}-gift-${Date.now()}`,
       platform: 'twitch',
       type: 'twitch',
       chatname: gifter,
-      chatmessage: `${gifter} gifted a sub to ${recipient}!`,
+      chatmessage: safeHtml(summary),
       chatimg: avatarUrl(gifter),
       timestamp: Number(userstate['tmi-sent-ts'] || Date.now()),
       event: 'subgift',
@@ -564,12 +752,13 @@ export class TwitchPlugin extends BasePlugin {
   }
 
   transformRaid(channel, username, viewers) {
+    const summary = `${username} is raiding with ${viewers} viewers!`;
     return {
       id: `${channel}-raid-${Date.now()}`,
       platform: 'twitch',
       type: 'twitch',
       chatname: username,
-      chatmessage: `${username} is raiding with ${viewers} viewers!`,
+      chatmessage: safeHtml(summary),
       chatimg: avatarUrl(username),
       timestamp: Date.now(),
       event: 'raid',
@@ -579,12 +768,13 @@ export class TwitchPlugin extends BasePlugin {
   }
 
   transformHost(channel, username, viewers) {
+    const summary = `${username} is hosting with ${viewers} viewers!`;
     return {
       id: `${channel}-host-${Date.now()}`,
       platform: 'twitch',
       type: 'twitch',
       chatname: username,
-      chatmessage: `${username} is hosting with ${viewers} viewers!`,
+      chatmessage: safeHtml(summary),
       chatimg: avatarUrl(username),
       timestamp: Date.now(),
       event: 'host',

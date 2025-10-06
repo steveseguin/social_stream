@@ -375,6 +375,13 @@ main.layout {
   color: var(--danger);
 }
 
+.source-card__status--has-detail {
+  white-space: normal;
+  line-height: 1.25;
+  max-width: 16rem;
+  text-align: right;
+}
+
 
 .source-card__body {
   display: grid;
@@ -395,6 +402,20 @@ main.layout {
 }
 
 .source-card__settings[hidden] {
+  display: none;
+}
+
+.source-card__advanced-toggle {
+  justify-self: start;
+  margin-top: 0.25rem;
+}
+
+.source-card__advanced {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.source-card__advanced[hidden] {
   display: none;
 }
 
@@ -743,6 +764,14 @@ main.layout {
 .activity-item__message img {
   max-height: 24px;
   vertical-align: middle;
+}
+
+.activity-item__message img.kick-emote {
+  max-height: 32px;
+}
+
+.activity-item__message img.kick-sticker {
+  max-height: 96px;
 }
 
 .activity-item__message a {

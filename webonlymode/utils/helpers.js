@@ -33,6 +33,12 @@ export function safeHtml(text) {
   return div.innerHTML;
 }
 
+export function htmlToText(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html ?? '';
+  return div.textContent || '';
+}
+
 export function debounce(fn, wait = 250) {
   let timer = null;
   return (...args) => {

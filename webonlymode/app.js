@@ -1,6 +1,7 @@
 import { DockMessenger } from './utils/dockMessenger.js';
 import { storage } from './utils/storage.js';
 import { randomSessionId, formatTime, safeHtml } from './utils/helpers.js';
+import { EmoteManager } from './utils/emoteManager.js';
 import { YoutubePlugin } from './plugins/youtubePlugin.js';
 import { TwitchPlugin } from './plugins/twitchPlugin.js';
 import { TikTokPlugin } from './plugins/tiktokPlugin.js';
@@ -56,6 +57,7 @@ const messenger = new DockMessenger(elements.dockFrame, {
   onDebug: debugEnabled ? addActivity : null,
   onMessage: ({ message }) => handleRelayMessage(message)
 });
+const emotes = new EmoteManager();
 let plugins = [];
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -212,6 +214,14 @@ function sessionUrl(sessionId) {
   }
   const url = new URL('../dock.html', window.location.href);
   url.searchParams.set('session', sessionId);
+  url.searchParams.set('compact', "");
+  url.searchParams.set('hidemenu', "");
+  url.searchParams.set('hideshadow', "");
+  url.searchParams.set('nomemberhighlight', "");
+  url.searchParams.set('unhighlight', "");
+  url.searchParams.set('nodonohighlight', "");
+  url.searchParams.set('notime', "");
+  url.searchParams.set('color', "");
   return url.toString();
 }
 
@@ -1436,6 +1446,7 @@ function init() {
   plugins = [
     new YoutubePlugin({
       messenger,
+      emotes,
       icon: '../sources/images/youtube.png',
       debug: debugEnabled,
       onActivity: addActivity,
@@ -1445,6 +1456,7 @@ function init() {
     }),
     new TwitchPlugin({
       messenger,
+      emotes,
       icon: '../sources/images/twitch.png',
       debug: debugEnabled,
       onActivity: addActivity,
@@ -1454,6 +1466,7 @@ function init() {
     }),
     new KickPlugin({
       messenger,
+      emotes,
       icon: '../sources/images/kick.png',
       debug: debugEnabled,
       onActivity: addActivity,
