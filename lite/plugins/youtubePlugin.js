@@ -36,6 +36,7 @@ export class YoutubePlugin extends BasePlugin {
     this.nextPageToken = null;
     this.pollInterval = 5000;
     this.liveChatId = storage.get(CHAT_ID_KEY, '');
+    this.activeBroadcast = null;
   }
 
   renderPrimary(container) {
@@ -49,10 +50,8 @@ export class YoutubePlugin extends BasePlugin {
 
     const streamLabel = document.createElement('div');
     streamLabel.className = 'source-card__subtext';
-    streamLabel.hidden = !this.liveChatId;
-    if (this.liveChatId) {
-      streamLabel.textContent = `Live chat ID: ${this.liveChatId}`;
-    }
+    streamLabel.textContent = '';
+    streamLabel.hidden = true;
 
     const controls = document.createElement('div');
     controls.className = 'plugin-actions';
@@ -107,8 +106,9 @@ export class YoutubePlugin extends BasePlugin {
       // If connected and the Video/Chat ID changed, reconnect
       if (this.state === 'connected' && newValue !== oldValue) {
         this.log('Video/Chat ID changed. Reconnecting...');
-        this.disable();
         this.setState('connecting');
+        this.disable();
+        this.refreshStatus();
         setTimeout(() => {
           this.setupLiveChat();
         }, 500);
@@ -136,8 +136,22 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     if (this.streamLabel) {
-      if (this.liveChatId) {
-        this.streamLabel.textContent = `Live chat ID: ${this.liveChatId}`;
+      let labelText = '';
+
+      if (this.activeBroadcast) {
+        if (this.activeBroadcast.title) {
+          labelText = `Active broadcast: ${this.activeBroadcast.title}`;
+        } else if (this.activeBroadcast.videoId) {
+          labelText = `Video ID: ${this.activeBroadcast.videoId}`;
+        }
+      }
+
+      if (!labelText && this.state === 'connected' && this.liveChatId) {
+        labelText = 'Connected to YouTube live chat';
+      }
+
+      if (labelText) {
+        this.streamLabel.textContent = labelText;
         this.streamLabel.hidden = false;
       } else {
         this.streamLabel.textContent = '';
@@ -156,6 +170,30 @@ export class YoutubePlugin extends BasePlugin {
       this.authButton.hidden = !needsAuth;
       this.authButton.disabled = this.state === 'connecting';
     }
+  }
+
+  setActiveBroadcast(info) {
+    if (!info) {
+      this.activeBroadcast = null;
+      return;
+    }
+
+    const title = info.title ? htmlToText(info.title).trim() : '';
+    const videoId = info.videoId || '';
+    const liveChatId = info.liveChatId || '';
+    const type = info.type || 'custom';
+
+    if (!title && !videoId) {
+      this.activeBroadcast = null;
+      return;
+    }
+
+    this.activeBroadcast = {
+      title,
+      videoId,
+      liveChatId,
+      type
+    };
   }
 
   enable() {
@@ -177,6 +215,7 @@ export class YoutubePlugin extends BasePlugin {
       this.pollTimer = null;
     }
     this.nextPageToken = null;
+    this.setActiveBroadcast(null);
   }
 
   beginAuth() {
@@ -251,11 +290,12 @@ export class YoutubePlugin extends BasePlugin {
     storage.remove(CHANNEL_KEY);
     this.token = null;
     this.channelInfo = null;
-    this.refreshStatus();
+    this.setActiveBroadcast(null);
     if (this.state === 'connected') {
       this.disable();
-      this.setState('idle');
     }
+    this.setState('idle');
+    this.refreshStatus();
   }
 
   async setupLiveChat() {
@@ -269,8 +309,8 @@ export class YoutubePlugin extends BasePlugin {
       }
       this.liveChatId = chatId;
       storage.set(CHAT_ID_KEY, this.liveChatId);
-      this.refreshStatus();
       this.setState('connected');
+      this.refreshStatus();
       this.log('Connected to YouTube live chat.', { liveChatId: this.liveChatId });
       await this.prepareEmotesForChannel();
       this.pollChat();
@@ -290,7 +330,7 @@ export class YoutubePlugin extends BasePlugin {
     };
 
     // Fetch video details to get the live chat ID
-    const videoRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}`, { headers });
+    const videoRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails&id=${videoId}`, { headers });
     if (!videoRes.ok) {
       const errBody = await videoRes.json().catch(() => ({}));
       throw this.createApiError(errBody, videoRes.status, 'videos');
@@ -298,15 +338,26 @@ export class YoutubePlugin extends BasePlugin {
 
     const videoData = await videoRes.json();
     if (videoData.items && videoData.items.length > 0) {
-      const liveChatId = videoData.items[0]?.liveStreamingDetails?.activeLiveChatId;
+      const videoItem = videoData.items[0] || {};
+      const liveChatId = videoItem?.liveStreamingDetails?.activeLiveChatId;
       if (liveChatId) {
         this.log(`Resolved video ID ${videoId} to live chat ID: ${liveChatId}`);
+        this.setActiveBroadcast({
+          title: videoItem?.snippet?.title,
+          videoId,
+          liveChatId,
+          type: 'video'
+        });
         return liveChatId;
       }
-      throw new Error(`Video ${videoId} does not have an active live chat. Make sure the video is currently live.`);
+      const noLiveChatErr = new Error(`Video ${videoId} does not have an active live chat. Make sure the video is currently live.`);
+      noLiveChatErr.code = 'VIDEO_HAS_NO_LIVE_CHAT';
+      throw noLiveChatErr;
     }
 
-    throw new Error(`Video ${videoId} not found or inaccessible.`);
+    const notFoundErr = new Error(`Video ${videoId} not found or inaccessible.`);
+    notFoundErr.code = 'VIDEO_NOT_FOUND';
+    throw notFoundErr;
   }
 
   async resolveLiveChatId() {
@@ -325,9 +376,20 @@ export class YoutubePlugin extends BasePlugin {
       // Video IDs are typically 11 characters, Live Chat IDs are longer
       if (manualId.length === 11) {
         // Looks like a video ID - try to fetch the live chat ID from it
-        return await this.getLiveChatIdFromVideoId(manualId);
+        try {
+          return await this.getLiveChatIdFromVideoId(manualId);
+        } catch (err) {
+          const fallbackReasons = new Set(['notFound', 'videoNotFound', 'invalidParameter', 'badRequest', 'idNotFound']);
+          if (err?.code === 'VIDEO_NOT_FOUND' || fallbackReasons.has(err?.reason) || err?.status === 404) {
+            this.debugLog('Manual ID fallback to live chat ID', { manualId, error: err?.message });
+            this.setActiveBroadcast(null);
+            return manualId;
+          }
+          throw err;
+        }
       }
       // Assume it's already a live chat ID
+      this.setActiveBroadcast(null);
       return manualId;
     }
 
@@ -362,6 +424,12 @@ export class YoutubePlugin extends BasePlugin {
           thumbnail: live?.snippet?.thumbnails?.default?.url
         };
         storage.set(CHANNEL_KEY, this.channelInfo);
+        this.setActiveBroadcast({
+          title: live?.snippet?.title,
+          videoId: live?.id,
+          liveChatId: live?.snippet?.liveChatId,
+          type: 'broadcast'
+        });
         return live?.snippet?.liveChatId || null;
       }
     }
@@ -394,6 +462,7 @@ export class YoutubePlugin extends BasePlugin {
       }
     }
 
+    this.setActiveBroadcast(null);
     return null;
   }
 
