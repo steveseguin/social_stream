@@ -6,6 +6,7 @@ import { loadScriptSequential } from '../utils/scriptLoader.js';
 const UNIQUE_ID_KEY = 'tiktok.uniqueId';
 const SERVER_URL_KEY = 'tiktok.serverUrl';
 const SCRIPT_URL_KEY = 'tiktok.scriptUrl';
+const SESSION_ID_KEY = 'tiktok.sessionId';
 const INCLUDE_GIFTS_KEY = 'tiktok.includeGifts';
 const INCLUDE_FOLLOWS_KEY = 'tiktok.includeFollows';
 const INCLUDE_LIKES_KEY = 'tiktok.includeLikes';
@@ -99,6 +100,7 @@ export class TikTokPlugin extends BasePlugin {
     this.uniqueIdInput = null;
     this.serverInput = null;
     this.scriptInput = null;
+    this.sessionIdInput = null;
     this.includeGiftsInput = null;
     this.includeFollowsInput = null;
     this.includeLikesInput = null;
@@ -169,6 +171,21 @@ export class TikTokPlugin extends BasePlugin {
     });
     scriptRow.append(scriptLabel, scriptInput);
 
+    const sessionRow = document.createElement('label');
+    sessionRow.className = 'field';
+    const sessionLabel = document.createElement('span');
+    sessionLabel.className = 'field__label';
+    sessionLabel.textContent = 'TikTok session cookie (optional, helps with connection issues)';
+    const sessionInput = document.createElement('input');
+    sessionInput.type = 'password';
+    sessionInput.placeholder = 'sessionid cookie value from TikTok.com';
+    sessionInput.autocomplete = 'off';
+    sessionInput.value = storage.get(SESSION_ID_KEY, '');
+    sessionInput.addEventListener('change', () => {
+      storage.set(SESSION_ID_KEY, sessionInput.value.trim());
+    });
+    sessionRow.append(sessionLabel, sessionInput);
+
     const toggles = document.createElement('div');
     toggles.className = 'field field--checkbox-group';
 
@@ -210,11 +227,12 @@ export class TikTokPlugin extends BasePlugin {
 
     toggles.append(includeGifts, includeFollows, includeLikes);
 
-    container.append(idRow, serverRow, scriptRow, toggles);
+    container.append(idRow, serverRow, sessionRow, scriptRow, toggles);
 
     this.uniqueIdInput = idInput;
     this.serverInput = serverInput;
     this.scriptInput = scriptInput;
+    this.sessionIdInput = sessionInput;
     this.includeGiftsInput = includeGiftsInput;
     this.includeFollowsInput = includeFollowsInput;
     this.includeLikesInput = includeLikesInput;
@@ -302,7 +320,7 @@ export class TikTokPlugin extends BasePlugin {
   }
 
   buildConnectOptions() {
-    return {
+    const options = {
       enableExtendedGiftInfo: true,
       processInitialData: false,
       fetchRoomInfo: true,
@@ -310,6 +328,14 @@ export class TikTokPlugin extends BasePlugin {
         showMessageHistory: false
       }
     };
+
+    // Include sessionId if provided
+    const sessionId = (this.sessionIdInput ? this.sessionIdInput.value : storage.get(SESSION_ID_KEY, '')).trim();
+    if (sessionId) {
+      options.sessionId = sessionId;
+    }
+
+    return options;
   }
 
   async enable() {
