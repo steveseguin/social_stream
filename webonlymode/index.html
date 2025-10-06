@@ -9,7 +9,7 @@
 <body>
   <main class="layout">
     <header class="masthead">
-      <div class="masthead__title">Social Stream Ninja Lite</div>
+      <div class="masthead__title"><span style="color:#eaeafc">Social Stream Ninja</span> <span style="font-weight:400">Lite</span></div>
       <p class="masthead__subtitle">Lightweight web-first control panel for relaying chats to overlays.</p>
     </header>
 
@@ -66,7 +66,29 @@
     <section id="activity" class="card activity" aria-labelledby="activity-heading">
       <div class="card__header">
         <h2 id="activity-heading">Activity</h2>
-        <button type="button" id="activity-clear" class="btn btn--ghost">Clear</button>
+        <div class="activity__controls" role="group" aria-label="Activity controls">
+          <button type="button" id="activity-fullscreen" class="btn btn--ghost" aria-pressed="false" data-state="enter">Full screen</button>
+          <label class="activity-toggle" for="activity-filter-donations">
+            <input type="checkbox" id="activity-filter-donations" />
+            <span>Donations only</span>
+          </label>
+          <label class="activity-toggle" for="activity-toggle-tts">
+            <input type="checkbox" id="activity-toggle-tts" />
+            <span>Text-to-speech</span>
+          </label>
+          <button type="button" id="activity-clear" class="btn btn--ghost">Clear</button>
+          <div class="activity-menu">
+            <button type="button" id="activity-menu-toggle" class="icon-button activity-menu__toggle" aria-haspopup="true" aria-expanded="false" aria-controls="activity-menu" title="More options">
+              <span class="sr-only">Activity options</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 6h16a1 1 0 1 0 0-2H4a1 1 0 0 0 0 2zm16 5H4a1 1 0 1 0 0 2h16a1 1 0 1 0 0-2zm0 7H4a1 1 0 0 0 0 2h16a1 1 0 0 0 0-2z" />
+              </svg>
+            </button>
+            <div id="activity-menu" class="activity-menu__panel" role="menu" hidden tabindex="-1">
+              <button type="button" id="activity-popout" class="activity-menu__item" role="menuitem">Pop out activity feed</button>
+            </div>
+          </div>
+        </div>
       </div>
       <div id="activity-log" class="activity__log" aria-live="polite"></div>
     </section>

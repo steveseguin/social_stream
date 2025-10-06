@@ -328,19 +328,23 @@ export class TikTokPlugin extends BasePlugin {
   }
 
   async enable() {
-    if (!this.messenger.getSessionId()) {
-      throw new Error('Start a session before connecting TikTok.');
+    const sessionId = this.messenger.getSessionId();
+    if (!sessionId) {
+      this.reportError(new Error('Start a session before connecting TikTok.'));
+      return;
     }
 
     const uniqueId = normalizeUniqueId(this.uniqueIdInput ? this.uniqueIdInput.value : storage.get(UNIQUE_ID_KEY, ''));
     if (!uniqueId) {
-      throw new Error('Enter the TikTok username to monitor.');
+      this.reportError(new Error('Enter the TikTok username to monitor.'));
+      return;
     }
     storage.set(UNIQUE_ID_KEY, uniqueId);
 
     const serverUrl = normalizeServerUrl(this.serverInput ? this.serverInput.value : storage.get(SERVER_URL_KEY, ''));
     if (!serverUrl) {
-      throw new Error('Enter the proxy server URL hosting TikTok-Chat-Reader.');
+      this.reportError(new Error('Enter the proxy server URL hosting TikTok-Chat-Reader.'));
+      return;
     }
     storage.set(SERVER_URL_KEY, serverUrl);
 
@@ -352,14 +356,15 @@ export class TikTokPlugin extends BasePlugin {
     this.refreshStatus();
 
     const customSources = scriptOverride ? [scriptOverride, ...CONNECTOR_SOURCES] : null;
-    await this.ensureConnectorLoaded(customSources);
-
-    this.cleanupConnector();
-
-    this.connector = new window.TikTokIOConnection(serverUrl);
-    this.bindConnectorEvents(uniqueId);
 
     try {
+      await this.ensureConnectorLoaded(customSources);
+
+      this.cleanupConnector();
+
+      this.connector = new window.TikTokIOConnection(serverUrl);
+      this.bindConnectorEvents(uniqueId);
+
       const result = this.connector.connect(uniqueId, this.buildConnectOptions());
       if (result && typeof result.then === 'function') {
         await result;
@@ -367,7 +372,8 @@ export class TikTokPlugin extends BasePlugin {
       this.log(`Connecting to TikTok @${uniqueId}`);
     } catch (err) {
       this.cleanupConnector();
-      throw err instanceof Error ? err : new Error(err?.message || String(err));
+      const error = err instanceof Error ? err : new Error(err?.message || String(err));
+      this.reportError(error);
     }
   }
 

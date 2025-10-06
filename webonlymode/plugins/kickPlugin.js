@@ -280,13 +280,16 @@ export class KickPlugin extends BasePlugin {
   }
 
   async enable() {
-    if (!this.messenger.getSessionId()) {
-      throw new Error('Start a session before connecting Kick.');
+    const sessionId = this.messenger.getSessionId();
+    if (!sessionId) {
+      this.reportError(new Error('Start a session before connecting Kick.'));
+      return;
     }
 
     const channel = normalizeChannel(this.channelInput ? this.channelInput.value : storage.get(CHANNEL_KEY, ''));
     if (!channel) {
-      throw new Error('Enter the Kick channel name.');
+      this.reportError(new Error('Enter the Kick channel name.'));
+      return;
     }
 
     this.channelSlug = channel;
@@ -296,29 +299,35 @@ export class KickPlugin extends BasePlugin {
 
     this.refreshStatus();
 
-    const chatroomId = await this.resolveChatroomId(channel);
-    if (!chatroomId) {
-      throw new Error('Unable to determine Kick chatroom ID.');
+    try {
+      const chatroomId = await this.resolveChatroomId(channel);
+      if (!chatroomId) {
+        throw new Error('Unable to determine Kick chatroom ID.');
+      }
+
+      this.chatroomId = chatroomId;
+      this.cursor = null;
+      this.seenIds = new Set();
+      this.refreshStatus();
+
+      await this.pullMessages({ warmup: true });
+
+      const interval = Math.max(1000, Number(this.pollInput ? this.pollInput.value : storage.get(POLL_MS_KEY, DEFAULT_POLL_INTERVAL)) || DEFAULT_POLL_INTERVAL);
+      storage.set(POLL_MS_KEY, interval);
+
+      this.pollTimer = window.setInterval(() => {
+        this.pullMessages().catch((err) => {
+          this.log(`Kick polling failed: ${err?.message || err}`);
+        });
+      }, interval);
+
+      this.setState('connected');
+      this.log(`Connected to Kick channel ${channel}`);
+    } catch (err) {
+      this.resetConnectionState();
+      const error = err instanceof Error ? err : new Error(err?.message || String(err));
+      this.reportError(error);
     }
-
-    this.chatroomId = chatroomId;
-    this.cursor = null;
-    this.seenIds = new Set();
-    this.refreshStatus();
-
-    await this.pullMessages({ warmup: true });
-
-    const interval = Math.max(1000, Number(this.pollInput ? this.pollInput.value : storage.get(POLL_MS_KEY, DEFAULT_POLL_INTERVAL)) || DEFAULT_POLL_INTERVAL);
-    storage.set(POLL_MS_KEY, interval);
-
-    this.pollTimer = window.setInterval(() => {
-      this.pullMessages().catch((err) => {
-        this.log(`Kick polling failed: ${err?.message || err}`);
-      });
-    }, interval);
-
-    this.setState('connected');
-    this.log(`Connected to Kick channel ${channel}`);
   }
 
   async resolveChatroomId(channel) {
@@ -524,7 +533,7 @@ export class KickPlugin extends BasePlugin {
     }
   }
 
-  disable() {
+  resetConnectionState() {
     if (this.pollTimer) {
       window.clearInterval(this.pollTimer);
       this.pollTimer = null;
@@ -533,6 +542,10 @@ export class KickPlugin extends BasePlugin {
     this.cursor = null;
     this.seenIds.clear();
     this.refreshStatus();
+  }
+
+  disable() {
+    this.resetConnectionState();
     this.setState('idle');
   }
 }

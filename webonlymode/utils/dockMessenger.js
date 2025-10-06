@@ -8,14 +8,54 @@ export function buildDockUrl(sessionId, { dockParams = '' } = {}) {
   return `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=false&room=${encodeURIComponent(trimmed)}&push=${encodeURIComponent(trimmed)}&vd=0&ad=0&autostart&cleanoutput&view&label=SocialStream${extra}`;
 }
 
+function extractOverlayPayload(data) {
+  if (data === null || data === undefined) {
+    return null;
+  }
+  if (Array.isArray(data)) {
+    return data
+      .map((item) => extractOverlayPayload(item))
+      .filter((item) => item !== null && item !== undefined);
+  }
+  if (typeof data !== 'object') {
+    return null;
+  }
+
+  if ('dataReceived' in data) {
+    const received = extractOverlayPayload(data.dataReceived);
+    if (received !== null && received !== undefined) {
+      return received;
+    }
+  }
+
+  if ('overlayNinja' in data) {
+    return data.overlayNinja;
+  }
+
+  if ('contents' in data) {
+    return extractOverlayPayload(data.contents);
+  }
+
+  if ('detail' in data) {
+    const detail = extractOverlayPayload(data.detail);
+    if (detail !== null && detail !== undefined) {
+      return detail;
+    }
+  }
+
+  return null;
+}
+
 export class DockMessenger {
-  constructor(frame, { debug = false, onDebug = null } = {}) {
+  constructor(frame, { debug = false, onDebug = null, onMessage = null } = {}) {
     this.frame = frame;
     this.sessionId = null;
     this.pending = [];
     this.ready = false;
     this.debug = Boolean(debug);
     this.onDebug = typeof onDebug === 'function' ? onDebug : null;
+    this.onMessage = typeof onMessage === 'function' ? onMessage : null;
+    this.handleWindowMessage = this.handleWindowMessage.bind(this);
 
     if (!this.frame) {
       throw new Error('DockMessenger requires an iframe element.');
@@ -27,6 +67,8 @@ export class DockMessenger {
       this.debugLog('Dock iframe loaded', { pending: this.pending.length });
       this.flush();
     });
+
+    window.addEventListener('message', this.handleWindowMessage, false);
   }
 
   setSessionId(sessionId, { dockParams = '' } = {}) {
@@ -81,20 +123,25 @@ export class DockMessenger {
       this.debugLog('Posting message to dock iframe', { payload });
       this.frame.contentWindow.postMessage(payload, '*');
 
-      const target = this.frame.contentWindow;
-      if (target && typeof target.processInput === 'function') {
+      let target = null;
+      try {
+        target = this.frame.contentWindow;
+      } catch (accessErr) {
+        this.debugLog('Unable to access dock contentWindow', { error: accessErr?.message || accessErr });
+      }
+
+      if (target) {
         try {
-          target.processInput(message);
+          if (typeof target.processInput === 'function') {
+            target.processInput(message);
+          } else if (typeof target.processData === 'function') {
+            target.processData({ contents: message });
+          }
         } catch (err) {
-          this.debugLog('Direct processInput relay failed', { error: err?.message || err });
-        }
-      } else if (target && typeof target.processData === 'function') {
-        try {
-          target.processData({ contents: message });
-        } catch (err) {
-          this.debugLog('Direct processData relay failed', { error: err?.message || err });
+          this.debugLog('Direct dock relay unavailable', { error: err?.message || err });
         }
       }
+      this.notifyMessage(message);
     } catch (err) {
       console.error('Failed to post message to dock iframe', err);
     }
@@ -134,5 +181,32 @@ export class DockMessenger {
         console.warn('DockMessenger debug callback failed', err);
       }
     }
+  }
+
+  notifyMessage(message) {
+    if (!this.onMessage) {
+      return;
+    }
+    try {
+      this.onMessage({ message, sessionId: this.sessionId });
+    } catch (err) {
+      this.debugLog('onMessage callback failed', { error: err?.message || err });
+    }
+  }
+
+  handleWindowMessage(event) {
+    if (!this.frame || event.source !== this.frame.contentWindow) {
+      return;
+    }
+    const payload = extractOverlayPayload(event.data);
+    if (payload === null || payload === undefined) {
+      return;
+    }
+    const payloads = Array.isArray(payload) ? payload : [payload];
+    payloads.forEach((item) => {
+      if (item && typeof item === 'object') {
+        this.notifyMessage(item);
+      }
+    });
   }
 }

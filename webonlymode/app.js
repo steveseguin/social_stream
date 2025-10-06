@@ -17,24 +17,34 @@ const elements = {
   sessionOpen: document.getElementById('session-open'),
   sessionStatus: document.getElementById('session-status'),
   sourceList: document.getElementById('source-list'),
+  activitySection: document.getElementById('activity'),
   activityLog: document.getElementById('activity-log'),
   activityClear: document.getElementById('activity-clear'),
+  activityFullscreen: document.getElementById('activity-fullscreen'),
+  activityFilterDonations: document.getElementById('activity-filter-donations'),
+  activityToggleTts: document.getElementById('activity-toggle-tts'),
+  activityMenuToggle: document.getElementById('activity-menu-toggle'),
+  activityMenu: document.getElementById('activity-menu'),
+  activityPopout: document.getElementById('activity-popout'),
   dockFrame: document.getElementById('dock-relay'),
   mobileNavButtons: Array.from(document.querySelectorAll('[data-mobile-nav-target]'))
 };
 
 const sessionKey = 'session.currentId';
 const activityLimit = 80;
-const debugStorageKey = 'debug.enabled';
 
 const url = new URL(window.location.href);
 const debugParam = url.searchParams.get('debug');
-let debugEnabled = storage.get(debugStorageKey, false);
-if (debugParam !== null) {
-  const normalized = (debugParam || '').toLowerCase();
-  debugEnabled = normalized === '' || (!['0', 'false', 'off', 'no'].includes(normalized));
-  storage.set(debugStorageKey, debugEnabled);
-}
+const debugEnabled = (() => {
+  if (debugParam === null) {
+    return false;
+  }
+  const normalized = (debugParam || '').trim().toLowerCase();
+  if (!normalized) {
+    return true;
+  }
+  return !['0', 'false', 'off', 'no'].includes(normalized);
+})();
 if (debugEnabled) {
   console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL to disable.');
 } else {
@@ -43,9 +53,9 @@ if (debugEnabled) {
 
 const messenger = new DockMessenger(elements.dockFrame, {
   debug: debugEnabled,
-  onDebug: debugEnabled ? addActivity : null
+  onDebug: debugEnabled ? addActivity : null,
+  onMessage: ({ message }) => handleRelayMessage(message)
 });
-const activity = [];
 let plugins = [];
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -125,6 +135,57 @@ const testMessagePresets = [
 ];
 
 let lastTestMessageSignature = null;
+
+const PLATFORM_ICON_MAP = {
+  youtube: '../sources/images/youtube.png',
+  youtubeshorts: '../sources/images/youtubeshorts.png',
+  twitch: '../sources/images/twitch.png',
+  tiktok: '../sources/images/tiktok.png',
+  kick: '../sources/images/kick.png',
+  discord: '../sources/images/discord.png',
+  facebook: '../sources/images/facebook.png',
+  zoom: '../sources/images/zoom.png',
+  slack: '../sources/images/slack.png',
+  default: '../sources/images/default.png'
+};
+
+const PLATFORM_LABEL_MAP = {
+  youtube: 'YouTube',
+  youtubeshorts: 'YouTube Shorts',
+  twitch: 'Twitch',
+  tiktok: 'TikTok',
+  kick: 'Kick',
+  discord: 'Discord',
+  facebook: 'Facebook',
+  zoom: 'Zoom',
+  slack: 'Slack'
+};
+
+const BADGE_FLAG_LABELS = {
+  moderator: 'Moderator',
+  mod: 'Moderator',
+  vip: 'VIP',
+  subscriber: 'Subscriber',
+  founder: 'Founder',
+  broadcaster: 'Host',
+  staff: 'Staff'
+};
+
+const activityEntries = [];
+const activityById = new Map();
+
+const activityState = {
+  filters: {
+    donationsOnly: false
+  },
+  ttsEnabled: false,
+  fallbackFullscreen: false,
+  lastSpokenId: null
+};
+
+const speechSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+const donationsFilterKey = 'activity.filter.donationsOnly';
+const ttsEnabledKey = 'activity.tts.enabled';
 
 function updateSessionStatus(message, tone = 'info', { html = false } = {}) {
   const target = elements.sessionStatus;
@@ -240,45 +301,783 @@ function handleCopyLink() {
 }
 
 function addActivity(entry) {
-  if (!entry) return;
-  activity.unshift(entry);
-  if (activity.length > activityLimit) {
-    activity.length = activityLimit;
+  const normalized = normalizeActivityEntry(entry);
+  if (!normalized) {
+    return;
   }
+
+  if (normalized.id && activityById.has(normalized.id)) {
+    const existingIndex = activityEntries.findIndex((item) => item.id === normalized.id);
+    if (existingIndex >= 0) {
+      activityEntries.splice(existingIndex, 1);
+    }
+  }
+
+  activityEntries.unshift(normalized);
+  if (normalized.id) {
+    activityById.set(normalized.id, normalized);
+  }
+
+  while (activityEntries.length > activityLimit) {
+    const removed = activityEntries.pop();
+    if (removed && removed.id) {
+      activityById.delete(removed.id);
+    }
+  }
+
   renderActivity();
+
+  if (normalized.kind === 'event') {
+    maybeSpeak(normalized);
+  }
+}
+
+function normalizeActivityEntry(entry) {
+  if (!entry) {
+    return null;
+  }
+
+  const timestamp = entry.timestamp || Date.now();
+  const kind = entry.kind || inferEntryKind(entry);
+
+  if (kind === 'event') {
+    const payload = entry.payload || entry.messageData || entry.detail || entry;
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+    if (!debugEnabled && !isDisplayableMessage(payload)) {
+      return null;
+    }
+
+    const id = entry.id || payload.id || `event-${timestamp}-${Math.floor(Math.random() * 1000)}`;
+    const normalizedPayload = { ...payload };
+    if (!normalizedPayload.timestamp) {
+      normalizedPayload.timestamp = timestamp;
+    }
+
+    return {
+      id,
+      kind: 'event',
+      plugin: normalizePlugin(entry.plugin, normalizedPayload.type),
+      timestamp,
+      payload: normalizedPayload
+    };
+  }
+
+  const message = entry.message || '';
+  const detail = entry.detail;
+  const isDebugEntry = kind === 'debug' || (message && message.includes('[debug]'));
+
+  const entryKind = isDebugEntry ? 'debug' : (kind === 'error' ? 'error' : 'status');
+
+  if (!debugEnabled && entryKind === 'debug') {
+    return null;
+  }
+  if (!debugEnabled && entryKind === 'status') {
+    return null;
+  }
+
+  const id = entry.id || `log-${timestamp}-${Math.floor(Math.random() * 1000)}`;
+  return {
+    id,
+    kind: entryKind,
+    plugin: entry.plugin || 'system',
+    timestamp,
+    message,
+    detail
+  };
+}
+
+function inferEntryKind(entry) {
+  if (!entry) {
+    return 'status';
+  }
+  if (entry.kind) {
+    return entry.kind;
+  }
+  if (entry.payload || entry.messageData) {
+    return 'event';
+  }
+  if (entry.message && entry.message.includes('[debug]')) {
+    return 'debug';
+  }
+  return 'status';
+}
+
+function normalizePlugin(plugin, type) {
+  if (plugin) {
+    return plugin;
+  }
+  if (type) {
+    return String(type).toLowerCase();
+  }
+  return 'system';
+}
+
+function shouldDisplayEntry(entry) {
+  if (!entry) {
+    return false;
+  }
+  if (entry.kind === 'event') {
+    if (activityState.filters.donationsOnly && !eventHasDonation(entry.payload)) {
+      return false;
+    }
+    return true;
+  }
+  if (entry.kind === 'error') {
+    return true;
+  }
+  return debugEnabled;
 }
 
 function renderActivity() {
   if (!elements.activityLog) return;
   elements.activityLog.innerHTML = '';
-  activity.forEach((item) => {
-    const row = document.createElement('div');
-    row.className = 'activity-entry';
 
-    const meta = document.createElement('div');
-    meta.className = 'activity-entry__meta';
-    meta.textContent = `${formatTime(item.timestamp)} - ${item.plugin || 'system'}`;
+  const visibleEntries = activityEntries.filter(shouldDisplayEntry);
 
-    const message = document.createElement('p');
-    message.className = 'activity-entry__message';
-    message.innerHTML = safeHtml(item.message || '');
+  if (!visibleEntries.length) {
+    const empty = document.createElement('p');
+    empty.className = 'activity-empty';
+    empty.textContent = 'No activity yet.';
+    elements.activityLog.appendChild(empty);
+    return;
+  }
 
-    row.append(meta, message);
-
-    if (item.detail) {
-      const detail = document.createElement('pre');
-      detail.className = 'activity-entry__detail';
-      detail.textContent = typeof item.detail === 'string' ? item.detail : JSON.stringify(item.detail, null, 2);
-      row.appendChild(detail);
+  const fragment = document.createDocumentFragment();
+  visibleEntries.forEach((entry) => {
+    if (entry.kind === 'event') {
+      fragment.appendChild(buildActivityNode(entry));
+    } else {
+      fragment.appendChild(buildStatusNode(entry));
     }
-
-    elements.activityLog.appendChild(row);
   });
+
+  elements.activityLog.appendChild(fragment);
+}
+
+function buildActivityNode(entry) {
+  const payload = entry.payload || {};
+  const platformIcon = getPlatformIcon(payload.type);
+  const platformLabel = getPlatformLabel(payload.type);
+
+  const card = document.createElement('article');
+  card.className = 'activity-item';
+  card.dataset.platform = (payload.type || 'unknown').toLowerCase();
+  card.dataset.eventType = (payload.event || 'message').toLowerCase();
+
+  if (payload.highlightColor) {
+    card.style.setProperty('--activity-accent', payload.highlightColor);
+  }
+
+  const avatar = createAvatarNode(payload, platformIcon);
+  card.appendChild(avatar);
+
+  const body = document.createElement('div');
+  body.className = 'activity-item__body';
+
+  const meta = document.createElement('div');
+  meta.className = 'activity-item__meta';
+
+  const iconImg = document.createElement('img');
+  iconImg.className = 'activity-item__platform-icon';
+  iconImg.src = platformIcon;
+  iconImg.alt = `${platformLabel} icon`;
+  iconImg.loading = 'lazy';
+  iconImg.decoding = 'async';
+  meta.appendChild(iconImg);
+
+  const platformSpan = document.createElement('span');
+  platformSpan.className = 'activity-item__platform';
+  platformSpan.textContent = platformLabel;
+  meta.appendChild(platformSpan);
+
+  const timeSpan = document.createElement('time');
+  timeSpan.className = 'activity-item__time';
+  timeSpan.dateTime = new Date(entry.timestamp).toISOString();
+  timeSpan.textContent = formatTime(entry.timestamp);
+  meta.appendChild(timeSpan);
+
+  body.appendChild(meta);
+
+  const headline = document.createElement('div');
+  headline.className = 'activity-item__headline';
+
+  const name = document.createElement('span');
+  name.className = 'activity-item__name';
+  name.textContent = payload.chatname || 'Unknown';
+  if (payload.nameColor) {
+    name.style.color = payload.nameColor;
+  }
+  headline.appendChild(name);
+
+  const badgeContainer = renderBadgeElements(payload);
+  if (badgeContainer) {
+    headline.appendChild(badgeContainer);
+  }
+
+  body.appendChild(headline);
+
+  if (payload.subtitle) {
+    const subtitle = document.createElement('div');
+    subtitle.className = 'activity-item__subtitle';
+    subtitle.textContent = payload.subtitle;
+    body.appendChild(subtitle);
+  }
+
+  const chips = buildChipRow(payload);
+  if (chips) {
+    body.appendChild(chips);
+  }
+
+  if (payload.chatmessage) {
+    const messageEl = document.createElement('div');
+    messageEl.className = 'activity-item__message';
+    if (payload.textColor) {
+      messageEl.style.color = payload.textColor;
+    }
+    if (payload.backgroundColor) {
+      messageEl.style.background = payload.backgroundColor;
+    }
+    messageEl.innerHTML = payload.chatmessage;
+    body.appendChild(messageEl);
+  }
+
+  if (payload.contentimg) {
+    const media = document.createElement('img');
+    media.className = 'activity-item__media';
+    media.src = payload.contentimg;
+    media.alt = payload.chatname ? `${payload.chatname} shared content` : 'Shared content';
+    media.loading = 'lazy';
+    media.decoding = 'async';
+    body.appendChild(media);
+  }
+
+  card.appendChild(body);
+  return card;
+}
+
+function buildStatusNode(entry) {
+  const row = document.createElement('div');
+  const classes = ['activity-status'];
+  if (entry.kind === 'error') {
+    classes.push('activity-status--error');
+    row.setAttribute('role', 'alert');
+  } else if (entry.kind === 'debug') {
+    classes.push('activity-status--debug');
+  }
+  row.className = classes.join(' ');
+
+  const meta = document.createElement('div');
+  meta.className = 'activity-status__meta';
+  meta.textContent = `${formatTime(entry.timestamp)} · ${entry.plugin || 'system'}`;
+  row.appendChild(meta);
+
+  const message = document.createElement('div');
+  message.className = 'activity-status__message';
+  message.textContent = entry.message || '';
+  row.appendChild(message);
+
+  if (entry.detail !== undefined) {
+    const detail = document.createElement('pre');
+    detail.className = 'activity-status__detail';
+    detail.textContent = typeof entry.detail === 'string' ? entry.detail : JSON.stringify(entry.detail, null, 2);
+    row.appendChild(detail);
+  }
+
+  return row;
+}
+
+function createAvatarNode(payload, fallbackIcon) {
+  const wrapper = document.createElement('div');
+  wrapper.className = 'activity-item__avatar';
+
+  if (payload.chatimg) {
+    const img = document.createElement('img');
+    img.src = payload.chatimg;
+    img.alt = payload.chatname ? `${payload.chatname} avatar` : 'Avatar';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    wrapper.appendChild(img);
+    return wrapper;
+  }
+
+  const name = (payload.chatname || '').trim();
+  if (name) {
+    const initial = document.createElement('span');
+    initial.className = 'activity-item__avatar-initial';
+    initial.textContent = name[0].toUpperCase();
+    wrapper.appendChild(initial);
+    return wrapper;
+  }
+
+  const icon = document.createElement('img');
+  icon.src = fallbackIcon;
+  icon.alt = 'Platform';
+  icon.loading = 'lazy';
+  icon.decoding = 'async';
+  wrapper.classList.add('activity-item__avatar--fallback');
+  wrapper.appendChild(icon);
+  return wrapper;
+}
+
+function renderBadgeElements(payload) {
+  const nodes = [];
+
+  if (Array.isArray(payload.chatbadges)) {
+    payload.chatbadges.forEach((badge) => {
+      const node = createBadgeNode(badge);
+      if (node) {
+        nodes.push(node);
+      }
+    });
+  }
+
+  const flags = [];
+  if (payload.badges && typeof payload.badges === 'object') {
+    Object.keys(payload.badges).forEach((flag) => flags.push(flag));
+  }
+  if (payload.vip) {
+    flags.push('vip');
+  }
+
+  const uniqueFlags = Array.from(new Set(flags));
+  uniqueFlags.forEach((flag) => {
+    const label = BADGE_FLAG_LABELS[flag];
+    if (label) {
+      const flagChip = document.createElement('span');
+      flagChip.className = 'activity-item__badge-flag';
+      flagChip.textContent = label;
+      nodes.push(flagChip);
+    }
+  });
+
+  if (!nodes.length) {
+    return null;
+  }
+
+  const container = document.createElement('div');
+  container.className = 'activity-item__badges';
+  nodes.forEach((node) => container.appendChild(node));
+  return container;
+}
+
+function createBadgeNode(badge) {
+  if (!badge) {
+    return null;
+  }
+
+  if (typeof badge === 'string') {
+    const img = document.createElement('img');
+    img.className = 'activity-item__badge';
+    img.src = badge;
+    img.alt = 'Badge';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    return img;
+  }
+
+  if (typeof badge === 'object') {
+    if (badge.url || badge.image) {
+      const img = document.createElement('img');
+      img.className = 'activity-item__badge';
+      img.src = badge.url || badge.image;
+      img.alt = badge.alt || 'Badge';
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      return img;
+    }
+    if (badge.type === 'svg' && badge.html) {
+      const span = document.createElement('span');
+      span.className = 'activity-item__badge activity-item__badge--svg';
+      span.innerHTML = badge.html;
+      return span;
+    }
+  }
+
+  return null;
+}
+
+function buildChipRow(payload) {
+  const chips = [];
+
+  if (payload.hasDonation) {
+    chips.push({ className: 'activity-chip activity-chip--donation', label: payload.hasDonation });
+  } else if (payload.donationAmount) {
+    const amount = payload.donationCurrency ? `${payload.donationAmount} ${payload.donationCurrency}` : payload.donationAmount;
+    chips.push({ className: 'activity-chip activity-chip--donation', label: amount });
+  }
+
+  if (payload.bits) {
+    chips.push({ className: 'activity-chip activity-chip--bits', label: `${payload.bits} bits` });
+  }
+
+  if (payload.membership) {
+    chips.push({ className: 'activity-chip activity-chip--membership', label: payload.membership });
+  }
+
+  const eventLabel = formatEventLabel(payload.event);
+  if (eventLabel && eventLabel !== 'Message' && !chips.some((chip) => chip.label === eventLabel)) {
+    chips.push({ className: 'activity-chip activity-chip--event', label: eventLabel });
+  }
+
+  if (payload.question) {
+    chips.push({ className: 'activity-chip activity-chip--flag', label: 'Question' });
+  }
+
+  if (payload.private) {
+    chips.push({ className: 'activity-chip activity-chip--flag', label: 'Private' });
+  }
+
+  if (payload.vip && !chips.some((chip) => chip.label === 'VIP')) {
+    chips.push({ className: 'activity-chip activity-chip--flag', label: 'VIP' });
+  }
+
+  if (payload.badges && typeof payload.badges === 'object') {
+    Object.keys(payload.badges).forEach((flag) => {
+      const label = BADGE_FLAG_LABELS[flag];
+      if (label && !chips.some((chip) => chip.label === label)) {
+        chips.push({ className: 'activity-chip activity-chip--flag', label });
+      }
+    });
+  }
+
+  if (!chips.length) {
+    return null;
+  }
+
+  const container = document.createElement('div');
+  container.className = 'activity-item__chips';
+  chips.forEach(({ className, label }) => {
+    const span = document.createElement('span');
+    span.className = className || 'activity-chip';
+    span.textContent = label;
+    container.appendChild(span);
+  });
+  return container;
+}
+
+function eventHasDonation(payload) {
+  if (!payload) {
+    return false;
+  }
+  if (payload.hasDonation && String(payload.hasDonation).trim()) {
+    return true;
+  }
+  if (payload.donationAmount && String(payload.donationAmount).trim()) {
+    return true;
+  }
+  if (payload.donationCurrency && String(payload.donationCurrency).trim()) {
+    return true;
+  }
+  const bits = Number(payload.bits || 0);
+  if (!Number.isNaN(bits) && bits > 0) {
+    return true;
+  }
+  if (payload.membership && String(payload.membership).trim()) {
+    return true;
+  }
+  return false;
+}
+
+function isDisplayableMessage(payload) {
+  if (!payload || typeof payload !== 'object') {
+    return false;
+  }
+  return Boolean(
+    (payload.chatname && payload.chatname.toString().trim()) ||
+    (payload.chatmessage && payload.chatmessage.toString().trim()) ||
+    (payload.contentimg && payload.contentimg.toString().trim()) ||
+    eventHasDonation(payload) ||
+    (payload.subtitle && payload.subtitle.toString().trim()) ||
+    (payload.question === true) ||
+    (payload.vip === true)
+  );
+}
+
+function formatEventLabel(value) {
+  if (!value) {
+    return '';
+  }
+  const normalized = String(value).toLowerCase();
+  const map = {
+    donation: 'Donation',
+    bits: 'Cheer',
+    cheer: 'Cheer',
+    raid: 'Raid',
+    host: 'Host',
+    follow: 'Follow',
+    subscription: 'Subscription',
+    resubscription: 'Resub',
+    gifted: 'Gift',
+    gift: 'Gift',
+    like: 'Like',
+    join: 'Join',
+    test: 'Test',
+    message: 'Message'
+  };
+  if (map[normalized]) {
+    return map[normalized];
+  }
+  return normalized.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function getPlatformIcon(type) {
+  const key = String(type || '').toLowerCase();
+  return PLATFORM_ICON_MAP[key] || PLATFORM_ICON_MAP.default;
+}
+
+function getPlatformLabel(type) {
+  const key = String(type || '').toLowerCase();
+  if (PLATFORM_LABEL_MAP[key]) {
+    return PLATFORM_LABEL_MAP[key];
+  }
+  if (!key) {
+    return 'Unknown';
+  }
+  return key.replace(/[_-]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function toPlainText(value) {
+  if (!value) {
+    return '';
+  }
+  const div = document.createElement('div');
+  div.innerHTML = value;
+  return div.textContent || div.innerText || '';
+}
+
+function maybeSpeak(entry) {
+  if (!activityState.ttsEnabled || !speechSupported) {
+    return;
+  }
+  if (!entry || entry.kind !== 'event') {
+    return;
+  }
+  if (activityState.lastSpokenId === entry.id) {
+    return;
+  }
+
+  const text = buildSpeechText(entry.payload);
+  if (!text) {
+    return;
+  }
+
+  try {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    window.speechSynthesis.speak(utterance);
+    activityState.lastSpokenId = entry.id;
+  } catch (err) {
+    console.warn('Speech synthesis failed', err);
+  }
+}
+
+function buildSpeechText(payload) {
+  if (!payload) {
+    return '';
+  }
+  const name = payload.chatname || 'Someone';
+  if (payload.hasDonation) {
+    return `${name} sent a donation: ${payload.hasDonation}.`;
+  }
+  if (payload.donationAmount) {
+    const amount = payload.donationCurrency ? `${payload.donationAmount} ${payload.donationCurrency}` : payload.donationAmount;
+    return `${name} sent a donation of ${amount}.`;
+  }
+  const bits = Number(payload.bits || 0);
+  if (!Number.isNaN(bits) && bits > 0) {
+    return `${name} cheered ${bits} bits.`;
+  }
+  if (payload.membership) {
+    return `${name} membership: ${payload.membership}.`;
+  }
+  if (payload.chatmessage) {
+    const message = toPlainText(payload.chatmessage).trim();
+    if (message) {
+      return `${name} said: ${message}`;
+    }
+  }
+  if (payload.contentimg) {
+    return `${name} shared an image.`;
+  }
+  const eventLabel = formatEventLabel(payload.event);
+  if (eventLabel && eventLabel !== 'Message') {
+    return `${name} triggered ${eventLabel}.`;
+  }
+  return '';
 }
 
 function clearActivity() {
-  activity.length = 0;
+  activityEntries.length = 0;
+  activityById.clear();
+  activityState.lastSpokenId = null;
+  if (speechSupported) {
+    try {
+      window.speechSynthesis.cancel();
+    } catch (err) {
+      console.warn('Failed to cancel speech synthesis', err);
+    }
+  }
   renderActivity();
+}
+
+function setDonationsOnly(enabled, { persist = true } = {}) {
+  activityState.filters.donationsOnly = Boolean(enabled);
+  if (persist) {
+    storage.set(donationsFilterKey, activityState.filters.donationsOnly);
+  }
+  if (elements.activityFilterDonations) {
+    elements.activityFilterDonations.checked = activityState.filters.donationsOnly;
+  }
+  renderActivity();
+}
+
+function setTtsEnabled(enabled, { persist = true } = {}) {
+  const intended = Boolean(enabled);
+  if (!speechSupported) {
+    activityState.ttsEnabled = false;
+    if (elements.activityToggleTts) {
+      elements.activityToggleTts.checked = false;
+      elements.activityToggleTts.disabled = true;
+    }
+    if (persist) {
+      storage.set(ttsEnabledKey, false);
+    }
+    return;
+  }
+
+  activityState.ttsEnabled = intended;
+  if (!activityState.ttsEnabled) {
+    activityState.lastSpokenId = null;
+    try {
+      window.speechSynthesis.cancel();
+    } catch (err) {
+      console.warn('Speech synthesis cancel failed', err);
+    }
+  }
+  if (elements.activityToggleTts) {
+    elements.activityToggleTts.checked = activityState.ttsEnabled;
+  }
+  if (persist) {
+    storage.set(ttsEnabledKey, activityState.ttsEnabled);
+  }
+}
+
+function toggleActivityMenu(forceState) {
+  if (!elements.activityMenuToggle || !elements.activityMenu) {
+    return;
+  }
+  const expanded = elements.activityMenuToggle.getAttribute('aria-expanded') === 'true';
+  const next = typeof forceState === 'boolean' ? forceState : !expanded;
+  elements.activityMenuToggle.setAttribute('aria-expanded', String(next));
+  elements.activityMenu.hidden = !next;
+
+  if (next) {
+    document.addEventListener('mousedown', handleGlobalMenuClose, { capture: true });
+    document.addEventListener('keydown', handleMenuKeydown);
+    const firstItem = elements.activityMenu.querySelector('[role="menuitem"]');
+    const focusTarget = firstItem || elements.activityMenu;
+    focusTarget?.focus({ preventScroll: true });
+  } else {
+    document.removeEventListener('mousedown', handleGlobalMenuClose, { capture: true });
+    document.removeEventListener('keydown', handleMenuKeydown);
+  }
+}
+
+function handleGlobalMenuClose(event) {
+  if (!elements.activityMenu || !elements.activityMenuToggle) {
+    return;
+  }
+  if (elements.activityMenu.contains(event.target) || elements.activityMenuToggle.contains(event.target)) {
+    return;
+  }
+  toggleActivityMenu(false);
+}
+
+function handleMenuKeydown(event) {
+  if (event.key === 'Escape' && elements.activityMenuToggle?.getAttribute('aria-expanded') === 'true') {
+    event.preventDefault();
+    toggleActivityMenu(false);
+    elements.activityMenuToggle?.focus({ preventScroll: true });
+  }
+}
+
+function isFullscreenActive() {
+  if (document.fullscreenElement) {
+    return document.fullscreenElement === elements.activitySection;
+  }
+  return Boolean(activityState.fallbackFullscreen);
+}
+
+function updateFullscreenControl() {
+  const target = elements.activityFullscreen;
+  if (!target) {
+    return;
+  }
+  const active = isFullscreenActive();
+  target.setAttribute('aria-pressed', String(active));
+  target.dataset.state = active ? 'exit' : 'enter';
+  target.textContent = active ? 'Exit full screen' : 'Full screen';
+}
+
+async function toggleActivityFullscreen() {
+  const section = elements.activitySection;
+  if (!section) {
+    return;
+  }
+
+  if (document.fullscreenElement === section) {
+    try {
+      await document.exitFullscreen();
+    } catch (err) {
+      console.warn('Exit fullscreen failed', err);
+    }
+    return;
+  }
+
+  if (!document.fullscreenElement && section.requestFullscreen) {
+    try {
+      await section.requestFullscreen({ navigationUI: 'hide' });
+      return;
+    } catch (err) {
+      console.warn('Fullscreen request failed', err);
+    }
+  }
+
+  activityState.fallbackFullscreen = !activityState.fallbackFullscreen;
+  section.classList.toggle('activity--expanded', activityState.fallbackFullscreen);
+  document.body.classList.toggle('activity-fallback-fullscreen', activityState.fallbackFullscreen);
+  updateFullscreenControl();
+}
+
+function handleFullscreenChange() {
+  if (!elements.activitySection) {
+    return;
+  }
+
+  if (document.fullscreenElement === elements.activitySection) {
+    activityState.fallbackFullscreen = false;
+    document.body.classList.remove('activity-fallback-fullscreen');
+    elements.activitySection.classList.add('activity--expanded');
+  } else if (!document.fullscreenElement) {
+    activityState.fallbackFullscreen = false;
+    document.body.classList.remove('activity-fallback-fullscreen');
+    elements.activitySection.classList.remove('activity--expanded');
+  }
+  updateFullscreenControl();
+}
+
+function openActivityPopout() {
+  try {
+    const popupUrl = new URL(window.location.href);
+    popupUrl.searchParams.set('focus', 'activity');
+    window.open(popupUrl.toString(), '_blank', 'width=480,height=720,resizable=yes,scrollbars=yes');
+  } catch (err) {
+    console.warn('Unable to open activity pop-out', err);
+  }
+  toggleActivityMenu(false);
 }
 
 function pickRandom(list) {
@@ -384,6 +1183,63 @@ function createTestMessage() {
   }
 
   return message;
+}
+
+function collectRelayPayloads(input) {
+  if (input === null || input === undefined) {
+    return [];
+  }
+  if (Array.isArray(input)) {
+    const merged = [];
+    input.forEach((item) => {
+      const results = collectRelayPayloads(item);
+      if (results && results.length) {
+        merged.push(...results);
+      }
+    });
+    return merged;
+  }
+  if (typeof input !== 'object') {
+    return [];
+  }
+
+  if ('overlayNinja' in input) {
+    return collectRelayPayloads(input.overlayNinja);
+  }
+  if ('dataReceived' in input) {
+    return collectRelayPayloads(input.dataReceived);
+  }
+  if ('contents' in input) {
+    return collectRelayPayloads(input.contents);
+  }
+  if ('detail' in input) {
+    const detailPayloads = collectRelayPayloads(input.detail);
+    if (detailPayloads.length) {
+      return detailPayloads;
+    }
+  }
+
+  return [input];
+}
+
+function handleRelayMessage(message) {
+  const payloads = collectRelayPayloads(message);
+  if (!payloads.length) {
+    return;
+  }
+
+  payloads.forEach((payload) => {
+    if (!payload || typeof payload !== 'object') {
+      return;
+    }
+    addActivity({
+      kind: 'event',
+      plugin: payload.type || payload.platform || 'system',
+      payload,
+      timestamp: payload.timestamp || Date.now(),
+      id: payload.id
+    });
+  });
 }
 
 function handleSendTestMessage() {
@@ -505,6 +1361,7 @@ function processOAuthCallback(pluginMap) {
 
 function init() {
   setSessionIndicator('idle', 'Session idle');
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
   elements.dockFrame.addEventListener('load', () => {
     if (messenger.getSessionId()) {
       const sessionId = messenger.getSessionId();
@@ -529,6 +1386,17 @@ function init() {
   elements.sessionCopy.addEventListener('click', () => handleCopyLink());
   elements.sessionTest?.addEventListener('click', () => handleSendTestMessage());
   elements.activityClear.addEventListener('click', clearActivity);
+  elements.activityFilterDonations?.addEventListener('change', (event) => {
+    const target = event.target;
+    setDonationsOnly(Boolean(target && target.checked));
+  });
+  elements.activityToggleTts?.addEventListener('change', (event) => {
+    const target = event.target;
+    setTtsEnabled(Boolean(target && target.checked));
+  });
+  elements.activityFullscreen?.addEventListener('click', () => toggleActivityFullscreen());
+  elements.activityMenuToggle?.addEventListener('click', () => toggleActivityMenu());
+  elements.activityPopout?.addEventListener('click', openActivityPopout);
 
   if (elements.sessionToggle && elements.sessionAdvanced) {
     elements.sessionToggle.addEventListener('click', () => {
@@ -554,13 +1422,24 @@ function init() {
     elements.sessionTest.disabled = !storedSession;
   }
 
+  const storedDonationsOnly = storage.get(donationsFilterKey, false);
+  setDonationsOnly(Boolean(storedDonationsOnly), { persist: false });
+
+  const storedTtsEnabled = storage.get(ttsEnabledKey, false);
+  setTtsEnabled(Boolean(storedTtsEnabled), { persist: false });
+  if (!speechSupported && elements.activityToggleTts) {
+    elements.activityToggleTts.title = 'Text-to-speech is not supported in this browser.';
+  }
+
+  updateFullscreenControl();
+
   plugins = [
     new YoutubePlugin({
       messenger,
       icon: '../sources/images/youtube.png',
       debug: debugEnabled,
       onActivity: addActivity,
-      onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
+      onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
       autoConnect: true,
       controls: { connect: false, disconnect: true }
     }),
@@ -569,7 +1448,7 @@ function init() {
       icon: '../sources/images/twitch.png',
       debug: debugEnabled,
       onActivity: addActivity,
-      onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
+      onStatus: ({ kind = 'debug', plugin, state }) => addActivity({ kind, plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
       autoConnect: true,
       controls: { connect: false, disconnect: true }
     }),
@@ -578,14 +1457,14 @@ function init() {
       icon: '../sources/images/kick.png',
       debug: debugEnabled,
       onActivity: addActivity,
-      onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
+      onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
     }),
     new TikTokPlugin({
       messenger,
       icon: '../sources/images/tiktok.png',
       debug: debugEnabled,
       onActivity: addActivity,
-      onStatus: ({ plugin, state }) => addActivity({ plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
+      onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() })
     })
   ];
 
@@ -598,6 +1477,15 @@ function init() {
   startSession(storedSession);
   processOAuthCallback(pluginMap);
   initMobileNav();
+
+  if (url.searchParams.get('focus') === 'activity' && elements.activitySection) {
+    window.setTimeout(() => {
+      elements.activitySection.scrollIntoView({
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        block: 'start'
+      });
+    }, 150);
+  }
 }
 
 init();

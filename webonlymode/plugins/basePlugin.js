@@ -287,7 +287,8 @@ export class BasePlugin {
     }
   }
 
-  log(message, detail) {
+  log(message, detail, options = {}) {
+    const { kind = 'status' } = options || {};
     if (this.debug) {
       if (detail !== undefined) {
         console.debug(`[${this.id}] ${message}`, detail);
@@ -296,6 +297,7 @@ export class BasePlugin {
       }
     }
     this.onActivity({
+      kind,
       plugin: this.id,
       message,
       detail,
@@ -313,6 +315,7 @@ export class BasePlugin {
       console.debug(`[${this.id}] ${message}`);
     }
     this.onActivity({
+      kind: 'debug',
       plugin: this.id,
       message: `[debug] ${message}`,
       detail,
@@ -324,7 +327,8 @@ export class BasePlugin {
     console.error(`${this.id} plugin error`, error);
     const description = error && error.message ? error.message : 'Unexpected error';
     this.setState('error', { message: description });
-    this.log(`Error: ${description}`);
+    const detail = error instanceof Error ? error.stack || error.message : error;
+    this.log(`Error: ${description}`, detail, { kind: 'error' });
   }
 
   enable() {
