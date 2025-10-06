@@ -91,16 +91,28 @@ export class YoutubePlugin extends BasePlugin {
 
     const chatLabel = document.createElement('span');
     chatLabel.className = 'field__label';
-    chatLabel.textContent = 'Live Chat ID (optional)';
+    chatLabel.textContent = 'Live Chat ID or Video ID (optional)';
 
     const chatInput = document.createElement('input');
     chatInput.type = 'text';
-    chatInput.placeholder = 'Overrides automatic broadcast detection';
+    chatInput.placeholder = 'e.g., dQw4w9WgXcQ (video ID) or Cg0KC... (chat ID)';
     chatInput.value = this.liveChatId || '';
     chatInput.addEventListener('change', () => {
-      this.liveChatId = chatInput.value.trim();
+      const newValue = chatInput.value.trim();
+      const oldValue = this.liveChatId;
+      this.liveChatId = newValue;
       storage.set(CHAT_ID_KEY, this.liveChatId);
       this.refreshStatus();
+
+      // If connected and the Video/Chat ID changed, reconnect
+      if (this.state === 'connected' && newValue !== oldValue) {
+        this.log('Video/Chat ID changed. Reconnecting...');
+        this.disable();
+        this.setState('connecting');
+        setTimeout(() => {
+          this.setupLiveChat();
+        }, 500);
+      }
     });
 
     chatRow.append(chatLabel, chatInput);
@@ -267,9 +279,56 @@ export class YoutubePlugin extends BasePlugin {
     }
   }
 
+  async getLiveChatIdFromVideoId(videoId) {
+    if (!this.isTokenValid()) {
+      throw new Error('YouTube token expired. Please reconnect.');
+    }
+
+    const headers = {
+      Authorization: `Bearer ${this.token.accessToken}`,
+      Accept: 'application/json'
+    };
+
+    // Fetch video details to get the live chat ID
+    const videoRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoId}`, { headers });
+    if (!videoRes.ok) {
+      const errBody = await videoRes.json().catch(() => ({}));
+      throw this.createApiError(errBody, videoRes.status, 'videos');
+    }
+
+    const videoData = await videoRes.json();
+    if (videoData.items && videoData.items.length > 0) {
+      const liveChatId = videoData.items[0]?.liveStreamingDetails?.activeLiveChatId;
+      if (liveChatId) {
+        this.log(`Resolved video ID ${videoId} to live chat ID: ${liveChatId}`);
+        return liveChatId;
+      }
+      throw new Error(`Video ${videoId} does not have an active live chat. Make sure the video is currently live.`);
+    }
+
+    throw new Error(`Video ${videoId} not found or inaccessible.`);
+  }
+
   async resolveLiveChatId() {
+    // Check DOM input first (if settings panel is open)
+    let manualId = '';
     if (this.chatIdInput && this.chatIdInput.value.trim()) {
-      return this.chatIdInput.value.trim();
+      manualId = this.chatIdInput.value.trim();
+    }
+    // Check stored value (from previous sessions or if settings not rendered)
+    else if (this.liveChatId && this.liveChatId.trim()) {
+      manualId = this.liveChatId.trim();
+    }
+
+    // If manual ID provided, check if it's a video ID or chat ID
+    if (manualId) {
+      // Video IDs are typically 11 characters, Live Chat IDs are longer
+      if (manualId.length === 11) {
+        // Looks like a video ID - try to fetch the live chat ID from it
+        return await this.getLiveChatIdFromVideoId(manualId);
+      }
+      // Assume it's already a live chat ID
+      return manualId;
     }
 
     if (!this.isTokenValid()) {
