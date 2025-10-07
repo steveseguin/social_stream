@@ -638,6 +638,8 @@
 			
 			ele.querySelectorAll(".yt-spec-button-shape-next--icon-leading[aria-label]").forEach(img => {
 			try {
+				if (img.ariaLabel.startsWith("Like")){return;}
+				if (img.ariaLabel.startsWith("Reply")){return;}
 				var html = {};
 				html.html = `
 					<svg xmlns="http://www.w3.org/2000/svg" width="28" height="16" viewBox="0 0 28 16" fill="rgb(54, 0, 140)" stroke="rgb(255,255,255)" focusable="false" aria-hidden="true" style="width: 100%; height: 100%; background-color:rgb(54, 0, 140); border-radius:3px; margin:0 2px;">
