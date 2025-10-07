@@ -224,15 +224,23 @@
 		function (request, sender, sendResponse) {
 			try{
 				if ("getSource" == request){sendResponse("slack");	return;	}
-				if ("focusChat" == request){
-					if (!document.querySelector('[contenteditable][role="textbox"]>p')){
-						sendResponse(false);
+					if ("focusChat" == request){
+						var editor = document.querySelector('[contenteditable][role="textbox"]');
+						if (!editor){
+							sendResponse(false);
+							return;
+						}
+						try {
+							editor.focus();
+							var selection = window.getSelection();
+							if (selection){
+								selection.selectAllChildren(editor);
+								selection.collapseToEnd();
+							}
+						} catch (e) {}
+						sendResponse(true);
 						return;
 					}
-					document.querySelector('[contenteditable][role="textbox"]>p').focus();
-					sendResponse(true);
-					return;
-				}
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;

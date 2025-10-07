@@ -8800,6 +8800,8 @@ async function generalFakeChat(tabId, message, middle = true, keypress = true, b
 
     if (backspace) {
       await sendKeyEvent(tabId, "rawKeyDown", KEY_EVENTS.BACKSPACE);
+      await new Promise(resolve => setTimeout(resolve, 30));
+      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.BACKSPACE);
     }
 
     await insertText(tabId, message);
@@ -8826,10 +8828,6 @@ async function generalFakeChat(tabId, message, middle = true, keypress = true, b
         await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
     }
 	
-	if (backspace) {
-      await sendKeyEvent(tabId, "rawKeyDown", KEY_EVENTS.BACKSPACE);
-    }
-
     await delayedDetach(tabId);
 
   } catch (e) {
