@@ -8939,11 +8939,56 @@ class HostMessageFilter {
 
   sanitizeMessage(message) {
     if (!message || typeof message !== 'string') return '';
-    
-    // Strip HTML tags and normalize whitespace
-    return message.replace(/<\/?[^>]+(>|$)/g, "")
-      .replace(/\s\s+/g, " ")
+
+    let text = message;
+
+    try {
+      text = text.replace(/<br\s*\/?>/gi, ' ');
+      text = text.replace(/<img\b[^>]*>/gi, ' ');
+      text = text.replace(/<[^>]+>/g, ' ');
+      text = this.decodeHtmlEntities(text);
+    } catch (err) {
+      console.warn('HostMessageFilter sanitize error', err);
+      text = message;
+    }
+
+    const emojiPattern = /[\p{Extended_Pictographic}\p{Emoji_Presentation}\p{Emoji_Component}\u200D\uFE0F]/gu;
+
+    return text
+      .replace(emojiPattern, '')
+      .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  decodeHtmlEntities(input) {
+    if (!input) return '';
+    if (typeof input !== 'string') input = String(input);
+
+    const namedEntities = {
+      amp: '&',
+      lt: '<',
+      gt: '>',
+      quot: '"',
+      apos: "'",
+      nbsp: ' '
+    };
+
+    return input
+      .replace(/&#x([0-9a-f]+);/gi, (match, hex) => {
+        try {
+          return String.fromCodePoint(parseInt(hex, 16));
+        } catch (e) {
+          return match;
+        }
+      })
+      .replace(/&#(\d+);/g, (match, dec) => {
+        try {
+          return String.fromCodePoint(parseInt(dec, 10));
+        } catch (e) {
+          return match;
+        }
+      })
+      .replace(/&(amp|lt|gt|quot|apos);/gi, (match, name) => namedEntities[name.toLowerCase()] || match);
   }
 
   isHostDuplicate(message) {
