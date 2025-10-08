@@ -9,8 +9,13 @@ const CHANNEL_KEY = 'youtube.channel';
 const STATE_KEY = 'youtube.authState';
 
 const DEFAULT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+const SUBSCRIBER_CACHE_KEY = 'youtube.subscriberCache';
+const SUBSCRIBER_CACHE_LIMIT = 200;
+const SUBSCRIBER_POLL_INTERVAL = 120000;
+const CAPTURE_EVENTS_KEY = 'settings.captureevents';
 const YT_SCOPES = [
-  'https://www.googleapis.com/auth/youtube.readonly'
+  'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
 
 export class YoutubePlugin extends BasePlugin {
@@ -41,6 +46,14 @@ export class YoutubePlugin extends BasePlugin {
     this.streamingToggleInput = null;
     this.useStreaming = Boolean(useStreaming);
     this.onStreamingPreferenceChange = typeof onStreamingPreferenceChange === 'function' ? onStreamingPreferenceChange : null;
+
+    const cachedSubscribers = storage.get(SUBSCRIBER_CACHE_KEY, null);
+    const cachedKeys = Array.isArray(cachedSubscribers?.keys) ? cachedSubscribers.keys.slice(0, SUBSCRIBER_CACHE_LIMIT) : [];
+    this.seenSubscriberKeys = new Set(cachedKeys);
+    this.lastSubscriberTimestamp = Number(cachedSubscribers?.timestamp) || 0;
+    this.subscriberPollTimer = null;
+    this.subscriberFeatureUnavailable = false;
+    this.subscriberErrorNotified = false;
   }
 
   renderPrimary(container) {
@@ -262,6 +275,7 @@ export class YoutubePlugin extends BasePlugin {
     this.stopListening();
     this.nextPageToken = null;
     this.setActiveBroadcast(null);
+    this.stopSubscriberWatcher();
   }
 
   beginAuth() {
@@ -309,6 +323,7 @@ export class YoutubePlugin extends BasePlugin {
 
     storage.set(TOKEN_KEY, tokenData);
     this.token = tokenData;
+    this.refreshSubscriberCapability(tokenData, { force: true });
     this.refreshStatus();
 
     if (this.messenger.getSessionId()) {
@@ -340,6 +355,12 @@ export class YoutubePlugin extends BasePlugin {
     if (this.state === 'connected') {
       this.disable();
     }
+    this.stopSubscriberWatcher();
+    this.seenSubscriberKeys.clear();
+    this.lastSubscriberTimestamp = 0;
+    this.subscriberFeatureUnavailable = false;
+    this.subscriberErrorNotified = false;
+    storage.remove(SUBSCRIBER_CACHE_KEY);
     this.setState('idle');
     this.refreshStatus();
   }
@@ -361,6 +382,7 @@ export class YoutubePlugin extends BasePlugin {
       await this.prepareEmotesForChannel();
       this.stopListening();
       this.startListening();
+      this.startSubscriberWatcher();
     } catch (err) {
       this.reportError(err);
     }
@@ -646,11 +668,431 @@ export class YoutubePlugin extends BasePlugin {
       previewText: rawMessage
     };
 
+    let publishNote = null;
+    const membershipInfo = this.deriveMembershipMetadata(snippet, sanitizedMessage);
+
+    if (membershipInfo) {
+      if (membershipInfo.membership) {
+        message.membership = membershipInfo.membership;
+      }
+      if (membershipInfo.subtitle) {
+        message.subtitle = membershipInfo.subtitle;
+      }
+      if (membershipInfo.event) {
+        message.event = membershipInfo.event;
+      }
+      if (membershipInfo.previewText) {
+        message.previewText = membershipInfo.previewText;
+      }
+      if (membershipInfo.chatmessage) {
+        message.chatmessage = membershipInfo.chatmessage;
+      }
+      if (membershipInfo.membershipLevel) {
+        message.membershipLevel = membershipInfo.membershipLevel;
+      }
+      if (membershipInfo.membershipMonths) {
+        message.membershipMonths = membershipInfo.membershipMonths;
+      }
+      if (membershipInfo.membershipGiftCount) {
+        message.membershipGiftCount = membershipInfo.membershipGiftCount;
+      }
+      if (membershipInfo.membershipGifter) {
+        message.membershipGifter = membershipInfo.membershipGifter;
+      }
+      publishNote = membershipInfo.note || null;
+    }
+
+    const badges = this.buildChatBadges(author, { includeMemberBadge: membershipInfo?.includeMemberBadge });
+    if (badges.length) {
+      message.chatbadges = badges;
+    }
+
     if (snippet.superChatDetails) {
       message.color = snippet.superChatDetails.tier || snippet.superChatDetails.tier || null;
     }
 
-    await this.publishWithEmotes(message, { silent: true });
+    await this.publishWithEmotes(message, { silent: true, note: publishNote });
+  }
+
+  buildChatBadges(author, options = {}) {
+    const includeMemberBadge = Boolean(options?.includeMemberBadge);
+    const badges = [];
+
+    if (author?.isChatOwner) {
+      badges.push({ type: 'text', text: '👑' });
+    }
+    if (author?.isChatModerator) {
+      badges.push({ type: 'text', text: '🛡️' });
+    }
+    if ((author && author.isChatSponsor) || includeMemberBadge) {
+      badges.push({ type: 'text', text: '⭐' });
+    }
+
+    return badges;
+  }
+
+  deriveMembershipMetadata(snippet, sanitizedMessage) {
+    if (!snippet) {
+      return null;
+    }
+
+    const type = typeof snippet.type === 'string' ? snippet.type.trim().toLowerCase() : '';
+    const toPlainText = (value) => htmlToText(value || '').trim();
+    const fallbackPreview = () => {
+      const fromSnippet = toPlainText(snippet.displayMessage || '');
+      if (fromSnippet) {
+        return fromSnippet;
+      }
+      if (sanitizedMessage) {
+        const fromSanitized = toPlainText(sanitizedMessage);
+        if (fromSanitized) {
+          return fromSanitized;
+        }
+      }
+      return '';
+    };
+
+    let result = null;
+
+    if (type === 'newsponsorevent') {
+      const details = snippet.newSponsorDetails || {};
+      const level = toPlainText(details.memberLevelName);
+      const isUpgrade = Boolean(details.isUpgrade);
+      const membershipLabel = isUpgrade ? 'Membership Upgrade' : 'New Member';
+      const subtitle = level || (isUpgrade ? 'Upgraded channel membership' : 'Joined channel membership');
+
+      result = {
+        membership: membershipLabel,
+        subtitle,
+        event: isUpgrade ? 'membership_upgrade' : 'membership',
+        note: level ? `${membershipLabel}: ${level}` : membershipLabel,
+        includeMemberBadge: true
+      };
+
+      if (level) {
+        result.membershipLevel = level;
+      }
+    } else if (type === 'membermilestonechatevent') {
+      const details = snippet.memberMilestoneChatDetails || {};
+      const level = toPlainText(details.memberLevelName);
+      const monthsRaw = Number(details.memberMonth);
+      const hasMonths = Number.isFinite(monthsRaw) && monthsRaw > 0;
+      const monthLabel = hasMonths ? `${monthsRaw} month${monthsRaw === 1 ? '' : 's'}` : '';
+      const subtitleParts = [];
+      if (monthLabel) {
+        subtitleParts.push(monthLabel);
+      }
+      if (level) {
+        subtitleParts.push(level);
+      }
+
+      result = {
+        membership: 'Membership Milestone',
+        subtitle: subtitleParts.join(' · ') || null,
+        event: 'membership_milestone',
+        note: subtitleParts.join(' · ') || 'Membership Milestone',
+        includeMemberBadge: true
+      };
+
+      if (hasMonths) {
+        result.membershipMonths = monthsRaw;
+      }
+      if (level) {
+        result.membershipLevel = level;
+      }
+    } else if (type === 'membershipgiftingevent' || snippet.membershipGiftingDetails) {
+      const details = snippet.membershipGiftingDetails || {};
+      const level = toPlainText(details.giftMembershipsLevelName);
+      const countRaw = Number(details.giftMembershipsCount);
+      const count = Number.isFinite(countRaw) && countRaw > 0 ? countRaw : 1;
+      const membershipLabel = count === 1 ? 'Gifted a Membership' : `Gifted ${count} Memberships`;
+
+      result = {
+        membership: membershipLabel,
+        subtitle: level || null,
+        event: 'membership_gift',
+        note: level ? `${membershipLabel} (${level})` : membershipLabel,
+        includeMemberBadge: true,
+        membershipGiftCount: count
+      };
+
+      if (level) {
+        result.membershipLevel = level;
+      }
+    } else if (type === 'giftmembershipreceivedevent' || snippet.giftMembershipReceivedDetails) {
+      const details = snippet.giftMembershipReceivedDetails || {};
+      const level = toPlainText(details.memberLevelName);
+      const gifter = toPlainText(details.gifterDisplayName);
+      const subtitleParts = [];
+      if (level) {
+        subtitleParts.push(level);
+      }
+      if (gifter) {
+        subtitleParts.push(`From ${gifter}`);
+      }
+
+      result = {
+        membership: 'Gift Membership',
+        subtitle: subtitleParts.join(' · ') || null,
+        event: 'membership_gift_received',
+        note: subtitleParts.join(' · ') || 'Gift Membership',
+        includeMemberBadge: true
+      };
+
+      if (level) {
+        result.membershipLevel = level;
+      }
+      if (gifter) {
+        result.membershipGifter = gifter;
+      }
+    }
+
+    if (!result && snippet.membershipDetails) {
+      const details = snippet.membershipDetails;
+      const level = toPlainText(details.memberLevelName);
+
+      result = {
+        membership: 'Membership',
+        subtitle: level || null,
+        event: 'membership',
+        note: level ? `Membership: ${level}` : 'Membership',
+        includeMemberBadge: true
+      };
+
+      if (level) {
+        result.membershipLevel = level;
+      }
+    }
+
+    if (!result) {
+      return null;
+    }
+
+    if (!result.previewText) {
+      const preview = fallbackPreview();
+      result.previewText = preview || result.membership || '';
+    }
+
+    return result;
+  }
+
+  hasMembershipScope(token = this.token) {
+    const scopeValue = token?.scope;
+    if (!scopeValue) {
+      return false;
+    }
+    if (Array.isArray(scopeValue)) {
+      return scopeValue.includes('https://www.googleapis.com/auth/youtube.channel-memberships.creator');
+    }
+    if (typeof scopeValue === 'string') {
+      return scopeValue.split(/\s+/).includes('https://www.googleapis.com/auth/youtube.channel-memberships.creator');
+    }
+    return false;
+  }
+
+  refreshSubscriberCapability(token = this.token, options = {}) {
+    const { force = false } = options;
+    if (force || this.hasMembershipScope(token)) {
+      this.subscriberFeatureUnavailable = false;
+      this.subscriberErrorNotified = false;
+    }
+  }
+
+  shouldCaptureStreamEvents() {
+    const stored = storage.get(CAPTURE_EVENTS_KEY, null);
+    if (stored === null || stored === undefined) {
+      return true;
+    }
+    return Boolean(stored);
+  }
+
+  startSubscriberWatcher() {
+    if (this.subscriberFeatureUnavailable) {
+      this.refreshSubscriberCapability();
+      if (this.subscriberFeatureUnavailable) {
+        return;
+      }
+    }
+
+    if (!this.shouldCaptureStreamEvents()) {
+      return;
+    }
+    if (this.state !== 'connected') {
+      return;
+    }
+    this.scheduleSubscriberPoll(0);
+  }
+
+  scheduleSubscriberPoll(delay = SUBSCRIBER_POLL_INTERVAL) {
+    if (this.subscriberFeatureUnavailable || !this.shouldCaptureStreamEvents()) {
+      return;
+    }
+    if (this.subscriberPollTimer) {
+      window.clearTimeout(this.subscriberPollTimer);
+    }
+    this.subscriberPollTimer = window.setTimeout(async () => {
+      this.subscriberPollTimer = null;
+      try {
+        await this.pollRecentSubscribers();
+      } catch (err) {
+        this.debugLog('YouTube subscriber poll failed', { error: err?.message || err });
+      }
+      if (this.state === 'connected' && !this.subscriberFeatureUnavailable && this.shouldCaptureStreamEvents()) {
+        this.scheduleSubscriberPoll(SUBSCRIBER_POLL_INTERVAL);
+      }
+    }, Math.max(0, delay));
+  }
+
+  stopSubscriberWatcher() {
+    if (this.subscriberPollTimer) {
+      window.clearTimeout(this.subscriberPollTimer);
+      this.subscriberPollTimer = null;
+    }
+  }
+
+  async pollRecentSubscribers() {
+    if (this.state !== 'connected') {
+      return;
+    }
+    if (!this.isTokenValid()) {
+      return;
+    }
+    if (!this.shouldCaptureStreamEvents()) {
+      return;
+    }
+
+    const headers = {
+      Authorization: `Bearer ${this.token.accessToken}`,
+      Accept: 'application/json'
+    };
+    const params = new URLSearchParams({
+      part: 'snippet,subscriberSnippet',
+      myRecentSubscribers: 'true',
+      maxResults: '50'
+    });
+
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/subscriptions?${params.toString()}`, {
+      headers
+    });
+
+    if (res.status === 401) {
+      throw new Error('YouTube authentication expired while checking subscribers.');
+    }
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => ({}));
+      const apiErr = this.createApiError(errBody, res.status, 'subscriptions');
+      if (apiErr.status === 403 || apiErr.reason === 'subscriptionForbidden' || apiErr.reason === 'insufficientPermissions') {
+        if (!this.subscriberErrorNotified) {
+          this.subscriberErrorNotified = true;
+          this.log('Unable to access YouTube subscriber list; subscriber events disabled for this session.', { reason: apiErr.reason || apiErr.status }, { kind: 'warn' });
+        }
+        this.subscriberFeatureUnavailable = true;
+        this.stopSubscriberWatcher();
+        return;
+      }
+      throw apiErr;
+    }
+
+    const data = await res.json();
+    if (!Array.isArray(data.items) || data.items.length === 0) {
+      return;
+    }
+
+    const previousKeys = Array.from(this.seenSubscriberKeys);
+    const batchKeys = [];
+    const newEntries = [];
+    let maxTimestamp = this.lastSubscriberTimestamp || 0;
+
+    data.items.forEach((item) => {
+      const snippet = item?.snippet || {};
+      const subscriberSnippet = item?.subscriberSnippet || {};
+      const publishedRaw = snippet?.publishedAt || subscriberSnippet?.publishedAt || '';
+      const parsed = publishedRaw ? Date.parse(publishedRaw) : NaN;
+      const publishedAt = Number.isFinite(parsed) ? parsed : Date.now();
+      if (Number.isFinite(parsed) && parsed > maxTimestamp) {
+        maxTimestamp = parsed;
+      }
+      const subscriberId = subscriberSnippet?.channelId || item?.id || '';
+      const key = `${subscriberId}:${publishedAt}`;
+      batchKeys.push(key);
+      if (!this.seenSubscriberKeys.has(key)) {
+        newEntries.push({ item, snippet, subscriberSnippet, publishedAt, key });
+      }
+    });
+
+    let cacheChanged = false;
+    if (batchKeys.length) {
+      const merged = [];
+      const pushUnique = (value) => {
+        if (!merged.includes(value)) {
+          merged.push(value);
+        }
+      };
+      batchKeys.forEach(pushUnique);
+      previousKeys.forEach(pushUnique);
+      const limited = merged.slice(0, SUBSCRIBER_CACHE_LIMIT);
+      if (limited.length !== previousKeys.length || limited.some((value, index) => value !== previousKeys[index])) {
+        cacheChanged = true;
+        this.seenSubscriberKeys = new Set(limited);
+      }
+    }
+
+    const timestampChanged = maxTimestamp > (this.lastSubscriberTimestamp || 0);
+    if ((cacheChanged || timestampChanged) && maxTimestamp) {
+      this.lastSubscriberTimestamp = maxTimestamp;
+      this.persistSubscriberCache();
+    }
+
+    if (!newEntries.length) {
+      return;
+    }
+
+    for (let index = newEntries.length - 1; index >= 0; index -= 1) {
+      const message = this.buildSubscriberEventMessage(newEntries[index]);
+      if (message) {
+        this.publish(message, { note: 'New YouTube subscriber relayed' });
+      }
+    }
+  }
+
+  persistSubscriberCache() {
+    const keys = Array.from(this.seenSubscriberKeys).slice(0, SUBSCRIBER_CACHE_LIMIT);
+    storage.set(SUBSCRIBER_CACHE_KEY, {
+      keys,
+      timestamp: this.lastSubscriberTimestamp || Date.now()
+    });
+  }
+
+  buildSubscriberEventMessage(entry) {
+    if (!entry) {
+      return null;
+    }
+    const { item, snippet, subscriberSnippet, publishedAt, key } = entry;
+    const displayName = (subscriberSnippet?.title || snippet?.title || '').trim() || 'YouTube user';
+    const avatar =
+      subscriberSnippet?.thumbnails?.high?.url ||
+      subscriberSnippet?.thumbnails?.default?.url ||
+      subscriberSnippet?.thumbnails?.medium?.url ||
+      '';
+    const timestamp = Number.isFinite(publishedAt) ? publishedAt : Date.now();
+    const messageId = item?.id ? `youtube-subscriber-${item.id}` : `youtube-subscriber-${key}`;
+    const payload = {
+      id: messageId,
+      platform: 'youtube',
+      type: 'youtube',
+      chatname: displayName,
+      chatmessage: 'followed',
+      event: 'followed',
+      chatimg: avatar,
+      timestamp,
+      previewText: `${displayName} followed`,
+      raw: { subscriber: item }
+    };
+    if (subscriberSnippet?.channelId) {
+      payload.userid = subscriberSnippet.channelId;
+    }
+    return payload;
   }
 
   async publishWithEmotes(message, options = {}) {
@@ -721,8 +1163,16 @@ export class YoutubePlugin extends BasePlugin {
       return 'membership';
     }
 
-    if (snippet.membershipGiftingDetails) {
-      return 'gift';
+    if (normalized === 'membermilestonechatevent') {
+      return 'membership_milestone';
+    }
+
+    if (normalized === 'membershipgiftingevent' || snippet.membershipGiftingDetails) {
+      return 'membership_gift';
+    }
+
+    if (normalized === 'giftmembershipreceivedevent' || snippet.giftMembershipReceivedDetails) {
+      return 'membership_gift_received';
     }
 
     return normalized;

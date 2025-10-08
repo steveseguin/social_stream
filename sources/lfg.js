@@ -456,9 +456,11 @@
 	  // settings.dedupeWindowMs  : repeat window (same message treated as duplicate)
 	  // settings.dedupeKeepMs    : how long we keep keys around for GC
 	  // settings.dedupeMax       : max keys stored before trimming oldest
-	  const DEFAULT_WINDOW = 2 * 60 * 1000;   // 2 minutes
-	  const DEFAULT_KEEP   = 10 * 60 * 1000;  // 10 minutes
+	  const DEFAULT_WINDOW = 10 * 60 * 1000;  // 10 minutes
+	  const DEFAULT_KEEP   = 30 * 60 * 1000;  // 30 minutes
 	  const DEFAULT_MAX    = 5000;            // cap map size
+	  const STORAGE_KEY    = "ss_lfg_seen_v1";
+	  const PERSIST_LIMIT  = 3000;
 
 	  const decodeEntities = (s) => (s || "")
 		.replace(/&nbsp;/g, " ")
@@ -499,10 +501,45 @@
 		const text  = normalize(data.chatmessage);
 		const init  = normalize(data.initial);
 		const reply = normalize(data.reply);
+		const dono  = normalize(data.hasDonation);
 		const chan  = normalize(typeof channelName === "string" ? channelName : "");
-		// Include DOM id if present + channel + sender + content + reply context
-		return hash([domId, chan, name, text, init, reply].join("|"));
+		// Include DOM id if present + channel + sender + content + reply context + donation label
+		return hash([domId, chan, name, text, init, reply, dono].join("|"));
 	  };
+
+	  const loadPersisted = () => {
+		try {
+		  const raw = sessionStorage.getItem(STORAGE_KEY);
+		  if (!raw) { return; }
+		  const parsed = JSON.parse(raw);
+		  if (!Array.isArray(parsed)) { return; }
+		  const now = Date.now();
+		  parsed.forEach(entry => {
+			if (!Array.isArray(entry) || entry.length !== 2) { return; }
+			const [key, ts] = entry;
+			if (typeof key === "string" && typeof ts === "number" && (now - ts) < (DEFAULT_KEEP * 2)) {
+			  seen.set(key, ts);
+			}
+		  });
+		} catch (e) {}
+	  };
+
+	  let persistTimer = null;
+	  const schedulePersist = () => {
+		if (persistTimer) { return; }
+		try {
+		  persistTimer = setTimeout(() => {
+			persistTimer = null;
+			try {
+			  const entries = Array.from(seen.entries());
+			  const slice = entries.length > PERSIST_LIMIT ? entries.slice(entries.length - PERSIST_LIMIT) : entries;
+			  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(slice));
+			} catch (e) {}
+		  }, 1000);
+		} catch (e) {}
+	  };
+
+	  loadPersisted();
 
 	  const prune = (now, keepMs, maxKeys) => {
 		// Time-based pruning
@@ -532,6 +569,7 @@
 
 		// mark / refresh
 		seen.set(key, now);
+		schedulePersist();
 
 		// periodic cleanup
 		if ((++sweepCount % 250) === 0) prune(now, keep, limit);

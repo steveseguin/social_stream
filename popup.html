@@ -4631,6 +4631,13 @@ input:checked + .slider:before {
 									</label>
 									👩‍🏫 <span data-translate="modLLMonly">Will respond to Moderators only</span>
 								</div>
+								<div style="display: inline-block; margin-left: 12px;" title="When enabled, the chat bot can answer reflections created by dock/API messages from the host.">
+									<label class="switch">
+										<input type="checkbox" id="chatbotRespondToReflections" data-setting="chatbotRespondToReflections" />
+										<span class="slider round"></span>
+									</label>
+									🤖↩️ Allow replies to host reflections
+								</div>
 								<!-- <div style="display: inline-block;" title="Text to speech bot messages">
 									<label class="switch">
 										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
@@ -5281,20 +5288,13 @@ input:checked + .slider:before {
 								<i>This is different than the chat bot overlay. This allows for private 1 on 1 conversation with your bot on a dedicated page, just in case you want to talk privately. It does not have access to the RAG knowledge dataset currently or your other chat histories.<br /><br /><strong>⚠️ Requires a properly configured LLM service provider in the "Configure LLM Service Provider" section above.</strong></i>
 								
 								<br/><br/>
-								<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
-									<label class="switch">
-										<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />
-										<span class="slider round"></span>
-									</label>
-									💬 <span data-translate="enable-ollama-chat-bot-external">Enable private chat bot option</span>
-								</div>
-								<div style="margin-top: 8px;" title="When enabled, the chat bot can respond to messages you send through the dock or API that bounce back as reflections.">
-									<label class="switch">
-										<input type="checkbox" id="chatbotRespondToReflections" data-setting="chatbotRespondToReflections" />
-										<span class="slider round"></span>
-									</label>
-									🤖↩️ Allow the chat bot to reply to host reflections
-								</div>
+							<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
+								<label class="switch">
+									<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />
+									<span class="slider round"></span>
+								</label>
+								💬 <span data-translate="enable-ollama-chat-bot-external">Enable private chat bot option</span>
+							</div>
 							</div>
 							
 						</div>
