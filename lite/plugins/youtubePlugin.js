@@ -1,3 +1,4 @@
+
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
 import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
@@ -13,14 +14,17 @@ const SUBSCRIBER_CACHE_KEY = 'youtube.subscriberCache';
 const SUBSCRIBER_CACHE_LIMIT = 200;
 const SUBSCRIBER_POLL_INTERVAL = 120000;
 const CAPTURE_EVENTS_KEY = 'settings.captureevents';
+
 const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
   'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
 
+
 export class YoutubePlugin extends BasePlugin {
   constructor(options) {
     const { useStreaming = false, onStreamingPreferenceChange = null } = options || {};
+
 
     super({
       ...options,
@@ -33,6 +37,7 @@ export class YoutubePlugin extends BasePlugin {
     this.chatIdInput = null;
     this.statusLabel = null;
     this.streamLabel = null;
+
     this.signOutBtn = null;
     this.authButton = null;
 
@@ -190,6 +195,7 @@ export class YoutubePlugin extends BasePlugin {
       if (this.token && !this.isTokenExpired()) {
         const channelName = this.channelInfo?.title || 'Your channel';
         this.statusLabel.innerHTML = `Authorized as <strong>${safeHtml(channelName)}</strong>`;
+
         this.statusLabel.hidden = false;
       } else {
         this.statusLabel.textContent = '';
@@ -959,12 +965,14 @@ export class YoutubePlugin extends BasePlugin {
     }
     if (!this.shouldCaptureStreamEvents()) {
       return;
+
     }
 
     const headers = {
       Authorization: `Bearer ${this.token.accessToken}`,
       Accept: 'application/json'
     };
+
     const params = new URLSearchParams({
       part: 'snippet,subscriberSnippet',
       myRecentSubscribers: 'true',
@@ -1093,6 +1101,7 @@ export class YoutubePlugin extends BasePlugin {
       payload.userid = subscriberSnippet.channelId;
     }
     return payload;
+
   }
 
   async publishWithEmotes(message, options = {}) {
@@ -1121,6 +1130,7 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   buildEmoteContext() {
+
     const context = { platform: 'youtube' };
     if (this.channelInfo?.title) {
       context.channelName = this.channelInfo.title.toLowerCase();
@@ -1208,9 +1218,6 @@ export class YoutubePlugin extends BasePlugin {
     return super.shouldAutoConnect() && this.isTokenValid();
   }
 }
-
-
-
 
 
 

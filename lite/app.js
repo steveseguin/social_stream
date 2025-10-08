@@ -3,7 +3,8 @@ import { storage } from './utils/storage.js';
 import { randomSessionId, formatTime, safeHtml } from './utils/helpers.js';
 import { EmoteManager } from './utils/emoteManager.js';
 import { YoutubePlugin } from './plugins/youtubePlugin.js';
-import { YoutubeStreamingPlugin } from './plugins/youtubeStreamingPlugin.js';
+
+import { YoutubeStreamingPlugin } from './plugins/youtubeStreamingPlugin.
 import { TwitchPlugin } from './plugins/twitchPlugin.js';
 import { TikTokPlugin } from './plugins/tiktokPlugin.js';
 import { KickPlugin } from './plugins/kickPlugin.js';
@@ -59,6 +60,7 @@ if (storedOverlayToggleState && typeof storedOverlayToggleState === 'object' && 
   overlayToggleState = { ...overlayToggleState, ...storedOverlayToggleState };
 }
 
+
 let youtubeStreamingEnabled = Boolean(storage.get(youtubeStreamingStorageKey, false));
 
 const url = new URL(window.location.href);
@@ -86,6 +88,7 @@ const messenger = new DockMessenger(elements.dockFrame, {
 });
 const emotes = new EmoteManager();
 let plugins = [];
+
 const pluginMap = new Map();
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1350,6 +1353,7 @@ function notifyPluginsOfSession(sessionId) {
   });
 }
 
+
 function handleYoutubeStreamingPreferenceChange(useStreaming) {
   const nextValue = Boolean(useStreaming);
   if (nextValue === youtubeStreamingEnabled) {
@@ -1587,7 +1591,9 @@ function init() {
   updateFullscreenControl();
 
   plugins = [
+
     createYoutubePluginInstance(youtubeStreamingEnabled),
+
     new TwitchPlugin({
       messenger,
       emotes,
@@ -1615,6 +1621,7 @@ function init() {
     })
   ];
 
+
   mountAllPlugins();
   startSession(storedSession);
   processOAuthCallback(pluginMap);
@@ -1630,5 +1637,5 @@ function init() {
   }
 }
 
-init();
 
+init();
