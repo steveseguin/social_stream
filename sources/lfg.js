@@ -122,7 +122,7 @@
 		if (ele.skip){
 			return;
 		}
-
+		console.log("2");
 		
 		var chatimg = ""
 
@@ -132,14 +132,30 @@
 		}
 		
 		var name="";
-		try {
-			name = escapeHtml(ele.querySelector("span.font-medium.text-sm.cursor-pointer").textContent);
-		} catch(e){
-		}
-		
 		var namecolor="";
 		try {
-			namecolor = ele.querySelector("span.font-medium.text-sm.cursor-pointer").style.color;
+			const nameSelectors = [
+				"span.font-medium.text-sm.cursor-pointer",
+				"span.font-medium.text-sm",
+				"span.font-medium.text-base.cursor-pointer",
+				"p.text-sm.font-bold",
+				"span.text-white.font-bold.text-sm"
+			];
+			let nameNode = null;
+			for (let i = 0; i < nameSelectors.length; i++){
+				if (!nameNode){
+					const candidate = ele.querySelector(nameSelectors[i]);
+					if (candidate && candidate.textContent && candidate.textContent.trim().length){
+						nameNode = candidate;
+					}
+				}
+			}
+			if (nameNode && nameNode.textContent){
+				name = escapeHtml(nameNode.textContent.trim());
+				if (nameNode.style && nameNode.style.color){
+					namecolor = nameNode.style.color;
+				}
+			}
 		} catch(e){
 		}
 		
@@ -153,12 +169,74 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("div.text-gray-200.text-base[style]")).trim();
+			const messageSelectors = [
+				"div.text-gray-200.text-base[style]",
+				"div.text-gray-200.text-lg[style]",
+				"div.text-gray-200.text-md[style]",
+				"div.text-gray-200.text-sm[style]",
+				"p.text-white.text-md[style]",
+				"p.text-white.text-lg[style]",
+				"p.text-white.text-base[style]"
+			];
+			const messageNode = ele.querySelector(messageSelectors.join(", "));
+			if (messageNode){
+				msg = getAllContentNodes(messageNode).trim();
+			}
 		} catch(e){
 		}
 		
+		var hasDonation = "";
+		try {
+			const donationNode = ele.querySelector("span.text-blue-300.text-xl.font-bold, div.text-blue-300.text-xl.font-bold");
+			if (donationNode){
+				const donationText = getAllContentNodes(donationNode).trim();
+				if (donationText && /tipped/i.test(donationText)){
+					hasDonation = donationText;
+				}
+			}
+			if (!hasDonation && ele.textContent && ele.textContent.toLowerCase().includes(" tipped ")){
+				const fallback = donationNode ? getAllContentNodes(donationNode).trim() : ele.textContent.trim();
+				if (fallback){
+					hasDonation = escapeHtml(fallback);
+				}
+			}
+		} catch(e){
+		}
+		if (!hasDonation){
+			try {
+				const amountNode = ele.querySelector("span.font-bold.animate-emphasize-in, span.font-bold.animate-emphasize-in-twice");
+				if (amountNode && amountNode.textContent){
+					const donorNameNode = ele.querySelector("span.text-white.font-bold.text-sm, p.text-sm.font-bold");
+					if (donorNameNode && donorNameNode.textContent){
+						const donor = donorNameNode.textContent.trim();
+						const donorColor = (donorNameNode.style && donorNameNode.style.color) ? donorNameNode.style.color : "";
+						const amount = amountNode.textContent.trim();
+						if (!name && donor){
+							name = escapeHtml(donor);
+							if (!namecolor && donorColor){
+								namecolor = donorColor;
+							}
+						}
+						if (donor && amount){
+							hasDonation = escapeHtml(donor + " tipped " + amount);
+						}
+					}
+				}
+			} catch(e){}
+		}
+		if (!msg && hasDonation){
+			try {
+				const donationMessage = ele.querySelector("p.text-white.text-md[style], p.text-white.text-base[style]");
+				if (donationMessage){
+					msg = getAllContentNodes(donationMessage).trim();
+				}
+			} catch(e){}
+		}
+		if (!name){
+			return;
+		}
 		
-		if (!msg.trim() || !name){
+		if (!msg.trim() && !hasDonation){
 	//		console.log("no name");
 			return;
 		}
@@ -209,7 +287,7 @@
 		data.nameColor = namecolor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
@@ -378,9 +456,11 @@
 	  // settings.dedupeWindowMs  : repeat window (same message treated as duplicate)
 	  // settings.dedupeKeepMs    : how long we keep keys around for GC
 	  // settings.dedupeMax       : max keys stored before trimming oldest
-	  const DEFAULT_WINDOW = 2 * 60 * 1000;   // 2 minutes
-	  const DEFAULT_KEEP   = 10 * 60 * 1000;  // 10 minutes
+	  const DEFAULT_WINDOW = 10 * 60 * 1000;  // 10 minutes
+	  const DEFAULT_KEEP   = 30 * 60 * 1000;  // 30 minutes
 	  const DEFAULT_MAX    = 5000;            // cap map size
+	  const STORAGE_KEY    = "ss_lfg_seen_v1";
+	  const PERSIST_LIMIT  = 3000;
 
 	  const decodeEntities = (s) => (s || "")
 		.replace(/&nbsp;/g, " ")
@@ -421,10 +501,45 @@
 		const text  = normalize(data.chatmessage);
 		const init  = normalize(data.initial);
 		const reply = normalize(data.reply);
+		const dono  = normalize(data.hasDonation);
 		const chan  = normalize(typeof channelName === "string" ? channelName : "");
-		// Include DOM id if present + channel + sender + content + reply context
-		return hash([domId, chan, name, text, init, reply].join("|"));
+		// Include DOM id if present + channel + sender + content + reply context + donation label
+		return hash([domId, chan, name, text, init, reply, dono].join("|"));
 	  };
+
+	  const loadPersisted = () => {
+		try {
+		  const raw = sessionStorage.getItem(STORAGE_KEY);
+		  if (!raw) { return; }
+		  const parsed = JSON.parse(raw);
+		  if (!Array.isArray(parsed)) { return; }
+		  const now = Date.now();
+		  parsed.forEach(entry => {
+			if (!Array.isArray(entry) || entry.length !== 2) { return; }
+			const [key, ts] = entry;
+			if (typeof key === "string" && typeof ts === "number" && (now - ts) < (DEFAULT_KEEP * 2)) {
+			  seen.set(key, ts);
+			}
+		  });
+		} catch (e) {}
+	  };
+
+	  let persistTimer = null;
+	  const schedulePersist = () => {
+		if (persistTimer) { return; }
+		try {
+		  persistTimer = setTimeout(() => {
+			persistTimer = null;
+			try {
+			  const entries = Array.from(seen.entries());
+			  const slice = entries.length > PERSIST_LIMIT ? entries.slice(entries.length - PERSIST_LIMIT) : entries;
+			  sessionStorage.setItem(STORAGE_KEY, JSON.stringify(slice));
+			} catch (e) {}
+		  }, 1000);
+		} catch (e) {}
+	  };
+
+	  loadPersisted();
 
 	  const prune = (now, keepMs, maxKeys) => {
 		// Time-based pruning
@@ -454,6 +569,7 @@
 
 		// mark / refresh
 		seen.set(key, now);
+		schedulePersist();
 
 		// periodic cleanup
 		if ((++sweepCount % 250) === 0) prune(now, keep, limit);
