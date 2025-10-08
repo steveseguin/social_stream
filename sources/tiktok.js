@@ -3,7 +3,7 @@
 	console.log("Social stream injected");
 	const avatarCache = {
 		_cache: {},
-		MAX_SIZE: 500,
+		MAX_SIZE: 501,
 		CLEANUP_COUNT: 50,
 		add(chatname, chatimg, badges = null, membership = null, nameColor = null) {
 			if (!chatname) return;
@@ -36,27 +36,41 @@
 		}
 	};
 	const messageLog = {
-		_log: [],
+		_entries: new Map(),
+		_order: [],
 		_mode: 'count',
-		_maxMessages: 400,
-		_timeWindow: 10000,
+		_maxMessages: 501,
+		_timeWindow: null,
 		_cleanupInterval: null,
 		init(options = {}) {
 			this._mode = options.mode || 'count';
-			this._maxMessages = options.maxMessages || 400;
-			this._timeWindow = options.timeWindow || 10000;
+			this._maxMessages = options.maxMessages || 501;
+			this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
 			this.destroy();
 			this._cleanupInterval = setInterval(() => this.cleanup(), 5000);
 		},
 		cleanup() {
 			const currentTime = Date.now();
-			if (this._mode === 'time') {
-				this._log = this._log.filter(entry =>
-					(currentTime - entry.time) <= this._timeWindow
-				);
-			} else {
-				if (this._log.length > this._maxMessages) {
-					this._log = this._log.slice(-this._maxMessages);
+			if (this._mode === 'time' || (this._timeWindow && this._mode !== 'count')) {
+				while (this._order.length) {
+					const key = this._order[0];
+					const entry = this._entries.get(key);
+					if (!entry) {
+						this._order.shift();
+						continue;
+					}
+					if (!this._timeWindow || (currentTime - entry.time) <= this._timeWindow) {
+						break;
+					}
+					this._entries.delete(key);
+					this._order.shift();
+				}
+			}
+			if (this._maxMessages && this._entries.size > this._maxMessages) {
+				const overflow = this._entries.size - this._maxMessages;
+				for (let i = 0; i < overflow && this._order.length; i++) {
+					const key = this._order.shift();
+					this._entries.delete(key);
 				}
 			}
 		},
@@ -64,26 +78,28 @@
 			if (!name && !message) return true;
 			const currentTime = Date.now();
 			const messageKey = `${name}:${message}`;
-			let duplicate = false;
-			if (this._mode === 'time') {
-				duplicate = this._log.some(entry =>
-					entry.key === messageKey &&
-					(currentTime - entry.time) <= this._timeWindow
-				);
-			} else {
-				duplicate = this._log.some(entry =>
-					entry.key === messageKey
-				);
+			const existing = this._entries.get(messageKey);
+			if (existing) {
+				if (!this._timeWindow || (currentTime - existing.time) <= this._timeWindow) {
+					return true;
+				}
+				// The message is older than the window; drop the stale entry before continuing.
+				this._entries.delete(messageKey);
+				const index = this._order.indexOf(messageKey);
+				if (index !== -1) {
+					this._order.splice(index, 1);
+				}
 			}
-			if (duplicate) {
-				return true;
-			}
-			this._log.push({
-				key: messageKey,
-				time: currentTime
-			});
-			if (this._mode === 'count' && this._log.length > this._maxMessages) {
-				this._log = this._log.slice(-this._maxMessages);
+			this._entries.set(messageKey, { time: currentTime });
+			this._order.push(messageKey);
+			if (this._timeWindow && this._mode === 'time') {
+				this.cleanup();
+			} else if (this._entries.size > this._maxMessages) {
+				const overflow = this._entries.size - this._maxMessages;
+				for (let i = 0; i < overflow && this._order.length; i++) {
+					const key = this._order.shift();
+					this._entries.delete(key);
+				}
 			}
 			return false;
 		},
@@ -92,18 +108,21 @@
 				clearInterval(this._cleanupInterval);
 				this._cleanupInterval = null;
 			}
-			this._log = [];
+			this._entries.clear();
+			this._order = [];
 		},
 		configure(options = {}) {
 			if (options.mode !== undefined) this._mode = options.mode;
 			if (options.maxMessages !== undefined) this._maxMessages = options.maxMessages;
-			if (options.timeWindow !== undefined) this._timeWindow = options.timeWindow;
+			if (options.timeWindow !== undefined) {
+				this._timeWindow = Number.isFinite(options.timeWindow) ? options.timeWindow : null;
+			}
 			this.cleanup();
 		}
 	};
 	messageLog.init({
 		mode: 'count',
-		maxMessages: 421
+		maxMessages: 501
 	});
 
 	function pushMessage(data) {
@@ -693,6 +712,41 @@
 		return false;
 	}
 
+	function collectEventTokens(element, maxDepth = 4) {
+		const tokens = [];
+		let current = element;
+		let depth = 0;
+		while (current && depth < maxDepth) {
+			if (current.dataset && typeof current.dataset.e2e === "string" && current.dataset.e2e) {
+				tokens.push(current.dataset.e2e.toLowerCase());
+			}
+			current = current.parentElement;
+			depth += 1;
+		}
+		return tokens;
+	}
+
+	function deriveEventHints(element) {
+		const tokens = collectEventTokens(element);
+		if (!tokens.length) {
+			return {
+				hasEventIndicator: false,
+				join: false,
+				share: false,
+				follow: false,
+				like: false
+			};
+		}
+		const normalized = tokens.join(" ");
+		const compact = normalized.replace(/[^a-z]/g, "");
+		const join = compact.includes("join") || (compact.includes("enter") && !compact.includes("center"));
+		const share = compact.includes("share");
+		const follow = compact.includes("follow");
+		const like = compact.includes("like");
+		const hasEventIndicator = join || share || follow || like || tokens.some(token => token.includes("social") || token.includes("system") || token.includes("event"));
+		return { hasEventIndicator, join, share, follow, like };
+	}
+
 	function processMessage(ele) {
 		if (!ele || ele.dataset.skip) {
 			return;
@@ -708,8 +762,14 @@
 			return;
 		}
 		ele.dataset.skip = ++msgCount;
+		const eventHints = deriveEventHints(ele);
 		var ital = false;
 		if (ele.dataset.e2e && (ele.dataset.e2e == "social-message")) {
+			if (!settings.captureevents) {
+				return;
+			}
+			ital = true;
+		} else if (eventHints.hasEventIndicator) {
 			if (!settings.captureevents) {
 				return;
 			}
@@ -929,6 +989,7 @@
 		} else if (chatmessage) {
 			chatmessage = chatmessage.trim();
 		}
+		let normalizedMessage = chatmessage ? chatmessage.toLowerCase() : "";
 		if (chatmessage == "Moderator") {
 			return;
 		}
@@ -941,22 +1002,30 @@
 		if (chatname && (chatimg || chatbadges || membership)) {
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
 		}
-		if ((ital === true) && chatmessage && chatmessage.includes("joined")) {
+		const compactMessage = normalizedMessage.replace(/[^a-z]/g, "");
+		const joinFromMessage = compactMessage.includes("joined") || (compactMessage.includes("enter") && !compactMessage.includes("center"));
+		const shareFromMessage = compactMessage.includes("share");
+		const followFromMessage = compactMessage.includes("follow");
+		const likeFromMessage = compactMessage.includes("like");
+
+		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
+		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
+		const isFollowEvent = eventHints.follow || ((ital === true || eventHints.hasEventIndicator) && followFromMessage);
+		const isLikeEvent = eventHints.like || ((ital === true || eventHints.hasEventIndicator) && likeFromMessage);
+
+		if (isJoinEvent) {
 			if (!settings.capturejoinedevent) {
 				return;
 			}
 			ital = "joined";
-			//if (!chatname) {
-			//	return;
-			//}
-		} else if ((ital === true) && chatmessage && chatmessage.includes("shared")) {
+		} else if (isShareEvent) {
 			return;
-		} else if ((ital === true) && chatmessage && chatmessage.includes("followed")) {
+		} else if (isFollowEvent) {
 			ital = "followed";
 			if (!chatname) {
 				return;
 			}
-		} else if ((ital === true) && chatmessage && chatmessage.includes("liked")) {
+		} else if (isLikeEvent) {
 			ital = "liked";
 			if (!chatname) {
 				return;
@@ -1014,6 +1083,19 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "tiktok";
 		data.event = ital;
+		if (data.event && typeof data.nameColor === "string") {
+			const normalizedColor = data.nameColor.trim().toLowerCase();
+			const compactColor = normalizedColor.replace(/\s/g, "");
+			if (
+				normalizedColor === "black" ||
+				normalizedColor === "#000" ||
+				normalizedColor === "#000000" ||
+				compactColor === "rgb(0,0,0)" ||
+				compactColor === "rgba(0,0,0,1)"
+			) {
+				data.nameColor = "";
+			}
+		}
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
 			avatarCache.cleanup();
 			////console.log("Has the channel changed? If so, click the page to validate it");
@@ -1048,6 +1130,7 @@
 		} catch (e) {}
 		ele.dataset.skip = ++msgCount;
 		var chatmessage = "";
+		const eventHints = deriveEventHints(ele);
 		let try1 = ele.querySelector("[data-e2e='message-owner-name']");
 		if (try1) {
 			try1 = try1?.nextElementSibling || try1.nextSibling;
@@ -1126,27 +1209,36 @@
 		if (chatmessage && (chatmessage === "**")) {
 			return;
 		}
-		if ((ital === true) && chatmessage && (chatmessage.includes("joined"))) {
+		const normalizedMessage = chatmessage ? chatmessage.toLowerCase() : "";
+		const compactMessage = normalizedMessage.replace(/[^a-z]/g, "");
+		const joinFromMessage = compactMessage.includes("joined") || (compactMessage.includes("enter") && !compactMessage.includes("center"));
+		const shareFromMessage = compactMessage.includes("share");
+		const followFromMessage = compactMessage.includes("follow");
+		const likeFromMessage = compactMessage.includes("like");
+
+		const isJoinEvent = eventHints.join || ((ital === true || eventHints.hasEventIndicator) && joinFromMessage);
+		const isShareEvent = eventHints.share || ((ital === true || eventHints.hasEventIndicator) && shareFromMessage);
+		const isFollowEvent = eventHints.follow || ((ital === true || eventHints.hasEventIndicator) && followFromMessage);
+		const isLikeEvent = eventHints.like || ((ital === true || eventHints.hasEventIndicator) && likeFromMessage);
+
+		if (isJoinEvent) {
 			if (!settings.capturejoinedevent) {
 				return;
 			}
 			ital = "joined";
-			//if (!chatname) {
-			//	return;
-			//}
-		} else if ((ital === true) && chatmessage.includes("shared")) {
+		} else if (isShareEvent) {
 			return;
-		} else if ((ital === true) && chatmessage.includes("followed")) {
+		} else if (isFollowEvent) {
 			ital = "followed";
 			if (!chatname) {
 				return;
 			}
-		} else if ((ital === true) && chatmessage && chatmessage.includes("liked")) {
+		} else if (isLikeEvent) {
 			ital = "liked";
 			if (!chatname) {
 				return;
 			}
-		} 
+		}
 		let chatimg = "";
 		let cachedBadges = "";
 		let cachedMembership = "";
@@ -1172,6 +1264,19 @@
 		data.textonly = settings.textonlymode || false;
 		data.type = "tiktok";
 		data.event = ital;
+		if (data.event && typeof data.nameColor === "string") {
+			const normalizedColor = data.nameColor.trim().toLowerCase();
+			const compactColor = normalizedColor.replace(/\s/g, "");
+			if (
+				normalizedColor === "black" ||
+				normalizedColor === "#000" ||
+				normalizedColor === "#000000" ||
+				compactColor === "rgb(0,0,0)" ||
+				compactColor === "rgba(0,0,0,1)"
+			) {
+				data.nameColor = "";
+			}
+		}
 		if (!StreamState.isValid() && StreamState.getCurrentChannel()) {
 			////console.log("Has the channel changed? If so, click the page to validate it");
 			return;
@@ -1217,37 +1322,40 @@
 					// not active
 				} else if (counter%15==1){
 					var viewerCount = document.querySelector("[data-e2e='live-people-count'], .flex.justify-start.items-center .P4-Regular.text-UIText3");
+					let views = 0; // Default to 0 if not found
 
 					if (viewerCount && viewerCount.textContent) {
-						let views = viewerCount.textContent;
-						
-						if (views.startsWith("· ")){
-							views = views.replace("· ","");
+						let viewText = viewerCount.textContent;
+
+						if (viewText.startsWith("· ")){
+							viewText = viewText.replace("· ","");
 						}
-						
+
 						let multiplier = 1;
-						if (views.includes("K")) {
+						if (viewText.includes("K")) {
 							multiplier = 1000;
-							views = views.replace("K", "");
-						} else if (views.includes("M")) {
+							viewText = viewText.replace("K", "");
+						} else if (viewText.includes("M")) {
 							multiplier = 1000000;
-							views = views.replace("M", "");
+							viewText = viewText.replace("M", "");
 						}
-						if (views == parseFloat(views)) {
-							views = parseFloat(views) * multiplier;
-							chrome.runtime.sendMessage(
-								chrome.runtime.id,
-								({
-									message: {
-										type: 'tiktok',
-										event: 'viewer_update',
-										meta: views
-									}
-								}),
-								function(e) {}
-							);
+						if (viewText == parseFloat(viewText)) {
+							views = parseFloat(viewText) * multiplier;
 						}
 					}
+
+					// Always send viewer update (even if 0) to clear stale counts
+					chrome.runtime.sendMessage(
+						chrome.runtime.id,
+						({
+							message: {
+								type: 'tiktok',
+								event: 'viewer_update',
+								meta: views
+							}
+						}),
+						function(e) {}
+					);
 				}
 			} catch (e) {
 				////console.error(e);
@@ -1427,15 +1535,14 @@
 							const node = mutation.addedNodes[i];
 							if (!node.isConnected) continue;
 							if (node.nodeName === "DIV") {
-								const typeOfEvent = node.dataset?.e2e || node.querySelector?.("[data-e2e]")?.dataset.e2e;
-								if (typeOfEvent) {
-									if (!settings.capturejoinedevent && typeOfEvent === "enter-message") {
-										continue;
-									}
-									processEvent(node);
-								} else {
-									processEvent(node);
+								const typeOfEvent = node.dataset?.e2e || node.querySelector?.("[data-e2e]")?.dataset.e2e || "";
+								const normalizedType = typeof typeOfEvent === "string" ? typeOfEvent.toLowerCase() : "";
+								const compactType = normalizedType.replace(/[^a-z]/g, "");
+								const isJoinNotification = compactType.includes("join") || (compactType.includes("enter") && !compactType.includes("center"));
+								if (!settings.capturejoinedevent && isJoinNotification) {
+									continue;
 								}
+								processEvent(node);
 							}
 						} catch (e) {}
 					}
