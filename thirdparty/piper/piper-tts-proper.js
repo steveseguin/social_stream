@@ -2,6 +2,8 @@
 (function(window) {
   'use strict';
   
+  const DEFAULT_REMOTE_PIPER_BASE = 'https://steveseguin.github.io/piper';
+  
   class ProperPiperTTS {
     constructor(voiceId = 'en_US-hfc_female-medium') {
       this.initialized = false;
@@ -14,11 +16,11 @@
       this.phonemizerBusy = false;
       this.synthesisQueue = [];
       this.isProcessingQueue = false;
-      this.voiceId = voiceId;
       const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-      this.voiceModelPath = baseUrl + `/thirdparty/piper/piper-voices/${voiceId}.onnx`;
-      this.voiceConfigPath = baseUrl + `/thirdparty/piper/piper-voices/${voiceId}.onnx.json`;
       this.baseUrl = baseUrl;
+      this.remoteBaseUrl = ProperPiperTTS.getRemoteBaseUrl();
+      this.localPiperBase = this.baseUrl + '/thirdparty/piper';
+      this.updateVoicePaths(voiceId);
       
       // Available voices
       this.availableVoices = {
@@ -67,20 +69,16 @@
 
         // Load voice configuration
         console.log('Loading voice configuration...');
-        const configResponse = await fetch(this.voiceConfigPath);
-        if (!configResponse.ok) {
-          throw new Error(`Failed to load voice config: ${configResponse.status}`);
-        }
-        this.voiceConfig = await configResponse.json();
+        const configResult = await this.fetchWithFallback(this.voiceConfigCandidates, 'json');
+        this.voiceConfig = configResult.data;
+        this.voiceConfigPath = configResult.url;
         console.log('Voice config loaded:', this.voiceConfig);
 
         // Load ONNX model
         console.log('Loading ONNX model...');
-        const modelResponse = await fetch(this.voiceModelPath);
-        if (!modelResponse.ok) {
-          throw new Error(`Failed to load voice model: ${modelResponse.status}`);
-        }
-        const modelBuffer = await modelResponse.arrayBuffer();
+        const modelResult = await this.fetchWithFallback(this.voiceModelCandidates, 'arrayBuffer');
+        const modelBuffer = modelResult.data;
+        this.voiceModelPath = modelResult.url;
         
         // Configure ONNX Runtime
         ort.env.wasm.numThreads = 1;
@@ -482,9 +480,7 @@
       this.clearQueue();
       
       // Update voice paths
-      this.voiceId = voiceId;
-      this.voiceModelPath = this.baseUrl + `/thirdparty/piper/piper-voices/${voiceId}.onnx`;
-      this.voiceConfigPath = this.baseUrl + `/thirdparty/piper/piper-voices/${voiceId}.onnx.json`;
+      this.updateVoicePaths(voiceId);
       
       // Reset initialization state
       this.initialized = false;
@@ -508,7 +504,93 @@
     getCurrentVoice() {
       return this.voiceId;
     }
+
+    static getRemoteBaseUrl() {
+      if (typeof ProperPiperTTS.remoteBaseUrl === 'string' && ProperPiperTTS.remoteBaseUrl.trim()) {
+        return ProperPiperTTS.remoteBaseUrl.trim().replace(/\/+$/, '');
+      }
+      if (typeof window !== 'undefined') {
+        const override = window.ProperPiperRemoteBaseUrl || window.PIPER_REMOTE_BASE_URL;
+        if (typeof override === 'string' && override.trim()) {
+          return override.trim().replace(/\/+$/, '');
+        }
+      }
+      return DEFAULT_REMOTE_PIPER_BASE;
+    }
+
+    updateVoicePaths(voiceId) {
+      this.voiceId = voiceId;
+      this.remoteBaseUrl = ProperPiperTTS.getRemoteBaseUrl();
+      const { model, config } = this.buildVoiceAssetPaths(voiceId);
+      this.voiceModelCandidates = model;
+      this.voiceConfigCandidates = config;
+      this.voiceModelPath = null;
+      this.voiceConfigPath = null;
+    }
+
+    buildVoiceAssetPaths(voiceId) {
+      const candidates = this.buildVoiceAssetBases(voiceId).map(base => base.replace(/\/+$/, ''));
+      const uniqueBases = [...new Set(candidates)];
+      return {
+        model: uniqueBases.map(base => `${base}.onnx`),
+        config: uniqueBases.map(base => `${base}.onnx.json`)
+      };
+    }
+
+    buildVoiceAssetBases(voiceId) {
+      const bases = [];
+      const addBase = (root) => {
+        if (!root || typeof root !== 'string') return;
+        const trimmed = root.trim().replace(/\/+$/, '');
+        bases.push(`${trimmed}/piper-voices/${voiceId}`);
+        bases.push(`${trimmed}/piper-voices/${voiceId}/${voiceId}`);
+      };
+      addBase(this.localPiperBase);
+      addBase(this.remoteBaseUrl);
+      return bases;
+    }
+
+    async fetchWithFallback(urls, responseType) {
+      if (!Array.isArray(urls) || urls.length === 0) {
+        throw new Error('No URLs provided for fetchWithFallback');
+      }
+      let lastError = null;
+      for (const url of urls) {
+        if (!url) continue;
+        try {
+          const response = await fetch(url);
+          if (!response || !response.ok) {
+            throw new Error(`Failed to fetch ${url}: ${response ? response.status : 'no response'}`);
+          }
+          let data;
+          if (responseType === 'json') {
+            data = await response.json();
+          } else if (responseType === 'arrayBuffer') {
+            data = await response.arrayBuffer();
+          } else if (responseType === 'text') {
+            data = await response.text();
+          } else {
+            data = await response.blob();
+          }
+          return { data, url };
+        } catch (error) {
+          lastError = error;
+          console.warn('Piper asset fetch failed, trying next candidate:', url, error);
+        }
+      }
+      throw lastError || new Error('All fetch attempts failed');
+    }
   }
+
+  ProperPiperTTS.remoteBaseUrl = null;
+  ProperPiperTTS.DEFAULT_REMOTE_BASE = DEFAULT_REMOTE_PIPER_BASE;
+  ProperPiperTTS.setRemoteBaseUrl = function(url) {
+    if (typeof url === 'string' && url.trim()) {
+      ProperPiperTTS.remoteBaseUrl = url.trim();
+    } else {
+      ProperPiperTTS.remoteBaseUrl = null;
+    }
+  };
 
   // Export to window
   window.ProperPiperTTS = ProperPiperTTS;

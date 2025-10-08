@@ -33,6 +33,8 @@ jobs:
         run: |
           rsync -av --exclude='.git/' main-content/ gh-pages-content/
           rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/
+          echo "Removing files larger than 25MB from deployment payload"
+          find gh-pages-content -type f -size +25M -print -delete || true
           echo "Deployment content (recursive):"
           ls -laR gh-pages-content
 
