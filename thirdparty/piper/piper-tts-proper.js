@@ -3,7 +3,7 @@
   'use strict';
   
   const DEFAULT_REMOTE_PIPER_BASE = 'https://steveseguin.github.io/piper';
-  const trimTrailingSlash = (value) => value.replace(/\/+$/, '');
+  const trimTrailingSlash = (value) => typeof value === 'string' ? value.replace(/\/+$/, '') : '';
   
   class ProperPiperTTS {
     constructor(voiceId = 'en_US-hfc_female-medium') {
@@ -20,10 +20,12 @@
       const extensionBase = typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getURL === 'function'
         ? trimTrailingSlash(chrome.runtime.getURL(''))
         : null;
-      const locationBase = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-      this.baseUrl = trimTrailingSlash(extensionBase || locationBase);
+      const locationBase = trimTrailingSlash(window.location.href.substring(0, window.location.href.lastIndexOf('/')));
+      this.baseUrl = locationBase;
+      this.extensionBaseUrl = extensionBase && extensionBase !== locationBase ? extensionBase : null;
       this.remoteBaseUrl = ProperPiperTTS.getRemoteBaseUrl();
       this.localPiperBase = this.baseUrl + '/thirdparty/piper';
+      this.extensionPiperBase = this.extensionBaseUrl ? this.extensionBaseUrl + '/thirdparty/piper' : null;
       this.updateVoicePaths(voiceId);
       
       // Available voices
@@ -82,7 +84,7 @@
         // Load ONNX model
         console.log('Loading ONNX model...');
         const modelResult = await this.fetchWithFallback(this.voiceModelCandidates, 'arrayBuffer');
-        const modelBuffer = modelResult.data instanceof Uint8Array ? modelResult.data : new Uint8Array(modelResult.data);
+        const modelBuffer = modelResult.data;
         this.voiceModelPath = modelResult.url;
         console.log('Using Piper voice model from:', this.voiceModelPath);
         
@@ -536,7 +538,7 @@
     }
 
     buildVoiceAssetPaths(voiceId) {
-      const candidates = this.buildVoiceAssetBases(voiceId).map(base => trimTrailingSlash(base));
+      const candidates = this.buildVoiceAssetBases(voiceId).map(base => trimTrailingSlash(base)).filter(Boolean);
       const uniqueBases = [...new Set(candidates)];
       return {
         model: uniqueBases.map(base => `${base}.onnx`),
@@ -553,7 +555,11 @@
         bases.push(`${trimmed}/piper-voices/${voiceId}/${voiceId}`);
       };
       addBase(this.localPiperBase);
+      addBase(this.extensionPiperBase);
       addBase(this.remoteBaseUrl);
+      if (this.remoteBaseUrl !== DEFAULT_REMOTE_PIPER_BASE) {
+        addBase(DEFAULT_REMOTE_PIPER_BASE);
+      }
       return bases;
     }
 
@@ -565,15 +571,33 @@
       for (const url of urls) {
         if (!url) continue;
         try {
-          const response = await fetch(url, { mode: 'cors', cache: 'no-store' });
+          const fetchOptions = { cache: 'no-store' };
+          try {
+            const parsed = new URL(url, window.location.href);
+            if (parsed.protocol === 'chrome-extension:') {
+              // leave mode undefined for extension resources
+            } else {
+              fetchOptions.mode = 'cors';
+            }
+          } catch (_urlError) {
+            fetchOptions.mode = 'cors';
+          }
+          const response = await fetch(url, fetchOptions);
           if (!response || !response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response ? response.status : 'no response'}`);
           }
+          const contentType = (response.headers && response.headers.get && response.headers.get('content-type')) || '';
           let data;
           if (responseType === 'json') {
+            if (contentType && !contentType.includes('application/json')) {
+              throw new Error(`Unexpected content-type for JSON fetch: ${contentType}`);
+            }
             data = await response.json();
           } else if (responseType === 'arrayBuffer') {
-            data = new Uint8Array(await response.arrayBuffer());
+            if (contentType && contentType.includes('text/html')) {
+              throw new Error(`Unexpected HTML response when expecting binary: ${contentType}`);
+            }
+            data = await response.arrayBuffer();
           } else if (responseType === 'text') {
             data = await response.text();
           } else {
