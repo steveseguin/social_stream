@@ -4250,6 +4250,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     async kittenTTS(text, settings) {
         try {
+            const baseUrl = chrome.runtime.getURL('');
+
             // Load ONNX Runtime first if not loaded
             if (typeof ort === 'undefined') {
                 const ortScript = document.createElement('script');
@@ -4259,31 +4261,30 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     ortScript.onerror = reject;
                     document.head.appendChild(ortScript);
                 });
-                
-                // Configure WASM paths after loading ONNX Runtime
-                if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
-                    ort.env.wasm.wasmPaths = './thirdparty/';
-                    ort.env.wasm.numThreads = 1;
-                    ort.env.wasm.simd = false;
-                    console.log("Configured ONNX Runtime WASM paths for popup");
-                }
             }
-            
+
+            // Configure WASM paths now that ONNX Runtime is available
+            if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
+                ort.env.wasm.wasmPaths = baseUrl + 'thirdparty/kitten-tts/';
+                ort.env.wasm.numThreads = 1;
+                ort.env.wasm.simd = false;
+                console.log("Configured ONNX Runtime WASM paths for popup");
+            }
+
             // Load Kitten TTS module if not loaded
             if (!window.kittenTtsInstance) {
                 // Use absolute URL for chrome extension context
-                const baseUrl = chrome.runtime.getURL('');
                 const moduleUrl = baseUrl + 'thirdparty/kitten-tts/kitten-tts-lib.js';
-                
+
                 const { KittenTTS } = await import(moduleUrl);
-                
+
                 window.kittenTtsInstance = new KittenTTS();
-                
-                // Initialize with model, voices, and WASM paths using absolute URLs
+
+                // Initialize with model, voices, and explicit WASM path using absolute URLs
                 const modelUrl = baseUrl + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
                 const voicesUrl = baseUrl + 'thirdparty/kitten-tts/voices.json';
-                // Don't set WASM path - let ONNX runtime use its default
-                await window.kittenTtsInstance.init(modelUrl, voicesUrl);
+                const wasmPaths = { wasm: baseUrl + 'thirdparty/kitten-tts/ort-wasm-simd-threaded.jsep.wasm' };
+                await window.kittenTtsInstance.init(modelUrl, voicesUrl, wasmPaths);
             }
             
             this.premiumQueueActive = true;

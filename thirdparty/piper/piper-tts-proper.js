@@ -3,6 +3,7 @@
   'use strict';
   
   const DEFAULT_REMOTE_PIPER_BASE = 'https://steveseguin.github.io/piper';
+  const trimTrailingSlash = (value) => value.replace(/\/+$/, '');
   
   class ProperPiperTTS {
     constructor(voiceId = 'en_US-hfc_female-medium') {
@@ -16,8 +17,11 @@
       this.phonemizerBusy = false;
       this.synthesisQueue = [];
       this.isProcessingQueue = false;
-      const baseUrl = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
-      this.baseUrl = baseUrl;
+      const extensionBase = typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getURL === 'function'
+        ? trimTrailingSlash(chrome.runtime.getURL(''))
+        : null;
+      const locationBase = window.location.href.substring(0, window.location.href.lastIndexOf('/'));
+      this.baseUrl = trimTrailingSlash(extensionBase || locationBase);
       this.remoteBaseUrl = ProperPiperTTS.getRemoteBaseUrl();
       this.localPiperBase = this.baseUrl + '/thirdparty/piper';
       this.updateVoicePaths(voiceId);
@@ -73,17 +77,20 @@
         this.voiceConfig = configResult.data;
         this.voiceConfigPath = configResult.url;
         console.log('Voice config loaded:', this.voiceConfig);
+        console.log('Voice config source:', this.voiceConfigPath);
 
         // Load ONNX model
         console.log('Loading ONNX model...');
         const modelResult = await this.fetchWithFallback(this.voiceModelCandidates, 'arrayBuffer');
-        const modelBuffer = modelResult.data;
+        const modelBuffer = modelResult.data instanceof Uint8Array ? modelResult.data : new Uint8Array(modelResult.data);
         this.voiceModelPath = modelResult.url;
+        console.log('Using Piper voice model from:', this.voiceModelPath);
         
         // Configure ONNX Runtime
+        const wasmRoot = this.baseUrl + '/thirdparty/';
         ort.env.wasm.numThreads = 1;
         ort.env.wasm.simd = true;
-        ort.env.wasm.wasmPaths = this.baseUrl + '/thirdparty/';
+        ort.env.wasm.wasmPaths = wasmRoot;
         
         // Create ONNX session
         const sessionOptions = {
@@ -529,7 +536,7 @@
     }
 
     buildVoiceAssetPaths(voiceId) {
-      const candidates = this.buildVoiceAssetBases(voiceId).map(base => base.replace(/\/+$/, ''));
+      const candidates = this.buildVoiceAssetBases(voiceId).map(base => trimTrailingSlash(base));
       const uniqueBases = [...new Set(candidates)];
       return {
         model: uniqueBases.map(base => `${base}.onnx`),
@@ -541,7 +548,7 @@
       const bases = [];
       const addBase = (root) => {
         if (!root || typeof root !== 'string') return;
-        const trimmed = root.trim().replace(/\/+$/, '');
+        const trimmed = trimTrailingSlash(root.trim());
         bases.push(`${trimmed}/piper-voices/${voiceId}`);
         bases.push(`${trimmed}/piper-voices/${voiceId}/${voiceId}`);
       };
@@ -558,7 +565,7 @@
       for (const url of urls) {
         if (!url) continue;
         try {
-          const response = await fetch(url);
+          const response = await fetch(url, { mode: 'cors', cache: 'no-store' });
           if (!response || !response.ok) {
             throw new Error(`Failed to fetch ${url}: ${response ? response.status : 'no response'}`);
           }
@@ -566,7 +573,7 @@
           if (responseType === 'json') {
             data = await response.json();
           } else if (responseType === 'arrayBuffer') {
-            data = await response.arrayBuffer();
+            data = new Uint8Array(await response.arrayBuffer());
           } else if (responseType === 'text') {
             data = await response.text();
           } else {
