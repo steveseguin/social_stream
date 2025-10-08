@@ -597,6 +597,11 @@ body::before {
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
             return;
         }
+
+        // Skip meta-only messages (follower/viewer data without actual content)
+        if (!data.chatname && data.meta) {
+            return;
+        }
         
         // Play terminal sound
         if (Math.random() < 0.3) { // Only sometimes to avoid spam

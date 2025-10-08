@@ -218,6 +218,11 @@
 			return;
 		}
 
+		// Skip meta-only messages (follower/viewer data without actual content)
+		if (!data.chatname && data.meta) {
+			return;
+		}
+
 		if (['follow', 'subscription', 'donation'].includes(data.type)) {
 			addEventToOverlay(data);
 			return;

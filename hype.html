@@ -1244,6 +1244,21 @@ eventer(messageEvent, function(e) {
                     }
                 });
 
+                if (showViewers) {
+                    const hypeContainer = document.getElementById("hype");
+                    if (hypeContainer) {
+                        Object.keys(aggregatedViewers).forEach(function(platform) {
+                            const holder = hypeContainer.querySelector(".sourceStatHolder[data-type='" + platform + "']");
+                            if (!holder) return;
+                            const viewerSpan = holder.querySelector("span[data-viewers][data-type='" + platform + "']");
+                            if (viewerSpan) {
+                                const value = aggregatedViewers[platform];
+                                viewerSpan.textContent = isNaN(value) ? "0" : String(value);
+                            }
+                        });
+                    }
+                }
+
                 // Do not short-circuit; allow subsequent hype updates to render.
                 return;
             }

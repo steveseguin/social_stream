@@ -927,6 +927,21 @@ const eventTemplates = {
       </div>
     </div>
   `,
+
+  webhookRelay: (id) => {
+    const suffix = id === 1 ? '' : id;
+    const inputId = `webhookrelayurl${suffix}`;
+    const settingKey = id === 1 ? 'webhookrelayurl' : `webhookrelayurl${id}`;
+
+    return `
+    <div class="event-container">
+      <div class="textInputContainer" style="width: 235px">
+        <input type="text" id="${inputId}" class="textInput" autocomplete="off" placeholder="https://thirdparty.com/api" data-textsetting="${settingKey}">
+        <label for="${inputId}">&gt; Webhook URL</label>
+      </div>
+    </div>
+  `;
+  },
   
   timedMessage: (id) => `
     <div class="event-container">
@@ -999,6 +1014,10 @@ function initializeInputHandlers(container) {
 	  prefixes: ['chatevent', 'chatcommand', 'chatwebhook', 'chatcommandtimeout'],
 	  type: 'chatCommand'
 	},
+	webhookRelay: {
+	  prefixes: ['webhookrelayurl'],
+	  type: 'webhookRelay'
+	},
 	timedMessage: {
 	  prefixes: ['timemessageevent', 'timemessagecommand', 'timemessageinterval', 'timemessageoffset'],
 	  type: 'timedMessage'
@@ -1019,12 +1038,20 @@ function findExistingEvents(eventType, response) {
   Object.keys(settings).forEach(key => {
 	pattern.prefixes.forEach(prefix => {
 	  if (key.startsWith(prefix)) {
-		const id = key.replace(prefix, '');
+		const suffix = key.slice(prefix.length);
+		let eventId = 1;
+		if (suffix) {
+		  const parsed = parseInt(suffix, 10);
+		  if (Number.isNaN(parsed)) {
+			return;
+		  }
+		  eventId = parsed;
+		}
 		if (settings[key]?.setting !== undefined || 
 			settings[key]?.textsetting !== undefined || 
 			settings[key]?.optionsetting !== undefined || 
 			settings[key]?.numbersetting !== undefined) {
-		  events.add(parseInt(id));
+		  events.add(eventId);
 		}
 	  }
 	});
@@ -1371,7 +1398,7 @@ function createTabsFromSettings(response) {
   if (!response || !response.settings) return;
 
   // Clear existing tabs first
-  const containers = ['botReplyMessages', 'chatCommands', 'timedMessages', 'midiCommands'];
+  const containers = ['webhookRelayUrls', 'botReplyMessages', 'chatCommands', 'timedMessages', 'midiCommands'];
   containers.forEach(containerId => {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -1380,6 +1407,7 @@ function createTabsFromSettings(response) {
 
   // Track existing events for each type
   const existingEvents = {
+    webhookRelay: new Set(),
     botReply: new Set(),
     chatCommand: new Set(),
     timedMessage: new Set(),
@@ -1420,7 +1448,26 @@ function createTabsFromSettings(response) {
         existingEvents.midiCommand.add(parseInt(id));
       }
     }
+    // Webhook relay destinations
+    else if (key.startsWith('webhookrelayurl')) {
+      const entry = response.settings[key];
+      const value = typeof entry === 'string' ? entry : entry?.textsetting;
+      if (typeof value === 'string' && value.trim()) {
+        const suffix = key.replace('webhookrelayurl', '');
+        let id = 1;
+        if (suffix && /^\d+$/.test(suffix)) {
+          id = parseInt(suffix, 10);
+        }
+        existingEvents.webhookRelay.add(id);
+      }
+    }
   });
+
+  if (existingEvents.webhookRelay.size > 0) {
+    initializeTabSystem('webhookRelayUrls', 'webhookRelay', Array.from(existingEvents.webhookRelay), response);
+  } else {
+    initializeTabSystem('webhookRelayUrls', 'webhookRelay', [1], response);
+  }
 
   // Initialize tab systems with found events
   if (existingEvents.botReply.size > 0) {

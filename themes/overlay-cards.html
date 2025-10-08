@@ -622,6 +622,11 @@ body {
         if (!data.chatname && !data.chatmessage && !data.hasDonation && !data.donation && !data.contentimg){
             return;
         }
+
+        // Skip meta-only messages (follower/viewer data without actual content)
+        if (!data.chatname && data.meta) {
+            return;
+        }
         
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message');

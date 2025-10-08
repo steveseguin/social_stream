@@ -3,6 +3,8 @@ import { storage } from './utils/storage.js';
 import { randomSessionId, formatTime, safeHtml } from './utils/helpers.js';
 import { EmoteManager } from './utils/emoteManager.js';
 import { YoutubePlugin } from './plugins/youtubePlugin.js';
+
+import { YoutubeStreamingPlugin } from './plugins/youtubeStreamingPlugin.
 import { TwitchPlugin } from './plugins/twitchPlugin.js';
 import { TikTokPlugin } from './plugins/tiktokPlugin.js';
 import { KickPlugin } from './plugins/kickPlugin.js';
@@ -44,6 +46,7 @@ const overlayToggleInputs = overlayToggleDefs.reduce((acc, def) => {
 
 const sessionKey = 'session.currentId';
 const overlayToggleStorageKey = 'session.overlayOptions';
+const youtubeStreamingStorageKey = 'youtube.useStreaming';
 const activityLimit = 80;
 
 const overlayToggleDefaults = overlayToggleDefs.reduce((acc, def) => {
@@ -56,6 +59,9 @@ const storedOverlayToggleState = storage.get(overlayToggleStorageKey, null);
 if (storedOverlayToggleState && typeof storedOverlayToggleState === 'object' && !Array.isArray(storedOverlayToggleState)) {
   overlayToggleState = { ...overlayToggleState, ...storedOverlayToggleState };
 }
+
+
+let youtubeStreamingEnabled = Boolean(storage.get(youtubeStreamingStorageKey, false));
 
 const url = new URL(window.location.href);
 const debugParam = url.searchParams.get('debug');
@@ -82,6 +88,8 @@ const messenger = new DockMessenger(elements.dockFrame, {
 });
 const emotes = new EmoteManager();
 let plugins = [];
+
+const pluginMap = new Map();
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const testMessagePresets = [
@@ -1345,6 +1353,81 @@ function notifyPluginsOfSession(sessionId) {
   });
 }
 
+
+function handleYoutubeStreamingPreferenceChange(useStreaming) {
+  const nextValue = Boolean(useStreaming);
+  if (nextValue === youtubeStreamingEnabled) {
+    return;
+  }
+
+  youtubeStreamingEnabled = nextValue;
+  storage.set(youtubeStreamingStorageKey, nextValue);
+  swapYoutubePlugin(nextValue);
+}
+
+function createYoutubePluginInstance(useStreaming) {
+  const PluginCtor = useStreaming ? YoutubeStreamingPlugin : YoutubePlugin;
+  return new PluginCtor({
+    messenger,
+    emotes,
+    icon: '../sources/images/youtube.png',
+    debug: debugEnabled,
+    onActivity: addActivity,
+    onStatus: ({ kind = 'debug', plugin, state }) => addActivity({ kind, plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
+    autoConnect: true,
+    controls: { connect: false, disconnect: true },
+    useStreaming,
+    onStreamingPreferenceChange: handleYoutubeStreamingPreferenceChange
+  });
+}
+
+function rebuildPluginMap() {
+  pluginMap.clear();
+  plugins.forEach((plugin) => {
+    pluginMap.set(plugin.id, plugin);
+  });
+}
+
+function mountAllPlugins() {
+  rebuildPluginMap();
+  if (!elements.sourceList) {
+    return;
+  }
+  elements.sourceList.innerHTML = '';
+  plugins.forEach((plugin) => {
+    plugin.mount(elements.sourceList);
+  });
+}
+
+function swapYoutubePlugin(useStreaming) {
+  const previous = pluginMap.get('youtube');
+  const sessionId = messenger.getSessionId();
+
+  if (previous) {
+    try {
+      previous.handleDisconnect();
+    } catch (err) {
+      console.error('Failed to disconnect YouTube plugin', err);
+    }
+  }
+
+  const remaining = plugins.filter((plugin) => plugin.id !== 'youtube');
+  const next = createYoutubePluginInstance(useStreaming);
+
+  plugins = [next, ...remaining];
+  mountAllPlugins();
+
+  addActivity({
+    plugin: 'youtube',
+    message: useStreaming ? 'YouTube streaming API enabled.' : 'YouTube polling API enabled.',
+    timestamp: Date.now()
+  });
+
+  if (sessionId) {
+    notifyPluginsOfSession(sessionId);
+  }
+}
+
 function initMobileNav() {
   const buttons = elements.mobileNavButtons || [];
   if (!buttons.length) return;
@@ -1508,16 +1591,9 @@ function init() {
   updateFullscreenControl();
 
   plugins = [
-    new YoutubePlugin({
-      messenger,
-      emotes,
-      icon: '../sources/images/youtube.png',
-      debug: debugEnabled,
-      onActivity: addActivity,
-      onStatus: ({ plugin, state }) => addActivity({ kind: 'debug', plugin, message: `Status changed: ${state}`, timestamp: Date.now() }),
-      autoConnect: true,
-      controls: { connect: false, disconnect: true }
-    }),
+
+    createYoutubePluginInstance(youtubeStreamingEnabled),
+
     new TwitchPlugin({
       messenger,
       emotes,
@@ -1545,12 +1621,8 @@ function init() {
     })
   ];
 
-  const pluginMap = new Map();
-  plugins.forEach((plugin) => {
-    pluginMap.set(plugin.id, plugin);
-    plugin.mount(elements.sourceList);
-  });
 
+  mountAllPlugins();
   startSession(storedSession);
   processOAuthCallback(pluginMap);
   initMobileNav();
@@ -1564,5 +1636,6 @@ function init() {
     }, 150);
   }
 }
+
 
 init();

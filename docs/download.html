@@ -103,6 +103,7 @@
             <div class="download-tabs">
                 <button class="tab-btn recommend" data-tab="extension">Browser Extension</button>
                 <button class="tab-btn recommend active" data-tab="standalone">Standalone App</button>
+                <button class="tab-btn recommend" data-tab="lite">Lite Web App</button>
                 <button class="tab-btn recommend" data-tab="source">Source Code</button>
             </div>
 
@@ -173,6 +174,26 @@
                         <p>AppImage for Linux distributions.</p>
                         <p class="note">Limited support, but should work on most modern distributions.</p>
                         <a href="https://github.com/steveseguin/social_stream/releases" target="_blank" class="btn btn-primary">Download AppImage</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="lite">
+                <div class="download-grid single">
+                    <div class="download-card highlight">
+                        <div class="download-icon">
+                            <img src="../icons/chatbot.svg" alt="Lite Web App">
+                        </div>
+                        <div class="badge">No Install Needed</div>
+                        <h3>Social Stream Ninja Lite</h3>
+                        <p>Launch directly in your browser for a lightweight experience that works on mobile devices without a host computer.</p>
+                        <ul class="choice-list">
+                            <li>Extremely limited feature set and customization options.</li>
+                            <li>Supports only a handful of core services.</li>
+                            <li>Optimized for low memory use and quick sessions.</li>
+                        </ul>
+                        <p class="note">Great for quick checks on the go, but expect many advanced tools to be missing.</p>
+                        <a href="https://lite.socialstream.ninja" target="_blank" class="btn btn-primary">Go to Social Stream Ninja Lite</a>
                     </div>
                 </div>
             </div>
@@ -472,17 +493,17 @@
 				// Hide all installation guides first
 				manualInstall.style.display = 'none';
 				firefoxInstall.style.display = 'none';
+				if (linuxInstall) {
+					linuxInstall.style.display = 'none';
+				}
 				
 				// Show appropriate guides based on active tab
 				if (activeTab === 'extension') {
 					manualInstall.style.display = 'block';
 					firefoxInstall.style.display = 'block';
-				} else if (activeTab === 'standalone') {
+				} else if (activeTab === 'standalone' && linuxInstall) {
 					// Only show Linux install section for standalone tab
 					linuxInstall.style.display = 'block';
-				} else {
-					// Hide Linux install section for other tabs
-					linuxInstall.style.display = 'none';
 				}
 			}
 			

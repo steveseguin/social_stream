@@ -142,6 +142,11 @@
     })();
 
 	function addMessageToOverlay(data) {
+		// Skip meta-only messages (follower/viewer data without actual content)
+		if (!data.chatname && data.meta) {
+			return;
+		}
+
 		const messageContainer = document.createElement('div');
 		messageContainer.classList.add('message-container');
 		

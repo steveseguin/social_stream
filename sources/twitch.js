@@ -1253,24 +1253,40 @@
 			fetch('https://api.socialstream.ninja/twitch/viewers?username='+channelName)
 			  .then(response => response.text())
 			  .then(count => {
+				let viewerCount = 0; // Default to 0 if invalid
 				try {
 					if (count == parseInt(count)){
-						chrome.runtime.sendMessage(
-							chrome.runtime.id,
-							({message:{
-									type: 'twitch',
-									event: 'viewer_update',
-									meta: parseInt(count)
-									//chatmessage: data.data[0] + " has started following"
-								}
-							}),
-							function (e) {}
-						);
+						viewerCount = parseInt(count);
 					}
 				} catch (e) {
 					//console.log(e);
-				}				
-				  //console.log('Viewer count:', count);
+				}
+
+				// Always send viewer update (even if 0) to clear stale counts
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+							type: 'twitch',
+							event: 'viewer_update',
+							meta: viewerCount
+						}
+					}),
+					function (e) {}
+				);
+				  //console.log('Viewer count:', viewerCount);
+			  })
+			  .catch(error => {
+				// Send 0 on fetch error to clear stale counts
+				chrome.runtime.sendMessage(
+					chrome.runtime.id,
+					({message:{
+							type: 'twitch',
+							event: 'viewer_update',
+							meta: 0
+						}
+					}),
+					function (e) {}
+				);
 			  });
 		}
 		

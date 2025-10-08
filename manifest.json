@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.32.13",
+  "version": "3.34.0",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -27,7 +27,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["sources/inject/streamelements-ws.js", "sources/inject/streamelements-network-monitor.js"],
+      "resources": ["sources/inject/streamelements-ws.js"],
       "matches": ["https://streamelements.com/*"]
     }
   ],
@@ -47,7 +47,6 @@
 	"https://patreon.com/*",
 	"https://simps.com/app/*",
 	"https://studio.favorited.com/popout/chat",
-	"https://lfg.tv/*",
 	"https://*/*autoreloadwithsocialstream",
 	"https://*.webinargeek.com/webinar/*",
 	"https://www.ilmfix.de/programs/*",
@@ -284,10 +283,6 @@
 	{
       "js": [ "./sources/streamplace.js" ],
       "matches": [ "https://stream.place/*" ]
-    },
-	{
-      "js": [ "./sources/lfg.js" ],
-      "matches": [ "https://lfg.tv/*" ]
     },
 	{
       "js": [ "./sources/simps.js" ],

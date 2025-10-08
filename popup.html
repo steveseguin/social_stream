@@ -3057,6 +3057,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="horizontal-scrolling-messages"> ↔️ Horizontal scrolling messages </span>
                                 </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="horizontalreverse" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="horizontal-left-to-right">↔️ Horizontal ticker slides left-to-right</span>
+                                </div>
 								<div>
                                     <label class="switch">
                                         <input type="checkbox" data-param1="trim=200" />
@@ -4624,6 +4631,13 @@ input:checked + .slider:before {
 									</label>
 									👩‍🏫 <span data-translate="modLLMonly">Will respond to Moderators only</span>
 								</div>
+								<div style="display: inline-block; margin-left: 12px;" title="When enabled, the chat bot can answer reflections created by dock/API messages from the host.">
+									<label class="switch">
+										<input type="checkbox" id="chatbotRespondToReflections" data-setting="chatbotRespondToReflections" />
+										<span class="slider round"></span>
+									</label>
+									🤖↩️ Allow replies to host reflections
+								</div>
 								<!-- <div style="display: inline-block;" title="Text to speech bot messages">
 									<label class="switch">
 										<input type="checkbox" id="ollamatts" data-setting="ollamatts" />
@@ -5274,13 +5288,13 @@ input:checked + .slider:before {
 								<i>This is different than the chat bot overlay. This allows for private 1 on 1 conversation with your bot on a dedicated page, just in case you want to talk privately. It does not have access to the RAG knowledge dataset currently or your other chat histories.<br /><br /><strong>⚠️ Requires a properly configured LLM service provider in the "Configure LLM Service Provider" section above.</strong></i>
 								
 								<br/><br/>
-								<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
-									<label class="switch">
-										<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />
-										<span class="slider round"></span>
-									</label>
-									💬 <span data-translate="enable-ollama-chat-bot-external">Enable private chat bot option</span>
-								</div>
+							<div style="display:inline-block;" title="Allow for private communication with the chat bot. Currently doesn't have access to RAG.">
+								<label class="switch">
+									<input type="checkbox" id="allowChatBot" data-setting="allowChatBot" />
+									<span class="slider round"></span>
+								</label>
+								💬 <span data-translate="enable-ollama-chat-bot-external">Enable private chat bot option</span>
+							</div>
 							</div>
 							
 						</div>
@@ -7749,7 +7763,15 @@ input:checked + .slider:before {
                                     </label>
                                     <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" />🤷‍♂️ <span data-translate="autoLiveYoutube"> Auto-select <b>Live Chat</b> in Youtube Popout</span>
                                 </div>
-								
+
+								<div title="Increase the font size of chat messages in the Youtube Live chat popout">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="youtubeLargerFont" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" />🔤 <span data-translate="youtubeLargerFont"> Larger font for Youtube Popout chat</span>
+                                </div>
+
 								 <div title="Make Discord Videos available as VDO.Ninja view links">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="vdoninjadiscord" />
@@ -8074,16 +8096,7 @@ input:checked + .slider:before {
                                         <label for="h2rserver"><span data-translate="send-all-to-h2r-server">&gt; Send all to H2R server</span></label>
                                     </div>
                                 </div>
-                                <div title="Relay Ko-fi, Stripe, Buy Me a Coffee, and Fourthwall webhook payloads to your custom endpoint">
-                                    <label class="switch">
-                                        <input type="checkbox" data-setting="webhookrelay" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;">
-                                        <input type="text" id="webhookrelayurl" class="textInput" autocomplete="off" placeholder="https://thirdparty.com/api" data-textsetting="webhookrelayurl" />
-                                        <label for="webhookrelayurl"><span>&gt; Relay incoming webhooks</span></label>
-                                    </div>
-                                </div>
+                               
                                 <div>
                                     <label class="switch">
                                         <input type="checkbox" data-setting="post" />
@@ -8115,6 +8128,18 @@ input:checked + .slider:before {
                                     </div>
                                 </div>
 
+								 <div title="Relay Ko-fi, Stripe, Buy Me a Coffee, and Fourthwall webhook payloads to your custom endpoint">
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-setting="webhookrelay">
+											<span class="slider round"></span>
+										</label>
+										⏩ <span data-translate="relay-the-incoming">Relay incoming webhooks</span>
+									</div>
+                                    <div class="webhook-relay-destinations" style="display: inline-block; width: 320px; max-width: 100%;">
+                                        <div id="webhookRelayUrls"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -8422,7 +8447,7 @@ input:checked + .slider:before {
                                     <span data-translate="mark-host-mentions-trivial">🔦 Mark @host messages as trivial events</span>
                                 </div>
 
-                                <div style="display: inline-block; margin-left: 30px;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
+                                <div style="display: inline-block;" title="Comma-separated keywords to identify questions (default: ?,Q:,question:,how,what,when,where,why,who,which,could,would,should,can,will)">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="questionKeywords" />
                                         <span class="slider round"></span>

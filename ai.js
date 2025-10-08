@@ -13,6 +13,98 @@ let lunrIndexPromise;
 const maxContextSize = 31000;
 const maxContextSizeFull = 32000;
 
+class LLMServiceError extends Error {
+    constructor(details = {}) {
+        const message = details.message || 'LLM request failed';
+        super(message);
+        this.name = 'LLMServiceError';
+        this.provider = details.provider || 'unknown';
+        this.status = details.status || null;
+        this.code = details.code || null;
+        this.model = details.model || null;
+        this.endpoint = details.endpoint || null;
+        this.hint = details.hint || null;
+        this.details = details.details || null;
+        this.reported = false;
+    }
+}
+
+function getLLMHint(status, code) {
+    if (status === 401 || status === 403) {
+        return 'Verify that your API key is present and has permission to use this model.';
+    }
+    if (status === 404 || (code && String(code).toLowerCase().includes('not_found'))) {
+        return 'Check the requested model name and endpoint URL.';
+    }
+    if (status === 402) {
+        return 'The provider reports a billing or credits issue. Review your plan or balance.';
+    }
+    if (status === 429 || (code && String(code).toLowerCase().includes('rate'))) {
+        return 'The provider rate limit was reached. Reduce frequency or increase your quota.';
+    }
+    if (status >= 500 && status < 600) {
+        return 'The provider reported a server error. Try again shortly.';
+    }
+    return null;
+}
+
+function formatLLMErrorSummary(error) {
+    const parts = [`[LLM:${error.provider}]`];
+    if (error.model) {
+        parts.push(`model="${error.model}"`);
+    }
+    if (error.status !== null && error.status !== undefined) {
+        parts.push(`status=${error.status}`);
+    }
+    if (error.code) {
+        parts.push(`code=${error.code}`);
+    }
+    const summary = `${parts.join(' ')} ${error.message}`.trim();
+    return error.hint ? `${summary} — ${error.hint}` : summary;
+}
+
+function reportLLMError(error) {
+    if (!error || error.reported) {
+        return;
+    }
+    console.error(formatLLMErrorSummary(error));
+    if (error.details) {
+        try {
+            console.error('[LLM:details]', error.details);
+        } catch (e) {
+            console.error('[LLM:details] Unable to log details payload');
+        }
+    }
+    error.reported = true;
+}
+
+function createLLMError(baseDetails, extra = {}) {
+    const merged = { ...baseDetails, ...extra };
+    if (!merged.hint && (merged.status || merged.code)) {
+        merged.hint = getLLMHint(merged.status, merged.code) || merged.hint;
+    }
+    const err = new LLMServiceError(merged);
+    reportLLMError(err);
+    return err;
+}
+
+function noteChatBotDecision(reason, data, context = {}) {
+    try {
+        if (!settings?.allowChatBot) {
+            return;
+        }
+        const user = data?.chatname || data?.userid || 'unknown';
+        const source = data?.type || 'unknown';
+        const contextEntries = Object.entries(context)
+            .filter(([, value]) => value !== undefined && value !== null && value !== '')
+            .map(([key, value]) => `${key}=${value}`);
+        const message = [`[ChatBot] ${reason}`, `user=${user}`, `source=${source}`, ...contextEntries].join(' | ');
+        console.log(message);
+    } catch (e) {
+        console.warn('Failed to log chat bot decision:', e);
+    }
+}
+
 async function rebuildIndex() {
     const db = await openLunrDatabase();
     const transaction = db.transaction(LUNR_DOCUMENT_STORE_NAME, 'readonly');
@@ -100,7 +192,15 @@ async function getFirstAvailableModel(exclude=null) {
                 const xhr = await fetchNode(`${ollamaendpoint}/api/tags`);
                 clearTimeout(ccc);
                 const datar = JSON.parse(xhr.data);
-                if (!datar?.models?.length) throw new Error('No models available');
+                if (!datar?.models?.length) {
+                    throw createLLMError({
+                        provider: 'ollama',
+                        endpoint: ollamaendpoint,
+                        status: 404,
+                        code: 'model_not_found',
+                        message: 'Ollama did not return any models at the configured endpoint.'
+                    });
+                }
                 resolve(findBestModel(datar.models));
             } catch(e) {
                 clearTimeout(ccc);
@@ -288,6 +388,25 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 	const provider = settings.aiProvider?.optionsetting || "ollama";
 	let endpoint, apiKey, streamable;
 
+	const buildContext = () => ({
+		provider,
+		model,
+		endpoint
+	});
+
+	const wrapLLMError = (error, extra = {}) => {
+		if (error instanceof LLMServiceError) {
+			reportLLMError(error);
+			return error;
+		}
+		const merged = {
+			...buildContext(),
+			details: error,
+			message: error?.message || extra.message || 'LLM request failed'
+		};
+		return createLLMError(merged, extra);
+	};
+
 	switch (provider) {
 		case "ollama":
 			endpoint = settings.ollamaendpoint?.textsetting || "http://localhost:11434";
@@ -404,14 +523,19 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             ollamamodel = await getFirstAvailableModel();
             if (ollamamodel) {
                 tmpModelFallback = ollamamodel;
-				setTimeout(() => {
-					tmpModelFallback = ""; 
-				}, 60000);
+                setTimeout(() => {
+                    tmpModelFallback = ""; 
+                }, 60000);
             } else {
-                console.error("No Ollama model found");
-                return;
+                throw createLLMError(buildContext(), {
+                    status: 404,
+                    code: 'model_not_found',
+                    message: 'No Ollama models are available on the configured endpoint.'
+                });
             }
         }
+        model = ollamamodel;
+
         const result = await makeRequestToOllama(ollamamodel);
         if (result.aborted) {
             return result.response + "💥";
@@ -419,29 +543,49 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
             try {
                 const availableModel = await getFirstAvailableModel(ollamamodel);
                 if (availableModel) {
+                    console.log(`[LLM:ollama] Model "${ollamamodel}" not found. Falling back to "${availableModel}".`);
                     tmpModelFallback = availableModel;
                     setTimeout(() => {
                         tmpModelFallback = ""; 
                     }, 60000);
+                    model = availableModel;
                     const fallbackResult = await makeRequestToOllama(availableModel);
                     if (fallbackResult.aborted) {
                         return fallbackResult.response + "💥";
                     } else if (fallbackResult.error) {
-                        throw new Error(fallbackResult.message);
+                        throw createLLMError(buildContext(), {
+                            status: fallbackResult.status || fallbackResult.error || null,
+                            code: fallbackResult.code || 'model_error',
+                            message: fallbackResult.message || 'Fallback Ollama model returned an error.',
+                            details: fallbackResult
+                        });
                     }
                     return fallbackResult.complete ? fallbackResult.response : fallbackResult.response + "💥";
+                } else {
+                    throw createLLMError(buildContext(), {
+                        status: 404,
+                        code: 'model_not_found',
+                        message: `Ollama model "${ollamamodel}" not found and no fallback model is available.`
+                    });
                 }
             } catch (fallbackError) {
-                console.warn("Error in callLLMAPI even with fallback:", fallbackError);
-                throw fallbackError;
+                throw wrapLLMError(fallbackError, {
+                    message: fallbackError?.message || 'Fallback Ollama request failed.'
+                });
             }
         } else if (result.error) {
-            return;
+            throw createLLMError(buildContext(), {
+                status: result.status || result.error || null,
+                code: result.code || 'ollama_error',
+                message: result.message || 'Ollama returned an error response.',
+                details: result
+            });
         }
         return result.complete ? result.response : result.response + "💥";
 	} else if (provider === "bedrock") {
 		try {
 			const modelId = model;
+			model = modelId;
 			const bedrockEndpoint = `${endpoint}/${modelId}/invoke`;
 			
 			let requestBody;
@@ -506,13 +650,19 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				
 				if (response.status !== 200) {
 					let errorMessage = '';
+					let errorData = null;
 					try {
-						const errorData = JSON.parse(response.data);
-						errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+						errorData = JSON.parse(response.data);
+						errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
 					} catch(e) {
 						errorMessage = `HTTP error! status: ${response.status}`;
 					}
-					throw new Error(errorMessage);
+					throw createLLMError(buildContext(), {
+						status: response.status,
+						code: errorData?.code || errorData?.errorCode || errorData?.error?.code || null,
+						message: errorMessage,
+						details: errorData || response.data
+					});
 				}
 				
 				const data = JSON.parse(response.data);
@@ -537,13 +687,19 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 				
 				if (!response.ok) {
 					let errorMessage = '';
+					let errorData = null;
 					try {
-						const errorData = await response.json();
-						errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+						errorData = await response.json();
+						errorMessage = errorData.message || errorData.error || `HTTP error! status: ${response.status}`;
 					} catch(e) {
 						errorMessage = `HTTP error! status: ${response.status}`;
 					}
-					throw new Error(errorMessage);
+					throw createLLMError(buildContext(), {
+						status: response.status,
+						code: errorData?.code || errorData?.errorCode || errorData?.error?.code || null,
+						message: errorMessage,
+						details: errorData
+					});
 				}
 				
 				const data = await response.json();
@@ -563,7 +719,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			if (error.name === 'AbortError') {
 				return { aborted: true };
 			}
-			throw error;
+			throw wrapLLMError(error);
 		}
     // Replace the else block in callLLMAPI with:
 	} else { // non-Ollama Request, but rather ChatGPT compatible APIs
@@ -592,7 +748,13 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 							if (chunk === null) {
 								resolve(fullResponse);
 							} else if (typeof chunk === 'object' && chunk.error) {
-								reject(chunk);
+								const err = createLLMError(buildContext(), {
+									status: chunk.status || chunk.error?.status || null,
+									code: chunk.code || chunk.error?.code || null,
+									message: chunk.message || chunk.error?.message || 'Streaming response returned an error.',
+									details: chunk
+								});
+								reject(err);
 							} else {
 								handleChunk(chunk, callback, (resp) => { 
 									fullResponse += resp; 
@@ -618,13 +780,19 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					
 					if (response.status !== 200) {
 						let errorMessage = '';
+						let errorData = null;
 						try {
-							const errorData = JSON.parse(response.data);
+							errorData = JSON.parse(response.data);
 							errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
 						} catch(e) {
 							errorMessage = `HTTP error! status: ${response.status}`;
 						}
-						throw new Error(errorMessage);
+						throw createLLMError(buildContext(), {
+							status: response.status,
+							code: errorData?.error?.code || errorData?.error?.type || errorData?.code || null,
+							message: errorMessage,
+							details: errorData || response.data
+						});
 					}
 
 					const data = JSON.parse(response.data);
@@ -640,7 +808,20 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 					});
 
 					if (!response.ok) {
-						throw new Error(`HTTP error! status: ${response.status}`);
+						let errorPayload = null;
+						let errorMessage = `HTTP error! status: ${response.status}`;
+						try {
+							errorPayload = await response.json();
+							errorMessage = errorPayload.error?.message || errorPayload.message || errorMessage;
+						} catch(e) {
+							// ignore parse issue; keep default message
+						}
+						throw createLLMError(buildContext(), {
+							status: response.status,
+							code: errorPayload?.error?.code || errorPayload?.error?.type || errorPayload?.code || null,
+							message: errorMessage,
+							details: errorPayload
+						});
 					}
 
 					const reader = response.body.getReader();
@@ -670,13 +851,19 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 
 					if (!response.ok) {
 						let errorMessage = '';
+						let errorData = null;
 						try {
-							const errorData = await response.json();
+							errorData = await response.json();
 							errorMessage = errorData.error?.message || errorData.message || `HTTP error! status: ${response.status}`;
 						} catch(e) {
 							errorMessage = `HTTP error! status: ${response.status}`;
 						}
-						throw new Error(errorMessage);
+						throw createLLMError(buildContext(), {
+							status: response.status,
+							code: errorData?.error?.code || errorData?.error?.type || errorData?.code || null,
+							message: errorMessage,
+							details: errorData
+						});
 					}
 
 					const data = await response.json();
@@ -687,7 +874,7 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			if (error.name === 'AbortError') {
 				return { aborted: true };
 			}
-			throw error;
+			throw wrapLLMError(error);
 		}
 	}
 
@@ -811,7 +998,11 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
                     } else if (response.status) {
                         return { error: response.status, message: `HTTP error! status: ${response.status}` };
                     }
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    return {
+                        error: true,
+                        message: `HTTP error! status: ${response.status}`,
+                        status: response.status || null
+                    };
                 }
 
                 if (isStreaming) {
@@ -838,10 +1029,14 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
         } catch (error) {
             if (error.name === 'AbortError') {
                 return { aborted: true, response: fullResponse };
-            } else {
-                console.warn(`Error in callLLMAPI with model ${currentModel}:`, error);
-                return { error: true, message: error.message };
             }
+            return {
+                error: true,
+                message: error?.message || 'Ollama request failed.',
+                status: error?.status || null,
+                code: error?.code || null,
+                details: error
+            };
         } finally {
             if (UUID && activeChatBotSessions[UUID] === abortController) {
                 delete activeChatBotSessions[UUID];
@@ -1231,6 +1426,8 @@ async function processMessageWithOllama(data, idx=null) {
     
     if (data.type !== "stageten" && !settings.ollamaoverlayonly && data.tid && lastResponseTime[data.tid] && (currentTime - lastResponseTime[data.tid] < ollamaRateLimitPerTab)) {
       isProcessing = false;
+      const waitMs = Math.max(0, ollamaRateLimitPerTab - (currentTime - lastResponseTime[data.tid]));
+      noteChatBotDecision('rate-limited', data, { waitMs });
       return;
     }
 
@@ -1243,6 +1440,7 @@ async function processMessageWithOllama(data, idx=null) {
     // Early return conditions
     if ((data.type === "stageten" && botname === data.chatname) || !data.chatmessage || (!settings.noollamabotname && data.chatmessage.startsWith(botname + ":"))) {
       isProcessing = false;
+      noteChatBotDecision('ignored-self-message', data);
       return;
     }
 
@@ -1250,6 +1448,7 @@ async function processMessageWithOllama(data, idx=null) {
     if (settings.bottriggerwords?.textsetting.trim()) { // bottriggerwords
       if (!checkTriggerWords(settings.bottriggerwords.textsetting, data.chatmessage)) {
         isProcessing = false;
+        noteChatBotDecision('missing-trigger', data);
         return;
       }
     }
@@ -1268,6 +1467,7 @@ async function processMessageWithOllama(data, idx=null) {
 
     if (!cleanedText) {
       isProcessing = false;
+      noteChatBotDecision('empty-after-cleaning', data);
       return;
     }
 
@@ -1275,7 +1475,7 @@ async function processMessageWithOllama(data, idx=null) {
     const score = fastMessageSimilarity(cleanedText, lastSentMessage);
     if (score > 0.5) {
       isProcessing = false;
-	  console.log("RETURN", cleanedText, lastSentMessage);
+	  noteChatBotDecision('too-similar-to-last-reply', data);
       return;
     }
 
@@ -1335,6 +1535,13 @@ async function processMessageWithOllama(data, idx=null) {
 			await messageStoreDB.updateMessage(idx, data);
 		}
 	  } 
+    } else {
+	  if (response) {
+		const preview = typeof response === 'string' ? response.slice(0, 80) : '';
+		noteChatBotDecision('llm-declined', data, preview ? { snippet: preview } : {});
+	  } else {
+		noteChatBotDecision('no-response-generated', data);
+	  }
     }
 
   } catch (error) {
