@@ -2723,6 +2723,25 @@ async function processIncomingMessage(message, sender=null){
 		
 		if (reflection){
 			message.reflection = true;
+			try {
+				if (message.tid && message.chatmessage) {
+					const normalized = sanitizeMessageForTracking(message.chatmessage, false);
+					const origin = getStoredMessageOrigin(message.tid, normalized);
+					if (origin) {
+						message.reflectionOrigin = origin;
+						if (origin === 'host') {
+							message.hostReflection = true;
+						} else if (origin === 'chatbot') {
+							message.chatbotReflection = true;
+						}
+						if (settings.allowChatBot) {
+							console.log(`[ChatBot] Reflection marked as ${origin} for ${message.chatname || 'unknown'} on ${message.type || 'unknown'}.`);
+						}
+					}
+				}
+			} catch (e) {
+				errorlog(e);
+			}
 		}
 		
 		if (settings.noduplicates && // filters echos if same TYPE, USERID, and MESSAGE 
@@ -3895,6 +3914,9 @@ let cleanUpLastTabs;
 
 async function sendToDestinations(message) {
 	if (typeof message == "object") {
+		if (message.suppressRelay) {
+			return true;
+		}
 		
 		if (message.chatname) {
 			message.chatname = filterXSS(message.chatname); // I do escapeHtml at the point of capture instead
@@ -5915,12 +5937,13 @@ socketserver.addEventListener("message", async function (event) {
             data.target = "";
         }
 
-        if (data.action && data.action === "sendChat" && data.value) {
+		if (data.action && data.action === "sendChat" && data.value) {
 				var msg = {};
 				msg.response = data.value;
 				if (data.target) {
 					msg.destination = data.target;
 				}
+				msg.outgoingOrigin = 'host';
 				resp = sendMessageToTabs(msg, false, null, false, false, false);
 			} else if (data.action && data.action === "sendEncodedChat" && data.value) {
 				var msg = {};
@@ -7892,12 +7915,24 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 				  }, controller, UUID, (request.images || null)).then((fullResponse) => {
 					sendDataP2P({ chatbotResponse: {value: fullResponse, target: request.target}}, UUID);
 				  }).catch((error) => {
-					console.error('Error in callLLMAPI:', error);
-					sendDataP2P({ chatbotResponse: {value: JSON.stringify(error), target: request.target}}, UUID);
+					let payload;
+					if (typeof LLMServiceError !== 'undefined' && error instanceof LLMServiceError) {
+						payload = {
+							provider: error.provider,
+							status: error.status,
+							code: error.code,
+							message: error.message,
+							hint: error.hint || null
+						};
+					} else {
+						console.error('Error in callLLMAPI:', error);
+						payload = { message: error?.message || 'Unknown error' };
+					}
+					sendDataP2P({ chatbotResponse: { value: JSON.stringify({ error: payload }), target: request.target }}, UUID);
 				  });
 				} catch(e) {
 				  console.error('Unexpected error:', e);
-				  sendDataP2P({ chatbotResponse: {value: JSON.stringify(e), target: request.target}}, UUID);
+				  sendDataP2P({ chatbotResponse: { value: JSON.stringify({ error: { message: e?.message || 'Unexpected error' } }), target: request.target}}, UUID);
 				}
 			}
 		}
@@ -8327,7 +8362,9 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         }
     }
     const now = Date.now();
-    
+
+    const messageOrigin = data.outgoingOrigin || (data.bot ? 'chatbot' : (data.host ? 'host' : 'relay'));
+
     if (!reverse && !overrideTimeout && data.tid) { // we do this early to avoid the blue bar if not needed
         if (data.tid in messageTimeout) {
             if (now - messageTimeout[data.tid] < overrideTimeout) {
@@ -8360,7 +8397,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 
             // Handle message store
             if (msg2Save) {  
-                handleMessageStore(tab.id, msg2Save, now, relayMode);
+                handleMessageStore(tab.id, msg2Save, now, relayMode, messageOrigin);
             }
 
             published[tab.url] = true;
@@ -8400,7 +8437,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                         restxt = restxt.substring(0, 200);
                         var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
                         if (ignore) {  
-                            handleMessageStore(tab.id, ignore, now, relayMode);
+                            handleMessageStore(tab.id, ignore, now, relayMode, messageOrigin);
                         }
                     }
                     
@@ -8419,7 +8456,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     if (restxt!==data.response){
                         var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
                         if (ignore) {  
-                            handleMessageStore(tab.id, ignore, now, relayMode);
+                            handleMessageStore(tab.id, ignore, now, relayMode, messageOrigin);
                         }
                     }
                     
@@ -8576,7 +8613,7 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
 }
 
 // Helper function to handle message store
-function handleMessageStore(tabId, msg2Save, now, relayMode) {
+function handleMessageStore(tabId, msg2Save, now, relayMode, origin = 'relay') {
     try {
         if (!messageStore[tabId]) {
             messageStore[tabId] = [];
@@ -8588,11 +8625,58 @@ function handleMessageStore(tabId, msg2Save, now, relayMode) {
         messageStore[tabId].push({
             message: msg2Save,
             timestamp: now,
-            relayMode: relayMode
+            relayMode: relayMode,
+            origin: origin
         });
     } catch(e) {
         errorlog(e);
     }
+}
+function sanitizeMessageForTracking(msg, sanitized = true) {
+    try {
+        if (!msg) {
+            return '';
+        }
+        let normalized;
+        if (!sanitized) {
+            const textArea = document.createElement('textarea');
+            textArea.innerHTML = msg;
+            normalized = textArea.value;
+        } else {
+            normalized = msg.replace(/<\/?[^>]+(>|$)/g, '');
+        }
+        return normalized.replace(/\s\s+/g, ' ').trim();
+    } catch (e) {
+        errorlog(e);
+        return '';
+    }
+}
+function getStoredMessageOrigin(tabId, normalizedMessage) {
+    try {
+        if (!tabId || !normalizedMessage) {
+            return null;
+        }
+
+        const entries = messageStore[tabId];
+        if (!entries || !entries.length) {
+            return null;
+        }
+
+        const now = Date.now();
+        while (entries.length > 0 && now - entries[0].timestamp > 10000) {
+            entries.shift();
+        }
+
+        for (let i = entries.length - 1; i >= 0; i--) {
+            const entry = entries[i];
+            if (entry.message === normalizedMessage) {
+                return entry.origin || null;
+            }
+        }
+    } catch (e) {
+        errorlog(e);
+    }
+    return null;
 }
 function messageExistsInTimeWindow(tabId, messageToFind, timeWindowMs = 1000) {
     try {
@@ -9217,8 +9301,13 @@ async function applyBotActions(data, tab = false) {
 			return false;
 		}
 		
-		if (data.host && data.reflection && settings.nohostreflections){
-			return false;
+		if ((data.hostReflection || (data.host && data.reflection)) && settings.nohostreflections){
+			if (settings.chatbotRespondToReflections && settings.allowChatBot){
+				data.suppressRelay = true;
+				console.log(`[ChatBot] Responding to host reflection from ${data.chatname || 'unknown'} on ${data.type || 'unknown'}.`);
+			} else {
+				return false;
+			}
 		}
 		
 		if (settings.hostFirstSimilarOnly && data.host && hostMessageFilter.isHostDuplicate(data)) {

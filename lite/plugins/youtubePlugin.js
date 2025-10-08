@@ -10,12 +10,13 @@ const STATE_KEY = 'youtube.authState';
 
 const DEFAULT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
 const YT_SCOPES = [
-  'https://www.googleapis.com/auth/youtube.readonly',
-  'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
+  'https://www.googleapis.com/auth/youtube.readonly'
 ];
 
 export class YoutubePlugin extends BasePlugin {
   constructor(options) {
+    const { useStreaming = false, onStreamingPreferenceChange = null } = options || {};
+
     super({
       ...options,
       id: 'youtube',
@@ -37,6 +38,9 @@ export class YoutubePlugin extends BasePlugin {
     this.pollInterval = 5000;
     this.liveChatId = storage.get(CHAT_ID_KEY, '');
     this.activeBroadcast = null;
+    this.streamingToggleInput = null;
+    this.useStreaming = Boolean(useStreaming);
+    this.onStreamingPreferenceChange = typeof onStreamingPreferenceChange === 'function' ? onStreamingPreferenceChange : null;
   }
 
   renderPrimary(container) {
@@ -120,7 +124,52 @@ export class YoutubePlugin extends BasePlugin {
 
     this.chatIdInput = chatInput;
 
+    const streamingGroup = document.createElement('div');
+    streamingGroup.className = 'field field--checkbox-group';
+
+    const streamingToggle = document.createElement('label');
+    streamingToggle.className = 'checkbox';
+
+    const streamingInput = document.createElement('input');
+    streamingInput.type = 'checkbox';
+    streamingInput.addEventListener('change', () => {
+      this.setStreamingPreference(streamingInput.checked, { notify: true });
+    });
+
+    const streamingLabel = document.createElement('span');
+    streamingLabel.textContent = 'Use YouTube streaming API (beta)';
+
+    streamingToggle.append(streamingInput, streamingLabel);
+    streamingGroup.append(streamingToggle);
+    container.append(streamingGroup);
+
+    this.streamingToggleInput = streamingInput;
+    this.applyStreamingPreferenceToControl();
+
     return container;
+  }
+
+  setStreamingPreference(useStreaming, options = {}) {
+    const { notify = false } = options || {};
+    const nextValue = Boolean(useStreaming);
+
+    if (nextValue === this.useStreaming) {
+      this.applyStreamingPreferenceToControl();
+      return;
+    }
+
+    this.useStreaming = nextValue;
+    this.applyStreamingPreferenceToControl();
+
+    if (notify && typeof this.onStreamingPreferenceChange === 'function') {
+      this.onStreamingPreferenceChange(nextValue);
+    }
+  }
+
+  applyStreamingPreferenceToControl() {
+    if (this.streamingToggleInput) {
+      this.streamingToggleInput.checked = this.useStreaming;
+    }
   }
 
   refreshStatus() {
@@ -210,10 +259,7 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   disable() {
-    if (this.pollTimer) {
-      window.clearTimeout(this.pollTimer);
-      this.pollTimer = null;
-    }
+    this.stopListening();
     this.nextPageToken = null;
     this.setActiveBroadcast(null);
   }
@@ -313,7 +359,8 @@ export class YoutubePlugin extends BasePlugin {
       this.refreshStatus();
       this.log('Connected to YouTube live chat.', { liveChatId: this.liveChatId });
       await this.prepareEmotesForChannel();
-      this.pollChat();
+      this.stopListening();
+      this.startListening();
     } catch (err) {
       this.reportError(err);
     }
@@ -464,6 +511,17 @@ export class YoutubePlugin extends BasePlugin {
 
     this.setActiveBroadcast(null);
     return null;
+  }
+
+  startListening() {
+    this.pollChat();
+  }
+
+  stopListening() {
+    if (this.pollTimer) {
+      window.clearTimeout(this.pollTimer);
+      this.pollTimer = null;
+    }
   }
 
   async pollChat() {
@@ -644,13 +702,30 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   resolveEvent(snippet) {
-    if (!snippet) return null;
-    if (snippet.type === 'superChatEvent') return 'superchat';
-    if (snippet.type === 'superStickerEvent') return 'supersticker';
-    if (snippet.type === 'newSponsorEvent') return 'membership';
-    if (snippet.membershipGiftingDetails) return 'gift';
-    if (snippet.type === 'fanFundingEvent') return 'donation';
-    return snippet.type || null;
+    if (!snippet) {
+      return null;
+    }
+
+    const rawType = typeof snippet.type === 'string' ? snippet.type.trim() : '';
+    const normalized = rawType.toLowerCase();
+
+    if (!normalized || normalized === 'textmessageevent') {
+      return null;
+    }
+
+    if (normalized === 'superchatevent' || normalized === 'superstickerevent' || normalized === 'fanfundingevent') {
+      return null;
+    }
+
+    if (normalized === 'newsponsorevent') {
+      return 'membership';
+    }
+
+    if (snippet.membershipGiftingDetails) {
+      return 'gift';
+    }
+
+    return normalized;
   }
 
   formatChatPreview(chat) {
@@ -683,3 +758,9 @@ export class YoutubePlugin extends BasePlugin {
     return super.shouldAutoConnect() && this.isTokenValid();
   }
 }
+
+
+
+
+
+

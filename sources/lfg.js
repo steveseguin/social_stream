@@ -122,7 +122,7 @@
 		if (ele.skip){
 			return;
 		}
-
+		console.log("2");
 		
 		var chatimg = ""
 
@@ -132,14 +132,30 @@
 		}
 		
 		var name="";
-		try {
-			name = escapeHtml(ele.querySelector("span.font-medium.text-sm.cursor-pointer").textContent);
-		} catch(e){
-		}
-		
 		var namecolor="";
 		try {
-			namecolor = ele.querySelector("span.font-medium.text-sm.cursor-pointer").style.color;
+			const nameSelectors = [
+				"span.font-medium.text-sm.cursor-pointer",
+				"span.font-medium.text-sm",
+				"span.font-medium.text-base.cursor-pointer",
+				"p.text-sm.font-bold",
+				"span.text-white.font-bold.text-sm"
+			];
+			let nameNode = null;
+			for (let i = 0; i < nameSelectors.length; i++){
+				if (!nameNode){
+					const candidate = ele.querySelector(nameSelectors[i]);
+					if (candidate && candidate.textContent && candidate.textContent.trim().length){
+						nameNode = candidate;
+					}
+				}
+			}
+			if (nameNode && nameNode.textContent){
+				name = escapeHtml(nameNode.textContent.trim());
+				if (nameNode.style && nameNode.style.color){
+					namecolor = nameNode.style.color;
+				}
+			}
 		} catch(e){
 		}
 		
@@ -153,12 +169,74 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("div.text-gray-200.text-base[style]")).trim();
+			const messageSelectors = [
+				"div.text-gray-200.text-base[style]",
+				"div.text-gray-200.text-lg[style]",
+				"div.text-gray-200.text-md[style]",
+				"div.text-gray-200.text-sm[style]",
+				"p.text-white.text-md[style]",
+				"p.text-white.text-lg[style]",
+				"p.text-white.text-base[style]"
+			];
+			const messageNode = ele.querySelector(messageSelectors.join(", "));
+			if (messageNode){
+				msg = getAllContentNodes(messageNode).trim();
+			}
 		} catch(e){
 		}
 		
+		var hasDonation = "";
+		try {
+			const donationNode = ele.querySelector("span.text-blue-300.text-xl.font-bold, div.text-blue-300.text-xl.font-bold");
+			if (donationNode){
+				const donationText = getAllContentNodes(donationNode).trim();
+				if (donationText && /tipped/i.test(donationText)){
+					hasDonation = donationText;
+				}
+			}
+			if (!hasDonation && ele.textContent && ele.textContent.toLowerCase().includes(" tipped ")){
+				const fallback = donationNode ? getAllContentNodes(donationNode).trim() : ele.textContent.trim();
+				if (fallback){
+					hasDonation = escapeHtml(fallback);
+				}
+			}
+		} catch(e){
+		}
+		if (!hasDonation){
+			try {
+				const amountNode = ele.querySelector("span.font-bold.animate-emphasize-in, span.font-bold.animate-emphasize-in-twice");
+				if (amountNode && amountNode.textContent){
+					const donorNameNode = ele.querySelector("span.text-white.font-bold.text-sm, p.text-sm.font-bold");
+					if (donorNameNode && donorNameNode.textContent){
+						const donor = donorNameNode.textContent.trim();
+						const donorColor = (donorNameNode.style && donorNameNode.style.color) ? donorNameNode.style.color : "";
+						const amount = amountNode.textContent.trim();
+						if (!name && donor){
+							name = escapeHtml(donor);
+							if (!namecolor && donorColor){
+								namecolor = donorColor;
+							}
+						}
+						if (donor && amount){
+							hasDonation = escapeHtml(donor + " tipped " + amount);
+						}
+					}
+				}
+			} catch(e){}
+		}
+		if (!msg && hasDonation){
+			try {
+				const donationMessage = ele.querySelector("p.text-white.text-md[style], p.text-white.text-base[style]");
+				if (donationMessage){
+					msg = getAllContentNodes(donationMessage).trim();
+				}
+			} catch(e){}
+		}
+		if (!name){
+			return;
+		}
 		
-		if (!msg.trim() || !name){
+		if (!msg.trim() && !hasDonation){
 	//		console.log("no name");
 			return;
 		}
@@ -209,7 +287,7 @@
 		data.nameColor = namecolor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = hasDonation;
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
