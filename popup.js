@@ -2306,7 +2306,7 @@ function handleAIProviderVisibility(provider) {
         "geminiApiKey", "geminimodel", "xaiApiKey", "xaimodel", "chatgptmodel",
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
-        "bedrockRegion", "bedrockmodel"
+        "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey"
     ].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
@@ -2336,9 +2336,13 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "custom") {
         document.getElementById("customAIEndpoint").classList.remove("hidden");
         document.getElementById("customAIModel").classList.remove("hidden");
+        document.getElementById("customAIApiKey").classList.remove("hidden");
     } else if (provider == "openrouter") {
         document.getElementById("openrouterApiKey").classList.remove("hidden");
         document.getElementById("openroutermodel").classList.remove("hidden");
+    } else if (provider == "groq") {
+        document.getElementById("groqApiKey").classList.remove("hidden");
+        document.getElementById("groqmodel").classList.remove("hidden");
     }
 }
 
@@ -3209,14 +3213,15 @@ function handleOptionSetting(ele, sync) {
 			'chatgptApiKey', 'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
-			'openrouterApiKey', 'openroutermodel'
+			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
+			'customAIApiKey'
 		];
         
         aiProviderElements.forEach(id => {
             document.getElementById(id).classList.add("hidden");
         });
         
-        // Show elements relevant to the selected AI provider
+		// Show elements relevant to the selected AI provider
         switch (ele.value) {
             case 'ollama':
                 document.getElementById("ollamamodel").classList.remove("hidden");
@@ -3249,9 +3254,14 @@ function handleOptionSetting(ele, sync) {
 				document.getElementById("openrouterApiKey").classList.remove("hidden");
 				document.getElementById("openroutermodel").classList.remove("hidden");
 				break;
+            case 'groq':
+                document.getElementById("groqApiKey").classList.remove("hidden");
+                document.getElementById("groqmodel").classList.remove("hidden");
+                break;
             case 'custom':
                 document.getElementById("customAIEndpoint").classList.remove("hidden");
                 document.getElementById("customAIModel").classList.remove("hidden");
+                document.getElementById("customAIApiKey").classList.remove("hidden");
                 break;
         }
     }

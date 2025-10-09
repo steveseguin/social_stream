@@ -4402,6 +4402,7 @@ input:checked + .slider:before {
 										<option value="xai">xAI API (Grok)</option>
 										<option value="bedrock">AWS Bedrock API</option>
 										<option value="openrouter">OpenRouter API</option>
+										<option value="groq">Groq API</option>
 										<option value="custom">Custom API</option>
 									</select>
 								<div>
@@ -4430,10 +4431,20 @@ input:checked + .slider:before {
 										<input type="password" class="textInput" autocomplete="off" placeholder="Your DeepSeek API key" data-textsetting="deepseekApiKey" />
 										<label for="deepseekApiKey">&gt; DeepSeek API Key</label>
 									</div>
-									
+
+									<div id="groqApiKey" class="textInputContainer hidden" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Your Groq API key" data-textsetting="groqApiKey" />
+										<label for="groqApiKey">&gt; Groq API Key</label>
+									</div>
+
 									<div id="customAIEndpoint" class="hidden textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="The default is http://localhost:11434" data-textsetting="customAIEndpoint" />
 										<label for="customAIEndpoint"><span data-translate="custom-API-endpoint">&gt; Custom OpenAI-compatible endpoint</span></label>
+									</div>
+
+									<div id="customAIApiKey" class="hidden textInputContainer" style="width: 95%;">
+										<input type="password" class="textInput" autocomplete="off" placeholder="Optional API key for compatible services" data-textsetting="customAIApiKey" />
+										<label for="customAIApiKey">&gt; Optional API Key</label>
 									</div>
 								</div>
 								
@@ -4469,6 +4480,12 @@ input:checked + .slider:before {
 									<div class="textInputContainer" style="width: 95%;">
 										<input type="text" class="textInput" autocomplete="off" placeholder="eg: deepseek-chat" data-textsetting="deepseekmodel" />
 										<label for="deepseekmodel"><span data-translate="deepseekmodel">&gt; DeepSeek Model to use</span></label>
+									</div>
+								</div>
+								<div id="groqmodel" class="hidden">
+									<div class="textInputContainer" style="width: 95%;">
+										<input type="text" class="textInput" autocomplete="off" placeholder="eg: llama-3.1-8b-instant" data-textsetting="groqmodel" />
+										<label for="groqmodel">&gt; Groq Model to use</label>
 									</div>
 								</div>
 								<div id="bedrockAccessKey" class="textInputContainer hidden" style="width: 95%;">

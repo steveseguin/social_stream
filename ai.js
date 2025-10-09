@@ -451,6 +451,11 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 			apiKey = settings.openrouterApiKey?.textsetting;
 			callback = null;
 			break;
+		case "groq":
+			endpoint = "https://api.groq.com/openai/v1/chat/completions";
+			model = model || settings.groqmodel?.textsetting || "llama-3.1-8b-instant";
+			apiKey = settings.groqApiKey?.textsetting;
+			break;
 		case "custom":
 			endpoint = settings.customAIEndpoint?.textsetting || "http://localhost:11434";
 			if (!endpoint.includes("/v1") || !endpoint.includes("/completions")){ // going to assume you already ended the completions URL
@@ -733,9 +738,12 @@ async function callLLMAPI(prompt, model = null, callback = null, abortController
 		};
 
 		const headers = {
-			'Content-Type': 'application/json',
-			'Authorization': `Bearer ${apiKey}`
+			'Content-Type': 'application/json'
 		};
+
+		if (apiKey) {
+			headers['Authorization'] = `Bearer ${apiKey}`;
+		}
 
 		try {
 			if (typeof ipcRenderer !== 'undefined') {
