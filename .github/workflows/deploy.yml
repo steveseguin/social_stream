@@ -35,6 +35,15 @@ jobs:
           rsync -av --exclude='.git/' beta-content/ gh-pages-content/beta/
           echo "Removing files larger than 25MB from deployment payload"
           find gh-pages-content -type f -size +25M -print -delete || true
+          echo "Duplicating selected .html files with .html.html suffix"
+          for file in background.html popup.html; do
+            if [ -f "gh-pages-content/$file" ]; then
+              cp "gh-pages-content/$file" "gh-pages-content/${file}.html"
+            fi
+            if [ -f "gh-pages-content/beta/$file" ]; then
+              cp "gh-pages-content/beta/$file" "gh-pages-content/beta/${file}.html"
+            fi
+          done
           echo "Deployment content (recursive):"
           ls -laR gh-pages-content
 
