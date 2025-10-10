@@ -1362,6 +1362,26 @@ let isProcessing = false;
 const lastResponseTime = {};
 // lastSentMessage is already declared in background.js
 
+const hostReflectionTracker = new Map();
+const HOST_REFLECTION_TTL_MS = 20 * 1000; // mirror duplicate reflection window
+
+function pruneHostReflectionTracker(now = Date.now()) {
+    for (const [key, timestamp] of hostReflectionTracker.entries()) {
+        if (now - timestamp > HOST_REFLECTION_TTL_MS) {
+            hostReflectionTracker.delete(key);
+        }
+    }
+}
+
+function getHostReflectionKey(data, message) {
+    if (!data || !message) {
+        return null;
+    }
+    const tid = data.tid !== undefined && data.tid !== null ? String(data.tid) : 'no-tab';
+    const user = data.chatname ? data.chatname.toLowerCase() : (data.userid ? String(data.userid).toLowerCase() : 'unknown');
+    return `${tid}:${user}:${message}`;
+}
+
 async function processSummary(data){
 	//console.log(data);
 	if (!data.tid) return data;
@@ -1480,11 +1500,33 @@ async function processMessageWithOllama(data, idx=null) {
     }
 
     // Prevent self-replies
-    const score = fastMessageSimilarity(cleanedText, lastSentMessage);
-    if (score > 0.5) {
-      isProcessing = false;
-	  noteChatBotDecision('too-similar-to-last-reply', data);
-      return;
+    const allowHostReflectionResponse = Boolean(
+      data?.reflection &&
+      data?.hostReflection &&
+      settings?.chatbotRespondToReflections &&
+      !data?.chatbotReflection
+    );
+
+    let hostReflectionKey = null;
+    if (allowHostReflectionResponse) {
+      hostReflectionKey = getHostReflectionKey(data, cleanedText);
+      pruneHostReflectionTracker();
+      if (hostReflectionKey && hostReflectionTracker.has(hostReflectionKey)) {
+        isProcessing = false;
+        noteChatBotDecision('reflection-already-handled', data);
+        return;
+      }
+    }
+
+    if (!allowHostReflectionResponse) {
+      const score = fastMessageSimilarity(cleanedText, lastSentMessage);
+      if (score > 0.5) {
+        isProcessing = false;
+        noteChatBotDecision('too-similar-to-last-reply', data);
+        return;
+      }
+    } else {
+      noteChatBotDecision('reflection-similarity-override', data);
     }
 
     // Get additional instructions
@@ -1494,17 +1536,32 @@ async function processMessageWithOllama(data, idx=null) {
     }
 	//console.log(additionalInstructions, cleanedText, botname, data);
 	const response = await processUserInput(cleanedText, data, additionalInstructions, botname);
+
+	let shouldSendResponse = false;
+	if (response && typeof response === 'string') {
+	  const lowerResponse = response.toLowerCase();
+	  shouldSendResponse = (
+	    !response.includes("@@@@@") &&
+	    !lowerResponse.startsWith("not available") &&
+	    (settings.alwaysRespondLLM || (
+	      !response.includes("NO_RESPONSE") &&
+	      !response.startsWith("No ") &&
+	      !response.startsWith("NO ")
+	    ))
+	  );
+	}
 	//console.log(response);
 
-    // Handle response
-    if (response && !response.includes("@@@@@") && !response.toLowerCase().startsWith("not available") && (settings.alwaysRespondLLM || ( 
-        !response.includes("NO_RESPONSE") && 
-        !response.startsWith("No ") && 
-        !response.startsWith("NO ")))) {
-      
-      // Send to overlay if enabled
-      sendTargetP2P({
-        chatmessage: response,
+	// Handle response
+	if (shouldSendResponse) {
+	  if (allowHostReflectionResponse && hostReflectionKey) {
+		// Mark the reflection as handled only if we are about to emit a reply
+		hostReflectionTracker.set(hostReflectionKey, Date.now());
+	  }
+	  
+	  // Send to overlay if enabled
+	  sendTargetP2P({
+		chatmessage: response,
         chatname: botname,
         chatimg: "./icons/bot.png",
         type: "socialstream",
