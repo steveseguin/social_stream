@@ -967,7 +967,7 @@
 			}
 		}
 		data.chatname = displayName;
-		data.chatbadges = "";
+		data.chatbadges = [];
 		data.nameColor = "";
 		data.chatmessage = getAllContentNodes(ele,"event");
 		data.chatimg = "";
