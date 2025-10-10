@@ -887,8 +887,28 @@
 		</audio>
 		<script type="text/javascript" src="tts.js"></script>
 		<script>
+			(function (w) {
+				w.URLSearchParams =
+					w.URLSearchParams ||
+					function (searchString) {
+						var self = this;
+						self.searchString = searchString;
+						self.get = function (name) {
+							var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(self.searchString);
+							if (results == null) {
+								return null;
+							} else {
+								return decodeURI(results[1]) || 0;
+							}
+						};
+					};
+			})(window);
+			var urlParams = new URLSearchParams(window.location.search);
+			
 			function log(msg) {
-				//	console.log(msg);
+				if (urlParams.has("debug")) {
+					console.log(msg);
+				}
 			}
 
 			function warnlog(msg, url = false, lineNumber = false) {
@@ -1122,23 +1142,7 @@
 				}
 			}
 
-			(function (w) {
-				w.URLSearchParams =
-					w.URLSearchParams ||
-					function (searchString) {
-						var self = this;
-						self.searchString = searchString;
-						self.get = function (name) {
-							var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(self.searchString);
-							if (results == null) {
-								return null;
-							} else {
-								return decodeURI(results[1]) || 0;
-							}
-						};
-					};
-			})(window);
-			var urlParams = new URLSearchParams(window.location.search);
+			
 			var fallbackAvatarURL = "./sources/images/unknown.png";
 			if (urlParams.has("fallbackimg")) {
 				var fallbackParam = urlParams.get("fallbackimg");
@@ -2279,6 +2283,9 @@
 			var lastMessageId = null
 
 			function processData(data) {
+			
+				log(data);
+				
 				if (pseudodock) {
 					if (data && !data.contents) {
 						var tmp = {};
@@ -2393,7 +2400,7 @@
 					sendToDisk(data.contents);
 					return true;
 				} else if (data.action){
-					console.log(data);
+					log(data);
 					if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {
@@ -2418,7 +2425,7 @@
 						} else {
 							TTS.speech = !TTS.speech;
 						}
-						console.log("TTS: "+TTS.speech);
+						log("TTS: "+TTS.speech);
 						return TTS.speech
 					}
 				}
