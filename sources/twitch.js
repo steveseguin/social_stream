@@ -957,7 +957,16 @@
 		ele.dataset.ignore = true;
 		
 		var data = {};
-		data.chatname = "";
+		var displayName = "";
+		var displayNameEle = ele.querySelector(SELECTORS.displayName); 
+		if (displayNameEle){
+			displayName = displayNameEle.innerText;
+			if (displayName){
+				displayName = escapeHtml(displayName);
+				displayName = hideContentInParentheses(displayName).trim();
+			}
+		}
+		data.chatname = displayName;
 		data.chatbadges = "";
 		data.nameColor = "";
 		data.chatmessage = getAllContentNodes(ele,"event");
