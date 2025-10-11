@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poll - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+        <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;600&family=Press+Start+2P&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: transparent;
+        }
+
+        .poll-container {
+            width: 90%;
+            max-width: 600px;
+            padding: 20px;
+            border-radius: 10px;
+        }
+
+        .poll-title {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .poll-option {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+		
+		.poll-instruction {
+			text-align: center;
+		}
+
+        .option-number {
+            margin-right: 10px;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .option-text {
+            flex-grow: 1;
+            z-index: 2;
+        }
+
+        .option-percentage {
+            margin-left: 10px;
+            z-index: 2;
+        }
+		
+		.option-tally { 
+			z-index: 2;
+			margin-left: 10px;
+		}
+
+        .poll-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            transition: width 0.5s ease-in-out;
+            z-index: 1;
+        }
+
+        /* Default Style */
+        .style-default {
+            font-family: 'Montserrat', sans-serif;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        .style-default .poll-title {
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .style-default .poll-option {
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .style-default .poll-bar {
+            background-color: rgba(76, 175, 80, 0.3);
+        }
+
+        /* Neon Style */
+        .style-neon {
+            font-family: 'Oswald', sans-serif;
+            color: #fff;
+            background-color: rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #ff00de, 0 0 35px #ff00de, 0 0 40px #ff00de, 0 0 50px #ff00de, 0 0 75px #ff00de;
+        }
+
+        .style-neon .poll-title {
+            font-size: 36px;
+            color: #0ff;
+        }
+
+        .style-neon .poll-option {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid #0ff;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        .style-neon .poll-bar {
+            background-color: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 30px #0ff, 0 0 40px #0ff;
+        }
+
+        .style-neon .option-number {
+            color: #0ff;
+        }
+
+        /* Minimalist Style */
+        .style-minimalist {
+            font-family: 'Poppins', sans-serif;
+            color: #333;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .style-minimalist .poll-title {
+            font-size: 28px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .style-minimalist .poll-option {
+            background-color: #f5f5f5;
+            border-left: 4px solid #3498db;
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+
+        .style-minimalist .poll-bar {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+
+        .style-minimalist .option-number {
+            color: #3498db;
+        }
+
+        /* Retro Gaming Style */
+        .style-retro-gaming {
+            font-family: 'Press Start 2P', cursive;
+            color: #33ff00;
+            background-color: rgba(0, 0, 0, 0.9);
+            text-shadow: 2px 2px #000;
+        }
+
+        .style-retro-gaming .poll-title {
+            font-size: 24px;
+            color: #ff6600;
+            margin-bottom: 30px;
+        }
+
+        .style-retro-gaming .poll-option {
+            background-color: #000;
+            border: 2px solid #33ff00;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .style-retro-gaming .poll-bar {
+            background-color: rgba(51, 255, 0, 0.3);
+            box-shadow: 0 0 5px #33ff00;
+        }
+
+        .style-retro-gaming .option-number {
+            color: #ff6600;
+        }
+
+        .style-retro-gaming .option-percentage {
+            color: #ff6600;
+        }
+
+        /* Elegant Style */
+        .style-elegant {
+            font-family: 'Playfair Display', serif;
+            color: #2c3e50;
+            background-color: rgba(245, 245, 245, 0.9);
+        }
+
+        .style-elegant .poll-title {
+            font-size: 32px;
+            color: #34495e;
+            font-weight: 700;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 10px;
+        }
+
+        .style-elegant .poll-option {
+            background-color: #fff;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .style-elegant .poll-bar {
+            background-color: rgba(52, 73, 94, 0.2);
+        }
+
+        .style-elegant .option-number {
+            color: #16a085;
+            font-weight: 700;
+        }
+
+        /* Futuristic Style */
+        .style-futuristic {
+            font-family: 'Roboto', sans-serif;
+            color: #ecf0f1;
+            background-color: rgba(44, 62, 80, 0.9);
+        }
+
+        .style-futuristic .poll-title {
+            font-size: 28px;
+            color: #3498db;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .style-futuristic .poll-option {
+            background-color: rgba(52, 152, 219, 0.1);
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .style-futuristic .poll-option:hover {
+            background-color: rgba(52, 152, 219, 0.2);
+        }
+
+        .style-futuristic .poll-bar {
+            background-color: rgba(52, 152, 219, 0.5);
+            box-shadow: 0 0 10px rgba(52, 152, 219, 0.7);
+        }
+
+        .style-futuristic .option-number {
+            color: #e74c3c;
+            font-weight: 700;
+        }
+
+        /* Vintage Style */
+        .style-vintage {
+            font-family: 'Merriweather', serif;
+            color: #3c3c3c;
+            background-color: rgba(255, 253, 231, 0.9);
+        }
+
+        .style-vintage .poll-title {
+            font-size: 30px;
+            color: #8b4513;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 1px 1px 2px rgba(139, 69, 19, 0.3);
+        }
+
+        .style-vintage .poll-option {
+            background-color: rgba(255, 248, 220, 0.7);
+            border: 2px solid #d2b48c;
+            border-radius: 0;
+            padding: 12px;
+            margin-bottom: 10px;
+            box-shadow: 3px 3px 0 #d2b48c;
+        }
+
+        .style-vintage .poll-bar {
+            background-color: rgba(210, 180, 140, 0.4);
+        }
+
+        .style-vintage .option-number {
+            color: #8b4513;
+            font-weight: 700;
+        }
+
+        /* Cyberpunk Style */
+        .style-cyberpunk {
+            font-family: 'Courier Prime', monospace;
+            color: #0f0;
+            background-color: rgba(0, 0, 0, 0.8);
+            text-shadow: 0 0 5px #0f0;
+        }
+
+        .style-cyberpunk .poll-title {
+            font-size: 28px;
+            color: #f0f;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #f0f;
+            padding-bottom: 10px;
+        }
+
+        .style-cyberpunk .poll-option {
+            background-color: rgba(0, 255, 0, 0.1);
+            border: 1px solid #0f0;
+            padding: 15px;
+            margin-bottom: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .style-cyberpunk .poll-option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 49%, #0f0 49%, #0f0 51%, transparent 51%);
+            background-size: 6px 6px;
+            opacity: 0.1;
+        }
+
+        .style-cyberpunk .poll-bar {
+            background-color: rgba(0, 255, 0, 0.3);
+            box-shadow: 0 0 10px #0f0;
+        }
+
+        .style-cyberpunk .option-number {
+            color: #ff0;
+            font-weight: 700;
+        }
+
+        .style-cyberpunk .option-percentage {
+            color: #f0f;
+        }
+		
+		.style-cyberpunk .option-tally {
+            color: #f0f;
+        }
+		
+		.hidden {
+            display: none;
+        }
+		
+		.poll-container {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .poll-container.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="poll-container" class="poll-container style-default hidden">
+        <h2 id="poll-title" class="poll-title">Loading poll...</h2>
+        <div id="poll-options"></div>
+    </div>
+    <script>
+// Replace the existing script with this optimized version
+
+const urlParams = new URLSearchParams(window.location.search);
+const settings = {
+    pollType: urlParams.get('pollType') || 'freeform',
+    pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
+    pollOptions: urlParams.get('pollOptions') ? urlParams.get('pollOptions').split(',').map(opt => opt.trim()) : [],
+    pollTimer: urlParams.get('pollTimer') || 60,
+    pollEnabled: urlParams.get('pollEnabled') || false,
+    styleType: urlParams.get('style') || 'default',
+    pollSpam: urlParams.has('pollSpam') || false,
+    pollClosed: false,
+    pollTally: urlParams.has('pollTally') || false, 
+};
+
+let results = {};
+let totalVotes = 0;
+let alreadyVoted = {};
+let updatePending = false;
+let lastUpdateTime = 0;
+const UPDATE_THROTTLE = 200; // Only update UI every 200ms
+
+// Cached DOM elements
+let pollContainer;
+let pollTitle;
+let pollOptionsContainer;
+
+function initializePoll() {
+    pollContainer = document.getElementById('poll-container');
+    pollTitle = document.getElementById('poll-title');
+    pollOptionsContainer = document.getElementById('poll-options');
+    
+    pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
+    pollTitle.innerText = settings.pollQuestion;
+    updatePollOptions();
+}
+
+function updatePollOptions() {
+    pollOptionsContainer.innerHTML = '';
+
+    if (settings.pollType === 'yesno') {
+        settings.pollOptions = ['Yes', 'No'];
+    }
+    
+    if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+        const fragment = document.createDocumentFragment();
+        
+        settings.pollOptions.forEach((option, index) => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'poll-option';
+            
+            const numberSpan = document.createElement('span');
+            numberSpan.className = 'option-number';
+            numberSpan.textContent = index + 1;
+            
+            const textSpan = document.createElement('span');
+            textSpan.className = 'option-text';
+            textSpan.textContent = option;
+            
+            const percentageSpan = document.createElement('span');
+            percentageSpan.className = 'option-percentage';
+            percentageSpan.textContent = '0%';
+            
+            const barDiv = document.createElement('div');
+            barDiv.className = 'poll-bar';
+            barDiv.style.width = '0%';
+            
+            optionElement.appendChild(numberSpan);
+            optionElement.appendChild(textSpan);
+            optionElement.appendChild(percentageSpan);
+            optionElement.appendChild(barDiv);
+            
+            fragment.appendChild(optionElement);
+        });
+        
+        pollOptionsContainer.appendChild(fragment);
+    } else if (settings.pollType === 'freeform') {
+        const instructionElement = document.createElement('div');
+        instructionElement.className = 'poll-instruction';
+        instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
+        pollOptionsContainer.appendChild(instructionElement);
+    }
+}
+
+function scheduleUpdate() {
+    if (updatePending) return;
+    
+    const now = Date.now();
+    const timeSinceLastUpdate = now - lastUpdateTime;
+    
+    if (timeSinceLastUpdate >= UPDATE_THROTTLE) {
+        updatePollResults();
+        lastUpdateTime = now;
+    } else {
+        updatePending = true;
+        setTimeout(() => {
+            updatePending = false;
+            updatePollResults();
+            lastUpdateTime = Date.now();
+        }, UPDATE_THROTTLE - timeSinceLastUpdate);
+    }
+}
+
+function updatePollResults() {
+    pollOptionsContainer.innerHTML = '';
+    const fragment = document.createDocumentFragment();
+
+    if (settings.pollType === 'freeform' && !settings.pollClosed) {
+        const instructionElement = document.createElement('div');
+        instructionElement.className = 'poll-instruction';
+        instructionElement.textContent = 'Enter a hashtagged #word into chat to vote for it!';
+        fragment.appendChild(instructionElement);
+    }
+
+    let displayOptions = [];
+
+    if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+        displayOptions = settings.pollOptions.map(option => [option, results[option] || 0]);
+    } else if (settings.pollType === 'freeform') {
+        displayOptions = Object.entries(results).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    }
+
+    const maxVotes = Math.max(...displayOptions.map(([_, votes]) => votes), 0);
+
+    displayOptions.forEach(([option, votes], index) => {
+        const percentage = totalVotes > 0 ? (votes / totalVotes * 100).toFixed(1) : 0;
+
+        const optionElement = document.createElement('div');
+        optionElement.className = 'poll-option';
+        
+        if (votes === maxVotes && maxVotes > 0 && settings.pollClosed) {
+            optionElement.style.fontWeight = 'bold';
+            optionElement.style.fontSize = '1.1em';
+        }
+
+        let html = '';
+        if (!settings.pollClosed) {
+            html += `<span class="option-number">${index + 1}</span>`;
+        }
+        
+        html += `<span class="option-text">${option}</span>`;
+        
+		if (settings.pollTally) {
+			html += `<span class="option-tally">${votes} votes</span>`;
+		} else {
+			html += `<span class="option-percentage">${percentage}%</span>`;
+		}
+        
+        html += `<div class="poll-bar" style="width: ${percentage}%;"></div>`;
+        
+        optionElement.innerHTML = html;
+
+        if (parseFloat(percentage) > 90) {
+            optionElement.style.color = '#fff';
+            optionElement.style.textShadow = '1px 1px 2px rgba(0,0,0,0.7)';
+        }
+
+        fragment.appendChild(optionElement);
+    });
+
+    pollOptionsContainer.appendChild(fragment);
+}
+
+// Create lookup tables for faster matching
+const yesMatches = new Set(['yes', 'y', 'yea', 'yeah', 'yep', 'yup', '1']);
+const noMatches = new Set(['no', 'n', 'nah', 'nope', '0', '2']);
+
+// Optimize with a debounced message queue
+const messageQueue = [];
+let processingQueue = false;
+
+function queueVote(vote, name, source) {
+    messageQueue.push({vote, name, source});
+    if (!processingQueue) {
+        processingQueue = true;
+        setTimeout(processVoteQueue, 50); // Process votes in batches every 50ms
+    }
+}
+
+function processVoteQueue() {
+    const startTime = Date.now();
+    const timeLimit = 20; // Process for max 20ms to avoid UI freezing
+    
+    while (messageQueue.length > 0 && (Date.now() - startTime < timeLimit)) {
+        const {vote, name, source} = messageQueue.shift();
+        processVoteSingle(vote, name, source);
+    }
+    
+    if (messageQueue.length > 0) {
+        // If there are still items, schedule another processing cycle
+        setTimeout(processVoteQueue, 0);
+    } else {
+        processingQueue = false;
+        scheduleUpdate(); // Update UI after processing batch
+    }
+}
+
+function processVoteSingle(vote, name, source) {
+    if (settings.pollClosed) return;
+    
+    const voterKey = name+":"+source;
+    if (!settings.pollSpam && alreadyVoted[voterKey]) return;
+    
+    // Clean the vote: lowercase and remove common punctuation
+    vote = vote.trim().toLowerCase().replace(/[!.,?]+$/, '');
+    
+    if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
+        // Handle numeric votes first
+        const numericVote = parseInt(vote);
+        if (!isNaN(numericVote)) {
+            // For yes/no, 1 = Yes, 2 = No
+            if (settings.pollType === 'yesno') {
+                if (numericVote === 1) {
+                    results['Yes'] = (results['Yes'] || 0) + 1;
+                    totalVotes++;
+                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    return;
+                } else if (numericVote === 2 || numericVote === 0) {
+                    results['No'] = (results['No'] || 0) + 1;
+                    totalVotes++;
+                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    return;
+                }
+            } else {
+                // Regular multiple choice handling
+                const option = settings.pollOptions[numericVote - 1];
+                if (option) {
+                    results[option] = (results[option] || 0) + 1;
+                    totalVotes++;
+                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    return;
+                }
+            }
+        }
+
+        // Special handling for yes/no polls
+        if (settings.pollType === 'yesno') {
+            if (yesMatches.has(vote)) {
+                results['Yes'] = (results['Yes'] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
+            }
+            if (noMatches.has(vote)) {
+                results['No'] = (results['No'] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
+            }
+        }
+
+        // For multiple choice, cached option lookup
+        let cleanVote = vote;
+        
+        // Remove hashtag if it exists
+        if (cleanVote.startsWith('#')) {
+            cleanVote = cleanVote.substring(1);
+        }
+        
+        for (let i = 0; i < settings.pollOptions.length; i++) {
+            const option = settings.pollOptions[i];
+            const normalizedOption = option.toLowerCase();
+            
+            if (cleanVote === normalizedOption || 
+                normalizedOption === cleanVote + 's' || 
+                cleanVote === normalizedOption + 's') {
+                
+                results[option] = (results[option] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
+            }
+        }
+    } else if (settings.pollType === 'freeform') {
+        // Freeform handling - optimize hashtag matching
+        if (vote.startsWith('#') && vote.length > 1) {
+            const hashtag = vote.substring(1).toUpperCase();
+            if (hashtag.match(/^\w+$/)) {
+                results[hashtag] = (results[hashtag] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                return;
+            }
+        } else {
+            const numericVote = parseInt(vote, 10);
+            const resultsKeys = Object.keys(results);
+            if (!isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
+                const selectedOption = resultsKeys[numericVote - 1];
+                results[selectedOption] = (results[selectedOption] || 0) + 1;
+                totalVotes++;
+                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+            }
+        }
+    }
+}
+function updatePollVisibility() {
+    if (settings.pollEnabled) {
+        pollContainer.classList.remove('hidden');
+    } else {
+        pollContainer.classList.add('hidden');
+    }
+}
+function processData(data) {
+    if (data.setting && !data.settings) {
+        if (data.type === "setting") {
+            data.settings = {
+                [data.setting]: {
+                    setting: data.value
+                }
+            };
+        } else {
+            data.settings = {
+                [data.setting]: {
+                    [data.type]: data.value !== undefined ? data.value : false
+                }
+            };
+        }
+    } 
+	
+    if (data.settings) {
+        let settingsChanged = false;
+        let justUIChange = false;
+        
+        if (data.settings.pollEnabled) {
+            settings.pollEnabled = data.settings.pollEnabled.setting;
+            settingsChanged = true;
+        }
+        if (data.settings.pollType) {
+            settings.pollType = data.settings.pollType.optionsetting || 'multiple';
+            settingsChanged = true;
+        }
+        if (data.settings.pollQuestion) {
+            settings.pollQuestion = data.settings.pollQuestion.textsetting || 'Loading poll...';
+            settingsChanged = true;
+        }
+        if (data.settings.pollTally) {
+            settings.pollTally = data.settings.pollTally.setting;
+            justUIChange = true;
+        }
+        if (data.settings.pollStyle) {
+            settings.styleType = data.settings.pollStyle.optionsetting || 'default';
+            let pollContainer = document.getElementById('poll-container');
+			pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
+        }
+        if (data.settings.pollSpam) {
+            settings.pollSpam = data.settings.pollSpam.setting;
+            justUIChange = true;
+        }
+        if (data.settings.multipleChoiceOptions) {
+            settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
+                .split(',')
+                .map(option => option.trim());
+            settingsChanged = true;
+        }
+        if (data.settings.pollTimer) {
+            settings.pollTimer = data.settings.pollTimer.numbersetting || 60;
+            settingsChanged = true;
+        }
+        settings.pollTimerState = data.settings.pollTimerState ? true : false;
+        
+        if (settingsChanged) {
+            results = {};
+            totalVotes = 0;
+            alreadyVoted = {};
+            settings.pollClosed = false;
+            initializePoll();
+            updatePollVisibility();
+        }
+		if (justUIChange) {
+            updatePollResults();
+        }
+    } else if (data.chatmessage) {
+        queueVote(data.chatmessage, data.chatname, data.type);
+    } else if (data.cmd) {
+        if (data.cmd === "closepoll") {
+            closePoll();
+        } else if (data.cmd === "resetpoll") {
+            resetPoll();
+        } else if (data.cmd === "startpoll") {
+            startPoll();
+        }
+    }
+}
+
+function closePoll() {
+    settings.pollClosed = true;
+    pollTitle.innerText = settings.pollQuestion + " (Closed)";
+    updatePollResults();
+}
+
+function startPoll() {
+    settings.pollEnabled = true;
+    settings.pollClosed = false;
+    alreadyVoted = {};
+    totalVotes = 0;
+    results = {};
+    initializePoll();
+    updatePollVisibility();
+}
+
+function resetPoll() {
+    settings.pollClosed = false;
+    results = {};
+    totalVotes = 0;
+    alreadyVoted = {};
+    initializePoll();
+}
+
+function processInput(data) {
+    if (!data) return false;
+	
+	console.log(data);
+	
+    if ("action" in data) {
+        if (data.action === "closepoll") {
+            closePoll();
+        } else if (data.action === "resetpoll") {
+            resetPoll();
+        } else if (data.action === "startpoll") {
+            startPoll();
+        }
+        return true;
+    } else if (data.chatmessage) {
+        queueVote(data.chatmessage, data.chatname, data.type);
+        return true;
+    } else if (data.settings) {
+        // Process settings updates
+        processData(data);
+        return true;
+    } else if (data.cmd) {
+        // Process commands
+        processData(data);
+        return true;
+    }
+    return false;
+}
+
+// Memory optimization - create connection manager
+const ConnectionManager = {
+    setupMainSocket() {
+        if (urlParams.has("server")) {
+            this.setupSocket(
+                urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api"),
+                urlParams.get('session').split(",")[0],
+                2, 1,
+                (data) => processInput(data)
+            );
+        }
+    },
+    
+    setupExtensionSocket() {
+        if (urlParams.has("server2") || urlParams.has("server3")) {
+            const serverURL = urlParams.has("server2") ? 
+                (urlParams.get("server2") || "wss://io.socialstream.ninja/extension") : 
+                (urlParams.get("server3") || "wss://io.socialstream.ninja/extension");
+            
+            this.setupSocket(
+                serverURL,
+                urlParams.get('session').split(",")[0],
+                3, 4,
+                (data) => {
+                    if ((urlParams.has("server2") || urlParams.has("server3"))) {
+                        processInput(data);
+                    }
+                }
+            );
+        }
+    },
+    
+    setupSocket(serverURL, session, outChannel, inChannel, messageHandler) {
+        let socket = null;
+        let connectionAttempts = 1;
+        let reconnectionTimeout = null;
+        
+        function connect() {
+            if (reconnectionTimeout) {
+                clearTimeout(reconnectionTimeout);
+                reconnectionTimeout = null;
+            }
+            
+            if (socket) {
+                socket.onclose = null;
+                socket.close();
+            }
+            
+            socket = new WebSocket(serverURL);
+            
+            socket.onclose = function() {
+                reconnectionTimeout = setTimeout(() => {
+                    connectionAttempts += 1;
+                    connect();
+                }, 100 * connectionAttempts);
+            };
+            
+            socket.onopen = function() {
+                connectionAttempts = 1;
+                socket.send(JSON.stringify({ join: session, out: outChannel, in: inChannel }));
+            };
+            
+            socket.onerror = function(error) {
+                socket.close();
+            };
+            
+            socket.addEventListener("message", function(event) {
+                if (!event.data) return;
+                
+                try {
+                    const data = JSON.parse(event.data);
+                    const resp = messageHandler(data);
+                    
+                    if (resp !== null && data.get) {
+                        const ret = { 
+                            callback: {
+                                get: data.get,
+                                result: resp
+                            }
+                        };
+                        socket.send(JSON.stringify(ret));
+                    }
+                } catch (e) {
+                    // Silently ignore parsing errors
+                }
+            });
+        }
+        
+        connect();
+    }
+};
+
+// Initialize iframe for communication
+const iframe = document.createElement("iframe");
+iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password=${urlParams.get('password') || "false"}&solo&view=${urlParams.get('session')}&novideo&noaudio&label=poll&cleanoutput&room=${urlParams.get('session')}`;
+iframe.style.cssText = "width:0;height:0;border:0;border:none;position:absolute;";
+document.body.appendChild(iframe);
+
+window.addEventListener("message", (event) => {
+    if (event.source !== iframe.contentWindow) return;
+    if (event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+        processData(event.data.dataReceived.overlayNinja);
+    }
+});
+
+// Setup socket connections
+ConnectionManager.setupMainSocket();
+ConnectionManager.setupExtensionSocket();
+
+// Initialize the poll on page load
+document.addEventListener('DOMContentLoaded', initializePoll);
+    </script>
+</body>
+</html>
