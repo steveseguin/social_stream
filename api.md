@@ -86,6 +86,8 @@ There is an easy to use sandbox to play with some of the common API commands and
 
 The WebSocket API allows real-time, bidirectional communication between your application and the Social Stream Ninja server.
 
+If you prefer to keep traffic peer-to-peer without enabling the WebSocket relay, you can instead integrate the Social Stream Ninja WebRTC SDK. It offers a Node- and browser-friendly interface that plugs into the same transport layer used by the extension. A Social Stream Ninja listener example is available at [ninjasdk/demos/socialstreamninja-listener.js](https://github.com/steveseguin/ninjasdk/blob/main/demos/socialstreamninja-listener.js).
+
 ### Connecting to the API Server
 
 Connect to the WebSocket server at `wss://io.socialstream.ninja`.

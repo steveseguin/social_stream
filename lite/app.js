@@ -4,7 +4,7 @@ import { randomSessionId, formatTime, safeHtml } from './utils/helpers.js';
 import { EmoteManager } from './utils/emoteManager.js';
 import { YoutubePlugin } from './plugins/youtubePlugin.js';
 
-import { YoutubeStreamingPlugin } from './plugins/youtubeStreamingPlugin.
+import { YoutubeStreamingPlugin } from './plugins/youtubeStreamingPlugin.js';
 import { TwitchPlugin } from './plugins/twitchPlugin.js';
 import { TikTokPlugin } from './plugins/tiktokPlugin.js';
 import { KickPlugin } from './plugins/kickPlugin.js';

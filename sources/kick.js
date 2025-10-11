@@ -138,11 +138,45 @@
 	var processedMessages = new Set();
 	var maxTrackedMessages = 3;
 	var pastMessages = [];
-	
+
 	// Persistent cache configuration
 	const CACHE_KEY = 'kick_user_profiles_cache';
 	const CACHE_EXPIRY_DAYS = 7;
 	const CACHE_EXPIRY_MS = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+
+	function normalizeCacheEntry(entry) {
+		if (!entry) {
+			return null;
+		}
+		if (typeof entry === 'string') {
+			return {
+				profilePic: entry,
+				timestamp: 0,
+				pending: false
+			};
+		}
+		if (typeof entry === 'object') {
+			return {
+				profilePic: typeof entry.profilePic === 'string' ? entry.profilePic : '',
+				timestamp: typeof entry.timestamp === 'number' ? entry.timestamp : 0,
+				pending: Boolean(entry.pending)
+			};
+		}
+		return null;
+	}
+
+	function isCacheEntryFresh(entry) {
+		if (!entry) {
+			return false;
+		}
+		if (!entry.profilePic) {
+			return false;
+		}
+		if (!entry.timestamp) {
+			return false;
+		}
+		return (Date.now() - entry.timestamp) < CACHE_EXPIRY_MS;
+	}
 	
 	// Load cached profiles from localStorage on startup
 	function loadCachedProfiles() {
@@ -154,8 +188,16 @@
 				
 				// Filter out expired entries and convert back to Map
 				Object.entries(data).forEach(([username, entry]) => {
-					if (entry.timestamp && (now - entry.timestamp) < CACHE_EXPIRY_MS) {
-						cachedUserProfiles.set(username, entry.profilePic);
+					const cachedEntry = normalizeCacheEntry(entry);
+					if (!cachedEntry || !cachedEntry.profilePic) {
+						return;
+					}
+					if (cachedEntry.timestamp && (now - cachedEntry.timestamp) < CACHE_EXPIRY_MS) {
+						cachedUserProfiles.set(username, {
+							profilePic: cachedEntry.profilePic,
+							timestamp: cachedEntry.timestamp,
+							pending: false
+						});
 					}
 				});
 				
@@ -173,10 +215,15 @@
 			const now = Date.now();
 			
 			// Convert Map to object with timestamps
-			cachedUserProfiles.forEach((profilePic, username) => {
+			cachedUserProfiles.forEach((value, username) => {
+				const cachedEntry = normalizeCacheEntry(value);
+				if (!cachedEntry || !cachedEntry.profilePic || cachedEntry.pending) {
+					return;
+				}
+				const entryTimestamp = cachedEntry.timestamp && cachedEntry.timestamp > 0 ? cachedEntry.timestamp : now;
 				data[username] = {
-					profilePic: profilePic,
-					timestamp: now
+					profilePic: cachedEntry.profilePic,
+					timestamp: entryTimestamp
 				};
 			});
 			
@@ -237,11 +284,19 @@
 				
 				// Remove expired entries
 				Object.entries(data).forEach(([username, entry]) => {
-					if (!entry.timestamp || (now - entry.timestamp) >= CACHE_EXPIRY_MS) {
+					const cachedEntry = normalizeCacheEntry(entry);
+					const isExpired = !cachedEntry || !cachedEntry.timestamp || (now - cachedEntry.timestamp) >= CACHE_EXPIRY_MS;
+					const isEmpty = !cachedEntry || !cachedEntry.profilePic;
+					if (isExpired || isEmpty) {
 						delete data[username];
 						hasExpired = true;
 						// Also remove from memory cache if present
 						cachedUserProfiles.delete(username);
+					} else {
+						data[username] = {
+							profilePic: cachedEntry.profilePic,
+							timestamp: cachedEntry.timestamp
+						};
 					}
 				});
 				
@@ -445,14 +500,27 @@
 	}
 	
 	async function getKickAvatarImage(username, channelname){
-		
 		// Check if username exists in cache
 		if (cachedUserProfiles.has(username)){
-			// Move to end (most recently used)
-			const value = cachedUserProfiles.get(username);
-			cachedUserProfiles.delete(username);
-			cachedUserProfiles.set(username, value);
-			return value;
+			const cachedEntry = normalizeCacheEntry(cachedUserProfiles.get(username));
+			if (cachedEntry){
+				if (cachedEntry.pending){
+					return cachedEntry.profilePic || "";
+				}
+				if (isCacheEntryFresh(cachedEntry)){
+					// Move to end (most recently used) without mutating timestamp
+					cachedUserProfiles.delete(username);
+					cachedUserProfiles.set(username, {
+						profilePic: cachedEntry.profilePic,
+						timestamp: cachedEntry.timestamp,
+						pending: false
+					});
+					return cachedEntry.profilePic;
+				}
+				// Entry is stale; remove before refetching
+				cachedUserProfiles.delete(username);
+				debouncedSaveCachedProfiles();
+			}
 		}
 		
 		// Evict oldest entry if cache is full
@@ -463,18 +531,36 @@
 		}
 		
 		// Add placeholder immediately to prevent duplicate requests
-		cachedUserProfiles.set(username, "");
+		cachedUserProfiles.set(username, {
+			profilePic: "",
+			timestamp: 0,
+			pending: true
+		});
 		
 		return await fetchWithTimeout("https://kick.com/channels/"+encodeURIComponent(channelname)+"/"+encodeURIComponent(username)).then(async response => {
+			if (!response || !response.ok) {
+				cachedUserProfiles.delete(username);
+				debouncedSaveCachedProfiles();
+				return "";
+			}
 			return await response.json().then(function (data) {
 				if (data && data.profilepic){
 					// Update cache with actual profile pic
-					cachedUserProfiles.set(username, data.profilepic);
+					cachedUserProfiles.set(username, {
+						profilePic: data.profilepic,
+						timestamp: Date.now(),
+						pending: false
+					});
 					debouncedSaveCachedProfiles(); // Save after adding new profile
 					return data.profilepic;
 				}
+				// No profile pic returned; clear placeholder to allow future retries
+				cachedUserProfiles.delete(username);
+				debouncedSaveCachedProfiles();
 			});
 		}).catch(error => {
+			cachedUserProfiles.delete(username);
+			debouncedSaveCachedProfiles();
 			//console.log("Couldn't get avatar image URL. API service down?");
 		});
 	}
