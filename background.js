@@ -1283,6 +1283,168 @@ async function loadmidi() {
 	chrome.runtime.lastError;
 }
 
+async function bringBackgroundPageToFrontForPicker() {
+    if (isSSAPP) {
+        return null;
+    }
+
+    if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.getURL !== "function") {
+        return null;
+    }
+
+    if (!chrome.tabs || typeof chrome.tabs.query !== "function") {
+        return null;
+    }
+
+    if (document.visibilityState === "visible") {
+        return null;
+    }
+
+    try {
+        const backgroundUrl = chrome.runtime.getURL("background.html");
+
+        const backgroundTabs = await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.query({ url: backgroundUrl }, function (tabs) {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve(tabs || []);
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        if (!backgroundTabs.length) {
+            return null;
+        }
+
+        const backgroundTab = backgroundTabs[0];
+
+        const [currentActive] = await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve(tabs || []);
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        const restoreTarget = currentActive && currentActive.id !== backgroundTab.id
+            ? { tabId: currentActive.id, windowId: currentActive.windowId }
+            : null;
+
+        await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.update(backgroundTab.id, { active: true }, function () {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve();
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        if (backgroundTab.windowId !== undefined && chrome.windows && typeof chrome.windows.update === "function") {
+            await new Promise((resolve, reject) => {
+                try {
+                    chrome.windows.update(backgroundTab.windowId, { focused: true }, function () {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve();
+                        }
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+
+        if (document.visibilityState !== "visible") {
+            await new Promise((resolve) => {
+                let settled = false;
+
+                function cleanup() {
+                    if (!settled) {
+                        settled = true;
+                        document.removeEventListener("visibilitychange", handleVisibility);
+                        resolve();
+                    }
+                }
+
+                function handleVisibility() {
+                    if (document.visibilityState === "visible") {
+                        cleanup();
+                    }
+                }
+
+                document.addEventListener("visibilitychange", handleVisibility);
+                setTimeout(cleanup, 200);
+            });
+        }
+
+        return restoreTarget;
+    } catch (error) {
+        console.warn("Unable to focus background page for file picker", error);
+        return null;
+    }
+}
+
+async function restorePreviousTabAfterPicker(target) {
+    if (!target || !target.tabId || isSSAPP) {
+        return;
+    }
+
+    if (!chrome || !chrome.tabs || typeof chrome.tabs.update !== "function") {
+        return;
+    }
+
+    try {
+        await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.update(target.tabId, { active: true }, function () {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve();
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        if (target.windowId !== undefined && chrome.windows && typeof chrome.windows.update === "function") {
+            await new Promise((resolve, reject) => {
+                try {
+                    chrome.windows.update(target.windowId, { focused: true }, function () {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve();
+                        }
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+    } catch (error) {
+        console.warn("Unable to restore previous tab after file picker", error);
+    }
+}
+
 var newFileHandle = false;
 async function overwriteFile(data = false) {
     if (data == "setup") {
@@ -1297,7 +1459,13 @@ async function overwriteFile(data = false) {
         if (!window.showSaveFilePicker) {
             console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
         }
-        newFileHandle = await window.showSaveFilePicker(opts);
+        const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+        try {
+            newFileHandle = await window.showSaveFilePicker(opts);
+        } finally {
+            await restorePreviousTabAfterPicker(restoreTarget);
+        }
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newFileHandle === "string") {
@@ -1330,7 +1498,13 @@ async function overwriteSavedNames(data = false) {
         if (!window.showSaveFilePicker) {
             console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
         }
-        newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+        const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+        try {
+            newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+        } finally {
+            await restorePreviousTabAfterPicker(restoreTarget);
+        }
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newSavedNamesFileHandle === "string") {
@@ -1394,7 +1568,13 @@ async function overwriteFileExcel(data = false) {
 		if (!window.showSaveFilePicker) {
 			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
 		}
-		newFileHandleExcel = await window.showSaveFilePicker(opts);
+		const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+		try {
+			newFileHandleExcel = await window.showSaveFilePicker(opts);
+		} finally {
+			await restorePreviousTabAfterPicker(restoreTarget);
+		}
 		workbook = XLSX.utils.book_new();
 
 		data = [];
@@ -2639,7 +2819,15 @@ try {
           tab.url.includes('https://www.youtube.com/live/')
         )) {
           const isPopout = tab.url.includes('live_chat?is_popout=1');
-          activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
+          const sourceKey = `${tabId}-0`;
+          const existing = activeChatSources.get(sourceKey);
+          activeChatSources.set(sourceKey, {
+            url: tab.url,
+            videoId: videoId,
+            isPopout: isPopout,
+            frameId: 0,
+            firstSeen: existing?.firstSeen || Date.now()
+          });
         } else {
           for (let key of activeChatSources.keys()) {
             if (key.startsWith(`${tabId}-`)) {
@@ -2654,18 +2842,54 @@ try {
   console.warn(e);
 }
 
+function getYouTubeSourcePriority(source) {
+  if (!source) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const normalizedUrl = (source.url || '').toLowerCase();
+
+  if (source.isPopout) {
+    if (normalizedUrl.includes('www.youtube.com')) {
+      return 0;
+    }
+    if (normalizedUrl.includes('studio.youtube.com')) {
+      return 1;
+    }
+    return 2;
+  }
+
+  if (normalizedUrl.includes('studio.youtube.com/video/')) {
+    return 3;
+  }
+
+  if (normalizedUrl.includes('studio.youtube.com')) {
+    return 4;
+  }
+
+  if (normalizedUrl.includes('www.youtube.com/live_chat')) {
+    return 5;
+  }
+
+  return 6;
+}
+
 function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
   const videoId = msg.videoid || extractVideoId(tabUrl);
   if (!videoId) return true;
 
   const sourceId = `${tabId}-${frameId}`;
-  
-  const isPopout = tabUrl.includes('live_chat?is_popout=1');
-  
+  const safeTabUrl = tabUrl || '';
+  const isPopout = safeTabUrl.includes('live_chat?is_popout=1');
+
+  const existingSource = activeChatSources.get(sourceId);
+
   activeChatSources.set(sourceId, { 
-    url: tabUrl, 
+    url: safeTabUrl, 
     videoId: videoId, 
-    isPopout: isPopout
+    isPopout: isPopout,
+    frameId: frameId,
+    firstSeen: existingSource?.firstSeen || Date.now()
   });
 
   const sourcesForThisVideo = Array.from(activeChatSources.entries())
@@ -2675,13 +2899,21 @@ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
     return true; 
   }
 
-  const hasPopout = sourcesForThisVideo.some(([, data]) => data.isPopout);
+  let preferredSource = null;
 
-  if (hasPopout) {
-    return isPopout; 
+  for (const [id, data] of sourcesForThisVideo) {
+    const priority = getYouTubeSourcePriority(data);
+    const sourceFrameId = Number.isInteger(data?.frameId) ? data.frameId : parseInt(id.split('-')[1], 10) || 0;
+    const frameBias = (!data?.isPopout && sourceFrameId === 0) ? 1 : 0;
+    if (!preferredSource ||
+        priority < preferredSource.priority ||
+        (priority === preferredSource.priority && frameBias < preferredSource.frameBias) ||
+        (priority === preferredSource.priority && frameBias === preferredSource.frameBias && data.firstSeen < preferredSource.data.firstSeen)) {
+      preferredSource = { id, data, priority, frameBias };
+    }
   }
 
-  return sourceId === sourcesForThisVideo[0][0];
+  return sourceId === preferredSource?.id;
 }
 
 const checkDuplicateSources = new CheckDuplicateSources();
@@ -2757,8 +2989,9 @@ async function processIncomingMessage(message, sender=null){
 				}
 			}
 			try {
-				if (sender?.tab && ("iframeId" in sender)){
-					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, sender.frameId);
+				if (sender?.tab){
+					const frameId = Number.isInteger(sender.frameId) ? sender.frameId : 0;
+					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, frameId);
 					if (!shouldAllowMessage) {
 					  return;
 					}

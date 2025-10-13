@@ -421,6 +421,7 @@ private | boolean | whether this is a private/direct message; typically won't be
 nameColor | string | Manually specify the color of a display name by passing a color value
 textColor | string | Manually specify the background color of a featured message
 backgroundColor | string | Manually specify the color of a featured message's main text color
+meta | object | contains data like viewer or follow count totals, or other excess data that doesn't fit in elsewhere
 
 ### Additional Features
 

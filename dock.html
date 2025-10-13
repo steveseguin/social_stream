@@ -968,6 +968,7 @@
 				flex-direction: var(--flex-direction);
 				padding-top: var(--padding-rows) !important;
 				padding-bottom: var(--padding-rows) !important;
+				contain: paint;
 			}
 			
 			
@@ -2031,9 +2032,9 @@
 			}
 
 			.fadeout {
-				animation: fadeout 2s;
-				webkit-transition: opacity 1.5s ease-in-out;
-				transition: opacity 1.5 ease-in-out;
+				animation: fadeout 2s both;
+				-webkit-transition: opacity 1.5s ease-in-out;
+				transition: opacity 1.5s ease-in-out;
 				opacity: 0;
 			}
 
@@ -2050,10 +2051,16 @@
 			}
 
 			.fadein {
-				animation: fadein 1s;
-				webkit-transition: opacity 0.5s ease-in-out;
+				animation: fadein 1s both;
+				-webkit-transition: opacity 0.5s ease-in-out;
 				transition: opacity 0.5s ease-in-out;
 				opacity: 1;
+			}
+
+			.fade-animating {
+				will-change: opacity, transform;
+				contain: paint;
+				backface-visibility: hidden;
 			}
 			
 
@@ -4972,10 +4979,25 @@
 				}
 			}
 			
+			document.addEventListener('animationstart', function(e) {
+				if (!e || !e.target || !e.target.classList) {
+					return;
+				}
+				if (e.animationName === 'fadein' || e.animationName === 'fadeout') {
+					e.target.classList.add('fade-animating');
+				}
+			});
+
 			document.addEventListener('animationend', function(e) {
-			  if (e.target.classList.contains('dissolve')) {
-				e.target.remove(); // Remove the element when animation ends
-			  }
+				if (!e || !e.target || !e.target.classList) {
+					return;
+				}
+				if (e.target.classList.contains('fade-animating')) {
+					e.target.classList.remove('fade-animating');
+				}
+				if (e.target.classList.contains('dissolve')) {
+					e.target.remove(); // Remove the element when animation ends
+				}
 			});
 			
 			function createPopoutChat() {
@@ -7061,10 +7083,14 @@
 					return;
 				}
 				
-				const rawChatName = element.dataset.chatname || "";
+				const rawContents = element.rawContents || null;
+				const rawChatName = element.dataset.chatname
+					|| element.dataset.userid
+					|| (rawContents && (rawContents.chatname || rawContents.userid))
+					|| "";
 				const chatName = (typeof unescapeHtml === "function") ? unescapeHtml(rawChatName) : rawChatName;
 				const type = element.dataset.sourceType;
-				const tid = element.rawContents ? element.rawContents.tid : null;
+				const tid = rawContents ? rawContents.tid : null;
 				
 				if (document.getElementById("getChatSourceButton")) {
 					clearTimeout(getById("getChatSourcesButton").setTimeout);
