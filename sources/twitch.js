@@ -378,6 +378,9 @@
 		var eventtype = ""; 
 		var crossChat = "";
 		
+		var mod = false;
+		var vip = false;
+		
 		try {
 			ele.querySelectorAll(SELECTORS.chatBadges).forEach(badge => {
 				if (badge.alt && badge.alt.includes("Subscriber")){
@@ -409,6 +412,12 @@
 				   subscriber = "購読者";
 				} else if (badge.alt && badge.alt.includes("구독자")){
 				   subscriber = "구독자";
+				}
+				if (badge.alt && badge.alt == "Moderator"){
+				   mod = true;
+				}
+				if (badge.alt && badge.alt == "VIP"){
+				   vip = true;
 				}
 				
 				if (badge.alt && badge.alt.includes(", ")){
@@ -736,6 +745,13 @@
 		data.subtitle = subtitle;
 		data.textonly = settings.textonlymode || false;
 		data.type = "twitch";
+		
+		if (mod){
+			data.mod = true;
+		}
+		if (vip){
+			data.vip = true;
+		}
 
 
 		if (brandedImageURL) {
