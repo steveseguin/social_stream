@@ -2853,7 +2853,17 @@ async function processUploadQueue() {
 }
 async function importSettingsLLM(usePreprocessing = true) {
     try {
-        var importFile = await window.showOpenFilePicker();
+		let importFile;
+		const restoreTarget = typeof bringBackgroundPageToFrontForPicker === 'function'
+			? await bringBackgroundPageToFrontForPicker()
+			: null;
+		try {
+			importFile = await window.showOpenFilePicker();
+		} finally {
+			if (typeof restorePreviousTabAfterPicker === 'function') {
+				await restorePreviousTabAfterPicker(restoreTarget);
+			}
+		}
 		var title = "";
 		
 		try {

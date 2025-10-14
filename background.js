@@ -1263,7 +1263,14 @@ async function loadmidi() {
 			}
 		]
 	};
-	var midiConfigFile = await window.showOpenFilePicker();
+	let midiConfigFile;
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		midiConfigFile = await window.showOpenFilePicker(opts);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
 
 	try {
 		midiConfigFile = await midiConfigFile[0].getFile();
@@ -1697,7 +1704,13 @@ async function exportSettings() {
 		if (!window.showSaveFilePicker) {
 			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
 		}
-		fileExportHandler = await window.showSaveFilePicker(opts);
+		const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+		try {
+			fileExportHandler = await window.showSaveFilePicker(opts);
+		} finally {
+			await restorePreviousTabAfterPicker(restoreTarget);
+		}
 
 		if (typeof fileExportHandler == "string") {
 			ipcRenderer.send("write-to-file", { filePath: fileExportHandler, data: JSON.stringify(item) });
@@ -1717,7 +1730,14 @@ async function importSettings(item = false) {
 		}],
 	}; */
 
-	var importFile = await window.showOpenFilePicker();
+	let importFile;
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		importFile = await window.showOpenFilePicker();
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
 	log(importFile);
 	try {
 		importFile = await importFile[0].getFile();
@@ -7588,7 +7608,13 @@ async function downloadWaitlist() {
 	if (!window.showSaveFilePicker) {
 		console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
 	}
-	fileExportHandler = await window.showSaveFilePicker(opts);
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		fileExportHandler = await window.showSaveFilePicker(opts);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
 	var filesContent = objectArrayToCSV(waitlist, "\t");
 
 	if (typeof fileExportHandler == "string") {
@@ -10825,16 +10851,23 @@ let fileSizeTicker = 0;
 let monitorInterval = null;
 
 async function selectTickerFile() {
-    fileHandleTicker = await window.showOpenFilePicker({
-        types: [{
-            description: 'Text Files',
-            accept: {'text/plain': ['.txt']},
-        }],
-    });
-    
-    if (!isSSAPP) {
-        fileHandleTicker = fileHandleTicker[0];
-    } else if (typeof fileHandleTicker === "string") {
+	const pickerOptions = {
+		types: [{
+			description: 'Text Files',
+			accept: {'text/plain': ['.txt']},
+		}],
+	};
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
+
+	if (!isSSAPP) {
+		fileHandleTicker = fileHandleTicker[0];
+	} else if (typeof fileHandleTicker === "string") {
         // Store file path when isSSAPP is true
         localStorage.setItem("tickerFilePath", fileHandleTicker);
     }
