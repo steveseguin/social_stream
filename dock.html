@@ -4596,6 +4596,8 @@
 
 			var hideNotMembers = false;
 			var hideNotDonos = false;
+			var hideNotMods = false;
+			var hideNotVips = false;
 			
 			if (urlParams.has("showonlydonos")) {
 				hideNotDonos = true;
@@ -4607,6 +4609,24 @@
 				hideNotMembers = true;
 				doubleLimit = true;
 				members();
+			}
+
+			if (urlParams.has("showonlymods")) {
+				hideNotMods = true;
+				doubleLimit = true;
+			}
+
+			if (urlParams.has("showonlyvips")) {
+				hideNotVips = true;
+				doubleLimit = true;
+			}
+
+			if (hideNotMods || hideNotVips) {
+				setTimeout(function(){
+					try {
+						redoOdd();
+					} catch (e) {}
+				}, 0);
 			}
 			var eventsOnly = false;
 			if (urlParams.has("showonlyevents")) {
@@ -4908,28 +4928,55 @@
 				filterMessages(getById("filter_messages").value);
 			}
 
-			function applyHiddenState(node) {
-				if (hideNotDonos && node.classList.contains("noDono")) {
-					if (hideNotMembers && node.dataset.member) {
-						node.classList.remove("hidden");
-					} else {
-						node.classList.add("hidden");
-					}
-				} else if (hideNotMembers && !node.dataset.member) {
-					if (hideNotDonos && !node.classList.contains("noDono")) {
-						node.classList.remove("hidden");
-					} else {
-						node.classList.add("hidden");
-					}
-				} else if (hideNotQueued && !node.classList.contains("queued")) {
-					node.classList.add("hidden");
-				} else if (hideNotPinned && !node.classList.contains("pinned")) {
-					node.classList.add("hidden");
-				} else if (hideEmojiOnly && node.classList.contains("noText")) {
-					node.classList.add("hidden");
-				} else {
-					node.classList.remove("hidden");
+			function passesSupporterFilters(isDonation, isMember) {
+				if (!hideNotDonos && !hideNotMembers) {
+					return true;
+				} else if (hideNotDonos && hideNotMembers) {
+					return isDonation || isMember;
+				} else if (hideNotDonos) {
+					return isDonation;
 				}
+				return isMember;
+			}
+
+			function passesRoleFilters(isMod, isVip) {
+				if (!hideNotMods && !hideNotVips) {
+					return true;
+				} else if (hideNotMods && hideNotVips) {
+					return isMod || isVip;
+				} else if (hideNotMods) {
+					return isMod;
+				}
+				return isVip;
+			}
+
+			function applyHiddenState(node) {
+				var isDonation = !node.classList.contains("noDono");
+				var isMemberNode = node.dataset.member === "true";
+				var isModNode = node.dataset.mod === "true";
+				var isVipNode = node.dataset.vip === "true";
+
+				if (!passesSupporterFilters(isDonation, isMemberNode) || !passesRoleFilters(isModNode, isVipNode)) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				if (hideNotQueued && !node.classList.contains("queued")) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				if (hideNotPinned && !node.classList.contains("pinned")) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				if (hideEmojiOnly && node.classList.contains("noText")) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				node.classList.remove("hidden");
 			}
 
 			var hashCode = s =>
@@ -8243,23 +8290,19 @@
 						return;
 					}
 					
-					if (hardFilter) {
-						// Check donation requirements
-						if (hideNotDonos && !data.donation && !data.hasDonation) {
-							// If members are allowed and this is a member, let it through
-							if (!(hideNotMembers && (data.membership || data.member || data.hasMembershp))) {
-								return;
-							}
-						}
-						
-						// Check membership requirements
-						if (hideNotMembers && !data.membership && !data.member && !data.hasMembershp) {
-							// If donations are allowed and this is a donation, let it through
-							if (!(hideNotDonos && (data.donation || data.hasDonation))) {
-								return;
-							}
-						}
+				if (hardFilter) {
+					var hasDonation = !!(data.donation || data.hasDonation);
+					var hasMembership = !!(data.membership || data.member || data.hasMembershp || data.hasMembership);
+					if (!passesSupporterFilters(hasDonation, hasMembership)) {
+						return;
 					}
+
+					var isModeratorMessage = !!data.mod;
+					var isVipMessage = !!data.vip;
+					if (!passesRoleFilters(isModeratorMessage, isVipMessage)) {
+						return;
+					}
+				}
 
 					try {
 						if (applyCustomActions) {
@@ -8801,6 +8844,15 @@
 					
 					if (mod){
 						node.classList.add("mod");
+						node.dataset.mod = "true";
+					} else {
+						delete node.dataset.mod;
+					}
+
+					if (vip){
+						node.dataset.vip = "true";
+					} else {
+						delete node.dataset.vip;
 					}
 
 					if ("karma" in data) {
@@ -8955,25 +9007,9 @@
 						svg.dataset.hash = Math.abs(hashCode(svg.innerHTML));
 					});
 
-					if (hideNotDonos && node.classList.contains("noDono")) {
-						if (hideNotMembers && node.dataset.member) {
-							node.classList.remove("hidden");
-						} else {
-							node.classList.add("hidden");
-						}
-					} else if (hideNotMembers && !node.dataset.member) {
-						if (hideNotDonos && !node.classList.contains("noDono")) {
-							node.classList.remove("hidden");
-						} else {
-							node.classList.add("hidden");
-						}
-					} else if (hideNotQueued && !node.classList.contains("queued")) {
-						node.classList.add("hidden");
-					} else if (hideNotPinned && !node.classList.contains("pinned")) {
-						node.classList.add("hidden");
-					} else if (hideEmojiOnly && node.classList.contains("noText")) {
-						node.classList.add("hidden");
-					} else {
+					applyHiddenState(node);
+
+					if (!node.classList.contains("hidden")) {
 						var style = window.getComputedStyle(node);
 						if (style.visibility !== "hidden" && style.display !== "none") {
 							if (odd) {
