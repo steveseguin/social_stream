@@ -50,15 +50,11 @@ function q(id) {
 function initElements() {
     Object.assign(els, {
         authState: q('auth-state'),
-        channelSlug: q('channel-slug'),
         startAuth: q('start-auth'),
-        connectBridge: q('connect-bridge'),
-        disconnectBridge: q('disconnect-bridge'),
-        subscribeEvents: q('subscribe-events'),
-        listSubscriptions: q('list-subscriptions'),
-        subscriptionStatus: q('subscription-status'),
+        channelLabel: q('channel-label'),
         eventLog: q('event-log'),
         bridgeState: q('bridge-state'),
+        subscriptionSummary: q('subscription-summary'),
         chatMessage: q('chat-message'),
         chatType: q('chat-send-type'),
         sendChat: q('send-chat'),
@@ -194,8 +190,13 @@ function persistTokens() {
 }
 
 function updateInputsFromState() {
-    if (els.channelSlug) {
-        els.channelSlug.value = state.channelSlug || '';
+    if (els.channelLabel) {
+        if (state.channelSlug) {
+            const name = state.channelName || state.channelSlug;
+            els.channelLabel.textContent = `Channel: ${name}`;
+        } else {
+            els.channelLabel.textContent = 'Channel: —';
+        }
     }
     if (els.chatType) {
         els.chatType.value = state.chat?.type || 'user';
@@ -215,40 +216,6 @@ function updateAuthStatus() {
 function bindEvents() {
     if (els.startAuth) {
         els.startAuth.addEventListener('click', startAuthFlow);
-    }
-    if (els.connectBridge) {
-        els.connectBridge.addEventListener('click', () => {
-            if (els.channelSlug) {
-                setChannelSlug(els.channelSlug.value, { source: 'input' });
-            }
-            connectBridge();
-        });
-    }
-    if (els.disconnectBridge) {
-        els.disconnectBridge.addEventListener('click', disconnectBridge);
-    }
-    if (els.subscribeEvents) {
-        els.subscribeEvents.addEventListener('click', () => subscribeToEvents());
-    }
-    if (els.listSubscriptions) {
-        els.listSubscriptions.addEventListener('click', () => listSubscriptions());
-    }
-    if (els.channelSlug) {
-        const commitSlug = () => {
-            setChannelSlug(els.channelSlug.value, { source: 'input' });
-        };
-        els.channelSlug.addEventListener('change', commitSlug);
-        els.channelSlug.addEventListener('blur', commitSlug);
-    }
-    if (els.subscriptionStatus) {
-        els.subscriptionStatus.addEventListener('click', event => {
-            const deleteTarget = event.target.closest('[data-delete-subscription]');
-            if (deleteTarget) {
-                event.preventDefault();
-                const id = deleteTarget.getAttribute('data-delete-subscription');
-                if (id) deleteSubscriptions(id);
-            }
-        });
     }
     if (els.chatType) {
         els.chatType.addEventListener('change', () => {
@@ -662,6 +629,7 @@ async function resolveChannelId(force = false) {
     state.channelId = channel.broadcaster_user_id;
     state.channelName = channel.slug || channel.channel_description || slug;
     state.lastResolvedSlug = slug.toLowerCase();
+    updateInputsFromState();
     return state.channelId;
 }
 
@@ -680,7 +648,7 @@ async function subscribeToEvents(options = {}) {
             events = deriveEventSubscriptions(eventTypes);
         }
         if (!events.length) {
-            log('No event types available for subscription. Check your scopes.', 'error');
+            log('No event types available for subscription. Try signing in again.', 'error');
             return;
         }
         log(`Requesting subscriptions: ${events.map(evt => evt.name).join(', ')}`);
@@ -704,30 +672,6 @@ async function subscribeToEvents(options = {}) {
     }
 }
 
-async function deleteSubscriptions(presetValue) {
-    const raw = typeof presetValue === 'string' ? presetValue : '';
-    const value = raw.trim();
-    if (!value) {
-        log('Select a subscription from the list to delete it.', 'warning');
-        return;
-    }
-    const ids = value.split(/[,\s]+/).map(item => item.trim()).filter(Boolean);
-    if (!ids.length) {
-        log('No valid subscription IDs detected.', 'warning');
-        return;
-    }
-    const params = new URLSearchParams();
-    ids.forEach(id => params.append('id', id));
-    try {
-        await apiFetch(`/public/v1/events/subscriptions?${params.toString()}`, { method: 'DELETE' });
-        log(`Deleted ${ids.length} subscription${ids.length === 1 ? '' : 's'}.`);
-        await listSubscriptions();
-    } catch (err) {
-        console.error('Delete subscription failed', err);
-        log(`Failed to delete subscription(s): ${err.message}`, 'error');
-    }
-}
-
 async function listSubscriptions() {
     try {
         const data = await apiFetch('/public/v1/events/subscriptions');
@@ -737,34 +681,42 @@ async function listSubscriptions() {
     } catch (err) {
         console.error(err);
         log(`Failed to list subscriptions: ${err.message}`, 'error');
+        if (els.subscriptionSummary) {
+            els.subscriptionSummary.textContent = 'Subscriptions unavailable';
+            els.subscriptionSummary.className = 'status-chip danger';
+            els.subscriptionSummary.title = `Failed to list subscriptions: ${err.message}`;
+        }
         return [];
     }
 }
 
 function renderSubscriptions(items) {
-    if (!els.subscriptionStatus) return;
-    if (!items.length) {
-        els.subscriptionStatus.innerHTML = '<div class="list-item"><strong>No active subscriptions.</strong><small>Create one using the button above.</small></div>';
+    if (!els.subscriptionSummary) return;
+    const list = Array.isArray(items) ? items : [];
+    const channelIdKey = state.channelId != null ? String(state.channelId) : null;
+    const relevant = channelIdKey
+        ? list.filter(item => String(item?.broadcaster_user_id || '') === channelIdKey)
+        : list;
+    const eventNames = relevant.map(item => item?.event).filter(Boolean);
+    const summary = els.subscriptionSummary;
+
+    if (!list.length) {
+        summary.textContent = 'Subscriptions pending';
+        summary.className = 'status-chip warning';
+        summary.title = 'No subscriptions detected yet. They will be created automatically after sign-in.';
         return;
     }
-    const html = items.map(item => {
-        const isCurrent = state.channelId && item.broadcaster_user_id === state.channelId;
-        const channelLabel = isCurrent && state.channelName ? `${item.broadcaster_user_id} (${state.channelName})` : (item.broadcaster_user_id || 'All');
-        const eventName = escapeHtml(item.event || 'Unknown event');
-        const channelText = escapeHtml(String(channelLabel));
-        const method = escapeHtml(item.method || 'webhook');
-        const id = escapeHtml(item.id || '—');
-        return `<div class="list-item${isCurrent ? ' active' : ''}" data-subscription-id="${id}">
-            <div class="list-row">
-                <div class="list-details">
-                    <strong>${eventName}</strong>
-                    <small>ID: ${id} • Channel: ${channelText} • Method: ${method}</small>
-                </div>
-                <button type="button" class="button-secondary button-small" data-delete-subscription="${id}">Delete</button>
-            </div>
-        </div>`;
-    }).join('');
-    els.subscriptionStatus.innerHTML = html;
+
+    if (!eventNames.length) {
+        summary.textContent = 'Subscriptions mismatch';
+        summary.className = 'status-chip warning';
+        summary.title = 'Subscriptions exist, but none belong to the active channel. Clear old Kick webhooks or reload this page.';
+        return;
+    }
+
+    summary.textContent = `Subscriptions active (${eventNames.length})`;
+    summary.className = 'status-chip';
+    summary.title = `Active events: ${eventNames.join(', ')}`;
 }
 
 async function maybeAutoStart(force = false) {

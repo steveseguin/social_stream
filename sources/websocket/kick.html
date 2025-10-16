@@ -47,8 +47,8 @@
         .hero {
             display: flex;
             flex-direction: column;
-            gap: 16px;
-            padding: 28px;
+            gap: 18px;
+            padding: 30px;
             background: linear-gradient(132deg, rgba(78, 242, 135, 0.18), rgba(40, 190, 120, 0.05));
             border: 1px solid rgba(78, 242, 135, 0.35);
         }
@@ -66,6 +66,16 @@
             flex-wrap: wrap;
             align-items: center;
             gap: 14px;
+        }
+        .hero-status {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .hero-status .status-note {
+            color: rgba(244, 244, 244, 0.75);
+            font-size: 0.95rem;
         }
         h2 {
             margin: 0 0 12px;
@@ -188,44 +198,6 @@
             border-color: rgba(242, 78, 124, 0.28);
             color: #ff7297;
         }
-        .list {
-            background: #0f0f0f;
-            border-radius: 12px;
-            border: 1px solid #252525;
-            max-height: 240px;
-            overflow-y: auto;
-            padding: 12px;
-            font-size: 0.95rem;
-        }
-        .list-item {
-            padding: 12px 14px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            background: #181818;
-            border: 1px solid transparent;
-            transition: border 0.18s ease;
-        }
-        .list-item:last-child {
-            margin-bottom: 0;
-        }
-        .list-item.active {
-            border-color: rgba(78, 242, 135, 0.35);
-            background: rgba(78, 242, 135, 0.08);
-        }
-        .list-item strong {
-            display: block;
-            margin-bottom: 6px;
-        }
-        .list-item small {
-            display: block;
-            color: #8a8a8a;
-        }
-        .list-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-        }
         .log {
             background: #0e0e0e;
             border-radius: 12px;
@@ -277,57 +249,31 @@
     <div class="page">
         <div class="content">
             <header class="hero panel">
-                <h1>Kick chat bridge for Social Stream</h1>
-                <p>Sign in with Kick, choose your channel, and we’ll flow chat, follows, subs, tips, and live alerts straight into Social Stream through our hosted webhook bridge.</p>
+                <h1>Kick alerts for Social Stream</h1>
+                <p>Sign in with Kick and we’ll automatically listen for chat, follows, subscriptions, tips, and live status updates through the Social Stream webhook bridge.</p>
                 <div class="hero-actions">
                     <button id="start-auth">Sign in with Kick</button>
                     <span id="auth-state" class="status-chip warning">Not signed in</span>
                 </div>
-                <p class="hint">Use the same browser you run Social Stream in so tokens stay together on this device.</p>
+                <div class="hero-status">
+                    <span id="channel-label" class="status-note">Channel: —</span>
+                    <span id="bridge-state" class="status-chip danger">Bridge disconnected</span>
+                    <span id="subscription-summary" class="status-chip warning">Subscriptions pending</span>
+                </div>
+                <p class="hint">Keep this page open while you want alerts to flow. To watch a different channel, reload with <code>?username=&lt;slug&gt;</code> after signing in.</p>
             </header>
 
             <main class="stack">
-                <section class="panel step">
-                    <h2>Step 1 · Pick your channel</h2>
-                    <p class="hint">We auto-fill this with the channel you just signed in as. Enter a different slug (the part after <code>kick.com/</code>) if you want to watch another broadcaster or pass <code>?username=&lt;slug&gt;</code> in the URL.</p>
-                    <label for="channel-slug">Channel slug</label>
-                    <input id="channel-slug" type="text" placeholder="yourchannel" autocomplete="off" />
-                    <div class="button-row">
-                        <button id="connect-bridge">Connect alerts</button>
-                        <button id="disconnect-bridge" class="button-secondary">Disconnect</button>
-                    </div>
-                    <div class="button-row" style="margin-top: 4px;">
-                        <span class="hint" style="margin:0;">Bridge status:</span>
-                        <span id="bridge-state" class="status-chip danger">Bridge disconnected</span>
-                    </div>
-                    <p class="hint">Social Stream hosts the Kick bridge at <code>https://kick.socialstream.ninja:8787</code>. Keep this tab open whenever you want alerts to flow.</p>
-                </section>
-
-                <section class="panel step">
-                    <h2>Step 2 · Webhook subscriptions (auto-managed)</h2>
-                    <p class="hint">As soon as you are signed in we auto-create the default webhook subscriptions for chat, follows, subscriptions, tips, and live status alerts. Use the button below only if you need to force a refresh.</p>
-                    <div class="button-row">
-                        <button id="subscribe-events">Force resubscribe</button>
-                        <button id="list-subscriptions" class="button-secondary">Refresh list</button>
-                    </div>
-                    <div id="subscription-status" class="list">
-                        <div class="list-item">
-                            <strong>No subscription data yet.</strong>
-                            <small>Subscriptions appear automatically right after sign-in or page load.</small>
-                        </div>
-                    </div>
-                </section>
-
                 <div class="grid-two">
                     <section class="panel step">
-                        <h2>Step 3 · Live event feed</h2>
+                        <h2>Live event feed</h2>
                         <p class="hint">Every webhook that reaches the bridge is echoed here. It’s perfect for testing alerts before you go live.</p>
                         <div id="event-log" class="log"></div>
                     </section>
 
                     <section class="panel step">
-                        <h2>Optional · Send a chat test</h2>
-                        <p class="hint">Grant the <code>chat:write</code> scope during sign-in and you can send a hello to chat straight from here.</p>
+                        <h2>Send a chat message</h2>
+                        <p class="hint">Say hello to your chat directly from Social Stream once you’re connected.</p>
                         <label for="chat-message">Message</label>
                         <textarea id="chat-message" placeholder="Say hello to chat"></textarea>
                         <div class="button-row">
@@ -344,9 +290,9 @@
                 <section class="panel step">
                     <h2>Helpful tips</h2>
                     <ul class="tips">
-                        <li>Need to remove a webhook? Use the Delete button beside any entry in the list above.</li>
-                        <li>Tokens live in this browser’s storage. Clear them by signing out of the Kick bridge domain.</li>
-                        <li>If events stop flowing, tap “Refresh list” to make sure your subscriptions are still active.</li>
+                        <li>Tokens stay in this browser. Sign out here or clear storage if you need to switch accounts.</li>
+                        <li>Subscriptions keep themselves up to date. If something breaks, reload the page to rebuild them.</li>
+                        <li>Use the query string trick (<code>?username=&lt;slug&gt;</code>) to monitor your moderators or partner channels.</li>
                     </ul>
                 </section>
             </main>
