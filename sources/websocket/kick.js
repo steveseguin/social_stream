@@ -264,13 +264,24 @@ function bindEvents() {
     }
 }
 
+function getBridgeBaseUrl() {
+    const candidate = (state.bridgeUrl && state.bridgeUrl.trim()) || DEFAULT_CONFIG.bridgeUrl;
+    try {
+        const parsed = new URL(candidate, window.location.href);
+        return `${parsed.protocol}//${parsed.host}`;
+    } catch (err) {
+        try {
+            return `${window.location.protocol}//${window.location.host}`;
+        } catch (_) {
+            return 'https://kick.socialstream.ninja:8787';
+        }
+    }
+}
+
 async function startAuthFlow() {
     if (!state.clientId) {
         alert('Missing Kick Client ID. Check the advanced settings section.');
         return;
-    }
-    if (!state.clientSecret) {
-        log('No client secret set. Continuing with PKCE-only exchange. If authentication fails, add your client secret in Advanced settings.', 'warning');
     }
     const verifier = generateRandomString(64);
     const challenge = await createCodeChallenge(verifier);
@@ -332,33 +343,42 @@ async function handleAuthCallback() {
 }
 
 async function exchangeCodeForToken(code, verifier) {
+    const redirectUri = state.redirectUri || (window.location.origin + window.location.pathname);
+    const base = getBridgeBaseUrl().replace(/\/$/, '');
     const params = new URLSearchParams({
-        grant_type: 'authorization_code',
-        client_id: state.clientId,
         code,
-        redirect_uri: state.redirectUri || (window.location.origin + window.location.pathname),
-        code_verifier: verifier
-    });
-    if (state.clientSecret) {
-        params.append('client_secret', state.clientSecret);
-    }
-
-    const res = await fetch('https://id.kick.com/oauth/token', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-        },
-        body: params.toString()
+        code_verifier: verifier,
+        redirect_uri: redirectUri
     });
 
-    if (!res.ok) {
-        const body = await res.text();
-        throw new Error(`HTTP ${res.status}: ${body}`);
+    const response = await fetch(`${base}/kick/callback?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' }
+    });
+    const text = await response.text();
+    let data = {};
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch (err) {
+            if (!response.ok) {
+                throw new Error(text);
+            }
+            throw new Error('Invalid JSON response from Kick bridge.');
+        }
     }
 
-    const data = await res.json();
+    if (!response.ok) {
+        const message = data?.error_description || data?.error || text || `HTTP ${response.status}`;
+        throw new Error(message);
+    }
+    if (!data.access_token) {
+        throw new Error('Kick bridge did not return an access token.');
+    }
+
     const now = Date.now();
     state.tokens = {
+        ...(state.tokens || {}),
         ...data,
         expires_at: now + (data.expires_in || 0) * 1000
     };
@@ -385,32 +405,34 @@ function scheduleTokenRefresh() {
 
 async function refreshAccessToken() {
     if (!state.tokens?.refresh_token) return;
-    const params = new URLSearchParams({
-        grant_type: 'refresh_token',
-        client_id: state.clientId,
-        refresh_token: state.tokens.refresh_token
+    const base = getBridgeBaseUrl().replace(/\/$/, '');
+    const response = await fetch(`${base}/kick/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+            grant_type: 'refresh_token',
+            refresh_token: state.tokens.refresh_token
+        })
     });
-    if (state.clientSecret) {
-        params.append('client_secret', state.clientSecret);
+    const text = await response.text();
+    let data = {};
+    if (text) {
+        try {
+            data = JSON.parse(text);
+        } catch (err) {
+            console.error('Refresh parse error:', err);
+        }
     }
 
-    const res = await fetch('https://id.kick.com/oauth/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: params.toString()
-    });
-
-    if (!res.ok) {
+    if (!response.ok || !data.access_token) {
         log('Failed to refresh access token. You may need to sign in again.', 'error');
-        const body = await res.text();
-        console.error('Refresh error body:', body);
+        console.error('Refresh error body:', text);
         return;
     }
 
-    const data = await res.json();
     const now = Date.now();
     state.tokens = {
-        ...state.tokens,
+        ...(state.tokens || {}),
         ...data,
         expires_at: now + (data.expires_in || 0) * 1000
     };
