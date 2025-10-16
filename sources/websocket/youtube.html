@@ -1984,13 +1984,16 @@ try {
 			let eventType = membershipData.eventType || "new_member";
 			let displayMessage = '';
 			let nameColor = !settings.nosubcolor ? "#107516" : "";
+			let eventName = 'sponsorship';
 			
 			if (eventType === "renewal") {
 				displayMessage = `renewed membership (${membershipData.level})`;
 				addEvent(`Member Renewal: ${membershipData.authorName} - ${membershipData.level}`);
+				eventName = 'resub';
 			} else if (eventType === "upgrade") {
 				displayMessage = `upgraded membership to ${membershipData.level}`;
 				addEvent(`Member Upgrade: ${membershipData.authorName} - ${membershipData.level}`);
+				eventName = 'resub';
 			} else {
 				displayMessage = `joined as a member (${membershipData.level})`;
 				addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
@@ -2029,7 +2032,7 @@ try {
 				membership: eventType === "renewal" ? "renewed_member" : eventType === "upgrade" ? "upgraded_member" : "new_member",
 				subtitle: membershipData.level,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
-				event: eventType,
+				event: eventName,
 				textonly: settings.textonlymode || false
 			});
 		} catch (e) {

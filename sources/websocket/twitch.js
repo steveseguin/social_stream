@@ -25,6 +25,23 @@ try{
 	var FFZ = false;
 	var EMOTELIST = false;
 	var settings = {};
+	function getTranslation(key, value = '') {
+		try {
+			if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
+				return settings.translation.innerHTML[key];
+			}
+			if (settings.translation && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
+				return settings.translation.miscellaneous[key];
+			}
+		} catch (e) {
+			console.warn('Translation lookup failed:', e);
+		}
+		if (value !== undefined && value !== null && value !== '') {
+			return value;
+		}
+		return key.replaceAll('-', ' ');
+	}
+
 
 	var urlParams = new URLSearchParams(window.location.search);
 	var hashParams = new URLSearchParams(window.location.hash.slice(1));
@@ -294,6 +311,7 @@ try{
 
 	let getViewerCountInterval = null;
 	let getFollowersInterval = null;
+	let getSubscribersInterval = null;
 	let tokenValidationInterval = null;
 	let badges = null;
 
@@ -426,6 +444,11 @@ try{
 				if (permissions.canViewFollowers) {
 					getFollowers(channelInfo.id);
 					getFollowersInterval = setInterval(() => getFollowers(channelInfo.id), 60000);
+				}
+				if (permissions.canViewSubscribers && permissions.hasSubscriptionProgram) {
+					getSubscribers(channelInfo.id);
+					clearInterval(getSubscribersInterval);
+					getSubscribersInterval = setInterval(() => getSubscribers(channelInfo.id), 60000);
 				}
 			}
 			console.log(channel);
@@ -1354,7 +1377,9 @@ try{
 				break;
 			case 'follower_update':
 				document.getElementById('follower-count').textContent = data.meta;
-				//addEvent(`New Follower: ${data.latestFollower.chatname}`);
+				break;
+			case 'subscriber_update':
+				document.getElementById('subscriber-count').textContent = data.meta;
 				break;
 			case 'new_follower':
 				addEvent(`New Follower: ${data.chatname}`);
@@ -1527,6 +1552,7 @@ try{
 	// Store the last known values
 	let lastKnownViewers = null;
 	let lastKnownFollowers = null;
+	let lastKnownSubscribers = null;
 
 	// Function to fetch current viewer count
 	async function getViewerCount(channelName) {
@@ -1600,6 +1626,35 @@ try{
 		}
 	}
 
+	// Function to fetch subscribers
+	async function getSubscribers(broadcasterId) {
+		const token = getStoredToken();
+		if (!token) return;
+		try {
+			const response = await fetchWithTimeout(
+				`https://api.twitch.tv/helix/subscriptions?broadcaster_id=${broadcasterId}&first=1`,
+				5000,
+				{
+					'Client-ID': clientId,
+					'Authorization': `Bearer ${token}`
+				}
+			);
+			if (!response.ok) {
+				if (response.status === 401 || response.status === 403) {
+					console.warn('Subscriber lookup not permitted - missing scope or broadcaster rights');
+				}
+				return;
+			}
+			const data = await response.json();
+			if (typeof data.total === 'number' && data.total !== lastKnownSubscribers) {
+				lastKnownSubscribers = data.total;
+				pushMessage({ type: 'twitch', event: 'subscriber_update', meta: data.total });
+			}
+		} catch (error) {
+			console.error('Error fetching subscriber count:', error);
+		}
+	}
+
 	let eventSocket;
 	let eventSessionId;
 	let isDisconnecting = false;
@@ -1628,6 +1683,10 @@ try{
 			clearInterval(getFollowersInterval);
 			getFollowersInterval = null;
 		}
+		if (getSubscribersInterval) {
+			clearInterval(getSubscribersInterval);
+			getSubscribersInterval = null;
+		}
 		if (tokenValidationInterval) {
 			clearInterval(tokenValidationInterval);
 			tokenValidationInterval = null;
@@ -1655,10 +1714,15 @@ try{
 		currentChannelId = null;
 		lastKnownViewers = null;
 		lastKnownFollowers = null;
+		lastKnownSubscribers = null;
 		
 		document.getElementById('viewer-count').textContent = "-";
 		document.getElementById('follower-count').textContent = "-";
-		document.getElementById('permissions-info').innerHTML = "";
+		document.getElementById('subscriber-count').textContent = "-";
+		const permissionsInfo = document.getElementById('permissions-info');
+		if (permissionsInfo) {
+			permissionsInfo.innerHTML = "";
+		}
 		
 		// Wait a moment for connections to fully close
 		await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1907,36 +1971,49 @@ try{
 		}
 
 		switch (subscription.type) {
-			case 'channel.follow':
-				pushMessage({
-					type: "twitch",
-					event: 'new_follower',
-					chatmessage: `${event.user_name} has started following`,
-					chatname: event.user_name,
-					userid: event.user_id,
-					timestamp: event.followed_at,
-					meta: { userId: event.user_id, followedAt: event.followed_at },
-					textonly: settings.textonlymode || false
-				});
-				// Add to recent events
-				addEvent(`Follow: ${event.user_name}`);
-				break;
+		case 'channel.follow':
+			const followSuffix = getTranslation('has-started-following', 'has started following');
+			const followMessage = `${event.user_name} ${followSuffix}`.trim();
+			pushMessage({
+				type: "twitch",
+				event: 'new_follower',
+				chatmessage: followMessage,
+				chatname: event.user_name,
+				userid: event.user_id,
+				timestamp: event.followed_at,
+				meta: { userId: event.user_id, followedAt: event.followed_at },
+				textonly: settings.textonlymode || false
+			});
+			if (typeof lastKnownFollowers === 'number') {
+				lastKnownFollowers += 1;
+				pushMessage({ type: 'twitch', event: 'follower_update', meta: lastKnownFollowers });
+			}
+			// Add to recent events
+			addEvent(`Follow: ${event.user_name}`);
+			break;
 
-			case 'channel.subscribe':
-				pushMessage({
-					type: "twitch",
-					event: 'new_subscriber',
-					chatmessage: `${event.user_name} has subscribed at tier ${event.tier}`,
-					chatname: event.user_name,
-					userid: event.user_id,
-					tier: event.tier,
-					isGift: event.is_gift,
-					meta: { userId: event.user_id, tier: event.tier, isGift: event.is_gift },
-					textonly: settings.textonlymode || false
-				});
-				// Add to recent events
-				addEvent(`Subscribe: ${event.user_name} (Tier ${event.tier})`);
-				break;
+		case 'channel.subscribe':
+			const subscribeSuffix = getTranslation('has-subscribed', 'has subscribed');
+			const tierLabel = event.tier ? ` ${getTranslation('at-tier', 'at tier')} ${event.tier}` : '';
+			const subscribeMessage = `${event.user_name} ${subscribeSuffix}${tierLabel}`.trim();
+			pushMessage({
+				type: "twitch",
+				event: 'new_subscriber',
+				chatmessage: subscribeMessage,
+				chatname: event.user_name,
+				userid: event.user_id,
+				tier: event.tier,
+				isGift: event.is_gift,
+				meta: { userId: event.user_id, tier: event.tier, isGift: event.is_gift },
+				textonly: settings.textonlymode || false
+			});
+			if (typeof lastKnownSubscribers === 'number') {
+				lastKnownSubscribers += 1;
+				pushMessage({ type: 'twitch', event: 'subscriber_update', meta: lastKnownSubscribers });
+			}
+			// Add to recent events
+			addEvent(`Subscribe: ${event.user_name} (Tier ${event.tier})`);
+			break;
 
 			case 'channel.subscription.message':
 				pushMessage({

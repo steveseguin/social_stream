@@ -5437,6 +5437,11 @@ sendChatMessage(chatData, fakechat = false, relayed = false) {
         isAction: false
       }
     };
+
+    const videoId = chatData.videoId || chatData.videoid;
+    if (videoId) {
+      payload.data.videoId = videoId;
+    }
     
     return this._sendMessage(payload);
   } catch (error) {
@@ -5466,6 +5471,11 @@ sendChatMessage(chatData, fakechat = false, relayed = false) {
         source: "SocialStream.Ninja"
       }
     };
+
+    const videoId = chatData.videoId || chatData.videoid;
+    if (videoId) {
+      payload.data.videoId = videoId;
+    }
     
     // If you want to show the original platform, add it to the message
     if (chatData.type && chatData.type !== "Chat") {
@@ -5612,6 +5622,8 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
     // Prepare the data payload to be sent
     // It's good practice to create a new object to avoid modifying the original `data` object directly
     // unless intended.
+    const videoId = data.videoId || data.videoid;
+
     const payloadData = {
         ...data, // Copy original data
         chatname: username || data.chatname || data.userid || "Host⚡",
@@ -5622,6 +5634,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
         originalPlatform: data.type || "unknown" // Preserve original platform info
     };
 
+    if (videoId) {
+      payloadData.videoId = videoId;
+    }
 
     console.log(`Sending message event to Streamer.bot: ${payloadData.chatmessage} (from ${payloadData.chatname})`);
 
@@ -5635,6 +5650,10 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
       const args = {
           chatData: payloadData
       };
+
+      if (payloadData.videoId) {
+          args.videoId = payloadData.videoId;
+      }
 
       return streamerbotClient.doAction(actionId, args);
 

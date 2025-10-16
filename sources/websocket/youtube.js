@@ -223,6 +223,21 @@ window.addEventListener('youtubeMessage', function(e) {
 		}
 	}
 });
+
+window.addEventListener('youtubeDelete', function(e) {
+	if (!e.detail) {
+		return;
+	}
+	try {
+		chrome.runtime.sendMessage(chrome.runtime.id, { delete: e.detail }, function() {
+			if (chrome.runtime.lastError) {
+				console.warn('Runtime error forwarding delete to Social Stream:', chrome.runtime.lastError.message);
+			}
+		});
+	} catch (err) {
+		console.error('Error forwarding delete event:', err);
+	}
+});
 window.addEventListener('youtubeVideoChanged', function(e) {
 	if (e.detail && (e.detail.videoId || e.detail.channelId)) {
 		console.log('Video changed:', e.detail);
