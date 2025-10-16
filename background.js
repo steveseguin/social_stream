@@ -4718,8 +4718,7 @@ function relayIncomingWebhook(source, payload) {
         requestInit = {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                "X-SSN-Webhook-Source": source
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
             },
             body: params.toString()
         };
@@ -4742,8 +4741,7 @@ function relayIncomingWebhook(source, payload) {
         requestInit = {
             method: "POST",
             headers: {
-                "Content-Type": contentType,
-                "X-SSN-Webhook-Source": source
+                "Content-Type": contentType
             },
             body
         };

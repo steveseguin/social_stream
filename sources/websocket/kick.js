@@ -429,6 +429,14 @@ async function apiFetch(path, options = {}, retry = true) {
         'Accept': 'application/json',
         ...(options.headers || {})
     };
+    if (state.clientId) {
+        if (!headers['Client-ID']) {
+            headers['Client-ID'] = state.clientId;
+        }
+        if (!headers['Client-Id']) {
+            headers['Client-Id'] = state.clientId;
+        }
+    }
     if (fetchOptions.body && !headers['Content-Type']) {
         headers['Content-Type'] = 'application/json';
     }
@@ -516,7 +524,13 @@ async function loadAuthenticatedProfile() {
                 return applyProfile(profile);
             }
         } catch (err) {
-            console.error('Failed to load Kick profile', err);
+            const message = err?.message || '';
+            if (/404/.test(message)) {
+                log('Kick profile details are still rolling out on the API. Continuing with sign-in information.', 'warning');
+            } else {
+                console.error('Failed to load Kick profile', err);
+                log(`Unable to load Kick profile: ${message || 'unknown error'}`, 'warning');
+            }
         }
         const fallback = extractProfileFromTokens();
         if (fallback) {
@@ -551,7 +565,7 @@ async function fetchEventTypes(force = false) {
         if (/404/.test(message)) {
             state.eventTypesUnavailable = true;
             if (!wasUnavailable) {
-                log('Kick event types endpoint is unavailable; using default subscription list.', 'warning');
+                log('Kick has not published the event type list for this app yet. Using the default set instead.', 'warning');
             }
         } else {
             log(`Unable to fetch event types: ${message}`, 'error');
@@ -592,6 +606,45 @@ function deriveEventSubscriptions(types) {
     return subscriptions;
 }
 
+function getSubscriptionEventName(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    return (
+        entry.event ||
+        entry.name ||
+        entry.event_name ||
+        entry.event_type ||
+        entry.type ||
+        entry.topic ||
+        ''
+    );
+}
+
+function formatEventLabel(name) {
+    if (!name) return 'event';
+    return name
+        .split('.')
+        .map(part => part ? part.charAt(0).toUpperCase() + part.slice(1) : part)
+        .join(' ');
+}
+
+function formatKickSubscriptionError(name, rawError) {
+    const text = typeof rawError === 'string' ? rawError : rawError?.message || '';
+    const eventLabel = formatEventLabel(name);
+    if (!text) {
+        return `Kick did not confirm ${eventLabel}.`;
+    }
+    if (/rate limit token/i.test(text) || /retry quota exceeded/i.test(text)) {
+        return `Kick temporarily rate-limited ${eventLabel}. We'll automatically retry in a moment.`;
+    }
+    if (/already exists/i.test(text) || /duplicate/i.test(text)) {
+        return `${eventLabel} is already active on Kick.`;
+    }
+    if (/not authorized/i.test(text)) {
+        return `Kick reported that ${eventLabel} isn't enabled for this account. Double-check your Kick developer app scopes.`;
+    }
+    return `${eventLabel} could not be enabled (Kick replied: ${text})`;
+}
+
 function reportSubscriptionResults(response, requested) {
     const items = Array.isArray(response?.data) ? response.data : [];
     if (!items.length) {
@@ -604,7 +657,9 @@ function reportSubscriptionResults(response, requested) {
         log(`Subscribed to ${successes.length} event(s).`);
     }
     failures.forEach(item => {
-        log(`Subscription error for ${item.name}: ${item.error}`, 'error');
+        const message = formatKickSubscriptionError(item?.name, item?.error);
+        log(message, 'warning');
+        console.warn('Kick subscription error', item);
     });
     const requestedNames = new Set((requested || []).map(evt => evt.name));
     const missing = [...requestedNames].filter(name => !items.some(item => item.name === name));
@@ -697,7 +752,7 @@ function renderSubscriptions(items) {
     const relevant = channelIdKey
         ? list.filter(item => String(item?.broadcaster_user_id || '') === channelIdKey)
         : list;
-    const eventNames = relevant.map(item => item?.event).filter(Boolean);
+    const eventNames = relevant.map(getSubscriptionEventName).filter(Boolean);
     const summary = els.subscriptionSummary;
 
     if (!list.length) {
@@ -708,9 +763,9 @@ function renderSubscriptions(items) {
     }
 
     if (!eventNames.length) {
-        summary.textContent = 'Subscriptions mismatch';
+        summary.textContent = 'Waiting for Kick';
         summary.className = 'status-chip warning';
-        summary.title = 'Subscriptions exist, but none belong to the active channel. Clear old Kick webhooks or reload this page.';
+        summary.title = 'Kick returned webhooks, but none are tied to this channel yet. This usually resolves once Kick finishes provisioning. Remove old Kick webhooks if the message persists.';
         return;
     }
 
@@ -756,14 +811,16 @@ async function maybeAutoStart(force = false) {
 
         const eventTypes = await fetchEventTypes();
         const desiredEvents = deriveEventSubscriptions(eventTypes);
-        const desiredNames = desiredEvents.map(evt => evt.name);
+        const desiredNames = desiredEvents
+            .map(evt => evt?.name || evt?.event || evt?.type || '')
+            .filter(Boolean);
 
         const existing = await listSubscriptions();
         const channelIdKey = channelId != null ? String(channelId) : null;
         const forChannel = channelIdKey
             ? existing.filter(item => String(item?.broadcaster_user_id || '') === channelIdKey)
             : existing;
-        const existingNames = new Set(forChannel.map(item => item.event));
+        const existingNames = new Set(forChannel.map(getSubscriptionEventName).filter(Boolean));
         const missing = force
             ? desiredNames
             : desiredNames.filter(name => !existingNames.has(name));
