@@ -1178,7 +1178,7 @@ try{
 		// Parse reply if enabled
 		let replyMessage = "";
 		let originalMessage = "";
-		if (settings.replyingto && parsedMessage.tags && parsedMessage.tags['reply-parent-msg-body']) {
+		if (!settings.excludeReplyingTo && parsedMessage.tags && parsedMessage.tags['reply-parent-msg-body']) {
 			replyMessage = parsedMessage.tags['reply-parent-msg-body'];
 			originalMessage = message;
 		}

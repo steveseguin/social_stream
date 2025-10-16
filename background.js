@@ -3351,7 +3351,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "streamerbotpassword") {
 				handleStreamerBotSettingsChange();
 			}
-			if (request.setting == "replyingto") {
+			if (request.setting == "excludeReplyingTo") {
 				pushSettingChange();
 			}
 			if (request.setting == "delayyoutube") {

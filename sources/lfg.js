@@ -247,7 +247,7 @@
 		  
 		  
 		  // <div class="mb-2 pl-2 border-l-2 border-gray-600 bg-gray-800/30 rounded-r px-2 py-1"><div class="flex items-center gap-1 text-xs text-gray-400"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-reply w-3 h-3" aria-hidden="true"><path d="M20 18v-2a4 4 0 0 0-4-4H4"></path><path d="m9 17-5-5 5-5"></path></svg><span>Reply to <span class="text-white font-medium">Renegade_Tigers</span></span></div><div class="text-xs text-gray-300 mt-1 truncate max-w-sm">@chchris_yoos_gt500 @sususyprieto70 @sousoundstixx what's up fam gtsy again, Happy Saturday</div></div>
-		  if (settings.replyingto){
+		  if (!settings.excludeReplyingTo){
 			  if (ele.querySelector(".text-xs.text-gray-300.mt-1.truncate.max-w-sm") && ele.querySelector(".text-white.font-medium")){
 				let reply = ele.querySelector(".text-xs.text-gray-300.mt-1.truncate.max-w-sm");
 				if (reply?.parentNode.querySelector(".text-white.font-medium")){

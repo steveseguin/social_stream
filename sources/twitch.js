@@ -634,7 +634,7 @@
 		var replyMessage = "";
 
 		try {
-			if (settings.replyingto && chatmessage) {
+			if (!settings.excludeReplyingTo && chatmessage) {
 				try {
 					var t = ele.querySelector(".chat-line__message-container [title], .seventv-reply-message-part");
 					if (t){

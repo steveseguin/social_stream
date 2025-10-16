@@ -641,7 +641,7 @@
 		nameColor = ele.querySelector(".chat-entry-username").style.color;
 	  } catch(e){}
 	  
-	  // settings.replyingto
+	  // settings.excludeReplyingTo
 	  
 	  if (!settings.textonlymode){
 		  try {
@@ -670,7 +670,7 @@
 	  var originalMessage = "";
 	  var replyMessage = "";
 	  
-	  if (settings.replyingto){
+	  if (!settings.excludeReplyingTo){
 		  let reply = ele.querySelector(".chat-entry");
 		  if (reply?.children.length == 2){
 				reply = escapeHtml(reply.children[0].textContent);
@@ -945,7 +945,7 @@
 	  var originalMessage = "";
 	  var replyMessage = "";
 	  
-	  if (settings.replyingto){
+	  if (!settings.excludeReplyingTo){
 		  let reply = ele.querySelector(".text-xs button");
 		  if (reply){
 				reply = getAllContentNodes(reply.parentNode).trim();

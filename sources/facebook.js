@@ -227,7 +227,7 @@
 		var replyMessage = "";
 		
 		try {
-			if (settings.replyingto && msg && ele.previousSibling) {
+			if (!settings.excludeReplyingTo && msg && ele.previousSibling) {
 				replyMessage = getAllContentNodes(ele.previousSibling.querySelector("div>div>span>span"), true);
 				if (replyMessage) {
 					originalMessage = msg;
