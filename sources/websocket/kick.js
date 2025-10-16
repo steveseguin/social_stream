@@ -137,7 +137,7 @@ function updateAuthStatus() {
     if (!els.authState) return;
     const authed = state.tokens?.access_token && !isTokenExpired();
     els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
-    els.authState.className = authed ? 'status-pill success' : 'status-pill warning';
+    els.authState.className = authed ? 'status-chip' : 'status-chip warning';
 }
 
 function bindEvents() {
@@ -529,10 +529,10 @@ async function subscribeToEvents() {
 }
 
 async function deleteSubscriptions(presetValue) {
-    const raw = typeof presetValue === 'string' ? presetValue : (els.subscriptionIds?.value || '');
+    const raw = typeof presetValue === 'string' ? presetValue : '';
     const value = raw.trim();
     if (!value) {
-        log('Enter one or more subscription IDs to delete.', 'warning');
+        log('Select a subscription from the list to delete it.', 'warning');
         return;
     }
     const ids = value.split(/[,\s]+/).map(item => item.trim()).filter(Boolean);
@@ -545,9 +545,6 @@ async function deleteSubscriptions(presetValue) {
     try {
         await apiFetch(`/public/v1/events/subscriptions?${params.toString()}`, { method: 'DELETE' });
         log(`Deleted ${ids.length} subscription${ids.length === 1 ? '' : 's'}.`);
-        if (els.subscriptionIds && typeof presetValue !== 'string') {
-            els.subscriptionIds.value = '';
-        }
         await listSubscriptions();
     } catch (err) {
         console.error('Delete subscription failed', err);
@@ -671,13 +668,13 @@ function updateBridgeState() {
     if (!els.bridgeState) return;
     if (state.bridge.status === 'connected') {
         els.bridgeState.textContent = 'Bridge connected';
-        els.bridgeState.className = 'status-pill success';
+        els.bridgeState.className = 'status-chip';
     } else if (state.bridge.status === 'connecting') {
         els.bridgeState.textContent = 'Bridge connecting';
-        els.bridgeState.className = 'status-pill warning';
+        els.bridgeState.className = 'status-chip warning';
     } else {
         els.bridgeState.textContent = 'Bridge disconnected';
-        els.bridgeState.className = 'status-pill danger';
+        els.bridgeState.className = 'status-chip danger';
     }
 }
 
