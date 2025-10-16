@@ -289,7 +289,7 @@
             <main class="stack">
                 <section class="panel step">
                     <h2>Step 1 · Pick your channel</h2>
-                    <p class="hint">Enter the channel slug (the part after <code>kick.com/</code>). We remember it locally for next time.</p>
+                    <p class="hint">We auto-fill this with the channel you just signed in as. Enter a different slug (the part after <code>kick.com/</code>) if you want to watch another broadcaster or pass <code>?username=&lt;slug&gt;</code> in the URL.</p>
                     <label for="channel-slug">Channel slug</label>
                     <input id="channel-slug" type="text" placeholder="yourchannel" autocomplete="off" />
                     <div class="button-row">
@@ -304,16 +304,16 @@
                 </section>
 
                 <section class="panel step">
-                    <h2>Step 2 · Create subscriptions</h2>
-                    <p class="hint">After you sign in, create the default webhook subscriptions so Kick can send us chat, follows, subscriptions, tips, and live status notifications.</p>
+                    <h2>Step 2 · Webhook subscriptions (auto-managed)</h2>
+                    <p class="hint">As soon as you are signed in we auto-create the default webhook subscriptions for chat, follows, subscriptions, tips, and live status alerts. Use the button below only if you need to force a refresh.</p>
                     <div class="button-row">
-                        <button id="subscribe-events">Create subscriptions</button>
+                        <button id="subscribe-events">Force resubscribe</button>
                         <button id="list-subscriptions" class="button-secondary">Refresh list</button>
                     </div>
                     <div id="subscription-status" class="list">
                         <div class="list-item">
                             <strong>No subscription data yet.</strong>
-                            <small>Click “Create subscriptions” as soon as you’re signed in.</small>
+                            <small>Subscriptions appear automatically right after sign-in or page load.</small>
                         </div>
                     </div>
                 </section>
