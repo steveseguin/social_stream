@@ -311,16 +311,30 @@ async function handleAuthCallback() {
 async function exchangeCodeForToken(code, verifier) {
     const redirectUri = state.redirectUri || (window.location.origin + window.location.pathname);
     const base = getBridgeBaseUrl().replace(/\/$/, '');
-    const params = new URLSearchParams({
+    const payload = {
         code,
         code_verifier: verifier,
         redirect_uri: redirectUri
-    });
+    };
 
-    const response = await fetch(`${base}/kick/callback?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
+    let response = await fetch(`${base}/kick/callback`, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
     });
+    if (response.status === 404 || response.status === 405 || response.status === 501) {
+        const params = new URLSearchParams();
+        params.set('code', code);
+        params.set('code_verifier', verifier);
+        params.set('redirect_uri', redirectUri);
+        response = await fetch(`${base}/kick/callback?${params.toString()}`, {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' }
+        });
+    }
     const text = await response.text();
     let data = {};
     if (text) {

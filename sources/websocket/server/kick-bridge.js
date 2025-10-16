@@ -313,19 +313,19 @@ async function routeRequest(req, res) {
         res.end();
         return;
     }
-    if (req.method === 'GET' && url.pathname === '/events') {
+    if (url.pathname === '/events' && req.method === 'GET') {
         handleEvents(req, res);
         return;
     }
-    if (req.method === 'GET' && url.pathname === '/kick/callback') {
-        await handleKickCallback(req, res, url);
+    if (url.pathname === '/kick/callback' && (req.method === 'GET' || req.method === 'POST')) {
+        await handleKickCallback(req, res, url, req);
         return;
     }
-    if (req.method === 'POST' && url.pathname === '/kick/token') {
+    if (url.pathname === '/kick/token' && req.method === 'POST') {
         await handleKickTokenRequest(req, res);
         return;
     }
-    if (req.method === 'POST' && url.pathname === '/webhook') {
+    if (url.pathname === '/webhook' && req.method === 'POST') {
         await handleWebhook(req, res);
         return;
     }
@@ -345,10 +345,53 @@ function createRequestListener() {
     };
 }
 
-async function handleKickCallback(req, res, url) {
-    const code = url.searchParams.get('code');
-    const verifier = url.searchParams.get('code_verifier');
-    const redirectUri = url.searchParams.get('redirect_uri') || KICK_REDIRECT_URI;
+async function parseJsonBody(req) {
+    const buffers = [];
+    for await (const chunk of req) {
+        buffers.push(chunk);
+    }
+    if (!buffers.length) {
+        return null;
+    }
+    try {
+        const raw = Buffer.concat(buffers).toString('utf8');
+        if (!raw) return null;
+        const contentType = (req.headers['content-type'] || '').toLowerCase();
+        if (contentType.includes('application/x-www-form-urlencoded')) {
+            const params = new URLSearchParams(raw);
+            const result = {};
+            for (const [key, value] of params.entries()) {
+                result[key] = value;
+            }
+            return result;
+        }
+        return JSON.parse(raw);
+    } catch (err) {
+        throw new Error('invalid_json');
+    }
+}
+
+function bodyOrQuery(url, body, key) {
+    if (body && Object.prototype.hasOwnProperty.call(body, key)) {
+        return body[key];
+    }
+    return url.searchParams.get(key);
+}
+
+async function handleKickCallback(req, res, url, rawReq) {
+    let body = null;
+    if (req.method === 'POST') {
+        try {
+            body = await parseJsonBody(rawReq);
+        } catch (err) {
+            res.writeHead(400, corsHeaders({ 'Content-Type': 'application/json' }));
+            res.end(JSON.stringify({ error: 'invalid_json', message: 'Request body must be valid JSON.' }));
+            return;
+        }
+    }
+    const code = bodyOrQuery(url, body, 'code');
+    const verifier = bodyOrQuery(url, body, 'code_verifier');
+    const redirectUri = bodyOrQuery(url, body, 'redirect_uri') || KICK_REDIRECT_URI;
     if (!code) {
         res.writeHead(400, corsHeaders({ 'Content-Type': 'application/json' }));
         res.end(JSON.stringify({ error: 'missing_code', message: 'Kick did not return an authorization code.' }));
@@ -378,19 +421,13 @@ async function handleKickCallback(req, res, url) {
 }
 
 async function handleKickTokenRequest(req, res) {
-    const buffers = [];
-    for await (const chunk of req) {
-        buffers.push(chunk);
-    }
     let payload = {};
-    if (buffers.length) {
-        try {
-            payload = JSON.parse(Buffer.concat(buffers).toString('utf8'));
-        } catch (err) {
-            res.writeHead(400, corsHeaders({ 'Content-Type': 'application/json' }));
-            res.end(JSON.stringify({ error: 'invalid_json', message: 'Request body must be valid JSON.' }));
-            return;
-        }
+    try {
+        payload = (await parseJsonBody(req)) || {};
+    } catch (err) {
+        res.writeHead(400, corsHeaders({ 'Content-Type': 'application/json' }));
+        res.end(JSON.stringify({ error: 'invalid_json', message: 'Request body must be valid JSON.' }));
+        return;
     }
     const grantType = payload?.grant_type;
 
