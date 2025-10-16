@@ -13,6 +13,7 @@ const state = {
     clientSecret: '',
     redirectUri: '',
     channelSlug: '',
+    channelSlugSource: '',
     channelId: null,
     channelName: '',
     lastResolvedSlug: '',
@@ -20,6 +21,14 @@ const state = {
     customEvents: '',
     tokens: null,
     refreshTimer: null,
+    authUser: null,
+    profilePromise: null,
+    eventTypesUnavailable: false,
+    autoStart: {
+        running: false,
+        lastSlug: '',
+        pendingForce: false
+    },
     bridge: {
         source: null,
         retryTimer: null,
@@ -57,6 +66,48 @@ function initElements() {
     });
 }
 
+function setChannelSlug(value, options = {}) {
+    const { persist = true, source = 'manual', force = false } = options;
+    const slug = (value || '').trim();
+    if (!slug) return;
+    const normalized = slug.toLowerCase();
+    const current = (state.channelSlug || '').toLowerCase();
+    const cameFromQuery = state.channelSlugSource === 'query';
+    const sameValue = normalized === current;
+
+    if (!force && sameValue && cameFromQuery && source !== 'query') {
+        // Respect explicit query parameter overrides.
+        if (persist) persistConfig();
+        updateInputsFromState();
+        maybeAutoStart();
+        return;
+    }
+    if (!force && cameFromQuery && source !== 'query' && !sameValue) {
+        // Keep the query-selected slug in place.
+        if (persist) persistConfig();
+        updateInputsFromState();
+        maybeAutoStart();
+        return;
+    }
+
+    const changed = !sameValue || force;
+    if (changed) {
+        state.channelSlug = slug;
+        state.channelId = null;
+        state.lastResolvedSlug = '';
+        state.autoStart.lastSlug = '';
+    } else {
+        state.channelSlug = slug; // Preserve original casing.
+    }
+    state.channelSlugSource = source;
+
+    if (persist) {
+        persistConfig();
+    }
+    updateInputsFromState();
+    maybeAutoStart();
+}
+
 function loadConfig() {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
@@ -65,7 +116,12 @@ function loadConfig() {
         state.clientId = cfg.clientId || '';
         state.clientSecret = cfg.clientSecret || '';
         state.redirectUri = cfg.redirectUri || '';
-        state.channelSlug = cfg.channelSlug || '';
+        if (cfg.channelSlug) {
+            setChannelSlug(cfg.channelSlug, { persist: false, source: 'storage', force: true });
+        } else {
+            state.channelSlug = '';
+            state.channelSlugSource = '';
+        }
         state.bridgeUrl = cfg.bridgeUrl || '';
         state.customEvents = cfg.customEvents || '';
         if (cfg.chatType) {
@@ -85,6 +141,22 @@ function loadTokens() {
         state.tokens = tokens;
     } catch (err) {
         console.error('Failed to load Kick tokens', err);
+    }
+}
+
+function applyUrlParams() {
+    try {
+        const params = new URLSearchParams(window.location.search);
+        const slug =
+            params.get('username') ||
+            params.get('channel') ||
+            params.get('slug') ||
+            params.get('channel_slug');
+        if (slug) {
+            setChannelSlug(slug, { source: 'query', force: true });
+        }
+    } catch (err) {
+        console.error('Failed to parse Kick URL parameters', err);
     }
 }
 
@@ -146,8 +218,9 @@ function bindEvents() {
     }
     if (els.connectBridge) {
         els.connectBridge.addEventListener('click', () => {
-            state.channelSlug = els.channelSlug ? els.channelSlug.value.trim() : '';
-            persistConfig();
+            if (els.channelSlug) {
+                setChannelSlug(els.channelSlug.value, { source: 'input' });
+            }
             connectBridge();
         });
     }
@@ -155,16 +228,17 @@ function bindEvents() {
         els.disconnectBridge.addEventListener('click', disconnectBridge);
     }
     if (els.subscribeEvents) {
-        els.subscribeEvents.addEventListener('click', subscribeToEvents);
+        els.subscribeEvents.addEventListener('click', () => subscribeToEvents());
     }
     if (els.listSubscriptions) {
-        els.listSubscriptions.addEventListener('click', listSubscriptions);
+        els.listSubscriptions.addEventListener('click', () => listSubscriptions());
     }
     if (els.channelSlug) {
-        els.channelSlug.addEventListener('change', () => {
-            state.channelSlug = els.channelSlug.value.trim();
-            persistConfig();
-        });
+        const commitSlug = () => {
+            setChannelSlug(els.channelSlug.value, { source: 'input' });
+        };
+        els.channelSlug.addEventListener('change', commitSlug);
+        els.channelSlug.addEventListener('blur', commitSlug);
     }
     if (els.subscriptionStatus) {
         els.subscriptionStatus.addEventListener('click', event => {
@@ -258,7 +332,9 @@ async function handleAuthCallback() {
     try {
         await exchangeCodeForToken(code, verifier);
         updateAuthStatus();
+        await loadAuthenticatedProfile();
         await listSubscriptions();
+        await maybeAutoStart(true);
     } catch (err) {
         console.error(err);
         log(`Token exchange failed: ${err.message}`, 'error');
@@ -409,17 +485,110 @@ async function apiFetch(path, options = {}, retry = true) {
     return res.text();
 }
 
+function extractProfileFromTokens() {
+    const tokens = state.tokens || {};
+    if (!tokens) return null;
+    const candidates = [tokens.profile, tokens.user, tokens.account];
+    for (const candidate of candidates) {
+        if (candidate && typeof candidate === 'object') {
+            return candidate;
+        }
+    }
+    const slug =
+        tokens.username ||
+        tokens.user_login ||
+        tokens.userLogin ||
+        tokens.user_name ||
+        tokens.userName ||
+        '';
+    if (!slug) {
+        return null;
+    }
+    return {
+        id: tokens.user_id || tokens.userId || null,
+        username: slug,
+        display_name: tokens.display_name || tokens.user_display_name || slug,
+        slug
+    };
+}
+
+async function loadAuthenticatedProfile() {
+    if (!state.tokens?.access_token) return null;
+    if (state.profilePromise) {
+        return state.profilePromise;
+    }
+    state.profilePromise = (async () => {
+        const applyProfile = profile => {
+            if (!profile || typeof profile !== 'object') return null;
+            state.authUser = profile;
+            const username =
+                profile.username ||
+                profile.display_name ||
+                profile.name ||
+                profile.user?.username ||
+                '';
+            if (username) {
+                state.channelName = username;
+            }
+            const slug =
+                profile.slug ||
+                profile.channel?.slug ||
+                profile.user?.slug ||
+                profile.username ||
+                '';
+            if (slug) {
+                setChannelSlug(slug, { source: 'profile' });
+            }
+            return profile;
+        };
+        try {
+            const data = await apiFetch('/public/v1/me');
+            const profile =
+                (data && (data.data || data.profile || data.user || data)) || null;
+            if (profile && typeof profile === 'object') {
+                return applyProfile(profile);
+            }
+        } catch (err) {
+            console.error('Failed to load Kick profile', err);
+        }
+        const fallback = extractProfileFromTokens();
+        if (fallback) {
+            return applyProfile(fallback);
+        }
+        return null;
+    })();
+    state.profilePromise.finally(() => {
+        state.profilePromise = null;
+    });
+    return state.profilePromise;
+}
+
 async function fetchEventTypes(force = false) {
-    if (!force && cachedEventTypes) {
-        return cachedEventTypes;
+    if (!force) {
+        if (state.eventTypesUnavailable) {
+            return cachedEventTypes || [];
+        }
+        if (cachedEventTypes) {
+            return cachedEventTypes;
+        }
     }
     try {
         const data = await apiFetch('/public/v1/events/types');
         const list = Array.isArray(data?.data) ? data.data : [];
+        state.eventTypesUnavailable = false;
         cachedEventTypes = list;
         return list;
     } catch (err) {
-        log(`Unable to fetch event types: ${err.message}`, 'error');
+        const message = err?.message || '';
+        const wasUnavailable = state.eventTypesUnavailable;
+        if (/404/.test(message)) {
+            state.eventTypesUnavailable = true;
+            if (!wasUnavailable) {
+                log('Kick event types endpoint is unavailable; using default subscription list.', 'warning');
+            }
+        } else {
+            log(`Unable to fetch event types: ${message}`, 'error');
+        }
         cachedEventTypes = [];
         return cachedEventTypes;
     }
@@ -496,7 +665,8 @@ async function resolveChannelId(force = false) {
     return state.channelId;
 }
 
-async function subscribeToEvents() {
+async function subscribeToEvents(options = {}) {
+    const { events: presetEvents = null, skipListRefresh = false } = options || {};
     try {
         await resolveChannelId();
     } catch (err) {
@@ -504,8 +674,11 @@ async function subscribeToEvents() {
         return;
     }
     try {
-        const eventTypes = await fetchEventTypes();
-        const events = deriveEventSubscriptions(eventTypes);
+        let events = Array.isArray(presetEvents) ? presetEvents : null;
+        if (!events) {
+            const eventTypes = await fetchEventTypes();
+            events = deriveEventSubscriptions(eventTypes);
+        }
         if (!events.length) {
             log('No event types available for subscription. Check your scopes.', 'error');
             return;
@@ -521,7 +694,10 @@ async function subscribeToEvents() {
             body: JSON.stringify(payload)
         });
         reportSubscriptionResults(response, events);
-        await listSubscriptions();
+        if (!skipListRefresh) {
+            await listSubscriptions();
+        }
+        return response;
     } catch (err) {
         console.error(err);
         log(`Subscription failed: ${err.message}`, 'error');
@@ -555,10 +731,13 @@ async function deleteSubscriptions(presetValue) {
 async function listSubscriptions() {
     try {
         const data = await apiFetch('/public/v1/events/subscriptions');
-        renderSubscriptions(data?.data || []);
+        const items = Array.isArray(data?.data) ? data.data : [];
+        renderSubscriptions(items);
+        return items;
     } catch (err) {
         console.error(err);
         log(`Failed to list subscriptions: ${err.message}`, 'error');
+        return [];
     }
 }
 
@@ -586,6 +765,73 @@ function renderSubscriptions(items) {
         </div>`;
     }).join('');
     els.subscriptionStatus.innerHTML = html;
+}
+
+async function maybeAutoStart(force = false) {
+    if (!state.tokens?.access_token) return;
+    const slug = state.channelSlug?.trim();
+    if (!slug) return;
+
+    const normalizedSlug = slug.toLowerCase();
+    if (state.autoStart.running) {
+        if (force) {
+            state.autoStart.pendingForce = true;
+        }
+        return;
+    }
+    if (
+        !force &&
+        state.autoStart.lastSlug === normalizedSlug &&
+        (state.bridge.status === 'connected' || state.bridge.status === 'connecting')
+    ) {
+        return;
+    }
+
+    state.autoStart.running = true;
+    state.autoStart.pendingForce = false;
+    try {
+        if (state.bridge.status === 'disconnected' || !state.bridge.source) {
+            connectBridge();
+        }
+
+        let channelId;
+        try {
+            channelId = await resolveChannelId();
+        } catch (err) {
+            log(err.message, 'error');
+            return;
+        }
+
+        const eventTypes = await fetchEventTypes();
+        const desiredEvents = deriveEventSubscriptions(eventTypes);
+        const desiredNames = desiredEvents.map(evt => evt.name);
+
+        const existing = await listSubscriptions();
+        const channelIdKey = channelId != null ? String(channelId) : null;
+        const forChannel = channelIdKey
+            ? existing.filter(item => String(item?.broadcaster_user_id || '') === channelIdKey)
+            : existing;
+        const existingNames = new Set(forChannel.map(item => item.event));
+        const missing = force
+            ? desiredNames
+            : desiredNames.filter(name => !existingNames.has(name));
+
+        if (missing.length) {
+            log(`Auto-subscribing to: ${missing.join(', ')}`);
+            await subscribeToEvents({ events: desiredEvents, skipListRefresh: true });
+            await listSubscriptions();
+        }
+
+        state.autoStart.lastSlug = normalizedSlug;
+    } catch (err) {
+        console.error('Auto-start failed', err);
+    } finally {
+        state.autoStart.running = false;
+        if (state.autoStart.pendingForce) {
+            state.autoStart.pendingForce = false;
+            maybeAutoStart(true);
+        }
+    }
 }
 
 function connectBridge() {
@@ -1177,19 +1423,22 @@ async function createCodeChallenge(verifier) {
     return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function bootstrap() {
+async function bootstrap() {
     initElements();
     loadConfig();
     applyDefaultConfig();
     loadTokens();
+    applyUrlParams();
     updateInputsFromState();
     updateAuthStatus();
     bindEvents();
     if (state.tokens?.access_token) {
         scheduleTokenRefresh();
-        listSubscriptions();
+        await loadAuthenticatedProfile();
+        await maybeAutoStart();
+        await listSubscriptions();
     }
-    handleAuthCallback();
+    await handleAuthCallback();
 }
 
 document.addEventListener('DOMContentLoaded', bootstrap);
