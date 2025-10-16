@@ -41,13 +41,7 @@ function q(id) {
 function initElements() {
     Object.assign(els, {
         authState: q('auth-state'),
-        clientId: q('client-id'),
-        clientSecret: q('client-secret'),
-        redirectUri: q('redirect-uri'),
         channelSlug: q('channel-slug'),
-        bridgeUrl: q('bridge-url'),
-        saveCredentials: q('save-credentials'),
-        clearCredentials: q('clear-credentials'),
         startAuth: q('start-auth'),
         connectBridge: q('connect-bridge'),
         disconnectBridge: q('disconnect-bridge'),
@@ -56,17 +50,10 @@ function initElements() {
         subscriptionStatus: q('subscription-status'),
         eventLog: q('event-log'),
         bridgeState: q('bridge-state'),
-        customEvents: q('custom-events'),
-        subscriptionIds: q('subscription-ids'),
-        deleteSubscriptions: q('delete-subscriptions'),
         chatMessage: q('chat-message'),
         chatType: q('chat-send-type'),
         sendChat: q('send-chat'),
-        chatStatus: q('chat-status'),
-        tokenPanel: q('token-panel'),
-        accessToken: q('access-token'),
-        refreshToken: q('refresh-token'),
-        tokenExpiry: q('token-expiry')
+        chatStatus: q('chat-status')
     });
 }
 
@@ -135,14 +122,8 @@ function persistTokens() {
 }
 
 function updateInputsFromState() {
-    if (!els.clientId) return;
-    els.clientId.value = state.clientId;
-    els.clientSecret.value = state.clientSecret;
-    els.redirectUri.value = state.redirectUri || (window.location.origin + window.location.pathname);
-    els.channelSlug.value = state.channelSlug;
-    els.bridgeUrl.value = state.bridgeUrl || DEFAULT_CONFIG.bridgeUrl;
-    if (els.customEvents) {
-        els.customEvents.value = state.customEvents || '';
+    if (els.channelSlug) {
+        els.channelSlug.value = state.channelSlug || '';
     }
     if (els.chatType) {
         els.chatType.value = state.chat?.type || 'user';
@@ -154,78 +135,36 @@ function updateInputsFromState() {
 
 function updateAuthStatus() {
     if (!els.authState) return;
-    if (state.tokens?.access_token && !isTokenExpired()) {
-        els.authState.textContent = 'Authenticated';
-        els.authState.className = 'status-chip';
-    } else {
-        els.authState.textContent = 'Not authenticated';
-        els.authState.className = 'status-chip warning';
-    }
-    if (state.tokens?.access_token) {
-        els.tokenPanel.style.display = 'block';
-        els.accessToken.textContent = maskToken(state.tokens.access_token);
-        els.refreshToken.textContent = state.tokens.refresh_token ? maskToken(state.tokens.refresh_token) : '—';
-        const expiresAt = state.tokens.expires_at ? new Date(state.tokens.expires_at) : null;
-        els.tokenExpiry.textContent = expiresAt ? expiresAt.toLocaleString() : 'Unknown';
-    } else {
-        els.tokenPanel.style.display = 'none';
-    }
-}
-
-function maskToken(token) {
-    if (!token) return '—';
-    if (token.length <= 16) return token;
-    return `${token.slice(0, 6)}…${token.slice(-4)}`;
+    const authed = state.tokens?.access_token && !isTokenExpired();
+    els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
+    els.authState.className = authed ? 'status-pill success' : 'status-pill warning';
 }
 
 function bindEvents() {
-    if (!els.saveCredentials) return;
-    els.saveCredentials.addEventListener('click', () => {
-        state.clientId = els.clientId.value.trim();
-        state.clientSecret = els.clientSecret.value.trim();
-        state.redirectUri = els.redirectUri.value.trim();
-        state.channelSlug = els.channelSlug.value.trim();
-        state.bridgeUrl = els.bridgeUrl.value.trim() || DEFAULT_CONFIG.bridgeUrl;
-        persistConfig();
-        log('Credentials saved locally.');
-    });
-
-    els.clearCredentials.addEventListener('click', () => {
-        state.clientId = '';
-        state.clientSecret = '';
-        state.redirectUri = '';
-        state.bridgeUrl = '';
-        state.customEvents = '';
-        applyDefaultConfig();
-        persistConfig();
-        updateInputsFromState();
-        log('Advanced settings reset to defaults.');
-    });
-
-    els.startAuth.addEventListener('click', startAuthFlow);
-    els.connectBridge.addEventListener('click', () => {
-        state.bridgeUrl = els.bridgeUrl.value.trim();
-        if (!state.bridgeUrl) {
-            state.bridgeUrl = DEFAULT_CONFIG.bridgeUrl;
-        }
-        state.channelSlug = els.channelSlug.value.trim();
-        persistConfig();
-        connectBridge();
-    });
-    els.disconnectBridge.addEventListener('click', disconnectBridge);
-    els.subscribeEvents.addEventListener('click', subscribeToEvents);
-    els.listSubscriptions.addEventListener('click', listSubscriptions);
-    els.channelSlug.addEventListener('change', () => {
-        state.channelSlug = els.channelSlug.value.trim();
-        persistConfig();
-    });
-    if (els.customEvents) {
-        const updateCustomEvents = () => {
-            state.customEvents = els.customEvents.value.trim();
+    if (els.startAuth) {
+        els.startAuth.addEventListener('click', startAuthFlow);
+    }
+    if (els.connectBridge) {
+        els.connectBridge.addEventListener('click', () => {
+            state.channelSlug = els.channelSlug ? els.channelSlug.value.trim() : '';
             persistConfig();
-        };
-        els.customEvents.addEventListener('change', updateCustomEvents);
-        els.customEvents.addEventListener('blur', updateCustomEvents);
+            connectBridge();
+        });
+    }
+    if (els.disconnectBridge) {
+        els.disconnectBridge.addEventListener('click', disconnectBridge);
+    }
+    if (els.subscribeEvents) {
+        els.subscribeEvents.addEventListener('click', subscribeToEvents);
+    }
+    if (els.listSubscriptions) {
+        els.listSubscriptions.addEventListener('click', listSubscriptions);
+    }
+    if (els.channelSlug) {
+        els.channelSlug.addEventListener('change', () => {
+            state.channelSlug = els.channelSlug.value.trim();
+            persistConfig();
+        });
     }
     if (els.subscriptionStatus) {
         els.subscriptionStatus.addEventListener('click', event => {
@@ -233,25 +172,9 @@ function bindEvents() {
             if (deleteTarget) {
                 event.preventDefault();
                 const id = deleteTarget.getAttribute('data-delete-subscription');
-                if (id) {
-                    if (els.subscriptionIds) {
-                        els.subscriptionIds.value = id;
-                    }
-                    deleteSubscriptions(id);
-                }
-                return;
-            }
-            const item = event.target.closest('.list-item[data-subscription-id]');
-            if (item && els.subscriptionIds) {
-                const id = item.getAttribute('data-subscription-id');
-                if (id) {
-                    els.subscriptionIds.value = id;
-                }
+                if (id) deleteSubscriptions(id);
             }
         });
-    }
-    if (els.deleteSubscriptions) {
-        els.deleteSubscriptions.addEventListener('click', () => deleteSubscriptions());
     }
     if (els.chatType) {
         els.chatType.addEventListener('change', () => {
@@ -280,7 +203,7 @@ function getBridgeBaseUrl() {
 
 async function startAuthFlow() {
     if (!state.clientId) {
-        alert('Missing Kick Client ID. Check the advanced settings section.');
+        log('Missing Kick client ID. Please refresh this page and try again.', 'error');
         return;
     }
     const verifier = generateRandomString(64);
@@ -669,8 +592,9 @@ function renderSubscriptions(items) {
 }
 
 function connectBridge() {
+    state.bridgeUrl = state.bridgeUrl || DEFAULT_CONFIG.bridgeUrl;
     if (!state.bridgeUrl) {
-        alert('Set the bridge SSE URL first.');
+        log('Unable to determine Kick bridge URL.', 'error');
         return;
     }
     disconnectBridge();
@@ -747,13 +671,13 @@ function updateBridgeState() {
     if (!els.bridgeState) return;
     if (state.bridge.status === 'connected') {
         els.bridgeState.textContent = 'Bridge connected';
-        els.bridgeState.className = 'status-chip';
+        els.bridgeState.className = 'status-pill success';
     } else if (state.bridge.status === 'connecting') {
         els.bridgeState.textContent = 'Bridge connecting';
-        els.bridgeState.className = 'status-chip warning';
+        els.bridgeState.className = 'status-pill warning';
     } else {
         els.bridgeState.textContent = 'Bridge disconnected';
-        els.bridgeState.className = 'status-chip danger';
+        els.bridgeState.className = 'status-pill danger';
     }
 }
 
