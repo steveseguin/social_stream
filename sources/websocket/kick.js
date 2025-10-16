@@ -487,6 +487,39 @@ function extractProfileFromTokens() {
     };
 }
 
+function unwrapKickProfile(payload) {
+    if (!payload || typeof payload === 'string') {
+        return null;
+    }
+    if (Array.isArray(payload)) {
+        return payload.find(item => item && typeof item === 'object') || null;
+    }
+    if (typeof payload !== 'object') {
+        return null;
+    }
+    const dataField = payload.data;
+    if (Array.isArray(dataField)) {
+        return dataField.find(item => item && typeof item === 'object') || null;
+    }
+    if (dataField && typeof dataField === 'object') {
+        return dataField;
+    }
+    for (const key of ['profile', 'user', 'account']) {
+        const candidate = payload[key];
+        if (!candidate) continue;
+        if (Array.isArray(candidate)) {
+            const found = candidate.find(item => item && typeof item === 'object');
+            if (found) return found;
+        } else if (typeof candidate === 'object') {
+            return candidate;
+        }
+    }
+    if (payload && Object.keys(payload).length > 0) {
+        return payload;
+    }
+    return null;
+}
+
 async function loadAuthenticatedProfile() {
     if (!state.tokens?.access_token) return null;
     if (state.profilePromise) {
@@ -516,20 +549,38 @@ async function loadAuthenticatedProfile() {
             }
             return profile;
         };
-        try {
-            const data = await apiFetch('/public/v1/me');
-            const profile =
-                (data && (data.data || data.profile || data.user || data)) || null;
-            if (profile && typeof profile === 'object') {
-                return applyProfile(profile);
+        const endpoints = [
+            {
+                path: '/public/v1/users',
+                notFoundMessage:
+                    'Kick user details endpoint is still rolling out for this app. Trying the legacy profile endpoint.'
+            },
+            {
+                path: '/public/v1/me',
+                notFoundMessage:
+                    'Kick profile details are still rolling out on the API. Continuing with sign-in information.'
             }
-        } catch (err) {
-            const message = err?.message || '';
-            if (/404/.test(message)) {
-                log('Kick profile details are still rolling out on the API. Continuing with sign-in information.', 'warning');
-            } else {
-                console.error('Failed to load Kick profile', err);
-                log(`Unable to load Kick profile: ${message || 'unknown error'}`, 'warning');
+        ];
+        for (const endpoint of endpoints) {
+            try {
+                const data = await apiFetch(endpoint.path);
+                const profile = unwrapKickProfile(data);
+                if (profile && typeof profile === 'object') {
+                    return applyProfile(profile);
+                }
+            } catch (err) {
+                const message = err?.message || '';
+                if (/404/.test(message)) {
+                    if (endpoint.notFoundMessage) {
+                        log(endpoint.notFoundMessage, 'warning');
+                    }
+                } else {
+                    console.error(`Failed to load Kick profile via ${endpoint.path}`, err);
+                    log(
+                        `Unable to load Kick profile (${endpoint.path}): ${message || 'unknown error'}`,
+                        'warning'
+                    );
+                }
             }
         }
         const fallback = extractProfileFromTokens();
