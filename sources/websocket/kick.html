@@ -3,164 +3,448 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Social Stream – Kick (Official API)</title>
+    <title>Social Stream – Kick Chat Bridge</title>
     <link rel="icon" href="https://kick.com/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="youtube.css">
     <style>
-        body { background: #0f0f0f; color: #f4f4f4; font-family: 'Inter', 'Roboto', sans-serif; }
-        a { color: #5ee37f; }
-        .kick-accent { color: #4ef287; }
-        .container { max-width: 1060px; margin: 0 auto; padding: 24px; }
-        .panel { background: #161616; border: 1px solid #2c2c2c; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 6px 20px rgba(0,0,0,0.32); }
-        .panel h2 { margin-top: 0; font-size: 1.6rem; display: flex; align-items: center; gap: 10px; }
-        label { display: block; font-weight: 600; margin-bottom: 4px; color: #d3d3d3; }
-        input[type="text"], input[type="password"], input[type="url"], textarea, select {
-            width: 100%; padding: 10px 12px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #2f2f2f; background: #111; color: #f4f4f4;
+        :root {
+            --kick-green: #4ef287;
+            --kick-dark: #0f0f0f;
+            --kick-panel: #161616;
+            --kick-border: #2c2c2c;
+            --kick-muted: #a0a5ab;
         }
-        select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, #4ef287 50%), linear-gradient(135deg, #4ef287 50%, transparent 50%); background-position: calc(100% - 16px) calc(1rem + 3px), calc(100% - 11px) calc(1rem + 3px); background-size: 5px 5px, 5px 5px; background-repeat: no-repeat; padding-right: 32px; }
-        select:focus { outline: none; border-color: #4ef287; }
-        input::placeholder { color: #767676; }
-        button { background: #4ef287; color: #0f0f0f; border: none; border-radius: 8px; padding: 10px 18px; font-weight: 600; cursor: pointer; transition: transform .15s ease, opacity .15s ease; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-        button:hover:not(:disabled) { transform: translateY(-1px); }
-        .button-secondary { background: transparent; color: #f4f4f4; border: 1px solid #3a3a3a; }
-        .section-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
-        .status-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; font-size: 0.85rem; background: rgba(78, 242, 135, 0.12); color: #4ef287; }
-        .status-chip.danger { background: rgba(242, 78, 124, 0.12); color: #f24e7c; }
-        .status-chip.warning { background: rgba(242, 188, 78, 0.12); color: #f2bc4e; }
-        .flex { display: flex; align-items: center; gap: 12px; }
-        .flex-between { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-        .list { background:#101010; border-radius: 10px; border:1px solid #252525; max-height:220px; overflow-y:auto; padding:12px; font-size:0.9rem; }
-        .list-item { padding:8px 10px; border-radius:8px; margin-bottom:8px; background:#161616; border:1px solid transparent; }
-        .list-item.active { border-color:#4ef287; }
-        .list-item small { display:block; color:#8a8a8a; margin-top:4px; }
-        .log { background:#0e0e0e; border-radius:10px; border:1px solid #292929; padding:12px; color:#e0e0e0; font-family: 'JetBrains Mono', monospace; height:200px; overflow-y:auto; font-size:0.85rem; }
-        .log-line { margin-bottom:6px; }
-        .log-line time { color:#666; margin-right:8px; }
-        .inline { display:flex; gap:10px; align-items:center; }
-        .inline input { flex:1; margin-bottom:0; }
-        .button-small { padding:6px 12px; font-size:0.8rem; }
-        .list-row { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-        .list-details { flex:1; min-width:0; }
-        .list-row button { flex-shrink:0; }
-        .token-view { background:#101010; padding:10px 12px; border-radius:8px; border:1px solid #282828; font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; }
-        .token-view strong { color:#4ef287; }
-        .badge-pill { display:inline-flex; align-items:center; padding:4px 8px; border-radius:999px; background:#252525; color:#dcdcdc; font-size:0.75rem; margin-right:6px; }
-        details { background:#111; border-radius:10px; border:1px solid #252525; padding:12px 16px; }
-        details summary { cursor:pointer; font-weight:600; }
-        .hint { color:#8a8a8a; font-size:0.85rem; }
-        @media (max-width: 720px) {
-            .flex, .flex-between { flex-direction: column; align-items: flex-start; }
-            button { width: 100%; }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            min-height: 100%;
+            overflow-y: auto;
+            background: var(--kick-dark);
+            color: #f4f4f4;
+            font-family: 'Inter', 'Roboto', sans-serif;
+            line-height: 1.55;
+        }
+        a { color: var(--kick-green); }
+        .page {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .content {
+            width: min(1080px, 100%);
+            margin: 0 auto;
+            padding: 32px 24px 40px;
+        }
+        .panel {
+            background: var(--kick-panel);
+            border: 1px solid var(--kick-border);
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+        }
+        .hero {
+            background: linear-gradient(135deg, rgba(78, 242, 135, 0.18), rgba(40, 190, 120, 0.04));
+            border-color: rgba(78, 242, 135, 0.35);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 2.8vw, 2.3rem);
+        }
+        .hero p {
+            margin: 0;
+            color: rgba(244, 244, 244, 0.85);
+            max-width: 720px;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+        }
+        .hero-note {
+            margin: 0;
+            color: var(--kick-muted);
+            font-size: 0.95rem;
+        }
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.25rem, 2vw, 1.55rem);
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        input[type="text"],
+        input[type="password"],
+        input[type="url"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 10px;
+            border: 1px solid #2f2f2f;
+            background: #111;
+            color: #f4f4f4;
+            font-size: 1rem;
+            margin-bottom: 14px;
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: #757575;
+        }
+        select {
+            appearance: none;
+            background-image:
+                linear-gradient(45deg, transparent 50%, var(--kick-green) 50%),
+                linear-gradient(135deg, var(--kick-green) 50%, transparent 50%);
+            background-position:
+                calc(100% - 16px) calc(1rem + 3px),
+                calc(100% - 11px) calc(1rem + 3px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            padding-right: 36px;
+        }
+        select:focus {
+            outline: none;
+            border-color: var(--kick-green);
+        }
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--kick-green);
+            color: #0f0f0f;
+            border: none;
+            border-radius: 999px;
+            padding: 11px 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(78, 242, 135, 0.25);
+        }
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .button-secondary {
+            background: transparent;
+            color: #f4f4f4;
+            border: 1px solid #3a3a3a;
+            box-shadow: none;
+        }
+        .button-secondary:hover:not(:disabled) {
+            box-shadow: none;
+            border-color: var(--kick-green);
+        }
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 6px 0 10px;
+        }
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+            background: rgba(78, 242, 135, 0.12);
+            color: var(--kick-green);
+            border: 1px solid rgba(78, 242, 135, 0.28);
+        }
+        .status-chip.warning {
+            background: rgba(242, 188, 78, 0.14);
+            border-color: rgba(242, 188, 78, 0.28);
+            color: #f4c259;
+        }
+        .status-chip.danger {
+            background: rgba(242, 78, 124, 0.14);
+            border-color: rgba(242, 78, 124, 0.28);
+            color: #ff7297;
+        }
+        .hint {
+            color: var(--kick-muted);
+            font-size: 0.95rem;
+            margin: 4px 0 12px;
+        }
+        .bridge-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin: 14px 0 8px;
+        }
+        .list {
+            background: #101010;
+            border-radius: 12px;
+            border: 1px solid #252525;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 12px;
+            font-size: 0.95rem;
+        }
+        .list-item {
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #161616;
+            border: 1px solid transparent;
+            transition: border 0.18s ease;
+        }
+        .list-item:hover {
+            border-color: rgba(78, 242, 135, 0.35);
+        }
+        .list-item small {
+            display: block;
+            color: #8a8a8a;
+            margin-top: 4px;
+        }
+        .log {
+            background: #0e0e0e;
+            border-radius: 12px;
+            border: 1px solid #292929;
+            padding: 14px;
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            min-height: 240px;
+            max-height: 360px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+        .log-line {
+            margin-bottom: 6px;
+        }
+        .log-line time {
+            color: #666;
+            margin-right: 8px;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        .grid-two {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            align-items: stretch;
+        }
+        details {
+            background: #131313;
+            border-radius: 12px;
+            border: 1px solid #2d2d2d;
+            padding: 14px 18px;
+        }
+        details summary {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            list-style: none;
+        }
+        details summary::marker {
+            display: none;
+        }
+        details[open] {
+            border-color: rgba(78, 242, 135, 0.32);
+        }
+        .advanced-body {
+            margin-top: 14px;
+            display: grid;
+            gap: 16px;
+        }
+        .advanced-grid {
+            display: grid;
+            gap: 16px;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .advanced-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .token-view {
+            background: #101010;
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid #282828;
+            font-size: 0.9rem;
+            word-break: break-all;
+        }
+        .token-view strong {
+            color: var(--kick-green);
+        }
+        .inline-details summary {
+            color: #d8d8d8;
+        }
+        .inline-details .details-body {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        @media (max-width: 640px) {
+            .content {
+                padding: 24px 16px 32px;
+            }
+            button {
+                width: 100%;
+            }
+            .button-row {
+                flex-direction: column;
+            }
+            .bridge-line {
+                flex-direction: column;
+                align-items: flex-start;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="panel" style="background: linear-gradient(135deg, rgba(78,242,135,0.16), transparent); border-color: rgba(78,242,135,0.35);">
-            <div class="flex-between">
-                <div>
-                    <h1 style="margin: 0; font-size: 2rem;">Kick – Official API Bridge</h1>
-                    <p style="margin: 6px 0 0; color: #cfcfcf; max-width: 680px;">
-                        Authenticate with your Kick developer app, subscribe to webhook events, and relay chat messages into Social Stream. A lightweight webhook bridge converts Kick webhooks into a local event stream that this page consumes.
-                    </p>
+    <div class="page">
+        <div class="content">
+            <header class="hero panel">
+                <h1>Kick Chat Bridge</h1>
+                <p>Connect Kick chat and alerts directly to Social Stream. Sign in once, pick your channel, and we route everything through our hosted bridge for you.</p>
+                <div class="hero-actions">
+                    <button id="start-auth">Sign in with Kick</button>
+                    <span id="auth-state" class="status-chip warning">Not signed in</span>
                 </div>
-                <div id="auth-state" class="status-chip warning">Not authenticated</div>
-            </div>
-        </header>
+                <p class="hero-note">Tokens stay on this device. Use the same browser as Social Stream for the smoothest experience.</p>
+            </header>
 
-        <section class="panel">
-            <h2>1. App Credentials</h2>
-            <p class="hint">Create a Kick developer app, enable webhooks, and add this page’s URL as an allowed redirect. Store credentials locally only.</p>
-            <label for="client-id">Client ID</label>
-            <input id="client-id" type="text" placeholder="pkce-client-id" autocomplete="off" spellcheck="false" />
-            <label for="client-secret">Client Secret</label>
-            <input id="client-secret" type="password" placeholder="client-secret" autocomplete="current-password" spellcheck="false" />
-            <label for="redirect-uri">Redirect URI</label>
-            <input id="redirect-uri" type="url" placeholder="https://socialstream.ninja/sources/websocket/kick.html" autocomplete="off" />
-            <div class="flex" style="margin-top:12px; flex-wrap:wrap; gap:10px;">
-                <button id="save-credentials">Save credentials</button>
-                <button id="clear-credentials" class="button-secondary">Clear</button>
-                <button id="start-auth" style="margin-left:auto;">Sign in with Kick</button>
-            </div>
-        </section>
-
-        <section class="panel">
-            <h2>2. Channel &amp; Webhook Subscriptions</h2>
-            <div class="section-grid">
-                <div>
+            <main class="stack">
+                <section class="panel step">
+                    <h2>Step 1 · Pick your Kick channel</h2>
+                    <p class="hint">Type the channel slug (the part after <code>kick.com/</code>). We’ll pull your chat and alerts as soon as the bridge is connected.</p>
                     <label for="channel-slug">Channel slug</label>
-                    <input id="channel-slug" type="text" placeholder="kickstreamer" autocomplete="off" />
-                </div>
-                <div>
-                    <label for="bridge-url">Webhook Bridge SSE URL</label>
-                    <input id="bridge-url" type="url" placeholder="http://localhost:8787/events" autocomplete="off" />
-                </div>
-                <div>
-                    <label for="custom-events">Extra event names</label>
-                    <input id="custom-events" type="text" placeholder="channel.banned, chat.message.deleted" autocomplete="off" />
-                    <p class="hint" style="margin-top:6px;">Optional: request additional Kick event types (comma separated). Versions default to 1 unless Kick reports otherwise.</p>
-                </div>
-            </div>
-            <div class="flex" style="flex-wrap:wrap; gap:10px;">
-                <button id="connect-bridge">Connect bridge</button>
-                <button id="disconnect-bridge" class="button-secondary">Disconnect</button>
-                <button id="subscribe-events" style="margin-left:auto;">Create subscriptions</button>
-                <button id="list-subscriptions" class="button-secondary">Refresh subscriptions</button>
-            </div>
-            <p class="hint" style="margin-top:12px;">Set the webhook callback URL in your Kick app to point at the bridge’s <code>/webhook</code> endpoint. The bridge streams events to <code>/events</code>.</p>
-            <div id="subscription-status" class="list" style="margin-top:14px;">
-                <div class="list-item">
-                    <strong>No subscription data yet.</strong>
-                    <small>Use “Refresh subscriptions” after authenticating.</small>
-                </div>
-            </div>
-            <div class="inline" style="margin-top:12px; gap:10px;">
-                <input id="subscription-ids" type="text" placeholder="subscription_id or multiple IDs" autocomplete="off" />
-                <button id="delete-subscriptions" class="button-secondary">Delete subscriptions</button>
-            </div>
-            <p class="hint" style="margin-top:6px;">Click a subscription row to copy its ID or paste multiple IDs separated by commas or spaces.</p>
-        </section>
+                    <input id="channel-slug" type="text" placeholder="yourchannel" autocomplete="off" />
+                    <div class="button-row">
+                        <button id="connect-bridge">Connect alerts</button>
+                        <button id="disconnect-bridge" class="button-secondary">Disconnect</button>
+                    </div>
+                    <div class="bridge-line">
+                        <span class="hint" style="margin:0;">Bridge status:</span>
+                        <span id="bridge-state" class="status-chip danger">Bridge disconnected</span>
+                    </div>
+                    <p class="hint">We host a Kick bridge at <code>https://kick.socialstream.ninja:8787</code>. It turns Kick’s webhooks into a live event stream for this page and Social Stream.</p>
+                </section>
 
-        <section class="panel">
-            <h2>3. Live Event Log</h2>
-            <div id="bridge-state" class="status-chip danger" style="margin-bottom:12px;">Bridge disconnected</div>
-            <div id="event-log" class="log"></div>
-        </section>
+                <section class="panel step">
+                    <h2>Step 2 · Enable alerts</h2>
+                    <p class="hint">After signing in, create subscriptions to follow chat, follows, subs, tips, and live status updates. Refresh to see what’s active.</p>
+                    <div class="button-row">
+                        <button id="subscribe-events">Create event subscriptions</button>
+                        <button id="list-subscriptions" class="button-secondary">Refresh list</button>
+                    </div>
+                    <div id="subscription-status" class="list">
+                        <div class="list-item">
+                            <strong>No subscription data yet.</strong>
+                            <small>Click “Create event subscriptions” once you’re signed in.</small>
+                        </div>
+                    </div>
+                    <details class="inline-details">
+                        <summary>Need to remove a subscription?</summary>
+                        <div class="details-body">
+                            <label for="subscription-ids">Subscription ID(s)</label>
+                            <input id="subscription-ids" type="text" placeholder="Paste one or many IDs" autocomplete="off" />
+                            <button id="delete-subscriptions" class="button-secondary">Delete selected</button>
+                        </div>
+                    </details>
+                </section>
 
-        <section class="panel">
-            <h2>4. Chat Tools</h2>
-            <p class="hint">Send messages through the Kick API after authenticating with <code>chat:write</code> scope. Messages sent as "Broadcaster" require the channel slug above.</p>
-            <label for="chat-message">Message</label>
-            <textarea id="chat-message" rows="3" placeholder="Say hello to chat"></textarea>
-            <div class="flex" style="flex-wrap:wrap; gap:10px;">
-                <select id="chat-send-type" title="Choose how the message is delivered">
-                    <option value="user">Send as broadcaster</option>
-                    <option value="userbot">Send as bot account</option>
-                </select>
-                <button id="send-chat">Send message</button>
-            </div>
-            <div id="chat-status" class="hint"></div>
-        </section>
+                <div class="grid-two">
+                    <section class="panel step">
+                        <h2>Step 3 · Live event feed</h2>
+                        <p class="hint">Every webhook that arrives through the bridge is echoed here. Helpful for testing alerts before going live.</p>
+                        <div id="event-log" class="log"></div>
+                    </section>
 
-        <section class="panel" id="token-panel" style="display:none;">
-            <h2>Token Details</h2>
-            <div class="section-grid">
-                <div>
-                    <label>Access token</label>
-                    <div id="access-token" class="token-view"></div>
+                    <section class="panel step">
+                        <h2>Optional · Send a chat message</h2>
+                        <p class="hint">After granting the <code>chat:write</code> scope you can send a quick hello directly from this page.</p>
+                        <label for="chat-message">Message</label>
+                        <textarea id="chat-message" placeholder="Say hello to chat"></textarea>
+                        <div class="button-row">
+                            <select id="chat-send-type" title="Choose how the message is delivered">
+                                <option value="user">Send as broadcaster</option>
+                                <option value="userbot">Send as bot account</option>
+                            </select>
+                            <button id="send-chat">Send message</button>
+                        </div>
+                        <div id="chat-status" class="hint"></div>
+                    </section>
                 </div>
-                <div>
-                    <label>Expires</label>
-                    <div id="token-expiry" class="token-view"></div>
-                </div>
-                <div>
-                    <label>Refresh token</label>
-                    <div id="refresh-token" class="token-view"></div>
-                </div>
-            </div>
-        </section>
 
+                <section class="panel advanced">
+                    <details>
+                        <summary>Advanced · Kick developer app settings</summary>
+                        <div class="advanced-body">
+                            <p class="hint">These values are already filled for Social Stream. Override them only if you manage your own Kick developer app. Changes are stored locally in this browser.</p>
+                            <div class="advanced-grid">
+                                <div>
+                                    <label for="client-id">Client ID</label>
+                                    <input id="client-id" type="text" placeholder="Kick client ID" autocomplete="off" spellcheck="false" />
+                                </div>
+                                <div>
+                                    <label for="client-secret">Client secret</label>
+                                    <input id="client-secret" type="password" placeholder="Paste securely (stored locally)" autocomplete="current-password" spellcheck="false" />
+                                </div>
+                                <div>
+                                    <label for="redirect-uri">Redirect URI</label>
+                                    <input id="redirect-uri" type="url" placeholder="https://socialstream.ninja/sources/websocket/kick.html" autocomplete="off" />
+                                </div>
+                                <div>
+                                    <label for="bridge-url">Bridge SSE URL</label>
+                                    <input id="bridge-url" type="url" value="https://kick.socialstream.ninja:8787/events" autocomplete="off" />
+                                </div>
+                                <div>
+                                    <label for="custom-events">Extra event names (comma separated)</label>
+                                    <input id="custom-events" type="text" placeholder="channel.banned, chat.message.deleted" autocomplete="off" />
+                                </div>
+                            </div>
+                            <div class="advanced-actions">
+                                <button id="save-credentials">Save settings</button>
+                                <button id="clear-credentials" class="button-secondary">Reset fields</button>
+                            </div>
+                            <section id="token-panel" style="display:none;">
+                                <h3 style="margin:14px 0 8px;">Token details</h3>
+                                <div class="advanced-grid">
+                                    <div>
+                                        <label>Access token</label>
+                                        <div id="access-token" class="token-view"></div>
+                                    </div>
+                                    <div>
+                                        <label>Refresh token</label>
+                                        <div id="refresh-token" class="token-view"></div>
+                                    </div>
+                                    <div>
+                                        <label>Expires</label>
+                                        <div id="token-expiry" class="token-view"></div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </details>
+                </section>
+            </main>
+        </div>
     </div>
 
     <script type="module" src="kick.js"></script>

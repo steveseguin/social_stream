@@ -3,6 +3,11 @@ const TOKEN_KEY = 'kickApiTokens';
 const CODE_VERIFIER_KEY = 'kickPkceVerifier';
 const STATE_KEY = 'kickOAuthState';
 
+const DEFAULT_CONFIG = {
+    clientId: '01K7MXFQ9C39VAQ50DCQ2DXSDJ',
+    bridgeUrl: 'https://kick.socialstream.ninja:8787/events'
+};
+
 const state = {
     clientId: '',
     clientSecret: '',
@@ -72,7 +77,7 @@ function loadConfig() {
         const cfg = JSON.parse(stored);
         state.clientId = cfg.clientId || '';
         state.clientSecret = cfg.clientSecret || '';
-        state.redirectUri = cfg.redirectUri || window.location.origin + window.location.pathname;
+        state.redirectUri = cfg.redirectUri || '';
         state.channelSlug = cfg.channelSlug || '';
         state.bridgeUrl = cfg.bridgeUrl || '';
         state.customEvents = cfg.customEvents || '';
@@ -93,6 +98,18 @@ function loadTokens() {
         state.tokens = tokens;
     } catch (err) {
         console.error('Failed to load Kick tokens', err);
+    }
+}
+
+function applyDefaultConfig() {
+    if (!state.clientId) {
+        state.clientId = DEFAULT_CONFIG.clientId;
+    }
+    if (!state.redirectUri) {
+        state.redirectUri = window.location.origin + window.location.pathname;
+    }
+    if (!state.bridgeUrl) {
+        state.bridgeUrl = DEFAULT_CONFIG.bridgeUrl;
     }
 }
 
@@ -121,9 +138,9 @@ function updateInputsFromState() {
     if (!els.clientId) return;
     els.clientId.value = state.clientId;
     els.clientSecret.value = state.clientSecret;
-    els.redirectUri.value = state.redirectUri || window.location.origin + window.location.pathname;
+    els.redirectUri.value = state.redirectUri || (window.location.origin + window.location.pathname);
     els.channelSlug.value = state.channelSlug;
-    els.bridgeUrl.value = state.bridgeUrl;
+    els.bridgeUrl.value = state.bridgeUrl || DEFAULT_CONFIG.bridgeUrl;
     if (els.customEvents) {
         els.customEvents.value = state.customEvents || '';
     }
@@ -168,7 +185,7 @@ function bindEvents() {
         state.clientSecret = els.clientSecret.value.trim();
         state.redirectUri = els.redirectUri.value.trim();
         state.channelSlug = els.channelSlug.value.trim();
-        state.bridgeUrl = els.bridgeUrl.value.trim();
+        state.bridgeUrl = els.bridgeUrl.value.trim() || DEFAULT_CONFIG.bridgeUrl;
         persistConfig();
         log('Credentials saved locally.');
     });
@@ -176,14 +193,21 @@ function bindEvents() {
     els.clearCredentials.addEventListener('click', () => {
         state.clientId = '';
         state.clientSecret = '';
+        state.redirectUri = '';
+        state.bridgeUrl = '';
+        state.customEvents = '';
+        applyDefaultConfig();
         persistConfig();
         updateInputsFromState();
-        log('Credentials cleared.');
+        log('Advanced settings reset to defaults.');
     });
 
     els.startAuth.addEventListener('click', startAuthFlow);
     els.connectBridge.addEventListener('click', () => {
         state.bridgeUrl = els.bridgeUrl.value.trim();
+        if (!state.bridgeUrl) {
+            state.bridgeUrl = DEFAULT_CONFIG.bridgeUrl;
+        }
         state.channelSlug = els.channelSlug.value.trim();
         persistConfig();
         connectBridge();
@@ -241,9 +265,12 @@ function bindEvents() {
 }
 
 async function startAuthFlow() {
-    if (!state.clientId || !state.clientSecret) {
-        alert('Please provide your Client ID and Client Secret first.');
+    if (!state.clientId) {
+        alert('Missing Kick Client ID. Check the advanced settings section.');
         return;
+    }
+    if (!state.clientSecret) {
+        log('No client secret set. Continuing with PKCE-only exchange. If authentication fails, add your client secret in Advanced settings.', 'warning');
     }
     const verifier = generateRandomString(64);
     const challenge = await createCodeChallenge(verifier);
@@ -308,11 +335,13 @@ async function exchangeCodeForToken(code, verifier) {
     const params = new URLSearchParams({
         grant_type: 'authorization_code',
         client_id: state.clientId,
-        client_secret: state.clientSecret,
         code,
-        redirect_uri: state.redirectUri || window.location.origin + window.location.pathname,
+        redirect_uri: state.redirectUri || (window.location.origin + window.location.pathname),
         code_verifier: verifier
     });
+    if (state.clientSecret) {
+        params.append('client_secret', state.clientSecret);
+    }
 
     const res = await fetch('https://id.kick.com/oauth/token', {
         method: 'POST',
@@ -359,9 +388,11 @@ async function refreshAccessToken() {
     const params = new URLSearchParams({
         grant_type: 'refresh_token',
         client_id: state.clientId,
-        client_secret: state.clientSecret,
         refresh_token: state.tokens.refresh_token
     });
+    if (state.clientSecret) {
+        params.append('client_secret', state.clientSecret);
+    }
 
     const res = await fetch('https://id.kick.com/oauth/token', {
         method: 'POST',
@@ -1205,8 +1236,8 @@ async function createCodeChallenge(verifier) {
 
 function bootstrap() {
     initElements();
-    state.redirectUri = window.location.origin + window.location.pathname;
     loadConfig();
+    applyDefaultConfig();
     loadTokens();
     updateInputsFromState();
     updateAuthStatus();
