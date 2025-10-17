@@ -35,6 +35,8 @@
 				--comment-font-size: unset;
 				--message-line-height: 22px;
 				--author-font-size: 17px;
+				--message-font-weight: inherit;
+				--name-font-weight: 700;
 				--electron-drag-fix: drag;
 				--time-arrived-padding: 1px;
 				--profile-pic-border: 0 solid black;
@@ -73,6 +75,8 @@
 				--scrollbar-visible: inherit;
 				--padding-rows: 3px;
 				
+				--text-stroke-width: 0px;
+				--text-stroke-color: #000;
 				--text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
 				
 			}
@@ -547,6 +551,8 @@
 				background-color: var(--background-color);
 				
 				text-shadow: var(--text-shadow);
+				-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
+				text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
@@ -682,6 +688,7 @@
 				margin: auto 1px;
 				overflow-wrap: anywhere;
 				line-height: max(var(--message-line-height), var(--comment-font-size));
+				font-weight: var(--message-font-weight);
 				font-size: var(--comment-font-size);
 			}
 			
@@ -1148,7 +1155,7 @@
 			}
 
 			.hl-name {
-				font-weight: 700;
+				font-weight: var(--name-font-weight, 700);
 				margin: auto 5px;
 				position: relative;
 				left: 0;
@@ -2774,6 +2781,88 @@
 				}
 				return item.value;
 			}
+
+			function hasValue(value) {
+				return value !== null && value !== undefined && value !== "";
+			}
+
+			function parseNumericValue(value) {
+				if (!hasValue(value)) {
+					return null;
+				}
+				var numeric = parseFloat(value);
+				if (isNaN(numeric)) {
+					return null;
+				}
+				return Math.abs(numeric);
+			}
+
+			function toCssLength(value, unit) {
+				if (!hasValue(value)) {
+					return null;
+				}
+				unit = unit || "px";
+				value = String(value).trim();
+				if (/^[\d.]+$/.test(value)) {
+					return value + unit;
+				}
+				return value;
+			}
+
+			function buildOutlineShadow(radius, color) {
+				if (!radius || radius <= 0) {
+					return "0 0 " + color;
+				}
+
+				var half = radius / 2;
+				var offsets = [-radius, -half, 0, half, radius];
+				var unique = offsets.filter(function (value, index, self) {
+					return !isNaN(value) && self.indexOf(value) === index;
+				});
+
+				function formatOffset(val) {
+					if (!isFinite(val)) {
+						return "0";
+					}
+					var rounded = Math.round(val * 1000) / 1000;
+					if (Math.abs(rounded) < 0.0001) {
+						rounded = 0;
+					}
+					return rounded.toString();
+				}
+
+				var parts = [];
+				for (var i = 0; i < unique.length; i++) {
+					for (var j = 0; j < unique.length; j++) {
+						parts.push(formatOffset(unique[i]) + "px " + formatOffset(unique[j]) + "px " + color);
+					}
+				}
+				return parts.join(", ");
+			}
+
+			function applyTextStroke(widthValue, colorValue) {
+				if (hasValue(colorValue)) {
+					document.documentElement.style.setProperty("--text-stroke-color", colorValue);
+				}
+				if (hasValue(widthValue)) {
+					var cssWidth = toCssLength(widthValue, "px");
+					if (cssWidth) {
+						document.documentElement.style.setProperty("--text-stroke-width", cssWidth);
+					}
+				}
+			}
+
+			function applyTextOutline(widthValue, colorValue) {
+				if (!hasValue(widthValue) && !hasValue(colorValue)) {
+					return;
+				}
+				var width = parseNumericValue(widthValue);
+				var color = colorValue || "#000000";
+				var shadow = buildOutlineShadow(width === null ? 2 : width, color);
+				document.documentElement.style.setProperty("--text-shadow", shadow);
+				document.body.style.textShadow = shadow;
+			}
+
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
@@ -2817,6 +2906,56 @@
 			var doubleLimit = false;
 			
 			var encode = false;
+			var customStrokeWidthParam = null;
+			var customStrokeColorParam = null;
+			var customOutlineWidthParam = null;
+			var customOutlineColorParam = null;
+			var hasCustomOutline = false;
+
+			var fontColorParam = urlParams.get("fontcolor");
+			if (hasValue(fontColorParam)) {
+				document.documentElement.style.setProperty("--font-color", fontColorParam);
+			}
+
+			var nameColorParam = urlParams.get("namecolor");
+			if (hasValue(nameColorParam)) {
+				document.documentElement.style.setProperty("--font-color-name", nameColorParam);
+			}
+
+			var fontWeightParam = urlParams.get("fontweight");
+			if (hasValue(fontWeightParam)) {
+				document.documentElement.style.setProperty("--message-font-weight", fontWeightParam);
+			}
+
+			var nameWeightParam = urlParams.get("nameweight");
+			if (hasValue(nameWeightParam)) {
+				document.documentElement.style.setProperty("--name-font-weight", nameWeightParam);
+			}
+
+			var strokeWidthParam = urlParams.get("strokewidth") || urlParams.get("stroke");
+			var strokeColorParam = urlParams.get("strokecolor") || urlParams.get("strokeColor");
+			if (hasValue(strokeWidthParam)) {
+				customStrokeWidthParam = strokeWidthParam;
+			}
+			if (hasValue(strokeColorParam)) {
+				customStrokeColorParam = strokeColorParam;
+			}
+			if (customStrokeWidthParam !== null || customStrokeColorParam !== null) {
+				applyTextStroke(customStrokeWidthParam, customStrokeColorParam);
+			}
+
+			var outlineWidthParam = urlParams.get("outlinewidth");
+			var outlineColorParam = urlParams.get("outlinecolor");
+			if (hasValue(outlineWidthParam)) {
+				customOutlineWidthParam = outlineWidthParam;
+			}
+			if (hasValue(outlineColorParam)) {
+				customOutlineColorParam = outlineColorParam;
+			}
+			if (!customOutlineColorParam && customStrokeColorParam) {
+				customOutlineColorParam = customStrokeColorParam;
+			}
+			hasCustomOutline = customOutlineWidthParam !== null || customOutlineColorParam !== null;
 			
 
 			try {
@@ -4539,6 +4678,13 @@
 				document.documentElement.style.setProperty("--special-bgcolor-bubble-odd", "#EEE7");
 			}
 
+			if (hasValue(fontColorParam)) {
+				document.documentElement.style.setProperty("--font-color", fontColorParam);
+			}
+			if (hasValue(nameColorParam)) {
+				document.documentElement.style.setProperty("--font-color-name", nameColorParam);
+			}
+
 			if (urlParams.has("hideshadow")) {
 				// alternating
 				document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
@@ -4552,17 +4698,22 @@
 			}
 
 			if (urlParams.has("nooutline")) {
+				document.documentElement.style.setProperty("--text-shadow", "0 0 #0000");
 				document.body.style.textShadow = "0 0 black";
 				if (!darkmode){
 					document.getElementById("topbar").style.color = "white";
 					document.getElementById("topbar").style.fontWeight = "700";
 				}
+			} else if (hasCustomOutline) {
+				applyTextOutline(customOutlineWidthParam, customOutlineColorParam || customStrokeColorParam);
 			} else if (urlParams.has("bolder")) {
-				document.documentElement.style.setProperty("--text-shadow", "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000");
-			
+				var bolderShadow = "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000";
+				document.documentElement.style.setProperty("--text-shadow", bolderShadow);
+				document.body.style.textShadow = bolderShadow;
 			} else if (urlParams.has("thinner")) {
-				document.documentElement.style.setProperty("--text-shadow", "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000");
-			
+				var thinnerShadow = "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000";
+				document.documentElement.style.setProperty("--text-shadow", thinnerShadow);
+				document.body.style.textShadow = thinnerShadow;
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
