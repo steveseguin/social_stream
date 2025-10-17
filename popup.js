@@ -2947,6 +2947,9 @@ function handleTextParam(ele, targetId, paramType, sync) {
         }, function (response) {});
     }
     
+    // Keep any linked color picker synchronized with the text value
+    handleColorAndPalette(ele);
+    
     return true;
 }
 
