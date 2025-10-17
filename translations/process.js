@@ -35,6 +35,7 @@ const updateList = [
     "pt-br",
     "ru",
     "tr",
+    "cs",
     "uk",
     "ar"
 ];

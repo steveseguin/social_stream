@@ -1450,6 +1450,7 @@ input:checked + .slider:before {
                 <option value="pt-br">Portuguese - BR</option>
                 <option value="uk" title="Ukrainian">Ukrainian</option>
                 <option value="tr" title="Turkish">Turkish</option>
+                <option value="cs" title="Czech">Czech</option>
                 <option value="test">Test Translations</option>
             </select>
             <br />
@@ -4208,30 +4209,38 @@ input:checked + .slider:before {
 
                                 <h3><span data-translate="colors">Colors</span></h3>
 
-                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="comment_color_palette" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color" />
-									
-                                    <label for="comment_color"><span data-translate="comment-font-color">&gt; Comment font color</span></label>
+                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                        <input type="text" data-palette="comment_color_palette" id="comment_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_color" />
+										
+                                        <label for="comment_color"><span data-translate="comment-font-color">&gt; Comment font color</span></label>
+                                    </div>
+									<input type="color" data-color="comment_color" id="comment_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
                                 </div>
-								<input type="color" data-color="comment_color" id="comment_color_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 
-                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="comment_background_palette" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background" />
-                                    <label for="comment_background"><span data-translate="comment-background-color">&gt; Comment background color</span></label>
+                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                        <input type="text" data-palette="comment_background_palette" id="comment_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="comment_background" />
+                                        <label for="comment_background"><span data-translate="comment-background-color">&gt; Comment background color</span></label>
+                                    </div>
+									<input type="color" data-color="comment_background" id="comment_background_palette"  class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
                                 </div>
-								<input type="color" data-color="comment_background" id="comment_background_palette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 								
-                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="name_color_palette" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color" />
-                                    <label for="name_color"><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
+                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                        <input type="text" data-palette="name_color_palette" id="name_color" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_color" />
+                                        <label for="name_color"><span data-translate="default-name-font-color">&gt; Default name font color</span></label>
+                                    </div>
+									<input type="color" data-color="name_color" id="name_color_palette"  class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
                                 </div>
-								<input type="color" data-color="name_color" id="name_color_palette"  class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 
-                                <div class="textInputContainer" style="width: 70%; display:inline-block;margin-right:5px;">
-                                    <input type="text" data-palette="name_background_palette" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background" />
-                                    <label for="name_background"><span data-translate="name-background-color">&gt; Name background color</span></label>
+                                <div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+                                    <div class="textInputContainer" style="flex:1; margin-right:5px;">
+                                        <input type="text" data-palette="name_background_palette" id="name_background" class="textInput" autocomplete="off" placeholder="Type #HEX value or color name" data-textsetting="name_background" />
+                                        <label for="name_background"><span data-translate="name-background-color">&gt; Name background color</span></label>
+                                    </div>
+									<input type="color" data-color="name_background" id="name_background_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
                                 </div>
-								<input type="color" data-color="name_background" id="name_background_palette" class="colorPicker" style="display: inline-block; cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);">
 								
 								<div class="textInputContainer" style="width: 95%;margin-top:10px;">
 									<textarea id="customCSS2" class="textInput" rows="4" data-textparam2="cssb64" placeholder="Enter your custom CSS here"></textarea>
@@ -7569,7 +7578,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-beta-sdk-options" />
-                    <label class="collapsible-label" for="wrapper-beta-sdk-options">🧪 <span>Beta Features</span></label>
+                    <label class="collapsible-label" for="wrapper-beta-sdk-options">🧪 <span>Experimental Features</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
