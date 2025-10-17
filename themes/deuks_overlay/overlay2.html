@@ -243,10 +243,10 @@
 			messageDiv.classList.add('message');
 
 			let sourceIcon = '';
-			if (data.type === 'twitch') {
-			    sourceIcon = `<img src="https://img.icons8.com/?size=100&id=S5wxXL23AVBm&format=png&color=000000" alt="Twitch" class="source-icon">`;
-			} else if (data.type === 'tiktok') {
-			    sourceIcon = `<img src="https://w7.pngwing.com/pngs/483/249/png-transparent-tiktok-icon-thumbnail.png" alt="TikTok" class="source-icon" style="transform: scale(1.25)" >`;
+			if (data.type) {
+				const providerName = data.type.charAt(0).toUpperCase() + data.type.slice(1);
+				const iconUrl = `https://socialstream.ninja/sources/images/${data.type}.png`;
+				sourceIcon = `<img src="${iconUrl}" alt="${providerName}" class="source-icon" onerror="this.remove();">`;
 			}
 
 			let chatbadges = "";

@@ -679,13 +679,34 @@ function deriveEventSubscriptions(types) {
 
 function getSubscriptionEventName(entry) {
     if (!entry || typeof entry !== 'object') return '';
+    const tryValue = value => {
+        if (!value) return '';
+        if (typeof value === 'string') {
+            return value;
+        }
+        if (typeof value === 'object') {
+            return (
+                value.name ||
+                value.event ||
+                value.type ||
+                value.event_type ||
+                value.topic ||
+                ''
+            );
+        }
+        return '';
+    };
     return (
-        entry.event ||
-        entry.name ||
-        entry.event_name ||
-        entry.event_type ||
-        entry.type ||
-        entry.topic ||
+        tryValue(entry.event) ||
+        tryValue(entry.name) ||
+        tryValue(entry.event_name) ||
+        tryValue(entry.event_type) ||
+        tryValue(entry.type) ||
+        tryValue(entry.topic) ||
+        tryValue(entry.data) ||
+        tryValue(entry.payload) ||
+        tryValue(entry.definition) ||
+        tryValue(entry.subscription) ||
         ''
     );
 }
