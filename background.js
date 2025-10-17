@@ -4684,68 +4684,35 @@ function relayIncomingWebhook(source, payload) {
         return;
     }
 
-    const endpoints = getWebhookRelayEndpoints(settings);
+    const endpoints = getWebhookRelayEndpoints(settings); 
     if (endpoints.length === 0) {
         return;
     }
 
     let requestInit;
 
-    if (source === "kofi") {
-        if (typeof payload !== "object") {
-            console.warn("[WebhookRelay] Unexpected Ko-fi payload type", typeof payload);
-            return;
-        }
+    let body;
+	let contentType = "application/json";
 
-        const params = new URLSearchParams();
-        Object.entries(payload).forEach(([key, value]) => {
-            if (value === undefined || value === null) {
-                return;
-            }
+	if (typeof payload === "string") {
+		body = payload;
+		contentType = "text/plain";
+	} else {
+		try {
+			body = JSON.stringify(payload);
+		} catch (e) {
+			console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
+			return;
+		}
+	}
 
-            let stringValue = String(value);
-            if (key === "data") {
-                try {
-                    stringValue = decodeURIComponent(stringValue.replace(/\+/g, " "));
-                } catch (e) {
-                    stringValue = String(value);
-                }
-            }
-
-            params.append(key, stringValue);
-        });
-
-        requestInit = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-            },
-            body: params.toString()
-        };
-    } else {
-        let body;
-        let contentType = "application/json";
-
-        if (typeof payload === "string") {
-            body = payload;
-            contentType = "text/plain";
-        } else {
-            try {
-                body = JSON.stringify(payload);
-            } catch (e) {
-                console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
-                return;
-            }
-        }
-
-        requestInit = {
-            method: "POST",
-            headers: {
-                "Content-Type": contentType
-            },
-            body
-        };
-    }
+	requestInit = {
+		method: "POST",
+		headers: {
+			"Content-Type": contentType
+		},
+		body
+	};
 
     endpoints.forEach(endpoint => {
         try {
