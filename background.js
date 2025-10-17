@@ -4673,6 +4673,19 @@ function getWebhookRelayEndpoints(settings) {
     return Array.from(endpoints);
 }
 
+function isStreamerBotEndpoint(endpoint) {
+    if (!endpoint) {
+        return false;
+    }
+
+    try {
+        const { hostname } = new URL(endpoint);
+        return Boolean(hostname && hostname.toLowerCase().includes("streamer.bot"));
+    } catch (err) {
+        return String(endpoint).toLowerCase().includes("streamer.bot");
+    }
+}
+
 function relayIncomingWebhook(source, payload) {
     if (!WEBHOOK_RELAY_SOURCES.has(source)) {
         return;
@@ -4689,36 +4702,99 @@ function relayIncomingWebhook(source, payload) {
         return;
     }
 
-    let requestInit;
+    let jsonRequestInit = null;
+    let jsonRequestInitFailed = false;
+    let formRequestInit = null;
+    let formRequestInitFailed = false;
 
-    let body;
-	let contentType = "application/json";
+    const buildJsonRequestInit = () => {
+        let body;
+        let contentType = "application/json";
 
-	if (typeof payload === "string") {
-		body = payload;
-		contentType = "text/plain";
-	} else {
-		try {
-			body = JSON.stringify(payload);
-		} catch (e) {
-			console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
-			return;
-		}
-	}
+        if (typeof payload === "string") {
+            body = payload;
+            contentType = "text/plain";
+        } else {
+            try {
+                body = JSON.stringify(payload);
+            } catch (e) {
+                console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
+                return null;
+            }
+        }
 
-	requestInit = {
-		method: "POST",
-		headers: {
-			"Content-Type": contentType
-		},
-		body
-	};
+        return {
+            method: "POST",
+            headers: {
+                "Content-Type": contentType
+            },
+            body
+        };
+    };
+
+    const buildFormRequestInit = () => {
+        if (typeof payload !== "object" || payload === null) {
+            console.warn(`[WebhookRelay] Streamer.bot destinations require object payloads, received ${typeof payload}`);
+            return null;
+        }
+
+        const params = new URLSearchParams();
+        Object.entries(payload).forEach(([key, value]) => {
+            if (value === undefined || value === null) {
+                return;
+            }
+
+            let stringValue = String(value);
+            if (key === "data") {
+                try {
+                    stringValue = decodeURIComponent(stringValue.replace(/\+/g, " "));
+                } catch (e) {
+                    stringValue = String(value);
+                }
+            }
+
+            params.append(key, stringValue);
+        });
+
+        return {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+            },
+            body: params.toString()
+        };
+    };
 
     endpoints.forEach(endpoint => {
+        const useForm = isStreamerBotEndpoint(endpoint);
+        let baseInit;
+
+        if (useForm) {
+            if (!formRequestInit && !formRequestInitFailed) {
+                formRequestInit = buildFormRequestInit();
+                if (!formRequestInit) {
+                    formRequestInitFailed = true;
+                }
+            }
+            baseInit = formRequestInit;
+        } else {
+            if (!jsonRequestInit && !jsonRequestInitFailed) {
+                jsonRequestInit = buildJsonRequestInit();
+                if (!jsonRequestInit) {
+                    jsonRequestInitFailed = true;
+                }
+            }
+            baseInit = jsonRequestInit;
+        }
+
+        if (!baseInit) {
+            return;
+        }
+
         try {
             const init = {
-                ...requestInit,
-                headers: { ...requestInit.headers }
+                ...baseInit,
+                headers: { ...baseInit.headers }
             };
             fetch(endpoint, init).catch(err => console.warn(`[WebhookRelay] Request failed for ${source} -> ${endpoint}:`, err));
         } catch (err) {
