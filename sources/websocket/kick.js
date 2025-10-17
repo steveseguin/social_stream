@@ -8,6 +8,8 @@ const DEFAULT_CONFIG = {
     bridgeUrl: 'https://kick.socialstream.ninja:8787/events'
 };
 
+const SUBSCRIPTION_RETRY_DELAY_MS = 10000;
+
 const state = {
     clientId: '',
     clientSecret: '',
@@ -28,6 +30,10 @@ const state = {
         running: false,
         lastSlug: '',
         pendingForce: false
+    },
+    subscriptionRetry: {
+        timer: null,
+        delayMs: SUBSCRIPTION_RETRY_DELAY_MS
     },
     bridge: {
         source: null,
@@ -699,7 +705,7 @@ function formatKickSubscriptionError(name, rawError) {
         return `Kick did not confirm ${eventLabel}.`;
     }
     if (/rate limit token/i.test(text) || /retry quota exceeded/i.test(text)) {
-        return `Kick temporarily rate-limited ${eventLabel}. We'll automatically retry in a moment.`;
+        return `Kick temporarily rate-limited ${eventLabel}. Retrying in about ${Math.round(SUBSCRIPTION_RETRY_DELAY_MS / 1000)} seconds.`;
     }
     if (/already exists/i.test(text) || /duplicate/i.test(text)) {
         return `${eventLabel} is already active on Kick.`;
@@ -708,6 +714,35 @@ function formatKickSubscriptionError(name, rawError) {
         return `Kick reported that ${eventLabel} isn't enabled for this account. Double-check your Kick developer app scopes.`;
     }
     return `${eventLabel} could not be enabled (Kick replied: ${text})`;
+}
+
+function clearSubscriptionRetryTimer() {
+    const bucket = state.subscriptionRetry;
+    if (bucket?.timer) {
+        clearTimeout(bucket.timer);
+        bucket.timer = null;
+    }
+}
+
+function scheduleSubscriptionRetry(delayMs = SUBSCRIPTION_RETRY_DELAY_MS) {
+    const bucket = state.subscriptionRetry;
+    if (!bucket) {
+        return;
+    }
+    if (bucket.timer) {
+        return;
+    }
+    const delay = Math.max(delayMs, 1000);
+    bucket.delayMs = delay;
+    bucket.timer = setTimeout(() => {
+        bucket.timer = null;
+        try {
+            maybeAutoStart(true);
+        } catch (err) {
+            console.error('Kick subscription retry failed to start', err);
+        }
+    }, delay);
+    console.info('[Kick] Scheduling subscription retry in', delay, 'ms');
 }
 
 function reportSubscriptionResults(response, requested) {
@@ -721,7 +756,18 @@ function reportSubscriptionResults(response, requested) {
     if (successes.length) {
         log(`Subscribed to ${successes.length} event(s).`);
     }
+    let scheduledRetry = false;
     failures.forEach(item => {
+        const rawError = item?.error;
+        const errorText =
+            typeof rawError === 'string'
+                ? rawError
+                : rawError?.message || rawError?.detail || '';
+        const isRateLimited = /rate limit token/i.test(errorText) || /retry quota exceeded/i.test(errorText);
+        if (isRateLimited && !scheduledRetry) {
+            scheduleSubscriptionRetry();
+            scheduledRetry = true;
+        }
         const message = formatKickSubscriptionError(item?.name, item?.error);
         log(message, 'warning');
         console.warn('Kick subscription error', item);
@@ -843,6 +889,8 @@ async function maybeAutoStart(force = false) {
     if (!state.tokens?.access_token) return;
     const slug = state.channelSlug?.trim();
     if (!slug) return;
+
+    clearSubscriptionRetryTimer();
 
     const normalizedSlug = slug.toLowerCase();
     if (state.autoStart.running) {
