@@ -5,7 +5,7 @@ const STATE_KEY = 'kickOAuthState';
 
 const DEFAULT_CONFIG = {
     clientId: '01K7MXFQ9C39VAQ50DCQ2DXSDJ',
-    bridgeUrl: 'https://kick.socialstream.ninja:8787/events'
+    bridgeUrl: 'https://kick-bridge.socialstream.ninja/events'
 };
 
 const SUBSCRIPTION_RETRY_DELAY_MS = 10000;
@@ -66,7 +66,11 @@ let lastBridgeNotifyStatus = null;
 let lastAuthNotifyStatus = null;
 
 function isTextOnlyMode() {
-    return Boolean(extension.settings && extension.settings.textonlymode);
+    const setting = extension.settings && extension.settings.textonlymode;
+    if (setting && typeof setting === 'object') {
+        return setting.setting === true;
+    }
+    return setting === true;
 }
 
 function notifyApp(payload) {
@@ -368,7 +372,7 @@ function getBridgeBaseUrl() {
         try {
             return `${window.location.protocol}//${window.location.host}`;
         } catch (_) {
-            return 'https://kick.socialstream.ninja:8787';
+            return 'https://kick-bridge.socialstream.ninja';
         }
     }
 }
