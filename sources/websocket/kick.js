@@ -49,6 +49,120 @@ const state = {
 const els = {};
 let cachedEventTypes = null;
 
+const TAB_ID = typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
+    ? window.__SSAPP_TAB_ID__
+    : null;
+
+const extension = {
+    available: typeof chrome !== 'undefined' && !!(chrome && chrome.runtime && chrome.runtime.id),
+    enabled: true,
+    settings: {},
+    tabId: TAB_ID
+};
+
+const WSS_PLATFORM = 'kick';
+let extensionInitialized = false;
+let lastBridgeNotifyStatus = null;
+let lastAuthNotifyStatus = null;
+
+function isTextOnlyMode() {
+    return Boolean(extension.settings && extension.settings.textonlymode);
+}
+
+function notifyApp(payload) {
+    try {
+        if (extension.available) {
+            chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {});
+            return;
+        }
+        if (window.ninjafy && window.ninjafy.sendMessage) {
+            window.ninjafy.sendMessage(null, payload, null, extension.tabId);
+            return;
+        }
+        if (typeof window !== 'undefined' && window.parent) {
+            let data = payload;
+            if (payload && typeof payload === 'object') {
+                data = { ...payload };
+                if (extension.tabId != null) {
+                    data.__tabID__ = extension.tabId;
+                }
+            }
+            window.parent.postMessage(data, '*');
+        }
+    } catch (err) {
+        console.error('Failed to notify app', err);
+    }
+}
+
+function initExtensionBridge() {
+    if (extensionInitialized) return;
+    extensionInitialized = true;
+
+    if (!extension.available) {
+        return;
+    }
+
+    try {
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+            try {
+                if (request === 'getSource') {
+                    sendResponse('kick');
+                    return false;
+                }
+                if (request === 'focusChat') {
+                    const target = els.chatMessage;
+                    if (target) {
+                        target.focus();
+                        sendResponse(true);
+                    } else {
+                        sendResponse(false);
+                    }
+                    return false;
+                }
+                if (request && typeof request === 'object') {
+                    if (Object.prototype.hasOwnProperty.call(request, 'state')) {
+                        extension.enabled = Boolean(request.state);
+                    }
+                    if (request.settings) {
+                        extension.settings = request.settings || {};
+                        sendResponse(true);
+                        return false;
+                    }
+                    if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+                        sendChatFromExtension(request.message)
+                            .then(result => sendResponse(Boolean(result)))
+                            .catch(err => {
+                                console.error('Kick extension SEND_MESSAGE failed', err);
+                                sendResponse(false);
+                            });
+                        return true;
+                    }
+                }
+            } catch (err) {
+                console.error('Kick extension message handling failed', err);
+            }
+            sendResponse(false);
+            return false;
+        });
+    } catch (err) {
+        console.error('Failed to register Kick extension bridge listener', err);
+    }
+
+    try {
+        chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, response => {
+            if (!response || typeof response !== 'object') return;
+            if (Object.prototype.hasOwnProperty.call(response, 'settings')) {
+                extension.settings = response.settings || {};
+            }
+            if (Object.prototype.hasOwnProperty.call(response, 'state')) {
+                extension.enabled = Boolean(response.state);
+            }
+        });
+    } catch (err) {
+        console.error('Failed to fetch Kick extension settings', err);
+    }
+}
+
 function q(id) {
     return document.getElementById(id);
 }
@@ -217,6 +331,17 @@ function updateAuthStatus() {
     const authed = state.tokens?.access_token && !isTokenExpired();
     els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
     els.authState.className = authed ? 'status-chip' : 'status-chip warning';
+    const status = authed ? 'authorized' : 'signin_required';
+    if (status !== lastAuthNotifyStatus) {
+        lastAuthNotifyStatus = status;
+        notifyApp({
+            wssStatus: {
+                platform: WSS_PLATFORM,
+                status,
+                message: authed ? 'Kick account linked' : 'Sign in with Kick to continue'
+            }
+        });
+    }
 }
 
 function bindEvents() {
@@ -1065,6 +1190,25 @@ function updateBridgeState() {
         els.bridgeState.textContent = 'Bridge disconnected';
         els.bridgeState.className = 'status-chip danger';
     }
+    const status = state.bridge.status || 'disconnected';
+    if (status !== lastBridgeNotifyStatus) {
+        lastBridgeNotifyStatus = status;
+        let message;
+        if (status === 'connected') {
+            message = 'Connected to Kick bridge';
+        } else if (status === 'connecting') {
+            message = 'Connecting to Kick bridge';
+        } else {
+            message = 'Disconnected from Kick bridge';
+        }
+        notifyApp({
+            wssStatus: {
+                platform: WSS_PLATFORM,
+                status,
+                message
+            }
+        });
+    }
 }
 
 function handleBridgeEvent(packet) {
@@ -1164,8 +1308,10 @@ function forwardFollower(evt, bridgeMeta) {
         type: 'kick',
         event: 'new_follower',
         chatname: follower || '',
-        chatmessage,
-        chatimg: chatimg || ''
+        chatmessage: escapeHtml(chatmessage),
+        chatimg: chatimg || '',
+        bridge: bridgeMeta || null,
+        raw: evt
     });
 
     const followerCountCandidates = [
@@ -1229,14 +1375,6 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
         evt?.gifted_by?.display_name,
         evt?.gifted_by?.username
     ]);
-    const pickImage = (...candidates) => {
-        for (const value of candidates) {
-            if (typeof value === 'string' && value.trim()) {
-                return value.trim();
-            }
-        }
-        return '';
-    };
     const takeNumber = value => {
         if (typeof value === 'number' && Number.isFinite(value)) {
             return value;
@@ -1307,9 +1445,11 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
         type: 'kick',
         event: eventName,
         chatname,
-        chatmessage,
+        chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',
-        meta
+        bridge: bridgeMeta || null,
+        meta,
+        raw: evt
     });
     const prefix = bridgeMeta?.verified === false ? '[SUB ⚠]' : '[SUB]';
     log(`${prefix} ${chatmessage}`);
@@ -1342,6 +1482,26 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
         currency = currency || 'KICK';
     }
     const note = extractMessageContent(evt?.message || evt?.comment || evt?.note || evt?.support?.message || evt?.tip?.message || evt) || '';
+    const amountLabel = amount != null ? `${amount}${currency ? ' ' + currency : ''}` : '';
+    const messageSegments = [];
+    if (amountLabel) {
+        messageSegments.push(amountLabel);
+    }
+    if (note) {
+        messageSegments.push(note);
+    }
+    const chatmessage = messageSegments.length ? messageSegments.join(' • ') : 'New support received!';
+    const chatname = supporter || 'Kick supporter';
+    const chatimg = pickImage(
+        evt?.supporter?.profile_picture,
+        evt?.supporter?.avatar,
+        evt?.sender?.profile_picture,
+        evt?.sender?.avatar,
+        evt?.user?.profile_picture,
+        evt?.user?.avatar,
+        evt?.gifter?.profile_picture,
+        evt?.gifter?.avatar
+    );
     const meta = {
         eventType,
         supporter,
@@ -1353,10 +1513,12 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
     pushMessage({
         type: 'kick',
         event: 'donation',
+        chatname,
+        chatmessage: escapeHtml(chatmessage),
+        chatimg: chatimg || '',
         bridge: bridgeMeta || null,
         meta
     });
-    const amountLabel = amount != null ? `${amount}${currency ? ' ' + currency : ''}` : '';
     const noteLabel = note ? ` – ${note}` : '';
     const prefix = bridgeMeta?.verified === false ? '[TIP ⚠]' : '[TIP]';
     log(`${prefix} ${supporter}${amountLabel ? ` • ${amountLabel}` : ''}${noteLabel}`);
@@ -1364,11 +1526,16 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
 
 function forwardLiveStatus(evt, bridgeMeta) {
     const isLive = Boolean(evt?.is_live);
+    const chatname = 'Kick';
+    const chatmessage = isLive ? 'Stream is now LIVE' : 'Stream is now OFFLINE';
     pushMessage({
         type: 'kick',
         event: isLive ? 'stream_online' : 'stream_offline',
+        chatname,
+        chatmessage: escapeHtml(chatmessage),
         bridge: bridgeMeta || null,
-        meta: evt
+        meta: evt,
+        raw: evt
     });
     const prefix = bridgeMeta?.verified === false ? '[LIVE ⚠]' : '[LIVE]';
     log(`${prefix} ${isLive ? 'Online' : 'Offline'}`);
@@ -1391,6 +1558,34 @@ function setChatStatus(message, level = 'info') {
         warning: '#f2bc4e'
     };
     els.chatStatus.style.color = colorMap[level] || colorMap.info;
+}
+
+async function sendChatFromExtension(message) {
+    if (!els.chatMessage || typeof message !== 'string') {
+        return false;
+    }
+    const trimmed = message.trim();
+    if (!trimmed) {
+        return false;
+    }
+    const original = els.chatMessage.value || '';
+    const hadOriginal = original.length > 0;
+    els.chatMessage.value = trimmed;
+    try {
+        await sendChatMessage();
+        return true;
+    } catch (err) {
+        if (hadOriginal) {
+            els.chatMessage.value = original;
+        } else {
+            els.chatMessage.value = '';
+        }
+        throw err;
+    } finally {
+        if (hadOriginal) {
+            els.chatMessage.value = original;
+        }
+    }
 }
 
 async function sendChatMessage() {
@@ -1437,10 +1632,20 @@ async function sendChatMessage() {
 
 function pushMessage(data) {
     try {
-        if (window.chrome?.runtime?.sendMessage) {
-            window.chrome.runtime.sendMessage(window.chrome.runtime.id, { message: data }, () => {});
-        } else {
-            window.parent?.postMessage({ source: 'socialstream', payload: data }, '*');
+        if (extension.available) {
+            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
+            return;
+        }
+        if (window.ninjafy && window.ninjafy.sendMessage) {
+            window.ninjafy.sendMessage(null, { message: data }, null, extension.tabId);
+            return;
+        }
+        if (typeof window !== 'undefined' && window.parent) {
+            const envelope = { source: 'socialstream', payload: data };
+            if (extension.tabId != null) {
+                envelope.__tabID__ = extension.tabId;
+            }
+            window.parent.postMessage(envelope, '*');
         }
     } catch (err) {
         console.error('Failed to push message', err);
@@ -1473,6 +1678,15 @@ function pickDisplayName(candidates) {
         }
     }
     return 'Kick User';
+}
+
+function pickImage(...candidates) {
+    for (const value of candidates) {
+        if (typeof value === 'string' && value.trim()) {
+            return value.trim();
+        }
+    }
+    return '';
 }
 
 function normalizeBadges(badges) {
@@ -1538,8 +1752,12 @@ function extractFragmentText(fragment) {
 }
 
 function escapeHtml(str) {
-    if (!str) return '';
-    return str
+    if (str == null) return '';
+    const value = typeof str === 'string' ? str : String(str);
+    if (isTextOnlyMode()) {
+        return value;
+    }
+    return value
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -1568,6 +1786,8 @@ async function createCodeChallenge(verifier) {
 
 async function bootstrap() {
     initElements();
+    initExtensionBridge();
+    updateBridgeState();
     loadConfig();
     applyDefaultConfig();
     loadTokens();

@@ -4853,8 +4853,16 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 
 // Add the isEmoji function from your original code
 function isEmoji(char) {
+    if (!char) {
+        return false;
+    }
+    const trimmed = char.trim();
+    const asciiEmoticonRegex = /^[:;=8BxX][-^\'"]?[)(DPOop3/\\|]+$/;
+    if (asciiEmoticonRegex.test(trimmed) || /^<3+$/.test(trimmed)) {
+        return true;
+    }
     const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
-    return emojiRegex.test(char);
+    return emojiRegex.test(trimmed);
 }
 
 const messageStore = {};
