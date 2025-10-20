@@ -145,7 +145,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - Locals.com (no pop out needed)
 - retake.tv
 - Nimo.TV (pop out chat, ie: https://www.nimo.tv/popout/chat/xxxx)
-- kick.com (pop out chat). For the new official webhook workflow see [`docs/kick-official.md`](docs/kick-official.md)
+- kick.com (pop out chat)
 - quickchannel.com (https://play.quickchannel.com/*)
 - rokfin.com (https://www.rokfin.com/popout/chat/xxxxxx?stream=yyyyyy)
 - sli.do (https://app.sli.do/event/XXXXXXXXXXXXXX/live/questions)
