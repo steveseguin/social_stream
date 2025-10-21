@@ -282,6 +282,13 @@ export class BasePlugin {
     } = options;
     try {
       this.debugLog('Publishing payload to dock', { payload, silent, note });
+      this.onActivity({
+        kind: 'event',
+        plugin: this.id,
+        payload,
+        timestamp: payload?.timestamp || Date.now(),
+        id: payload?.id
+      });
       this.messenger.send(payload);
       if (!silent) {
         const previewSource = (payload?.previewText ?? payload?.chatmessage ?? '').toString();
