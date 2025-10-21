@@ -1598,33 +1598,52 @@ function initMobileNav() {
   }
 }
 
-function processOAuthCallback(pluginMap) {
+async function processOAuthCallback(pluginMap) {
+  const handleParams = async (params) => {
+    const state = params.get('state') || '';
+    const provider = state.split(':')[0];
+    const plugin = provider ? pluginMap.get(provider) : null;
+
+    if (!plugin) {
+      updateSessionStatus('Received OAuth response for unknown provider.', 'warn');
+      return true;
+    }
+
+    try {
+      await plugin.handleOAuthCallback(params);
+      addActivity({
+        plugin: provider,
+        message: 'OAuth authorization completed.',
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.error('OAuth handling failed', err);
+      updateSessionStatus(err.message || 'OAuth handling failed.', 'warn');
+    }
+
+    return true;
+  };
+
+  if (window.location.search) {
+    const searchParams = new URLSearchParams(window.location.search.slice(1));
+    if (searchParams.has('code') && searchParams.has('state')) {
+      await handleParams(searchParams);
+      const url = new URL(window.location.href);
+      url.hash = '';
+      ['code', 'scope', 'state'].forEach((key) => url.searchParams.delete(key));
+      const remainingSearch = url.searchParams.toString();
+      const newUrl = remainingSearch ? `${url.pathname}?${remainingSearch}` : url.pathname;
+      history.replaceState(null, '', newUrl);
+      return;
+    }
+  }
+
   if (!window.location.hash) return;
   const params = new URLSearchParams(window.location.hash.slice(1));
   if (!params.has('access_token')) return;
 
-  const state = params.get('state') || '';
-  const provider = state.split(':')[0];
-  const plugin = pluginMap.get(provider);
-
-  if (!plugin) {
-    updateSessionStatus('Received OAuth response for unknown provider.', 'warn');
-    return;
-  }
-
-  try {
-    plugin.handleOAuthCallback(params);
-    addActivity({
-      plugin: provider,
-      message: 'OAuth authorization completed.',
-      timestamp: Date.now()
-    });
-  } catch (err) {
-    console.error('OAuth handling failed', err);
-    updateSessionStatus(err.message || 'OAuth handling failed.', 'warn');
-  } finally {
-    history.replaceState(null, '', window.location.pathname + window.location.search);
-  }
+  await handleParams(params);
+  history.replaceState(null, '', window.location.pathname + window.location.search);
 }
 
 function init() {
@@ -1733,7 +1752,10 @@ function init() {
 
   mountAllPlugins();
   startSession(storedSession);
-  processOAuthCallback(pluginMap);
+  processOAuthCallback(pluginMap).catch((err) => {
+    console.error('OAuth processing failed', err);
+    updateSessionStatus(err.message || 'OAuth callback handling failed.', 'warn');
+  });
   initMobileNav();
 
   if (url.searchParams.get('focus') === 'activity' && elements.activitySection) {

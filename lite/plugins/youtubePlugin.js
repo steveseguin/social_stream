@@ -9,6 +9,7 @@ const CHAT_ID_KEY = 'youtube.chatId';
 const CHAT_ID_SOURCE_KEY = 'youtube.chatIdSource';
 const CHANNEL_KEY = 'youtube.channel';
 const STATE_KEY = 'youtube.authState';
+const REDIRECT_KEY = 'youtube.redirectUri';
 
 const DEFAULT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
 const SUBSCRIBER_CACHE_KEY = 'youtube.subscriberCache';
@@ -16,8 +17,12 @@ const SUBSCRIBER_CACHE_LIMIT = 200;
 const SUBSCRIBER_POLL_INTERVAL = 120000;
 const CAPTURE_EVENTS_KEY = 'settings.captureevents';
 
+const AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
+
 const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/youtube',
+  'https://www.googleapis.com/auth/youtube.force-ssl',
   'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
 
@@ -508,23 +513,29 @@ export class YoutubePlugin extends BasePlugin {
     const redirectUri = new URL(window.location.href.split('#')[0]).toString();
     const state = `${this.id}:${randomSessionId()}`;
     storage.set(STATE_KEY, state);
+    storage.set(REDIRECT_KEY, redirectUri);
 
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
-      response_type: 'token',
-      access_type: 'online',
-      include_granted_scopes: 'true',
       scope: YT_SCOPES.join(' '),
-      state,
-      prompt: 'consent'
+      state
     });
 
-    window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+    window.location.assign(`${AUTH_BASE_URL}/auth?${params.toString()}`);
   }
 
-  handleOAuthCallback(params) {
+  async handleOAuthCallback(params) {
+    if (params.has('code')) {
+      await this.completeAuthorizationCodeFlow(params);
+      return;
+    }
+
     const access = params.get('access_token');
+    if (!access) {
+      throw new Error('OAuth response missing authorization code or access token for YouTube.');
+    }
+
     const expires = parseInt(params.get('expires_in'), 10) || 3600;
     const scope = params.get('scope') || '';
     const state = params.get('state');
@@ -540,7 +551,8 @@ export class YoutubePlugin extends BasePlugin {
       accessToken: access,
       scope,
       tokenType: params.get('token_type') || 'Bearer',
-      expiresAt: Date.now() + (expires - 60) * 1000
+      expiresAt: Date.now() + (expires - 60) * 1000,
+      refreshToken: null
     };
 
     storage.set(TOKEN_KEY, tokenData);
@@ -554,6 +566,87 @@ export class YoutubePlugin extends BasePlugin {
       this.setupLiveChat();
     } else {
       this.log('Authorization successful. Start a session and press Connect when ready.');
+    }
+  }
+
+  async completeAuthorizationCodeFlow(params) {
+    const code = params.get('code');
+    const state = params.get('state');
+
+    if (!code) {
+      throw new Error('Missing authorization code from YouTube.');
+    }
+
+    const storedState = storage.get(STATE_KEY, null);
+    if (!storedState || storedState !== state) {
+      storage.remove(STATE_KEY);
+      throw new Error('OAuth state mismatch for YouTube.');
+    }
+
+    storage.remove(STATE_KEY);
+
+    const storedRedirect = storage.get(REDIRECT_KEY, null);
+    storage.remove(REDIRECT_KEY);
+
+    const redirectUrl = storedRedirect || this.buildRedirectUriWithoutOAuthParams();
+
+    let tokenResponse;
+    try {
+      const res = await fetch(`${AUTH_BASE_URL}/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          redirect_uri: redirectUrl
+        })
+      });
+      tokenResponse = await res.json();
+      if (!res.ok) {
+        const message = tokenResponse?.error_description || tokenResponse?.error || 'YouTube token exchange failed.';
+        throw new Error(message);
+      }
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to exchange YouTube authorization code.');
+    }
+
+    const expiresIn = parseInt(tokenResponse.expires_in, 10) || 0;
+    const refreshToken = tokenResponse.refresh_token || this.token?.refreshToken || null;
+    const scope = tokenResponse.scope || YT_SCOPES.join(' ');
+
+    if (!tokenResponse.access_token) {
+      throw new Error('YouTube token response missing access token.');
+    }
+
+    const tokenData = {
+      accessToken: tokenResponse.access_token,
+      refreshToken,
+      scope,
+      tokenType: tokenResponse.token_type || 'Bearer',
+      expiresAt: expiresIn ? Date.now() + Math.max((expiresIn - 60) * 1000, 0) : null
+    };
+
+    storage.set(TOKEN_KEY, tokenData);
+    this.token = tokenData;
+    this.refreshSubscriberCapability(tokenData, { force: true });
+    this.refreshStatus();
+
+    if (this.messenger.getSessionId()) {
+      this.setState('connecting');
+      this.log('Authorization successful. Connecting to live chat...');
+      this.setupLiveChat();
+    } else {
+      this.log('Authorization successful. Start a session and press Connect when ready.');
+    }
+  }
+
+  buildRedirectUriWithoutOAuthParams() {
+    try {
+      const url = new URL(window.location.href);
+      url.hash = '';
+      ['code', 'scope', 'state'].forEach((key) => url.searchParams.delete(key));
+      return url.toString();
+    } catch (err) {
+      return window.location.href.split('#')[0].split('?code=')[0];
     }
   }
 

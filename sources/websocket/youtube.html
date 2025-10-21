@@ -192,7 +192,6 @@ try {
         if (urlKey) { apiKeyOverride = urlKey; }
     } catch {}
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
-    var scope = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/youtube.channel-memberships.creator';
     var username = "";
     var channel = '';
     var videoId = '';
@@ -599,6 +598,8 @@ try {
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.remove('hidden');
+        const signedInCreds = document.getElementById('credentials-container-signedin');
+        if (signedInCreds) signedInCreds.classList.remove('hidden');
     }
     function showSocketInterface() {
         const authElement = document.querySelector('.auth');
@@ -606,6 +607,8 @@ try {
         if (authElement) authElement.classList.add("hidden");
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.add('hidden');
+        const signedInCreds = document.getElementById('credentials-container-signedin');
+        if (signedInCreds) signedInCreds.classList.add('hidden');
     }
 	function handleVisibilityChange() {
 		const wasVisible = isPageVisible;
