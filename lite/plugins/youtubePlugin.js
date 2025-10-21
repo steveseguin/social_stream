@@ -932,7 +932,6 @@ export class YoutubePlugin extends BasePlugin {
     const sanitizedMessage = safeHtml(rawMessage);
 
     const message = {
-      id: item.id,
       platform: 'youtube',
       type: 'youtube',
       chatname: author.displayName || 'YouTube User',
@@ -949,6 +948,10 @@ export class YoutubePlugin extends BasePlugin {
       raw: item,
       previewText: rawMessage
     };
+
+    if (item.id) {
+      message.sourceId = item.id;
+    }
 
     if (author?.channelId) {
       message.userid = author.channelId;
@@ -1521,7 +1524,7 @@ export class YoutubePlugin extends BasePlugin {
     if (!entry) {
       return null;
     }
-    const { item, snippet, subscriberSnippet, publishedAt, key } = entry;
+    const { item, snippet, subscriberSnippet, publishedAt } = entry;
     const displayName = (subscriberSnippet?.title || snippet?.title || '').trim() || 'YouTube user';
     const avatar =
       subscriberSnippet?.thumbnails?.high?.url ||
@@ -1529,9 +1532,7 @@ export class YoutubePlugin extends BasePlugin {
       subscriberSnippet?.thumbnails?.medium?.url ||
       '';
     const timestamp = Number.isFinite(publishedAt) ? publishedAt : Date.now();
-    const messageId = item?.id ? `youtube-subscriber-${item.id}` : `youtube-subscriber-${key}`;
     const payload = {
-      id: messageId,
       platform: 'youtube',
       type: 'youtube',
       chatname: displayName,
@@ -1542,6 +1543,9 @@ export class YoutubePlugin extends BasePlugin {
       previewText: `${displayName} followed`,
       raw: { subscriber: item }
     };
+    if (item?.id) {
+      payload.sourceId = item.id;
+    }
     if (subscriberSnippet?.channelId) {
       payload.userid = subscriberSnippet.channelId;
     }
