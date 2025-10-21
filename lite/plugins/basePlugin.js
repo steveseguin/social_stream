@@ -1,5 +1,13 @@
 import { formatTime, safeHtml, htmlToText } from '../utils/helpers.js';
 
+const MESSAGE_COUNTER_BASE = Math.floor(Math.random() * 90000);
+let globalMessageCounter = MESSAGE_COUNTER_BASE;
+
+function nextIncrementalId() {
+  globalMessageCounter += 1;
+  return globalMessageCounter;
+}
+
 const STATE_LABEL = {
   idle: 'Idle',
   connecting: 'Connecting...',
@@ -51,6 +59,10 @@ export class BasePlugin {
     this.primaryNode = null;
     this.settingsNode = null;
     this.settingsToggle = null;
+  }
+
+  static nextMessageId() {
+    return nextIncrementalId();
   }
 
   mount(container) {
@@ -281,6 +293,9 @@ export class BasePlugin {
       previewDetail
     } = options;
     try {
+      if (payload && typeof payload === 'object' && !payload.id) {
+        payload.id = BasePlugin.nextMessageId();
+      }
       const logDetail = (() => {
         if (!payload || typeof payload !== 'object') {
           return { payload, silent, note };
