@@ -92,6 +92,60 @@ let plugins = [];
 const pluginMap = new Map();
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+function debugActivityTrace(label, detail) {
+  if (!debugEnabled) {
+    return;
+  }
+  if (detail !== undefined) {
+    console.debug(`[Lite] ${label}`, detail);
+  } else {
+    console.debug(`[Lite] ${label}`);
+  }
+}
+
+function sanitizePayloadForDebug(payload) {
+  if (!debugEnabled) {
+    return payload;
+  }
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  if (Array.isArray(payload)) {
+    return payload.map((item) => sanitizePayloadForDebug(item));
+  }
+  const snapshot = { ...payload };
+  if (Object.prototype.hasOwnProperty.call(snapshot, 'raw')) {
+    snapshot.raw = '[omitted in debug log]';
+  }
+  if (snapshot.payload && typeof snapshot.payload === 'object') {
+    snapshot.payload = sanitizePayloadForDebug(snapshot.payload);
+  }
+  if (snapshot.detail && typeof snapshot.detail === 'object') {
+    snapshot.detail = sanitizePayloadForDebug(snapshot.detail);
+  }
+  return snapshot;
+}
+
+function snapshotActivityEntryForDebug(entry) {
+  if (!debugEnabled) {
+    return entry;
+  }
+  if (!entry || typeof entry !== 'object') {
+    return entry;
+  }
+  if (Array.isArray(entry)) {
+    return entry.map((item) => snapshotActivityEntryForDebug(item));
+  }
+  const snapshot = { ...entry };
+  if (snapshot.payload && typeof snapshot.payload === 'object') {
+    snapshot.payload = sanitizePayloadForDebug(snapshot.payload);
+  }
+  if (snapshot.detail && typeof snapshot.detail === 'object') {
+    snapshot.detail = sanitizePayloadForDebug(snapshot.detail);
+  }
+  return snapshot;
+}
+
 const testMessagePresets = [
   () => ({
     type: 'youtube',
@@ -387,8 +441,11 @@ function handleCopyLink() {
 function addActivity(entry) {
   const normalized = normalizeActivityEntry(entry);
   if (!normalized) {
+    debugActivityTrace('Activity entry dropped', { entry: snapshotActivityEntryForDebug(entry) });
     return;
   }
+
+  debugActivityTrace('Activity entry accepted', snapshotActivityEntryForDebug(normalized));
 
   if (normalized.id && activityById.has(normalized.id)) {
     const existingIndex = activityEntries.findIndex((item) => item.id === normalized.id);
@@ -418,6 +475,7 @@ function addActivity(entry) {
 
 function normalizeActivityEntry(entry) {
   if (!entry) {
+    debugActivityTrace('normalizeActivityEntry: empty entry', entry);
     return null;
   }
 
@@ -427,9 +485,17 @@ function normalizeActivityEntry(entry) {
   if (kind === 'event') {
     const payload = entry.payload || entry.messageData || entry.detail || entry;
     if (!payload || typeof payload !== 'object') {
+      debugActivityTrace('normalizeActivityEntry: invalid event payload', { entry: snapshotActivityEntryForDebug(entry) });
       return null;
     }
     if (!debugEnabled && !isDisplayableMessage(payload)) {
+      return null;
+    }
+    if (debugEnabled && !isDisplayableMessage(payload)) {
+      debugActivityTrace(
+        'normalizeActivityEntry: payload filtered (not displayable)',
+        { entry: snapshotActivityEntryForDebug(entry), payload: sanitizePayloadForDebug(payload) }
+      );
       return null;
     }
 
@@ -459,6 +525,10 @@ function normalizeActivityEntry(entry) {
   }
   if (!debugEnabled && entryKind === 'status') {
     return null;
+  }
+
+  if (entryKind === 'debug' && debugEnabled) {
+    debugActivityTrace('normalizeActivityEntry: debug entry accepted', { entry: snapshotActivityEntryForDebug(entry) });
   }
 
   const id = entry.id || `log-${timestamp}-${Math.floor(Math.random() * 1000)}`;
@@ -1316,6 +1386,9 @@ function handleRelayMessage(message) {
     if (!payload || typeof payload !== 'object') {
       return;
     }
+
+    debugActivityTrace('Relay payload received', sanitizePayloadForDebug(payload));
+
     addActivity({
       kind: 'event',
       plugin: payload.type || payload.platform || 'system',

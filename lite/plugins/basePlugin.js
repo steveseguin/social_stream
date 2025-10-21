@@ -281,7 +281,17 @@ export class BasePlugin {
       previewDetail
     } = options;
     try {
-      this.debugLog('Publishing payload to dock', { payload, silent, note });
+      const logDetail = (() => {
+        if (!payload || typeof payload !== 'object') {
+          return { payload, silent, note };
+        }
+        const snapshot = { ...payload };
+        if (snapshot.raw) {
+          snapshot.raw = '[omitted in debug log]';
+        }
+        return { payload: snapshot, silent, note };
+      })();
+      this.debugLog('Publishing payload to dock', logDetail);
       this.onActivity({
         kind: 'event',
         plugin: this.id,

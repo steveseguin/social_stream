@@ -954,6 +954,14 @@ export class YoutubePlugin extends BasePlugin {
       message.userid = author.channelId;
     }
 
+    if (this.debug) {
+      const debugSnapshot = { ...message };
+      if (debugSnapshot.raw) {
+        debugSnapshot.raw = '[omitted in debug log]';
+      }
+      this.debugLog('Prepared YouTube chat payload', debugSnapshot);
+    }
+
     const meta = {};
     let publishNote = null;
     const membershipInfo = this.deriveMembershipMetadata(snippet, sanitizedMessage);
