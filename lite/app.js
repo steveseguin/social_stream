@@ -47,6 +47,7 @@ const overlayToggleInputs = overlayToggleDefs.reduce((acc, def) => {
 const sessionKey = 'session.currentId';
 const overlayToggleStorageKey = 'session.overlayOptions';
 const youtubeStreamingStorageKey = 'youtube.useStreaming';
+const debugPreferenceKey = 'debug.enabled';
 const activityLimit = 80;
 
 const overlayToggleDefaults = overlayToggleDefs.reduce((acc, def) => {
@@ -65,21 +66,56 @@ let youtubeStreamingEnabled = Boolean(storage.get(youtubeStreamingStorageKey, fa
 
 const url = new URL(window.location.href);
 const debugParam = url.searchParams.get('debug');
+const storedDebugPreference = storage.get(debugPreferenceKey, null);
 const debugEnabled = (() => {
-  if (debugParam === null) {
-    return false;
+  if (debugParam !== null) {
+    const normalized = (debugParam || '').trim().toLowerCase();
+    if (!normalized) {
+      storage.set(debugPreferenceKey, true);
+      return true;
+    }
+    const next = !['0', 'false', 'off', 'no'].includes(normalized);
+    storage.set(debugPreferenceKey, next);
+    return next;
   }
-  const normalized = (debugParam || '').trim().toLowerCase();
-  if (!normalized) {
-    return true;
+  if (typeof storedDebugPreference === 'boolean') {
+    return storedDebugPreference;
   }
-  return !['0', 'false', 'off', 'no'].includes(normalized);
+  return false;
 })();
 if (debugEnabled) {
-  console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL to disable.');
+  console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL or call window.SocialStreamLiteDebug.disable() to turn it off.');
 } else {
-  console.info('Social Stream Lite debug logging disabled. Add ?debug=1 to the URL to enable.');
+  console.info('Social Stream Lite debug logging disabled. Add ?debug=1 to the URL or call window.SocialStreamLiteDebug.enable() to turn it on.');
 }
+
+window.SocialStreamLiteDebug = Object.freeze({
+  enable() {
+    storage.set(debugPreferenceKey, true);
+    const next = new URL(window.location.href);
+    next.searchParams.set('debug', '1');
+    window.location.assign(next.toString());
+  },
+  disable() {
+    storage.set(debugPreferenceKey, false);
+    const next = new URL(window.location.href);
+    next.searchParams.set('debug', '0');
+    window.location.assign(next.toString());
+  },
+  clear() {
+    storage.remove(debugPreferenceKey);
+    const next = new URL(window.location.href);
+    next.searchParams.delete('debug');
+    window.location.assign(next.toString());
+  },
+  status() {
+    return {
+      param: new URL(window.location.href).searchParams.get('debug'),
+      stored: storage.get(debugPreferenceKey, null),
+      active: debugEnabled
+    };
+  }
+});
 
 const messenger = new DockMessenger(elements.dockFrame, {
   debug: debugEnabled,
@@ -97,9 +133,9 @@ function debugActivityTrace(label, detail) {
     return;
   }
   if (detail !== undefined) {
-    console.debug(`[Lite] ${label}`, detail);
+    console.info(`[Lite] ${label}`, detail);
   } else {
-    console.debug(`[Lite] ${label}`);
+    console.info(`[Lite] ${label}`);
   }
 }
 

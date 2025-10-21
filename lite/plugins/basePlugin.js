@@ -320,9 +320,9 @@ export class BasePlugin {
     const { kind = 'status' } = options || {};
     if (this.debug) {
       if (detail !== undefined) {
-        console.debug(`[${this.id}] ${message}`, detail);
+        console.info(`[${this.id}] ${message}`, detail);
       } else {
-        console.debug(`[${this.id}] ${message}`);
+        console.info(`[${this.id}] ${message}`);
       }
     }
     this.onActivity({
@@ -339,9 +339,9 @@ export class BasePlugin {
       return;
     }
     if (detail !== undefined) {
-      console.debug(`[${this.id}] ${message}`, detail);
+      console.info(`[${this.id}] ${message}`, detail);
     } else {
-      console.debug(`[${this.id}] ${message}`);
+      console.info(`[${this.id}] ${message}`);
     }
     this.onActivity({
       kind: 'debug',
