@@ -56,6 +56,9 @@
     "https://cherry.tv/*",	
 	"https://*.online.church/",
     "https://beamstream.gg/*/chat",
+    "https://socialstream.ninja/*",
+    "https://*.socialstream.ninja/*",
+    "https://io.socialstream.ninja/*",
     "https://socialstream.ninja/sources/websocket/*",
     "https://socialstream.ninja/websocket/*",
 	"https://socialstream.ninja/beta/sources/websocket/*",
@@ -160,13 +163,16 @@
     "https://watch.owncast.online/*",
     "https://live.simontv.org/*",
     "https://discord.com/*",
-	"https://discord.gg/*",
+    "https://discord.gg/*",
+    "https://discordapp.com/*",
+    "https://*.discordapp.com/*",
     "https://www.mixcloud.com/live/*/chat/",
     "https://vimeo.com/live*",
     "https://www.vimeo.com/live*",
     "https://vimeo.com/event/*",
     "https://teams.live.com/*",
     "https://teams.microsoft.com/*",
+	"https://teams.cloud.microsoft/*",
     "https://livestream.com/accounts/*",
     "https://joinpeertube.org/*/plugins/livechat/*router/webchat/room/*",
     "https://joinpeertube.org/*/p/livechat/room?room=*",
@@ -630,6 +636,16 @@
 		"http://localhost:8080/twitch.html*"
       ]
     },
+    {
+      "js": [ "./sources/websocket/kick.js" ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/kick*",
+		"https://beta.socialstream.ninja/sources/websocket/kick*",
+		"https://socialstream.ninja/beta/sources/websocket/kick*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*",
+		"http://localhost:8080/kick.html*"
+      ]
+    },
 	{
       "js": [ "./sources/websocket/irc.js" ],
       "matches": [
@@ -769,12 +785,12 @@
     },
     {
       "js": [ "./sources/teams.js" ],
-      "matches": [ "https://teams.microsoft.com/*" ],
+      "matches": [ "https://teams.microsoft.com/*", "https://teams.cloud.microsoft/*" ],
       "all_frames": true
     },
     {
       "js": [ "./sources/teams.js" ],
-      "matches": [ "https://teams.live.com/*" ]
+      "matches": [ "https://teams.live.com/*", "https://teams.cloud.microsoft/*" ]
     },
     {
       "js": [ "./sources/peertube.js" ],
