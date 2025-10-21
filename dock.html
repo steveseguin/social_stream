@@ -9119,7 +9119,17 @@
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
 
-					var textContentLength =  node.querySelector("#content_" + data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
+					var contentId = "content_" + data.id;
+					var contentNode = node.querySelector('[id="' + contentId + '"]');
+					if (!contentNode && window.CSS && typeof window.CSS.escape === "function") {
+						try {
+							contentNode = node.querySelector('#' + CSS.escape(contentId));
+						} catch (e) {}
+					}
+					var textContentLength = 0;
+					if (contentNode) {
+						textContentLength = contentNode.innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
+					}
 					node.dataset.contentLength = textContentLength;
 					if (!textContentLength) {
 						node.classList.add("noText");
@@ -9220,9 +9230,17 @@
 								getById("img_" + data.id).src = data.chatimg;
 								getById("img_" + data.id).classList.remove("invert");
 								getById("img_" + data.id).classList.remove("fade-in-image");
-								node.querySelector("#img_" + data.id).src = data.chatimg;
-								node.querySelector("#img_" + data.id).classList.remove("invert");
-								node.querySelector("#img_" + data.id).classList.remove("fade-in-image");
+								var imgNode = node.querySelector('[id="img_' + data.id + '"]');
+								if (!imgNode && window.CSS && typeof window.CSS.escape === "function") {
+									try {
+										imgNode = node.querySelector('#' + CSS.escape("img_" + data.id));
+									} catch (e) {}
+								}
+								if (imgNode) {
+									imgNode.src = data.chatimg;
+									imgNode.classList.remove("invert");
+									imgNode.classList.remove("fade-in-image");
+								}
 							} catch (e) {}
 						}.bind(data, node);
 						twitchImage.src = data.chatimg;
