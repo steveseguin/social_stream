@@ -314,7 +314,139 @@
 	  }
 	  
 	  traverse(element);
-	  return textArray;
+		return textArray;
+	}
+
+	const SUBSCRIBER_PATTERNS = [
+		{ keyword: "subscriber", label: "Subscriber" },
+		{ keyword: "suscriptor", label: "Suscriptor" },
+		{ keyword: "abonné", label: "Abonné" },
+		{ keyword: "abonnent", label: "Abonnent" },
+		{ keyword: "abbonato", label: "Abbonato" },
+		{ keyword: "assinante", label: "Assinante" },
+		{ keyword: "abonnee", label: "Abonnee" },
+		{ keyword: "prenumerant", label: "Prenumerant" },
+		{ keyword: "подписчик", label: "Подписчик" },
+		{ keyword: "订阅者", label: "订阅者" },
+		{ keyword: "購読者", label: "購読者" },
+		{ keyword: "구독자", label: "구독자" }
+	];
+
+	const SUBSCRIBER_SET_IDS = new Set(["subscriber"]);
+
+	function matchSubscriberKeyword(text) {
+		if (!text) {
+			return null;
+		}
+		const lower = text.toLowerCase();
+		for (const pattern of SUBSCRIBER_PATTERNS) {
+			if (lower.includes(pattern.keyword)) {
+				return pattern.label;
+			}
+		}
+		return null;
+	}
+
+	function buildSubscriberSubtitle(text, label) {
+		if (!text) {
+			return "";
+		}
+		let cleaned = text.replace(/\s*\([^)]*\)/g, "");
+		if (label) {
+			try {
+				const labelRegex = new RegExp(label, "i");
+				cleaned = cleaned.replace(labelRegex, "");
+			} catch (e) {
+				cleaned = cleaned.replace(label, "");
+			}
+		}
+		cleaned = cleaned.replace(/badge/i, "");
+		cleaned = cleaned.replace(/\s+/g, " ").trim();
+		if (!cleaned) {
+			return "";
+		}
+		if (cleaned.endsWith("-Month") && cleaned !== "1-Month") {
+			cleaned += "s";
+		}
+		return cleaned;
+	}
+
+	function getSubscriberInfoFromBadge(badge) {
+		const textCandidates = new Set();
+
+		if (badge.alt) {
+			textCandidates.add(badge.alt);
+		}
+
+		const ariaLabel = badge.getAttribute("aria-label");
+		if (ariaLabel) {
+			textCandidates.add(ariaLabel);
+		}
+
+		const title = badge.getAttribute("title");
+		if (title) {
+			textCandidates.add(title);
+		}
+
+		if (badge.dataset) {
+			const datasetKeys = ["aBadge", "badge", "badgeId", "aBadgeId", "badgeTooltip", "aBadgeTooltip"];
+			for (const key of datasetKeys) {
+				if (badge.dataset[key]) {
+					textCandidates.add(badge.dataset[key]);
+				}
+			}
+
+			const badgeData = badge.dataset.aBadgeData || badge.dataset.badgeData;
+			if (badgeData) {
+				try {
+					const parsed = JSON.parse(badgeData);
+					const setId = (parsed.setID || parsed.setId || parsed.badgeID || parsed.badgeId || "").toLowerCase();
+
+					if (setId && SUBSCRIBER_SET_IDS.has(setId)) {
+						const display = parsed.title || parsed.tooltip || parsed.badgeId || parsed.badgeID || "Subscriber";
+						return {
+							label: "Subscriber",
+							text: display
+						};
+					}
+
+					const parsedKeys = ["title", "tooltip", "badgeID", "badgeId", "setID", "setId"];
+					for (const key of parsedKeys) {
+						if (parsed[key]) {
+							textCandidates.add(String(parsed[key]));
+						}
+					}
+				} catch (e) {}
+			}
+		}
+
+		for (const text of textCandidates) {
+			const label = matchSubscriberKeyword(text);
+			if (label) {
+				return {
+					label: label,
+					text: text
+				};
+			}
+		}
+
+		const srcCandidates = [badge.src, badge.getAttribute("data-src")];
+		for (const src of srcCandidates) {
+			if (!src) {
+				continue;
+			}
+			const lowerSrc = src.toLowerCase();
+			for (const id of SUBSCRIBER_SET_IDS) {
+				if (lowerSrc.includes(id)) {
+					return {
+						label: "Subscriber",
+						text: ""
+					};
+				}
+			}
+		}
+
+		return null;
 	}
 
 	var lastMessage = "";
@@ -382,51 +514,34 @@
 		var vip = false;
 		
 		try {
-			ele.querySelectorAll(SELECTORS.chatBadges).forEach(badge => {
-				if (badge.alt && badge.alt.includes("Subscriber")){
-					subscriber = "Subscriber";
-					subtitle = badge.alt.replace(/\s*\([^)]*\)/g, '');
-					subtitle = subtitle.replace("Subscriber","").trim();
-					if (subtitle && subtitle.endsWith("-Month") && (subtitle!=="1-Month")){
-						subtitle+="s";
+			const badges = ele.querySelectorAll(SELECTORS.chatBadges);
+			for (const badge of badges) {
+				if (!subscriber) {
+					const subscriberInfo = getSubscriberInfoFromBadge(badge);
+					if (subscriberInfo) {
+						subscriber = subscriberInfo.label;
+						const subtitleSource = subscriberInfo.text || badge.alt || badge.getAttribute("aria-label") || "";
+						subtitle = buildSubscriberSubtitle(subtitleSource, subscriber);
 					}
-				} else if (badge.alt && badge.alt.includes("Suscriptor")){
-				   subscriber = "Suscriptor";
-				} else if (badge.alt && badge.alt.includes("Abonné")){
-				   subscriber = "Abonné";
-				} else if (badge.alt && badge.alt.includes("Abonnent")){
-				   subscriber = "Abonnent";
-				} else if (badge.alt && badge.alt.includes("Abbonato")){
-				   subscriber = "Abbonato";
-				} else if (badge.alt && badge.alt.includes("Assinante")){
-				   subscriber = "Assinante";
-				} else if (badge.alt && badge.alt.includes("Abonnee")){
-				   subscriber = "Abonnee";
-				} else if (badge.alt && badge.alt.includes("Prenumerant")){
-				   subscriber = "Prenumerant";
-				} else if (badge.alt && badge.alt.includes("Подписчик")){
-				   subscriber = "Подписчик";
-				} else if (badge.alt && badge.alt.includes("订阅者")){
-				   subscriber = "订阅者";
-				} else if (badge.alt && badge.alt.includes("購読者")){
-				   subscriber = "購読者";
-				} else if (badge.alt && badge.alt.includes("구독자")){
-				   subscriber = "구독자";
 				}
-				if (badge.alt && badge.alt == "Moderator"){
-				   mod = true;
-				}
-				if (badge.alt && badge.alt == "VIP"){
-				   vip = true;
-				}
-				
-				if (badge.alt && badge.alt.includes(", ")){
-					let name11 = badge.alt.split(", ").pop();
-					if (name11){
+
+				const badgeText = (badge.alt || badge.getAttribute("aria-label") || badge.getAttribute("title") || "").trim();
+				const loweredBadgeText = badgeText.toLowerCase();
+
+				if (badgeText && badgeText.includes(", ")) {
+					const name11 = badgeText.split(", ").pop();
+					if (name11) {
 						crossChat = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(name11);
 					}
 				}
-				
+
+				if (!mod && loweredBadgeText === "moderator") {
+					mod = true;
+				}
+				if (!vip && loweredBadgeText === "vip") {
+					vip = true;
+				}
+
 				if (badge.srcset) {
 					let bb = badge.srcset.split("https://").pop();
 					if (bb) {
@@ -461,7 +576,7 @@
 					bage.color = "#FFF";
 					chatbadges.push(bage);
 				} */
-			});
+			}
 		} catch (e) {}
 		
 		if (settings.memberchatonly && !subscriber){

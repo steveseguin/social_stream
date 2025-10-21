@@ -25,7 +25,7 @@ const TLS_RELOAD_INTERVAL_MS = Number(process.env.TLS_RELOAD_INTERVAL_MS || 12 *
 
 // Hard-coded Kick OAuth client credentials. Update these with your actual values.
 const KICK_CLIENT_ID = '01K7MXFQ9C39VAQ50DCQ2DXSDJ';
-const KICK_CLIENT_SECRET = 'f1eca0aa5bdf2e2c5d0c70330f2dc8c8b6c4d305c63df06de76e57fc3a96e73a';
+const KICK_CLIENT_SECRET = 'XXXXXXXXXXXXXXXXXXXXX';
 const KICK_REDIRECT_URI =
     process.env.KICK_REDIRECT_URI || 'https://socialstream.ninja/beta/sources/websocket/kick.html';
 
