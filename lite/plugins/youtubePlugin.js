@@ -47,9 +47,32 @@ export class YoutubePlugin extends BasePlugin {
     this.pollTimer = null;
     this.nextPageToken = null;
     this.pollInterval = 5000;
-    this.liveChatId = storage.get(CHAT_ID_KEY, '');
+
+    const storedChatId = storage.get(CHAT_ID_KEY, '');
     const storedChatIdSource = storage.get(CHAT_ID_SOURCE_KEY, null);
-    this.chatIdSource = storedChatIdSource === 'manual' ? 'manual' : 'auto';
+    let ignoredManualChatId = null;
+
+    this.liveChatId = '';
+    this.chatIdSource = 'auto';
+    this.chatIdIsLegacyManual = false;
+    this.skipStoredManualOnce = false;
+
+    if (storedChatIdSource === 'auto' && storedChatId) {
+      this.liveChatId = storedChatId;
+    } else if (storedChatId && storedChatIdSource === 'manual') {
+      ignoredManualChatId = storedChatId;
+      storage.remove(CHAT_ID_KEY);
+      storage.remove(CHAT_ID_SOURCE_KEY);
+    } else if (storedChatId && !storedChatIdSource) {
+      ignoredManualChatId = storedChatId;
+      storage.remove(CHAT_ID_KEY);
+    }
+
+    if (ignoredManualChatId) {
+      this.debugLog('Ignored stored manual YouTube chat ID on startup to prioritize active broadcasts.', {
+        chatId: ignoredManualChatId
+      });
+    }
     this.activeBroadcast = null;
     this.streamingToggleInput = null;
     this.useStreaming = Boolean(useStreaming);
@@ -125,7 +148,7 @@ export class YoutubePlugin extends BasePlugin {
     chatInput.addEventListener('change', () => {
       const newValue = chatInput.value.trim();
       const oldValue = this.liveChatId;
-      this.rememberLiveChatId(newValue, { source: newValue ? 'manual' : 'auto' });
+      this.rememberLiveChatId(newValue, { source: newValue ? 'manual' : 'auto', legacy: false });
 
       // If connected and the Video/Chat ID changed, reconnect
       if (this.state === 'connected' && newValue !== oldValue) {
@@ -267,22 +290,22 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   rememberLiveChatId(chatId, options = {}) {
-    const { source = 'auto', silent = false } = options || {};
+    const { source = 'auto', silent = false, legacy = false } = options || {};
     const normalizedSource = source === 'manual' ? 'manual' : 'auto';
     const value = typeof chatId === 'string' ? chatId.trim() : '';
 
     this.liveChatId = value;
     this.chatIdSource = normalizedSource;
-
-    if (this.liveChatId) {
-      storage.set(CHAT_ID_KEY, this.liveChatId);
-    } else {
-      storage.remove(CHAT_ID_KEY);
-    }
+    this.chatIdIsLegacyManual = normalizedSource === 'manual' && Boolean(legacy);
 
     if (normalizedSource === 'manual') {
-      storage.set(CHAT_ID_SOURCE_KEY, 'manual');
+      storage.remove(CHAT_ID_KEY);
+      storage.remove(CHAT_ID_SOURCE_KEY);
+    } else if (this.liveChatId) {
+      storage.set(CHAT_ID_KEY, this.liveChatId);
+      storage.set(CHAT_ID_SOURCE_KEY, 'auto');
     } else {
+      storage.remove(CHAT_ID_KEY);
       storage.remove(CHAT_ID_SOURCE_KEY);
     }
 
@@ -297,7 +320,7 @@ export class YoutubePlugin extends BasePlugin {
 
   clearStoredLiveChatId(options = {}) {
     const { silent = false } = options || {};
-    this.rememberLiveChatId('', { source: 'auto', silent: true });
+    this.rememberLiveChatId('', { source: 'auto', silent: true, legacy: false });
     this.nextPageToken = null;
     this.setActiveBroadcast(null);
     if (!silent) {
@@ -308,7 +331,14 @@ export class YoutubePlugin extends BasePlugin {
   beginLiveChatRecovery(options = {}) {
     const { reason = null } = options || {};
 
-    if (this.state === 'idle' || this.state === 'disabled' || this.chatIdSource === 'manual') {
+    if (this.state === 'idle' || this.state === 'disabled') {
+      return false;
+    }
+
+    const isManualSource = this.chatIdSource === 'manual';
+    const canRecoverManual = isManualSource && this.chatIdIsLegacyManual;
+
+    if (isManualSource && !canRecoverManual) {
       return false;
     }
 
@@ -330,13 +360,27 @@ export class YoutubePlugin extends BasePlugin {
 
     this.stopListening();
     this.stopSubscriberWatcher();
-    this.clearStoredLiveChatId({ silent: true });
+    this.nextPageToken = null;
+    this.setActiveBroadcast(null);
+
+    const previousChatState = {
+      id: this.liveChatId,
+      source: this.chatIdSource,
+      legacyManual: this.chatIdIsLegacyManual
+    };
+
+    if (canRecoverManual) {
+      this.skipStoredManualOnce = true;
+    } else {
+      this.clearStoredLiveChatId({ silent: true });
+    }
 
     if (this.state !== 'connecting') {
       this.setState('connecting');
     }
 
     Promise.resolve().then(async () => {
+      let restoredPrevious = false;
       try {
         if (this.state === 'idle' || this.state === 'disabled') {
           return;
@@ -346,8 +390,24 @@ export class YoutubePlugin extends BasePlugin {
         }
         await this.setupLiveChat();
       } catch (err) {
+        if (canRecoverManual && previousChatState.id) {
+          this.rememberLiveChatId(previousChatState.id, {
+            source: previousChatState.source,
+            legacy: previousChatState.legacyManual,
+            silent: true
+          });
+          restoredPrevious = true;
+        }
         super.reportError(err);
       } finally {
+        if (canRecoverManual && !restoredPrevious && !this.liveChatId && previousChatState.id) {
+          this.rememberLiveChatId(previousChatState.id, {
+            source: previousChatState.source,
+            legacy: previousChatState.legacyManual,
+            silent: true
+          });
+        }
+        this.skipStoredManualOnce = false;
         this.recoveringLiveChat = false;
       }
     });
@@ -538,10 +598,13 @@ export class YoutubePlugin extends BasePlugin {
       const chatSource = typeof resolvedChat === 'object' && resolvedChat !== null && resolvedChat.source
         ? resolvedChat.source
         : this.chatIdSource || 'auto';
+      const chatLegacy = typeof resolvedChat === 'object' && resolvedChat !== null && Object.prototype.hasOwnProperty.call(resolvedChat, 'legacy')
+        ? Boolean(resolvedChat.legacy)
+        : false;
       if (!chatId) {
         throw new Error('No active live chat found. Start a broadcast or provide a Live Chat ID.');
       }
-      this.rememberLiveChatId(chatId, { source: chatSource, silent: true });
+      this.rememberLiveChatId(chatId, { source: chatSource, legacy: chatLegacy, silent: true });
       this.setState('connected');
       this.log('Connected to YouTube live chat.', { liveChatId: this.liveChatId });
       await this.prepareEmotesForChannel();
@@ -595,18 +658,26 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   async resolveLiveChatId() {
+    const bypassStoredManual = this.skipStoredManualOnce;
+    if (this.skipStoredManualOnce) {
+      this.skipStoredManualOnce = false;
+    }
+
     let manualId = '';
     let manualSource = null;
+    let manualLegacy = false;
 
     if (this.chatIdInput && this.chatIdInput.value.trim()) {
       manualId = this.chatIdInput.value.trim();
       manualSource = 'manual';
-    } else if (this.liveChatId && this.liveChatId.trim()) {
+      manualLegacy = false;
+    } else if ((this.liveChatId && this.liveChatId.trim()) && (!bypassStoredManual || this.chatIdSource !== 'manual')) {
       manualId = this.liveChatId.trim();
       manualSource = this.chatIdSource === 'manual' ? 'manual' : 'auto';
+      manualLegacy = this.chatIdIsLegacyManual;
     }
 
-    if (manualId && manualSource !== 'manual') {
+    if (manualId && manualSource === 'auto') {
       try {
         const active = await this.isLiveChatIdActive(manualId);
         if (!active) {
@@ -628,23 +699,44 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     if (manualId) {
-      const resolvedSource = manualSource === 'manual' ? 'manual' : 'auto';
-      if (manualId.length === 11) {
-        try {
-          const liveChatId = await this.getLiveChatIdFromVideoId(manualId);
-          return { id: liveChatId, source: resolvedSource };
-        } catch (err) {
-          const fallbackReasons = new Set(['notFound', 'videoNotFound', 'invalidParameter', 'badRequest', 'idNotFound']);
-          if (err?.code === 'VIDEO_NOT_FOUND' || fallbackReasons.has(err?.reason) || err?.status === 404) {
-            this.debugLog('Manual ID fallback to live chat ID', { manualId, error: err?.message });
-            this.setActiveBroadcast(null);
-            return { id: manualId, source: resolvedSource };
+      if (manualSource === 'manual') {
+        const legacyFlag = manualLegacy;
+        if (manualId.length === 11) {
+          try {
+            const liveChatId = await this.getLiveChatIdFromVideoId(manualId);
+            return { id: liveChatId, source: 'manual', legacy: legacyFlag };
+          } catch (err) {
+            const fallbackReasons = new Set(['notFound', 'videoNotFound', 'invalidParameter', 'badRequest', 'idNotFound']);
+            if (err?.code === 'VIDEO_NOT_FOUND' || fallbackReasons.has(err?.reason) || err?.status === 404) {
+              this.debugLog('Manual ID fallback to live chat ID', { manualId, error: err?.message });
+              this.setActiveBroadcast(null);
+              return { id: manualId, source: 'manual', legacy: legacyFlag };
+            }
+            throw err;
           }
-          throw err;
         }
+        this.setActiveBroadcast(null);
+        return { id: manualId, source: 'manual', legacy: legacyFlag };
       }
-      this.setActiveBroadcast(null);
-      return { id: manualId, source: resolvedSource };
+
+      if (manualSource === 'auto') {
+        if (manualId.length === 11) {
+          try {
+            const liveChatId = await this.getLiveChatIdFromVideoId(manualId);
+            return { id: liveChatId, source: 'auto' };
+          } catch (err) {
+            const fallbackReasons = new Set(['notFound', 'videoNotFound', 'invalidParameter', 'badRequest', 'idNotFound']);
+            if (err?.code === 'VIDEO_NOT_FOUND' || fallbackReasons.has(err?.reason) || err?.status === 404) {
+              this.debugLog('Stored video ID fallback to provided ID', { manualId, error: err?.message });
+              this.setActiveBroadcast(null);
+              return { id: manualId, source: 'auto' };
+            }
+            throw err;
+          }
+        }
+        this.setActiveBroadcast(null);
+        return { id: manualId, source: 'auto' };
+      }
     }
 
     if (!this.isTokenValid()) {

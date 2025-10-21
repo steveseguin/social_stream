@@ -78,7 +78,7 @@ async function handleEvents(request, env) {
   let abortHandler = null;
   let closed = false;
 
-  const cleanup = (controller) => {
+  function cleanup(controller) {
     if (closed) {
       return;
     }
@@ -104,7 +104,7 @@ async function handleEvents(request, env) {
         // noop
       }
     }
-  };
+  }
 
   const stream = new ReadableStream({
     start(controller) {
@@ -127,7 +127,6 @@ async function handleEvents(request, env) {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
       'Connection': 'keep-alive',
-      'Transfer-Encoding': 'chunked',
       'Access-Control-Allow-Origin': env.ALLOW_ORIGIN || '*',
       'X-Accel-Buffering': 'no'
     }
