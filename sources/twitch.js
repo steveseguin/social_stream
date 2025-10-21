@@ -76,6 +76,48 @@
 		}
 	}
 
+	function stripHtmlContent(html) {
+		if (!html) {
+			return "";
+		}
+		const tempDiv = document.createElement("div");
+		tempDiv.innerHTML = html;
+		tempDiv.querySelectorAll("img").forEach(img => {
+			const altText = img.getAttribute("alt") || img.getAttribute("title") || "";
+			if (altText) {
+				const textNode = document.createTextNode(altText);
+				img.parentNode.replaceChild(textNode, img);
+			} else {
+				img.remove();
+			}
+		});
+		return (tempDiv.textContent || tempDiv.innerText || "").trim();
+	}
+
+	function sanitizeReplyMarkup(html) {
+		if (!html) {
+			return "";
+		}
+		const tempDiv = document.createElement("div");
+		tempDiv.innerHTML = html;
+		tempDiv.querySelectorAll("svg").forEach(svg => svg.remove());
+		return tempDiv.innerHTML.trim();
+	}
+
+	function getReplyTarget(ele) {
+		try {
+			const ariaLabel = ele?.getAttribute?.("aria-label") || "";
+			if (!ariaLabel) {
+				return "";
+			}
+			const match = ariaLabel.match(/Replying to\s+([^,]+)/i);
+			if (match && match[1]) {
+				return match[1].trim();
+			}
+		} catch (e) {}
+		return "";
+	}
+
 	function cloneSvgWithResolvedUse(svgElement) {
 		const clonedSvg = svgElement.cloneNode(true);
 
@@ -747,40 +789,68 @@
 		var originalMessage = "";
 	    var ReplyMessage = "";
 		var replyMessage = "";
+		var rawReplyMarkup = "";
+		var replyTarget = "";
+		var hasReply = false;
 
 		try {
 			if (!settings.excludeReplyingTo && chatmessage) {
 				try {
 					var t = ele.querySelector(".chat-line__message-container [title], .seventv-reply-message-part");
 					if (t){
-						replyMessage = getAllContentNodes(t);
-						replyMessage = replyMessage.trim();
-						
+						rawReplyMarkup = getAllContentNodes(t).trim();
 					}
-					if (!replyMessage && ele.querySelector(".reply-line--mentioned")) {
-						replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
-						replyMessage = replyMessage.trim();
+					if (!rawReplyMarkup && ele.querySelector(".reply-line--mentioned")) {
+						rawReplyMarkup = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode).trim();
 					}
-					if (!replyMessage) {
+					if (!rawReplyMarkup) {
 						let l = ele.querySelector('path[d="M11 8h2v2h-2V8zM9 8H7v2h2V8z"]');
 						if (l){
-							replyMessage = getAllContentNodes(l.parentNode.parentNode.parentNode);
-							replyMessage = replyMessage.trim();
+							rawReplyMarkup = getAllContentNodes(l.parentNode.parentNode.parentNode).trim();
 						}
 					}
 				} catch (e) {
 					try {
-						replyMessage = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode);
-						replyMessage = replyMessage.trim();
+						rawReplyMarkup = getAllContentNodes(ele.querySelector(".reply-line--mentioned").parentNode).trim();
 					} catch (ee) {
+					}
+				}
+
+					replyTarget = getReplyTarget(ele);
+					if (rawReplyMarkup) {
+						replyMessage = sanitizeReplyMarkup(rawReplyMarkup);
+					}
+
+					if (replyTarget) {
+						const normalizedTarget = replyTarget.startsWith("@") ? replyTarget : "@" + replyTarget;
+						const replyText = stripHtmlContent(replyMessage);
+						if (!replyMessage || !replyText || replyText.toLowerCase() === replyTarget.toLowerCase() || replyText.toLowerCase() === normalizedTarget.toLowerCase()) {
+							replyMessage = getTranslation("replying-to", "Replying to") + " " + escapeHtml(normalizedTarget);
+						}
+					}
+
+				if (!replyMessage && rawReplyMarkup) {
+					const fallbackText = stripHtmlContent(rawReplyMarkup);
+					if (fallbackText) {
+						replyMessage = escapeHtml(fallbackText);
 					}
 				}
 
 				if (replyMessage) {
 					ReplyMessage = replyMessage;
 					originalMessage = chatmessage;
+					hasReply = true;
 					if (settings.textonlymode) {
-						chatmessage = replyMessage + ": " + chatmessage;
+						var replyTextOnly = stripHtmlContent(replyMessage);
+						if (!replyTextOnly && replyTarget) {
+							const normalizedTarget = replyTarget.startsWith("@") ? replyTarget : "@" + replyTarget;
+							replyTextOnly = getTranslation("replying-to", "Replying to") + " " + normalizedTarget;
+						}
+						if (!replyTextOnly && rawReplyMarkup) {
+							replyTextOnly = stripHtmlContent(rawReplyMarkup);
+						}
+						replyTextOnly = replyTextOnly || getTranslation("replying-to", "Replying to");
+						chatmessage = replyTextOnly + ": " + chatmessage;
 					} else {
 						chatmessage = "<i><small>" + replyMessage + ":&nbsp;</small></i> " + chatmessage;
 					}
@@ -823,15 +893,15 @@
 				}
 			}
 		} catch (e) {}
-		
-		
-		if (!contentimg && ele.querySelector(".message-event-pill")){
-			if (!settings.textonlymode){
-				chatmessage = "<i class='event-pill'>"+getAllContentNodes(ele.querySelector(".message-event-pill")) + "</i> " + chatmessage;
-			} else {
-				chatmessage = getAllContentNodes(ele.querySelector(".message-event-pill")) + "  " + chatmessage;
+			
+			
+			if (!hasReply && !contentimg && ele.querySelector(".message-event-pill")){
+				if (!settings.textonlymode){
+					chatmessage = "<i class='event-pill'>"+getAllContentNodes(ele.querySelector(".message-event-pill")) + "</i> " + chatmessage;
+				} else {
+					chatmessage = getAllContentNodes(ele.querySelector(".message-event-pill")) + "  " + chatmessage;
+				}
 			}
-		}
 
 		var data = {};
 		
