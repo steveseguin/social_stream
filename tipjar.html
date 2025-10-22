@@ -28,6 +28,10 @@
         font-family: 'Arial', sans-serif;
     }
 
+    body.align-right {
+        justify-content: flex-end;
+    }
+
     /* Style-specific containers */
     .style-container {
         position: relative;
@@ -379,7 +383,7 @@
     <div id="minimal-style" class="style-container">
         <div class="minimal-container">
             <div class="minimal-amount" id="minimal-amount">$0.00</div>
-            <div class="minimal-goal">of $250 goal</div>
+            <div class="minimal-goal">of <span id="minimal-goal-value">$250</span> goal</div>
             <div class="minimal-percentage" id="minimal-percentage">0%</div>
         </div>
     </div>
@@ -418,12 +422,14 @@
         const style = urlParams.get('style') || 'jar'; // jar, meter, minimal
         const theme = urlParams.get('theme') || 'default'; // default, neon, gold
         const goal = parseFloat(urlParams.get('goal')) || 250;
+        const formattedGoal = goal % 1 === 0 ? goal.toFixed(0) : goal.toFixed(2);
         const celebration = urlParams.get('celebration') || 'hearts'; // hearts, confetti, fireworks, none
         const persistent = urlParams.has('persistent'); // Keep amount between sessions
         const sound = urlParams.has('sound'); // Play sound on donation
         const customTitle = urlParams.get('title') || 'Stream Goal';
         const showControls = urlParams.has('controls'); // Show control panel
         const customJarUrl = urlParams.get('jarimage'); // Custom jar image URL
+        const alignRight = urlParams.has('alignright');
         
         // Socket server parameters
         const hasServerParam = urlParams.has('server') || urlParams.has('server2');
@@ -435,6 +441,10 @@
         // Apply theme
         if (theme !== 'default') {
             document.body.classList.add(theme);
+        }
+
+        if (alignRight) {
+            document.body.classList.add('align-right');
         }
 
         // Initialize style
@@ -455,6 +465,11 @@
             document.getElementById('milestone-75').textContent = `$${(goal * 0.75).toFixed(2)}`;
             document.getElementById('milestone-50').textContent = `$${(goal * 0.50).toFixed(2)}`;
             document.getElementById('milestone-25').textContent = `$${(goal * 0.25).toFixed(2)}`;
+        } else if (style === 'minimal') {
+            const minimalGoalElement = document.getElementById('minimal-goal-value');
+            if (minimalGoalElement) {
+                minimalGoalElement.textContent = `$${formattedGoal}`;
+            }
         }
 
         // Tracking variables

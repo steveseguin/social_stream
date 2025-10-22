@@ -35,6 +35,8 @@
 				--comment-font-size: unset;
 				--message-line-height: 22px;
 				--author-font-size: 17px;
+				--message-font-weight: inherit;
+				--name-font-weight: 700;
 				--electron-drag-fix: drag;
 				--time-arrived-padding: 1px;
 				--profile-pic-border: 0 solid black;
@@ -73,6 +75,8 @@
 				--scrollbar-visible: inherit;
 				--padding-rows: 3px;
 				
+				--text-stroke-width: 0px;
+				--text-stroke-color: #000;
 				--text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
 				
 			}
@@ -547,6 +551,8 @@
 				background-color: var(--background-color);
 				
 				text-shadow: var(--text-shadow);
+				-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
+				text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				overflow-x: hidden;
 				scrollbar-color: #666 #201c29;
 			}
@@ -682,6 +688,7 @@
 				margin: auto 1px;
 				overflow-wrap: anywhere;
 				line-height: max(var(--message-line-height), var(--comment-font-size));
+				font-weight: var(--message-font-weight);
 				font-size: var(--comment-font-size);
 			}
 			
@@ -968,6 +975,7 @@
 				flex-direction: var(--flex-direction);
 				padding-top: var(--padding-rows) !important;
 				padding-bottom: var(--padding-rows) !important;
+				contain: paint;
 			}
 			
 			
@@ -1147,7 +1155,7 @@
 			}
 
 			.hl-name {
-				font-weight: 700;
+				font-weight: var(--name-font-weight, 700);
 				margin: auto 5px;
 				position: relative;
 				left: 0;
@@ -1317,14 +1325,22 @@
 				background-color: var(--member-bgcolor);
 			}
 			
-			.odd.firsttime, .firsttime {
-				background-color: var(--firstime-bgcolor);
-			}
-
 			.odd.member:not(.expand) {
 				background-color: var(--member-bgcolor-odd);
 			}
 			
+			.highlight-chat.member {
+				background-color: var(--member-bgcolor);
+			}
+
+			.highlight-chat.member.odd:not(.expand) {
+				background-color: var(--member-bgcolor-odd);
+			}
+
+			.odd.firsttime, .firsttime {
+				background-color: var(--firstime-bgcolor);
+			}
+
 			.dono-highlight {
 				background-color: var(--donation-bgcolor);
 			}
@@ -1357,6 +1373,14 @@
 			}
 
 			.odd.special:not(.expand) {
+				background-color: var(--special-bgcolor-odd);
+			}
+
+			.highlight-chat.special {
+				background-color: var(--special-bgcolor);
+			}
+
+			.highlight-chat.special.odd:not(.expand) {
 				background-color: var(--special-bgcolor-odd);
 			}
 
@@ -2031,9 +2055,9 @@
 			}
 
 			.fadeout {
-				animation: fadeout 2s;
-				webkit-transition: opacity 1.5s ease-in-out;
-				transition: opacity 1.5 ease-in-out;
+				animation: fadeout 2s both;
+				-webkit-transition: opacity 1.5s ease-in-out;
+				transition: opacity 1.5s ease-in-out;
 				opacity: 0;
 			}
 
@@ -2050,10 +2074,16 @@
 			}
 
 			.fadein {
-				animation: fadein 1s;
-				webkit-transition: opacity 0.5s ease-in-out;
+				animation: fadein 1s both;
+				-webkit-transition: opacity 0.5s ease-in-out;
 				transition: opacity 0.5s ease-in-out;
 				opacity: 1;
+			}
+
+			.fade-animating {
+				will-change: opacity, transform;
+				contain: paint;
+				backface-visibility: hidden;
 			}
 			
 
@@ -2767,6 +2797,88 @@
 				}
 				return item.value;
 			}
+
+			function hasValue(value) {
+				return value !== null && value !== undefined && value !== "";
+			}
+
+			function parseNumericValue(value) {
+				if (!hasValue(value)) {
+					return null;
+				}
+				var numeric = parseFloat(value);
+				if (isNaN(numeric)) {
+					return null;
+				}
+				return Math.abs(numeric);
+			}
+
+			function toCssLength(value, unit) {
+				if (!hasValue(value)) {
+					return null;
+				}
+				unit = unit || "px";
+				value = String(value).trim();
+				if (/^[\d.]+$/.test(value)) {
+					return value + unit;
+				}
+				return value;
+			}
+
+			function buildOutlineShadow(radius, color) {
+				if (!radius || radius <= 0) {
+					return "0 0 " + color;
+				}
+
+				var half = radius / 2;
+				var offsets = [-radius, -half, 0, half, radius];
+				var unique = offsets.filter(function (value, index, self) {
+					return !isNaN(value) && self.indexOf(value) === index;
+				});
+
+				function formatOffset(val) {
+					if (!isFinite(val)) {
+						return "0";
+					}
+					var rounded = Math.round(val * 1000) / 1000;
+					if (Math.abs(rounded) < 0.0001) {
+						rounded = 0;
+					}
+					return rounded.toString();
+				}
+
+				var parts = [];
+				for (var i = 0; i < unique.length; i++) {
+					for (var j = 0; j < unique.length; j++) {
+						parts.push(formatOffset(unique[i]) + "px " + formatOffset(unique[j]) + "px " + color);
+					}
+				}
+				return parts.join(", ");
+			}
+
+			function applyTextStroke(widthValue, colorValue) {
+				if (hasValue(colorValue)) {
+					document.documentElement.style.setProperty("--text-stroke-color", colorValue);
+				}
+				if (hasValue(widthValue)) {
+					var cssWidth = toCssLength(widthValue, "px");
+					if (cssWidth) {
+						document.documentElement.style.setProperty("--text-stroke-width", cssWidth);
+					}
+				}
+			}
+
+			function applyTextOutline(widthValue, colorValue) {
+				if (!hasValue(widthValue) && !hasValue(colorValue)) {
+					return;
+				}
+				var width = parseNumericValue(widthValue);
+				var color = colorValue || "#000000";
+				var shadow = buildOutlineShadow(width === null ? 2 : width, color);
+				document.documentElement.style.setProperty("--text-shadow", shadow);
+				document.body.style.textShadow = shadow;
+			}
+
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
@@ -2810,6 +2922,56 @@
 			var doubleLimit = false;
 			
 			var encode = false;
+			var customStrokeWidthParam = null;
+			var customStrokeColorParam = null;
+			var customOutlineWidthParam = null;
+			var customOutlineColorParam = null;
+			var hasCustomOutline = false;
+
+			var fontColorParam = urlParams.get("fontcolor");
+			if (hasValue(fontColorParam)) {
+				document.documentElement.style.setProperty("--font-color", fontColorParam);
+			}
+
+			var nameColorParam = urlParams.get("namecolor");
+			if (hasValue(nameColorParam)) {
+				document.documentElement.style.setProperty("--font-color-name", nameColorParam);
+			}
+
+			var fontWeightParam = urlParams.get("fontweight");
+			if (hasValue(fontWeightParam)) {
+				document.documentElement.style.setProperty("--message-font-weight", fontWeightParam);
+			}
+
+			var nameWeightParam = urlParams.get("nameweight");
+			if (hasValue(nameWeightParam)) {
+				document.documentElement.style.setProperty("--name-font-weight", nameWeightParam);
+			}
+
+			var strokeWidthParam = urlParams.get("strokewidth") || urlParams.get("stroke");
+			var strokeColorParam = urlParams.get("strokecolor") || urlParams.get("strokeColor");
+			if (hasValue(strokeWidthParam)) {
+				customStrokeWidthParam = strokeWidthParam;
+			}
+			if (hasValue(strokeColorParam)) {
+				customStrokeColorParam = strokeColorParam;
+			}
+			if (customStrokeWidthParam !== null || customStrokeColorParam !== null) {
+				applyTextStroke(customStrokeWidthParam, customStrokeColorParam);
+			}
+
+			var outlineWidthParam = urlParams.get("outlinewidth");
+			var outlineColorParam = urlParams.get("outlinecolor");
+			if (hasValue(outlineWidthParam)) {
+				customOutlineWidthParam = outlineWidthParam;
+			}
+			if (hasValue(outlineColorParam)) {
+				customOutlineColorParam = outlineColorParam;
+			}
+			if (!customOutlineColorParam && customStrokeColorParam) {
+				customOutlineColorParam = customStrokeColorParam;
+			}
+			hasCustomOutline = customOutlineWidthParam !== null || customOutlineColorParam !== null;
 			
 
 			try {
@@ -4532,6 +4694,13 @@
 				document.documentElement.style.setProperty("--special-bgcolor-bubble-odd", "#EEE7");
 			}
 
+			if (hasValue(fontColorParam)) {
+				document.documentElement.style.setProperty("--font-color", fontColorParam);
+			}
+			if (hasValue(nameColorParam)) {
+				document.documentElement.style.setProperty("--font-color-name", nameColorParam);
+			}
+
 			if (urlParams.has("hideshadow")) {
 				// alternating
 				document.documentElement.style.setProperty("--highlight-base", "#0000", "important");
@@ -4545,17 +4714,22 @@
 			}
 
 			if (urlParams.has("nooutline")) {
+				document.documentElement.style.setProperty("--text-shadow", "0 0 #0000");
 				document.body.style.textShadow = "0 0 black";
 				if (!darkmode){
 					document.getElementById("topbar").style.color = "white";
 					document.getElementById("topbar").style.fontWeight = "700";
 				}
+			} else if (hasCustomOutline) {
+				applyTextOutline(customOutlineWidthParam, customOutlineColorParam || customStrokeColorParam);
 			} else if (urlParams.has("bolder")) {
-				document.documentElement.style.setProperty("--text-shadow", "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000");
-			
+				var bolderShadow = "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000";
+				document.documentElement.style.setProperty("--text-shadow", bolderShadow);
+				document.body.style.textShadow = bolderShadow;
 			} else if (urlParams.has("thinner")) {
-				document.documentElement.style.setProperty("--text-shadow", "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000");
-			
+				var thinnerShadow = "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000";
+				document.documentElement.style.setProperty("--text-shadow", thinnerShadow);
+				document.body.style.textShadow = thinnerShadow;
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
@@ -4589,6 +4763,8 @@
 
 			var hideNotMembers = false;
 			var hideNotDonos = false;
+			var hideNotMods = false;
+			var hideNotVips = false;
 			
 			if (urlParams.has("showonlydonos")) {
 				hideNotDonos = true;
@@ -4600,6 +4776,24 @@
 				hideNotMembers = true;
 				doubleLimit = true;
 				members();
+			}
+
+			if (urlParams.has("showonlymods")) {
+				hideNotMods = true;
+				doubleLimit = true;
+			}
+
+			if (urlParams.has("showonlyvips")) {
+				hideNotVips = true;
+				doubleLimit = true;
+			}
+
+			if (hideNotMods || hideNotVips) {
+				setTimeout(function(){
+					try {
+						redoOdd();
+					} catch (e) {}
+				}, 0);
 			}
 			var eventsOnly = false;
 			if (urlParams.has("showonlyevents")) {
@@ -4901,28 +5095,55 @@
 				filterMessages(getById("filter_messages").value);
 			}
 
-			function applyHiddenState(node) {
-				if (hideNotDonos && node.classList.contains("noDono")) {
-					if (hideNotMembers && node.dataset.member) {
-						node.classList.remove("hidden");
-					} else {
-						node.classList.add("hidden");
-					}
-				} else if (hideNotMembers && !node.dataset.member) {
-					if (hideNotDonos && !node.classList.contains("noDono")) {
-						node.classList.remove("hidden");
-					} else {
-						node.classList.add("hidden");
-					}
-				} else if (hideNotQueued && !node.classList.contains("queued")) {
-					node.classList.add("hidden");
-				} else if (hideNotPinned && !node.classList.contains("pinned")) {
-					node.classList.add("hidden");
-				} else if (hideEmojiOnly && node.classList.contains("noText")) {
-					node.classList.add("hidden");
-				} else {
-					node.classList.remove("hidden");
+			function passesSupporterFilters(isDonation, isMember) {
+				if (!hideNotDonos && !hideNotMembers) {
+					return true;
+				} else if (hideNotDonos && hideNotMembers) {
+					return isDonation || isMember;
+				} else if (hideNotDonos) {
+					return isDonation;
 				}
+				return isMember;
+			}
+
+			function passesRoleFilters(isMod, isVip) {
+				if (!hideNotMods && !hideNotVips) {
+					return true;
+				} else if (hideNotMods && hideNotVips) {
+					return isMod || isVip;
+				} else if (hideNotMods) {
+					return isMod;
+				}
+				return isVip;
+			}
+
+			function applyHiddenState(node) {
+				var isDonation = !node.classList.contains("noDono");
+				var isMemberNode = node.dataset.member === "true";
+				var isModNode = node.dataset.mod === "true";
+				var isVipNode = node.dataset.vip === "true";
+
+				if (!passesSupporterFilters(isDonation, isMemberNode) || !passesRoleFilters(isModNode, isVipNode)) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				if (hideNotQueued && !node.classList.contains("queued")) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				if (hideNotPinned && !node.classList.contains("pinned")) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				if (hideEmojiOnly && node.classList.contains("noText")) {
+					node.classList.add("hidden");
+					return;
+				}
+
+				node.classList.remove("hidden");
 			}
 
 			var hashCode = s =>
@@ -4972,10 +5193,25 @@
 				}
 			}
 			
+			document.addEventListener('animationstart', function(e) {
+				if (!e || !e.target || !e.target.classList) {
+					return;
+				}
+				if (e.animationName === 'fadein' || e.animationName === 'fadeout') {
+					e.target.classList.add('fade-animating');
+				}
+			});
+
 			document.addEventListener('animationend', function(e) {
-			  if (e.target.classList.contains('dissolve')) {
-				e.target.remove(); // Remove the element when animation ends
-			  }
+				if (!e || !e.target || !e.target.classList) {
+					return;
+				}
+				if (e.target.classList.contains('fade-animating')) {
+					e.target.classList.remove('fade-animating');
+				}
+				if (e.target.classList.contains('dissolve')) {
+					e.target.remove(); // Remove the element when animation ends
+				}
 			});
 			
 			function createPopoutChat() {
@@ -7061,32 +7297,92 @@
 					return;
 				}
 				
-				var chatName = element.dataset.chatname;
-				var type = element.dataset.sourceType;
-				var tid = element.rawContents ? element.rawContents.tid : null;
+				const rawContents = element.rawContents || null;
+				const rawChatName = element.dataset.chatname
+					|| element.dataset.userid
+					|| (rawContents && (rawContents.chatname || rawContents.userid))
+					|| "";
+				const chatName = (typeof unescapeHtml === "function") ? unescapeHtml(rawChatName) : rawChatName;
+				const type = element.dataset.sourceType;
+				const tid = rawContents ? rawContents.tid : null;
 				
 				if (document.getElementById("getChatSourceButton")) {
 					clearTimeout(getById("getChatSourcesButton").setTimeout);
 				}
 				
-				var modal = document.getElementById("getReplyModule");
+				let modal = document.getElementById("getReplyModule");
 				if (!modal) {
 					modal = document.createElement("div");
 					modal.id = "getReplyModule";
 					modal.classList.add("modal");
 					modal.style.display = "block";
-					modal.innerHTML = `
-						<div class="modal-content">
-							<span class="close-btn" id="closereply">&times;</span>
-							<h2 id="c">What message do you want to send ${chatName}?</h2>
-							<input type="textarea" style="width: calc(100% - 200px);min-width:200px;" id="getReplyModuleInput">
-							<button id="getReplyModuleButton">SEND</button><br><br>
-							${!tid ? "<div>⚠️ This message will go to all destinations, since it didn't come from a specific tab</div>" : ""}
-						</div>`;
-						
+
+					const modalContent = document.createElement("div");
+					modalContent.classList.add("modal-content");
+
+					const closeBtn = document.createElement("span");
+					closeBtn.classList.add("close-btn");
+					closeBtn.id = "closereply";
+					closeBtn.innerHTML = "&times;";
+					modalContent.appendChild(closeBtn);
+
+					const heading = document.createElement("h2");
+					heading.id = "c";
+					heading.innerText = `What message do you want to send ${chatName}?`;
+					modalContent.appendChild(heading);
+
+					const input = document.createElement("input");
+					input.type = "textarea";
+					input.style.width = "calc(100% - 200px)";
+					input.style.minWidth = "200px";
+					input.id = "getReplyModuleInput";
+					modalContent.appendChild(input);
+
+					const button = document.createElement("button");
+					button.id = "getReplyModuleButton";
+					button.innerText = "SEND";
+					modalContent.appendChild(button);
+
+					modalContent.appendChild(document.createElement("br"));
+					modalContent.appendChild(document.createElement("br"));
+
+					if (!tid) {
+						const warning = document.createElement("div");
+						warning.classList.add("reply-module-warning");
+						warning.innerText = "⚠️ This message will go to all destinations, since it didn't come from a specific tab";
+						modalContent.appendChild(warning);
+					}
+
+					modal.appendChild(modalContent);
 					document.body.appendChild(modal);
 				} else {
 					modal.classList.remove("hidden");
+					modal.style.display = "block";
+
+					const modalContent = modal.querySelector(".modal-content");
+					const heading = modal.querySelector("#c");
+					if (heading) {
+						heading.innerText = `What message do you want to send ${chatName}?`;
+					}
+
+					const warning = modal.querySelector(".reply-module-warning");
+					if (!tid) {
+						if (!warning && modalContent) {
+							const warningMessage = document.createElement("div");
+							warningMessage.classList.add("reply-module-warning");
+							warningMessage.innerText = "⚠️ This message will go to all destinations, since it didn't come from a specific tab";
+							modalContent.appendChild(warningMessage);
+						} else if (warning) {
+							warning.classList.remove("hidden");
+						}
+					} else if (warning) {
+						warning.remove();
+					}
+
+					const existingInput = modal.querySelector("#getReplyModuleInput");
+					if (existingInput) {
+						existingInput.value = "";
+					}
 				}
 				
 				const closeModal = () => {
@@ -7098,11 +7394,13 @@
 					const getReplyModuleInput = getById("getReplyModuleInput");
 					let response = getReplyModuleInput.value ? getReplyModuleInput.value.trim() : null;
 					if (!response) return;
-					
+
 					closeModal();
-					
+
 					if (!response.startsWith("@")) {
-						response = `@${chatName} ${response}`;
+						// Don't add @ if username already starts with @
+						const prefix = chatName.startsWith("@") ? chatName : `@${chatName}`;
+						response = `${prefix} ${response}`;
 					}
 					
 					let sendBlob = { response };
@@ -8161,23 +8459,19 @@
 						return;
 					}
 					
-					if (hardFilter) {
-						// Check donation requirements
-						if (hideNotDonos && !data.donation && !data.hasDonation) {
-							// If members are allowed and this is a member, let it through
-							if (!(hideNotMembers && (data.membership || data.member || data.hasMembershp))) {
-								return;
-							}
-						}
-						
-						// Check membership requirements
-						if (hideNotMembers && !data.membership && !data.member && !data.hasMembershp) {
-							// If donations are allowed and this is a donation, let it through
-							if (!(hideNotDonos && (data.donation || data.hasDonation))) {
-								return;
-							}
-						}
+				if (hardFilter) {
+					var hasDonation = !!(data.donation || data.hasDonation);
+					var hasMembership = !!(data.membership || data.member || data.hasMembershp || data.hasMembership);
+					if (!passesSupporterFilters(hasDonation, hasMembership)) {
+						return;
 					}
+
+					var isModeratorMessage = !!data.mod;
+					var isVipMessage = !!data.vip;
+					if (!passesRoleFilters(isModeratorMessage, isVipMessage)) {
+						return;
+					}
+				}
 
 					try {
 						if (applyCustomActions) {
@@ -8719,6 +9013,15 @@
 					
 					if (mod){
 						node.classList.add("mod");
+						node.dataset.mod = "true";
+					} else {
+						delete node.dataset.mod;
+					}
+
+					if (vip){
+						node.dataset.vip = "true";
+					} else {
+						delete node.dataset.vip;
 					}
 
 					if ("karma" in data) {
@@ -8834,12 +9137,12 @@
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
 
-					var textContentLength =  node.querySelector("#content_" + data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
-					node.dataset.contentLength = textContentLength;
-					if (!textContentLength) {
-						node.classList.add("noText");
-					}
-					// textContentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0; // must come after noText set, if we want to include images as a character
+						var textContentLength =  node.querySelector("#content_" + data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
+						node.dataset.contentLength = textContentLength;
+						if (!textContentLength) {
+							node.classList.add("noText");
+						}
+						// textContentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0; // must come after noText set, if we want to include images as a character
 					node.contentLength = textContentLength;
 
 					transitionType.forEach(classtype => {
@@ -8873,25 +9176,9 @@
 						svg.dataset.hash = Math.abs(hashCode(svg.innerHTML));
 					});
 
-					if (hideNotDonos && node.classList.contains("noDono")) {
-						if (hideNotMembers && node.dataset.member) {
-							node.classList.remove("hidden");
-						} else {
-							node.classList.add("hidden");
-						}
-					} else if (hideNotMembers && !node.dataset.member) {
-						if (hideNotDonos && !node.classList.contains("noDono")) {
-							node.classList.remove("hidden");
-						} else {
-							node.classList.add("hidden");
-						}
-					} else if (hideNotQueued && !node.classList.contains("queued")) {
-						node.classList.add("hidden");
-					} else if (hideNotPinned && !node.classList.contains("pinned")) {
-						node.classList.add("hidden");
-					} else if (hideEmojiOnly && node.classList.contains("noText")) {
-						node.classList.add("hidden");
-					} else {
+					applyHiddenState(node);
+
+					if (!node.classList.contains("hidden")) {
 						var style = window.getComputedStyle(node);
 						if (style.visibility !== "hidden" && style.display !== "none") {
 							if (odd) {
@@ -10266,18 +10553,30 @@
 			
 			// Resume audio context on user interaction if needed
 			function setupUserInteractionHandler() {
-				const handler = function() {
-					if (audioContext && audioContext.state === 'suspended') {
-						audioContext.resume().then(() => {
-							waitingForUserGesture = false;
-							console.log('Audio context resumed after user interaction');
-						});
+				const handler = async function() {
+					if (!audioContext && typeof initAudioContext === 'function') {
+						initAudioContext();
 					}
-					document.removeEventListener('click', handler);
-					document.removeEventListener('touchstart', handler);
-					document.removeEventListener('keydown', handler);
+					if (!audioContext) {
+						return;
+					}
+					try {
+						if (audioContext.state === 'suspended') {
+							await audioContext.resume();
+						}
+					} catch (err) {
+						waitingForUserGesture = true;
+						console.warn('Audio context resume failed after user interaction', err);
+						return;
+					}
+					if (audioContext.state !== 'suspended') {
+						waitingForUserGesture = false;
+						console.log('Audio context ready after user interaction');
+						document.removeEventListener('click', handler);
+						document.removeEventListener('touchstart', handler);
+						document.removeEventListener('keydown', handler);
+					}
 				};
-				
 				document.addEventListener('click', handler);
 				document.addEventListener('touchstart', handler);
 				document.addEventListener('keydown', handler);
