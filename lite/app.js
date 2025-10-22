@@ -185,19 +185,99 @@ function snapshotActivityEntryForDebug(entry) {
 const testMessagePresets = [
   () => ({
     type: 'youtube',
-    chatname: 'John Doe',
-    chatmessage: 'Looking good! 😘😘😊 This is a test message. 🎶🎵🔨',
+    chatname: 'Friendly Viewer',
+    chatmessage: 'Thanks for keeping the stream fun tonight!',
     chatimg: '',
     chatbadges: []
   }),
   () => ({
     type: 'youtube',
-    chatname: 'Bob',
+    chatname: 'Generous Donor',
+    chatmessage: 'hi doctor I unsubscribe on all your Youtubers old friends.they women',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_lasYSs3mDnqKHgeUiaEgd69ZZBlwVe12Jmyv3DBtWMviA=s256-c-k-c0x00ffffff-no-rj',
+    hasDonation: 'US$5.00',
+    backgroundColor: 'rgba(29,233,182,1)',
+    textColor: '#111',
+    sourceName: 'DrDisRespect',
+    sourceImg: 'https://yt3.ggpht.com/_0_SuenjzMocr2OTOHbGjEin5FcHOy-vRroLcEZtj0WfUMEQXVQqbtEuRaa-tIewyjbAkffR=s88-c-k-c0x00ffffff-no-rj',
+    title: 'DONATION'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Helpful Person',
     chatmessage: 'Appreciate the stream! Have a coffee on me ☕',
     chatimg: '',
     hasDonation: '$5.00',
     donationAmount: '$5.00',
     donationCurrency: 'USD'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Longtime Member',
+    nameColor: '#107516',
+    chatbadges: ['https://yt3.ggpht.com/OIRwLP2qDr_Xgwr0qn2JBs-ZDDmy12_-DQ1LCKF-iFYE8DewzfcRWjGZy0FQ9n2DtxzpXp3e=s32-c-k'],
+    chatmessage: '@Shredda HAHAHAH',
+    chatimg: 'https://yt4.ggpht.com/XgKdw8fR3PAQpBoilC3V02G0ovthMxU6xaTVF3_iVr7x7XWmqBzTNeVws1yXRpTXucgpnDHniHE=s256-c-k-c0x00ffffff-no-rj',
+    membership: 'MEMBERSHIP',
+    sourceName: 'DrDisRespect',
+    sourceImg: 'https://yt3.ggpht.com/_0_SuenjzMocr2OTOHbGjEin5FcHOy-vRroLcEZtj0WfUMEQXVQqbtEuRaa-tIewyjbAkffR=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Green Monkey',
+    nameColor: '#107516',
+    chatbadges: ['https://yt3.ggpht.com/VmHr8SQigQsXa4xw7pZLzxnzaOoWY8aLqBUdD0ohSTQZYA5n3ZeODIA6h9OkxN4UupD-xMGAQw=s32-c-k'],
+    chatmessage: '<img class="regular-emote" src="https://yt3.ggpht.com/mOH-VvA-bB3wVX1xm0QpO61O9aqHJvpzrciu6kX_PdYCasFevfeDINFTn0yw5EvkSeysj_AzuA=w48-h48-c-k-nd" alt="stare" title="stare"><img class="regular-emote" src="https://yt3.ggpht.com/mOH-VvA-bB3wVX1xm0QpO61O9aqHJvpzrciu6kX_PdYCasFevfeDINFTn0yw5EvkSeysj_AzuA=w48-h48-c-k-nd" alt="stare" title="stare"><img class="regular-emote" src="https://yt3.ggpht.com/mOH-VvA-bB3wVX1xm0QpO61O9aqHJvpzrciu6kX_PdYCasFevfeDINFTn0yw5EvkSeysj_AzuA=w48-h48-c-k-nd" alt="stare" title="stare">',
+    chatimg: 'https://yt4.ggpht.com/tNDmCXDa_lp98-5guXBtMwuiRM-DLER44mcLbfOcguZjHffkHAMsmpimbyzjN7mBj7QH9XmiPA=s256-c-k-c0x00ffffff-no-rj',
+    membership: 'MEMBERSHIP',
+    sourceName: 'DrDisRespect',
+    sourceImg: 'https://yt3.ggpht.com/_0_SuenjzMocr2OTOHbGjEin5FcHOy-vRroLcEZtj0WfUMEQXVQqbtEuRaa-tIewyjbAkffR=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Gift Giver',
+    chatmessage: '<i>Sent 10 TheBurntPeanut gift memberships</i>',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_n6ZBBa_3wssvZ-3uYejR-pYif7bZ3F-sJr33JSyktwwYCCLRkkFCHIjZW7Up1yAzVU4w=s256-c-k-c0x00ffffff-no-rj',
+    hasDonation: '10 Gifted',
+    donoValue: 50,
+    membership: 'SPONSORSHIP',
+    event: 'sponsorship',
+    title: 'DONATION',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Gift Recipient',
+    chatmessage: '<i>received a gift membership by Ali G</i>',
+    chatimg: 'https://yt4.ggpht.com/471qNrf01DUBIQEQHh4Hlny3JXyawMroXqaOPzBmtrvUHhwiJ2L26LbFxAPOeNUpIvOHB4Y0_w=s256-c-k-c0x00ffffff-no-rj',
+    event: 'giftredemption',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Board Member',
+    nameColor: '#107516',
+    chatbadges: ['https://yt3.ggpht.com/xMtfL2zCOJLIkmWzToUm1Ol_-_b0RhhC5UqxYHdO3UOflOSveKOADd1PD9PBWyNvpsVwNqxN8YM=s32-c-k'],
+    chatmessage: 'thank you mr bungus for all the silly dreams',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_lbsPbvnSYefsc_2CWUuszhQuD2YW4sx4fTSQUD0n8BNaS1=s256-c-k-c0x00ffffff-no-rj',
+    membership: 'Bungulator Board Member',
+    subtitle: '2 months',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Road Tripper',
+    chatmessage: 'Thank you for providing prime content during prime gaming time while i drive home from a camping trip. Love u fatass',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_kx7LRXG9JxEQPwGG5Y-3-amHKIcX2nDJF5PElO758mf4e-_81WiP_1aIdW3MoO0j1Pgg=s256-c-k-c0x00ffffff-no-rj',
+    hasDonation: 'US$4.99',
+    backgroundColor: 'rgba(29,233,182,1)',
+    textColor: '#111',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj',
+    title: 'DONATION'
   }),
   () => ({
     type: 'twitch',
@@ -210,37 +290,6 @@ const testMessagePresets = [
     isModerator: true
   }),
   () => ({
-    type: 'discord',
-    chatname: 'Sir Drinks-a-lot',
-    chatmessage: '☕☕☕ COFFEE!',
-    chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
-    membership: 'Coffee Addiction',
-    highlightColor: 'pink',
-    nameColor: '#9C27B0',
-    private: true
-  }),
-  () => ({
-    type: 'youtubeshorts',
-    chatname: `Lucy_${Math.floor(Math.random() * 999)}`,
-    chatmessage: 'Short and sweet! ✨',
-    chatimg: Math.random() > 0.5 ? 'https://socialstream.ninja/media/sampleavatar.png' : ''
-  }),
-  () => ({
-    type: 'facebook',
-    chatname: `Steve_${Math.floor(Math.random() * 9000)}`,
-    chatmessage: '!join The only way to do great work is to love what you do. ❤️',
-    chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
-    nameColor: '#107516',
-    membership: 'SPONSORSHIP'
-  }),
-  () => ({
-    type: 'zoom',
-    chatname: 'Nich Lass',
-    question: true,
-    chatmessage: 'Is this a test question?  🤓🤓🤓',
-    chatimg: 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj'
-  }),
-  () => ({
     type: 'twitch',
     chatname: 'VDO.Ninja',
     chatmessage: '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png" alt="icon"> 😁 🇨🇦 https://vdo.ninja/',
@@ -249,11 +298,19 @@ const testMessagePresets = [
     chatbadges: ['https://socialstream.ninja/icons/bot.png', 'https://socialstream.ninja/icons/announcement.png']
   }),
   () => ({
-    type: 'youtube',
-    chatname: 'ChannelBot',
-    chatmessage: '',
-    contentimg: 'https://socialstream.ninja/media/logo.png',
-    chatimg: 'https://socialstream.ninja/media/user1.jpg'
+    type: 'kick',
+    chatname: `KickSubscriber${Math.floor(Math.random() * 900) + 100}`,
+    chatmessage: 'Loving the overlay tonight, keep the games coming!',
+    chatimg: 'https://files.kick.com/profile-images/default-avatar.png',
+    chatbadges: ['https://files.kick.com/badges/subscriber.png']
+  }),
+  () => ({
+    type: 'kick',
+    chatname: 'KickSupporter',
+    chatmessage: 'Dropped a few Kicks to keep the hype rolling!',
+    chatimg: '',
+    hasDonation: '25 Kicks',
+    event: 'supporter'
   })
 ];
 
