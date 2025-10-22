@@ -7394,11 +7394,13 @@
 					const getReplyModuleInput = getById("getReplyModuleInput");
 					let response = getReplyModuleInput.value ? getReplyModuleInput.value.trim() : null;
 					if (!response) return;
-					
+
 					closeModal();
-					
+
 					if (!response.startsWith("@")) {
-						response = `@${chatName} ${response}`;
+						// Don't add @ if username already starts with @
+						const prefix = chatName.startsWith("@") ? chatName : `@${chatName}`;
+						response = `${prefix} ${response}`;
 					}
 					
 					let sendBlob = { response };

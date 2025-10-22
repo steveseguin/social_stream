@@ -52,6 +52,8 @@ export class DockMessenger {
     this.sessionId = null;
     this.pending = [];
     this.ready = false;
+    this.flushTimer = null;
+    this.retryCounts = new WeakMap();
     this.debug = Boolean(debug);
     this.onDebug = typeof onDebug === 'function' ? onDebug : null;
     this.onMessage = typeof onMessage === 'function' ? onMessage : null;
@@ -75,6 +77,11 @@ export class DockMessenger {
     const trimmed = (sessionId || '').trim();
     if (!trimmed) {
       this.pending = [];
+      this.retryCounts = new WeakMap();
+      if (this.flushTimer) {
+        window.clearTimeout(this.flushTimer);
+        this.flushTimer = null;
+      }
       this.sessionId = null;
       this.ready = false;
       this.frame.removeAttribute('src');
@@ -88,6 +95,11 @@ export class DockMessenger {
 
     this.sessionId = trimmed;
     this.pending = [];
+    this.retryCounts = new WeakMap();
+    if (this.flushTimer) {
+      window.clearTimeout(this.flushTimer);
+      this.flushTimer = null;
+    }
     this.ready = false;
 
     const nextSrc = buildDockUrl(trimmed, { dockParams });
@@ -117,6 +129,16 @@ export class DockMessenger {
     this.post(message);
   }
 
+  scheduleFlush(delay = 400) {
+    if (this.flushTimer) {
+      return;
+    }
+    this.flushTimer = window.setTimeout(() => {
+      this.flushTimer = null;
+      this.flush();
+    }, delay);
+  }
+
   post(message) {
     try {
       const payload = { sendData: { overlayNinja: message }, type: 'pcs' };
@@ -142,8 +164,31 @@ export class DockMessenger {
         }
       }
       this.notifyMessage(message);
+      this.retryCounts.delete(message);
     } catch (err) {
       console.error('Failed to post message to dock iframe', err);
+      const attempts = this.retryCounts.get(message) || 0;
+      if (attempts < 3) {
+        const nextAttempts = attempts + 1;
+        this.retryCounts.set(message, nextAttempts);
+        this.pending.unshift(message);
+        this.debugLog('Re-queued message after post failure', { attempts: nextAttempts });
+        this.scheduleFlush(Math.min(1200, 400 * nextAttempts));
+        return;
+      }
+      this.retryCounts.delete(message);
+      if (this.onDebug) {
+        try {
+          this.onDebug({
+            plugin: 'system',
+            message: '[warn] Dock relay unavailable for test message.',
+            detail: { error: err?.message || err },
+            timestamp: Date.now(),
+          });
+        } catch (notifyErr) {
+          this.debugLog('Failed to report dock relay error', { error: notifyErr?.message || notifyErr });
+        }
+      }
     }
   }
 
@@ -157,6 +202,9 @@ export class DockMessenger {
     while (this.pending.length) {
       const msg = this.pending.shift();
       this.post(msg);
+      if (!this.ready) {
+        break;
+      }
     }
   }
 

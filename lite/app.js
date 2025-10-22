@@ -196,8 +196,6 @@ const testMessagePresets = [
     chatmessage: 'hi doctor I unsubscribe on all your Youtubers old friends.they women',
     chatimg: 'https://yt4.ggpht.com/ytc/AIdro_lasYSs3mDnqKHgeUiaEgd69ZZBlwVe12Jmyv3DBtWMviA=s256-c-k-c0x00ffffff-no-rj',
     hasDonation: 'US$5.00',
-    backgroundColor: 'rgba(29,233,182,1)',
-    textColor: '#111',
     sourceName: 'DrDisRespect',
     sourceImg: 'https://yt3.ggpht.com/_0_SuenjzMocr2OTOHbGjEin5FcHOy-vRroLcEZtj0WfUMEQXVQqbtEuRaa-tIewyjbAkffR=s88-c-k-c0x00ffffff-no-rj',
     title: 'DONATION'
@@ -273,8 +271,6 @@ const testMessagePresets = [
     chatmessage: 'Thank you for providing prime content during prime gaming time while i drive home from a camping trip. Love u fatass',
     chatimg: 'https://yt4.ggpht.com/ytc/AIdro_kx7LRXG9JxEQPwGG5Y-3-amHKIcX2nDJF5PElO758mf4e-_81WiP_1aIdW3MoO0j1Pgg=s256-c-k-c0x00ffffff-no-rj',
     hasDonation: 'US$4.99',
-    backgroundColor: 'rgba(29,233,182,1)',
-    textColor: '#111',
     sourceName: 'TheBurntPeanut',
     sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj',
     title: 'DONATION'
@@ -313,6 +309,8 @@ const testMessagePresets = [
     event: 'supporter'
   })
 ];
+
+const AVATAR_FALLBACK_SRC = '../unknown.png';
 
 let lastTestMessageSignature = null;
 
@@ -841,10 +839,15 @@ function createAvatarNode(payload, fallbackIcon) {
 
   if (payload.chatimg) {
     const img = document.createElement('img');
-    img.src = payload.chatimg;
     img.alt = payload.chatname ? `${payload.chatname} avatar` : 'Avatar';
     img.loading = 'lazy';
     img.decoding = 'async';
+    img.onerror = () => {
+      img.onerror = null;
+      wrapper.classList.add('activity-item__avatar--fallback');
+      img.src = AVATAR_FALLBACK_SRC;
+    };
+    img.src = payload.chatimg;
     wrapper.appendChild(img);
     return wrapper;
   }
@@ -1348,36 +1351,44 @@ function createTestMessage() {
     lastTestMessageSignature === `${candidate.type || candidate.platform || 'twitch'}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`
   );
 
-  if (!candidate) {
-    candidate = {
-      type: 'twitch',
-      chatname: 'Test User',
-      chatmessage: 'Hello from Social Stream test message!',
-      event: 'message'
-    };
-  }
-  const type = candidate.type || candidate.platform || 'twitch';
-  lastTestMessageSignature = `${type}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`;
+  const fallbackCandidate = {
+    type: 'twitch',
+    chatname: 'Test User',
+    chatmessage: 'Hello from Social Stream test message!',
+    event: 'message'
+  };
 
-  const bits = candidate.bits ? Number(candidate.bits) : 0;
+  const source = candidate && typeof candidate === 'object' ? { ...candidate } : {};
+  const baseCandidate = Object.keys(source).length ? source : fallbackCandidate;
+  const type = baseCandidate.type || baseCandidate.platform || 'twitch';
+  lastTestMessageSignature = `${type}|${baseCandidate.chatname}|${baseCandidate.chatmessage || baseCandidate.contentimg || ''}`;
+
+  const bits = baseCandidate.bits ? Number(baseCandidate.bits) : 0;
   const donationText =
-    typeof candidate.hasDonation === 'string'
-      ? candidate.hasDonation
-      : candidate.hasDonation
-        ? candidate.donationAmount || ''
+    typeof baseCandidate.hasDonation === 'string'
+      ? baseCandidate.hasDonation
+      : baseCandidate.hasDonation
+        ? baseCandidate.donationAmount || ''
         : '';
-  const event = candidate.event || (bits ? 'bits' : donationText ? 'donation' : 'message');
+  const event = baseCandidate.event || (bits ? 'bits' : donationText ? 'donation' : 'message');
+
+  const rawData = {
+    ...(baseCandidate.raw && typeof baseCandidate.raw === 'object' ? baseCandidate.raw : {}),
+    test: true
+  };
 
   const message = {
-    id: `test-${now}-${Math.floor(Math.random() * 1000)}`,
+    ...baseCandidate,
+    id: baseCandidate.id || `test-${now}-${Math.floor(Math.random() * 1000)}`,
     type,
-    chatname: candidate.chatname || 'Test User',
-    chatmessage: candidate.chatmessage || '',
-    chatimg: candidate.chatimg || '',
+    platform: baseCandidate.platform || type,
+    chatname: baseCandidate.chatname || 'Test User',
+    chatmessage: baseCandidate.chatmessage || '',
+    chatimg: baseCandidate.chatimg || '',
     timestamp: now,
     event,
-    textonly: Boolean(candidate.textonly),
-    raw: { test: true }
+    textonly: Boolean(baseCandidate.textonly),
+    raw: rawData
   };
 
   if (bits) {
@@ -1386,47 +1397,59 @@ function createTestMessage() {
   if (donationText) {
     message.hasDonation = donationText;
   }
-  if (candidate.donationAmount) {
-    message.donationAmount = candidate.donationAmount;
+  if (baseCandidate.donationAmount) {
+    message.donationAmount = baseCandidate.donationAmount;
   }
-  if (candidate.donationCurrency) {
-    message.donationCurrency = candidate.donationCurrency;
+  if (baseCandidate.donationCurrency) {
+    message.donationCurrency = baseCandidate.donationCurrency;
   }
-  if (candidate.membership) {
-    message.membership = candidate.membership;
+  if (baseCandidate.membership) {
+    message.membership = baseCandidate.membership;
   }
-  if (candidate.badges && typeof candidate.badges === 'object') {
-    message.badges = candidate.badges;
+  if (baseCandidate.badges && typeof baseCandidate.badges === 'object') {
+    message.badges = baseCandidate.badges;
   }
-  if (Array.isArray(candidate.chatbadges) && candidate.chatbadges.length) {
-    message.chatbadges = candidate.chatbadges;
+  if (Array.isArray(baseCandidate.chatbadges) && baseCandidate.chatbadges.length) {
+    message.chatbadges = [...baseCandidate.chatbadges];
   }
-  if (candidate.nameColor) {
-    message.nameColor = candidate.nameColor;
+  if (baseCandidate.nameColor) {
+    message.nameColor = baseCandidate.nameColor;
   }
-  if (candidate.backgroundColor) {
-    message.backgroundColor = candidate.backgroundColor;
+  if (baseCandidate.backgroundColor) {
+    message.backgroundColor = baseCandidate.backgroundColor;
   }
-  if (candidate.highlightColor) {
-    message.highlightColor = candidate.highlightColor;
+  if (baseCandidate.highlightColor) {
+    message.highlightColor = baseCandidate.highlightColor;
   }
-  if (candidate.subtitle) {
-    message.subtitle = candidate.subtitle;
+  if (baseCandidate.subtitle) {
+    message.subtitle = baseCandidate.subtitle;
   }
-  if (candidate.contentimg) {
-    message.contentimg = candidate.contentimg;
+  if (baseCandidate.contentimg) {
+    message.contentimg = baseCandidate.contentimg;
   }
-  if (candidate.private) {
+  if (baseCandidate.private) {
     message.private = true;
   }
-  if (candidate.question) {
+  if (baseCandidate.question) {
     message.question = true;
   }
-  if (candidate.vip) {
+  if (baseCandidate.vip) {
     message.vip = true;
   }
-  if (candidate.isModerator) {
+  if (baseCandidate.isModerator) {
     message.isModerator = true;
+  }
+  if (baseCandidate.sourceName) {
+    message.sourceName = baseCandidate.sourceName;
+  }
+  if (baseCandidate.sourceImg) {
+    message.sourceImg = baseCandidate.sourceImg;
+  }
+  if (baseCandidate.title) {
+    message.title = baseCandidate.title;
+  }
+  if (baseCandidate.donoValue) {
+    message.donoValue = baseCandidate.donoValue;
   }
 
   return message;
@@ -1500,6 +1523,7 @@ function handleSendTestMessage() {
 
   const message = createTestMessage();
   messenger.send(message);
+  handleRelayMessage(message);
 
   addActivity({
     plugin: 'system',
