@@ -199,14 +199,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 			name = ele.querySelector("div [data-tid='threadBodyDisplayName'], div [data-tid='message-author-name']").innerText;
 		} catch(e){}
 		
-		if (name){
-		  name = name.trim();
-		  name = name.replace(/\s*\([^)]*\)/g, ''); // remove brackets tags.
-	    }
 		
-		try {
-			name = escapeHtml(name);
-		} catch(e){}
 		
 		//console.log(chatimg);
 		if (!ele.querySelector(".fui-ChatMyMessage")){
@@ -235,8 +228,16 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 			} catch(e){} 
 		}
 		
+		try {
+			name = escapeHtml(name);
+		} catch(e){}
+		
 		if (name){
-		  name = name.replace("(Guest)","");
+		  name = name.trim();
+		  name = name.replace(/\s*\([^)]*\)/g, ''); // remove brackets tags.
+	    }
+		
+		if (name){
 		  name = name.trim();
 	    }
 
