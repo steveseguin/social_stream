@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream – Kick</title>
+    <link rel="icon" href="https://kick.com/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="youtube.css">
+    <style>
+        :root {
+            --kick-green: #4ef287;
+            --kick-dark: #0f0f0f;
+            --kick-panel: #161616;
+            --kick-border: #262626;
+            --kick-muted: #a0a5ab;
+        }
+        * { box-sizing: border-box; }
+        html, body { height: 100%; }
+        body {
+            margin: 0;
+            min-height: 100%;
+            background: var(--kick-dark);
+            color: #f4f4f4;
+            font-family: 'Inter', 'Roboto', sans-serif;
+            line-height: 1.55;
+            overflow-y: auto;
+        }
+        a { color: var(--kick-green); }
+        .page {
+            min-height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .content {
+            width: min(1100px, 100%);
+            margin: 0 auto;
+            padding: 32px 24px 48px;
+        }
+        .panel {
+            background: var(--kick-panel);
+            border: 1px solid var(--kick-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
+        }
+        .hero {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            padding: 30px;
+            background: linear-gradient(132deg, rgba(78, 242, 135, 0.18), rgba(40, 190, 120, 0.05));
+            border: 1px solid rgba(78, 242, 135, 0.35);
+        }
+        .hero h1 {
+            margin: 0;
+            font-size: clamp(1.9rem, 3vw, 2.45rem);
+        }
+        .hero p {
+            margin: 0;
+            color: rgba(244, 244, 244, 0.85);
+            max-width: 720px;
+        }
+        .hero-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 14px;
+        }
+        .hero-status {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .hero-status .status-note {
+            color: rgba(244, 244, 244, 0.75);
+            font-size: 0.95rem;
+        }
+        h2 {
+            margin: 0 0 12px;
+            font-size: clamp(1.3rem, 2.2vw, 1.6rem);
+        }
+        .hint {
+            color: var(--kick-muted);
+            font-size: 0.95rem;
+            margin: 6px 0 14px;
+        }
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+        input[type="text"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 10px;
+            border: 1px solid #2f2f2f;
+            background: #111;
+            color: #f4f4f4;
+            font-size: 1rem;
+            margin-bottom: 14px;
+        }
+        input::placeholder,
+        textarea::placeholder {
+            color: #757575;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        select {
+            appearance: none;
+            background-image:
+                linear-gradient(45deg, transparent 50%, var(--kick-green) 50%),
+                linear-gradient(135deg, var(--kick-green) 50%, transparent 50%);
+            background-position:
+                calc(100% - 16px) calc(1rem + 3px),
+                calc(100% - 11px) calc(1rem + 3px);
+            background-size: 5px 5px, 5px 5px;
+            background-repeat: no-repeat;
+            padding-right: 36px;
+        }
+        select:focus {
+            outline: none;
+            border-color: var(--kick-green);
+        }
+        button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--kick-green);
+            color: #0f0f0f;
+            border: none;
+            border-radius: 999px;
+            padding: 11px 22px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.18s ease, opacity 0.18s ease, box-shadow 0.18s ease;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px rgba(78, 242, 135, 0.28);
+        }
+        button:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .button-secondary {
+            background: transparent;
+            color: #f4f4f4;
+            border: 1px solid #3a3a3a;
+            box-shadow: none;
+        }
+        .button-secondary:hover:not(:disabled) {
+            box-shadow: none;
+            border-color: var(--kick-green);
+        }
+        .button-small {
+            padding: 8px 14px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+        .button-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 8px 0 12px;
+        }
+        .status-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            border-radius: 999px;
+            font-size: 0.9rem;
+            letter-spacing: 0.01em;
+            background: rgba(78, 242, 135, 0.12);
+            color: var(--kick-green);
+            border: 1px solid rgba(78, 242, 135, 0.28);
+        }
+        .status-chip.warning {
+            background: rgba(242, 188, 78, 0.14);
+            border-color: rgba(242, 188, 78, 0.28);
+            color: #f4c259;
+        }
+        .status-chip.danger {
+            background: rgba(242, 78, 124, 0.14);
+            border-color: rgba(242, 78, 124, 0.28);
+            color: #ff7297;
+        }
+        .log {
+            background: #0e0e0e;
+            border-radius: 12px;
+            border: 1px solid #292929;
+            padding: 16px;
+            color: #e0e0e0;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            min-height: 240px;
+            max-height: 380px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+        }
+        .log-line {
+            margin-bottom: 6px;
+        }
+        .log-line time {
+            color: #666;
+            margin-right: 8px;
+        }
+        .grid-two {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            align-items: stretch;
+        }
+        .tips {
+            display: grid;
+            gap: 12px;
+            padding-top: 4px;
+        }
+        .tips li {
+            color: rgba(244, 244, 244, 0.8);
+            margin-left: 18px;
+        }
+        @media (max-width: 720px) {
+            .content {
+                padding: 24px 16px 32px;
+            }
+            button {
+                width: 100%;
+            }
+            .button-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="content">
+            <header class="hero panel">
+                <h1>Kick alerts for Social Stream</h1>
+                <p>Sign in with Kick and we’ll automatically listen for chat, follows, subscriptions, tips, and live status updates through the Social Stream webhook bridge.</p>
+                <div class="hero-actions">
+                    <button id="start-auth">Sign in with Kick</button>
+                    <span id="auth-state" class="status-chip warning">Not signed in</span>
+                </div>
+                <div class="hero-status">
+                    <span id="channel-label" class="status-note">Channel: —</span>
+                    <span id="bridge-state" class="status-chip danger">Bridge disconnected</span>
+                    <span id="subscription-summary" class="status-chip warning">Subscriptions pending</span>
+                </div>
+                <p class="hint">Keep this page open while you want alerts to flow. To watch a different channel, reload with <code>?username=&lt;slug&gt;</code> after signing in.</p>
+            </header>
+
+            <main class="stack">
+                <div class="grid-two">
+                    <section class="panel step">
+                        <h2>Live event feed</h2>
+                        <p class="hint">Every webhook that reaches the bridge is echoed here. It’s perfect for testing alerts before you go live.</p>
+                        <div id="event-log" class="log"></div>
+                    </section>
+
+                    <section class="panel step">
+                        <h2>Send a chat message</h2>
+                        <p class="hint">Say hello to your chat directly from Social Stream once you’re connected.</p>
+                        <label for="chat-message">Message</label>
+                        <textarea id="chat-message" placeholder="Say hello to chat"></textarea>
+                        <div class="button-row">
+                            <select id="chat-send-type" title="Choose how the message is delivered">
+                                <option value="user">Send as broadcaster</option>
+                                <option value="userbot">Send as bot account</option>
+                            </select>
+                            <button id="send-chat">Send message</button>
+                        </div>
+                        <div id="chat-status" class="hint"></div>
+                    </section>
+                </div>
+
+                <section class="panel step">
+                    <h2>Helpful tips</h2>
+                    <ul class="tips">
+                        <li>Tokens stay in this browser. Sign out here or clear storage if you need to switch accounts.</li>
+                        <li>Subscriptions keep themselves up to date. If something breaks, reload the page to rebuild them.</li>
+                        <li>Use the query string trick (<code>?username=&lt;slug&gt;</code>) to monitor your moderators or partner channels.</li>
+                    </ul>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script type="module" src="kick.js"></script>
+</body>
+</html>

@@ -2306,7 +2306,7 @@ function handleAIProviderVisibility(provider) {
         "geminiApiKey", "geminimodel", "xaiApiKey", "xaimodel", "chatgptmodel",
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
-        "bedrockRegion", "bedrockmodel"
+        "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey"
     ].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
@@ -2336,9 +2336,13 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "custom") {
         document.getElementById("customAIEndpoint").classList.remove("hidden");
         document.getElementById("customAIModel").classList.remove("hidden");
+        document.getElementById("customAIApiKey").classList.remove("hidden");
     } else if (provider == "openrouter") {
         document.getElementById("openrouterApiKey").classList.remove("hidden");
         document.getElementById("openroutermodel").classList.remove("hidden");
+    } else if (provider == "groq") {
+        document.getElementById("groqApiKey").classList.remove("hidden");
+        document.getElementById("groqmodel").classList.remove("hidden");
     }
 }
 
@@ -2943,6 +2947,9 @@ function handleTextParam(ele, targetId, paramType, sync) {
         }, function (response) {});
     }
     
+    // Keep any linked color picker synchronized with the text value
+    handleColorAndPalette(ele);
+    
     return true;
 }
 
@@ -3209,14 +3216,15 @@ function handleOptionSetting(ele, sync) {
 			'chatgptApiKey', 'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
-			'openrouterApiKey', 'openroutermodel'
+			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
+			'customAIApiKey'
 		];
         
         aiProviderElements.forEach(id => {
             document.getElementById(id).classList.add("hidden");
         });
         
-        // Show elements relevant to the selected AI provider
+		// Show elements relevant to the selected AI provider
         switch (ele.value) {
             case 'ollama':
                 document.getElementById("ollamamodel").classList.remove("hidden");
@@ -3249,9 +3257,14 @@ function handleOptionSetting(ele, sync) {
 				document.getElementById("openrouterApiKey").classList.remove("hidden");
 				document.getElementById("openroutermodel").classList.remove("hidden");
 				break;
+            case 'groq':
+                document.getElementById("groqApiKey").classList.remove("hidden");
+                document.getElementById("groqmodel").classList.remove("hidden");
+                break;
             case 'custom':
                 document.getElementById("customAIEndpoint").classList.remove("hidden");
                 document.getElementById("customAIModel").classList.remove("hidden");
+                document.getElementById("customAIApiKey").classList.remove("hidden");
                 break;
         }
     }
@@ -4250,6 +4263,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     async kittenTTS(text, settings) {
         try {
+            const baseUrl = chrome.runtime.getURL('');
+
             // Load ONNX Runtime first if not loaded
             if (typeof ort === 'undefined') {
                 const ortScript = document.createElement('script');
@@ -4259,31 +4274,30 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     ortScript.onerror = reject;
                     document.head.appendChild(ortScript);
                 });
-                
-                // Configure WASM paths after loading ONNX Runtime
-                if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
-                    ort.env.wasm.wasmPaths = './thirdparty/';
-                    ort.env.wasm.numThreads = 1;
-                    ort.env.wasm.simd = false;
-                    console.log("Configured ONNX Runtime WASM paths for popup");
-                }
             }
-            
+
+            // Configure WASM paths now that ONNX Runtime is available
+            if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
+                ort.env.wasm.wasmPaths = baseUrl + 'thirdparty/kitten-tts/';
+                ort.env.wasm.numThreads = 1;
+                ort.env.wasm.simd = false;
+                console.log("Configured ONNX Runtime WASM paths for popup");
+            }
+
             // Load Kitten TTS module if not loaded
             if (!window.kittenTtsInstance) {
                 // Use absolute URL for chrome extension context
-                const baseUrl = chrome.runtime.getURL('');
                 const moduleUrl = baseUrl + 'thirdparty/kitten-tts/kitten-tts-lib.js';
-                
+
                 const { KittenTTS } = await import(moduleUrl);
-                
+
                 window.kittenTtsInstance = new KittenTTS();
-                
-                // Initialize with model, voices, and WASM paths using absolute URLs
+
+                // Initialize with model, voices, and explicit WASM path using absolute URLs
                 const modelUrl = baseUrl + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
                 const voicesUrl = baseUrl + 'thirdparty/kitten-tts/voices.json';
-                // Don't set WASM path - let ONNX runtime use its default
-                await window.kittenTtsInstance.init(modelUrl, voicesUrl);
+                const wasmPaths = { wasm: baseUrl + 'thirdparty/kitten-tts/ort-wasm-simd-threaded.jsep.wasm' };
+                await window.kittenTtsInstance.init(modelUrl, voicesUrl, wasmPaths);
             }
             
             this.premiumQueueActive = true;

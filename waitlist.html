@@ -972,18 +972,30 @@
 	
 	// Resume audio context on user interaction if needed
 	function setupUserInteractionHandler() {
-		const handler = function() {
-			if (audioContext && audioContext.state === 'suspended') {
-				audioContext.resume().then(() => {
-					waitingForUserGesture = false;
-					console.log('Audio context resumed after user interaction');
-				});
+		const handler = async function() {
+			if (!audioContext && typeof initAudioContext === 'function') {
+				initAudioContext();
 			}
-			document.removeEventListener('click', handler);
-			document.removeEventListener('touchstart', handler);
-			document.removeEventListener('keydown', handler);
+			if (!audioContext) {
+				return;
+			}
+			try {
+				if (audioContext.state === 'suspended') {
+					await audioContext.resume();
+				}
+			} catch (err) {
+				waitingForUserGesture = true;
+				console.warn('Audio context resume failed after user interaction', err);
+				return;
+			}
+			if (audioContext.state !== 'suspended') {
+				waitingForUserGesture = false;
+				console.log('Audio context ready after user interaction');
+				document.removeEventListener('click', handler);
+				document.removeEventListener('touchstart', handler);
+				document.removeEventListener('keydown', handler);
+			}
 		};
-		
 		document.addEventListener('click', handler);
 		document.addEventListener('touchstart', handler);
 		document.addEventListener('keydown', handler);

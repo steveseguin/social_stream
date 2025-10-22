@@ -890,6 +890,128 @@
         let tickerAnimationId = null;
         let tickerContainer = null;
         
+        const GIFT_EVENT_TYPES = new Set([
+            'gift',
+            'giftpurchase',
+            'giftredemption',
+            'subscription_gift',
+            'gift_membership',
+            'giftmemberships',
+            'gifted_membership',
+            'gifted_memberships',
+            'membership_gift',
+            'sponsorship',
+            'reward',
+            'community_gift'
+        ]);
+        
+        const MEMBERSHIP_EVENT_TYPES = new Set([
+            'sponsorship',
+            'membermilestone',
+            'member_milestone',
+            'new_member',
+            'new_membership',
+            'upgraded_membership',
+            'new_subscriber',
+            'resub'
+        ]);
+        
+        const CONTRIBUTION_EVENT_TYPES = new Set([
+            'raid',
+            'host',
+            'follow',
+            'new_follower',
+            'joined',
+            'liked',
+            'cheer',
+            'channel_points',
+            'community_highlight',
+            'reward',
+            'gift',
+            'giftpurchase',
+            'giftredemption',
+            'subscription_gift',
+            'sponsorship',
+            'membermilestone',
+            'member_milestone',
+            'new_subscriber',
+            'resub'
+        ]);
+        
+        function normalizeEventType(event) {
+            return typeof event === 'string'
+                ? event.toLowerCase().replace(/[\s-]+/g, '_')
+                : '';
+        }
+        
+        function normalizeTwitchTier(tier) {
+            if (!tier) return 'default';
+            const value = tier.toString().toLowerCase();
+            if (value === '1000' || value === 'tier1') return 'tier1';
+            if (value === '2000' || value === 'tier2') return 'tier2';
+            if (value === '3000' || value === 'tier3') return 'tier3';
+            return value || 'default';
+        }
+        
+        function extractGiftQuantity(data) {
+            const quantityFields = ['giftCount', 'giftcount', 'total', 'count', 'quantity', 'giftQuantity', 'gifts'];
+            for (const field of quantityFields) {
+                if (field in data) {
+                    const value = parseInt(data[field], 10);
+                    if (!isNaN(value) && value > 0) {
+                        return value;
+                    }
+                }
+            }
+            return 1;
+        }
+        
+        function resolveGiftType(data, normalizedEvent) {
+            let giftType = (data.giftType || data.tier || data.level || data.subscriptionTier || data.planName || '').toString().toLowerCase();
+            if (normalizedEvent === 'subscription_gift') {
+                giftType = normalizeTwitchTier(giftType);
+            }
+            if (!giftType || giftType === 'giftpurchase') {
+                giftType = normalizedEvent.includes('membership') ? 'membership' : 'default';
+            }
+            return giftType;
+        }
+        
+        function parseNumericValue(value) {
+            if (typeof value === 'number') {
+                return isNaN(value) ? 0 : value;
+            }
+            if (typeof value === 'string') {
+                const parsed = parseFloat(value.replace(/[^0-9.]/g, ''));
+                return isNaN(parsed) ? 0 : parsed;
+            }
+            return 0;
+        }
+        
+        function handleGiftEvent(user, data, normalizedEvent) {
+            const giftQuantity = extractGiftQuantity(data);
+            
+            user.giftCount += giftQuantity;
+            user.giftsGiven += giftQuantity;
+            user.dailyGifts += giftQuantity;
+            user.weeklyGifts += giftQuantity;
+            
+            let giftValue = parseNumericValue(data.donoValue);
+            if (!giftValue) {
+                const source = (data.type || '').toLowerCase();
+                const giftType = resolveGiftType(data, normalizedEvent);
+                const baseValue = (typeof getGiftValue === 'function')
+                    ? getGiftValue(source, giftType)
+                    : 4.99;
+                giftValue = baseValue * giftQuantity;
+            }
+            
+            user.giftValue += giftValue;
+            user.dailyGiftValue += giftValue;
+            user.weeklyGiftValue += giftValue;
+            user.lastGiftTime = Date.now();
+        }
+
         // Start endless ticker animation
         function startEndlessTicker() {
             const wrapper = document.querySelector('.ticker-wrapper');
@@ -1411,7 +1533,11 @@
             }
 
 			console.log(data);
-            if (!data.chatname || !data.type) return;
+            const normalizedEvent = normalizeEventType(data.event);
+
+            if (!data.chatname || !data.type) {
+                return;
+            }
 
             const user = getOrCreateUser(data.chatname, data.type);
             user.messageCount++;
@@ -1426,48 +1552,18 @@
             if (data.membership) {
                 user.isMember = true;
             }
-            
-            // Track engagement metrics
-            if (data.event) {
-                // Track special events (raid, host, follow, etc)
-                if (['raid', 'host', 'follow', 'joined', 'liked'].includes(data.event)) {
+
+            if (normalizedEvent) {
+                if (CONTRIBUTION_EVENT_TYPES.has(normalizedEvent)) {
                     user.eventCount++;
                 }
-                // Track gifts - Enhanced for topbar tracking
-                if (['gift', 'giftpurchase', 'reward', 'sponsorship'].includes(data.event)) {
-                    user.giftCount++;
-                    user.giftsGiven++;
-                    user.dailyGifts++;
-                    user.weeklyGifts++;
-                    
-                    // Calculate gift value based on platform
-                    let giftValue = 0;
-                    if (data.event === 'giftpurchase' && data.donoValue) {
-                        giftValue = parseFloat(data.donoValue) || 0;
-                    } else {
-                        // Use the getGiftValue helper from currency.js
-                        const giftType = data.giftType || 'default';
-                        giftValue = typeof getGiftValue === 'function' 
-                            ? getGiftValue(data.type, giftType)
-                            : (data.type === 'kick' ? 3.75 : 4.99);
-                    }
-                    
-                    // Handle bulk gifting
-                    const giftMultiplier = data.giftCount || 1;
-                    if (giftMultiplier > 1) {
-                        user.giftCount += (giftMultiplier - 1);
-                        user.giftsGiven += (giftMultiplier - 1);
-                        user.dailyGifts += (giftMultiplier - 1);
-                        user.weeklyGifts += (giftMultiplier - 1);
-                        giftValue *= giftMultiplier;
-                    }
-                    
-                    user.giftValue += giftValue;
-                    user.dailyGiftValue += giftValue;
-                    user.weeklyGiftValue += giftValue;
-                    
-                    // Update last gift time
-                    user.lastGiftTime = Date.now();
+
+                if (MEMBERSHIP_EVENT_TYPES.has(normalizedEvent)) {
+                    user.isMember = true;
+                }
+
+                if (GIFT_EVENT_TYPES.has(normalizedEvent)) {
+                    handleGiftEvent(user, data, normalizedEvent);
                 }
             }
             
@@ -1486,10 +1582,19 @@
 
 
             // Always process donations for topbar layout or when explicitly enabled
-            if (data.hasDonation && (showDonations || layout === 'topbar')) {
+            const rawDonationValue = data.hasDonation || data.donoValue;
+            const isGiftEvent = normalizedEvent && GIFT_EVENT_TYPES.has(normalizedEvent);
+
+            if (rawDonationValue && !isGiftEvent && (showDonations || layout === 'topbar')) {
                 try {
                     const source = data.type ? data.type.toLowerCase() : '';
-                    const donationAmount = convertToUSD(data.hasDonation, source);
+                    let donationAmount = 0;
+                    
+                    if (typeof rawDonationValue === 'number') {
+                        donationAmount = rawDonationValue;
+                    } else {
+                        donationAmount = convertToUSD(rawDonationValue, source);
+                    }
                     
                     if (!isNaN(donationAmount) && donationAmount > 0) {
                         user.donations += donationAmount;

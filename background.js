@@ -1263,7 +1263,14 @@ async function loadmidi() {
 			}
 		]
 	};
-	var midiConfigFile = await window.showOpenFilePicker();
+	let midiConfigFile;
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		midiConfigFile = await window.showOpenFilePicker(opts);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
 
 	try {
 		midiConfigFile = await midiConfigFile[0].getFile();
@@ -1283,6 +1290,168 @@ async function loadmidi() {
 	chrome.runtime.lastError;
 }
 
+async function bringBackgroundPageToFrontForPicker() {
+    if (isSSAPP) {
+        return null;
+    }
+
+    if (typeof chrome === "undefined" || !chrome.runtime || typeof chrome.runtime.getURL !== "function") {
+        return null;
+    }
+
+    if (!chrome.tabs || typeof chrome.tabs.query !== "function") {
+        return null;
+    }
+
+    if (document.visibilityState === "visible") {
+        return null;
+    }
+
+    try {
+        const backgroundUrl = chrome.runtime.getURL("background.html");
+
+        const backgroundTabs = await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.query({ url: backgroundUrl }, function (tabs) {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve(tabs || []);
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        if (!backgroundTabs.length) {
+            return null;
+        }
+
+        const backgroundTab = backgroundTabs[0];
+
+        const [currentActive] = await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve(tabs || []);
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        const restoreTarget = currentActive && currentActive.id !== backgroundTab.id
+            ? { tabId: currentActive.id, windowId: currentActive.windowId }
+            : null;
+
+        await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.update(backgroundTab.id, { active: true }, function () {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve();
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        if (backgroundTab.windowId !== undefined && chrome.windows && typeof chrome.windows.update === "function") {
+            await new Promise((resolve, reject) => {
+                try {
+                    chrome.windows.update(backgroundTab.windowId, { focused: true }, function () {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve();
+                        }
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+
+        if (document.visibilityState !== "visible") {
+            await new Promise((resolve) => {
+                let settled = false;
+
+                function cleanup() {
+                    if (!settled) {
+                        settled = true;
+                        document.removeEventListener("visibilitychange", handleVisibility);
+                        resolve();
+                    }
+                }
+
+                function handleVisibility() {
+                    if (document.visibilityState === "visible") {
+                        cleanup();
+                    }
+                }
+
+                document.addEventListener("visibilitychange", handleVisibility);
+                setTimeout(cleanup, 200);
+            });
+        }
+
+        return restoreTarget;
+    } catch (error) {
+        console.warn("Unable to focus background page for file picker", error);
+        return null;
+    }
+}
+
+async function restorePreviousTabAfterPicker(target) {
+    if (!target || !target.tabId || isSSAPP) {
+        return;
+    }
+
+    if (!chrome || !chrome.tabs || typeof chrome.tabs.update !== "function") {
+        return;
+    }
+
+    try {
+        await new Promise((resolve, reject) => {
+            try {
+                chrome.tabs.update(target.tabId, { active: true }, function () {
+                    if (chrome.runtime.lastError) {
+                        reject(chrome.runtime.lastError);
+                    } else {
+                        resolve();
+                    }
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+
+        if (target.windowId !== undefined && chrome.windows && typeof chrome.windows.update === "function") {
+            await new Promise((resolve, reject) => {
+                try {
+                    chrome.windows.update(target.windowId, { focused: true }, function () {
+                        if (chrome.runtime.lastError) {
+                            reject(chrome.runtime.lastError);
+                        } else {
+                            resolve();
+                        }
+                    });
+                } catch (err) {
+                    reject(err);
+                }
+            });
+        }
+    } catch (error) {
+        console.warn("Unable to restore previous tab after file picker", error);
+    }
+}
+
 var newFileHandle = false;
 async function overwriteFile(data = false) {
     if (data == "setup") {
@@ -1297,7 +1466,13 @@ async function overwriteFile(data = false) {
         if (!window.showSaveFilePicker) {
             console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
         }
-        newFileHandle = await window.showSaveFilePicker(opts);
+        const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+        try {
+            newFileHandle = await window.showSaveFilePicker(opts);
+        } finally {
+            await restorePreviousTabAfterPicker(restoreTarget);
+        }
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newFileHandle === "string") {
@@ -1330,7 +1505,13 @@ async function overwriteSavedNames(data = false) {
         if (!window.showSaveFilePicker) {
             console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
         }
-        newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+        const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+        try {
+            newSavedNamesFileHandle = await window.showSaveFilePicker(opts);
+        } finally {
+            await restorePreviousTabAfterPicker(restoreTarget);
+        }
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newSavedNamesFileHandle === "string") {
@@ -1394,7 +1575,13 @@ async function overwriteFileExcel(data = false) {
 		if (!window.showSaveFilePicker) {
 			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
 		}
-		newFileHandleExcel = await window.showSaveFilePicker(opts);
+		const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+		try {
+			newFileHandleExcel = await window.showSaveFilePicker(opts);
+		} finally {
+			await restorePreviousTabAfterPicker(restoreTarget);
+		}
 		workbook = XLSX.utils.book_new();
 
 		data = [];
@@ -1517,7 +1704,13 @@ async function exportSettings() {
 		if (!window.showSaveFilePicker) {
 			console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
 		}
-		fileExportHandler = await window.showSaveFilePicker(opts);
+		const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+		try {
+			fileExportHandler = await window.showSaveFilePicker(opts);
+		} finally {
+			await restorePreviousTabAfterPicker(restoreTarget);
+		}
 
 		if (typeof fileExportHandler == "string") {
 			ipcRenderer.send("write-to-file", { filePath: fileExportHandler, data: JSON.stringify(item) });
@@ -1537,7 +1730,14 @@ async function importSettings(item = false) {
 		}],
 	}; */
 
-	var importFile = await window.showOpenFilePicker();
+	let importFile;
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		importFile = await window.showOpenFilePicker();
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
 	log(importFile);
 	try {
 		importFile = await importFile[0].getFile();
@@ -2639,7 +2839,15 @@ try {
           tab.url.includes('https://www.youtube.com/live/')
         )) {
           const isPopout = tab.url.includes('live_chat?is_popout=1');
-          activeChatSources.set(`${tabId}-0`, { url: tab.url, videoId: videoId, isPopout: isPopout });
+          const sourceKey = `${tabId}-0`;
+          const existing = activeChatSources.get(sourceKey);
+          activeChatSources.set(sourceKey, {
+            url: tab.url,
+            videoId: videoId,
+            isPopout: isPopout,
+            frameId: 0,
+            firstSeen: existing?.firstSeen || Date.now()
+          });
         } else {
           for (let key of activeChatSources.keys()) {
             if (key.startsWith(`${tabId}-`)) {
@@ -2654,18 +2862,54 @@ try {
   console.warn(e);
 }
 
+function getYouTubeSourcePriority(source) {
+  if (!source) {
+    return Number.MAX_SAFE_INTEGER;
+  }
+
+  const normalizedUrl = (source.url || '').toLowerCase();
+
+  if (source.isPopout) {
+    if (normalizedUrl.includes('www.youtube.com')) {
+      return 0;
+    }
+    if (normalizedUrl.includes('studio.youtube.com')) {
+      return 1;
+    }
+    return 2;
+  }
+
+  if (normalizedUrl.includes('studio.youtube.com/video/')) {
+    return 3;
+  }
+
+  if (normalizedUrl.includes('studio.youtube.com')) {
+    return 4;
+  }
+
+  if (normalizedUrl.includes('www.youtube.com/live_chat')) {
+    return 5;
+  }
+
+  return 6;
+}
+
 function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
   const videoId = msg.videoid || extractVideoId(tabUrl);
   if (!videoId) return true;
 
   const sourceId = `${tabId}-${frameId}`;
-  
-  const isPopout = tabUrl.includes('live_chat?is_popout=1');
-  
+  const safeTabUrl = tabUrl || '';
+  const isPopout = safeTabUrl.includes('live_chat?is_popout=1');
+
+  const existingSource = activeChatSources.get(sourceId);
+
   activeChatSources.set(sourceId, { 
-    url: tabUrl, 
+    url: safeTabUrl, 
     videoId: videoId, 
-    isPopout: isPopout
+    isPopout: isPopout,
+    frameId: frameId,
+    firstSeen: existingSource?.firstSeen || Date.now()
   });
 
   const sourcesForThisVideo = Array.from(activeChatSources.entries())
@@ -2675,13 +2919,21 @@ function shouldAllowYouTubeMessage(tabId, tabUrl, msg, frameId = 0) {
     return true; 
   }
 
-  const hasPopout = sourcesForThisVideo.some(([, data]) => data.isPopout);
+  let preferredSource = null;
 
-  if (hasPopout) {
-    return isPopout; 
+  for (const [id, data] of sourcesForThisVideo) {
+    const priority = getYouTubeSourcePriority(data);
+    const sourceFrameId = Number.isInteger(data?.frameId) ? data.frameId : parseInt(id.split('-')[1], 10) || 0;
+    const frameBias = (!data?.isPopout && sourceFrameId === 0) ? 1 : 0;
+    if (!preferredSource ||
+        priority < preferredSource.priority ||
+        (priority === preferredSource.priority && frameBias < preferredSource.frameBias) ||
+        (priority === preferredSource.priority && frameBias === preferredSource.frameBias && data.firstSeen < preferredSource.data.firstSeen)) {
+      preferredSource = { id, data, priority, frameBias };
+    }
   }
 
-  return sourceId === sourcesForThisVideo[0][0];
+  return sourceId === preferredSource?.id;
 }
 
 const checkDuplicateSources = new CheckDuplicateSources();
@@ -2757,8 +3009,9 @@ async function processIncomingMessage(message, sender=null){
 				}
 			}
 			try {
-				if (sender?.tab && ("iframeId" in sender)){
-					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, sender.frameId);
+				if (sender?.tab){
+					const frameId = Number.isInteger(sender.frameId) ? sender.frameId : 0;
+					const shouldAllowMessage = shouldAllowYouTubeMessage(sender.tab.id, sender.tab.url, message, frameId);
 					if (!shouldAllowMessage) {
 					  return;
 					}
@@ -3098,7 +3351,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "streamerbotpassword") {
 				handleStreamerBotSettingsChange();
 			}
-			if (request.setting == "replyingto") {
+			if (request.setting == "excludeReplyingTo") {
 				pushSettingChange();
 			}
 			if (request.setting == "delayyoutube") {
@@ -4420,6 +4673,19 @@ function getWebhookRelayEndpoints(settings) {
     return Array.from(endpoints);
 }
 
+function isStreamerBotEndpoint(endpoint) {
+    if (!endpoint) {
+        return false;
+    }
+
+    try {
+        const { hostname } = new URL(endpoint);
+        return Boolean(hostname && hostname.toLowerCase().includes("streamer.bot"));
+    } catch (err) {
+        return String(endpoint).toLowerCase().includes("streamer.bot");
+    }
+}
+
 function relayIncomingWebhook(source, payload) {
     if (!WEBHOOK_RELAY_SOURCES.has(source)) {
         return;
@@ -4431,17 +4697,45 @@ function relayIncomingWebhook(source, payload) {
         return;
     }
 
-    const endpoints = getWebhookRelayEndpoints(settings);
+    const endpoints = getWebhookRelayEndpoints(settings); 
     if (endpoints.length === 0) {
         return;
     }
 
-    let requestInit;
+    let jsonRequestInit = null;
+    let jsonRequestInitFailed = false;
+    let formRequestInit = null;
+    let formRequestInitFailed = false;
 
-    if (source === "kofi") {
-        if (typeof payload !== "object") {
-            console.warn("[WebhookRelay] Unexpected Ko-fi payload type", typeof payload);
-            return;
+    const buildJsonRequestInit = () => {
+        let body;
+        let contentType = "application/json";
+
+        if (typeof payload === "string") {
+            body = payload;
+            contentType = "text/plain";
+        } else {
+            try {
+                body = JSON.stringify(payload);
+            } catch (e) {
+                console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
+                return null;
+            }
+        }
+
+        return {
+            method: "POST",
+            headers: {
+                "Content-Type": contentType
+            },
+            body
+        };
+    };
+
+    const buildFormRequestInit = () => {
+        if (typeof payload !== "object" || payload === null) {
+            console.warn(`[WebhookRelay] Streamer.bot destinations require object payloads, received ${typeof payload}`);
+            return null;
         }
 
         const params = new URLSearchParams();
@@ -4462,45 +4756,45 @@ function relayIncomingWebhook(source, payload) {
             params.append(key, stringValue);
         });
 
-        requestInit = {
+        return {
             method: "POST",
             headers: {
-                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                "X-SSN-Webhook-Source": source
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
             },
             body: params.toString()
         };
-    } else {
-        let body;
-        let contentType = "application/json";
-
-        if (typeof payload === "string") {
-            body = payload;
-            contentType = "text/plain";
-        } else {
-            try {
-                body = JSON.stringify(payload);
-            } catch (e) {
-                console.warn(`[WebhookRelay] Failed to serialize payload for ${source}:`, e);
-                return;
-            }
-        }
-
-        requestInit = {
-            method: "POST",
-            headers: {
-                "Content-Type": contentType,
-                "X-SSN-Webhook-Source": source
-            },
-            body
-        };
-    }
+    };
 
     endpoints.forEach(endpoint => {
+        const useForm = isStreamerBotEndpoint(endpoint);
+        let baseInit;
+
+        if (useForm) {
+            if (!formRequestInit && !formRequestInitFailed) {
+                formRequestInit = buildFormRequestInit();
+                if (!formRequestInit) {
+                    formRequestInitFailed = true;
+                }
+            }
+            baseInit = formRequestInit;
+        } else {
+            if (!jsonRequestInit && !jsonRequestInitFailed) {
+                jsonRequestInit = buildJsonRequestInit();
+                if (!jsonRequestInit) {
+                    jsonRequestInitFailed = true;
+                }
+            }
+            baseInit = jsonRequestInit;
+        }
+
+        if (!baseInit) {
+            return;
+        }
+
         try {
             const init = {
-                ...requestInit,
-                headers: { ...requestInit.headers }
+                ...baseInit,
+                headers: { ...baseInit.headers }
             };
             fetch(endpoint, init).catch(err => console.warn(`[WebhookRelay] Request failed for ${source} -> ${endpoint}:`, err));
         } catch (err) {
@@ -4559,8 +4853,16 @@ function sanitizeRelay(text, textonly=false, alt = false) {
 
 // Add the isEmoji function from your original code
 function isEmoji(char) {
+    if (!char) {
+        return false;
+    }
+    const trimmed = char.trim();
+    const asciiEmoticonRegex = /^[:;=8BxX][-^\'"]?[)(DPOop3/\\|]+$/;
+    if (asciiEmoticonRegex.test(trimmed) || /^<3+$/.test(trimmed)) {
+        return true;
+    }
     const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
-    return emojiRegex.test(char);
+    return emojiRegex.test(trimmed);
 }
 
 const messageStore = {};
@@ -5184,6 +5486,11 @@ sendChatMessage(chatData, fakechat = false, relayed = false) {
         isAction: false
       }
     };
+
+    const videoId = chatData.videoId || chatData.videoid;
+    if (videoId) {
+      payload.data.videoId = videoId;
+    }
     
     return this._sendMessage(payload);
   } catch (error) {
@@ -5213,6 +5520,11 @@ sendChatMessage(chatData, fakechat = false, relayed = false) {
         source: "SocialStream.Ninja"
       }
     };
+
+    const videoId = chatData.videoId || chatData.videoid;
+    if (videoId) {
+      payload.data.videoId = videoId;
+    }
     
     // If you want to show the original platform, add it to the message
     if (chatData.type && chatData.type !== "Chat") {
@@ -5359,6 +5671,8 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
     // Prepare the data payload to be sent
     // It's good practice to create a new object to avoid modifying the original `data` object directly
     // unless intended.
+    const videoId = data.videoId || data.videoid;
+
     const payloadData = {
         ...data, // Copy original data
         chatname: username || data.chatname || data.userid || "Host⚡",
@@ -5369,6 +5683,9 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
         originalPlatform: data.type || "unknown" // Preserve original platform info
     };
 
+    if (videoId) {
+      payloadData.videoId = videoId;
+    }
 
     console.log(`Sending message event to Streamer.bot: ${payloadData.chatmessage} (from ${payloadData.chatname})`);
 
@@ -5382,6 +5699,10 @@ function sendToStreamerBot(data, fakechat = false, relayed = false) {
       const args = {
           chatData: payloadData
       };
+
+      if (payloadData.videoId) {
+          args.videoId = payloadData.videoId;
+      }
 
       return streamerbotClient.doAction(actionId, args);
 
@@ -7355,7 +7676,13 @@ async function downloadWaitlist() {
 	if (!window.showSaveFilePicker) {
 		console.warn("Open `brave://flags/#file-system-access-api` and enable to use the File API");
 	}
-	fileExportHandler = await window.showSaveFilePicker(opts);
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		fileExportHandler = await window.showSaveFilePicker(opts);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
 	var filesContent = objectArrayToCSV(waitlist, "\t");
 
 	if (typeof fileExportHandler == "string") {
@@ -10592,16 +10919,23 @@ let fileSizeTicker = 0;
 let monitorInterval = null;
 
 async function selectTickerFile() {
-    fileHandleTicker = await window.showOpenFilePicker({
-        types: [{
-            description: 'Text Files',
-            accept: {'text/plain': ['.txt']},
-        }],
-    });
-    
-    if (!isSSAPP) {
-        fileHandleTicker = fileHandleTicker[0];
-    } else if (typeof fileHandleTicker === "string") {
+	const pickerOptions = {
+		types: [{
+			description: 'Text Files',
+			accept: {'text/plain': ['.txt']},
+		}],
+	};
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+
+	try {
+		fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
+
+	if (!isSSAPP) {
+		fileHandleTicker = fileHandleTicker[0];
+	} else if (typeof fileHandleTicker === "string") {
         // Store file path when isSSAPP is true
         localStorage.setItem("tickerFilePath", fileHandleTicker);
     }

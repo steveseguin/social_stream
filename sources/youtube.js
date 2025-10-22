@@ -474,6 +474,9 @@
 		
 		//console.log(ele);
 		
+		
+		var hasMembership = "";
+		var subtitle = "";
 
 		var chatmessage = "";
 		var chatname = "";
@@ -481,6 +484,7 @@
 		var nameColor = "";
 		var member = false;
 		var mod = false;
+		
 		
 		var donoValue = "";
 
@@ -508,6 +512,8 @@
 				} else if (member || nameElement.classList.contains("member")) {
 					nameColor = "#107516";
 					member = true;
+					
+					subtitle = nameElement.getAttribute("aria-label") || "";
 				} 
 			}
 			
@@ -663,9 +669,6 @@
 			hasDonation = chatdonation;
 		}
 
-		var hasMembership = "";
-
-		var subtitle = "";
 
 		var giftedmemembership = ele.querySelector("#primary-text.ytd-sponsorships-live-chat-header-renderer");
 
@@ -957,8 +960,8 @@
 			data.title = getTranslation("donation", "DONATION");
 			if (!data.chatmessage){
 				data.chatmessage = getTranslation("thank-you", "Thank you for your donation!");
-				if (!data.event){
-					data.event = "thankyou";
+				if (!eventType){
+					eventType = "thankyou";
 				}
 			}
 		}

@@ -376,6 +376,198 @@ body.light-mode .message.active {
 		document.body.style.fontFamily = fontFamily;
 	}
     
+    const FRIENDLY_EVENT_LABELS = {
+		new_follower: 'New Follower',
+		new_subscriber: 'New Subscriber',
+		resub: 'Resub',
+		subscription_gift: 'Gifted Subs',
+		gift: 'Gift',
+		giftpurchase: 'Gift Purchase',
+		giftredemption: 'Gift Redemption',
+		sponsorship: 'Membership',
+		membermilestone: 'Member Milestone',
+		member_milestone: 'Member Milestone',
+		channel_points: 'Channel Points',
+		cheer: 'Cheer',
+		donation: 'Donation',
+		supersticker: 'Super Sticker',
+		thankyou: 'Thank You'
+	};
+
+	const STATUS_EVENT_TYPES = new Set(['viewer_update', 'follower_update', 'subscriber_update', 'view_update', 'likes_update']);
+	const STREAM_EVENT_TYPES = new Set(['stream_online', 'stream_offline']);
+	const AD_EVENT_TYPES = new Set(['ad_break', 'ad_request', 'ad_schedule']);
+	const GIFT_EVENT_TYPES = new Set([
+		'gift',
+		'giftpurchase',
+		'giftredemption',
+		'subscription_gift',
+		'sponsorship',
+		'gift_membership',
+		'giftmemberships',
+		'gifted_membership',
+		'gifted_memberships',
+		'membership_gift'
+	]);
+
+	function normalizeEventKey(event) {
+		if (typeof event !== 'string') return '';
+		const normalized = event
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '_')
+			.replace(/__+/g, '_')
+			.replace(/^_+|_+$/g, '');
+		const aliasMap = {
+			channel_subscription_gifts: 'subscription_gift',
+			channel_subscription_gift: 'subscription_gift',
+			channel_subscription_new: 'new_subscriber',
+			channel_subscription_start: 'new_subscriber',
+			channel_subscription_renewal: 'resub',
+			channel_subscription_extend: 'resub',
+			channel_subscription: 'new_subscriber',
+			channel_followed: 'new_follower',
+			follower_added: 'new_follower',
+			subscription_renewal: 'resub',
+			subscription_gifts: 'subscription_gift'
+		};
+		return aliasMap[normalized] || normalized;
+	}
+
+	function humanizeEventKey(event) {
+		return event.replace(/[_-]+/g, ' ').replace(/\b\w/g, char => char.toUpperCase());
+	}
+
+	function capitalizeSource(value) {
+		if (!value || typeof value !== 'string') return 'System';
+		return value.charAt(0).toUpperCase() + value.slice(1);
+	}
+
+	function extractNumeric(value) {
+		if (value === undefined || value === null) return null;
+		if (typeof value === 'number') {
+			return Number.isFinite(value) ? value : null;
+		}
+		if (typeof value === 'string') {
+			const cleaned = value.replace(/[^0-9.-]/g, '');
+			if (!cleaned) return null;
+			const parsed = parseFloat(cleaned);
+			return Number.isFinite(parsed) ? parsed : null;
+		}
+		return null;
+	}
+
+	function formatMetricValue(data, fallback = 0) {
+		const candidates = [];
+
+		if (data.meta !== undefined) {
+			const meta = data.meta;
+			if (typeof meta === 'object' && meta !== null) {
+				candidates.push(meta.current, meta.count, meta.total, meta.viewers, meta.viewer_count, meta.value, meta.amount);
+			} else {
+				candidates.push(meta);
+			}
+		}
+
+		candidates.push(data.count, data.total, data.value);
+		candidates.push(fallback);
+
+		for (const candidate of candidates) {
+			const numeric = extractNumeric(candidate);
+			if (numeric !== null) {
+				return numeric.toLocaleString();
+			}
+		}
+
+		return Number(fallback || 0).toLocaleString();
+	}
+
+	function buildEventDisplay(data) {
+		const normalizedEvent = normalizeEventKey(data.event);
+		let name = data.chatname || data.sourceName || `${capitalizeSource(data.type)} Alerts`;
+		let message = data.chatmessage || '';
+		let eventTypeText = '';
+		let eventTypeClass = data.hasDonation ? 'event-donation' : 'event-other';
+		let eventSpecificText = '';
+		let forceShow = false;
+
+		if (data.hasDonation) {
+			eventTypeText = 'DONATION';
+		} else if (normalizedEvent) {
+			eventTypeText = 'EVENT';
+		}
+
+		if (normalizedEvent) {
+			eventSpecificText = FRIENDLY_EVENT_LABELS[normalizedEvent] || humanizeEventKey(normalizedEvent);
+		}
+
+		if (STATUS_EVENT_TYPES.has(normalizedEvent)) {
+			eventTypeText = 'STATUS';
+			eventSpecificText = {
+				viewer_update: 'Viewers',
+				follower_update: 'Followers',
+				subscriber_update: 'Subscribers',
+				view_update: 'Views',
+				likes_update: 'Likes'
+			}[normalizedEvent] || eventSpecificText;
+			message = `Current ${eventSpecificText.toLowerCase()}: ${formatMetricValue(data, 0)}`;
+			name = data.sourceName || `${capitalizeSource(data.type)} Stats`;
+			forceShow = true;
+		} else if (STREAM_EVENT_TYPES.has(normalizedEvent)) {
+			eventTypeText = 'STREAM';
+			if (normalizedEvent === 'stream_online') {
+				eventSpecificText = 'Online';
+				const startedAt = data.meta && (data.meta.startedAt || data.meta.started_at);
+				if (startedAt) {
+					const startDate = new Date(startedAt);
+					message = isNaN(startDate.getTime()) ? 'Stream is now live!' : `Stream is live (since ${startDate.toLocaleTimeString()})`;
+				} else {
+					message = 'Stream is now live!';
+				}
+			} else {
+				eventSpecificText = 'Offline';
+				message = 'Stream has ended.';
+			}
+			name = data.sourceName || `${capitalizeSource(data.type)} Status`;
+			forceShow = true;
+		} else if (AD_EVENT_TYPES.has(normalizedEvent)) {
+			eventTypeText = 'ADVERTISEMENT';
+			if (normalizedEvent === 'ad_break') {
+				eventSpecificText = 'Ad Break';
+				if (!message) {
+					const duration = data.meta && (data.meta.duration || data.meta.length || data.meta.duration_seconds);
+					message = `Ad break started${duration ? ` (${duration}s)` : ''}`;
+				}
+			} else if (normalizedEvent === 'ad_request') {
+				eventSpecificText = 'Ad Request';
+				if (!message) {
+					const length = data.meta && (data.meta.length || data.meta.duration);
+					message = `Ad request queued${length ? ` (${length}s)` : ''}`;
+				}
+			} else {
+				eventSpecificText = 'Ad Schedule';
+				if (!message) {
+					message = 'Ad schedule updated.';
+				}
+			}
+			name = data.meta && data.meta.requester ? data.meta.requester : (data.sourceName || `${capitalizeSource(data.type)} Ads`);
+			forceShow = true;
+		}
+
+		if (!eventSpecificText && normalizedEvent) {
+			eventSpecificText = humanizeEventKey(normalizedEvent);
+		}
+
+		return {
+			name,
+			message,
+			eventTypeText,
+			eventTypeClass,
+			eventSpecificText,
+			normalizedEvent,
+			forceShow
+		};
+	}
+
     function addMessageToOverlay(data) {
 		// Only display events from enabled sources
 		
@@ -392,16 +584,23 @@ body.light-mode .message.active {
 			return;
 		}
 		
-		// Rest of your existing function...
-		if (!(data.event || data.hasDonation)){
+		const display = buildEventDisplay(data);
+
+		if (!(data.event || data.hasDonation) && !display.forceShow) {
 			return;
 		}
-		
-		if (!data.chatname && !data.chatmessage && !data.hasDonation){return;}
-		
-		
-		if (giftSubsOnly && (!data.event || !(data.textContent || data.chatmessage).includes("gifted"))){
+
+		const hasDisplayContent = (display.message && display.message.trim().length > 0) || data.hasDonation || display.forceShow;
+		if (!hasDisplayContent) {
 			return;
+		}
+
+		if (giftSubsOnly) {
+			const isGiftEvent = display.normalizedEvent && GIFT_EVENT_TYPES.has(display.normalizedEvent);
+			const messageText = (display.message || data.chatmessage || '').toLowerCase();
+			if (!isGiftEvent && !messageText.includes('gift')) {
+				return;
+			}
 		}
 		
 		// Remove the "no events" message if it exists
@@ -412,7 +611,8 @@ body.light-mode .message.active {
 		
 		const messageDiv = document.createElement('div');
 		messageDiv.classList.add('message');
-		messageDiv.classList.add(`${data.type}-event`);
+		const eventClass = data.type ? `${data.type}-event` : 'system-event';
+		messageDiv.classList.add(eventClass);
 		
         messageDiv.rawContents = data; // Store the original data object
         messageDiv.classList.add('clickable-message');
@@ -421,28 +621,20 @@ body.light-mode .message.active {
 			messageDiv.id = data.mid;
 		}
 		
-		data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
+		if (data.type) {
+			data.sourceicon = "https://socialstream.ninja/sources/images/"+data.type+".png";
+		} else {
+			data.sourceicon = "";
+		}
 		
 		// Get current time for timestamp
 		const now = new Date();
 		const timeString = now.toLocaleTimeString();
 		
-		// Determine event type
-		let eventTypeText = '';
-		let eventTypeClass = 'event-other';
-		let eventSpecificText = '';
-		
-		if (data.hasDonation) {
-			eventTypeText = 'DONATION';
-			eventTypeClass = 'event-donation';
-		} else if (data.event) {
-			if (typeof data.event === 'string') {
-				eventTypeText = 'EVENT';
-				eventSpecificText = data.event.toUpperCase();
-			} else {
-				eventTypeText = 'EVENT';
-			}
-		}
+		const eventTypeText = display.eventTypeText;
+		const eventTypeClass = display.eventTypeClass || (data.hasDonation ? 'event-donation' : 'event-other');
+		const eventSpecificText = display.eventSpecificText;
+		const displayName = display.name || data.chatname || 'Anonymous';
 		
 		// Calculate USD value if donation
 		let usdValue = 0;
@@ -473,12 +665,12 @@ body.light-mode .message.active {
 				<div class="message-meta">
 					${eventTypeText ? `<div class="event-type ${eventTypeClass}">${eventTypeText}</div>` : ''}
 					${eventSpecificText ? `<div class="event-specific">${eventSpecificText}</div>` : ''}
-					<div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${data.chatname || 'Anonymous'}</div>
+					<div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${displayName}</div>
 					${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
 				</div>
 			</div>
 			
-			<div class="text">${data.chatmessage || ''}</div>
+			<div class="text">${display.message || ''}</div>
 			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
 			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
 			<div class="timestamp">${timeString}</div>

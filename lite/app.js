@@ -47,6 +47,7 @@ const overlayToggleInputs = overlayToggleDefs.reduce((acc, def) => {
 const sessionKey = 'session.currentId';
 const overlayToggleStorageKey = 'session.overlayOptions';
 const youtubeStreamingStorageKey = 'youtube.useStreaming';
+const debugPreferenceKey = 'debug.enabled';
 const activityLimit = 80;
 
 const overlayToggleDefaults = overlayToggleDefs.reduce((acc, def) => {
@@ -65,21 +66,56 @@ let youtubeStreamingEnabled = Boolean(storage.get(youtubeStreamingStorageKey, fa
 
 const url = new URL(window.location.href);
 const debugParam = url.searchParams.get('debug');
+const storedDebugPreference = storage.get(debugPreferenceKey, null);
 const debugEnabled = (() => {
-  if (debugParam === null) {
-    return false;
+  if (debugParam !== null) {
+    const normalized = (debugParam || '').trim().toLowerCase();
+    if (!normalized) {
+      storage.set(debugPreferenceKey, true);
+      return true;
+    }
+    const next = !['0', 'false', 'off', 'no'].includes(normalized);
+    storage.set(debugPreferenceKey, next);
+    return next;
   }
-  const normalized = (debugParam || '').trim().toLowerCase();
-  if (!normalized) {
-    return true;
+  if (typeof storedDebugPreference === 'boolean') {
+    return storedDebugPreference;
   }
-  return !['0', 'false', 'off', 'no'].includes(normalized);
+  return false;
 })();
 if (debugEnabled) {
-  console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL to disable.');
+  console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL or call window.SocialStreamLiteDebug.disable() to turn it off.');
 } else {
-  console.info('Social Stream Lite debug logging disabled. Add ?debug=1 to the URL to enable.');
+  console.info('Social Stream Lite debug logging disabled. Add ?debug=1 to the URL or call window.SocialStreamLiteDebug.enable() to turn it on.');
 }
+
+window.SocialStreamLiteDebug = Object.freeze({
+  enable() {
+    storage.set(debugPreferenceKey, true);
+    const next = new URL(window.location.href);
+    next.searchParams.set('debug', '1');
+    window.location.assign(next.toString());
+  },
+  disable() {
+    storage.set(debugPreferenceKey, false);
+    const next = new URL(window.location.href);
+    next.searchParams.set('debug', '0');
+    window.location.assign(next.toString());
+  },
+  clear() {
+    storage.remove(debugPreferenceKey);
+    const next = new URL(window.location.href);
+    next.searchParams.delete('debug');
+    window.location.assign(next.toString());
+  },
+  status() {
+    return {
+      param: new URL(window.location.href).searchParams.get('debug'),
+      stored: storage.get(debugPreferenceKey, null),
+      active: debugEnabled
+    };
+  }
+});
 
 const messenger = new DockMessenger(elements.dockFrame, {
   debug: debugEnabled,
@@ -91,6 +127,60 @@ let plugins = [];
 
 const pluginMap = new Map();
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function debugActivityTrace(label, detail) {
+  if (!debugEnabled) {
+    return;
+  }
+  if (detail !== undefined) {
+    console.info(`[Lite] ${label}`, detail);
+  } else {
+    console.info(`[Lite] ${label}`);
+  }
+}
+
+function sanitizePayloadForDebug(payload) {
+  if (!debugEnabled) {
+    return payload;
+  }
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  if (Array.isArray(payload)) {
+    return payload.map((item) => sanitizePayloadForDebug(item));
+  }
+  const snapshot = { ...payload };
+  if (Object.prototype.hasOwnProperty.call(snapshot, 'raw')) {
+    snapshot.raw = '[omitted in debug log]';
+  }
+  if (snapshot.payload && typeof snapshot.payload === 'object') {
+    snapshot.payload = sanitizePayloadForDebug(snapshot.payload);
+  }
+  if (snapshot.detail && typeof snapshot.detail === 'object') {
+    snapshot.detail = sanitizePayloadForDebug(snapshot.detail);
+  }
+  return snapshot;
+}
+
+function snapshotActivityEntryForDebug(entry) {
+  if (!debugEnabled) {
+    return entry;
+  }
+  if (!entry || typeof entry !== 'object') {
+    return entry;
+  }
+  if (Array.isArray(entry)) {
+    return entry.map((item) => snapshotActivityEntryForDebug(item));
+  }
+  const snapshot = { ...entry };
+  if (snapshot.payload && typeof snapshot.payload === 'object') {
+    snapshot.payload = sanitizePayloadForDebug(snapshot.payload);
+  }
+  if (snapshot.detail && typeof snapshot.detail === 'object') {
+    snapshot.detail = sanitizePayloadForDebug(snapshot.detail);
+  }
+  return snapshot;
+}
 
 const testMessagePresets = [
   () => ({
@@ -387,8 +477,11 @@ function handleCopyLink() {
 function addActivity(entry) {
   const normalized = normalizeActivityEntry(entry);
   if (!normalized) {
+    debugActivityTrace('Activity entry dropped', { entry: snapshotActivityEntryForDebug(entry) });
     return;
   }
+
+  debugActivityTrace('Activity entry accepted', snapshotActivityEntryForDebug(normalized));
 
   if (normalized.id && activityById.has(normalized.id)) {
     const existingIndex = activityEntries.findIndex((item) => item.id === normalized.id);
@@ -418,6 +511,7 @@ function addActivity(entry) {
 
 function normalizeActivityEntry(entry) {
   if (!entry) {
+    debugActivityTrace('normalizeActivityEntry: empty entry', entry);
     return null;
   }
 
@@ -427,9 +521,17 @@ function normalizeActivityEntry(entry) {
   if (kind === 'event') {
     const payload = entry.payload || entry.messageData || entry.detail || entry;
     if (!payload || typeof payload !== 'object') {
+      debugActivityTrace('normalizeActivityEntry: invalid event payload', { entry: snapshotActivityEntryForDebug(entry) });
       return null;
     }
     if (!debugEnabled && !isDisplayableMessage(payload)) {
+      return null;
+    }
+    if (debugEnabled && !isDisplayableMessage(payload)) {
+      debugActivityTrace(
+        'normalizeActivityEntry: payload filtered (not displayable)',
+        { entry: snapshotActivityEntryForDebug(entry), payload: sanitizePayloadForDebug(payload) }
+      );
       return null;
     }
 
@@ -459,6 +561,10 @@ function normalizeActivityEntry(entry) {
   }
   if (!debugEnabled && entryKind === 'status') {
     return null;
+  }
+
+  if (entryKind === 'debug' && debugEnabled) {
+    debugActivityTrace('normalizeActivityEntry: debug entry accepted', { entry: snapshotActivityEntryForDebug(entry) });
   }
 
   const id = entry.id || `log-${timestamp}-${Math.floor(Math.random() * 1000)}`;
@@ -1316,6 +1422,9 @@ function handleRelayMessage(message) {
     if (!payload || typeof payload !== 'object') {
       return;
     }
+
+    debugActivityTrace('Relay payload received', sanitizePayloadForDebug(payload));
+
     addActivity({
       kind: 'event',
       plugin: payload.type || payload.platform || 'system',
@@ -1489,33 +1598,52 @@ function initMobileNav() {
   }
 }
 
-function processOAuthCallback(pluginMap) {
+async function processOAuthCallback(pluginMap) {
+  const handleParams = async (params) => {
+    const state = params.get('state') || '';
+    const provider = state.split(':')[0];
+    const plugin = provider ? pluginMap.get(provider) : null;
+
+    if (!plugin) {
+      updateSessionStatus('Received OAuth response for unknown provider.', 'warn');
+      return true;
+    }
+
+    try {
+      await plugin.handleOAuthCallback(params);
+      addActivity({
+        plugin: provider,
+        message: 'OAuth authorization completed.',
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.error('OAuth handling failed', err);
+      updateSessionStatus(err.message || 'OAuth handling failed.', 'warn');
+    }
+
+    return true;
+  };
+
+  if (window.location.search) {
+    const searchParams = new URLSearchParams(window.location.search.slice(1));
+    if (searchParams.has('code') && searchParams.has('state')) {
+      await handleParams(searchParams);
+      const url = new URL(window.location.href);
+      url.hash = '';
+      ['code', 'scope', 'state'].forEach((key) => url.searchParams.delete(key));
+      const remainingSearch = url.searchParams.toString();
+      const newUrl = remainingSearch ? `${url.pathname}?${remainingSearch}` : url.pathname;
+      history.replaceState(null, '', newUrl);
+      return;
+    }
+  }
+
   if (!window.location.hash) return;
   const params = new URLSearchParams(window.location.hash.slice(1));
   if (!params.has('access_token')) return;
 
-  const state = params.get('state') || '';
-  const provider = state.split(':')[0];
-  const plugin = pluginMap.get(provider);
-
-  if (!plugin) {
-    updateSessionStatus('Received OAuth response for unknown provider.', 'warn');
-    return;
-  }
-
-  try {
-    plugin.handleOAuthCallback(params);
-    addActivity({
-      plugin: provider,
-      message: 'OAuth authorization completed.',
-      timestamp: Date.now()
-    });
-  } catch (err) {
-    console.error('OAuth handling failed', err);
-    updateSessionStatus(err.message || 'OAuth handling failed.', 'warn');
-  } finally {
-    history.replaceState(null, '', window.location.pathname + window.location.search);
-  }
+  await handleParams(params);
+  history.replaceState(null, '', window.location.pathname + window.location.search);
 }
 
 function init() {
@@ -1624,7 +1752,10 @@ function init() {
 
   mountAllPlugins();
   startSession(storedSession);
-  processOAuthCallback(pluginMap);
+  processOAuthCallback(pluginMap).catch((err) => {
+    console.error('OAuth processing failed', err);
+    updateSessionStatus(err.message || 'OAuth callback handling failed.', 'warn');
+  });
   initMobileNav();
 
   if (url.searchParams.get('focus') === 'activity' && elements.activitySection) {
