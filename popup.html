@@ -1575,10 +1575,14 @@ input:checked + .slider:before {
                                 </div>
                                 <div title="This won't work in Chrome">
                                     <label class="switch">
-                                        <input type="checkbox" data-param1="chroma=0006" />
+                                        <input type="checkbox" data-param1="chromaalpha" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="translucent-page-background">⚪ Translucent page background </span>
+                                    <span>
+                                        <span data-translate="translucent-page-background">⚪ Translucent page background </span>
+                                        <input type="range" id="dock-chroma-range" min="0" max="100" step="1" value="40" style="width: 80px;" data-numbersetting="chromaalpha" data-range-display="dock-chroma-display" data-range-suffix="%" />
+                                        <span class="range-value" id="dock-chroma-display">40%</span>
+                                    </span>
                                 </div>
                                 <div>
                                     <label class="switch">
