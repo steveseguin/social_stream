@@ -227,14 +227,19 @@
 	"https://fansly.com/chatroom/*",
 	"https://pump.fun/coin/*",
 	"https://retake.tv/*",
+	"https://www.camsoda.com/*",
 	"https://portal.abs.xyz/stream/*"
   ],
   "content_scripts": [
     {
       "js": [ "./sources/portal.js" ],
-      "matches": [ "https://portal.abs.xyz/stream/*"]
+      "matches": [ "https://portal.abs.xyz/stream/*" ]
     },
-	 {
+	{
+      "js": [ "./sources/camsoda.js" ],
+      "matches": [ "https://www.camsoda.com/*" ]
+    },
+	{
       "js": [ "./sources/generic.js" ],
       "matches": [ "https://versus.cam/?testchat" ]
     },

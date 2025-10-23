@@ -650,14 +650,14 @@
             showNotification(`🎉 ${percent}% of goal reached!`);
         }
 
-        function addRecentTip(name, amount, currency) {
+        function addRecentTip(name, donationLabel) {
             if (style !== 'meter') return;
             
             const tipItem = document.createElement('div');
             tipItem.className = 'tip-item';
             tipItem.innerHTML = `
                 <span class="tip-name">${name}</span>
-                <span class="tip-amount">${amount} ${currency}</span>
+                <span class="tip-amount">${donationLabel}</span>
             `;
             
             const container = document.getElementById('recent-tips');
@@ -685,29 +685,70 @@
             audio.play().catch(() => {});
         }
 
-        function processTip(amount, currency, donator) {
-            // Use convertToUSD function from currency.js
-            let tipValue = convertToUSD(`${amount} ${currency}`);
-            
-            // Add to history
+        function parseDonationString(rawDonation) {
+            if (rawDonation === undefined || rawDonation === null) {
+                return { amount: null, currency: '', display: '' };
+            }
+
+            const raw = String(rawDonation).trim();
+            if (!raw) {
+                return { amount: null, currency: '', display: '' };
+            }
+
+            const numericMatch = raw.match(/-?\d+(?:[.,]\d+)?/);
+            let amount = null;
+            let currency = '';
+
+            if (numericMatch) {
+                amount = parseFloat(numericMatch[0].replace(',', '.'));
+                const before = raw.slice(0, numericMatch.index).trim();
+                const after = raw.slice(numericMatch.index + numericMatch[0].length).trim();
+                currency = `${before} ${after}`.trim();
+
+                if (!currency && raw.replace(numericMatch[0], '').trim()) {
+                    currency = raw.replace(numericMatch[0], '').trim();
+                }
+            }
+
+            return {
+                amount: isNaN(amount) ? null : amount,
+                currency,
+                display: raw
+            };
+        }
+
+        function processTip(rawDonation, donator, sourceType) {
+            const source = sourceType ? String(sourceType).toLowerCase() : '';
+            const tipValue = convertToUSD(rawDonation, source);
+
+            if (isNaN(tipValue) || tipValue <= 0) {
+                console.warn('Ignoring invalid donation value:', rawDonation);
+                return;
+            }
+
+            const parsedDonation = parseDonationString(rawDonation);
+            const storedAmount = parsedDonation.amount !== null ? parsedDonation.amount : tipValue;
+            const storedCurrency = parsedDonation.currency || 'USD';
+            const displayLabel = parsedDonation.display || `$${tipValue.toFixed(2)}`;
+
             const donation = {
                 timestamp: new Date().toISOString(),
                 donator: donator,
-                amount: amount,
-                currency: currency,
-                usdValue: tipValue
+                amount: storedAmount,
+                currency: storedCurrency,
+                usdValue: tipValue,
+                raw: parsedDonation.display || ''
             };
             donationHistory.push(donation);
-            
+
             if (persistent) {
                 localStorage.setItem('tipjar_history', JSON.stringify(donationHistory));
             }
 
             updateAmount(tipValue);
-            addRecentTip(donator, amount, currency);
+            addRecentTip(donator, displayLabel);
             playDonationSound();
 
-            // Celebration effects
             if (celebration === 'hearts' && style === 'jar') {
                 const heartCount = Math.min(Math.ceil(tipValue / 5), 10);
                 for (let i = 0; i < heartCount; i++) {
@@ -721,7 +762,7 @@
                 triggerFireworks();
             }
 
-            showNotification(`${donator} tipped ${amount} ${currency}!`);
+            showNotification(`${donator} tipped ${displayLabel}!`);
         }
 
         function processData(data) {
@@ -733,8 +774,8 @@
 
             if (data.donation || data.hasDonation) {
                 const donationString = data.donation || data.hasDonation;
-                const [amount, currency] = donationString.split(' ');
-                processTip(parseFloat(amount), currency, data.chatname || 'Anonymous');
+                const sourceType = data.type ? String(data.type).toLowerCase() : '';
+                processTip(donationString, data.chatname || 'Anonymous', sourceType);
             }
         }
         
