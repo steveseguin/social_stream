@@ -195,9 +195,10 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 		}
 		
         var name = "";
-		try {
-			name = ele.querySelector("div [data-tid='threadBodyDisplayName'], div [data-tid='message-author-name']").innerText;
-		} catch(e){}
+        var nameEscaped = false;
+        try {
+            name = ele.querySelector("div [data-tid='threadBodyDisplayName'], div [data-tid='message-author-name']").innerText;
+        } catch(e){}
 		
 		
 		
@@ -223,14 +224,18 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 					}
 				}
 				
-				name = escapeHtml(prev.querySelector('[data-tid="message-author-name"]').innerText);
-				
-			} catch(e){} 
-		}
-		
-		try {
-			name = escapeHtml(name);
-		} catch(e){}
+                name = escapeHtml(prev.querySelector('[data-tid="message-author-name"]').innerText);
+                nameEscaped = true;
+                
+            } catch(e){} 
+        }
+        
+        if (!nameEscaped){
+            try {
+                name = escapeHtml(name);
+                nameEscaped = true;
+            } catch(e){}
+        }
 		
 		if (name){
 		  name = name.trim();

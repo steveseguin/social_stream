@@ -524,6 +524,12 @@
 				display: block;
 				color: var(--donation-label-color);
 			}
+			.small.donation-title {
+				font-size: 14px;
+			}
+			.verysmall.donation-title {
+				font-size: 12px;
+			}
 
 			.youtubedonation.donation-title {
 			
@@ -2555,7 +2561,13 @@
 						memebershipHTML = data.membership;
 					  } else {
 						// No avatar membership display
-						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+						if (data.membership.length > 19){
+							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+						} else if (data.membership.length > 24){
+							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+						} else {
+							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+						}
 					  }
 					} else if (data.membership) {
 					  if (data.membership === true) {
