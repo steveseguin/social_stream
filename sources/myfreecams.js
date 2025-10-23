@@ -64,14 +64,9 @@
 	  
 	  try {
 		  try {
-			var chatname = getAllContentNodes(ele.querySelector(".author, .username"));
-			
+			var chatname = escapeHtml(ele.querySelector(".author, .username").textContent);
+			 chatname = chatname.split(":")[0];
 			 chatname = chatname.trim();
-			 
-			 nameColor = chatname.querySelector(".author").dataset.color;
-			 if(nameColor){
-				 nameColor = "#"+nameColor;
-			 }
 			 
 		  } catch(e){
 		  }
@@ -81,14 +76,14 @@
 	  
 	  var userid = "";
 	  try {
-			userid = ele.querySelector("button").getAttribute("user_id");
+			userid = parseInt(ele.querySelector("[data-user_id]").dataset.user_id);
 	  } catch(e){
 		  
 	  }
 	  if (!chatname){return;}
 	  
 	  try {
-		chatmessage = getAllContentNodes(ele.querySelector(".message-text"));
+		chatmessage = getAllContentNodes(ele.querySelector(".chat"));
 		chatmessage = chatmessage.trim();
 	  } catch(e){
 		  
@@ -111,17 +106,23 @@
 	  var chatimg = "";
 	  var chatbadges= [];
 	 
-	  ele.querySelectorAll(".thumb img[src]").forEach(badge=>{
+	  ele.querySelectorAll(".MfcChannelMembers_ShareBadges_emoji a").forEach(badge=>{
 		try {
-			if (badge && badge.nodeName == "IMG"){
+			if (badge.textContent){
 				var tmp = {};
-				tmp.src = badge.src;
-				tmp.type = "img";
+				tmp.text = badge.textContent;
+				tmp.type = "text";
 				chatbadges.push(tmp);
 			}
 		} catch(e){  }
 	  });
-	 
+	  
+	  if (chatbadges.length>3){
+		  chatbadges = [];
+	  }
+	  try {
+		chatimg = ele.querySelector("img.in_chat_avatar[src]").src;
+	  } catch(e){  }
 
 	  var data = {};
 	  data.chatname = chatname;
@@ -135,7 +136,7 @@
 	  data.hasDonation = hasDonation;
 	  data.membership = "";
 	  data.textonly = settings.textonlymode || false;
-	  data.type = "afreecatv";
+	  data.type = "myfreecams";
 	  
 	//  console.log(data);
 	  
@@ -150,7 +151,7 @@
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
 			try{
-				if ("getSource" == request){sendResponse("afreecatv");return;	}
+				if ("getSource" == request){sendResponse("myfreecams");return;	}
 				if ("focusChat" == request){
 					document.querySelector('textarea, #write_area').focus();
 					sendResponse(true);
@@ -179,6 +180,7 @@
 			settings = response.settings;
 		}
 	});
+	
 
 	function onElementInserted(target) {
 		var onMutationsObserved = function(mutations) {
@@ -207,19 +209,19 @@
 	
 	var checkReady = setInterval(function(){
 		
-		var mainChat = document.querySelector("#chat_area");
+		var mainChat = document.querySelector("#chat_contents");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
 			
 			setTimeout(function(){
-				var clear = document.querySelectorAll("#chat_area > div");
+				var clear = document.querySelectorAll("#chat_contents > div");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}
 				console.log("Social Stream ready to go");
-				onElementInserted( document.querySelector("#chat_area"));
-			},500);
+				onElementInserted( document.querySelector("#chat_contents"));
+			},2500);
 		} 
 	},500);
 	

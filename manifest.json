@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.34.10",
+  "version": "3.34.11",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -53,7 +53,9 @@
 	"https://cloud.malte-schroeder.de/call/*",
 	"https://*.webinargeek.com/watch/*",
     "https://chaturbate.com/*/",
-    "https://cherry.tv/*",	
+    "https://cherry.tv/*",
+	"https://myfreecams.com/*",
+	"https://www.myfreecams.com/*",
 	"https://*.online.church/",
     "https://beamstream.gg/*/chat",
     "https://socialstream.ninja/*",
@@ -257,6 +259,10 @@
     {
       "js": [ "./sources/cherrytv.js" ],
       "matches": [ "https://cherry.tv/*" ]
+    },
+	    {
+      "js": [ "./sources/myfreecams.js" ],
+      "matches": [ "https://myfreecams.com/*","https://www.myfreecams.com/*" ]
     },
 	{
       "js": [ "./sources/onlinechurch.js" ],
