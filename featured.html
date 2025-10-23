@@ -2549,7 +2549,7 @@
 					}
 
 					var memebershipHTML = "";
-
+					
 					// MODIFIED MEMBERSHIP/DONATION HANDLING
 					if (data.hasMembership) {
 					  if (data.hasMembership === true) {
@@ -2561,9 +2561,9 @@
 						memebershipHTML = data.membership;
 					  } else {
 						// No avatar membership display
-						if (data.membership.length > 19){
+						if (data.membership.length > 24){
 							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
-						} else if (data.membership.length > 24){
+						} else if (data.membership.length > 30){
 							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
 						} else {
 							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
@@ -2578,9 +2578,19 @@
 					  
 					  if (avatarForMessage) {
 						if (data.subtitle) {
-						  memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+							if (data.membership.length > 19){
+								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+							} else if (data.membership.length > 24){
+								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+							} else {
+								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+							}
+						} else if (data.membership.length > 24){
+							memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div></div>";
+						} else if (data.membership.length > 30){
+							memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div></div>";
 						} else {
-						  memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+							memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
 						}
 					  } else {
 						// No avatar membership with possible subtitle
@@ -2590,9 +2600,19 @@
 						  // Special format for sponsorships to match the example image
 						  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + data.membership.toUpperCase() + '</div>';
 						} else if (data.subtitle) {
-						  memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+							if (data.membership.length > 19){
+								memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+							} else if (data.membership.length > 24){
+								memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+							} else {
+								memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+							}
+						} else if (data.membership.length > 24){
+							 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+						} else if (data.membership.length > 30){
+							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
 						} else {
-						  memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+							memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
 						}
 					  }
 					} else if (data.subtitle) {
