@@ -3398,8 +3398,9 @@ function updateRangeDisplay(ele) {
             formattedValue += suffix;
         }
     }
-
-    displayEle.textContent = formattedValue;
+	if (formattedValue){
+		displayEle.textContent = formattedValue;
+	}
 }
 
 function formatChromaValueFromPercent(percentValue) {

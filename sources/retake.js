@@ -193,7 +193,7 @@
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							({message:{
-									type: 'arenasocial',
+									type: 'retake',
 									event: 'viewer_update',
 									meta: views
 								}

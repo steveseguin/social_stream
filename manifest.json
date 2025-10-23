@@ -226,10 +226,15 @@
     "https://meetme.com/*",
 	"https://fansly.com/chatroom/*",
 	"https://pump.fun/coin/*",
-	"https://retake.tv/*"
+	"https://retake.tv/*",
+	"https://portal.abs.xyz/stream/*"
   ],
   "content_scripts": [
     {
+      "js": [ "./sources/portal.js" ],
+      "matches": [ "https://portal.abs.xyz/stream/*"]
+    },
+	 {
       "js": [ "./sources/generic.js" ],
       "matches": [ "https://versus.cam/?testchat" ]
     },

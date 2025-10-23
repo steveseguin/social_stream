@@ -90,25 +90,24 @@
 		var chatimg = ""
 
 		try {
-			chatimg = ele.querySelector("img[src].rounded-full.object-cover");
-			if (chatimg){
-				chatimg.src = chatimg.src+"";
-				chatimg = chatimg.src;
-			}
+			chatimg = ele.querySelector("a > img[alt][src]").src;
 		} catch(e){
 			//console.error(e);
 		}
 		
 		var name="";
-		var namecolor="";
 		try {
-			name = escapeHtml(ele.querySelector("a.font-semibold.text-xs").textContent);
-			namecolor = ele.querySelector("a.font-semibold.text-xs").style.color;
+			name = escapeHtml(ele.querySelector("[class^='styles_messageName']").textContent);
 		} catch(e){
 		//	console.error(e);
+			return;
 		}
 		
-		if (!name){return;}
+		var namecolor="";
+		try {
+			namecolor = ele.querySelector("[class^='styles_messageName']").style.color;
+		} catch(e){
+		}
 		
 		var badges=[];
 		/* try {
@@ -125,20 +124,9 @@
 			
 			
 		try {
-			msg = getAllContentNodes(ele.querySelector("p.break-words")).trim();
+			msg = getAllContentNodes(ele.querySelector("[class^='styles_messageName']").nextElementSibling).trim();
 		} catch(e){
 			
-		}
-		
-		if (!msg){
-			try {
-				msg = getAllContentNodes(ele.querySelector("a p.text-xs.font-semibold")).trim();
-				if (msg.startsWith("Tipped")){
-					hasDonation = msg.split(" ")[1] + " " + msg.split(" ")[2];
-				}
-			} catch(e){
-			//	console.error(e);
-			}
 		}
 		
 		if (!msg || !name){
@@ -160,7 +148,7 @@
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
-		data.type = "pumpfun";
+		data.type = "portal";
 		
 		//console.log(data);
 		pushMessage(data);
@@ -194,7 +182,7 @@
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							({message:{
-									type: 'pumpfun',
+									type: 'portal',
 									event: 'viewer_update',
 									meta: views
 								}
@@ -231,9 +219,9 @@
 					startCheck();
 				}
 				
-				if ("getSource" == request){sendResponse("pumpfun");	return;	}
+				if ("getSource" == request){sendResponse("portal");	return;	}
 				if ("focusChat" == request){
-					document.querySelector('input[type="text"][placeholder]').focus();
+					document.querySelector('[class^="styles_sidebar"] input[type="text"]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -262,10 +250,41 @@
 	var lastURL =  "";
 	var observer = null;
 	
+	
+	function onElementInserted(target) {
+		var onMutationsObserved = function(mutations) {
+			mutations.forEach(function(mutation) {
+				if (mutation.addedNodes.length) {
+					console.log(mutation.addedNodes);
+					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
+						try {
+							const addedNode = mutation.addedNodes[i];
+							if (addedNode.nodeType !== 1) continue; // Only process element nodes
 
+							if (addedNode.skip){continue;}
+
+							setTimeout(()=>{
+									processMessage(addedNode);
+							},300);
+
+						} catch(e){
+							console.error("Error processing added node:", e);
+						}
+					}
+				}
+			});
+		};
+		
+		var config = { childList: true, subtree: false };
+		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+		
+		observer = new MutationObserver(onMutationsObserved);
+		observer.observe(target, config);
+	}
+	
 	console.log("social stream injected");
 
-	var firstRun = 0;
+
 	function startCheck(){
 		if (isExtensionOn && checking){return;}
 
@@ -274,23 +293,19 @@
 		if (!isExtensionOn){
 			return;
 		}
-		
 		checking = setInterval(function(){
 			try {
-				document.querySelectorAll("[data-message-id]:not([data-skip])").forEach(msg=>{
-					
-					if (firstRun>4){
-						processMessage(msg);
-					}
-					msg.dataset.skip = "true";
-				});
-				
-				
-				firstRun += 1;
-				
+				var container = document.querySelector(".str-chat__list .str-chat__ul");
+				if (!container.marked){
+					container.marked=true;
+
+					console.log("CONNECTED");
+
+					onElementInserted(container);
+				}
 				// checkViewers();
 			} catch(e){}
-		},500);
+		},2000);
 	}
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
