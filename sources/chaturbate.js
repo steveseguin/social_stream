@@ -130,7 +130,7 @@
         function (request, sender, sendResponse) {
             try {
                 if ("focusChat" === request) {
-                    var chatInput = document.querySelector('div[data-testid="chat-input"]');
+                    var chatInput = document.querySelector('#ChatTabContainer div[data-testid="chat-input"][contenteditable="true"]');
                     if (chatInput) {
                         chatInput.focus();
                         sendResponse(true);
