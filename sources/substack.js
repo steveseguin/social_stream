@@ -144,9 +144,19 @@
 	var isExtensionOn = true;
 	chrome.runtime.onMessage.addListener(
 		function (request, sender, sendResponse) {
-			if (!isExtensionOn){return;}
 			try{
-				if ("getSource" == request){sendResponse("substack");	return;	}
+				if (!isExtensionOn){
+					sendResponse(false);
+					return;
+				}
+				if ("getSource" == request){
+					sendResponse("substack");
+					return;
+				}
+				if (!isLiveStreamPage(window.location.href)){
+					sendResponse(false);
+					return;
+				}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
 					document.querySelector('input[class^="input-"], textarea, input[type="text"]').focus();
 					sendResponse(true);
@@ -167,12 +177,38 @@
 		}
 	);
 
-	var lastURL =  "";
+	var lastURL = window.location.href;
 	var observer = null;
+	var isWatching = false;
+	
+	function isLiveStreamPage(url) {
+		if (!url) {
+			return false;
+		}
+		try {
+			return /(?:liveStream=|\/live-stream\/)/i.test(url);
+		} catch (e) {
+			return false;
+		}
+	}
+	
+	function resetObserver() {
+		if (observer) {
+			try {
+				observer.disconnect();
+			} catch (e) {}
+			observer = null;
+		}
+		isWatching = false;
+	}
 	
 	
 	function onElementInserted(target) {
-		if (!target){return;}
+		if (!target) {
+			return;
+		}
+		
+		resetObserver();
 		
 		//console.log(target);
 		
@@ -195,7 +231,13 @@
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
+		try {
+			observer.observe(target, config);
+			isWatching = true;
+		} catch (e) {
+			observer = null;
+			isWatching = false;
+		}
 	}
 	
 	console.log("social stream injected");
@@ -237,12 +279,22 @@
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('h4')?.nextSibling.childNodes.length){
-			if (!document.querySelector('h4').marked){
-				document.querySelector('h4').marked=true;
-				onElementInserted(document.querySelector('h4').nextSibling.childNodes[0]);
+		if (lastURL !== window.location.href){
+			lastURL = window.location.href;
+			resetObserver();
+		}
+		if (!isLiveStreamPage(window.location.href)){
+			return;
+		}
+		if (!isWatching){
+			var header = document.querySelector('h4');
+			var target = header?.nextSibling?.childNodes?.[0];
+			if (target){
+				onElementInserted(target);
 			}
-			
+		}
+		
+		if (isWatching){
 			checkViewers();
 		}} catch(e){}
 		
