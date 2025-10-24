@@ -8702,8 +8702,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     
     lastAntiSpam = messageCounter;
     
-    var msg2Save = checkExactDuplicateAlreadyRelayed(data.response, false, false, true);  // this might be more efficient if I do it after, rather than before
-    
 	if (settings.s10apikey && settings.s10) {
 		try {
 			handleStageTen(data, metadata);
@@ -8721,53 +8719,58 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         const processTab = async (tab) => {
             // console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
             processedAnyTab = true;  // Mark that we found at least one valid tab
-
-            // Handle message store
-            if (msg2Save) {  
-                handleMessageStore(tab.id, msg2Save, now, relayMode, messageOrigin);
-            }
-
+            const storeMessageForTab = (text) => {
+                if (text === undefined || text === null) {
+                    return;
+                }
+                const value = String(text);
+                if (!value.length) {
+                    return;
+                }
+                const sanitized = checkExactDuplicateAlreadyRelayed(value, false, false, true);
+                if (sanitized) {
+                    handleMessageStore(tab.id, sanitized, now, relayMode, messageOrigin);
+                }
+            };
+            const applyPlatformLimit = (message, platform) => limitMessageForPlatform(message, platform);
             published[tab.url] = true;
                 
             // Handle different site types
             if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
+                storeMessageForTab(data.response);
                 // we will handle this on its own.
                 return;
             } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
-                let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
+                let restxt = applyPlatformLimit(data.response, 'twitch');
+                storeMessageForTab(restxt);
                 await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
             } else if (tab.url.startsWith("https://boltplus.tv/")) {
+                storeMessageForTab(data.response);
                 await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
             } else if (tab.url.startsWith("https://rumble.com/")) {
+                storeMessageForTab(data.response);
                 await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
             } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
+                storeMessageForTab(data.response);
                 await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
             } else if (tab.url.startsWith("https://kick.com/")) {
-                let restxt = data.response.length > 500 ? data.response.substring(0, 500) : data.response;
-                if (isSSAPP){
-                    await attachAndChat(tab.id, " "+restxt, false, true, true, false, overrideTimeout);
-                } else {
-                    await attachAndChat(tab.id, restxt, false, true, true, false, overrideTimeout);
-                }
+                let restxt = applyPlatformLimit(data.response, 'kick');
+                const messageForKick = isSSAPP ? ` ${restxt}` : restxt;
+                storeMessageForTab(messageForKick);
+                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout);
             } else if (tab.url.startsWith("https://app.slack.com")) {
+                storeMessageForTab(data.response);
                 await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
             } else if (tab.url.startsWith("https://app.zoom.us/")) {
+                storeMessageForTab(data.response);
                 await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat);
                 return;
             } else {
                 // Generic handler
                 if (tab.url.includes("youtube.com/live_chat")) {
                     getYoutubeAvatarImage(tab.url, true);
-                    let restxt = data.response;
-                    
-                    if (restxt.length > 200){
-                        restxt = restxt.substring(0, 200);
-                        var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
-                        if (ignore) {  
-                            handleMessageStore(tab.id, ignore, now, relayMode, messageOrigin);
-                        }
-                    }
-                    
+                    let restxt = applyPlatformLimit(data.response, 'youtube');
+                    storeMessageForTab(restxt);
                     await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
                     return;
                 }
@@ -8778,19 +8781,13 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     if (settings.notiktoklinks){
                         tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
                     }
-                    let restxt = tiktokMessage.length > 150 ? tiktokMessage.substring(0, 150) : tiktokMessage;
-                    
-                    if (restxt!==data.response){
-                        var ignore = checkExactDuplicateAlreadyRelayed(restxt, false, false, true); 
-                        if (ignore) {  
-                            handleMessageStore(tab.id, ignore, now, relayMode, messageOrigin);
-                        }
-                    }
-                    
+                    let restxt = applyPlatformLimit(tiktokMessage, 'tiktok');
+                    storeMessageForTab(restxt);
                     await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
                     return;
                 }
                 
+                storeMessageForTab(data.response);
                 await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
             }
         };
@@ -9043,64 +9040,72 @@ function handleStageTen(data, metadata) {
 
 // Helper function to attach debugger and send chat
 async function attachAndChat(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, chatFunction = generalFakeChat) {
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
         safeDebuggerAttach(tabId, "1.3", (error) => {
             if (error) {
                 console.warn(`Failed to attach debugger to tab ${tabId}:`, error);
                 reject(error);
                 return;
             }
-            chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout);
             resolve();
         });
     });
+
+    await Promise.resolve(chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout));
 }
  
 function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
-    chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
-        try {
-            chrome.runtime.lastError; // Clear any runtime errors
-            
-            if (!response) {
-                delayedDetach(tabid);
-                return;
-            }
-
-            // Check if debugger is still attached before sending commands
-            if (!debuggerState.attachments[tabid]) {
-                console.warn(`Debugger not attached for tab ${tabid}`);
-                return;
-            }
-
-            chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function (e) {
-                if (chrome.runtime.lastError) {
-                    console.warn(`Error inserting text for tab ${tabid}:`, chrome.runtime.lastError);
+    return new Promise((resolve) => {
+        chrome.tabs.sendMessage(tabid, "focusChat", function (response = false) {
+            try {
+                chrome.runtime.lastError; // Clear any runtime errors
+                
+                if (!response) {
                     delayedDetach(tabid);
+                    resolve();
                     return;
                 }
 
-                chrome.debugger.sendCommand(
-                    { tabId: tabid },
-                    "Input.dispatchKeyEvent",
-                    {
-                        type: "keyDown",
-                        key: "Enter",
-                        code: "Enter",
-                        nativeVirtualKeyCode: 13,
-                        windowsVirtualKeyCode: 13
-                    },
-                    (e) => {
-                        if (chrome.runtime.lastError) {
-                            console.warn(`Error sending keyDown for tab ${tabid}:`, chrome.runtime.lastError);
-                        }
+                // Check if debugger is still attached before sending commands
+                if (!debuggerState.attachments[tabid]) {
+                    console.warn(`Debugger not attached for tab ${tabid}`);
+                    resolve();
+                    return;
+                }
+
+                chrome.debugger.sendCommand({ tabId: tabid }, "Input.insertText", { text: message }, function () {
+                    if (chrome.runtime.lastError) {
+                        console.warn(`Error inserting text for tab ${tabid}:`, chrome.runtime.lastError);
                         delayedDetach(tabid);
+                        resolve();
+                        return;
                     }
-                );
-            });
-        } catch (e) {
-            console.error(`Error in zoomFakeChat for tab ${tabid}:`, e);
-            delayedDetach(tabid);
-        }
+
+                    chrome.debugger.sendCommand(
+                        { tabId: tabid },
+                        "Input.dispatchKeyEvent",
+                        {
+                            type: "keyDown",
+                            key: "Enter",
+                            code: "Enter",
+                            nativeVirtualKeyCode: 13,
+                            windowsVirtualKeyCode: 13
+                        },
+                        () => {
+                            if (chrome.runtime.lastError) {
+                                console.warn(`Error sending keyDown for tab ${tabid}:`, chrome.runtime.lastError);
+                            }
+                            delayedDetach(tabid);
+                            resolve();
+                        }
+                    );
+                });
+            } catch (e) {
+                console.error(`Error in zoomFakeChat for tab ${tabid}:`, e);
+                delayedDetach(tabid);
+                resolve();
+            }
+        });
     });
 }
 
@@ -9128,6 +9133,25 @@ function limitString(string, maxLength) {
 		}
 	}
 	return result;
+}
+
+const PLATFORM_MESSAGE_LIMITS = {
+	youtube: 200,
+	youtubeshorts: 200,
+	twitch: 500,
+	tiktok: 150,
+	kick: 500
+};
+
+function limitMessageForPlatform(message, platform) {
+	if (!message || !platform) {
+		return message;
+	}
+	const limit = PLATFORM_MESSAGE_LIMITS[platform.toLowerCase()];
+	if (!limit) {
+		return message;
+	}
+	return limitString(message, limit);
 }
 const KEY_EVENTS = {
   ENTER: {
@@ -9187,8 +9211,9 @@ async function getSourceType(tabId) {
 
 async function generalFakeChat(tabId, message, middle = true, keypress = true, backspace = false, delayedPress = false, overrideTimeout = false) {
   try {
-    if (!overrideTimeout && messageTimeout[tabId]) {
-      if (Date.now() - messageTimeout[tabId] < overrideTimeout) {
+    const cooldown = typeof overrideTimeout === 'number' && overrideTimeout > 0 ? overrideTimeout : 0;
+    if (cooldown > 0 && messageTimeout[tabId]) {
+      if (Date.now() - messageTimeout[tabId] < cooldown) {
         return;
       }
     }

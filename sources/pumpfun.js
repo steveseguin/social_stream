@@ -108,6 +108,19 @@
 		//	console.error(e);
 		}
 		
+		if (!name && ele.querySelector("div.justify-end")){
+			name = "User";
+			namecolor = "#FF3535";
+			chatimg = "https://pump.fun/livestreams/pepe-placeholder.png?img-width=70&img-dpr=2";
+			
+			if (settings && settings.hostnamesext && settings.hostnamesext.textsetting){
+				name = settings.hostnamesext.textsetting.split(",")[0].trim();
+			}
+			if (settings && settings.mynameext && settings.mynameext.textparam1){
+				name = settings.mynameext.textparam1.split(",")[0].trim();
+			}
+		}
+		
 		if (!name){return;}
 		
 		var badges=[];
