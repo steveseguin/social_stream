@@ -106,7 +106,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - facebook live - guest view, publisher view, or the producer's pop-up chat on the web is supported.
 - workplace.com - (same setup as Facebook)
 - zoom.us (web version)
-- owncast demo page (`watch.owncast.online`, or for a pop-out chat version, open `https://watch.owncast.online/embed/chat/readwrite/`  )
+- owncast demo page (`watch.owncast.online`, or for a pop-out chat version, open `https://watch.owncast.online/embed/chat/readwrite/` or `https://live.simontv.org/embed/chat/readwrite/`  )
 - crowdcast.io
 - lfg.tv
 - livestream.com
@@ -128,7 +128,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - ![Requires toggling to enable certain integrations](https://user-images.githubusercontent.com/2575698/178857380-24b3a0fc-bf86-4645-91ec-24893df19279.png) telegram, slack, whatsapp, discord require an extra step to enable.  See this video for more help: https://www.youtube.com/watch?v=L3l0_8V1t0Q
 - restream.io chat supported (https://chat.restream.io/chat)
 - amazon.com/live
-- wix.com (https://manage.wix.com/dashboard/*/live-video/*)
+- wix.com (https://manage.wix.com/dashboard/*/live-video/* or https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*)
 - clouthub (no pop out; just the video page)
 - rumble.com (pop out chat)
 - trovo.live (open the chat pop-up page; ie: https://trovo.live/chat/CHANNEL_NAME_HERE)
@@ -150,9 +150,12 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - rokfin.com (https://www.rokfin.com/popout/chat/xxxxxx?stream=yyyyyy)
 - sli.do (https://app.sli.do/event/XXXXXXXXXXXXXX/live/questions)
 - cbox.ws (no pop out needed)
+- chatroll.com (embedded chat at https://chatroll.com/embed/chat/ROOM_ID)
 - castr.io (https://chat.castr.io/room/XXXXXXXX)
 - tellonym.me
+- rutube.ru (https://rutube.ru/live/chat/STREAM_ID/ for pop out chat)
 - peertube (triggers on: https://*/plugins/livechat/*router/webchat/room/*)
+- roll20.net (open https://roll20.net/ or https://app.roll20.net/ game pages directly)
 - IRC Quakenet (via https://webchat.quakenet.org)
 - IRC Libera Chat and custom IRC servers (via http://socialstream.ninja/sources/websocket/irc)
 - IRC KiwiIRC (via kiwiirc.com)
@@ -163,7 +166,8 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - afreecatv.com (pop out the chat; you can't close the main window it seems tho?)
 - nonolive.com (no pop out; partial support added so far only)
 - stageTEN.tv
-- live.vkplay.ru (was vkplay.live) - pop out the chat
+- live.vkplay.ru / live.vkvideo.ru (was vkplay.live) - pop out the chat
+- vk.com (open the live stream page; no pop out needed)
 - arena.tv (no pop out chat support, so just pause the video I guess)
 - bandlab.com (no pop out, so just pause the video I guess while chat open)
 - threads.net (a little funky star icon, right of the share icon, will select thread to push to dock)
@@ -184,19 +188,27 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - truffle.vip (https://chat.truffle.vip/chat/*)
 - megaphonetv.com (In [Studio](https://studio.megaphonetv.com/), select UGC, then open Recent messages)
 - pilled (pop out the chat)
+- soulbound.tv (no pop out; open https://soulbound.tv/* streams)
+- portal.abs.xyz (no pop out; open https://portal.abs.xyz/stream/*)
 - riverside.fm (just open the chat bar. Note: you can opt-out of capture via the extension menu)
 - chzzk.naver.com (pop out the chat)
 - demo.openstreamingplatform.com (pop out chat)
 - wave.video
+- verticalpixelzone.com (no pop out; open the page with chat)
 - beamstream.gg (open https://beamstream.gg/USERNAME/chat to user. *note the /chat added at the end)
 - zap.stream (no pop out)
+- pump.fun (open https://pump.fun/coin/COIN_ID while chat is visible)
+- whop.com (no pop out; open the channel page)
+- uScreen (https://www.ilmfix.de/programs/* pages)
+- maestro-launcher.vercel.app (demo launcher for testing chat)
 - twitcasting.tv (no pop out)
 - bigo.tv (no pop out)
-- circle.so
+- circle.so (and community domains like community.talkinghealthtech.com or members.firstinfam.com)
 - sooplive.com (pop out the chat to use)
-- sooplive.co.ko (pop out the chat to use)
+- sooplive.co.kr (pop out the chat to use)
 - on24.com ( Q&A - questions supported)
 - meetme
+- moonbeam.stream (no pop out)
 - music.gala.com (no pop out)
 - WebinarGeek (no pop out ; chat only)
 - live.fc2.com (no pop out)
@@ -208,10 +220,17 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - substack
 - online.church (no pop out)
 - fansly - pop out chat
+- camsoda.com (no pop out; open the stream page with chat visible)
+- chaturbate.com (no pop out; open the performer page with chat)
+- cherry.tv (no pop out; open the stream page)
+- myfreecams.com (no pop out; open the performer page with chat)
+- joystick.tv (no pop out; open https://joystick.tv/u/CHANNEL/chat)
 - nextcloud (requires domain added)
 - favorited (studio pop out chat)
+- simps.com/app (open https://simps.com/app/* for chat capture)
 - xeenon (not pop out ; dashboard)
 - streamelements (overlay page)
+- versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
@@ -1111,4 +1130,3 @@ This project contains inspiration by my past project, chat.overlay.ninja, which 
 <a href="https://github.com/steveseguin/social_stream/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=steveseguin/social_stream" />
 </a>
-
