@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Royale - Social Stream Ninja</title>
+	<meta name="title" content="Battle Royale - Social Stream Ninja" />
+	<link rel="icon" href="./favicon.ico" />
+   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+    
+    body {
+        margin: 0;
+        padding: 0;
+        background-color: #1a1a1a;
+        overflow: hidden;
+        font-family: 'Press Start 2P', cursive;
+    }
+    #game-container {
+        position: relative;
+        width: 100vw;
+        height: 100vh;
+    }
+    #game-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        image-rendering: pixelated;
+    }
+    #particles-canvas {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        z-index: 10;
+    }
+    #ui-overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 16px;
+        color: #fff;
+        text-shadow: 2px 2px #000;
+        z-index: 20;
+    }
+    #timer {
+        font-size: 24px;
+        font-weight: bold;
+        color: #ff6b6b;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    #player-count {
+        color: #4ecdc4;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    #rules {
+        color: #ffe66d;
+        font-size: 12px;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    }
+    #killstreak {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 32px;
+        color: #ff0000;
+        text-shadow: 4px 4px 8px rgba(0,0,0,0.9);
+        opacity: 0;
+        transition: opacity 0.5s;
+        z-index: 30;
+        text-align: center;
+    }
+    #killstreak.show {
+        opacity: 1;
+    }
+    #sound-controls {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        z-index: 25;
+        background: rgba(0,0,0,0.7);
+        padding: 10px;
+        border-radius: 5px;
+        display: none;
+    }
+    #sound-controls button {
+        background: #4ecdc4;
+        border: none;
+        color: white;
+        padding: 5px 10px;
+        margin: 2px;
+        cursor: pointer;
+        font-family: 'Press Start 2P', cursive;
+        font-size: 10px;
+        border-radius: 3px;
+    }
+    #sound-controls button:hover {
+        background: #45b3ad;
+    }
+    #sound-controls button.muted {
+        background: #ff6b6b;
+    }
+	.hidden {
+		opacity:0!important;
+		display:none!important;
+	}
+    .floating-text {
+        position: absolute;
+        font-size: 14px;
+        font-weight: bold;
+        pointer-events: none;
+        z-index: 15;
+        animation: floatUp 2s ease-out forwards;
+    }
+    @keyframes floatUp {
+        0% {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        100% {
+            opacity: 0;
+            transform: translateY(-50px);
+        }
+    }
+</style>
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <canvas id="particles-canvas"></canvas>
+        <div id="ui-overlay">
+            <div id="timer">--</div>
+            <div id="player-count">Players: 0</div>
+			<div id="rules">Type !join to play</div>
+        </div>
+        <div id="killstreak"></div>
+        <div id="sound-controls">
+            <button id="toggle-music" title="Toggle Music">🎵</button>
+            <button id="toggle-sfx" title="Toggle Sound Effects">🔊</button>
+        </div>
+    </div>
+<script>
+
+window.onerror = function backupErr(errorMsg, url=false, lineNumber=false) {
+	console.error(errorMsg);
+	console.error(lineNumber);
+	console.error("Unhandled Error occured");
+	return false;
+};
+
+function getById(id) {
+	var el = document.getElementById(id);
+	if (!el) {
+		el = document.createElement("span");
+	}
+	return el;
+}
+
+(function (w) {
+	w.URLSearchParams = w.URLSearchParams || function (searchString) {
+		var self = this;
+		self.searchString = searchString;
+		self.get = function (name) {
+			var results = new RegExp('[\?&]' + name + '=([^&#]*)').exec(self.searchString);
+			if (results == null) {
+				return null;
+			} else {
+				return decodeURI(results[1]) || 0;
+			}
+		};
+	};
+
+})(window);
+
+var urlParams = new URLSearchParams(window.location.search);
+
+try {
+	if ((window.ninjafy || window.electronApi)){ // fix for electron dragging.
+		document.body.style.width = "95%";
+		setTimeout(function(){
+			document.body.style.width = "100%";
+		},1000);
+
+		setTimeout(function(){
+			document.body.style.width = "98%";
+		},2000);
+
+		setTimeout(function(){
+			document.body.style.width = "100%";
+		},5000);
+	}
+} catch(e){
+}
+
+var roomID = "test";
+if (urlParams.has("session")){
+	roomID = urlParams.get("session");
+} else if (urlParams.has("s")){
+	roomID = urlParams.get("s");
+} else if (urlParams.has("id")){
+	roomID = urlParams.get("id");
+} else if (window.location.protocol=="file:"){
+	roomID = prompt("Enter your session ID here, or add it to the URL.");
+	if (roomID){
+		var href = window.location.href;
+		var arr = href.split('?');
+		var newurl;
+		if (arr.length > 1 && arr[1] !== '') {
+			newurl = href + '&session=' + roomID;
+		} else {
+			newurl = href + '?session=' + roomID;
+		}
+		window.history.pushState({path: newurl.toString()}, '', newurl.toString());
+	} else {
+		alert("You need to provide your extension's session ID for this page to work");
+	}
+} else {
+	window.location.href = "https://github.com/steveseguin/live-chat-overlay#readme";
+}
+
+var password = "false";
+    if (urlParams.has("password")){
+        password = urlParams.get("password") || "false";
+    }
+
+    // LAN-only P2P option
+    var lanonly = urlParams.has("lanonly") ? "&lanonly" : "";
+
+
+var addComputers = true;
+if (urlParams.has("nocomputers")){
+	addComputers = false;
+}
+
+var lobbyTimeInit = 10;
+if (urlParams.has("lobbytime")) {
+	lobbyTimeInit = parseInt(urlParams.get("lobbytime"));
+}
+
+let hostControlled = urlParams.has("lobby");
+let lobbyDuration = lobbyTimeInit // Default lobby duration in seconds
+let lobbyTimer = null;
+let isFirstGame = true;
+let topPlayers = null;
+
+function drawLobby() {
+    
+    // Draw grass background
+    ctx.fillStyle = grassPattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add semi-transparent overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Calculate font sizes based on canvas width
+    const titleFontSize = Math.max(24, Math.floor(canvas.width / 20));
+    const textFontSize = Math.max(16, Math.floor(canvas.width / 40));
+	const textFontSizeSmall = Math.max(12, Math.floor(canvas.width / 60));
+    
+    // Set up text styles
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Draw title
+    ctx.font = `bold ${titleFontSize}px Arial`;
+    ctx.fillText('BATTLE ROYALE', canvas.width / 2, canvas.height * 0.25);
+    ctx.font = `${titleFontSize * 0.8}px Arial`;
+    ctx.fillText('Waiting for players...', canvas.width / 2, canvas.height * 0.35);
+    
+    // Draw player count
+    ctx.font = `${textFontSizeSmall}px Arial`;
+    ctx.fillText(`Players in lobby: ${players.size}`, canvas.width / 2, canvas.height * 0.5);
+    
+    // Draw instructions
+	ctx.font = `${textFontSize}px Arial`; 
+    ctx.fillText('Type !join to enter the game', canvas.width / 2, canvas.height * 0.6);
+    ctx.font = `${textFontSizeSmall}px Arial`;
+    ctx.fillText('Commands: !left !right !up !down !say !emote !taunt', canvas.width / 2, canvas.height * 0.65);
+    
+    // Draw countdown if not host controlled
+    if (!hostControlled) {
+		ctx.font = `${textFontSizeSmall}px Arial`; 
+        ctx.fillText(`Game starts in ${lobbyDuration} seconds`, canvas.width / 2, canvas.height * 0.7);
+    }
+}
+function enterLobby() {
+    gameOver = true;
+	players.clear();
+	document.getElementById("ui-overlay").classList.add("hidden");
+	players.clear();
+    updatePlayerCount();
+	if (!hostControlled) {
+		startLobbyCountdown();
+	} else {
+		drawLobby();
+	}
+}						
+function startLobbyCountdown() {
+	lobbyDuration = lobbyTimeInit;
+
+	if (lobbyDuration <= 0) {
+		startGame();
+		return;
+	}
+	
+	if (isFirstGame && !urlParams.has("lobbytime")){
+		lobbyDuration+=5;
+	}
+	
+	drawLobby();
+	
+	clearInterval(lobbyTimer);
+    lobbyTimer = setInterval(() => {
+        lobbyDuration--;
+        if (lobbyDuration <= 0) {
+            clearInterval(lobbyTimer);
+            startGame();
+        } else {
+            drawLobby();
+        }
+    }, 1000);
+}
+function processData(data) {
+	if (data && data.chatmessage && data.chatname) {
+        if (data.chatmessage.toLowerCase().startsWith("!join")) {
+            soundManager.play('join');
+            if (!players.get(data.chatname)) {
+                const parts = data.chatmessage.toLowerCase().split(" ");
+                let weaponType = null;
+
+                if (parts.length > 1) {
+                    const classInput = parts[1];
+                    switch (classInput) {
+                        case "sword":
+                        case "shield":
+                        case "swordshield":
+                        case "sword_shield":
+                            weaponType = "sword_shield";
+                            break;
+                        case "axe":
+                        case "twohandedaxe":
+                        case "two_handed_axe":
+                            weaponType = "two_handed_axe";
+                            break;
+                        case "spear":
+                        case "longspear":
+                        case "long_spear":
+                            weaponType = "long_spear";
+                            break;
+                        case "bow":
+                        case "arrow":
+                        case "bowarrow":
+                        case "bow_arrow":
+                            weaponType = "bow_arrow";
+                            break;
+                        default:
+                            weaponType = null; // Random selection
+                    }
+                }
+
+                addPlayer(data.chatname, data.chatimg, data.type, data.nameColor, weaponType);
+				
+            }
+        } else if (data.chatmessage.startsWith("!say ")) {
+            if (players.get(data.chatname)) {
+                handleChatMessage(data.chatname, data.chatmessage.split("!say ")[1]);
+            }
+        } else if (data.chatmessage.toLowerCase().startsWith("!left") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = Math.PI;
+			}
+		} else if (data.chatmessage.toLowerCase().startsWith("!right") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = 0;
+			}
+		} else if (data.chatmessage.toLowerCase().startsWith("!up") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = -Math.PI/2;
+			}
+		} else if (data.chatmessage.toLowerCase().startsWith("!down") && players.get(data.chatname)) {
+			const player = players.get(data.chatname);
+			if (player.isAlive && !player.inCombat) {
+				player.direction = Math.PI/2;
+			}
+		}
+    }
+}
+
+function processInput(data){
+	if (data.startgame && hostControlled) {
+        startGame();
+        return;
+    } else if ("mid" in data){
+		return;
+	} else if ("pin" in data){
+		return;
+	} else if ("unpin" in data){
+		return;
+	} else if ("queueInit" in data){
+		return;
+	} else if ("queue" in data){
+		return;
+	} else if ("deleteMessage" in data){
+		return;
+	}
+	if (data.action){
+	} else if ("forward" in data){
+	} else if ("html" in data){
+	} else if (data.content){
+		processData(data.content);
+	} else {
+		processData(data );
+	}
+}
+
+var iframe = document.createElement("iframe"); // we can leave it called "dock", as it will get all the same messages the dock gets. This could be optimized of course..
+iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&notmobile&password="+encodeURIComponent(password)+lanonly+"&solo&view="+roomID+"&novideo&noaudio&label=dock&cleanoutput&room="+roomID; // view only connection (data two way of course)
+iframe.style.width = "0px";
+iframe.style.height = "0px";
+iframe.style.position = "fixed";
+iframe.style.left = "-100px";
+iframe.style.top = "-100px";
+iframe.id = "frame1"
+document.body.appendChild(iframe);
+
+var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+var eventer = window[eventMethod];
+var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+eventer(messageEvent, function (e) {
+	if (e.source != iframe.contentWindow){return} // reject messages send from other iframes
+	if ("dataReceived" in e.data){ // raw data
+		if ("overlayNinja" in e.data.dataReceived){
+			processInput(e.data.dataReceived.overlayNinja);
+		}
+	}
+});
+
+
+var conCon = 1;
+var socketserver = false;
+var serverURL = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api";
+var reconnectionTimeout = null;
+function setupSocket() {
+	// Clear any existing reconnection timeout
+	if (reconnectionTimeout) {
+		clearTimeout(reconnectionTimeout);
+		reconnectionTimeout = null;
+	}
+
+	if (socketserver) {
+		socketserver.onclose = null;
+		socketserver.close();
+		socketserver = null;
+	}
+	socketserver = new WebSocket(serverURL);
+
+	socketserver.onclose = function () {
+		reconnectionTimeout = setTimeout(function () {
+			conCon += 1;
+			setupSocket();
+		}, 100 * conCon);
+	};
+	socketserver.onopen = function () {
+		conCon = 1;
+		socketserver.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 2, in: 1 }));
+		console.log("output channel: 2, input channel: 1");
+	};
+
+	socketserver.onerror = function (error) {
+		console.error("WebSocket error:", error);
+		socketserver.close();
+	};
+
+	socketserver.addEventListener("message", function (event) {
+		var resp = false;
+		if (event.data) {
+			try {
+				var data = JSON.parse(event.data);
+			} catch (e) {
+				return;
+			}
+			resp = processInput(data);
+			console.log(resp);
+			if (resp !== null) {
+				if (data.get) {
+					var ret = {};
+					ret.callback = {};
+					ret.callback.get = data.get;
+					ret.callback.result = resp;
+					socketserver.send(JSON.stringify(ret));
+				}
+			}
+		}
+	});
+}
+
+if (urlParams.has("server")) {
+	serverURL = urlParams.get("server") || serverURL;
+	setupSocket();
+}
+
+var conConExtension = 1;
+var socketserverExtension = false;
+var serverURLExtension = urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/extension";
+var server2 = false;
+var server3 = false;
+var reconnectionTimeoutExtension = null;
+
+function setupSocketExtension() {
+	if (reconnectionTimeoutExtension) {
+		clearTimeout(reconnectionTimeoutExtension);
+		reconnectionTimeoutExtension = null;
+	}
+
+	if (socketserverExtension) {
+		socketserverExtension.onclose = null;
+		socketserverExtension.close();
+		socketserverExtension = null;
+	}
+
+	socketserverExtension = new WebSocket(serverURLExtension);
+
+	socketserverExtension.onclose = function () {
+		reconnectionTimeoutExtension = setTimeout(function () {
+			conConExtension += 1;
+			setupSocketExtension();
+		}, 100 * conConExtension);
+	};
+	socketserverExtension.onopen = function () {
+		conConExtension = 1;
+		socketserverExtension.send(JSON.stringify({ join: urlParams.get('session').split(",")[0], out: 3, in: 4 }));
+		console.log("output channel: 3, input channel: 4");
+	};
+
+	socketserverExtension.onerror = function (error) {
+		console.error("WebSocket error:", error);
+		socketserverExtension.close();
+	};
+
+	socketserverExtension.addEventListener("message", function (event) {
+		var resp = false;
+		if (event.data && server2) {
+			try {
+				var data = JSON.parse(event.data);
+				processInput(data);
+			} catch (e) {
+				console.error(e);
+			}
+		}
+	});
+}
+
+if (urlParams.has("server2")) {
+	server2 = true;
+	if (urlParams.has("server3")) {
+		server3 = true;
+	}
+	serverURLExtension = urlParams.get("server2") || serverURLExtension;
+	setupSocketExtension();
+} else if (urlParams.has("server3")) {
+	server3 = true;
+	serverURLExtension = urlParams.get("server3") || serverURLExtension;
+	setupSocketExtension();
+}
+
+
+const canvas = document.getElementById('game-canvas');
+const ctx = canvas.getContext('2d');
+
+const particlesCanvas = document.getElementById('particles-canvas');
+const particlesCtx = particlesCanvas.getContext('2d');
+
+// Initialize missing systems
+const particleSystem = {
+    particles: [],
+    emit(x, y, type, count) {
+        for (let i = 0; i < count; i++) {
+            this.particles.push({
+                x: x,
+                y: y,
+                vx: (Math.random() - 0.5) * 4,
+                vy: (Math.random() - 0.5) * 4,
+                life: 1.0,
+                type: type
+            });
+        }
+    },
+    update() {
+        this.particles = this.particles.filter(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.02;
+            return p.life > 0;
+        });
+    },
+    draw(ctx) {
+        this.particles.forEach(p => {
+            ctx.globalAlpha = p.life;
+            ctx.fillStyle = p.type === 'spark' ? '#ffff00' : '#ff0000';
+            ctx.fillRect(p.x - 2, p.y - 2, 4, 4);
+        });
+        ctx.globalAlpha = 1;
+    },
+    clear() {
+        this.particles = [];
+    }
+};
+
+const weatherSystem = {
+    timeOfDay: 'day',
+    weather: 'clear',
+    particles: [],
+    
+    update() {
+        // Update weather particles (rain, snow, etc.)
+        if (this.weather === 'rain') {
+            // Add new rain drops
+            if (Math.random() < 0.3) {
+                this.particles.push({
+                    x: Math.random() * canvas.width,
+                    y: -10,
+                    vy: 5 + Math.random() * 3,
+                    life: 1.0
+                });
+            }
+        }
+        
+        // Update existing particles
+        this.particles = this.particles.filter(p => {
+            p.y += p.vy;
+            p.life -= 0.01;
+            return p.y < canvas.height && p.life > 0;
+        });
+    },
+    
+    draw(ctx) {
+        if (this.weather === 'rain') {
+            ctx.strokeStyle = 'rgba(100, 150, 255, 0.5)';
+            ctx.lineWidth = 1;
+            this.particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x, p.y + 10);
+                ctx.stroke();
+            });
+            ctx.globalAlpha = 1;
+        }
+    }
+};
+
+const killStreaks = new Map();
+const lastKillTime = new Map();
+
+let timeLeft = 20;
+
+const timerElement = document.getElementById('timer');
+timerElement.textContent = timeLeft;
+
+const playerCountElement = document.getElementById('player-count');
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const TILE_SIZE = 32;
+const GRID_WIDTH = Math.floor(canvas.width / TILE_SIZE);
+const GRID_HEIGHT = Math.floor(canvas.height / TILE_SIZE);
+const COMBAT_RANGE_BASE = 10; // Base combat range in tiles
+const DENSITY_THRESHOLD = 0.1; // Players per tile threshold for adjusting combat range
+const WEAPONS = ['sword_shield', 'two_handed_axe', 'long_spear', 'bow_arrow'];
+const arrows = [];
+const ARROW_SPEED = 0.2;
+const players = new Map();
+
+const POWERUPS = ['speed', 'invincibility', 'regen', 'damage'];
+const powerUps = [];
+const obstacles = [];
+
+let countdownTimer = null;
+let countdownSeconds = 0;
+var killed = {};
+let gameOver = false;
+let scoreboardData = null;
+
+function spawnPowerUps() {
+    if (Math.random() < 0.005 && powerUps.length < 5) {
+        const x = Math.floor(Math.random() * GRID_WIDTH);
+        const y = Math.floor(Math.random() * GRID_HEIGHT);
+        const type = POWERUPS[Math.floor(Math.random() * POWERUPS.length)];
+        powerUps.push({ x, y, type });
+    }
+}
+
+function spawnObstacles() {
+    if (Math.random() < 0.002 && obstacles.length < 10) {
+        const x = Math.floor(Math.random() * GRID_WIDTH);
+        const y = Math.floor(Math.random() * GRID_HEIGHT);
+        obstacles.push({ x, y });
+    }
+}
+
+function checkPowerUpCollisions() {
+    players.forEach(player => {
+        if (!player.isAlive) return;
+
+        const playerX = Math.floor(player.x);
+        const playerY = Math.floor(player.y);
+
+        for (let i = powerUps.length - 1; i >= 0; i--) {
+            const powerUp = powerUps[i];
+            if (playerX === powerUp.x && playerY === powerUp.y) {
+                applyPowerUp(player, powerUp.type);
+                powerUps.splice(i, 1);
+                
+                // Power-up effects
+                particleSystem.emit(powerUp.x * TILE_SIZE + TILE_SIZE/2, powerUp.y * TILE_SIZE + TILE_SIZE/2, 'spark', 20);
+                soundManager.play('powerup');
+                
+                const powerUpNames = {
+                    'speed': 'SPEED BOOST!',
+                    'invincibility': 'INVINCIBLE!',
+                    'regen': 'REGENERATION!',
+                    'damage': 'DAMAGE UP!'
+                };
+                showFloatingText(powerUp.x * TILE_SIZE, powerUp.y * TILE_SIZE, powerUpNames[powerUp.type]);
+            }
+        }
+    });
+}
+
+function checkObstacleCollisions() {
+    players.forEach(player => {
+        if (!player.isAlive) return;
+
+        const playerX = Math.floor(player.x);
+        const playerY = Math.floor(player.y);
+
+        obstacles.forEach(obstacle => {
+            if (playerX === obstacle.x && playerY === obstacle.y) {
+                player.speed *= 0.5; // Slow down the player
+                setTimeout(() => {
+                    player.speed /= 0.5; // Restore normal speed after 3 seconds
+                }, 3000);
+            }
+        });
+    });
+}
+
+function applyPowerUp(player, type) {
+    switch (type) {
+        case 'speed':
+            player.speed *= 1.5;
+            setTimeout(() => {
+                player.speed /= 1.5;
+            }, 5000);
+            break;
+        case 'invincibility':
+            player.invincible = true;
+            setTimeout(() => {
+                player.invincible = false;
+            }, 5000);
+            break;
+        case 'regen':
+            player.healthRegenRate *= 3;
+            setTimeout(() => {
+                player.healthRegenRate /= 3;
+            }, 5000);
+            break;
+        case 'damage':
+            player.damageMultiplier = 1.5;
+            setTimeout(() => {
+                player.damageMultiplier = 1;
+            }, 5000);
+            break;
+    }
+}
+
+function createGrassPattern() {
+    const patternCanvas = document.createElement('canvas');
+    const patternCtx = patternCanvas.getContext('2d');
+    patternCanvas.width = 1000;
+    patternCanvas.height = 1000;
+
+    // Base grass color
+    patternCtx.fillStyle = '#228B22';
+    patternCtx.fillRect(0, 0, 1000, 1000);
+
+    // Add random grass blades
+    for (let i = 0; i < 20000; i++) {
+        patternCtx.strokeStyle = `rgb(${30 + Math.random() * 30}, ${100 + Math.random() * 50}, ${30 + Math.random() * 30})`;
+        patternCtx.beginPath();
+        const x = Math.random() * 1000;
+        const y = Math.random() * 1000;
+        patternCtx.moveTo(x, y);
+        patternCtx.lineTo(x + (Math.random() - 0.5) * 10, y + (Math.random() * 10) + 5);
+        patternCtx.stroke();
+    }
+
+    // Add some darker patches
+    for (let i = 0; i < 2000; i++) {
+        patternCtx.fillStyle = 'rgba(0, 50, 0, 0.02)';
+        patternCtx.beginPath();
+        patternCtx.arc(Math.random() * 1000, Math.random() * 1000, Math.random() * 10 + 5, 0, Math.PI * 2);
+        patternCtx.fill();
+    }
+
+    // Add stones
+    for (let i = 0; i < 25; i++) {
+        patternCtx.fillStyle = `rgb(${150 + Math.random() * 50}, ${150 + Math.random() * 50}, ${150 + Math.random() * 50})`;
+        patternCtx.beginPath();
+        patternCtx.arc(Math.random() * 1000, Math.random() * 1000, Math.random() * 3 + 1, 0, Math.PI * 2);
+        patternCtx.fill();
+    }
+
+    // Add weeds/flowers
+    for (let i = 0; i < 3; i++) {
+        const x = Math.random() * 1000;
+        const y = Math.random() * 1000;
+        patternCtx.fillStyle = 'yellow';
+        patternCtx.beginPath();
+        patternCtx.arc(x, y, 2, 0, Math.PI * 2);
+        patternCtx.fill();
+        
+        patternCtx.strokeStyle = 'darkgreen';
+        patternCtx.beginPath();
+        patternCtx.moveTo(x, y);
+        patternCtx.lineTo(x, y + 5);
+        patternCtx.stroke();
+    }
+
+    return ctx.createPattern(patternCanvas, 'repeat');
+}
+
+const grassPattern = createGrassPattern();
+
+const weaponStats = {
+    sword_shield: { attackDelay: 1000, attackSpeed: 1250, damage: 20, absorption: 0.5, range: 1 },
+    two_handed_axe: { attackDelay: 400, attackSpeed: 1800, damage: 40, absorption: 0, range: 1.2 },
+    long_spear: { attackDelay: 0, attackSpeed: 1400, damage: 18, absorption: 0.3, range: 2.2 },
+    bow_arrow: { attackDelay: 100, attackSpeed: 800, damage: 15, absorption: 0.1, range: 10 }
+};
+
+const combatMatrix = {
+    sword_shield: { sword_shield: 1.0, two_handed_axe: 1.4, long_spear: 0.7, bow_arrow: 1.0 },
+    two_handed_axe: { sword_shield: 0.8, two_handed_axe: 1.0, long_spear: 1.2, bow_arrow: 1.1 },
+    long_spear: { sword_shield: 1.4, two_handed_axe: 0.8, long_spear: 1.0, bow_arrow: 0.9 },
+    bow_arrow: { sword_shield: 1.6, two_handed_axe: 1.0, long_spear: 0.7, bow_arrow: 1.2 }
+};
+
+class Player {
+    constructor(name, x, y, weaponType) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.weapon = weaponType;
+        this.health = 100;
+        this.kills = 0;
+        this.direction = Math.random() * Math.PI * 2;
+        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        this.speed = 0.05;
+        this.inCombat = false;
+		this.nameColor = false;
+        this.animationFrame = 0;
+        this.joinTime = Date.now();
+        this.lastAttackTime = 0;
+		this.attackAnimationFrame = 0;
+        this.bloodSplatter = 0;
+		this.isAlive = true;
+        this.healthRegenRate = 0.04; // Health regen per frame
+		this.firstAttack = true;
+		this.message = null;
+        this.messageTimer = 0;
+		this.avatarImage = null;
+        this.avatarLoaded = false;
+		this.invincible = false;
+        this.damageMultiplier = 1;
+		this.damageEffects = [];
+        this.emote = null;
+        this.emoteTimer = 0;
+        this.spectating = false;
+    }
+	
+	setAvatar(imageUrl) {
+        this.avatarImage = new Image();
+        this.avatarImage.onload = () => {
+            this.avatarLoaded = true;
+        };
+        this.avatarImage.onerror = () => {
+            console.error(`Failed to load avatar for ${this.name}`);
+            this.avatarImage = null;
+        };
+        this.avatarImage.src = imageUrl;
+    }
+	
+	setNameColor(color) {
+        this.nameColor = color;
+    }
+	
+	setMessage(msg) {
+        if (this.isAlive && msg.length <= 50) {
+            this.message = msg;
+            this.messageTimer = 10000; // Message will display for 5 seconds
+        }
+    }
+    
+    showEmote(emote) {
+        this.emote = emote;
+        this.emoteTimer = 3000; // 3 seconds
+    }
+
+    update() {
+        if (!this.isAlive) {
+			this.message = null;
+			return;
+		}
+		
+		if (!this.inCombat && this.health < 100) {
+            this.health = Math.min(100, this.health + this.healthRegenRate);
+        }
+		
+        if (!this.inCombat) {
+            this.x += Math.cos(this.direction) * this.speed;
+            this.y += Math.sin(this.direction) * this.speed;
+
+            if (this.x < 0 || this.x > GRID_WIDTH - 1) {
+                this.direction = Math.PI - this.direction;
+            }
+            if (this.y < 0 || this.y > GRID_HEIGHT - 1) {
+                this.direction = -this.direction;
+            }
+
+            this.x = Math.max(0, Math.min(GRID_WIDTH - 1, this.x));
+            this.y = Math.max(0, Math.min(GRID_HEIGHT - 1, this.y));
+
+            if (Math.random() < 0.005) {
+                this.direction = (this.direction + (Math.random() * Math.PI * 2 * 0.03)) % (Math.PI * 2);
+            }
+        }
+		
+		if (this.messageTimer > 0) {
+            this.messageTimer -= 16; // Assuming 60 FPS, each frame is about 16ms
+            if (this.messageTimer <= 0) {
+                this.message = null;
+            }
+        }
+        
+        if (this.emoteTimer > 0) {
+            this.emoteTimer -= 16;
+            if (this.emoteTimer <= 0) {
+                this.emote = null;
+            }
+        }
+		
+		for (let i = this.damageEffects.length - 1; i >= 0; i--) {
+			const effect = this.damageEffects[i];
+			effect.age += 16; // ms per frame at 60fps
+			effect.y -= 0.5; // Float upward
+			
+			if (effect.age > 1000) { // Remove after 1 second
+				this.damageEffects.splice(i, 1);
+			}
+		}
+
+        this.animationFrame = (this.animationFrame + 1) % 60;
+    }
+
+    draw() {
+        const x = this.x * TILE_SIZE;
+        const y = this.y * TILE_SIZE;
+
+        ctx.globalAlpha = this.isAlive ? 1 : 0.5;
+
+        // Draw body
+        ctx.fillStyle = this.isAlive ? '#000000' : '#CCCCCC';
+        ctx.fillRect(x + 6, y + 10, 20, 20);
+
+        // Draw legs
+        const legOffset = this.isAlive ? Math.sin(this.animationFrame * 0.2) * 2 : 0;
+        ctx.fillRect(x + 8, y + 30 + legOffset, 6, 12);
+        ctx.fillRect(x + 18, y + 30 - legOffset, 6, 12);
+
+        // Draw head (avatar or colored box)
+        if (this.avatarLoaded && this.avatarImage) {
+			
+            ctx.save();
+            ctx.beginPath();
+            ctx.rect(x + 6, y, 20, 20);
+            ctx.clip();
+			
+            ctx.drawImage(this.avatarImage, x + 6, y, 20, 20);
+            ctx.restore();
+        } else {
+            ctx.fillStyle = this.isAlive ? this.color : '#FFFFFF';
+            ctx.fillRect(x + 6, y, 20, 20);
+        }
+
+        // Draw weapon
+        this.drawWeapon(x, y);
+		
+		if (this.invincible) {
+            ctx.strokeStyle = 'purple';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x, y, TILE_SIZE, TILE_SIZE);
+			this.bloodSplatter = 0;
+        } else if (this.bloodSplatter > 0) { // Draw blood splatter
+            ctx.fillStyle = `rgba(255, 0, 0, ${this.bloodSplatter / 100})`;
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+            this.bloodSplatter -= 0.5;
+        }
+
+        if (this.damageMultiplier > 1) {
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.3)';
+            ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+        }
+        
+		ctx.font = '12px Arial';
+		if (this.nameColor){
+			ctx.strokeStyle = this.nameColor;
+			ctx.strokeText(this.name, x, y - 5);
+		}
+			
+		ctx.fillStyle = '#fff';
+		ctx.fillText(this.name, x, y - 5);
+		ctx.strokeStyle = "black";
+
+        // Draw health bar
+        ctx.fillStyle = 'red';
+        ctx.fillRect(x, y - 24, 32, 5);
+        ctx.fillStyle = 'green';
+        ctx.fillRect(x, y - 24, 32 * (this.health / 100), 5);
+		
+	    this.damageEffects.forEach(effect => {
+			const opacity = 1 - (effect.age / 1000);
+			ctx.fillStyle = `rgba(255, 50, 50, ${opacity})`;
+			ctx.font = 'bold 16px Arial';
+			ctx.textAlign = 'center';
+			ctx.fillText(`-${effect.value}`, effect.x, effect.y);
+		});
+		
+		if (this.message) {
+            const x = this.x * TILE_SIZE;
+            const y = this.y * TILE_SIZE;
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.lineWidth = 3;
+            ctx.strokeText(this.message, x + TILE_SIZE / 2, y - 25);
+            ctx.fillText(this.message, x + TILE_SIZE / 2, y - 25);
+        }
+        
+        if (this.emote) {
+            const x = this.x * TILE_SIZE;
+            const y = this.y * TILE_SIZE;
+            ctx.font = '24px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(this.emote, x + TILE_SIZE / 2, y - 40);
+        }
+		
+		ctx.globalAlpha = 1;
+    }
+
+    drawWeapon(x, y) {
+		ctx.fillStyle = this.isAlive ? '#888888' : '#CCCCCC';
+        const weaponOffset = this.inCombat ? Math.sin(this.attackAnimationFrame * 0.2) * 10 : 0;
+
+        switch (this.weapon) {
+            case 'sword_shield':
+                // Draw sword
+                ctx.fillRect(x + 26 + weaponOffset, y + 15, 4, 15);
+                // Draw shield
+				ctx.fillStyle = this.isAlive ? '#A0522D' : '#CCCCCC';
+                ctx.fillRect(x - 2 - weaponOffset/2, y + 15, 6, 20);
+                break;
+            case 'two_handed_axe':
+                // Draw axe handle
+				ctx.fillStyle = this.isAlive ? '#8B4513' : '#CCCCCC';
+                ctx.fillRect(x + 26 + weaponOffset, y + 10, 4, 20);
+                // Draw axe head
+				ctx.fillStyle = this.isAlive ? '#888888' : '#CCCCCC';
+                ctx.beginPath();
+                ctx.moveTo(x + 28 + weaponOffset, y + 10);
+                ctx.lineTo(x + 38 + weaponOffset, y + 5);
+                ctx.lineTo(x + 38 + weaponOffset, y + 15);
+				ctx.moveTo(x + 28 + weaponOffset, y + 10);
+                ctx.closePath();
+                ctx.fill();
+                break;
+            case 'long_spear':
+                // Draw spear
+				ctx.fillStyle = this.isAlive ? '#8B4513' : '#CCCCCC';
+                ctx.fillRect(x + weaponOffset*2 - 5, y + 18, 50, 2);
+                // Draw spearhead
+				//ctx.fillStyle = this.isAlive ? '#888888' : '#CCCCCC';
+                //ctx.beginPath();
+                //ctx.moveTo(x + weaponOffset*2 , y +13);
+                //ctx.lineTo(x + weaponOffset*2+5, y + 18);
+                //ctx.lineTo(x + weaponOffset*2, y + 13);
+                //ctx.closePath();
+                //ctx.fill();
+                break;
+			case 'bow_arrow':
+                // Draw bow
+				ctx.lineWidth = 2;
+				ctx.strokeStyle = this.isAlive ? '#483224' : '#CCCCCC';
+                ctx.beginPath();
+                ctx.arc(x + 16, y + 16, 20, -Math.PI/2, Math.PI/2);
+                ctx.stroke();
+                
+                // Draw bowstring
+				ctx.lineWidth = 1;
+				ctx.strokeStyle = this.isAlive ? 'black' : '#CCCCCC';
+                ctx.beginPath();
+                ctx.moveTo(x + 16, y - 4);
+                ctx.lineTo(x + 16, y + 36);
+                ctx.stroke();
+				
+				ctx.strokeStyle = 'black';
+                
+                // Draw arrow
+				if (this.inCombat) {
+					const arrowLength = 20;
+					const drawAngle = Math.PI / 20; // 45-degree angle
+					const arrowX = x + 16 + Math.cos(drawAngle) * weaponOffset;
+					const arrowY = y + 16 + Math.sin(drawAngle) * weaponOffset;
+
+					ctx.save();
+					ctx.translate(arrowX, arrowY);
+					ctx.rotate(drawAngle);
+
+					// Arrow shaft
+					ctx.fillRect(0, -1, arrowLength, 2);
+
+					// Arrow head
+					ctx.beginPath();
+					ctx.moveTo(arrowLength, 0);
+					ctx.lineTo(arrowLength - 5, -3);
+					ctx.lineTo(arrowLength - 5, 3);
+					ctx.fill();
+
+					// Arrow feathers
+					ctx.fillStyle = this.isAlive ? '#8B4513' : '#CCCCCC'; // Brown color for feathers
+					ctx.beginPath();
+					ctx.moveTo(0, 0);
+					ctx.lineTo(-3, -3);
+					ctx.lineTo(-3, 3);
+					ctx.fill();
+
+					ctx.restore();
+				}
+                break;
+        }
+    }
+
+    fireArrow(target) {
+        const dx = target.x - this.x;
+        const dy = target.y - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        arrows.push({
+            x: this.x,
+            y: this.y,
+            dx: (dx / distance) * ARROW_SPEED,
+            dy: (dy / distance) * ARROW_SPEED,
+            source: this,
+            target: target
+        });
+        
+        soundManager.play('arrow');
+    }
+
+    meleeAttack(target) {
+        if (target.invincible) return false;
+
+        const damageModifier = combatMatrix[this.weapon][target.weapon];
+        const damage = weaponStats[this.weapon].damage * damageModifier * this.damageMultiplier;
+        const absorbedDamage = damage * weaponStats[target.weapon].absorption;
+        const actualDamage = damage - absorbedDamage;
+        target.health -= actualDamage;
+
+        target.bloodSplatter += actualDamage * 2;
+		
+		target.damageEffects.push({
+			value: Math.round(actualDamage),
+			x: target.x * TILE_SIZE + Math.random() * TILE_SIZE,
+			y: target.y * TILE_SIZE,
+			age: 0
+		});
+
+        if (target.health <= 0) {
+            target.isAlive = false;
+            this.kills++;
+            if (killed[this.weapon]){
+                killed[this.weapon]++;
+            } else {
+                killed[this.weapon] = 1;
+            }
+            this.health = Math.min(100, this.health + 25);
+            return true;
+        }
+        return false;
+    }
+	
+	attack(target) {
+        const now = Date.now();
+        const weaponStat = weaponStats[this.weapon];
+        const requiredDelay = this.firstAttack ? weaponStat.attackDelay : weaponStat.attackSpeed;
+        
+        if (now - this.lastAttackTime < requiredDelay) return false;
+
+        this.lastAttackTime = now;
+        this.firstAttack = false;
+
+        if (this.weapon === 'bow_arrow') {
+            this.fireArrow(target);
+            return false; // Arrow damage will be applied when it hits
+        } else {
+            return this.meleeAttack(target);
+        }
+    }
+}
+
+
+function initiateCombat(player1, player2) {
+    player1.inCombat = true;
+    player2.inCombat = true;
+    player1.firstAttack = true;
+    player2.firstAttack = true;
+    player1.combatTarget = player2;
+    player2.combatTarget = player1;
+
+    function moveTowardsOpponent(player, target) {
+        const dx = target.x - player.x;
+        const dy = target.y - player.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const playerRange = weaponStats[player.weapon].range;
+        
+        if (distance > playerRange) {
+            player.x += (dx / distance) * 0.04;
+            player.y += (dy / distance) * 0.04;
+            return false;
+        }
+        return true;
+    }
+
+    function combatRound() {
+        if (!player1.isAlive || !player2.isAlive || !player1.inCombat || !player2.inCombat) {
+            endCombat(player1, player2);
+            return;
+        }
+
+        const player1InRange = moveTowardsOpponent(player1, player2);
+        const player2InRange = moveTowardsOpponent(player2, player1);
+
+        const now = Date.now();
+        const player1ReadyToAttack = player1.firstAttack
+            ? now - player1.lastAttackTime >= weaponStats[player1.weapon].attackDelay
+            : now - player1.lastAttackTime >= weaponStats[player1.weapon].attackSpeed;
+        const player2ReadyToAttack = player2.firstAttack
+            ? now - player2.lastAttackTime >= weaponStats[player2.weapon].attackDelay
+            : now - player2.lastAttackTime >= weaponStats[player2.weapon].attackSpeed;
+
+		if (player1InRange){
+			player1.attackAnimationFrame++;
+		}
+        if (player1InRange && player1ReadyToAttack) {
+            
+            const player1Wins = player1.attack(player2);
+            player1.firstAttack = false;
+            if (player1Wins) {
+                endCombat(player1, player2);
+                return;
+            }
+        }
+		if (player2InRange){
+			player2.attackAnimationFrame++;
+		}
+        if (player2InRange && player2ReadyToAttack) {
+           
+            const player2Wins = player2.attack(player1);
+            player2.firstAttack = false;
+            if (player2Wins) {
+                endCombat(player2, player1);
+                return;
+            }
+        }
+
+        requestAnimationFrame(combatRound);
+    }
+
+    combatRound();
+}
+
+
+function showDamageIndicator(x, y) {
+    ctx.fillStyle = 'red';
+    ctx.font = '20px Arial';
+    ctx.fillText('Hit!', x, y - 20);
+}
+
+function endCombat(winner, loser) {
+    winner.inCombat = false;
+    loser.inCombat = false;
+    winner.attackAnimationFrame = 0;
+    loser.attackAnimationFrame = 0;
+    winner.combatTarget = null;
+    loser.combatTarget = null;
+    if (loser.health <= 0) {
+        loser.isAlive = false; // Make loser a ghost
+    }
+    winner.firstAttack = true; // Reset firstAttack for the next combat
+    loser.firstAttack = true; // Reset firstAttack for the next combat (if resurrected)
+}
+
+function addPlayer(name, avatarUrl, type, nameColor, weaponType) {
+    const x = Math.floor(Math.random() * GRID_WIDTH);
+    const y = Math.floor(Math.random() * GRID_HEIGHT);
+    
+    if (!weaponType) {
+        weaponType = WEAPONS[Math.floor(Math.random() * WEAPONS.length)];
+    }
+    
+    const player = new Player(name, x, y, weaponType);
+    
+    if (avatarUrl) {
+        player.setAvatar(avatarUrl);
+    }
+    
+    if (nameColor) {
+        player.color = nameColor;
+    }
+    
+    players.set(name, player);
+    updatePlayerCount();
+}
+
+function updatePlayerCount() {
+	if (gameOver && (countdownSeconds<=0)) {
+		drawLobby();
+	}
+    playerCountElement.textContent = `Players: ${players.size}`;
+}
+
+function calculateCombatRange() {
+    const totalArea = GRID_WIDTH * GRID_HEIGHT;
+    const playerDensity = players.size / totalArea;
+    const densityFactor = Math.min(playerDensity / DENSITY_THRESHOLD, 1);
+    return COMBAT_RANGE_BASE * (1 - densityFactor * 0.7); // Reduce range up to 70% based on density
+}
+
+function checkCombat() {
+    const combatRange = calculateCombatRange();
+    const playerArray = Array.from(players.values());
+
+    for (let i = 0; i < playerArray.length; i++) {
+        for (let j = i + 1; j < playerArray.length; j++) {
+            const player1 = playerArray[i];
+            const player2 = playerArray[j];
+
+            if (!player1.isAlive || !player2.isAlive || player1.inCombat || player2.inCombat) continue;
+
+            const distance = Math.sqrt(
+                Math.pow(player1.x - player2.x, 2) + Math.pow(player1.y - player2.y, 2)
+            );
+
+            if (distance <= combatRange) {
+                initiateCombat(player1, player2);
+            }
+        }
+    }
+}
+
+
+
+function update() {
+    if (!gameOver) {
+        players.forEach(player => player.update());
+        updateArrows();
+        checkCombat();
+        spawnPowerUps();
+        spawnObstacles();
+        checkPowerUpCollisions();
+        checkObstacleCollisions();
+        particleSystem.update();
+        weatherSystem.update();
+    }
+}
+
+function updateArrows() {
+    for (let i = arrows.length - 1; i >= 0; i--) {
+        const arrow = arrows[i];
+        arrow.x += arrow.dx;
+        arrow.y += arrow.dy;
+
+        const distance = Math.sqrt(
+            Math.pow(arrow.x - arrow.target.x, 2) + Math.pow(arrow.y - arrow.target.y, 2)
+        );
+
+        if (distance < 0.5) {
+            arrow.source.meleeAttack(arrow.target);
+            arrows.splice(i, 1);
+        } else if (arrow.x < 0 || arrow.x > GRID_WIDTH || arrow.y < 0 || arrow.y > GRID_HEIGHT) {
+            arrows.splice(i, 1);
+        }
+    }
+}
+
+function draw() {
+    // Clear canvases
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particlesCtx.clearRect(0, 0, particlesCanvas.width, particlesCanvas.height);
+    
+    // Draw grass background
+    ctx.fillStyle = grassPattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Apply time of day lighting
+    if (weatherSystem.timeOfDay === 'night') {
+        ctx.fillStyle = 'rgba(0, 0, 50, 0.3)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Draw obstacles
+    ctx.fillStyle = 'brown';
+    obstacles.forEach(obstacle => {
+        ctx.fillRect(obstacle.x * TILE_SIZE, obstacle.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    });
+
+    // Draw power-ups
+    powerUps.forEach(powerUp => {
+        ctx.fillStyle = getPowerUpColor(powerUp.type);
+        ctx.beginPath();
+        ctx.arc((powerUp.x + 0.5) * TILE_SIZE, (powerUp.y + 0.5) * TILE_SIZE, TILE_SIZE / 3, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    // Draw players
+    players.forEach(player => {
+        player.draw();
+    });
+
+    // Draw arrows
+    ctx.fillStyle = '#000000';
+    arrows.forEach(arrow => {
+        ctx.save();
+        const angle = Math.atan2(arrow.dy, arrow.dx);
+        ctx.translate(arrow.x * TILE_SIZE, arrow.y * TILE_SIZE);
+        ctx.rotate(angle);
+        
+        // Arrow body
+        ctx.fillRect(-5, -1, 10, 2);
+        
+        // Arrow head
+        ctx.beginPath();
+        ctx.moveTo(5, 0);
+        ctx.lineTo(2, -3);
+        ctx.lineTo(2, 3);
+        ctx.fill();
+        
+        ctx.restore();
+    });
+    
+    // Draw weather effects
+    weatherSystem.draw(ctx);
+    
+    // Draw particles
+    particleSystem.draw(particlesCtx);
+}
+
+function getPowerUpColor(type) {
+    switch (type) {
+        case 'speed': return 'yellow';
+        case 'invincibility': return 'purple';
+        case 'regen': return 'green';
+        case 'damage': return 'red';
+    }
+}
+
+function updateTimer() {
+    if (gameOver) return;
+
+    timeLeft--;
+    timerElement.textContent = timeLeft;
+    if (timeLeft <= 0) {
+        endGame();
+    }
+}
+
+function updateCountdown() {
+    countdownSeconds--;
+    if (countdownSeconds <= 0) {
+        clearInterval(countdownTimer);
+		enterLobby();
+    } else {
+		displayScoreboard();
+	}
+}
+
+function endGame() {
+	console.warn("endGame");
+	gameOver = true;
+	
+	const sortedPlayers = Array.from(players.values())
+        .filter(player => player.isAlive)
+        .sort((a, b) => {
+            if (b.kills !== a.kills) {
+                return b.kills - a.kills;
+            }
+            return a.joinTime - b.joinTime;
+        });
+
+    topPlayers = sortedPlayers.slice(0, 3);
+	
+    countdownSeconds = 15;
+	document.getElementById("ui-overlay").classList.add("hidden");
+	displayScoreboard();
+	clearInterval(countdownTimer);
+    countdownTimer = setInterval(updateCountdown, 1000); 
+}
+
+function showKillStreak(playerName, streak) {
+    const messages = {
+        3: "TRIPLE KILL!",
+        4: "QUADRA KILL!",
+        5: "PENTA KILL!",
+        6: "HEXA KILL!",
+        7: "LEGENDARY!",
+        8: "GODLIKE!"
+    };
+    
+    const message = messages[Math.min(streak, 8)] || `${streak}x KILL STREAK!`;
+    const killstreakEl = document.getElementById('killstreak');
+    killstreakEl.textContent = `${playerName}: ${message}`;
+    killstreakEl.classList.add('show');
+    
+    soundManager.play('victory');
+    
+    setTimeout(() => {
+        killstreakEl.classList.remove('show');
+    }, 3000);
+}
+
+function showFloatingText(x, y, text, color = '#ffff00') {
+    const div = document.createElement('div');
+    div.className = 'floating-text';
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
+    div.style.color = color;
+    div.textContent = text;
+    document.getElementById('game-container').appendChild(div);
+    
+    setTimeout(() => div.remove(), 2000);
+}
+
+function startGame() {
+    // Reset game state
+	console.warn("StartGame");
+	updatePlayerCount();
+    timeLeft = 60; // first match 100s; more matches 60s
+	gameOver = false;
+	document.getElementById("ui-overlay").classList.remove("hidden");
+    killStreaks.clear();
+    lastKillTime.clear();
+    particleSystem.clear();
+}
+
+function displayScoreboard() { 
+
+	draw();
+	
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = '#fff';
+    ctx.font = '36px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Game Over', canvas.width / 2, 100);
+
+    const modalWidth = 300;
+    const modalHeight = 420;
+    const modalX = (canvas.width - modalWidth) / 2;
+    const modalY = (canvas.height - modalHeight) / 2;
+
+    // Draw modal background
+    ctx.fillStyle = '#333';
+    ctx.fillRect(modalX, modalY, modalWidth, modalHeight);
+
+    // Draw modal border
+    ctx.strokeStyle = '#FFD700';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(modalX, modalY, modalWidth, modalHeight);
+
+    // Draw title
+    ctx.fillStyle = '#fff';
+    ctx.font = '24px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Top Survivors', canvas.width / 2, modalY + 40);
+
+    // Draw player information
+	if (topPlayers){
+		topPlayers.forEach((player, index) => {
+			const yOffset = modalY + 100 + index * 100;
+
+			// Draw player avatar	
+			if (player.avatarLoaded && player.avatarImage) {
+				ctx.save();
+				ctx.beginPath();
+				ctx.rect(modalX + 20, yOffset, 60, 60);
+				ctx.clip();
+				
+				ctx.drawImage(player.avatarImage, modalX + 20, yOffset, 60, 60);
+				ctx.restore();
+			} else {
+				ctx.fillStyle = player.color;
+				ctx.fillRect(modalX + 20, yOffset, 60, 60);
+			}
+
+			// Draw player name and kills
+			ctx.fillStyle = '#fff';
+			ctx.font = '18px Arial';
+			ctx.textAlign = 'left';
+			ctx.fillText(`${index + 1}. ${player.name}`, modalX + 90, yOffset + 25);
+			ctx.fillText(`Knock outs: ${player.kills}`, modalX + 90, yOffset + 50);
+
+			// Draw medal for top 3
+			const medalColors = ['#FFD700', '#C0C0C0', '#CD7F32'];
+			if (index < 3) {
+				ctx.fillStyle = medalColors[index];
+				ctx.beginPath();
+				ctx.arc(modalX + 40, yOffset - 10, 15, 0, Math.PI * 2);
+				ctx.fill();
+			}
+		});
+	} else if (!topPlayers || topPlayers.length === 0) {
+        ctx.fillStyle = '#fff';
+        ctx.font = '24px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No survivors!', canvas.width / 2, modalY + 200);
+    }
+
+    // Draw countdown message																	 
+    if (countdownSeconds <= 10) {
+        const alpha = (10 - countdownSeconds) / 5; // Fade in over 5 seconds
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Game will restart in ${countdownSeconds}s`, canvas.width / 2, modalY + modalHeight - 10);
+    }
+}
+
+function gameLoop() {
+    if (!gameOver) {
+        update();
+		draw();
+	}
+	requestAnimationFrame(gameLoop);
+}
+function simulateWebSocket() {
+	console.warn("simulateWebSocket");
+    setInterval(() => {
+        if (gameOver) return;
+
+        const randomCommand = Math.random();
+        if (randomCommand < 0.2) {
+			if (players.size<5){
+				if (addComputers){
+					const name = `Computer${Math.floor(Math.random() * 10000)}`;
+					addPlayer(name);
+				}
+			}
+        } else if (randomCommand < 0.25) {
+            // Simulate a chat message
+            const playerArray = Array.from(players.values());
+            if (playerArray.length > 0) {
+                const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
+                const randomMessage = `Ahhh-tauk!`;
+                handleChatMessage(randomPlayer.name, randomMessage);
+            }
+        } else if (randomCommand < 0.3) {
+            // Simulate a chat message
+            const playerArray = Array.from(players.values());
+            if (playerArray.length > 0) {
+                const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
+                const randomMessage = `I will destroy you all`;
+                handleChatMessage(randomPlayer.name, randomMessage);
+            }
+        } else if (randomCommand < 0.35) {
+            // Simulate a chat message
+            const playerArray = Array.from(players.values());
+            if (playerArray.length > 0) {
+                const randomPlayer = playerArray[Math.floor(Math.random() * playerArray.length)];
+				if (!randomPlayer.isAlive){
+					const randomMessage = `BooOoo..`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else if (randomPlayer.health<20){
+					const randomMessage = `Red is my favourite color`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else if (randomPlayer.inCombat){
+					const randomMessage = `Just give up already`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				} else {
+					const randomMessage = `Ooh! Pretty flowers!`;
+					handleChatMessage(randomPlayer.name, randomMessage);
+				}
+            }
+        }
+    }, 1500);
+}
+
+function handleChatMessage(playerName, message) {
+    const player = players.get(playerName);
+    if (player && player.isAlive) {
+        player.setMessage(message);
+    }
+}
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    particlesCanvas.width = window.innerWidth;
+    particlesCanvas.height = window.innerHeight;
+    // Redraw the current state (lobby or game)
+    if (gameOver && (countdownSeconds<=0)) {
+        drawLobby();
+	} else if (gameOver){
+		displayScoreboard();
+    } else {
+        draw();
+    }
+}
+
+window.addEventListener('resize', resizeCanvas);											
+// Start the game
+enterLobby();
+simulateWebSocket();
+gameLoop();
+
+setInterval(updateTimer, 1000);
+</script>
+<script src="js/soundManager.js"></script>
+</body>
+</html>
