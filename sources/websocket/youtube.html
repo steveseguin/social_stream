@@ -175,7 +175,12 @@ try {
      * {"type": "img", "src": badgeUrl} when images are available
      * {"type": "text", "text": emoji} as fallback
      */
-    
+    var YT_SCOPES = [
+        'https://www.googleapis.com/auth/youtube.readonly',
+        'https://www.googleapis.com/auth/youtube',
+        'https://www.googleapis.com/auth/youtube.force-ssl',
+        'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
+    ];
     var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
     var apiKeyOverride = '';
     try {
@@ -1103,6 +1108,7 @@ try {
 		return 'https://ytauth.socialstream.ninja/auth' +
 			'?client_id=' + clientId +
 			'&redirect_uri=' + encodeURIComponent(redirectURI) +
+			'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
 			'&state=' + state;
 	}
 	async function refreshAccessToken(refreshTokenValue) {
