@@ -868,6 +868,25 @@
 					return key.replaceAll("-", " "); //
 				}
 			}
+			function resolveSourceImageUrl(src) {
+				if (!src) {
+					return "";
+				}
+				var str = (src + "").trim();
+				if (!str) {
+					return "";
+				}
+				if (/^[a-z][a-z0-9+.-]*:/i.test(str) || str.startsWith("//")) {
+					return str;
+				}
+				var cleaned = str.replace(/^\.\/+/, "").replace(/^\/+/, "");
+				var lowerCleaned = cleaned.toLowerCase();
+				var prefix = "sources/images/";
+				if (!lowerCleaned.startsWith(prefix)) {
+					cleaned = prefix + cleaned;
+				}
+				return "./" + cleaned;
+			}
 			
 			var newFileHandle = false;
 
@@ -2105,10 +2124,11 @@
 					  showType = "";
 					}
 
-					if (data.sourceImg && customSource && avatar) {
-					  showType += '<img src="./sources/images/' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
-					} else if (data.sourceImg && customSource && !avatar) {
-					  showType += '<img src="./sources/images/' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					var resolvedSourceImg = data.sourceImg ? resolveSourceImageUrl(data.sourceImg) : "";
+					if (resolvedSourceImg && customSource && avatar) {
+					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					} else if (resolvedSourceImg && customSource && !avatar) {
+					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 					}
 
 					if (hideNames) {

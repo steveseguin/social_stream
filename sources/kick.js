@@ -898,6 +898,7 @@
 	  var nameColor = "";
 	  var name ="";
 	  var chatbadges = [];
+	  var chatNodes = [];
 	  
 	  
 	  try {
@@ -907,7 +908,7 @@
 	   
 	  if (!settings.textonlymode){
 		  try {
-			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
+			chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
 			
 			if (!chatNodes.length){
 				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
@@ -925,13 +926,11 @@
 		  } catch(e){
 		  }
 	  } else {
-		  if (!chatNodes.length){
-			let tmp = ele.querySelector("div span[class^='font-normal']");
-			if (tmp){
-				chatmessage = getAllContentNodes(tmp);
-				chatmessage = chatmessage.trim();
-			}
-		  }
+		let tmp = ele.querySelector("div span[class^='font-normal']");
+		if (tmp){
+			chatmessage = getAllContentNodes(tmp);
+			chatmessage = chatmessage.trim();
+		}
 	  }
 	  if (chatNodes.length){
 		for (var i=0;i<chatNodes.length;i++){
@@ -987,7 +986,6 @@
 
 
 	  var hasDonation = '';
-	
 	  
 	  chatname = chatname.replace("Channel Host", "");
 	  chatname = chatname.replace(":", "");

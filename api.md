@@ -396,32 +396,32 @@ A full break down of different keys though used in SSN are the following:
 
 key name | value type | description
 --- | --- | ---
-chatname | string | Display name
-chatmessage | string | Chat message
-chatimg | string | URL or DataBlob (under ~55KB) of the user's avatar image
-type | lower-case string | the pre-qualified name of the source, eg: `twitch`, also used as the source png image
-sourceImg | string | an alternative URL to the source image; relative or absolute
-sourceName | string | the channel's name or the username of the host for the channel
-textonly | boolean | Whether the chat message is only plain text; or does it contain HTML, etc.
-hasDonation | string | The donation amount with its units.  eg: "3 roses" or "$50 USD".
-chatbadges | array | An array of URLs/Objects. If an object, it may define itself as an img/svg and other attributes
-contentimg | string | URL to a single image or mp4/webm video
-membership | string | Membership event description / membership action / type or whatever
-title | string | An alternative name given for a donation event; CHEERS / DONATION are typical defaults
-subtitle | string | For added detail of a membership event, like number of months they have been a member.
-moderator | boolean | Whether they are a moderator in chat or not
-event | string or boolean | Whether this message should be treated as an event, and possible, what type of event it is
-admin | boolean | Whether they are a "priviledged" user or not
-bot | boolean | Whether the user is a bot / host or not
-question | boolean | Whether the message is a certified question or not
-userid | string | Some form of unique user ID / username for the source type. Useful if the display name isn't unique or if needing the user ID external API needs, like user blocking
-karma | float | 1.0 is a happy message; 0.0 is negative message, so 0.1 is likely bad. AI generated
-id | integer | This is maintained mostly internally, but it's an internal message ID value
-private | boolean | whether this is a private/direct message; typically won't be made public by default
-nameColor | string | Manually specify the color of a display name by passing a color value
-textColor | string | Manually specify the background color of a featured message
-backgroundColor | string | Manually specify the color of a featured message's main text color
-meta | object | contains data like viewer or follow count totals, or other excess data that doesn't fit in elsewhere
+chatname | string | Display name that will be rendered in overlays.
+chatmessage | string (HTML permitted) | Message body; can contain sanitized HTML/emote markup when `textonly` is false.
+chatimg | string (URL or data URI \<= 55 KB) | Author avatar. Absolute URLs preferred; legacy data URIs remain supported.
+type | string (lowercase identifier) | Primary source identifier such as `twitch`, `youtube`, `kick`. Also used to resolve the default icon `https://socialstream.ninja/sources/images/{type}.png`.
+sourceImg | string (URL or `./sources/images/...`) | Optional alternate icon representing a sub-source (ex: channel avatar, Restream origin). Should generally differ from the `type` icon. Legacy relative paths are normalised to `./sources/images/{file}` for consistency but remain locally resolved.
+sourceName | string | Channel title, profile name, or host identifier associated with the source feed.
+textonly | boolean | Indicates whether `chatmessage` should be treated as plain text (`true`) or may contain markup (`false`).
+hasDonation | string | Donation amount with units, e.g., `"3 roses"` or `"$50 USD"`.
+chatbadges | Array<string \| BadgeDescriptor> | Badge icons shown beside the author. Strings are image URLs; `BadgeDescriptor` objects can include `{ type, text, src }` for richer badges.
+contentimg | string (URL) | Optional media attachment for the message (image/gif/mp4/webm).
+membership | string | Short description of a membership/subscription state or label (e.g., `"Member"` or `"Tier 3 Upgrade"`).
+title | string | Display title for donations or other highlighted events (defaults like `"CHEERS"` or `"DONATION"` are common).
+subtitle | string | Additional detail for memberships or donations (e.g., `"12 months"` or `"Gifted by Alex"`).
+moderator | boolean | Marks the author as a moderator for the source platform.
+event | string \| boolean | Identifies structured events (`"follow"`, `"raid"`, etc.) or `false`/omitted when the message is standard chat.
+admin | boolean | Flags elevated/privileged accounts.
+bot | boolean | Flags automated or host-generated messages.
+question | boolean | Indicates the message has been classified as a question.
+userid | string | Stable user identifier from the source platform (helpful for API lookups, blocking, etc.).
+karma | number (0.0–1.0) | Sentiment score; `1.0` positive, `0.0` negative. Provided by AI heuristics when available.
+id | integer | Internal message identifier assigned by SSN for de-duplication/routing.
+private | boolean | Marks direct/private messages that should not be surfaced publicly by default.
+nameColor | string (CSS color) | Overrides the rendered display-name color.
+textColor | string (CSS color) | Overrides the rendered message text color.
+backgroundColor | string (CSS color) | Overrides the background color for highlighted message cards.
+meta | object | Extra structured data that doesn't fit elsewhere (viewer counts, membership details, `eventTypeMapping`, etc.).
 
 ### Additional Features
 

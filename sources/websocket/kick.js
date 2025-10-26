@@ -64,6 +64,33 @@ const WSS_PLATFORM = 'kick';
 let extensionInitialized = false;
 let lastBridgeNotifyStatus = null;
 let lastAuthNotifyStatus = null;
+const ignoredEventTypesLogged = new Set();
+
+let settings = {};
+let EMOTELIST = false;
+let BTTV = false;
+let SEVENTV = false;
+let FFZ = false;
+let lastEmoteRequestKey = null;
+
+function isSettingEnabled(key) {
+    const value = settings ? settings[key] : undefined;
+    if (typeof value === 'boolean') {
+        return value;
+    }
+    if (value && typeof value === 'object') {
+        if (typeof value.setting === 'boolean') {
+            return value.setting;
+        }
+        if (typeof value.enabled === 'boolean') {
+            return value.enabled;
+        }
+        if (typeof value.value === 'boolean') {
+            return value.value;
+        }
+    }
+    return Boolean(value);
+}
 
 function isTextOnlyMode() {
     const setting = extension.settings && extension.settings.textonlymode;
@@ -71,6 +98,461 @@ function isTextOnlyMode() {
         return setting.setting === true;
     }
     return setting === true;
+}
+
+function resetThirdPartyEmoteCache() {
+    BTTV = false;
+    SEVENTV = false;
+    FFZ = false;
+    EMOTELIST = false;
+    lastEmoteRequestKey = null;
+}
+
+function escapeAttribute(value) {
+    if (value == null) return '';
+    return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
+function deepMerge(target, source) {
+    const output = target || {};
+    if (!source || typeof source !== 'object') {
+        return output;
+    }
+    Object.keys(source).forEach(key => {
+        const value = source[key];
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            output[key] = deepMerge(output[key] || {}, value);
+        } else {
+            output[key] = value;
+        }
+    });
+    return output;
+}
+
+function mergeEmotes() {
+    let merged = {};
+    let hasEmotes = false;
+
+    const mergeCandidate = candidate => {
+        if (candidate && typeof candidate === 'object') {
+            merged = deepMerge(merged, candidate);
+            hasEmotes = true;
+        }
+    };
+
+    if (BTTV && isSettingEnabled('bttv')) {
+        try {
+            mergeCandidate(BTTV.channelEmotes);
+            mergeCandidate(BTTV.sharedEmotes);
+            mergeCandidate(BTTV.globalEmotes);
+        } catch (err) {
+            console.warn('Failed to merge BTTV emotes', err);
+        }
+    }
+    if (SEVENTV && isSettingEnabled('seventv')) {
+        try {
+            mergeCandidate(SEVENTV.channelEmotes);
+            mergeCandidate(SEVENTV.globalEmotes);
+        } catch (err) {
+            console.warn('Failed to merge 7TV emotes', err);
+        }
+    }
+    if (FFZ && isSettingEnabled('ffz')) {
+        try {
+            mergeCandidate(FFZ.channelEmotes);
+            mergeCandidate(FFZ.globalEmotes);
+        } catch (err) {
+            console.warn('Failed to merge FFZ emotes', err);
+        }
+    }
+
+    EMOTELIST = hasEmotes ? merged : false;
+}
+
+function replaceEmotesWithImages(text) {
+    if (typeof text !== 'string' || !text) {
+        return text;
+    }
+    if (isTextOnlyMode()) {
+        return text;
+    }
+    if (!EMOTELIST) {
+        return text;
+    }
+    return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+        const emote = EMOTELIST[emoteMatch];
+        if (!emote) {
+            return match;
+        }
+        const escapedMatch = escapeHtml(emoteMatch);
+        if (typeof emote === 'string') {
+            const safeUrl = escapeAttribute(emote);
+            return `<img src="${safeUrl}" alt="${escapedMatch}" title="${escapedMatch}" class="regular-emote"/>`;
+        }
+        if (!emote || typeof emote !== 'object') {
+            return match;
+        }
+        const url = typeof emote.url === 'string' ? emote.url : emote.src;
+        if (!url) {
+            return match;
+        }
+        const safeUrl = escapeAttribute(url);
+        const zeroWidth = Boolean(emote.zw || emote.zeroWidth || emote.zero_width);
+        const className = zeroWidth ? 'zero-width-emote-centered' : 'regular-emote';
+        return `<img src="${safeUrl}" alt="${escapedMatch}" title="${escapedMatch}" class="${className}"/>`;
+    });
+}
+
+function pickFirstString(candidates, fallback = '') {
+    for (const value of candidates || []) {
+        if (typeof value === 'string' && value.trim()) {
+            return value.trim();
+        }
+    }
+    return fallback;
+}
+
+function pickKickEmoteUrl(fragment) {
+    if (!fragment || typeof fragment !== 'object') {
+        return '';
+    }
+    const seen = new Set();
+    function pick(value) {
+        if (!value) return '';
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed || '';
+        }
+        if (seen.has(value)) {
+            return '';
+        }
+        seen.add(value);
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                const candidate = pick(item);
+                if (candidate) {
+                    return candidate;
+                }
+            }
+            return '';
+        }
+        if (typeof value === 'object') {
+            const keys = [
+                'url',
+                'src',
+                'gif',
+                'webp',
+                'png',
+                'default',
+                'image',
+                'light',
+                'dark',
+                '1x',
+                '2x',
+                '4x'
+            ];
+            for (const key of keys) {
+                if (Object.prototype.hasOwnProperty.call(value, key)) {
+                    const candidate = pick(value[key]);
+                    if (candidate) {
+                        return candidate;
+                    }
+                }
+            }
+        }
+        return '';
+    }
+
+    const candidates = [
+        fragment.url,
+        fragment.href,
+        fragment.src,
+        fragment.cdn,
+        fragment.gif,
+        fragment.image,
+        fragment.image_url,
+        fragment.imageUrl,
+        fragment.asset?.url,
+        fragment.asset_url,
+        fragment.images,
+        fragment.emote?.image,
+        fragment.emote?.image_url,
+        fragment.emote?.imageUrl,
+        fragment.emote?.images,
+        fragment.data?.image,
+        fragment.data?.url
+    ];
+
+    for (const value of candidates) {
+        const candidate = pick(value);
+        if (candidate) {
+            return candidate;
+        }
+    }
+    return '';
+}
+
+function renderKickEmoteFragment(fragment) {
+    const rawName = pickFirstString(
+        [
+            fragment?.text,
+            fragment?.name,
+            fragment?.code,
+            fragment?.displayText,
+            fragment?.alt,
+            fragment?.value,
+            fragment?.emote?.name,
+            fragment?.emote?.code
+        ],
+        ''
+    );
+    const cleanName = rawName.replace(/^:+|:+$/g, '');
+    const alt = escapeHtml(cleanName || rawName || '');
+    const zeroWidth = Boolean(
+        fragment?.zero_width ||
+        fragment?.zeroWidth ||
+        fragment?.zw ||
+        fragment?.metadata?.zero_width ||
+        fragment?.emote?.zero_width
+    );
+    const url = pickKickEmoteUrl(fragment);
+    if (url && !isTextOnlyMode()) {
+        const safeUrl = escapeAttribute(url);
+        const className = zeroWidth ? 'zero-width-emote-centered' : 'regular-emote';
+        return `<img src="${safeUrl}" alt="${alt}" title="${alt}" class="${className}"/>`;
+    }
+    if (cleanName) {
+        return replaceEmotesWithImages(escapeHtml(`:${cleanName}:`));
+    }
+    if (rawName) {
+        return replaceEmotesWithImages(escapeHtml(rawName));
+    }
+    return '';
+}
+
+function renderKickFragmentHtml(fragment) {
+    if (fragment == null) {
+        return '';
+    }
+    if (typeof fragment === 'string') {
+        return replaceEmotesWithImages(escapeHtml(fragment));
+    }
+    if (typeof fragment.html === 'string' && !isTextOnlyMode()) {
+        return fragment.html;
+    }
+    const type = typeof fragment.type === 'string' ? fragment.type.toLowerCase() : '';
+    if (type === 'emote' || type === 'emoji') {
+        return renderKickEmoteFragment(fragment);
+    }
+    if (type === 'link' || type === 'url') {
+        const url = pickFirstString([fragment.url, fragment.href, fragment.value, fragment.target], '');
+        const label = pickFirstString(
+            [
+                fragment.text,
+                fragment.content,
+                fragment.label,
+                fragment.displayText,
+                fragment.title,
+                fragment.name,
+                fragment.url
+            ],
+            url
+        );
+        const escapedLabel = replaceEmotesWithImages(escapeHtml(label || ''));
+        if (!url) {
+            return escapedLabel;
+        }
+        if (isTextOnlyMode()) {
+            const safeUrlText = escapeHtml(url);
+            return `${escapedLabel} (${safeUrlText})`;
+        }
+        const safeUrl = escapeAttribute(url);
+        return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer">${escapedLabel}</a>`;
+    }
+    if (type === 'mention') {
+        const username = pickFirstString(
+            [fragment.text, fragment.content, fragment.name, fragment.username, fragment.value],
+            ''
+        );
+        const label = username.startsWith('@') ? username : `@${username}`;
+        return replaceEmotesWithImages(escapeHtml(label));
+    }
+    if (fragment.emoji && typeof fragment.emoji.text === 'string') {
+        return escapeHtml(fragment.emoji.text);
+    }
+    const fallback = pickFirstString(
+        [
+            fragment.text,
+            fragment.content,
+            fragment.value,
+            fragment.name,
+            fragment.alt,
+            fragment.displayText,
+            fragment.label
+        ],
+        ''
+    );
+    return replaceEmotesWithImages(escapeHtml(fallback));
+}
+
+function collectMessageFragments(message) {
+    const fragments = [];
+    if (!message) {
+        return fragments;
+    }
+    if (Array.isArray(message.fragments)) {
+        fragments.push(...message.fragments);
+    }
+    if (Array.isArray(message.content)) {
+        fragments.push(...message.content);
+    }
+    if (Array.isArray(message.parts)) {
+        fragments.push(...message.parts);
+    }
+    if (!fragments.length && Array.isArray(message.messages)) {
+        fragments.push(...message.messages);
+    }
+    return fragments;
+}
+
+function renderKickMessageHtml(message, fallbackText) {
+    const fragments = collectMessageFragments(message);
+    if (fragments.length) {
+        const rendered = fragments.map(renderKickFragmentHtml).join('');
+        if (rendered.trim()) {
+            return rendered;
+        }
+    }
+    const safeFallback = escapeHtml(typeof fallbackText === 'string' ? fallbackText : '');
+    return replaceEmotesWithImages(safeFallback);
+}
+
+function consumeThirdPartyPayload(request) {
+    if (!request || typeof request !== 'object') {
+        return false;
+    }
+    if (request.type && request.type !== 'kick') {
+        return false;
+    }
+    const currentSlug = (state.channelSlug || '').toLowerCase();
+    const payloadSlug = (
+        typeof request.channel === 'string'
+            ? request.channel
+            : typeof request.slug === 'string'
+                ? request.slug
+                : null
+    );
+    if (currentSlug && payloadSlug && payloadSlug.toLowerCase() !== currentSlug) {
+        return false;
+    }
+    let changed = false;
+    if (Object.prototype.hasOwnProperty.call(request, 'BTTV')) {
+        BTTV = request.BTTV || false;
+        changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(request, 'SEVENTV')) {
+        SEVENTV = request.SEVENTV || false;
+        changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(request, 'FFZ')) {
+        FFZ = request.FFZ || false;
+        changed = true;
+    }
+    if (changed) {
+        mergeEmotes();
+    }
+    return changed;
+}
+
+function requestThirdPartyEmotes(options = {}) {
+    if (
+        !extension.available ||
+        typeof chrome === 'undefined' ||
+        !chrome.runtime ||
+        !chrome.runtime.id
+    ) {
+        return;
+    }
+    const { force = false } = options || {};
+    const slug = (state.channelSlug || '').trim().toLowerCase();
+    const userId = state.channelId != null ? String(state.channelId) : null;
+
+    if (!slug && !userId) {
+        return;
+    }
+
+    const key = `${slug}|${userId || ''}`;
+    const wantsBttv = isSettingEnabled('bttv');
+    const wantsSeventv = isSettingEnabled('seventv');
+    const wantsFfz = isSettingEnabled('ffz');
+
+    if (!wantsBttv && !wantsSeventv && !wantsFfz) {
+        mergeEmotes();
+        return;
+    }
+
+    const hasCachedData =
+        (wantsBttv && BTTV) ||
+        (wantsSeventv && SEVENTV) ||
+        (wantsFfz && FFZ);
+
+    if (!force && key === lastEmoteRequestKey && hasCachedData) {
+        return;
+    }
+
+    const payloadBase = { type: 'kick' };
+    if (slug) payloadBase.channel = slug;
+    if (userId) payloadBase.userid = userId;
+
+    const requests = [];
+    if (wantsBttv) {
+        requests.push({ ...payloadBase, getBTTV: true });
+    } else {
+        BTTV = false;
+    }
+    if (wantsSeventv) {
+        requests.push({ ...payloadBase, getSEVENTV: true });
+    } else {
+        SEVENTV = false;
+    }
+    if (wantsFfz) {
+        requests.push({ ...payloadBase, getFFZ: true });
+    } else {
+        FFZ = false;
+    }
+
+    if (!requests.length) {
+        mergeEmotes();
+        return;
+    }
+
+    lastEmoteRequestKey = key;
+    mergeEmotes();
+
+    requests.forEach(message => {
+        try {
+            chrome.runtime.sendMessage(chrome.runtime.id, message, () => {
+                if (chrome.runtime.lastError) {
+                    console.warn('Kick emote request failed:', chrome.runtime.lastError.message);
+                }
+            });
+        } catch (err) {
+            console.warn('Kick emote request failed:', err);
+        }
+    });
+}
+
+function applyExtensionSettings(newSettings) {
+    settings = newSettings && typeof newSettings === 'object' ? { ...newSettings } : {};
+    extension.settings = settings;
+    resetThirdPartyEmoteCache();
+    mergeEmotes();
+    requestThirdPartyEmotes({ force: true });
 }
 
 function notifyApp(payload) {
@@ -128,7 +610,11 @@ function initExtensionBridge() {
                         extension.enabled = Boolean(request.state);
                     }
                     if (request.settings) {
-                        extension.settings = request.settings || {};
+                        applyExtensionSettings(request.settings || {});
+                        sendResponse(true);
+                        return false;
+                    }
+                    if (consumeThirdPartyPayload(request)) {
                         sendResponse(true);
                         return false;
                     }
@@ -155,11 +641,11 @@ function initExtensionBridge() {
     try {
         chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, response => {
             if (!response || typeof response !== 'object') return;
-            if (Object.prototype.hasOwnProperty.call(response, 'settings')) {
-                extension.settings = response.settings || {};
-            }
             if (Object.prototype.hasOwnProperty.call(response, 'state')) {
                 extension.enabled = Boolean(response.state);
+            }
+            if (Object.prototype.hasOwnProperty.call(response, 'settings')) {
+                applyExtensionSettings(response.settings || {});
             }
         });
     } catch (err) {
@@ -216,10 +702,17 @@ function setChannelSlug(value, options = {}) {
         state.channelId = null;
         state.lastResolvedSlug = '';
         state.autoStart.lastSlug = '';
+        resetThirdPartyEmoteCache();
     } else {
         state.channelSlug = slug; // Preserve original casing.
     }
     state.channelSlugSource = source;
+
+    if (changed) {
+        requestThirdPartyEmotes({ force: true });
+    } else {
+        requestThirdPartyEmotes();
+    }
 
     if (persist) {
         persistConfig();
@@ -932,20 +1425,26 @@ function reportSubscriptionResults(response, requested) {
 async function resolveChannelId(force = false) {
     const slug = state.channelSlug?.trim();
     if (!slug) throw new Error('Channel slug required.');
-    if (!force && state.channelId && state.lastResolvedSlug === slug.toLowerCase()) {
+    const slugLower = slug.toLowerCase();
+    if (!force && state.channelId && state.lastResolvedSlug === slugLower) {
         return state.channelId;
     }
+    const previousId = state.channelId;
+    const previousSlug = state.lastResolvedSlug;
     const params = new URLSearchParams({ slug });
     const data = await apiFetch(`/public/v1/channels?${params.toString()}`);
     const entries = Array.isArray(data?.data) ? data.data : [];
-    const channel = entries.find(item => (item.slug || '').toLowerCase() === slug.toLowerCase()) || entries[0];
+    const channel = entries.find(item => (item.slug || '').toLowerCase() === slugLower) || entries[0];
     if (!channel?.broadcaster_user_id) {
         throw new Error('Unable to resolve channel user id.');
     }
     state.channelId = channel.broadcaster_user_id;
     state.channelName = channel.slug || channel.channel_description || slug;
-    state.lastResolvedSlug = slug.toLowerCase();
+    state.lastResolvedSlug = slugLower;
     updateInputsFromState();
+    if (force || state.channelId !== previousId || previousSlug !== slugLower) {
+        requestThirdPartyEmotes({ force: true });
+    }
     return state.channelId;
 }
 
@@ -1182,6 +1681,173 @@ function createBridgeMeta(packet) {
     };
 }
 
+const CHANNEL_CONTEXT_KEYWORDS = [
+    'channel',
+    'broadcaster',
+    'streamer',
+    'stream',
+    'owner',
+    'chatroom',
+    'room',
+    'livestream'
+];
+
+const CHANNEL_ID_KEYS = new Set([
+    'broadcaster_user_id',
+    'broadcasterid',
+    'broadcaster_id',
+    'channel_id',
+    'channelid',
+    'chatroom_id',
+    'chatroomid',
+    'streamer_id',
+    'streamerid',
+    'stream_id',
+    'streamid',
+    'livestream_id',
+    'livestreamid',
+    'room_id',
+    'roomid'
+]);
+
+const CHANNEL_SLUG_KEYS = new Set([
+    'channel_slug',
+    'channelslug',
+    'slug',
+    'slug_name',
+    'slugname',
+    'broadcaster_slug',
+    'broadcasterslug'
+]);
+
+function hasChannelContext(key, path) {
+    const target = `${key || ''} ${path || ''}`.toLowerCase();
+    return CHANNEL_CONTEXT_KEYWORDS.some(keyword => target.includes(keyword));
+}
+
+function shouldCollectAsId(key, path) {
+    if (!key) return false;
+    const lower = key.toLowerCase();
+    if (CHANNEL_ID_KEYS.has(lower)) {
+        return true;
+    }
+    if (/_?id$/.test(lower) && hasChannelContext(lower, path)) {
+        return true;
+    }
+    if ((lower === 'user_id' || lower === 'userid') && hasChannelContext(lower, path)) {
+        return true;
+    }
+    return false;
+}
+
+function shouldCollectAsSlug(key, path) {
+    if (!key) return false;
+    const lower = key.toLowerCase();
+    if (CHANNEL_SLUG_KEYS.has(lower)) {
+        return true;
+    }
+    if ((lower === 'username' || lower === 'handle') && hasChannelContext(lower, path)) {
+        return true;
+    }
+    return false;
+}
+
+function extractSlugFromUrl(value) {
+    if (typeof value !== 'string') return null;
+    const match = value.match(/kick\.com\/(@?)([a-z0-9_\-.]+)/i);
+    if (!match) return null;
+    return match[2] ? match[2].replace(/^@+/, '') : null;
+}
+
+function collectChannelHints(value, result, path = '', depth = 0, seen = new Set()) {
+    if (!value || typeof value !== 'object' || depth > 4 || seen.has(value)) {
+        return;
+    }
+    seen.add(value);
+    const entries = Object.entries(value);
+    for (const [key, current] of entries) {
+        const nextPath = path ? `${path}.${key}` : key;
+        if (current == null) {
+            continue;
+        }
+        if (typeof current === 'string' || typeof current === 'number') {
+            const str = String(current).trim();
+            if (!str) {
+                continue;
+            }
+            if (shouldCollectAsId(key, path)) {
+                result.ids.add(str);
+            }
+            if (shouldCollectAsSlug(key, path)) {
+                result.slugs.add(str.replace(/^@+/, '').toLowerCase());
+            }
+            if (typeof current === 'string') {
+                const urlSlug = extractSlugFromUrl(current);
+                if (urlSlug) {
+                    result.slugs.add(urlSlug.toLowerCase());
+                }
+            }
+        } else if (typeof current === 'object') {
+            collectChannelHints(current, result, nextPath, depth + 1, seen);
+        }
+    }
+}
+
+function normalizeIdForComparison(value, expectNumeric) {
+    if (value == null) return '';
+    const str = String(value).trim();
+    if (!str) return '';
+    if (!expectNumeric) {
+        return str;
+    }
+    const digits = str.replace(/[^0-9]/g, '');
+    return digits || str;
+}
+
+function normalizeSlug(value) {
+    if (value == null) return '';
+    return String(value).trim().replace(/^@+/, '').toLowerCase();
+}
+
+function bridgeEventMatchesCurrentChannel(packet) {
+    if (!packet || typeof packet !== 'object') {
+        return true;
+    }
+    const expectedId = state.channelId != null ? String(state.channelId).trim() : '';
+    const expectedSlug = state.channelSlug ? state.channelSlug.trim().toLowerCase() : '';
+    if (!expectedId && !expectedSlug) {
+        return true;
+    }
+    const result = {
+        ids: new Set(),
+        slugs: new Set()
+    };
+    collectChannelHints(packet.body, result);
+    collectChannelHints(packet, result);
+
+    const expectNumeric = expectedId ? /^\d+$/.test(expectedId) : false;
+    if (expectedId) {
+        const normalizedExpectedId = normalizeIdForComparison(expectedId, expectNumeric);
+        for (const candidate of result.ids) {
+            if (normalizeIdForComparison(candidate, expectNumeric) === normalizedExpectedId) {
+                return true;
+            }
+        }
+    }
+    if (expectedSlug) {
+        const normalizedExpectedSlug = normalizeSlug(expectedSlug);
+        for (const candidate of result.slugs) {
+            if (normalizeSlug(candidate) === normalizedExpectedSlug) {
+                return true;
+            }
+        }
+    }
+    if (!result.ids.size && !result.slugs.size) {
+        return true;
+    }
+    return false;
+}
+
 function updateBridgeState() {
     if (!els.bridgeState) return;
     if (state.bridge.status === 'connected') {
@@ -1233,6 +1899,13 @@ function handleBridgeEvent(packet) {
     if (bridgeMeta?.verified === false) {
         log(`Received unverified webhook event: ${type}`, 'warning');
     }
+    if (!bridgeEventMatchesCurrentChannel(packet)) {
+        if (!ignoredEventTypesLogged.has(type)) {
+            ignoredEventTypesLogged.add(type);
+            log(`Ignoring ${type} for a different Kick channel.`, 'info');
+        }
+        return;
+    }
     if (type === 'chat.message.sent') {
         forwardChatMessage(body, bridgeMeta);
         return;
@@ -1282,17 +1955,22 @@ function forwardChatMessage(evt, bridgeMeta) {
     const chatimg = sender?.profile_picture || sender?.avatar || sender?.profilePicture || message?.sender?.profile_picture || '';
     const nameColor = sender?.identity?.username_color || sender?.color || message?.sender?.identity?.username_color || '';
     const messageId = message?.id || payload.message_id || payload.id || null;
-    pushMessage({
+    const chatmessageHtml = renderKickMessageHtml(message, content);
+    const messagePayload = {
         type: 'kick',
         chatname,
-        chatmessage: escapeHtml(content),
+        chatmessage: chatmessageHtml,
         chatimg: chatimg || '',
         chatbadges: badges,
         nameColor: nameColor || '',
         messageId,
         bridge: bridgeMeta || null,
         raw: evt
-    });
+    };
+    if (content) {
+        messagePayload.meta = { plainText: content };
+    }
+    pushMessage(messagePayload);
     const prefix = bridgeMeta?.verified === false ? '[CHAT ⚠]' : '[CHAT]';
     log(`${prefix} ${chatname}: ${content || '[no text]'}`);
 }
