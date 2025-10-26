@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.34.11",
+  "version": "3.34.12",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -103,7 +103,9 @@
     "https://meet.google.com/*",
     "https://play.quickchannel.com/*",
     "https://kick.com/*/chatroom",
-	"https://kick.com/popout/*/chat",
+    "https://kick.com/*/*/chatroom",
+    "https://kick.com/popout/*/chat",
+    "https://kick.com/*/popout/*/chat",
     "https://chatroll.com/embed/chat/*",
     "https://www.nimo.tv/popout/chat/*",
     "https://dashboard.nimo.tv/popout/chat/*",
@@ -607,7 +609,12 @@
     },
     {
       "js": [ "./sources/kick.js" ],
-      "matches": [ "https://kick.com/*/chatroom", "https://kick.com/popout/*/chat"]
+      "matches": [
+        "https://kick.com/*/chatroom",
+        "https://kick.com/*/*/chatroom",
+        "https://kick.com/popout/*/chat",
+        "https://kick.com/*/popout/*/chat"
+      ]
     },
     {
       "js": [ "./sources/cloudhub.js" ],

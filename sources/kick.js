@@ -2,25 +2,94 @@
 	
 	// Function to rewrite old Kick URLs to new format
 	function rewriteKickUrl(url) {
-		// Check if it's an old Kick chatroom URL (case-insensitive)
-		const oldKickPattern = /^https:\/\/kick\.com\/([^\/]+)\/chatroom$/i;
-		const match = url.match(oldKickPattern);
-		
-		if (match) {
-			// Validate and sanitize username
-			const username = match[1];
-			if (!username || username.length === 0) {
-				return url; // Invalid username, don't redirect
-			}
-			
-			// Rewrite to new format
-			const newUrl = `https://kick.com/popout/${encodeURIComponent(username)}/chat`;
-			console.log(`[Social Stream] Rewriting old Kick URL: ${url} -> ${newUrl}`);
-			return newUrl;
+		const parsed = parseKickUrl(url);
+		if (!parsed || parsed.variant !== 'chatroom') {
+			return url; // Not an old chatroom URL
 		}
-		
-		// Return original URL if no rewriting needed
-		return url;
+
+		const localeSegment = parsed.locale ? `${encodeURIComponent(parsed.locale)}/` : '';
+		const encodedUsername = encodeURIComponent(parsed.username);
+		const search = parsed.url.search || '';
+		const hash = parsed.url.hash || '';
+		const newUrl = `${parsed.url.origin}/${localeSegment}popout/${encodedUsername}/chat${search}${hash}`;
+
+		if (newUrl !== url) {
+			console.log(`[Social Stream] Rewriting old Kick URL: ${url} -> ${newUrl}`);
+		}
+
+		return newUrl;
+	}
+
+	function parseKickUrl(url) {
+		try {
+			const baseOrigin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://kick.com';
+			const parsedUrl = new URL(url, baseOrigin);
+			if (!parsedUrl.hostname || !parsedUrl.hostname.toLowerCase().endsWith('kick.com')) {
+				return null;
+			}
+
+			const rawSegments = parsedUrl.pathname.split('/').filter(Boolean);
+			if (!rawSegments.length) {
+				return null;
+			}
+
+			const lowerSegments = rawSegments.map(seg => seg.toLowerCase());
+			const lastSegment = lowerSegments[lowerSegments.length - 1];
+
+			let variant = null;
+			let username = null;
+			let locale = null;
+
+			if (lastSegment === 'chat') {
+				const popoutIndex = lowerSegments.lastIndexOf('popout');
+				if (popoutIndex === -1 || popoutIndex + 1 >= rawSegments.length) {
+					return null;
+				}
+				variant = 'popout';
+				username = rawSegments[popoutIndex + 1];
+				if (popoutIndex === 1) {
+					locale = rawSegments[0];
+				} else if (popoutIndex > 1) {
+					return null; // Unexpected extra path segments before popout
+				}
+			} else if (lastSegment === 'chatroom') {
+				variant = 'chatroom';
+				if (rawSegments.length < 2) {
+					return null;
+				}
+				username = rawSegments[rawSegments.length - 2];
+				if (rawSegments.length === 3) {
+					locale = rawSegments[0];
+				} else if (rawSegments.length > 3) {
+					return null; // Unsupported structure
+				}
+			} else {
+				return null;
+			}
+
+			if (!username) {
+				return null;
+			}
+
+			try {
+				username = decodeURIComponent(username);
+			} catch (e) {}
+
+			if (locale) {
+				try {
+					locale = decodeURIComponent(locale);
+				} catch (e) {}
+			}
+
+			return {
+				url: parsedUrl,
+				variant,
+				username,
+				locale
+			};
+		} catch (e) {
+			return null;
+		}
 	}
 	
 	// Check and redirect if needed, but only once
@@ -341,10 +410,17 @@
 	}
 		
 	function extractKickUsername(url) {
-		const pattern = /kick\.com\/(?:popout\/)?([^/]+)(?:\/(?:chat|chatroom))?$/i;
-		const match = url.match(pattern);
-		if (match) {
-			return match[1];
+		const parsed = parseKickUrl(url);
+		if (parsed && parsed.username) {
+			return parsed.username;
+		}
+		return false;
+	}
+
+	function extractKickLocale(url) {
+		const parsed = parseKickUrl(url);
+		if (parsed && parsed.locale) {
+			return parsed.locale;
 		}
 		return false;
 	}
@@ -1255,26 +1331,30 @@
 		}
 		
 		try {
-			let kickUsername = extractKickUsername(window.location.href);
-			if (kickUsername && document.querySelector('[data-testid="not-found"]')){
-				if (kickUsername.includes("_")){
-					kickUsername = kickUsername.replaceAll("_","-").toLowerCase();
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
-					window.location.replace(newUrl); // Use replace to avoid history issues
+			const currentUrl = window.location.href;
+			const kickLocale = extractKickLocale(currentUrl);
+			const localeSegment = kickLocale ? `${encodeURIComponent(kickLocale)}/` : '';
+			const buildPopoutUrl = (username) => {
+				return `${window.location.origin}/${localeSegment}popout/${encodeURIComponent(username)}/chat?popout=`;
+			};
+
+			const kickUsername = extractKickUsername(currentUrl);
+			if (kickUsername && document.querySelector('[data-testid="not-found"]')) {
+				if (kickUsername.includes("_")) {
+					const normalized = kickUsername.replaceAll("_", "-").toLowerCase();
+					window.location.replace(buildPopoutUrl(normalized)); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
-				} else if (kickUsername.includes("-")){
-					kickUsername = kickUsername.replaceAll("-","_").toLowerCase();
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
-					window.location.replace(newUrl); // Use replace to avoid history issues
+				} else if (kickUsername.includes("-")) {
+					const normalized = kickUsername.replaceAll("-", "_").toLowerCase();
+					window.location.replace(buildPopoutUrl(normalized)); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
-				} else if (kickUsername.toLowerCase() !== kickUsername){
-					kickUsername = kickUsername.toLowerCase();
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
-					window.location.replace(newUrl); // Use replace to avoid history issues
+				} else if (kickUsername.toLowerCase() !== kickUsername) {
+					const normalized = kickUsername.toLowerCase();
+					window.location.replace(buildPopoutUrl(normalized)); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
 				}
 			}
-		}catch(e){
+		} catch(e){
 			console.error(e);
 		}
 		
