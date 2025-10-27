@@ -102,9 +102,9 @@
 
 var settings = {};
 
-// Message queue and throttling
-var messageQueue = [];
-var isProcessingQueue = false;
+// Relay queue and throttling (avoid clobbering page globals)
+var extensionRelayQueue = [];
+var isProcessingExtensionQueue = false;
 var BATCH_SIZE = 5;
 var BATCH_DELAY = 100; // ms between batches
 
@@ -167,15 +167,15 @@ function requestEmotesForVideo(videoId, channelId) {
 	}
 }
 
-function processMessageQueue() {
-	if (isProcessingQueue || messageQueue.length === 0) {
+function processExtensionQueue() {
+	if (isProcessingExtensionQueue || extensionRelayQueue.length === 0) {
 		return;
 	}
 	
-	isProcessingQueue = true;
+	isProcessingExtensionQueue = true;
 	
 	// Get a batch of messages
-	var batch = messageQueue.splice(0, BATCH_SIZE);
+	var batch = extensionRelayQueue.splice(0, BATCH_SIZE);
 	
 	try {
 		// Send batch or single message based on size
@@ -191,22 +191,22 @@ function processMessageQueue() {
 				console.warn('Dropping messages due to error:', batch.length, 'messages');
 			}
 			
-			isProcessingQueue = false;
+			isProcessingExtensionQueue = false;
 			
 			// Process next batch if there are more messages
-			if (messageQueue.length > 0) {
-				setTimeout(processMessageQueue, BATCH_DELAY);
+			if (extensionRelayQueue.length > 0) {
+				setTimeout(processExtensionQueue, BATCH_DELAY);
 			}
 		});
 	} catch(e) {
 		console.error('Error sending message batch to socialstream:', e);
 		// Log dropped messages but don't retry to avoid duplicates
 		console.warn('Dropping messages due to exception:', batch.length, 'messages');
-		isProcessingQueue = false;
+		isProcessingExtensionQueue = false;
 		
 		// Continue processing remaining messages
-		if (messageQueue.length > 0) {
-			setTimeout(processMessageQueue, BATCH_DELAY);
+		if (extensionRelayQueue.length > 0) {
+			setTimeout(processExtensionQueue, BATCH_DELAY);
 		}
 	}
 }
@@ -214,12 +214,12 @@ function processMessageQueue() {
 window.addEventListener('youtubeMessage', function(e) {
 	if (e.detail) {
 		// Add to queue instead of sending immediately
-		messageQueue.push(e.detail);
+		extensionRelayQueue.push(e.detail);
 		
 		// Start processing if not already running
-		if (!isProcessingQueue) {
+		if (!isProcessingExtensionQueue) {
 			// Small delay to allow more messages to accumulate
-			setTimeout(processMessageQueue, 10);
+			setTimeout(processExtensionQueue, 10);
 		}
 	}
 });

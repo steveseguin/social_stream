@@ -1491,11 +1491,11 @@ try {
 	  updatePollSpinner(5000);
 	}
 	function queueMessage(messageData) {
-		// If page is visible, process immediately
-		if (isPageVisible) {
-			processMessage(messageData);
-		} else {
-			// Queue messages when page is not visible
+		// Always relay messages immediately
+		processMessage(messageData);
+
+		// If page isn't visible, queue for later DOM rendering
+		if (!isPageVisible) {
 			if (messageQueue.length >= 200) {
 				messageQueue.splice(0, messageQueue.length - 199);
 			}
@@ -1511,7 +1511,7 @@ try {
 		const batchSize = Math.min(20, messageQueue.length);
 		const batch = messageQueue.splice(0, batchSize);
 		
-		batch.forEach(message => processMessage(message));
+		batch.forEach(message => processMessage(message, { suppressRelay: true }));
 		
 		// If more messages remain, process them after a short delay
 		if (messageQueue.length > 0) {
@@ -1938,7 +1938,8 @@ try {
 		youtubeShorts = true;
 	}
 
-	function processMessage(messageData) {
+	function processMessage(messageData, options = {}) {
+		const { suppressRelay = false } = options;
 		try {
 			// Apply member chat only filter if enabled
 			if (settings.memberchatonly && !messageData.isChatSponsor && !messageData.membership && !messageData.event) {
@@ -2000,7 +2001,7 @@ try {
 					}
 				}
 			}
-			if (!messageData.skipEvent && messageWithEmojis) {
+			if (!suppressRelay && !messageData.skipEvent && messageWithEmojis) {
 				// Determine membership status based on settings
 				let membershipStatus = "";
 				if (messageData.isChatSponsor) {

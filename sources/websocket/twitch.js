@@ -311,9 +311,9 @@ try{
 
 	let getViewerCountInterval = null;
 	let getFollowersInterval = null;
-	let getSubscribersInterval = null;
-	let tokenValidationInterval = null;
-	let badges = null;
+let getSubscribersInterval = null;
+let tokenValidationInterval = null;
+let badges = null;
 
 	async function validateToken(token) {
 		try {
@@ -1658,15 +1658,16 @@ try{
 	let eventSocket;
 	let eventSessionId;
 	let isDisconnecting = false;
-	let reconnectTimeout = null;
-	let currentChannelId = null;
-	let activeSubscriptions = new Set();
-	let eventSubRetryCount = 0;
-	let MAX_RETRY_ATTEMPTS = 2;
-	let hasPermissionError = [];
+let reconnectTimeout = null;
+let currentChannelId = null;
+let activeSubscriptions = new Set();
+let eventSubRetryCount = 0;
+let MAX_RETRY_ATTEMPTS = 2;
+let hasPermissionError = [];
+let eventSubReconnectInProgress = false;
 
-	async function cleanupCurrentConnection() {
-		isDisconnecting = true;
+async function cleanupCurrentConnection() {
+	isDisconnecting = true;
 		
 		// Clear any existing timeouts
 		if (reconnectTimeout) {
@@ -1724,65 +1725,83 @@ try{
 			permissionsInfo.innerHTML = "";
 		}
 		
-		// Wait a moment for connections to fully close
-		await new Promise(resolve => setTimeout(resolve, 1000));
-		isDisconnecting = false;
-	}
+	// Wait a moment for connections to fully close
+	await new Promise(resolve => setTimeout(resolve, 1000));
+	isDisconnecting = false;
+}
 
-	async function connectEventSub() {
-		if (isDisconnecting || hasPermissionError.length) return;
-		
-		if (eventSocket && (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING)) {
-			return;
-		}
+	function initializeEventSubSocket(url) {
+		const socket = new WebSocket(url);
 
-		eventSocket = new WebSocket('wss://eventsub.wss.twitch.tv/ws');
-		
-		eventSocket.onopen = () => {
+		socket.onopen = () => {
 			console.log('EventSub WebSocket Connected');
-		}; 
-		
-		eventSocket.onmessage = async (event) => {
+			eventSubRetryCount = 0;
+			eventSubReconnectInProgress = false;
+		};
+
+		socket.onmessage = async (event) => {
 			if (isDisconnecting) return;
-			
+
 			const message = JSON.parse(event.data);
-			
+
 			switch (message.metadata.message_type) {
 				case 'session_welcome':
 					eventSessionId = message.payload.session.id;
 					console.log('EventSub session established:', eventSessionId);
-					
+
 					if (currentChannelId) {
 						await createEventSubSubscriptions(currentChannelId);
 					}
 					break;
-					
+
 				case 'notification':
 					handleEventSubNotification(message.payload);
 					break;
-					
+
 				case 'session_keepalive':
 					break;
-					
+
 				case 'session_reconnect':
 					if (!isDisconnecting) {
-						const reconnectUrl = message.payload.session.reconnect_url;
-						await cleanupCurrentConnection();
-						eventSocket = new WebSocket(reconnectUrl);
+						const reconnectUrl = message.payload?.session?.reconnect_url;
+						if (reconnectUrl) {
+							console.log('EventSub requested reconnect. Switching sockets...');
+							activeSubscriptions.clear();
+							hasPermissionError = [];
+							eventSessionId = null;
+							eventSubReconnectInProgress = true;
+							const previousSocket = eventSocket;
+							if (previousSocket && (previousSocket.readyState === WebSocket.OPEN || previousSocket.readyState === WebSocket.CONNECTING)) {
+								try {
+									previousSocket.onopen = previousSocket.onmessage = previousSocket.onerror = previousSocket.onclose = null;
+								} catch (e) {}
+								try {
+									previousSocket.close();
+								} catch (e) {}
+							}
+							eventSocket = initializeEventSubSocket(reconnectUrl);
+						} else {
+							console.warn('EventSub provided no reconnect URL; staying on current socket.');
+						}
 					}
 					break;
 			}
 		};
-		
-		eventSocket.onerror = (error) => {
+
+		socket.onerror = (error) => {
 			if (!isDisconnecting) {
 				console.error('EventSub WebSocket Error:', error);
 			}
 		};
-		
-		eventSocket.onclose = () => {
+
+		socket.onclose = () => {
 			if (isDisconnecting) return;
-			
+
+			if (eventSubReconnectInProgress) {
+				// Intentional close during reconnect hand-off.
+				return;
+			}
+
 			if (!hasPermissionError.length && eventSubRetryCount < MAX_RETRY_ATTEMPTS) {
 				console.log(`EventSub WebSocket Closed - Retry attempt ${eventSubRetryCount + 1} of ${MAX_RETRY_ATTEMPTS}`);
 				eventSubRetryCount++;
@@ -1791,6 +1810,18 @@ try{
 				console.log('EventSub connection stopped: Permission errors detected');
 			}
 		};
+
+		return socket;
+	}
+
+	async function connectEventSub() {
+		if (isDisconnecting || hasPermissionError.length) return;
+
+		if (eventSocket && (eventSocket.readyState === WebSocket.OPEN || eventSocket.readyState === WebSocket.CONNECTING)) {
+			return;
+		}
+
+		eventSocket = initializeEventSubSocket('wss://eventsub.wss.twitch.tv/ws');
 	}
 
 	async function createEventSubSubscriptions(broadcasterId) {
