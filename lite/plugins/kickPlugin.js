@@ -9,11 +9,12 @@ const ADVANCED_VISIBLE_KEY = 'kick.advancedVisible';
 const MANUAL_OVERRIDES_KEY = 'kick.manualOverrides';
 const METADATA_CACHE_KEY = 'kick.metadataCache';
 const STORAGE_VERSION_KEY = 'kick.storageVersion';
-const STORAGE_VERSION = 3;
+const STORAGE_VERSION = 4;
 
 const DEFAULT_API_BASE = 'https://kick.com/api/v2';
-const DEFAULT_WS_BASE = 'wss://kick.socialstream.ninja:3900';
-const LEGACY_WS_DEFAULTS = new Set(['ws://localhost:3900', 'wss://localhost:3900']);
+const DEFAULT_WS_BASE = 'wss://ws-us2.pusher.com';
+const LEGACY_PROXY_WS_BASE = 'wss://kick.socialstream.ninja:3900';
+const LEGACY_WS_DEFAULTS = new Set(['ws://localhost:3900', 'wss://localhost:3900', LEGACY_PROXY_WS_BASE]);
 const HISTORY_LIMIT = 400;
 const PUSHER_APP_KEY = '32cbd69e4b950bf97679';
 const CHANNEL_WHITESPACE_MESSAGE = 'Kick channel names cannot contain spaces. Enter the channel slug (e.g. "evarate").';
@@ -330,12 +331,13 @@ export class KickPlugin extends BasePlugin {
     wsRow.className = 'field';
     const wsLabel = document.createElement('span');
     wsLabel.className = 'field__label';
-    wsLabel.textContent = 'Websocket base';
+    wsLabel.textContent = 'Websocket host (optional)';
     const wsInput = document.createElement('input');
     wsInput.type = 'url';
     wsInput.placeholder = DEFAULT_WS_BASE;
     wsInput.autocomplete = 'off';
-    wsInput.value = storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
+    const initialWs = storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
+    wsInput.value = typeof initialWs === 'string' && initialWs.trim() ? initialWs.trim() : DEFAULT_WS_BASE;
     wsInput.addEventListener('change', () => {
       const value = wsInput.value.trim() || DEFAULT_WS_BASE;
       storage.set(WS_BASE_KEY, value);
@@ -438,6 +440,13 @@ export class KickPlugin extends BasePlugin {
     if (version < 3) {
       const stored = storage.get(WS_BASE_KEY, '').trim();
       if (!stored || LEGACY_WS_DEFAULTS.has(stored)) {
+        storage.set(WS_BASE_KEY, DEFAULT_WS_BASE);
+      }
+    }
+
+    if (version < 4) {
+      const stored = storage.get(WS_BASE_KEY, '').trim();
+      if (!stored || stored === LEGACY_PROXY_WS_BASE) {
         storage.set(WS_BASE_KEY, DEFAULT_WS_BASE);
       }
     }
@@ -648,7 +657,7 @@ export class KickPlugin extends BasePlugin {
         const wsBase = this.wsBaseInput ? this.wsBaseInput.value.trim() : storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
         if (wsBase && wsBase !== DEFAULT_WS_BASE) {
           this.detailsLabel.hidden = false;
-          this.detailsLabel.textContent = `Websocket: ${wsBase}`;
+          this.detailsLabel.textContent = `Websocket host: ${wsBase}`;
         } else {
           this.detailsLabel.hidden = true;
           this.detailsLabel.textContent = '';
@@ -707,7 +716,9 @@ export class KickPlugin extends BasePlugin {
     this.apiBase = this.normalizeApiBase(this.apiBaseInput ? this.apiBaseInput.value : storage.get(API_BASE_KEY, DEFAULT_API_BASE));
     storage.set(API_BASE_KEY, this.apiBase);
 
-    const wsBase = this.wsBaseInput ? (this.wsBaseInput.value.trim() || DEFAULT_WS_BASE) : storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
+    const storedWsBase = storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
+    const wsBaseInputValue = this.wsBaseInput ? this.wsBaseInput.value.trim() : '';
+    const wsBase = wsBaseInputValue || (typeof storedWsBase === 'string' ? storedWsBase.trim() : DEFAULT_WS_BASE) || DEFAULT_WS_BASE;
     storage.set(WS_BASE_KEY, wsBase);
 
     this.refreshStatus();
@@ -767,7 +778,7 @@ export class KickPlugin extends BasePlugin {
 
       await this.prepareEmotesForChannel(channel);
       this.connectWebsocket({ wsBase, chatroomId: this.chatroomId, channelId: this.channelNumericId });
-      this.log(`Connecting to Kick channel ${channel} via websocket`);
+      this.log(`Connecting to Kick channel ${channel} via websocket (${wsBase || DEFAULT_WS_BASE})`);
     } catch (err) {
       this.resetConnectionState();
       const error = err instanceof Error ? err : new Error(err?.message || String(err));

@@ -208,8 +208,11 @@ try {
     var nextPageToken = null;
     var isPolling = false;
     var userDetails = {};
-    var currentStream = null;
+	var currentStream = null;
 	var messageQueue = [];
+	var queueDrainTimeout = null;
+	var pendingRelayMessages = [];
+	var emojiAssetsReady = false;
 	var displayInterval;
 	var quickPollCount = 0
     var urlParams = new URLSearchParams(window.location.search);
@@ -250,6 +253,30 @@ try {
 	var SEVENTV = false;
 	var FFZ = false;
 	var EMOTELIST = false;
+
+	function flushPendingRelayMessages() {
+		if (!pendingRelayMessages.length || !liveChatId) {
+			pendingRelayMessages.length = 0;
+			return;
+		}
+		var pending = pendingRelayMessages.slice();
+		pendingRelayMessages.length = 0;
+		pending.forEach(function(message) {
+			try {
+				processMessage(message);
+			} catch (error) {
+				console.error('Error processing deferred message:', error);
+			}
+		});
+	}
+
+	function markEmojiAssetsReady() {
+		if (emojiAssetsReady) {
+			return;
+		}
+		emojiAssetsReady = true;
+		flushPendingRelayMessages();
+	}
 
 	// Request emotes from extension
 	function requestEmotesFromExtension() {
@@ -427,6 +454,21 @@ try {
 		}
 	}
 	
+	function strictEscapeHtml(value) {
+		if (value === undefined || value === null) {
+			return '';
+		}
+		return String(value).replace(/[&<>"']/g, function(m) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#039;'
+			}[m];
+		});
+	}
+	
 	function replaceEmotesWithImages(text) {
 		if (!text || typeof text !== 'string') {
 			return text || '';
@@ -440,7 +482,7 @@ try {
 			const emote = EMOTELIST[emoteMatch];
 			if (emote) {
 				replacedCount++;
-				const escapedMatch = escapeHtml(emoteMatch); // should I be escaping this? It might be wastful CPU?
+				const escapedMatch = strictEscapeHtml(emoteMatch);
 				const isZeroWidth = typeof emote !== "string" && emote.zw;
 				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
 			}
@@ -538,19 +580,19 @@ try {
 		return [];
 	  });
 	  
-	  promises.push(customEmotePromise.then(data => {
-		processCustomEmoteData(data);
-		return data;
-	  }));
-
-	  return Promise.all(promises);
-	}
+		  promises.push(customEmotePromise.then(data => {
+			processCustomEmoteData(data);
+			return data;
+		  }));
+	
+		  return Promise.all(promises).finally(markEmojiAssetsReady);
+		}
 
 	function replaceEmojis(message) {
 		if (!message || typeof message !== 'string') {
 			return message || '';
 		}
-		let result = message;
+	let result = strictEscapeHtml(message);
 		
 		// Process BTTV/7TV/FFZ emotes first
 		if (EMOTELIST) {
@@ -725,6 +767,11 @@ try {
 					clearTimeout(fetchTimeout);
 				}
 				fetchTimeout = null;
+			}
+			
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+				queueDrainTimeout = null;
 			}
 			
 			if (!foregroundPollingInterval && pollInterval) {
@@ -1490,22 +1537,31 @@ try {
 	  `;
 	  updatePollSpinner(5000);
 	}
-	function queueMessage(messageData) {
-		// Always relay messages immediately
-		processMessage(messageData);
-
-		// If page isn't visible, queue for later DOM rendering
-		if (!isPageVisible) {
-			if (messageQueue.length >= 200) {
-				messageQueue.splice(0, messageQueue.length - 199);
+		function queueMessage(messageData) {
+			if (emojiAssetsReady) {
+				processMessage(messageData);
+			} else {
+				pendingRelayMessages.push(messageData);
 			}
-			messageQueue.push(messageData);
+
+			// If page isn't visible, queue for later DOM rendering
+			if (!isPageVisible) {
+				if (messageQueue.length >= 200) {
+					messageQueue.splice(0, messageQueue.length - 199);
+				}
+				messageQueue.push(messageData);
+			}
 		}
-	}
 	
 	function processQueuedMessages() {
-		// Process all queued messages when page becomes visible
-		if (messageQueue.length === 0) return;
+		// Only process queued messages while page is visible
+		if (!isPageVisible || messageQueue.length === 0) {
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+				queueDrainTimeout = null;
+			}
+			return;
+		}
 		
 		// Process messages in batches to avoid blocking UI
 		const batchSize = Math.min(20, messageQueue.length);
@@ -1514,8 +1570,16 @@ try {
 		batch.forEach(message => processMessage(message, { suppressRelay: true }));
 		
 		// If more messages remain, process them after a short delay
-		if (messageQueue.length > 0) {
-			setTimeout(processQueuedMessages, 50);
+		if (messageQueue.length > 0 && isPageVisible) {
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+			}
+			queueDrainTimeout = setTimeout(() => {
+				queueDrainTimeout = null;
+				processQueuedMessages();
+			}, 50);
+		} else {
+			queueDrainTimeout = null;
 		}
 	}
 		
@@ -1636,6 +1700,10 @@ try {
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
 		}
+		if (queueDrainTimeout) {
+			clearTimeout(queueDrainTimeout);
+			queueDrainTimeout = null;
+		}
 		
 		foregroundPollingInterval = null;
 		pollInterval = null;
@@ -1655,6 +1723,7 @@ try {
 		currentStream = null;
 		clearSourceIdentity();
 		messageQueue = [];
+		pendingRelayMessages = [];
 		quickPollCount = 0;
 		consecutiveMaxMessages = 0; // Reset consecutive max message counter
 		lastSuccessfulPollTime = 0;
@@ -1976,6 +2045,7 @@ try {
 			}
 			const messageText = messageData.message || '';
 			const messageWithEmojis = replaceEmojis(messageText);
+			const safeAuthorName = strictEscapeHtml(messageData.authorName || '');
 
 			// Only update DOM if page is visible
 			if (isPageVisible) {
@@ -1988,7 +2058,7 @@ try {
 					if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
 					if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
 					
-					span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
+					span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${messageWithEmojis}`;
 					textarea.appendChild(span);
 					// More aggressive cleanup to prevent memory buildup
 					const maxMessages = 50;
@@ -2047,7 +2117,10 @@ try {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${superChatData.authorName}</strong> <span>${superChatData.amount}</span>: ${superChatData.message || ''}`;
+					const safeAuthor = strictEscapeHtml(superChatData.authorName || '');
+					const safeAmount = strictEscapeHtml(superChatData.amount || '');
+					const safeMessage = strictEscapeHtml(superChatData.message || '');
+					span.innerHTML = `<strong>${safeAuthor}</strong> <span>${safeAmount}</span>: ${safeMessage}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
@@ -2172,7 +2245,7 @@ try {
 					const textarea = document.querySelector("#textarea");
 					if (textarea) {
 						var span = document.createElement("div");
-						span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>${escapeHtml(displayMessage)}</span>`;
+						span.innerHTML = `<strong>${strictEscapeHtml(membershipData.authorName || '')}</strong> <span>${strictEscapeHtml(displayMessage)}</span>`;
 						textarea.appendChild(span);
 						
 						// Use same cleanup limit as regular messages
@@ -2222,7 +2295,7 @@ try {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(giftData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
@@ -2276,7 +2349,7 @@ try {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(giftData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
@@ -2324,7 +2397,7 @@ try {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(sponsorData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(sponsorData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
@@ -2390,7 +2463,7 @@ try {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(milestoneData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(milestoneData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
@@ -2445,7 +2518,10 @@ try {
 					var span = document.createElement("div");
 					// Use the actual message or alt text for display
 					const stickerText = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
-					span.innerHTML = `<strong>${escapeHtml(stickerData.authorName)}</strong> <span>${stickerData.amount}</span>: 🎨 ${escapeHtml(stickerText)}`;
+					const safeStickerAuthor = strictEscapeHtml(stickerData.authorName || '');
+					const safeAmount = strictEscapeHtml(stickerData.amount || '');
+					const safeStickerText = strictEscapeHtml(stickerText);
+					span.innerHTML = `<strong>${safeStickerAuthor}</strong> <span>${safeAmount}</span>: 🎨 ${safeStickerText}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
