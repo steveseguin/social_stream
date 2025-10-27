@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.34.0",
+  "version": "3.34.12",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -52,8 +52,10 @@
 	"https://www.ilmfix.de/programs/*",
 	"https://cloud.malte-schroeder.de/call/*",
 	"https://*.webinargeek.com/watch/*",
-    "https://chaturbate.com/*",
-    "https://cherry.tv/*",	
+    "https://chaturbate.com/*/",
+    "https://cherry.tv/*",
+	"https://myfreecams.com/*",
+	"https://www.myfreecams.com/*",
 	"https://*.online.church/",
     "https://beamstream.gg/*/chat",
     "https://socialstream.ninja/*",
@@ -101,7 +103,9 @@
     "https://meet.google.com/*",
     "https://play.quickchannel.com/*",
     "https://kick.com/*/chatroom",
-	"https://kick.com/popout/*/chat",
+    "https://kick.com/*/*/chatroom",
+    "https://kick.com/popout/*/chat",
+    "https://kick.com/*/popout/*/chat",
     "https://chatroll.com/embed/chat/*",
     "https://www.nimo.tv/popout/chat/*",
     "https://dashboard.nimo.tv/popout/chat/*",
@@ -222,10 +226,22 @@
 	"https://*.on24.com/view/*",
     "https://*.meetme.com/*",
     "https://meetme.com/*",
-	"https://fansly.com/chatroom/*"
+	"https://fansly.com/chatroom/*",
+	"https://pump.fun/coin/*",
+	"https://retake.tv/*",
+	"https://www.camsoda.com/*",
+	"https://portal.abs.xyz/stream/*"
   ],
   "content_scripts": [
     {
+      "js": [ "./sources/portal.js" ],
+      "matches": [ "https://portal.abs.xyz/stream/*" ]
+    },
+	{
+      "js": [ "./sources/camsoda.js" ],
+      "matches": [ "https://www.camsoda.com/*" ]
+    },
+	{
       "js": [ "./sources/generic.js" ],
       "matches": [ "https://versus.cam/?testchat" ]
     },
@@ -248,7 +264,7 @@
     },
     {
       "js": [ "./sources/chaturbate.js" ],
-      "matches": [ "https://chaturbate.com/*/" ]
+      "matches": [ "https://chaturbate.com/*" ]
     },
 	{
       "js": [ "./sources/fansly.js" ],
@@ -257,6 +273,14 @@
     {
       "js": [ "./sources/cherrytv.js" ],
       "matches": [ "https://cherry.tv/*" ]
+    },
+	{
+      "js": [ "./sources/myfreecams.js" ],
+      "matches": [ "https://myfreecams.com/*","https://www.myfreecams.com/*" ]
+    },
+	{
+      "js": [ "./sources/pumpfun.js" ],
+      "matches": [ "https://pump.fun/coin/*" ]
     },
 	{
       "js": [ "./sources/onlinechurch.js" ],
@@ -296,7 +320,7 @@
     },
 	{
       "js": [ "./sources/retake.js" ],
-      "matches": [ "https://retake.tv/live/*" ]
+      "matches": ["https://retake.tv/*"]
     },
 	{
       "js": [ "./sources/xeenon.js" ],
@@ -585,7 +609,12 @@
     },
     {
       "js": [ "./sources/kick.js" ],
-      "matches": [ "https://kick.com/*/chatroom", "https://kick.com/popout/*/chat"]
+      "matches": [
+        "https://kick.com/*/chatroom",
+        "https://kick.com/*/*/chatroom",
+        "https://kick.com/popout/*/chat",
+        "https://kick.com/*/popout/*/chat"
+      ]
     },
     {
       "js": [ "./sources/cloudhub.js" ],
@@ -801,9 +830,12 @@
       "js": [ "./sources/instagram.js" ],
       "matches": [ "https://www.instagram.com/*" ]
     },
-	{
+    {
       "js": [ "./sources/substack.js" ],
-      "matches": [ "https://substack.com/*?liveStream=*", "https://*.substack.com/live-stream/*" ]
+      "matches": [
+        "https://substack.com/*",
+        "https://*.substack.com/*"
+      ]
     },
     {
       "js": [ "./sources/tiktok.js" ],

@@ -3,26 +3,6 @@
 	 
 	var checking = false;
 	
-	async function getImageAsBase64(blobUrl) {
-		
-		try {
-			// Fetch the blob
-			const response = await fetch(blobUrl);
-			const blob = await response.blob();
-			
-			// Convert blob to base64
-			return new Promise((resolve, reject) => {
-				const reader = new FileReader();
-				reader.onloadend = () => resolve(reader.result);
-				reader.onerror = reject;
-				reader.readAsDataURL(blob);
-			});
-		} catch (error) {
-			console.error('Error converting image to base64:', error);
-			return null;
-		}
-	}
-	
 	function toDataURL(url, callback) {
 	  var xhr = new XMLHttpRequest();
 	  xhr.onload = function() {
@@ -95,7 +75,7 @@
 	
 	var channelName = "";
 	
-	async function processMessage(ele){
+	function processMessage(ele){
 		//console.log(ele);
 		if (!ele || !ele.isConnected){
 		//	console.log("no connected");
@@ -110,24 +90,38 @@
 		var chatimg = ""
 
 		try {
-			chatimg = await getImageAsBase64(ele.querySelector("img[alt='Avatar'][src]").src);
+			chatimg = ele.querySelector("img[src].rounded-full.object-cover");
+			if (chatimg){
+				chatimg.src = chatimg.src+"";
+				chatimg = chatimg.src;
+			}
 		} catch(e){
 			//console.error(e);
 		}
 		
 		var name="";
-		try {
-			name = escapeHtml(ele.querySelector(".font-akkurat.text-sm.text-zinc-600").textContent.split(" ")[0]);
-		} catch(e){
-			//console.error(e);
-			return;
-		}
-		
 		var namecolor="";
 		try {
-			//namecolor = ele.querySelector(".css-1jxf684").style.color;
+			name = escapeHtml(ele.querySelector("a.font-semibold.text-xs").textContent);
+			namecolor = ele.querySelector("a.font-semibold.text-xs").style.color;
 		} catch(e){
+		//	console.error(e);
 		}
+		
+		if (!name && ele.querySelector("div.justify-end")){
+			name = "User";
+			namecolor = "#FF3535";
+			chatimg = "https://pump.fun/livestreams/pepe-placeholder.png?img-width=70&img-dpr=2";
+			
+			if (settings && settings.hostnamesext && settings.hostnamesext.textsetting){
+				name = settings.hostnamesext.textsetting.split(",")[0].trim();
+			}
+			if (settings && settings.mynameext && settings.mynameext.textparam1){
+				name = settings.mynameext.textparam1.split(",")[0].trim();
+			}
+		}
+		
+		if (!name){return;}
 		
 		var badges=[];
 		/* try {
@@ -144,11 +138,21 @@
 			
 			
 		try {
-			msg = getAllContentNodes(ele.querySelector("[alt='Image']src, .text-base.font-normal.leading-tight.text-white")).trim();
+			msg = getAllContentNodes(ele.querySelector("p.break-words")).trim();
 		} catch(e){
-		//	console.error(e);
+			
 		}
 		
+		if (!msg){
+			try {
+				msg = getAllContentNodes(ele.querySelector("a p.text-xs.font-semibold")).trim();
+				if (msg.startsWith("Tipped")){
+					hasDonation = msg.split(" ")[1] + " " + msg.split(" ")[2];
+				}
+			} catch(e){
+			//	console.error(e);
+			}
+		}
 		
 		if (!msg || !name){
 			//console.log("no name", msg, name);
@@ -169,7 +173,7 @@
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
-		data.type = "simps";
+		data.type = "pumpfun";
 		
 		//console.log(data);
 		pushMessage(data);
@@ -203,7 +207,7 @@
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							({message:{
-									type: 'simps',
+									type: 'pumpfun',
 									event: 'viewer_update',
 									meta: views
 								}
@@ -240,9 +244,9 @@
 					startCheck();
 				}
 				
-				if ("getSource" == request){sendResponse("simps");	return;	}
+				if ("getSource" == request){sendResponse("pumpfun");	return;	}
 				if ("focusChat" == request){
-					document.querySelector('textarea,input[type="text"]').focus();
+					document.querySelector('input[type="text"][placeholder]').focus();
 					sendResponse(true);
 					return;
 				}
@@ -271,41 +275,10 @@
 	var lastURL =  "";
 	var observer = null;
 	
-	
-	function onElementInserted(target) {
-		var onMutationsObserved = function(mutations) {
-			mutations.forEach(function(mutation) {
-				if (mutation.addedNodes.length) {
-					console.log(mutation.addedNodes);
-					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
-						try {
-							const addedNode = mutation.addedNodes[i];
-							if (addedNode.nodeType !== 1) continue; // Only process element nodes
 
-							if (addedNode.skip){continue;}
-
-							setTimeout(()=>{
-									processMessage(addedNode);
-							},300);
-
-						} catch(e){
-							console.error("Error processing added node:", e);
-						}
-					}
-				}
-			});
-		};
-		
-		var config = { childList: true, subtree: true };
-		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		
-		observer = new MutationObserver(onMutationsObserved);
-		observer.observe(target, config);
-	}
-	
 	console.log("social stream injected");
 
-
+	var firstRun = 0;
 	function startCheck(){
 		if (isExtensionOn && checking){return;}
 
@@ -314,19 +287,23 @@
 		if (!isExtensionOn){
 			return;
 		}
+		
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector(".lk-room-container");
-				if (!container.marked){
-					container.marked=true;
-
-					console.log("CONNECTED");
-
-					onElementInserted(container);
-				}
+				document.querySelectorAll("[data-message-id]:not([data-skip])").forEach(msg=>{
+					
+					if (firstRun>4){
+						processMessage(msg);
+					}
+					msg.dataset.skip = "true";
+				});
+				
+				
+				firstRun += 1;
+				
 				// checkViewers();
 			} catch(e){}
-		},2000);
+		},500);
 	}
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.

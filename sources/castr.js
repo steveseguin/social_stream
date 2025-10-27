@@ -1,6 +1,25 @@
 (function () {
 	
 	var isExtensionOn = true;
+	function resolveSourceImageUrl(src) {
+		if (!src) {
+			return "";
+		}
+		var str = (src + "").trim();
+		if (!str) {
+			return "";
+		}
+		if (/^[a-z][a-z0-9+.-]*:/i.test(str) || str.startsWith("//")) {
+			return str;
+		}
+		var cleaned = str.replace(/^\.\/+/, "").replace(/^\/+/, "");
+		var lowerCleaned = cleaned.toLowerCase();
+		var prefix = "sources/images/";
+		if (!lowerCleaned.startsWith(prefix)) {
+			cleaned = prefix + cleaned;
+		}
+		return "./" + cleaned;
+	}
 function toDataURL(blobUrl, callback) {
 		var xhr = new XMLHttpRequest;
 		xhr.responseType = 'blob';
@@ -126,7 +145,16 @@ function toDataURL(blobUrl, callback) {
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "castr";
-		data.sourceImg = "./sources/images/"+sourceImg;
+		var sourceImgPath = "./sources/images/"+sourceImg;
+		var normalizedSourceImg = resolveSourceImageUrl(sourceImgPath);
+		var typeIconUrl = resolveSourceImageUrl("./sources/images/" + data.type + ".png");
+		var finalSourceImg = normalizedSourceImg;
+		if (finalSourceImg && typeIconUrl && finalSourceImg.toLowerCase() === typeIconUrl.toLowerCase()) {
+			finalSourceImg = "";
+		}
+		if (finalSourceImg) {
+			data.sourceImg = finalSourceImg;
+		}
 		
 		
 		pushMessage(data);

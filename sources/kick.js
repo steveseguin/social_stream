@@ -2,25 +2,94 @@
 	
 	// Function to rewrite old Kick URLs to new format
 	function rewriteKickUrl(url) {
-		// Check if it's an old Kick chatroom URL (case-insensitive)
-		const oldKickPattern = /^https:\/\/kick\.com\/([^\/]+)\/chatroom$/i;
-		const match = url.match(oldKickPattern);
-		
-		if (match) {
-			// Validate and sanitize username
-			const username = match[1];
-			if (!username || username.length === 0) {
-				return url; // Invalid username, don't redirect
-			}
-			
-			// Rewrite to new format
-			const newUrl = `https://kick.com/popout/${encodeURIComponent(username)}/chat`;
-			console.log(`[Social Stream] Rewriting old Kick URL: ${url} -> ${newUrl}`);
-			return newUrl;
+		const parsed = parseKickUrl(url);
+		if (!parsed || parsed.variant !== 'chatroom') {
+			return url; // Not an old chatroom URL
 		}
-		
-		// Return original URL if no rewriting needed
-		return url;
+
+		const localeSegment = parsed.locale ? `${encodeURIComponent(parsed.locale)}/` : '';
+		const encodedUsername = encodeURIComponent(parsed.username);
+		const search = parsed.url.search || '';
+		const hash = parsed.url.hash || '';
+		const newUrl = `${parsed.url.origin}/${localeSegment}popout/${encodedUsername}/chat${search}${hash}`;
+
+		if (newUrl !== url) {
+			console.log(`[Social Stream] Rewriting old Kick URL: ${url} -> ${newUrl}`);
+		}
+
+		return newUrl;
+	}
+
+	function parseKickUrl(url) {
+		try {
+			const baseOrigin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : 'https://kick.com';
+			const parsedUrl = new URL(url, baseOrigin);
+			if (!parsedUrl.hostname || !parsedUrl.hostname.toLowerCase().endsWith('kick.com')) {
+				return null;
+			}
+
+			const rawSegments = parsedUrl.pathname.split('/').filter(Boolean);
+			if (!rawSegments.length) {
+				return null;
+			}
+
+			const lowerSegments = rawSegments.map(seg => seg.toLowerCase());
+			const lastSegment = lowerSegments[lowerSegments.length - 1];
+
+			let variant = null;
+			let username = null;
+			let locale = null;
+
+			if (lastSegment === 'chat') {
+				const popoutIndex = lowerSegments.lastIndexOf('popout');
+				if (popoutIndex === -1 || popoutIndex + 1 >= rawSegments.length) {
+					return null;
+				}
+				variant = 'popout';
+				username = rawSegments[popoutIndex + 1];
+				if (popoutIndex === 1) {
+					locale = rawSegments[0];
+				} else if (popoutIndex > 1) {
+					return null; // Unexpected extra path segments before popout
+				}
+			} else if (lastSegment === 'chatroom') {
+				variant = 'chatroom';
+				if (rawSegments.length < 2) {
+					return null;
+				}
+				username = rawSegments[rawSegments.length - 2];
+				if (rawSegments.length === 3) {
+					locale = rawSegments[0];
+				} else if (rawSegments.length > 3) {
+					return null; // Unsupported structure
+				}
+			} else {
+				return null;
+			}
+
+			if (!username) {
+				return null;
+			}
+
+			try {
+				username = decodeURIComponent(username);
+			} catch (e) {}
+
+			if (locale) {
+				try {
+					locale = decodeURIComponent(locale);
+				} catch (e) {}
+			}
+
+			return {
+				url: parsedUrl,
+				variant,
+				username,
+				locale
+			};
+		} catch (e) {
+			return null;
+		}
 	}
 	
 	// Check and redirect if needed, but only once
@@ -138,11 +207,45 @@
 	var processedMessages = new Set();
 	var maxTrackedMessages = 3;
 	var pastMessages = [];
-	
+
 	// Persistent cache configuration
 	const CACHE_KEY = 'kick_user_profiles_cache';
 	const CACHE_EXPIRY_DAYS = 7;
 	const CACHE_EXPIRY_MS = CACHE_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
+
+	function normalizeCacheEntry(entry) {
+		if (!entry) {
+			return null;
+		}
+		if (typeof entry === 'string') {
+			return {
+				profilePic: entry,
+				timestamp: 0,
+				pending: false
+			};
+		}
+		if (typeof entry === 'object') {
+			return {
+				profilePic: typeof entry.profilePic === 'string' ? entry.profilePic : '',
+				timestamp: typeof entry.timestamp === 'number' ? entry.timestamp : 0,
+				pending: Boolean(entry.pending)
+			};
+		}
+		return null;
+	}
+
+	function isCacheEntryFresh(entry) {
+		if (!entry) {
+			return false;
+		}
+		if (!entry.profilePic) {
+			return false;
+		}
+		if (!entry.timestamp) {
+			return false;
+		}
+		return (Date.now() - entry.timestamp) < CACHE_EXPIRY_MS;
+	}
 	
 	// Load cached profiles from localStorage on startup
 	function loadCachedProfiles() {
@@ -154,8 +257,16 @@
 				
 				// Filter out expired entries and convert back to Map
 				Object.entries(data).forEach(([username, entry]) => {
-					if (entry.timestamp && (now - entry.timestamp) < CACHE_EXPIRY_MS) {
-						cachedUserProfiles.set(username, entry.profilePic);
+					const cachedEntry = normalizeCacheEntry(entry);
+					if (!cachedEntry || !cachedEntry.profilePic) {
+						return;
+					}
+					if (cachedEntry.timestamp && (now - cachedEntry.timestamp) < CACHE_EXPIRY_MS) {
+						cachedUserProfiles.set(username, {
+							profilePic: cachedEntry.profilePic,
+							timestamp: cachedEntry.timestamp,
+							pending: false
+						});
 					}
 				});
 				
@@ -173,10 +284,15 @@
 			const now = Date.now();
 			
 			// Convert Map to object with timestamps
-			cachedUserProfiles.forEach((profilePic, username) => {
+			cachedUserProfiles.forEach((value, username) => {
+				const cachedEntry = normalizeCacheEntry(value);
+				if (!cachedEntry || !cachedEntry.profilePic || cachedEntry.pending) {
+					return;
+				}
+				const entryTimestamp = cachedEntry.timestamp && cachedEntry.timestamp > 0 ? cachedEntry.timestamp : now;
 				data[username] = {
-					profilePic: profilePic,
-					timestamp: now
+					profilePic: cachedEntry.profilePic,
+					timestamp: entryTimestamp
 				};
 			});
 			
@@ -237,11 +353,19 @@
 				
 				// Remove expired entries
 				Object.entries(data).forEach(([username, entry]) => {
-					if (!entry.timestamp || (now - entry.timestamp) >= CACHE_EXPIRY_MS) {
+					const cachedEntry = normalizeCacheEntry(entry);
+					const isExpired = !cachedEntry || !cachedEntry.timestamp || (now - cachedEntry.timestamp) >= CACHE_EXPIRY_MS;
+					const isEmpty = !cachedEntry || !cachedEntry.profilePic;
+					if (isExpired || isEmpty) {
 						delete data[username];
 						hasExpired = true;
 						// Also remove from memory cache if present
 						cachedUserProfiles.delete(username);
+					} else {
+						data[username] = {
+							profilePic: cachedEntry.profilePic,
+							timestamp: cachedEntry.timestamp
+						};
 					}
 				});
 				
@@ -286,10 +410,17 @@
 	}
 		
 	function extractKickUsername(url) {
-		const pattern = /kick\.com\/(?:popout\/)?([^/]+)(?:\/(?:chat|chatroom))?$/i;
-		const match = url.match(pattern);
-		if (match) {
-			return match[1];
+		const parsed = parseKickUrl(url);
+		if (parsed && parsed.username) {
+			return parsed.username;
+		}
+		return false;
+	}
+
+	function extractKickLocale(url) {
+		const parsed = parseKickUrl(url);
+		if (parsed && parsed.locale) {
+			return parsed.locale;
 		}
 		return false;
 	}
@@ -445,14 +576,27 @@
 	}
 	
 	async function getKickAvatarImage(username, channelname){
-		
 		// Check if username exists in cache
 		if (cachedUserProfiles.has(username)){
-			// Move to end (most recently used)
-			const value = cachedUserProfiles.get(username);
-			cachedUserProfiles.delete(username);
-			cachedUserProfiles.set(username, value);
-			return value;
+			const cachedEntry = normalizeCacheEntry(cachedUserProfiles.get(username));
+			if (cachedEntry){
+				if (cachedEntry.pending){
+					return cachedEntry.profilePic || "";
+				}
+				if (isCacheEntryFresh(cachedEntry)){
+					// Move to end (most recently used) without mutating timestamp
+					cachedUserProfiles.delete(username);
+					cachedUserProfiles.set(username, {
+						profilePic: cachedEntry.profilePic,
+						timestamp: cachedEntry.timestamp,
+						pending: false
+					});
+					return cachedEntry.profilePic;
+				}
+				// Entry is stale; remove before refetching
+				cachedUserProfiles.delete(username);
+				debouncedSaveCachedProfiles();
+			}
 		}
 		
 		// Evict oldest entry if cache is full
@@ -463,18 +607,36 @@
 		}
 		
 		// Add placeholder immediately to prevent duplicate requests
-		cachedUserProfiles.set(username, "");
+		cachedUserProfiles.set(username, {
+			profilePic: "",
+			timestamp: 0,
+			pending: true
+		});
 		
 		return await fetchWithTimeout("https://kick.com/channels/"+encodeURIComponent(channelname)+"/"+encodeURIComponent(username)).then(async response => {
+			if (!response || !response.ok) {
+				cachedUserProfiles.delete(username);
+				debouncedSaveCachedProfiles();
+				return "";
+			}
 			return await response.json().then(function (data) {
 				if (data && data.profilepic){
 					// Update cache with actual profile pic
-					cachedUserProfiles.set(username, data.profilepic);
+					cachedUserProfiles.set(username, {
+						profilePic: data.profilepic,
+						timestamp: Date.now(),
+						pending: false
+					});
 					debouncedSaveCachedProfiles(); // Save after adding new profile
 					return data.profilepic;
 				}
+				// No profile pic returned; clear placeholder to allow future retries
+				cachedUserProfiles.delete(username);
+				debouncedSaveCachedProfiles();
 			});
 		}).catch(error => {
+			cachedUserProfiles.delete(username);
+			debouncedSaveCachedProfiles();
 			//console.log("Couldn't get avatar image URL. API service down?");
 		});
 	}
@@ -555,7 +717,7 @@
 		nameColor = ele.querySelector(".chat-entry-username").style.color;
 	  } catch(e){}
 	  
-	  // settings.replyingto
+	  // settings.excludeReplyingTo
 	  
 	  if (!settings.textonlymode){
 		  try {
@@ -584,7 +746,7 @@
 	  var originalMessage = "";
 	  var replyMessage = "";
 	  
-	  if (settings.replyingto){
+	  if (!settings.excludeReplyingTo){
 		  let reply = ele.querySelector(".chat-entry");
 		  if (reply?.children.length == 2){
 				reply = escapeHtml(reply.children[0].textContent);
@@ -812,6 +974,7 @@
 	  var nameColor = "";
 	  var name ="";
 	  var chatbadges = [];
+	  var chatNodes = [];
 	  
 	  
 	  try {
@@ -821,7 +984,7 @@
 	   
 	  if (!settings.textonlymode){
 		  try {
-			var chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
+			chatNodes = ele.querySelectorAll("seventv-container"); // 7tv support, as of june 20th
 			
 			if (!chatNodes.length){
 				chatNodes = ele.querySelectorAll(".chat-entry-content, .chat-emote-container, .break-all");
@@ -839,13 +1002,11 @@
 		  } catch(e){
 		  }
 	  } else {
-		  if (!chatNodes.length){
-			let tmp = ele.querySelector("div span[class^='font-normal']");
-			if (tmp){
-				chatmessage = getAllContentNodes(tmp);
-				chatmessage = chatmessage.trim();
-			}
-		  }
+		let tmp = ele.querySelector("div span[class^='font-normal']");
+		if (tmp){
+			chatmessage = getAllContentNodes(tmp);
+			chatmessage = chatmessage.trim();
+		}
 	  }
 	  if (chatNodes.length){
 		for (var i=0;i<chatNodes.length;i++){
@@ -859,7 +1020,7 @@
 	  var originalMessage = "";
 	  var replyMessage = "";
 	  
-	  if (settings.replyingto){
+	  if (!settings.excludeReplyingTo){
 		  let reply = ele.querySelector(".text-xs button");
 		  if (reply){
 				reply = getAllContentNodes(reply.parentNode).trim();
@@ -901,7 +1062,6 @@
 
 
 	  var hasDonation = '';
-	
 	  
 	  chatname = chatname.replace("Channel Host", "");
 	  chatname = chatname.replace(":", "");
@@ -1171,26 +1331,30 @@
 		}
 		
 		try {
-			let kickUsername = extractKickUsername(window.location.href);
-			if (kickUsername && document.querySelector('[data-testid="not-found"]')){
-				if (kickUsername.includes("_")){
-					kickUsername = kickUsername.replaceAll("_","-").toLowerCase();
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
-					window.location.replace(newUrl); // Use replace to avoid history issues
+			const currentUrl = window.location.href;
+			const kickLocale = extractKickLocale(currentUrl);
+			const localeSegment = kickLocale ? `${encodeURIComponent(kickLocale)}/` : '';
+			const buildPopoutUrl = (username) => {
+				return `${window.location.origin}/${localeSegment}popout/${encodeURIComponent(username)}/chat?popout=`;
+			};
+
+			const kickUsername = extractKickUsername(currentUrl);
+			if (kickUsername && document.querySelector('[data-testid="not-found"]')) {
+				if (kickUsername.includes("_")) {
+					const normalized = kickUsername.replaceAll("_", "-").toLowerCase();
+					window.location.replace(buildPopoutUrl(normalized)); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
-				} else if (kickUsername.includes("-")){
-					kickUsername = kickUsername.replaceAll("-","_").toLowerCase();
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
-					window.location.replace(newUrl); // Use replace to avoid history issues
+				} else if (kickUsername.includes("-")) {
+					const normalized = kickUsername.replaceAll("-", "_").toLowerCase();
+					window.location.replace(buildPopoutUrl(normalized)); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
-				} else if (kickUsername.toLowerCase() !== kickUsername){
-					kickUsername = kickUsername.toLowerCase();
-					const newUrl = `https://kick.com/popout/${encodeURIComponent(kickUsername)}/chat?popout=`;
-					window.location.replace(newUrl); // Use replace to avoid history issues
+				} else if (kickUsername.toLowerCase() !== kickUsername) {
+					const normalized = kickUsername.toLowerCase();
+					window.location.replace(buildPopoutUrl(normalized)); // Use replace to avoid history issues
 					throw new Error('Redirecting to new Kick URL format');
 				}
 			}
-		}catch(e){
+		} catch(e){
 			console.error(e);
 		}
 		

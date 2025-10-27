@@ -6,8 +6,10 @@ import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
 const TOKEN_KEY = 'youtube.token';
 const CLIENT_ID_KEY = 'youtube.clientId';
 const CHAT_ID_KEY = 'youtube.chatId';
+const CHAT_ID_SOURCE_KEY = 'youtube.chatIdSource';
 const CHANNEL_KEY = 'youtube.channel';
 const STATE_KEY = 'youtube.authState';
+const REDIRECT_KEY = 'youtube.redirectUri';
 
 const DEFAULT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
 const SUBSCRIBER_CACHE_KEY = 'youtube.subscriberCache';
@@ -15,8 +17,12 @@ const SUBSCRIBER_CACHE_LIMIT = 200;
 const SUBSCRIBER_POLL_INTERVAL = 120000;
 const CAPTURE_EVENTS_KEY = 'settings.captureevents';
 
+const AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
+
 const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.readonly',
+  'https://www.googleapis.com/auth/youtube',
+  'https://www.googleapis.com/auth/youtube.force-ssl',
   'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
 
@@ -46,11 +52,37 @@ export class YoutubePlugin extends BasePlugin {
     this.pollTimer = null;
     this.nextPageToken = null;
     this.pollInterval = 5000;
-    this.liveChatId = storage.get(CHAT_ID_KEY, '');
+
+    const storedChatId = storage.get(CHAT_ID_KEY, '');
+    const storedChatIdSource = storage.get(CHAT_ID_SOURCE_KEY, null);
+    let ignoredManualChatId = null;
+
+    this.liveChatId = '';
+    this.chatIdSource = 'auto';
+    this.chatIdIsLegacyManual = false;
+    this.skipStoredManualOnce = false;
+
+    if (storedChatIdSource === 'auto' && storedChatId) {
+      this.liveChatId = storedChatId;
+    } else if (storedChatId && storedChatIdSource === 'manual') {
+      ignoredManualChatId = storedChatId;
+      storage.remove(CHAT_ID_KEY);
+      storage.remove(CHAT_ID_SOURCE_KEY);
+    } else if (storedChatId && !storedChatIdSource) {
+      ignoredManualChatId = storedChatId;
+      storage.remove(CHAT_ID_KEY);
+    }
+
+    if (ignoredManualChatId) {
+      this.debugLog('Ignored stored manual YouTube chat ID on startup to prioritize active broadcasts.', {
+        chatId: ignoredManualChatId
+      });
+    }
     this.activeBroadcast = null;
     this.streamingToggleInput = null;
     this.useStreaming = Boolean(useStreaming);
     this.onStreamingPreferenceChange = typeof onStreamingPreferenceChange === 'function' ? onStreamingPreferenceChange : null;
+    this.recoveringLiveChat = false;
 
     const cachedSubscribers = storage.get(SUBSCRIBER_CACHE_KEY, null);
     const cachedKeys = Array.isArray(cachedSubscribers?.keys) ? cachedSubscribers.keys.slice(0, SUBSCRIBER_CACHE_LIMIT) : [];
@@ -121,9 +153,7 @@ export class YoutubePlugin extends BasePlugin {
     chatInput.addEventListener('change', () => {
       const newValue = chatInput.value.trim();
       const oldValue = this.liveChatId;
-      this.liveChatId = newValue;
-      storage.set(CHAT_ID_KEY, this.liveChatId);
-      this.refreshStatus();
+      this.rememberLiveChatId(newValue, { source: newValue ? 'manual' : 'auto', legacy: false });
 
       // If connected and the Video/Chat ID changed, reconnect
       if (this.state === 'connected' && newValue !== oldValue) {
@@ -264,6 +294,197 @@ export class YoutubePlugin extends BasePlugin {
     };
   }
 
+  rememberLiveChatId(chatId, options = {}) {
+    const { source = 'auto', silent = false, legacy = false } = options || {};
+    const normalizedSource = source === 'manual' ? 'manual' : 'auto';
+    const value = typeof chatId === 'string' ? chatId.trim() : '';
+
+    this.liveChatId = value;
+    this.chatIdSource = normalizedSource;
+    this.chatIdIsLegacyManual = normalizedSource === 'manual' && Boolean(legacy);
+
+    if (normalizedSource === 'manual') {
+      storage.remove(CHAT_ID_KEY);
+      storage.remove(CHAT_ID_SOURCE_KEY);
+    } else if (this.liveChatId) {
+      storage.set(CHAT_ID_KEY, this.liveChatId);
+      storage.set(CHAT_ID_SOURCE_KEY, 'auto');
+    } else {
+      storage.remove(CHAT_ID_KEY);
+      storage.remove(CHAT_ID_SOURCE_KEY);
+    }
+
+    if (this.chatIdInput && this.chatIdInput.value !== this.liveChatId) {
+      this.chatIdInput.value = this.liveChatId;
+    }
+
+    if (!silent) {
+      this.refreshStatus();
+    }
+  }
+
+  clearStoredLiveChatId(options = {}) {
+    const { silent = false } = options || {};
+    this.rememberLiveChatId('', { source: 'auto', silent: true, legacy: false });
+    this.nextPageToken = null;
+    this.setActiveBroadcast(null);
+    if (!silent) {
+      this.refreshStatus();
+    }
+  }
+
+  beginLiveChatRecovery(options = {}) {
+    const { reason = null } = options || {};
+
+    if (this.state === 'idle' || this.state === 'disabled') {
+      return false;
+    }
+
+    const isManualSource = this.chatIdSource === 'manual';
+    const canRecoverManual = isManualSource && this.chatIdIsLegacyManual;
+
+    if (isManualSource && !canRecoverManual) {
+      return false;
+    }
+
+    if (this.recoveringLiveChat) {
+      return true;
+    }
+
+    this.recoveringLiveChat = true;
+
+    const detail = {};
+    if (this.liveChatId) {
+      detail.liveChatId = this.liveChatId;
+    }
+    if (reason && (reason.reason || reason.message)) {
+      detail.reason = reason.reason || reason.message;
+    }
+
+    this.log('YouTube live chat appears inactive. Attempting to find a current broadcast...', detail);
+
+    this.stopListening();
+    this.stopSubscriberWatcher();
+    this.nextPageToken = null;
+    this.setActiveBroadcast(null);
+
+    const previousChatState = {
+      id: this.liveChatId,
+      source: this.chatIdSource,
+      legacyManual: this.chatIdIsLegacyManual
+    };
+
+    if (canRecoverManual) {
+      this.skipStoredManualOnce = true;
+    } else {
+      this.clearStoredLiveChatId({ silent: true });
+    }
+
+    if (this.state !== 'connecting') {
+      this.setState('connecting');
+    }
+
+    Promise.resolve().then(async () => {
+      let restoredPrevious = false;
+      try {
+        if (this.state === 'idle' || this.state === 'disabled') {
+          return;
+        }
+        if (!this.messenger.getSessionId()) {
+          return;
+        }
+        await this.setupLiveChat();
+      } catch (err) {
+        if (canRecoverManual && previousChatState.id) {
+          this.rememberLiveChatId(previousChatState.id, {
+            source: previousChatState.source,
+            legacy: previousChatState.legacyManual,
+            silent: true
+          });
+          restoredPrevious = true;
+        }
+        super.reportError(err);
+      } finally {
+        if (canRecoverManual && !restoredPrevious && !this.liveChatId && previousChatState.id) {
+          this.rememberLiveChatId(previousChatState.id, {
+            source: previousChatState.source,
+            legacy: previousChatState.legacyManual,
+            silent: true
+          });
+        }
+        this.skipStoredManualOnce = false;
+        this.recoveringLiveChat = false;
+      }
+    });
+
+    return true;
+  }
+
+  isLiveChatInactiveError(error) {
+    if (!error) {
+      return false;
+    }
+
+    const reason = typeof error.reason === 'string' ? error.reason.toLowerCase() : '';
+    const message = typeof error.message === 'string' ? error.message.toLowerCase() : '';
+    const status = Number(error.status) || 0;
+
+    if (reason) {
+      if (reason.includes('livechatnotfound') || reason.includes('livechatended') || reason.includes('livechatinactive')) {
+        return true;
+      }
+      if (reason.includes('livechatnotavailable') || reason.includes('livechatunavailable')) {
+        return true;
+      }
+    }
+
+    if (message) {
+      if (message.includes('live chat is no longer live') || message.includes('live chat has ended')) {
+        return true;
+      }
+      if (message.includes('live chat is not live') || message.includes('live chat ended')) {
+        return true;
+      }
+    }
+
+    if (status === 404) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async isLiveChatIdActive(chatId) {
+    if (!chatId) {
+      return false;
+    }
+    if (!this.isTokenValid()) {
+      throw new Error('YouTube token expired. Please reconnect.');
+    }
+
+    const headers = {
+      Authorization: `Bearer ${this.token.accessToken}`,
+      Accept: 'application/json'
+    };
+    const params = new URLSearchParams({
+      part: 'id',
+      liveChatId: chatId,
+      maxResults: '1'
+    });
+
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/liveChat/messages?${params.toString()}`, { headers });
+    if (res.ok) {
+      return true;
+    }
+
+    const errBody = await res.json().catch(() => ({}));
+    const apiErr = this.createApiError(errBody, res.status, 'liveChat.messages');
+    if (this.isLiveChatInactiveError(apiErr)) {
+      return false;
+    }
+    throw apiErr;
+  }
+
   enable() {
     if (!this.messenger.getSessionId()) {
       throw new Error('Start a session before connecting YouTube.');
@@ -292,23 +513,29 @@ export class YoutubePlugin extends BasePlugin {
     const redirectUri = new URL(window.location.href.split('#')[0]).toString();
     const state = `${this.id}:${randomSessionId()}`;
     storage.set(STATE_KEY, state);
+    storage.set(REDIRECT_KEY, redirectUri);
 
     const params = new URLSearchParams({
       client_id: clientId,
       redirect_uri: redirectUri,
-      response_type: 'token',
-      access_type: 'online',
-      include_granted_scopes: 'true',
       scope: YT_SCOPES.join(' '),
-      state,
-      prompt: 'consent'
+      state
     });
 
-    window.location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`);
+    window.location.assign(`${AUTH_BASE_URL}/auth?${params.toString()}`);
   }
 
-  handleOAuthCallback(params) {
+  async handleOAuthCallback(params) {
+    if (params.has('code')) {
+      await this.completeAuthorizationCodeFlow(params);
+      return;
+    }
+
     const access = params.get('access_token');
+    if (!access) {
+      throw new Error('OAuth response missing authorization code or access token for YouTube.');
+    }
+
     const expires = parseInt(params.get('expires_in'), 10) || 3600;
     const scope = params.get('scope') || '';
     const state = params.get('state');
@@ -324,7 +551,8 @@ export class YoutubePlugin extends BasePlugin {
       accessToken: access,
       scope,
       tokenType: params.get('token_type') || 'Bearer',
-      expiresAt: Date.now() + (expires - 60) * 1000
+      expiresAt: Date.now() + (expires - 60) * 1000,
+      refreshToken: null
     };
 
     storage.set(TOKEN_KEY, tokenData);
@@ -338,6 +566,87 @@ export class YoutubePlugin extends BasePlugin {
       this.setupLiveChat();
     } else {
       this.log('Authorization successful. Start a session and press Connect when ready.');
+    }
+  }
+
+  async completeAuthorizationCodeFlow(params) {
+    const code = params.get('code');
+    const state = params.get('state');
+
+    if (!code) {
+      throw new Error('Missing authorization code from YouTube.');
+    }
+
+    const storedState = storage.get(STATE_KEY, null);
+    if (!storedState || storedState !== state) {
+      storage.remove(STATE_KEY);
+      throw new Error('OAuth state mismatch for YouTube.');
+    }
+
+    storage.remove(STATE_KEY);
+
+    const storedRedirect = storage.get(REDIRECT_KEY, null);
+    storage.remove(REDIRECT_KEY);
+
+    const redirectUrl = storedRedirect || this.buildRedirectUriWithoutOAuthParams();
+
+    let tokenResponse;
+    try {
+      const res = await fetch(`${AUTH_BASE_URL}/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          code,
+          redirect_uri: redirectUrl
+        })
+      });
+      tokenResponse = await res.json();
+      if (!res.ok) {
+        const message = tokenResponse?.error_description || tokenResponse?.error || 'YouTube token exchange failed.';
+        throw new Error(message);
+      }
+    } catch (err) {
+      throw new Error(err?.message || 'Failed to exchange YouTube authorization code.');
+    }
+
+    const expiresIn = parseInt(tokenResponse.expires_in, 10) || 0;
+    const refreshToken = tokenResponse.refresh_token || this.token?.refreshToken || null;
+    const scope = tokenResponse.scope || YT_SCOPES.join(' ');
+
+    if (!tokenResponse.access_token) {
+      throw new Error('YouTube token response missing access token.');
+    }
+
+    const tokenData = {
+      accessToken: tokenResponse.access_token,
+      refreshToken,
+      scope,
+      tokenType: tokenResponse.token_type || 'Bearer',
+      expiresAt: expiresIn ? Date.now() + Math.max((expiresIn - 60) * 1000, 0) : null
+    };
+
+    storage.set(TOKEN_KEY, tokenData);
+    this.token = tokenData;
+    this.refreshSubscriberCapability(tokenData, { force: true });
+    this.refreshStatus();
+
+    if (this.messenger.getSessionId()) {
+      this.setState('connecting');
+      this.log('Authorization successful. Connecting to live chat...');
+      this.setupLiveChat();
+    } else {
+      this.log('Authorization successful. Start a session and press Connect when ready.');
+    }
+  }
+
+  buildRedirectUriWithoutOAuthParams() {
+    try {
+      const url = new URL(window.location.href);
+      url.hash = '';
+      ['code', 'scope', 'state'].forEach((key) => url.searchParams.delete(key));
+      return url.toString();
+    } catch (err) {
+      return window.location.href.split('#')[0].split('?code=')[0];
     }
   }
 
@@ -361,6 +670,7 @@ export class YoutubePlugin extends BasePlugin {
     if (this.state === 'connected') {
       this.disable();
     }
+    this.clearStoredLiveChatId({ silent: true });
     this.stopSubscriberWatcher();
     this.seenSubscriberKeys.clear();
     this.lastSubscriberTimestamp = 0;
@@ -376,14 +686,19 @@ export class YoutubePlugin extends BasePlugin {
       throw new Error('Start a session before connecting YouTube.');
     }
     try {
-      const chatId = await this.resolveLiveChatId();
+      const resolvedChat = await this.resolveLiveChatId();
+      const chatId = typeof resolvedChat === 'object' && resolvedChat !== null ? resolvedChat.id : resolvedChat;
+      const chatSource = typeof resolvedChat === 'object' && resolvedChat !== null && resolvedChat.source
+        ? resolvedChat.source
+        : this.chatIdSource || 'auto';
+      const chatLegacy = typeof resolvedChat === 'object' && resolvedChat !== null && Object.prototype.hasOwnProperty.call(resolvedChat, 'legacy')
+        ? Boolean(resolvedChat.legacy)
+        : false;
       if (!chatId) {
         throw new Error('No active live chat found. Start a broadcast or provide a Live Chat ID.');
       }
-      this.liveChatId = chatId;
-      storage.set(CHAT_ID_KEY, this.liveChatId);
+      this.rememberLiveChatId(chatId, { source: chatSource, legacy: chatLegacy, silent: true });
       this.setState('connected');
-      this.refreshStatus();
       this.log('Connected to YouTube live chat.', { liveChatId: this.liveChatId });
       await this.prepareEmotesForChannel();
       this.stopListening();
@@ -436,36 +751,85 @@ export class YoutubePlugin extends BasePlugin {
   }
 
   async resolveLiveChatId() {
-    // Check DOM input first (if settings panel is open)
-    let manualId = '';
-    if (this.chatIdInput && this.chatIdInput.value.trim()) {
-      manualId = this.chatIdInput.value.trim();
-    }
-    // Check stored value (from previous sessions or if settings not rendered)
-    else if (this.liveChatId && this.liveChatId.trim()) {
-      manualId = this.liveChatId.trim();
+    const bypassStoredManual = this.skipStoredManualOnce;
+    if (this.skipStoredManualOnce) {
+      this.skipStoredManualOnce = false;
     }
 
-    // If manual ID provided, check if it's a video ID or chat ID
-    if (manualId) {
-      // Video IDs are typically 11 characters, Live Chat IDs are longer
-      if (manualId.length === 11) {
-        // Looks like a video ID - try to fetch the live chat ID from it
-        try {
-          return await this.getLiveChatIdFromVideoId(manualId);
-        } catch (err) {
-          const fallbackReasons = new Set(['notFound', 'videoNotFound', 'invalidParameter', 'badRequest', 'idNotFound']);
-          if (err?.code === 'VIDEO_NOT_FOUND' || fallbackReasons.has(err?.reason) || err?.status === 404) {
-            this.debugLog('Manual ID fallback to live chat ID', { manualId, error: err?.message });
-            this.setActiveBroadcast(null);
-            return manualId;
-          }
+    let manualId = '';
+    let manualSource = null;
+    let manualLegacy = false;
+
+    if (this.chatIdInput && this.chatIdInput.value.trim()) {
+      manualId = this.chatIdInput.value.trim();
+      manualSource = 'manual';
+      manualLegacy = false;
+    } else if ((this.liveChatId && this.liveChatId.trim()) && (!bypassStoredManual || this.chatIdSource !== 'manual')) {
+      manualId = this.liveChatId.trim();
+      manualSource = this.chatIdSource === 'manual' ? 'manual' : 'auto';
+      manualLegacy = this.chatIdIsLegacyManual;
+    }
+
+    if (manualId && manualSource === 'auto') {
+      try {
+        const active = await this.isLiveChatIdActive(manualId);
+        if (!active) {
+          this.log('Stored YouTube live chat ID is no longer active. Clearing saved value.', { liveChatId: manualId });
+          this.clearStoredLiveChatId({ silent: true });
+          manualId = '';
+          manualSource = null;
+        }
+      } catch (err) {
+        if (this.isLiveChatInactiveError(err)) {
+          this.log('Stored YouTube live chat ID is no longer active. Clearing saved value.', { liveChatId: manualId });
+          this.clearStoredLiveChatId({ silent: true });
+          manualId = '';
+          manualSource = null;
+        } else {
           throw err;
         }
       }
-      // Assume it's already a live chat ID
-      this.setActiveBroadcast(null);
-      return manualId;
+    }
+
+    if (manualId) {
+      if (manualSource === 'manual') {
+        const legacyFlag = manualLegacy;
+        if (manualId.length === 11) {
+          try {
+            const liveChatId = await this.getLiveChatIdFromVideoId(manualId);
+            return { id: liveChatId, source: 'manual', legacy: legacyFlag };
+          } catch (err) {
+            const fallbackReasons = new Set(['notFound', 'videoNotFound', 'invalidParameter', 'badRequest', 'idNotFound']);
+            if (err?.code === 'VIDEO_NOT_FOUND' || fallbackReasons.has(err?.reason) || err?.status === 404) {
+              this.debugLog('Manual ID fallback to live chat ID', { manualId, error: err?.message });
+              this.setActiveBroadcast(null);
+              return { id: manualId, source: 'manual', legacy: legacyFlag };
+            }
+            throw err;
+          }
+        }
+        this.setActiveBroadcast(null);
+        return { id: manualId, source: 'manual', legacy: legacyFlag };
+      }
+
+      if (manualSource === 'auto') {
+        if (manualId.length === 11) {
+          try {
+            const liveChatId = await this.getLiveChatIdFromVideoId(manualId);
+            return { id: liveChatId, source: 'auto' };
+          } catch (err) {
+            const fallbackReasons = new Set(['notFound', 'videoNotFound', 'invalidParameter', 'badRequest', 'idNotFound']);
+            if (err?.code === 'VIDEO_NOT_FOUND' || fallbackReasons.has(err?.reason) || err?.status === 404) {
+              this.debugLog('Stored video ID fallback to provided ID', { manualId, error: err?.message });
+              this.setActiveBroadcast(null);
+              return { id: manualId, source: 'auto' };
+            }
+            throw err;
+          }
+        }
+        this.setActiveBroadcast(null);
+        return { id: manualId, source: 'auto' };
+      }
     }
 
     if (!this.isTokenValid()) {
@@ -477,8 +841,6 @@ export class YoutubePlugin extends BasePlugin {
       Accept: 'application/json'
     };
 
-    // Step 1: Fetch active live broadcasts for the authenticated channel.
-    // Note: Cannot use both 'mine' and 'broadcastStatus' together - use separate calls
     const broadcastRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,contentDetails,status&mine=true', { headers });
     if (!broadcastRes.ok) {
       const errBody = await broadcastRes.json().catch(() => ({}));
@@ -486,7 +848,6 @@ export class YoutubePlugin extends BasePlugin {
     }
     const broadcastData = await broadcastRes.json();
     if (broadcastData.items && broadcastData.items.length) {
-      // Filter for active broadcasts
       const activeItems = broadcastData.items.filter(item =>
         item.status?.lifeCycleStatus === 'live' ||
         item.status?.lifeCycleStatus === 'liveStarting'
@@ -505,11 +866,10 @@ export class YoutubePlugin extends BasePlugin {
           liveChatId: live?.snippet?.liveChatId,
           type: 'broadcast'
         });
-        return live?.snippet?.liveChatId || null;
+        return { id: live?.snippet?.liveChatId || null, source: 'auto' };
       }
     }
 
-    // No active broadcasts found. Check if we got upcoming broadcasts
     if (broadcastData.items && broadcastData.items.length) {
       const upcomingItems = broadcastData.items.filter(item =>
         item.status?.lifeCycleStatus === 'ready' ||
@@ -524,7 +884,6 @@ export class YoutubePlugin extends BasePlugin {
       }
     }
 
-    // For backwards compatibility, also try the old approach
     const upcomingRes = await fetch('https://www.googleapis.com/youtube/v3/liveBroadcasts?part=snippet,status&mine=true', { headers });
     if (upcomingRes.ok) {
       const upcomingData = await upcomingRes.json();
@@ -538,7 +897,7 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     this.setActiveBroadcast(null);
-    return null;
+    return { id: null, source: 'auto' };
   }
 
   startListening() {
@@ -614,6 +973,9 @@ export class YoutubePlugin extends BasePlugin {
         );
       }
     } catch (err) {
+      if (this.isLiveChatInactiveError(err) && this.beginLiveChatRecovery({ reason: err })) {
+        return;
+      }
       this.reportError(err);
       return;
     }
@@ -622,6 +984,13 @@ export class YoutubePlugin extends BasePlugin {
       return;
     }
     this.pollTimer = window.setTimeout(() => this.pollChat(), this.pollInterval);
+  }
+
+  reportError(error) {
+    if (this.isLiveChatInactiveError(error) && this.beginLiveChatRecovery({ reason: error })) {
+      return;
+    }
+    super.reportError(error);
   }
 
   createApiError(body, status, endpoint) {
@@ -656,7 +1025,6 @@ export class YoutubePlugin extends BasePlugin {
     const sanitizedMessage = safeHtml(rawMessage);
 
     const message = {
-      id: item.id,
       platform: 'youtube',
       type: 'youtube',
       chatname: author.displayName || 'YouTube User',
@@ -674,6 +1042,23 @@ export class YoutubePlugin extends BasePlugin {
       previewText: rawMessage
     };
 
+    if (item.id) {
+      message.sourceId = item.id;
+    }
+
+    if (author?.channelId) {
+      message.userid = author.channelId;
+    }
+
+    if (this.debug) {
+      const debugSnapshot = { ...message };
+      if (debugSnapshot.raw) {
+        debugSnapshot.raw = '[omitted in debug log]';
+      }
+      this.debugLog('Prepared YouTube chat payload', debugSnapshot);
+    }
+
+    const meta = {};
     let publishNote = null;
     const membershipInfo = this.deriveMembershipMetadata(snippet, sanitizedMessage);
 
@@ -693,17 +1078,10 @@ export class YoutubePlugin extends BasePlugin {
       if (membershipInfo.chatmessage) {
         message.chatmessage = membershipInfo.chatmessage;
       }
-      if (membershipInfo.membershipLevel) {
-        message.membershipLevel = membershipInfo.membershipLevel;
-      }
-      if (membershipInfo.membershipMonths) {
-        message.membershipMonths = membershipInfo.membershipMonths;
-      }
-      if (membershipInfo.membershipGiftCount) {
-        message.membershipGiftCount = membershipInfo.membershipGiftCount;
-      }
-      if (membershipInfo.membershipGifter) {
-        message.membershipGifter = membershipInfo.membershipGifter;
+
+      const membershipMeta = this.buildMembershipMeta(snippet, membershipInfo);
+      if (membershipMeta) {
+        meta.membership = membershipMeta;
       }
       publishNote = membershipInfo.note || null;
     }
@@ -715,6 +1093,10 @@ export class YoutubePlugin extends BasePlugin {
 
     if (snippet.superChatDetails) {
       message.color = snippet.superChatDetails.tier || snippet.superChatDetails.tier || null;
+    }
+
+    if (Object.keys(meta).length) {
+      message.meta = { ...(message.meta || {}), ...meta };
     }
 
     await this.publishWithEmotes(message, { silent: true, note: publishNote });
@@ -880,6 +1262,165 @@ export class YoutubePlugin extends BasePlugin {
     }
 
     return result;
+  }
+
+  buildMembershipMeta(snippet, membershipInfo = {}) {
+    const meta = {};
+    const info = membershipInfo || {};
+    const toPlainText = (value) => htmlToText(value || '').trim();
+
+    if (info.membershipLevel) {
+      meta.levelName = info.membershipLevel;
+    }
+    if (Number.isFinite(info.membershipMonths)) {
+      meta.totalMonths = info.membershipMonths;
+    }
+    if (Number.isFinite(info.membershipGiftCount)) {
+      meta.giftCount = info.membershipGiftCount;
+    }
+    if (info.membershipGifter) {
+      meta.giftedBy = info.membershipGifter;
+    }
+    if (info.event) {
+      meta.eventType = info.event;
+    }
+    if (info.previewText) {
+      meta.previewText = info.previewText;
+    }
+    if (info.chatmessage) {
+      const highlightText = toPlainText(info.chatmessage);
+      if (highlightText) {
+        meta.highlightText = highlightText;
+      }
+    }
+
+    const snippetType = typeof snippet?.type === 'string' ? snippet.type.trim() : '';
+    if (snippetType) {
+      meta.snippetType = snippetType;
+    }
+
+    const membershipDetails = snippet?.membershipDetails;
+    if (membershipDetails) {
+      if (membershipDetails.highestAccessibleLevel) {
+        meta.highestLevelId = membershipDetails.highestAccessibleLevel;
+      }
+      if (membershipDetails.highestAccessibleLevelDisplayName) {
+        meta.highestLevelName = membershipDetails.highestAccessibleLevelDisplayName;
+      }
+      if (Array.isArray(membershipDetails.accessibleLevels) && membershipDetails.accessibleLevels.length) {
+        meta.accessibleLevels = membershipDetails.accessibleLevels.slice();
+      }
+
+      const duration = membershipDetails.membershipsDuration || null;
+      if (duration && (duration.memberSince || duration.memberTotalDurationMonths !== undefined)) {
+        const normalizedDuration = {};
+        if (duration.memberSince) {
+          normalizedDuration.memberSince = duration.memberSince;
+        }
+        const totalMonths = Number(duration.memberTotalDurationMonths);
+        if (Number.isFinite(totalMonths)) {
+          normalizedDuration.totalMonths = totalMonths;
+        }
+        if (Object.keys(normalizedDuration).length) {
+          meta.duration = normalizedDuration;
+        }
+      }
+
+      const durationAtLevel = membershipDetails.membershipsDurationAtLevel;
+      if (Array.isArray(durationAtLevel) && durationAtLevel.length) {
+        const normalizedLevels = durationAtLevel
+          .map((entry) => {
+            if (!entry) {
+              return null;
+            }
+            const normalizedEntry = {};
+            if (entry.level) {
+              normalizedEntry.levelId = entry.level;
+            }
+            if (entry.memberSince) {
+              normalizedEntry.memberSince = entry.memberSince;
+            }
+            const totalMonths = Number(entry.memberTotalDurationMonths);
+            if (Number.isFinite(totalMonths)) {
+              normalizedEntry.totalMonths = totalMonths;
+            }
+            return Object.keys(normalizedEntry).length ? normalizedEntry : null;
+          })
+          .filter(Boolean);
+        if (normalizedLevels.length) {
+          meta.durationByLevel = normalizedLevels;
+        }
+      }
+    }
+
+    const milestoneDetails = snippet?.memberMilestoneChatDetails;
+    if (milestoneDetails) {
+      const milestoneMeta = {};
+      const levelName = toPlainText(milestoneDetails.memberLevelName || '');
+      if (levelName) {
+        milestoneMeta.levelName = levelName;
+      }
+      const milestoneMonths = Number(milestoneDetails.memberMonth);
+      if (Number.isFinite(milestoneMonths)) {
+        milestoneMeta.months = milestoneMonths;
+      }
+      const userComment = toPlainText(milestoneDetails.userComment || '');
+      if (userComment) {
+        milestoneMeta.userComment = userComment;
+      }
+      if (Object.keys(milestoneMeta).length) {
+        meta.milestone = milestoneMeta;
+      }
+    }
+
+    const newSponsorDetails = snippet?.newSponsorDetails;
+    if (newSponsorDetails) {
+      const sponsorMeta = {};
+      const levelName = toPlainText(newSponsorDetails.memberLevelName || '');
+      if (levelName) {
+        sponsorMeta.levelName = levelName;
+      }
+      if (Object.prototype.hasOwnProperty.call(newSponsorDetails, 'isUpgrade')) {
+        sponsorMeta.isUpgrade = Boolean(newSponsorDetails.isUpgrade);
+      }
+      if (Object.keys(sponsorMeta).length) {
+        meta.newSponsor = sponsorMeta;
+      }
+    }
+
+    const giftingDetails = snippet?.membershipGiftingDetails;
+    if (giftingDetails) {
+      const giftingMeta = {};
+      const levelName = toPlainText(giftingDetails.giftMembershipsLevelName || '');
+      if (levelName) {
+        giftingMeta.levelName = levelName;
+      }
+      const giftCount = Number(giftingDetails.giftMembershipsCount);
+      if (Number.isFinite(giftCount)) {
+        giftingMeta.count = giftCount;
+      }
+      if (Object.keys(giftingMeta).length) {
+        meta.gifting = giftingMeta;
+      }
+    }
+
+    const receivedDetails = snippet?.giftMembershipReceivedDetails;
+    if (receivedDetails) {
+      const receivedMeta = {};
+      const levelName = toPlainText(receivedDetails.memberLevelName || '');
+      if (levelName) {
+        receivedMeta.levelName = levelName;
+      }
+      const gifter = toPlainText(receivedDetails.gifterDisplayName || '');
+      if (gifter) {
+        receivedMeta.gifter = gifter;
+      }
+      if (Object.keys(receivedMeta).length) {
+        meta.receivedGift = receivedMeta;
+      }
+    }
+
+    return Object.keys(meta).length ? meta : null;
   }
 
   hasMembershipScope(token = this.token) {
@@ -1076,7 +1617,7 @@ export class YoutubePlugin extends BasePlugin {
     if (!entry) {
       return null;
     }
-    const { item, snippet, subscriberSnippet, publishedAt, key } = entry;
+    const { item, snippet, subscriberSnippet, publishedAt } = entry;
     const displayName = (subscriberSnippet?.title || snippet?.title || '').trim() || 'YouTube user';
     const avatar =
       subscriberSnippet?.thumbnails?.high?.url ||
@@ -1084,9 +1625,7 @@ export class YoutubePlugin extends BasePlugin {
       subscriberSnippet?.thumbnails?.medium?.url ||
       '';
     const timestamp = Number.isFinite(publishedAt) ? publishedAt : Date.now();
-    const messageId = item?.id ? `youtube-subscriber-${item.id}` : `youtube-subscriber-${key}`;
     const payload = {
-      id: messageId,
       platform: 'youtube',
       type: 'youtube',
       chatname: displayName,
@@ -1097,6 +1636,9 @@ export class YoutubePlugin extends BasePlugin {
       previewText: `${displayName} followed`,
       raw: { subscriber: item }
     };
+    if (item?.id) {
+      payload.sourceId = item.id;
+    }
     if (subscriberSnippet?.channelId) {
       payload.userid = subscriberSnippet.channelId;
     }

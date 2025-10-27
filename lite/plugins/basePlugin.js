@@ -1,5 +1,13 @@
 import { formatTime, safeHtml, htmlToText } from '../utils/helpers.js';
 
+const MESSAGE_COUNTER_BASE = Math.floor(Math.random() * 90000);
+let globalMessageCounter = MESSAGE_COUNTER_BASE;
+
+function nextIncrementalId() {
+  globalMessageCounter += 1;
+  return globalMessageCounter;
+}
+
 const STATE_LABEL = {
   idle: 'Idle',
   connecting: 'Connecting...',
@@ -51,6 +59,10 @@ export class BasePlugin {
     this.primaryNode = null;
     this.settingsNode = null;
     this.settingsToggle = null;
+  }
+
+  static nextMessageId() {
+    return nextIncrementalId();
   }
 
   mount(container) {
@@ -281,7 +293,27 @@ export class BasePlugin {
       previewDetail
     } = options;
     try {
-      this.debugLog('Publishing payload to dock', { payload, silent, note });
+      if (payload && typeof payload === 'object' && !payload.id) {
+        payload.id = BasePlugin.nextMessageId();
+      }
+      const logDetail = (() => {
+        if (!payload || typeof payload !== 'object') {
+          return { payload, silent, note };
+        }
+        const snapshot = { ...payload };
+        if (snapshot.raw) {
+          snapshot.raw = '[omitted in debug log]';
+        }
+        return { payload: snapshot, silent, note };
+      })();
+      this.debugLog('Publishing payload to dock', logDetail);
+      this.onActivity({
+        kind: 'event',
+        plugin: this.id,
+        payload,
+        timestamp: payload?.timestamp || Date.now(),
+        id: payload?.id
+      });
       this.messenger.send(payload);
       if (!silent) {
         const previewSource = (payload?.previewText ?? payload?.chatmessage ?? '').toString();
@@ -303,9 +335,9 @@ export class BasePlugin {
     const { kind = 'status' } = options || {};
     if (this.debug) {
       if (detail !== undefined) {
-        console.debug(`[${this.id}] ${message}`, detail);
+        console.info(`[${this.id}] ${message}`, detail);
       } else {
-        console.debug(`[${this.id}] ${message}`);
+        console.info(`[${this.id}] ${message}`);
       }
     }
     this.onActivity({
@@ -322,9 +354,9 @@ export class BasePlugin {
       return;
     }
     if (detail !== undefined) {
-      console.debug(`[${this.id}] ${message}`, detail);
+      console.info(`[${this.id}] ${message}`, detail);
     } else {
-      console.debug(`[${this.id}] ${message}`);
+      console.info(`[${this.id}] ${message}`);
     }
     this.onActivity({
       kind: 'debug',

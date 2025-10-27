@@ -47,6 +47,7 @@ const overlayToggleInputs = overlayToggleDefs.reduce((acc, def) => {
 const sessionKey = 'session.currentId';
 const overlayToggleStorageKey = 'session.overlayOptions';
 const youtubeStreamingStorageKey = 'youtube.useStreaming';
+const debugPreferenceKey = 'debug.enabled';
 const activityLimit = 80;
 
 const overlayToggleDefaults = overlayToggleDefs.reduce((acc, def) => {
@@ -65,21 +66,56 @@ let youtubeStreamingEnabled = Boolean(storage.get(youtubeStreamingStorageKey, fa
 
 const url = new URL(window.location.href);
 const debugParam = url.searchParams.get('debug');
+const storedDebugPreference = storage.get(debugPreferenceKey, null);
 const debugEnabled = (() => {
-  if (debugParam === null) {
-    return false;
+  if (debugParam !== null) {
+    const normalized = (debugParam || '').trim().toLowerCase();
+    if (!normalized) {
+      storage.set(debugPreferenceKey, true);
+      return true;
+    }
+    const next = !['0', 'false', 'off', 'no'].includes(normalized);
+    storage.set(debugPreferenceKey, next);
+    return next;
   }
-  const normalized = (debugParam || '').trim().toLowerCase();
-  if (!normalized) {
-    return true;
+  if (typeof storedDebugPreference === 'boolean') {
+    return storedDebugPreference;
   }
-  return !['0', 'false', 'off', 'no'].includes(normalized);
+  return false;
 })();
 if (debugEnabled) {
-  console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL to disable.');
+  console.info('Social Stream Lite debug logging enabled. Add ?debug=0 to the URL or call window.SocialStreamLiteDebug.disable() to turn it off.');
 } else {
-  console.info('Social Stream Lite debug logging disabled. Add ?debug=1 to the URL to enable.');
+  console.info('Social Stream Lite debug logging disabled. Add ?debug=1 to the URL or call window.SocialStreamLiteDebug.enable() to turn it on.');
 }
+
+window.SocialStreamLiteDebug = Object.freeze({
+  enable() {
+    storage.set(debugPreferenceKey, true);
+    const next = new URL(window.location.href);
+    next.searchParams.set('debug', '1');
+    window.location.assign(next.toString());
+  },
+  disable() {
+    storage.set(debugPreferenceKey, false);
+    const next = new URL(window.location.href);
+    next.searchParams.set('debug', '0');
+    window.location.assign(next.toString());
+  },
+  clear() {
+    storage.remove(debugPreferenceKey);
+    const next = new URL(window.location.href);
+    next.searchParams.delete('debug');
+    window.location.assign(next.toString());
+  },
+  status() {
+    return {
+      param: new URL(window.location.href).searchParams.get('debug'),
+      stored: storage.get(debugPreferenceKey, null),
+      active: debugEnabled
+    };
+  }
+});
 
 const messenger = new DockMessenger(elements.dockFrame, {
   debug: debugEnabled,
@@ -92,22 +128,152 @@ let plugins = [];
 const pluginMap = new Map();
 const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+function debugActivityTrace(label, detail) {
+  if (!debugEnabled) {
+    return;
+  }
+  if (detail !== undefined) {
+    console.info(`[Lite] ${label}`, detail);
+  } else {
+    console.info(`[Lite] ${label}`);
+  }
+}
+
+function sanitizePayloadForDebug(payload) {
+  if (!debugEnabled) {
+    return payload;
+  }
+  if (!payload || typeof payload !== 'object') {
+    return payload;
+  }
+  if (Array.isArray(payload)) {
+    return payload.map((item) => sanitizePayloadForDebug(item));
+  }
+  const snapshot = { ...payload };
+  if (Object.prototype.hasOwnProperty.call(snapshot, 'raw')) {
+    snapshot.raw = '[omitted in debug log]';
+  }
+  if (snapshot.payload && typeof snapshot.payload === 'object') {
+    snapshot.payload = sanitizePayloadForDebug(snapshot.payload);
+  }
+  if (snapshot.detail && typeof snapshot.detail === 'object') {
+    snapshot.detail = sanitizePayloadForDebug(snapshot.detail);
+  }
+  return snapshot;
+}
+
+function snapshotActivityEntryForDebug(entry) {
+  if (!debugEnabled) {
+    return entry;
+  }
+  if (!entry || typeof entry !== 'object') {
+    return entry;
+  }
+  if (Array.isArray(entry)) {
+    return entry.map((item) => snapshotActivityEntryForDebug(item));
+  }
+  const snapshot = { ...entry };
+  if (snapshot.payload && typeof snapshot.payload === 'object') {
+    snapshot.payload = sanitizePayloadForDebug(snapshot.payload);
+  }
+  if (snapshot.detail && typeof snapshot.detail === 'object') {
+    snapshot.detail = sanitizePayloadForDebug(snapshot.detail);
+  }
+  return snapshot;
+}
+
 const testMessagePresets = [
   () => ({
     type: 'youtube',
-    chatname: 'John Doe',
-    chatmessage: 'Looking good! 😘😘😊 This is a test message. 🎶🎵🔨',
+    chatname: 'Friendly Viewer',
+    chatmessage: 'Thanks for keeping the stream fun tonight!',
     chatimg: '',
     chatbadges: []
   }),
   () => ({
     type: 'youtube',
-    chatname: 'Bob',
+    chatname: 'Generous Donor',
+    chatmessage: 'hi doctor I unsubscribe on all your Youtubers old friends.they women',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_lasYSs3mDnqKHgeUiaEgd69ZZBlwVe12Jmyv3DBtWMviA=s256-c-k-c0x00ffffff-no-rj',
+    hasDonation: 'US$5.00',
+    sourceName: 'DrDisRespect',
+    sourceImg: 'https://yt3.ggpht.com/_0_SuenjzMocr2OTOHbGjEin5FcHOy-vRroLcEZtj0WfUMEQXVQqbtEuRaa-tIewyjbAkffR=s88-c-k-c0x00ffffff-no-rj',
+    title: 'DONATION'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Helpful Person',
     chatmessage: 'Appreciate the stream! Have a coffee on me ☕',
     chatimg: '',
     hasDonation: '$5.00',
     donationAmount: '$5.00',
     donationCurrency: 'USD'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Longtime Member',
+    nameColor: '#107516',
+    chatbadges: ['https://yt3.ggpht.com/OIRwLP2qDr_Xgwr0qn2JBs-ZDDmy12_-DQ1LCKF-iFYE8DewzfcRWjGZy0FQ9n2DtxzpXp3e=s32-c-k'],
+    chatmessage: '@Shredda HAHAHAH',
+    chatimg: 'https://yt4.ggpht.com/XgKdw8fR3PAQpBoilC3V02G0ovthMxU6xaTVF3_iVr7x7XWmqBzTNeVws1yXRpTXucgpnDHniHE=s256-c-k-c0x00ffffff-no-rj',
+    membership: 'MEMBERSHIP',
+    sourceName: 'DrDisRespect',
+    sourceImg: 'https://yt3.ggpht.com/_0_SuenjzMocr2OTOHbGjEin5FcHOy-vRroLcEZtj0WfUMEQXVQqbtEuRaa-tIewyjbAkffR=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Green Monkey',
+    nameColor: '#107516',
+    chatbadges: ['https://yt3.ggpht.com/VmHr8SQigQsXa4xw7pZLzxnzaOoWY8aLqBUdD0ohSTQZYA5n3ZeODIA6h9OkxN4UupD-xMGAQw=s32-c-k'],
+    chatmessage: '<img class="regular-emote" src="https://yt3.ggpht.com/mOH-VvA-bB3wVX1xm0QpO61O9aqHJvpzrciu6kX_PdYCasFevfeDINFTn0yw5EvkSeysj_AzuA=w48-h48-c-k-nd" alt="stare" title="stare"><img class="regular-emote" src="https://yt3.ggpht.com/mOH-VvA-bB3wVX1xm0QpO61O9aqHJvpzrciu6kX_PdYCasFevfeDINFTn0yw5EvkSeysj_AzuA=w48-h48-c-k-nd" alt="stare" title="stare"><img class="regular-emote" src="https://yt3.ggpht.com/mOH-VvA-bB3wVX1xm0QpO61O9aqHJvpzrciu6kX_PdYCasFevfeDINFTn0yw5EvkSeysj_AzuA=w48-h48-c-k-nd" alt="stare" title="stare">',
+    chatimg: 'https://yt4.ggpht.com/tNDmCXDa_lp98-5guXBtMwuiRM-DLER44mcLbfOcguZjHffkHAMsmpimbyzjN7mBj7QH9XmiPA=s256-c-k-c0x00ffffff-no-rj',
+    membership: 'MEMBERSHIP',
+    sourceName: 'DrDisRespect',
+    sourceImg: 'https://yt3.ggpht.com/_0_SuenjzMocr2OTOHbGjEin5FcHOy-vRroLcEZtj0WfUMEQXVQqbtEuRaa-tIewyjbAkffR=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Gift Giver',
+    chatmessage: '<i>Sent 10 TheBurntPeanut gift memberships</i>',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_n6ZBBa_3wssvZ-3uYejR-pYif7bZ3F-sJr33JSyktwwYCCLRkkFCHIjZW7Up1yAzVU4w=s256-c-k-c0x00ffffff-no-rj',
+    hasDonation: '10 Gifted',
+    donoValue: 50,
+    membership: 'SPONSORSHIP',
+    event: 'sponsorship',
+    title: 'DONATION',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Gift Recipient',
+    chatmessage: '<i>received a gift membership by Ali G</i>',
+    chatimg: 'https://yt4.ggpht.com/471qNrf01DUBIQEQHh4Hlny3JXyawMroXqaOPzBmtrvUHhwiJ2L26LbFxAPOeNUpIvOHB4Y0_w=s256-c-k-c0x00ffffff-no-rj',
+    event: 'giftredemption',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Board Member',
+    nameColor: '#107516',
+    chatbadges: ['https://yt3.ggpht.com/xMtfL2zCOJLIkmWzToUm1Ol_-_b0RhhC5UqxYHdO3UOflOSveKOADd1PD9PBWyNvpsVwNqxN8YM=s32-c-k'],
+    chatmessage: 'thank you mr bungus for all the silly dreams',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_lbsPbvnSYefsc_2CWUuszhQuD2YW4sx4fTSQUD0n8BNaS1=s256-c-k-c0x00ffffff-no-rj',
+    membership: 'Bungulator Board Member',
+    subtitle: '2 months',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj'
+  }),
+  () => ({
+    type: 'youtube',
+    chatname: 'Road Tripper',
+    chatmessage: 'Thank you for providing prime content during prime gaming time while i drive home from a camping trip. Love u fatass',
+    chatimg: 'https://yt4.ggpht.com/ytc/AIdro_kx7LRXG9JxEQPwGG5Y-3-amHKIcX2nDJF5PElO758mf4e-_81WiP_1aIdW3MoO0j1Pgg=s256-c-k-c0x00ffffff-no-rj',
+    hasDonation: 'US$4.99',
+    sourceName: 'TheBurntPeanut',
+    sourceImg: 'https://yt3.ggpht.com/VKb63ulooe-XLiGFOnqqQiPO-dUflrqgLioSyERPyuBTqQ4_m5H1_-9JfhtoM7_sPkYBqqKQjQ=s88-c-k-c0x00ffffff-no-rj',
+    title: 'DONATION'
   }),
   () => ({
     type: 'twitch',
@@ -120,37 +286,6 @@ const testMessagePresets = [
     isModerator: true
   }),
   () => ({
-    type: 'discord',
-    chatname: 'Sir Drinks-a-lot',
-    chatmessage: '☕☕☕ COFFEE!',
-    chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
-    membership: 'Coffee Addiction',
-    highlightColor: 'pink',
-    nameColor: '#9C27B0',
-    private: true
-  }),
-  () => ({
-    type: 'youtubeshorts',
-    chatname: `Lucy_${Math.floor(Math.random() * 999)}`,
-    chatmessage: 'Short and sweet! ✨',
-    chatimg: Math.random() > 0.5 ? 'https://socialstream.ninja/media/sampleavatar.png' : ''
-  }),
-  () => ({
-    type: 'facebook',
-    chatname: `Steve_${Math.floor(Math.random() * 9000)}`,
-    chatmessage: '!join The only way to do great work is to love what you do. ❤️',
-    chatimg: 'https://socialstream.ninja/media/sampleavatar.png',
-    nameColor: '#107516',
-    membership: 'SPONSORSHIP'
-  }),
-  () => ({
-    type: 'zoom',
-    chatname: 'Nich Lass',
-    question: true,
-    chatmessage: 'Is this a test question?  🤓🤓🤓',
-    chatimg: 'https://yt4.ggpht.com/ytc/AL5GRJVWK__Edij5fA9Gh-aD7wSBCe_zZOI4jjZ1RQ=s32-c-k-c0x00ffffff-no-rj'
-  }),
-  () => ({
     type: 'twitch',
     chatname: 'VDO.Ninja',
     chatmessage: '<img src="https://github.com/steveseguin/social_stream/raw/main/icons/icon-128.png" alt="icon"> 😁 🇨🇦 https://vdo.ninja/',
@@ -159,13 +294,23 @@ const testMessagePresets = [
     chatbadges: ['https://socialstream.ninja/icons/bot.png', 'https://socialstream.ninja/icons/announcement.png']
   }),
   () => ({
-    type: 'youtube',
-    chatname: 'ChannelBot',
-    chatmessage: '',
-    contentimg: 'https://socialstream.ninja/media/logo.png',
-    chatimg: 'https://socialstream.ninja/media/user1.jpg'
+    type: 'kick',
+    chatname: `KickSubscriber${Math.floor(Math.random() * 900) + 100}`,
+    chatmessage: 'Loving the overlay tonight, keep the games coming!',
+    chatimg: 'https://files.kick.com/profile-images/default-avatar.png',
+    chatbadges: ['https://files.kick.com/badges/subscriber.png']
+  }),
+  () => ({
+    type: 'kick',
+    chatname: 'KickSupporter',
+    chatmessage: 'Dropped a few Kicks to keep the hype rolling!',
+    chatimg: '',
+    hasDonation: '25 Kicks',
+    event: 'supporter'
   })
 ];
+
+const AVATAR_FALLBACK_SRC = '../unknown.png';
 
 let lastTestMessageSignature = null;
 
@@ -387,8 +532,11 @@ function handleCopyLink() {
 function addActivity(entry) {
   const normalized = normalizeActivityEntry(entry);
   if (!normalized) {
+    debugActivityTrace('Activity entry dropped', { entry: snapshotActivityEntryForDebug(entry) });
     return;
   }
+
+  debugActivityTrace('Activity entry accepted', snapshotActivityEntryForDebug(normalized));
 
   if (normalized.id && activityById.has(normalized.id)) {
     const existingIndex = activityEntries.findIndex((item) => item.id === normalized.id);
@@ -418,6 +566,7 @@ function addActivity(entry) {
 
 function normalizeActivityEntry(entry) {
   if (!entry) {
+    debugActivityTrace('normalizeActivityEntry: empty entry', entry);
     return null;
   }
 
@@ -427,9 +576,17 @@ function normalizeActivityEntry(entry) {
   if (kind === 'event') {
     const payload = entry.payload || entry.messageData || entry.detail || entry;
     if (!payload || typeof payload !== 'object') {
+      debugActivityTrace('normalizeActivityEntry: invalid event payload', { entry: snapshotActivityEntryForDebug(entry) });
       return null;
     }
     if (!debugEnabled && !isDisplayableMessage(payload)) {
+      return null;
+    }
+    if (debugEnabled && !isDisplayableMessage(payload)) {
+      debugActivityTrace(
+        'normalizeActivityEntry: payload filtered (not displayable)',
+        { entry: snapshotActivityEntryForDebug(entry), payload: sanitizePayloadForDebug(payload) }
+      );
       return null;
     }
 
@@ -459,6 +616,10 @@ function normalizeActivityEntry(entry) {
   }
   if (!debugEnabled && entryKind === 'status') {
     return null;
+  }
+
+  if (entryKind === 'debug' && debugEnabled) {
+    debugActivityTrace('normalizeActivityEntry: debug entry accepted', { entry: snapshotActivityEntryForDebug(entry) });
   }
 
   const id = entry.id || `log-${timestamp}-${Math.floor(Math.random() * 1000)}`;
@@ -678,10 +839,15 @@ function createAvatarNode(payload, fallbackIcon) {
 
   if (payload.chatimg) {
     const img = document.createElement('img');
-    img.src = payload.chatimg;
     img.alt = payload.chatname ? `${payload.chatname} avatar` : 'Avatar';
     img.loading = 'lazy';
     img.decoding = 'async';
+    img.onerror = () => {
+      img.onerror = null;
+      wrapper.classList.add('activity-item__avatar--fallback');
+      img.src = AVATAR_FALLBACK_SRC;
+    };
+    img.src = payload.chatimg;
     wrapper.appendChild(img);
     return wrapper;
   }
@@ -1185,36 +1351,44 @@ function createTestMessage() {
     lastTestMessageSignature === `${candidate.type || candidate.platform || 'twitch'}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`
   );
 
-  if (!candidate) {
-    candidate = {
-      type: 'twitch',
-      chatname: 'Test User',
-      chatmessage: 'Hello from Social Stream test message!',
-      event: 'message'
-    };
-  }
-  const type = candidate.type || candidate.platform || 'twitch';
-  lastTestMessageSignature = `${type}|${candidate.chatname}|${candidate.chatmessage || candidate.contentimg || ''}`;
+  const fallbackCandidate = {
+    type: 'twitch',
+    chatname: 'Test User',
+    chatmessage: 'Hello from Social Stream test message!',
+    event: 'message'
+  };
 
-  const bits = candidate.bits ? Number(candidate.bits) : 0;
+  const source = candidate && typeof candidate === 'object' ? { ...candidate } : {};
+  const baseCandidate = Object.keys(source).length ? source : fallbackCandidate;
+  const type = baseCandidate.type || baseCandidate.platform || 'twitch';
+  lastTestMessageSignature = `${type}|${baseCandidate.chatname}|${baseCandidate.chatmessage || baseCandidate.contentimg || ''}`;
+
+  const bits = baseCandidate.bits ? Number(baseCandidate.bits) : 0;
   const donationText =
-    typeof candidate.hasDonation === 'string'
-      ? candidate.hasDonation
-      : candidate.hasDonation
-        ? candidate.donationAmount || ''
+    typeof baseCandidate.hasDonation === 'string'
+      ? baseCandidate.hasDonation
+      : baseCandidate.hasDonation
+        ? baseCandidate.donationAmount || ''
         : '';
-  const event = candidate.event || (bits ? 'bits' : donationText ? 'donation' : 'message');
+  const event = baseCandidate.event || (bits ? 'bits' : donationText ? 'donation' : 'message');
+
+  const rawData = {
+    ...(baseCandidate.raw && typeof baseCandidate.raw === 'object' ? baseCandidate.raw : {}),
+    test: true
+  };
 
   const message = {
-    id: `test-${now}-${Math.floor(Math.random() * 1000)}`,
+    ...baseCandidate,
+    id: baseCandidate.id || `test-${now}-${Math.floor(Math.random() * 1000)}`,
     type,
-    chatname: candidate.chatname || 'Test User',
-    chatmessage: candidate.chatmessage || '',
-    chatimg: candidate.chatimg || '',
+    platform: baseCandidate.platform || type,
+    chatname: baseCandidate.chatname || 'Test User',
+    chatmessage: baseCandidate.chatmessage || '',
+    chatimg: baseCandidate.chatimg || '',
     timestamp: now,
     event,
-    textonly: Boolean(candidate.textonly),
-    raw: { test: true }
+    textonly: Boolean(baseCandidate.textonly),
+    raw: rawData
   };
 
   if (bits) {
@@ -1223,47 +1397,59 @@ function createTestMessage() {
   if (donationText) {
     message.hasDonation = donationText;
   }
-  if (candidate.donationAmount) {
-    message.donationAmount = candidate.donationAmount;
+  if (baseCandidate.donationAmount) {
+    message.donationAmount = baseCandidate.donationAmount;
   }
-  if (candidate.donationCurrency) {
-    message.donationCurrency = candidate.donationCurrency;
+  if (baseCandidate.donationCurrency) {
+    message.donationCurrency = baseCandidate.donationCurrency;
   }
-  if (candidate.membership) {
-    message.membership = candidate.membership;
+  if (baseCandidate.membership) {
+    message.membership = baseCandidate.membership;
   }
-  if (candidate.badges && typeof candidate.badges === 'object') {
-    message.badges = candidate.badges;
+  if (baseCandidate.badges && typeof baseCandidate.badges === 'object') {
+    message.badges = baseCandidate.badges;
   }
-  if (Array.isArray(candidate.chatbadges) && candidate.chatbadges.length) {
-    message.chatbadges = candidate.chatbadges;
+  if (Array.isArray(baseCandidate.chatbadges) && baseCandidate.chatbadges.length) {
+    message.chatbadges = [...baseCandidate.chatbadges];
   }
-  if (candidate.nameColor) {
-    message.nameColor = candidate.nameColor;
+  if (baseCandidate.nameColor) {
+    message.nameColor = baseCandidate.nameColor;
   }
-  if (candidate.backgroundColor) {
-    message.backgroundColor = candidate.backgroundColor;
+  if (baseCandidate.backgroundColor) {
+    message.backgroundColor = baseCandidate.backgroundColor;
   }
-  if (candidate.highlightColor) {
-    message.highlightColor = candidate.highlightColor;
+  if (baseCandidate.highlightColor) {
+    message.highlightColor = baseCandidate.highlightColor;
   }
-  if (candidate.subtitle) {
-    message.subtitle = candidate.subtitle;
+  if (baseCandidate.subtitle) {
+    message.subtitle = baseCandidate.subtitle;
   }
-  if (candidate.contentimg) {
-    message.contentimg = candidate.contentimg;
+  if (baseCandidate.contentimg) {
+    message.contentimg = baseCandidate.contentimg;
   }
-  if (candidate.private) {
+  if (baseCandidate.private) {
     message.private = true;
   }
-  if (candidate.question) {
+  if (baseCandidate.question) {
     message.question = true;
   }
-  if (candidate.vip) {
+  if (baseCandidate.vip) {
     message.vip = true;
   }
-  if (candidate.isModerator) {
+  if (baseCandidate.isModerator) {
     message.isModerator = true;
+  }
+  if (baseCandidate.sourceName) {
+    message.sourceName = baseCandidate.sourceName;
+  }
+  if (baseCandidate.sourceImg) {
+    message.sourceImg = baseCandidate.sourceImg;
+  }
+  if (baseCandidate.title) {
+    message.title = baseCandidate.title;
+  }
+  if (baseCandidate.donoValue) {
+    message.donoValue = baseCandidate.donoValue;
   }
 
   return message;
@@ -1316,6 +1502,9 @@ function handleRelayMessage(message) {
     if (!payload || typeof payload !== 'object') {
       return;
     }
+
+    debugActivityTrace('Relay payload received', sanitizePayloadForDebug(payload));
+
     addActivity({
       kind: 'event',
       plugin: payload.type || payload.platform || 'system',
@@ -1334,6 +1523,7 @@ function handleSendTestMessage() {
 
   const message = createTestMessage();
   messenger.send(message);
+  handleRelayMessage(message);
 
   addActivity({
     plugin: 'system',
@@ -1489,33 +1679,52 @@ function initMobileNav() {
   }
 }
 
-function processOAuthCallback(pluginMap) {
+async function processOAuthCallback(pluginMap) {
+  const handleParams = async (params) => {
+    const state = params.get('state') || '';
+    const provider = state.split(':')[0];
+    const plugin = provider ? pluginMap.get(provider) : null;
+
+    if (!plugin) {
+      updateSessionStatus('Received OAuth response for unknown provider.', 'warn');
+      return true;
+    }
+
+    try {
+      await plugin.handleOAuthCallback(params);
+      addActivity({
+        plugin: provider,
+        message: 'OAuth authorization completed.',
+        timestamp: Date.now()
+      });
+    } catch (err) {
+      console.error('OAuth handling failed', err);
+      updateSessionStatus(err.message || 'OAuth handling failed.', 'warn');
+    }
+
+    return true;
+  };
+
+  if (window.location.search) {
+    const searchParams = new URLSearchParams(window.location.search.slice(1));
+    if (searchParams.has('code') && searchParams.has('state')) {
+      await handleParams(searchParams);
+      const url = new URL(window.location.href);
+      url.hash = '';
+      ['code', 'scope', 'state'].forEach((key) => url.searchParams.delete(key));
+      const remainingSearch = url.searchParams.toString();
+      const newUrl = remainingSearch ? `${url.pathname}?${remainingSearch}` : url.pathname;
+      history.replaceState(null, '', newUrl);
+      return;
+    }
+  }
+
   if (!window.location.hash) return;
   const params = new URLSearchParams(window.location.hash.slice(1));
   if (!params.has('access_token')) return;
 
-  const state = params.get('state') || '';
-  const provider = state.split(':')[0];
-  const plugin = pluginMap.get(provider);
-
-  if (!plugin) {
-    updateSessionStatus('Received OAuth response for unknown provider.', 'warn');
-    return;
-  }
-
-  try {
-    plugin.handleOAuthCallback(params);
-    addActivity({
-      plugin: provider,
-      message: 'OAuth authorization completed.',
-      timestamp: Date.now()
-    });
-  } catch (err) {
-    console.error('OAuth handling failed', err);
-    updateSessionStatus(err.message || 'OAuth handling failed.', 'warn');
-  } finally {
-    history.replaceState(null, '', window.location.pathname + window.location.search);
-  }
+  await handleParams(params);
+  history.replaceState(null, '', window.location.pathname + window.location.search);
 }
 
 function init() {
@@ -1624,7 +1833,10 @@ function init() {
 
   mountAllPlugins();
   startSession(storedSession);
-  processOAuthCallback(pluginMap);
+  processOAuthCallback(pluginMap).catch((err) => {
+    console.error('OAuth processing failed', err);
+    updateSessionStatus(err.message || 'OAuth callback handling failed.', 'warn');
+  });
   initMobileNav();
 
   if (url.searchParams.get('focus') === 'activity' && elements.activitySection) {

@@ -524,6 +524,12 @@
 				display: block;
 				color: var(--donation-label-color);
 			}
+			.small.donation-title {
+				font-size: 14px;
+			}
+			.verysmall.donation-title {
+				font-size: 12px;
+			}
 
 			.youtubedonation.donation-title {
 			
@@ -887,8 +893,28 @@
 		</audio>
 		<script type="text/javascript" src="tts.js"></script>
 		<script>
+			(function (w) {
+				w.URLSearchParams =
+					w.URLSearchParams ||
+					function (searchString) {
+						var self = this;
+						self.searchString = searchString;
+						self.get = function (name) {
+							var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(self.searchString);
+							if (results == null) {
+								return null;
+							} else {
+								return decodeURI(results[1]) || 0;
+							}
+						};
+					};
+			})(window);
+			var urlParams = new URLSearchParams(window.location.search);
+			
 			function log(msg) {
-				//	console.log(msg);
+				if (urlParams.has("debug")) {
+					console.log(msg);
+				}
 			}
 
 			function warnlog(msg, url = false, lineNumber = false) {
@@ -1003,6 +1029,25 @@
 				} else {
 					return key.replaceAll("-", " "); //
 				}
+			}
+			function resolveSourceImageUrl(src) {
+				if (!src) {
+					return "";
+				}
+				var str = (src + "").trim();
+				if (!str) {
+					return "";
+				}
+				if (/^[a-z][a-z0-9+.-]*:/i.test(str) || str.startsWith("//")) {
+					return str;
+				}
+				var cleaned = str.replace(/^\.\/+/, "").replace(/^\/+/, "");
+				var lowerCleaned = cleaned.toLowerCase();
+				var prefix = "sources/images/";
+				if (!lowerCleaned.startsWith(prefix)) {
+					cleaned = prefix + cleaned;
+				}
+				return "./" + cleaned;
 			}
 			
 			var newFileHandle = false;
@@ -1122,23 +1167,7 @@
 				}
 			}
 
-			(function (w) {
-				w.URLSearchParams =
-					w.URLSearchParams ||
-					function (searchString) {
-						var self = this;
-						self.searchString = searchString;
-						self.get = function (name) {
-							var results = new RegExp("[\?&]" + name + "=([^&#]*)").exec(self.searchString);
-							if (results == null) {
-								return null;
-							} else {
-								return decodeURI(results[1]) || 0;
-							}
-						};
-					};
-			})(window);
-			var urlParams = new URLSearchParams(window.location.search);
+			
 			var fallbackAvatarURL = "./sources/images/unknown.png";
 			if (urlParams.has("fallbackimg")) {
 				var fallbackParam = urlParams.get("fallbackimg");
@@ -2279,6 +2308,9 @@
 			var lastMessageId = null
 
 			function processData(data) {
+			
+				log(data);
+				
 				if (pseudodock) {
 					if (data && !data.contents) {
 						var tmp = {};
@@ -2393,7 +2425,7 @@
 					sendToDisk(data.contents);
 					return true;
 				} else if (data.action){
-					console.log(data);
+					log(data);
 					if (data.action === "toggleTTS" || data.action === "tts") {
 						if ("value" in data){
 							if (data.value == "toggle") {
@@ -2418,7 +2450,7 @@
 						} else {
 							TTS.speech = !TTS.speech;
 						}
-						console.log("TTS: "+TTS.speech);
+						log("TTS: "+TTS.speech);
 						return TTS.speech
 					}
 				}
@@ -2507,10 +2539,11 @@
 					  showType = "";
 					}
 
-					if (data.sourceImg && customSource && avatarForMessage) {
-					  showType += '<img src="./sources/images/' + data.sourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
-					} else if (data.sourceImg && customSource && !avatarForMessage) {
-					  showType += '<img src="./sources/images/' + +data.sourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
+					var resolvedSourceImg = data.sourceImg ? resolveSourceImageUrl(data.sourceImg) : "";
+					if (resolvedSourceImg && customSource && avatarForMessage) {
+					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + '"  onerror="this.style.display=\'none\'" />';
+					} else if (resolvedSourceImg && customSource && !avatarForMessage) {
+					  showType += '<img src="' + resolvedSourceImg + '" class="icon sourcetype ' + customSourceClass + ' noavatar-source" onerror="this.style.display=\'none\'" />';
 					}
 
 					if (hideNames) {
@@ -2536,7 +2569,7 @@
 					}
 
 					var memebershipHTML = "";
-
+					
 					// MODIFIED MEMBERSHIP/DONATION HANDLING
 					if (data.hasMembership) {
 					  if (data.hasMembership === true) {
@@ -2548,8 +2581,14 @@
 						memebershipHTML = data.membership;
 					  } else {
 						// No avatar membership display
-						memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
-					  }
+							if (data.membership.length > 30){
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+							} else if (data.membership.length > 24){
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+							} else {
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+							}
+						  }
 					} else if (data.membership) {
 					  if (data.membership === true) {
 						data.membership = getTranslation("membership", "Membership");
@@ -2557,25 +2596,45 @@
 						data.membership = data.membership.toString();
 					  }
 					  
-					  if (avatarForMessage) {
-						if (data.subtitle) {
-						  memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
-						} else {
-						  memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
-						}
-					  } else {
+						  if (avatarForMessage) {
+							if (data.subtitle) {
+								if (data.membership.length > 24){
+									memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+								} else if (data.membership.length > 19){
+									memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+								} else {
+									memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div><div class='subtitle'>" + data.subtitle + "</div></div>";
+								}
+							} else if (data.membership.length > 30){
+								memebershipHTML = '<div class="donation membership"><div class="donation-title verysmall">' + data.membership.toUpperCase() + "</div></div>";
+							} else if (data.membership.length > 24){
+								memebershipHTML = '<div class="donation membership"><div class="donation-title small">' + data.membership.toUpperCase() + "</div></div>";
+							} else {
+								memebershipHTML = '<div class="donation membership"><div class="donation-title">' + data.membership.toUpperCase() + "</div></div>";
+							}
+						  } else {
 						// No avatar membership with possible subtitle
-						const isSponsor = data.membership.toLowerCase().includes('sponsor') || 
-										  data.membership.toLowerCase().includes('membership');
-						if (isSponsor) {
-						  // Special format for sponsorships to match the example image
-						  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + data.membership.toUpperCase() + '</div>';
-						} else if (data.subtitle) {
-						  memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
-						} else {
-						  memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
-						}
-					  }
+							const isSponsor = data.membership.toLowerCase().includes('sponsor') || 
+											  data.membership.toLowerCase().includes('membership');
+							if (isSponsor) {
+							  // Special format for sponsorships to match the example image
+							  memebershipHTML = '<div class="no-avatar-donation sponsorship">' + data.membership.toUpperCase() + '</div>';
+							} else if (data.subtitle) {
+								if (data.membership.length > 24){
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title verysmall">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+								} else if (data.membership.length > 19){
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title small">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+								} else {
+									memebershipHTML = '<div class="no-avatar-donation"><div class="donation-title">' + data.membership.toUpperCase() + ': ' + data.subtitle + '</div></div>';
+								}
+							} else if (data.membership.length > 30){
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title verysmall">' + data.membership.toUpperCase() + '</div></div>';
+							} else if (data.membership.length > 24){
+								 memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title small">' + data.membership.toUpperCase() + '</div></div>';
+							} else {
+								memebershipHTML = '<div class="no-avatar-donation single-item"><div class="donation-title">' + data.membership.toUpperCase() + '</div></div>';
+							}
+						  }
 					} else if (data.subtitle) {
 					  if (avatarForMessage) {
 						memebershipHTML = '<div class="donation membership"><div class="subtitle">' + data.subtitle + "</div></div>";
@@ -3055,18 +3114,30 @@
 			
 			// Resume audio context on user interaction if needed
 			function setupUserInteractionHandler() {
-				const handler = function() {
-					if (audioContext && audioContext.state === 'suspended') {
-						audioContext.resume().then(() => {
-							waitingForUserGesture = false;
-							console.log('Audio context resumed after user interaction');
-						});
+				const handler = async function() {
+					if (!audioContext && typeof initAudioContext === 'function') {
+						initAudioContext();
 					}
-					document.removeEventListener('click', handler);
-					document.removeEventListener('touchstart', handler);
-					document.removeEventListener('keydown', handler);
+					if (!audioContext) {
+						return;
+					}
+					try {
+						if (audioContext.state === 'suspended') {
+							await audioContext.resume();
+						}
+					} catch (err) {
+						waitingForUserGesture = true;
+						console.warn('Audio context resume failed after user interaction', err);
+						return;
+					}
+					if (audioContext.state !== 'suspended') {
+						waitingForUserGesture = false;
+						console.log('Audio context ready after user interaction');
+						document.removeEventListener('click', handler);
+						document.removeEventListener('touchstart', handler);
+						document.removeEventListener('keydown', handler);
+					}
 				};
-				
 				document.addEventListener('click', handler);
 				document.addEventListener('touchstart', handler);
 				document.addEventListener('keydown', handler);

@@ -27,6 +27,25 @@ function toDataURL(blobUrl, callback) {
 	var lastImg = "";
 	var lastTimestamp = Date.now();
 	
+	function resolveSourceImageUrl(src) {
+		if (!src) {
+			return "";
+		}
+		var str = (src + "").trim();
+		if (!str) {
+			return "";
+		}
+		if (/^[a-z][a-z0-9+.-]*:/i.test(str) || str.startsWith("//")) {
+			return str;
+		}
+		var cleaned = str.replace(/^\.\/+/, "").replace(/^\/+/, "");
+		var lowerCleaned = cleaned.toLowerCase();
+		var prefix = "sources/images/";
+		if (!lowerCleaned.startsWith(prefix)) {
+			cleaned = prefix + cleaned;
+		}
+		return "./" + cleaned;
+	}
 	
 	function walkTheDOM(node, func) {
 	  func(node);
@@ -182,7 +201,15 @@ function toDataURL(blobUrl, callback) {
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
 		data.type = "restream";
-		data.sourceImg = sourceImg;
+		var normalizedSourceImg = resolveSourceImageUrl(sourceImg);
+		var typeIconUrl = resolveSourceImageUrl("./sources/images/" + data.type + ".png");
+		var finalSourceImg = normalizedSourceImg;
+		if (finalSourceImg && typeIconUrl && finalSourceImg.toLowerCase() === typeIconUrl.toLowerCase()) {
+			finalSourceImg = "";
+		}
+		if (finalSourceImg) {
+			data.sourceImg = finalSourceImg;
+		}
 		
 		
 		if (data.lastMessage === lastMessage){

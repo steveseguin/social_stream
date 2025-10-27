@@ -1824,57 +1824,85 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
         // Process option parameters
         const optionParamKey = `optionparam${paramNum}`;
         if (optionParamKey in settingObj) {
-            const ele = document.querySelector(`select[data-${optionParamKey}='${key}']`);
+            const ele = document.querySelector(`[data-${optionParamKey}='${key}']`);
             if (ele) {
                 let storedValue = settingObj[optionParamKey];
-                
-                // Backward compatibility: if stored value doesn't have 'lang=' prefix but contains '&voice=',
-                // it's likely an old format. Try to find a matching option.
-                if (storedValue && storedValue.includes('&voice=') && !storedValue.includes('lang=')) {
-                    // Try to find an option that matches when we add the 'lang=' prefix
-                    const compatValue = `lang=${storedValue}`;
-                    // Check if this value exists in the options
-                    const hasCompatOption = Array.from(ele.options).some(opt => opt.value === compatValue);
-                    if (hasCompatOption) {
-                        storedValue = compatValue;
-                    }
-                }
-                
-                ele.value = storedValue;
-                updateSettings(ele, sync);
+                const isSelect = ele.tagName === 'SELECT';
 
-                if (key == "ttsprovider" && paramNum == 2) { 
-                    handleTTSProvider2Visibility(ele.value); 
-                } else if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
-                    handleTTSProvider10Visibility(ele.value); 
+                if (isSelect) {
+                    // Backward compatibility: if stored value doesn't have 'lang=' prefix but contains '&voice=',
+                    // it's likely an old format. Try to find a matching option.
+                    if (storedValue && storedValue.includes('&voice=') && !storedValue.includes('lang=')) {
+                        // Try to find an option that matches when we add the 'lang=' prefix
+                        const compatValue = `lang=${storedValue}`;
+                        // Check if this value exists in the options
+                        const hasCompatOption = Array.from(ele.options).some(opt => opt.value === compatValue);
+                        if (hasCompatOption) {
+                            storedValue = compatValue;
+                        }
+                    }
+
+                    ele.value = storedValue;
+
+                    if (key == "ttsprovider" && paramNum == 2) { 
+                        handleTTSProvider2Visibility(ele.value); 
+                    } else if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
+                        handleTTSProvider10Visibility(ele.value); 
+                    }
+                } else if (storedValue !== undefined) {
+                    ele.value = storedValue;
                 }
+
+                updateSettings(ele, sync);
 
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, settingObj[optionParamKey]);
                 }
                 
-                // Handle OpenAI custom voice/model dropdowns
-                if (key === 'voiceopenai' && storedValue === 'custom') {
-                    // Show custom voice input for the appropriate section
-                    const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
-                                       paramNum === 2 ? 'openaiCustomVoice2' : 
-                                       paramNum === 10 ? 'openaiCustomVoice10' : null;
-                    if (customInputId) {
-                        const customInput = document.getElementById(customInputId);
-                        if (customInput) {
-                            customInput.style.display = 'inline-block';
+                if (isSelect) {
+                    // Handle OpenAI custom voice/model dropdowns
+                    if (key === 'voiceopenai' && storedValue === 'custom') {
+                        // Show custom voice input for the appropriate section
+                        const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
+                                           paramNum === 2 ? 'openaiCustomVoice2' : 
+                                           paramNum === 10 ? 'openaiCustomVoice10' : null;
+                        if (customInputId) {
+                            const customInput = document.getElementById(customInputId);
+                            if (customInput) {
+                                customInput.style.display = 'inline-block';
+                            }
                         }
-                    }
-                } else if (key === 'openaimodel' && storedValue === 'custom') {
-                    // Show custom model input for the appropriate section
-                    const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
-                                       paramNum === 2 ? 'openaiCustomModel2' : 
-                                       paramNum === 10 ? 'openaiCustomModel10' : null;
-                    if (customInputId) {
-                        const customInput = document.getElementById(customInputId);
-                        if (customInput) {
-                            customInput.style.display = 'inline-block';
+                    } else if (key === 'openaimodel' && storedValue === 'custom') {
+                        // Show custom model input for the appropriate section
+                        const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
+                                           paramNum === 2 ? 'openaiCustomModel2' : 
+                                           paramNum === 10 ? 'openaiCustomModel10' : null;
+                        if (customInputId) {
+                            const customInput = document.getElementById(customInputId);
+                            if (customInput) {
+                                customInput.style.display = 'inline-block';
+                            }
+                        }
+                    } else if (key === 'voiceopenai' && storedValue !== 'custom') {
+                        const customInputId = paramNum === 1 ? 'openaiCustomVoice' : 
+                                           paramNum === 2 ? 'openaiCustomVoice2' : 
+                                           paramNum === 10 ? 'openaiCustomVoice10' : null;
+                        if (customInputId) {
+                            const customInput = document.getElementById(customInputId);
+                            if (customInput) {
+                                customInput.style.display = 'none';
+                            }
+                        }
+                    } else if (key === 'openaimodel' && storedValue !== 'custom') {
+                        const customInputId = paramNum === 1 ? 'openaiCustomModel' : 
+                                           paramNum === 2 ? 'openaiCustomModel2' : 
+                                           paramNum === 10 ? 'openaiCustomModel10' : null;
+                        if (customInputId) {
+                            const customInput = document.getElementById(customInputId);
+                            if (customInput) {
+                                customInput.style.display = 'none';
+                            }
                         }
                     }
                 }
@@ -2261,6 +2289,25 @@ function processParam(key, paramNum, settingObj, sync) {
     let paramKey = `param${paramNum}`;
     let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
 
+    if (!ele && paramNum === 1 && key.startsWith('chroma=')) {
+        const rawValue = key.split('=')[1] || '';
+        const isTranslucentValue = /^(?:0{3}[0-9a-fA-F]|0{6}[0-9a-fA-F]{2})$/.test(rawValue);
+        if (isTranslucentValue) {
+            const compatKey = 'chromaalpha';
+            ele = document.querySelector(`input[data-${paramKey}='${compatKey}']`);
+            if (ele) {
+                const slider = document.querySelector(`input[data-numbersetting='${compatKey}']`);
+                if (slider) {
+                    const derivedPercent = getPercentFromChromaValue(rawValue);
+                    if (derivedPercent !== null) {
+                        slider.value = derivedPercent;
+                        updateSettings(slider, sync);
+                    }
+                }
+            }
+        }
+    }
+
     if (!ele && paramNum === 3 && key.startsWith('limit=')) {
         const legacyValue = parseInt(key.split('=')[1], 10);
         ele = document.querySelector(`input[data-${paramKey}='limit']`);
@@ -2306,7 +2353,7 @@ function handleAIProviderVisibility(provider) {
         "geminiApiKey", "geminimodel", "xaiApiKey", "xaimodel", "chatgptmodel",
         "deepseekApiKey", "deepseekmodel", "customAIEndpoint", "customAIModel",
         "openrouterApiKey", "openroutermodel", "bedrockAccessKey", "bedrockSecretKey",
-        "bedrockRegion", "bedrockmodel"
+        "bedrockRegion", "bedrockmodel", "groqApiKey", "groqmodel", "customAIApiKey"
     ].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
@@ -2336,9 +2383,13 @@ function handleAIProviderVisibility(provider) {
     } else if (provider == "custom") {
         document.getElementById("customAIEndpoint").classList.remove("hidden");
         document.getElementById("customAIModel").classList.remove("hidden");
+        document.getElementById("customAIApiKey").classList.remove("hidden");
     } else if (provider == "openrouter") {
         document.getElementById("openrouterApiKey").classList.remove("hidden");
         document.getElementById("openroutermodel").classList.remove("hidden");
+    } else if (provider == "groq") {
+        document.getElementById("groqApiKey").classList.remove("hidden");
+        document.getElementById("groqmodel").classList.remove("hidden");
     }
 }
 
@@ -2694,14 +2745,19 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
     const parts = paramValue.split('=');
     const keyOnly = parts[0]; // e.g., 'scale' or 'darkmode'
     const valueInAttr = parts.length > 1 ? parts[1] : undefined; // e.g., '0.77' or undefined
+    const effectiveKey = normalizeParamKey(keyOnly);
 
     if (ele.checked) {
         // Remove any existing instance of this parameter based on the key part
-        targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);
 
         if (valueInAttr !== undefined) {
             // If the value is embedded in the data attribute (like 'scale=0.77'), use the full paramValue
-            targetElement.raw = updateURL(paramValue, targetElement.raw);
+            if (keyOnly === 'chromaalpha') {
+                targetElement.raw = updateURL(`${effectiveKey}=${valueInAttr}`, targetElement.raw);
+            } else {
+                targetElement.raw = updateURL(paramValue, targetElement.raw);
+            }
         } else {
 			 // Determine the correct suffix for associated input attributes.
 			// Only numbersetting strips the '1' (e.g., "data-numbersetting" not "data-numbersetting1")
@@ -2762,19 +2818,30 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
                         targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
                     } else {
                         // Not a language parameter, use standard handling
-                        targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
+                        const valueToUse = keyOnly === 'chromaalpha'
+                            ? formatChromaValueFromPercent((value !== null && value !== undefined) ? value : associatedInput.value)
+                            : associatedInput.value;
+                        targetElement.raw = updateURL(`${effectiveKey}=${encodeURIComponent(valueToUse)}`, targetElement.raw);
                     }
                 } else {
                     // Standard select without language/voice data
-                    targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
+                    const valueToUse = keyOnly === 'chromaalpha'
+                        ? formatChromaValueFromPercent((value !== null && value !== undefined) ? value : associatedInput.value)
+                        : associatedInput.value;
+                    targetElement.raw = updateURL(`${effectiveKey}=${encodeURIComponent(valueToUse)}`, targetElement.raw);
                 }
             } else if (associatedInput && associatedInput.code !== undefined && associatedInput.code !== '') {
-                targetElement.raw = updateURL(`${keyOnly}=${associatedInput.code}`, targetElement.raw);
+                targetElement.raw = updateURL(`${effectiveKey}=${associatedInput.code}`, targetElement.raw);
             } else if (associatedInput && associatedInput.value !== undefined && associatedInput.value !== '') {
-                targetElement.raw = updateURL(`${keyOnly}=${encodeURIComponent(associatedInput.value)}`, targetElement.raw);
+                let associatedValue = associatedInput.value;
+                if (keyOnly === 'chromaalpha') {
+                    const percentSource = (value !== null && value !== undefined) ? value : associatedValue;
+                    associatedValue = formatChromaValueFromPercent(percentSource);
+                }
+                targetElement.raw = updateURL(`${effectiveKey}=${encodeURIComponent(associatedValue)}`, targetElement.raw);
             } else {
                 // Simple flag parameter
-                targetElement.raw = updateURL(keyOnly, targetElement.raw);
+                targetElement.raw = updateURL(effectiveKey, targetElement.raw);
             }
         }
 
@@ -2782,7 +2849,7 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
         handleExclusiveCases(ele, paramType, paramValue, sync);
     } else { // ele.checked is false
         // If checkbox is unchecked, remove the parameter from URL based on the key part
-        targetElement.raw = removeQueryParamWithValue(targetElement.raw, keyOnly);
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);
         
         // Special handling for language parameters - also remove associated voice parameter
         if (keyOnly === 'googlelang') {
@@ -2835,11 +2902,12 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
 
     // Handle "siblings" with the same param prefix
     // Only uncheck related toggles that control the same key (e.g., opacity=..., scale=...)
-    const paramPrefix = paramValue.split('=')[0];
+    const paramPrefixRaw = paramValue.split('=')[0];
+    const normalizedPrefix = normalizeParamKey(paramPrefixRaw);
     // Only handle siblings if the param contains '=' (like scale=2, opacity=0.3) or the bare key itself
-    if (paramValue.includes('=') || paramValue === paramPrefix) {
+    if (paramValue.includes('=') || paramValue === paramPrefixRaw) {
         // Select only inputs that control the same key for this param group, excluding the current element
-        const selector = `input[data-${paramType}^='${paramPrefix}='], input[data-${paramType}='${paramPrefix}']`;
+        const selector = `input[data-${paramType}^='${normalizedPrefix}='], input[data-${paramType}='${normalizedPrefix}'], input[data-${paramType}='${paramPrefixRaw}']`;
         document.querySelectorAll(selector).forEach(ele1 => {
             if (ele1 !== ele && ele1.checked) {
                 ele1.checked = false;
@@ -2942,6 +3010,9 @@ function handleTextParam(ele, targetId, paramType, sync) {
             value: ele.value
         }, function (response) {});
     }
+    
+    // Keep any linked color picker synchronized with the text value
+    handleColorAndPalette(ele);
     
     return true;
 }
@@ -3209,14 +3280,15 @@ function handleOptionSetting(ele, sync) {
 			'chatgptApiKey', 'geminiApiKey', 'geminimodel', 'xaiApiKey', 'xaimodel',
 			'chatgptmodel', 'deepseekApiKey', 'deepseekmodel', 'customAIEndpoint',
 			'customAIModel', 'ollamamodel', 'ollamaendpoint', 'ollamaKeepAlive',
-			'openrouterApiKey', 'openroutermodel'
+			'openrouterApiKey', 'openroutermodel', 'groqApiKey', 'groqmodel',
+			'customAIApiKey'
 		];
         
         aiProviderElements.forEach(id => {
             document.getElementById(id).classList.add("hidden");
         });
         
-        // Show elements relevant to the selected AI provider
+		// Show elements relevant to the selected AI provider
         switch (ele.value) {
             case 'ollama':
                 document.getElementById("ollamamodel").classList.remove("hidden");
@@ -3249,9 +3321,14 @@ function handleOptionSetting(ele, sync) {
 				document.getElementById("openrouterApiKey").classList.remove("hidden");
 				document.getElementById("openroutermodel").classList.remove("hidden");
 				break;
+            case 'groq':
+                document.getElementById("groqApiKey").classList.remove("hidden");
+                document.getElementById("groqmodel").classList.remove("hidden");
+                break;
             case 'custom':
                 document.getElementById("customAIEndpoint").classList.remove("hidden");
                 document.getElementById("customAIModel").classList.remove("hidden");
+                document.getElementById("customAIApiKey").classList.remove("hidden");
                 break;
         }
     }
@@ -3321,15 +3398,61 @@ function updateRangeDisplay(ele) {
             formattedValue += suffix;
         }
     }
+	if (formattedValue){
+		displayEle.textContent = formattedValue;
+	}
+}
 
-    displayEle.textContent = formattedValue;
+function formatChromaValueFromPercent(percentValue) {
+    const numericValue = parseFloat(percentValue);
+    if (Number.isNaN(numericValue)) {
+        return '0000';
+    }
+
+    const clampedPercent = Math.max(0, Math.min(100, numericValue));
+    const alphaNibble = Math.round((clampedPercent / 100) * 15);
+    return `000${alphaNibble.toString(16)}`;
+}
+
+function getPercentFromChromaValue(chromaValue) {
+    if (!chromaValue) {
+        return null;
+    }
+
+    const sanitized = chromaValue.replace('#', '').trim();
+    if (!sanitized) {
+        return null;
+    }
+
+    let alphaHex;
+    let divisor;
+
+    if (sanitized.length >= 8) {
+        alphaHex = sanitized.slice(-2);
+        divisor = 255;
+    } else {
+        alphaHex = sanitized.slice(-1);
+        divisor = 15;
+    }
+
+    const alphaDecimal = parseInt(alphaHex, 16);
+    if (Number.isNaN(alphaDecimal)) {
+        return null;
+    }
+
+    const percent = Math.round((alphaDecimal / divisor) * 100);
+    return Math.max(0, Math.min(100, percent));
+}
+
+function normalizeParamKey(key) {
+    return key === 'chromaalpha' ? 'chroma' : key;
 }
 
 function handleNumberSetting(ele, sync) {
     // Get the target map to determine which indices are valid
     const targetMap = getTargetMap();
     const invertedMap = {};
-    
+
     // Create an inverted map to look up target by index
     Object.entries(targetMap).forEach(([target, index]) => {
         invertedMap[index] = target;
@@ -3362,8 +3485,13 @@ function handleNumberSetting(ele, sync) {
         const checkbox = document.querySelector(`input[${paramAttr}='${settingValue}']`);
         if (checkbox && checkbox.checked) {
             const targetElement = document.getElementById(targetId);
-            targetElement.raw = removeQueryParamWithValue(targetElement.raw, settingValue);
-            targetElement.raw = updateURL(`${settingValue}=${ele.value}`, targetElement.raw);
+            const effectiveKey = normalizeParamKey(settingValue);
+            targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);
+            let valueForParam = ele.value;
+            if (settingValue === 'chromaalpha') {
+                valueForParam = formatChromaValueFromPercent(valueForParam);
+            }
+            targetElement.raw = updateURL(`${effectiveKey}=${encodeURIComponent(valueForParam)}`, targetElement.raw);
         }
         
         if (ele.type === 'range') {
@@ -4250,6 +4378,8 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
     
     async kittenTTS(text, settings) {
         try {
+            const baseUrl = chrome.runtime.getURL('');
+
             // Load ONNX Runtime first if not loaded
             if (typeof ort === 'undefined') {
                 const ortScript = document.createElement('script');
@@ -4259,31 +4389,30 @@ const TTSManager = {  // this is for testing the audio I think; not for managing
                     ortScript.onerror = reject;
                     document.head.appendChild(ortScript);
                 });
-                
-                // Configure WASM paths after loading ONNX Runtime
-                if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
-                    ort.env.wasm.wasmPaths = './thirdparty/';
-                    ort.env.wasm.numThreads = 1;
-                    ort.env.wasm.simd = false;
-                    console.log("Configured ONNX Runtime WASM paths for popup");
-                }
             }
-            
+
+            // Configure WASM paths now that ONNX Runtime is available
+            if (typeof ort !== 'undefined' && ort.env && ort.env.wasm) {
+                ort.env.wasm.wasmPaths = baseUrl + 'thirdparty/kitten-tts/';
+                ort.env.wasm.numThreads = 1;
+                ort.env.wasm.simd = false;
+                console.log("Configured ONNX Runtime WASM paths for popup");
+            }
+
             // Load Kitten TTS module if not loaded
             if (!window.kittenTtsInstance) {
                 // Use absolute URL for chrome extension context
-                const baseUrl = chrome.runtime.getURL('');
                 const moduleUrl = baseUrl + 'thirdparty/kitten-tts/kitten-tts-lib.js';
-                
+
                 const { KittenTTS } = await import(moduleUrl);
-                
+
                 window.kittenTtsInstance = new KittenTTS();
-                
-                // Initialize with model, voices, and WASM paths using absolute URLs
+
+                // Initialize with model, voices, and explicit WASM path using absolute URLs
                 const modelUrl = baseUrl + 'thirdparty/kitten-tts/kitten_tts_nano_v0_1.onnx';
                 const voicesUrl = baseUrl + 'thirdparty/kitten-tts/voices.json';
-                // Don't set WASM path - let ONNX runtime use its default
-                await window.kittenTtsInstance.init(modelUrl, voicesUrl);
+                const wasmPaths = { wasm: baseUrl + 'thirdparty/kitten-tts/ort-wasm-simd-threaded.jsep.wasm' };
+                await window.kittenTtsInstance.init(modelUrl, voicesUrl, wasmPaths);
             }
             
             this.premiumQueueActive = true;

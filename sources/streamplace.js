@@ -177,7 +177,7 @@
 						chrome.runtime.sendMessage(
 							chrome.runtime.id,
 							({message:{
-									type: 'arenasocial',
+									type: 'streamplace',
 									event: 'viewer_update',
 									meta: views
 								}

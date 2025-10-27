@@ -726,6 +726,175 @@
 		return tokens;
 	}
 
+	// Common join/enter verbs across several locales; strings should be lowercase and ASCII-friendly.
+	const JOIN_LATIN_WORDS = new Set([
+		"join",
+		"joined",
+		"joins",
+		"joining",
+		"rejoin",
+		"rejoined",
+		"rejoins",
+		"rejoining",
+		"enter",
+		"entered",
+		"enters",
+		"entering",
+		"entrar",
+		"entra",
+		"entras",
+		"entrado",
+		"entrando",
+		"entran",
+		"entraron",
+		"entrou",
+		"entro",
+		"unir",
+		"unido",
+		"unidos",
+		"unidas",
+		"unirse",
+		"unito",
+		"unita",
+		"uniti",
+		"unite",
+		"ingreso",
+		"ingresar",
+		"ingresa",
+		"ingresan",
+		"ingresaron",
+		"ingresado",
+		"ingresada",
+		"ingressou",
+		"aderiu",
+		"beigetreten",
+		"beitrat",
+		"beitreten",
+		"beitritt",
+		"deltager",
+		"deltagare",
+		"deltagit",
+		"deltatt",
+		"deltok",
+		"aangesloten",
+		"anslutit",
+		"ansluter",
+		"anslot",
+		"liittyi",
+		"liittynyt",
+		"pripojil",
+		"pripojila",
+		"pripojili",
+		"pripojuje",
+		"pripojilo",
+		"prisijunge",
+		"prisijungia",
+		"csatlakozott",
+		"csatlakozik",
+		"katildi",
+		"katiliyor",
+		"joinedthelive"
+	]);
+
+	// Phrases that require multi-token matching after normalization.
+	const JOIN_LATIN_PHRASES = [
+		"se unio",
+		"se ha unido",
+		"ha unito",
+		"ha unido",
+		"ha entrado",
+		"ha ingresado",
+		"ha ingresado al",
+		"gick med",
+		"gar med",
+		"har gatt med",
+		"ble med",
+		"kom inn",
+		"kom in"
+	];
+
+	// Non-Latin scripts checked against the raw (lowercased) message.
+	const JOIN_NON_LATIN_SUBSTRINGS = [
+		"加入",
+		"加入了",
+		"已加入",
+		"参加",
+		"參加",
+		"進入",
+		"进入",
+		"參與",
+		"参加しました",
+		"参加中",
+		"参戦",
+		"참여",
+		"참가",
+		"입장",
+		"입장했어요",
+		"입장했습니다",
+		"입장하셨습니다",
+		"참여했습니다",
+		"참여중",
+		"입장중",
+		"เข้าร่วม",
+		"เข้ามา",
+		"เข้าไลฟ์",
+		"เข้าไลฟ",
+		"присоединился",
+		"присоединилась",
+		"присоединились",
+		"подключился",
+		"подключилась",
+		"подключились",
+		"вошел",
+		"вошла",
+		"зашел",
+		"зашла",
+		"انضم",
+		"انضمت"
+	];
+
+	function normalizeTextForJoinMatching(text) {
+		if (!text) {
+			return "";
+		}
+		let working = text.toLowerCase();
+		if (typeof working.normalize === "function") {
+			try {
+				working = working.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+			} catch (e) {}
+		}
+		working = working.replace(/[^a-z0-9\s]/g, " ");
+		return working.replace(/\s+/g, " ").trim();
+	}
+
+	function containsJoinKeyword(text) {
+		if (!text) {
+			return false;
+		}
+		const rawLower = text.toLowerCase();
+		for (const snippet of JOIN_NON_LATIN_SUBSTRINGS) {
+			if (rawLower.includes(snippet)) {
+				return true;
+			}
+		}
+		const normalized = normalizeTextForJoinMatching(text);
+		if (!normalized) {
+			return false;
+		}
+		const tokens = normalized.split(" ");
+		for (const token of tokens) {
+			if (JOIN_LATIN_WORDS.has(token)) {
+				return true;
+			}
+		}
+		for (const phrase of JOIN_LATIN_PHRASES) {
+			if (normalized.includes(phrase)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	function deriveEventHints(element) {
 		const tokens = collectEventTokens(element);
 		if (!tokens.length) {
@@ -739,7 +908,7 @@
 		}
 		const normalized = tokens.join(" ");
 		const compact = normalized.replace(/[^a-z]/g, "");
-		const join = compact.includes("join") || (compact.includes("enter") && !compact.includes("center"));
+		const join = containsJoinKeyword(normalized);
 		const share = compact.includes("share");
 		const follow = compact.includes("follow");
 		const like = compact.includes("like");
@@ -1003,7 +1172,7 @@
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
 		}
 		const compactMessage = normalizedMessage.replace(/[^a-z]/g, "");
-		const joinFromMessage = compactMessage.includes("joined") || (compactMessage.includes("enter") && !compactMessage.includes("center"));
+		const joinFromMessage = containsJoinKeyword(chatmessage || normalizedMessage);
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
@@ -1211,7 +1380,7 @@
 		}
 		const normalizedMessage = chatmessage ? chatmessage.toLowerCase() : "";
 		const compactMessage = normalizedMessage.replace(/[^a-z]/g, "");
-		const joinFromMessage = compactMessage.includes("joined") || (compactMessage.includes("enter") && !compactMessage.includes("center"));
+		const joinFromMessage = containsJoinKeyword(chatmessage || normalizedMessage);
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
@@ -1537,8 +1706,7 @@
 							if (node.nodeName === "DIV") {
 								const typeOfEvent = node.dataset?.e2e || node.querySelector?.("[data-e2e]")?.dataset.e2e || "";
 								const normalizedType = typeof typeOfEvent === "string" ? typeOfEvent.toLowerCase() : "";
-								const compactType = normalizedType.replace(/[^a-z]/g, "");
-								const isJoinNotification = compactType.includes("join") || (compactType.includes("enter") && !compactType.includes("center"));
+								const isJoinNotification = containsJoinKeyword(normalizedType);
 								if (!settings.capturejoinedevent && isJoinNotification) {
 									continue;
 								}

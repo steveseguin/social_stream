@@ -8213,6 +8213,10 @@
 					return;
 				}
 				var current = horizontalCaptureCurrentTranslate();
+				if (!isFinite(target) || target === current || target >= current) {
+					horizontalSetImmediateTransform(target);
+					return;
+				}
 				horizontalSetImmediateTransform(current);
 				requestAnimationFrame(function () {
 					horizontalAnimateTo(target);
@@ -8232,19 +8236,17 @@
 				if (!node) {
 					return;
 				}
-				if (!horizontalTickerState || !horizontalTickerState.track || node.parentNode !== horizontalTickerState.track) {
+				var track = horizontalTickerState && horizontalTickerState.track;
+				if (!track || node.parentNode !== track) {
 					if (node.parentNode) {
 						node.remove();
 					}
 					return;
 				}
 				var current = horizontalCaptureCurrentTranslate();
-				node.remove();
-				var target = horizontalTickerState.direction === "rtl" ? horizontalCalculateTarget() : 0;
 				horizontalSetImmediateTransform(current);
-				requestAnimationFrame(function () {
-					horizontalAnimateTo(target);
-				});
+				node.remove();
+				horizontalRealign(false);
 			}
 
 			function horizontalPruneMessages() {

@@ -435,22 +435,34 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
             `
         },
-        {
-            name: 'VK Play Live',
-            icon: 'vkplay.png',
-            description: 'Russian streaming platform (formerly vkplay.live).',
-            type: 'popout',
+		{
+			name: 'VK Play Live',
+			icon: 'vkplay.png',
+			description: 'Russian streaming platform (formerly vkplay.live).',
+			type: 'popout',
             instructions: `
                 <ul>
                     <li>Pop out the chat</li>
                     <li>URL: https://live.vkplay.ru/*/only-chat?*</li>
-                </ul>
-            `
-        },
-        {
-            name: 'Piczel.tv',
-            icon: 'piczel.png',
-            description: 'Art streaming platform.',
+				</ul>
+			`
+		},
+		{
+			name: 'VK Live',
+			icon: 'vk.png',
+			description: 'Live streaming on VK.com.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://vk.com/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Piczel.tv',
+			icon: 'piczel.png',
+			description: 'Art streaming platform.',
             type: 'popout',
             instructions: `
                 <ul>
@@ -694,23 +706,47 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
             `
         },
-        {
-            name: 'Fansly',
-            icon: 'fansly.png',
-            description: 'Creator subscription platform.',
-            type: 'popout',
-            instructions: `
-                <ul>
-                    <li>Pop out chat</li>
-                    <li>URL: https://fansly.com/chatroom/*</li>
-                </ul>
-            `
-        },
-        {
-            name: 'TwitCasting',
-            icon: 'twitcasting.png',
-            description: 'Japanese live streaming platform.',
-            type: 'standard',
+		{
+			name: 'Fansly',
+			icon: 'fansly.png',
+			description: 'Creator subscription platform.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>Pop out chat</li>
+					<li>URL: https://fansly.com/chatroom/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Camsoda',
+			icon: 'camsoda.png',
+			description: 'Adult live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://www.camsoda.com/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'MyFreeCams',
+			icon: 'myfreecams.png',
+			description: 'Adult live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://myfreecams.com/* or https://www.myfreecams.com/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'TwitCasting',
+			icon: 'twitcasting.png',
+			description: 'Japanese live streaming platform.',
+			type: 'standard',
             instructions: `
                 <ul>
                     <li>No pop out needed</li>
@@ -836,6 +872,18 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'Simps',
+			icon: 'simps.png',
+			description: 'Streaming platform with app-based chat.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://simps.com/app/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
 			name: 'Pilled.net',
 			icon: 'pilled.png',
 			description: 'Alternative social media platform.',
@@ -846,6 +894,31 @@ document.addEventListener('DOMContentLoaded', function() {
 					<li>Pop out the chat</li>
 				</ul>
 			`
+		},
+		{
+			name: 'Portal',
+			icon: 'portal.png',
+			description: 'Streaming portal platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://portal.abs.xyz/stream/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Pump.fun',
+			icon: 'pumpfun.png',
+			description: 'Live trading and chat for Pump.fun coins.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://pump.fun/coin/*</li>
+				</ul>
+			`,
+			notes: 'Keep the coin page open with the live chat visible.'
 		},
 		{
 			name: 'Noice',

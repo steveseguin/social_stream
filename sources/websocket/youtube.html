@@ -175,7 +175,12 @@ try {
      * {"type": "img", "src": badgeUrl} when images are available
      * {"type": "text", "text": emoji} as fallback
      */
-    
+    var YT_SCOPES = [
+        'https://www.googleapis.com/auth/youtube.readonly',
+        'https://www.googleapis.com/auth/youtube',
+        'https://www.googleapis.com/auth/youtube.force-ssl',
+        'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
+    ];
     var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
     var apiKeyOverride = '';
     try {
@@ -192,7 +197,6 @@ try {
         if (urlKey) { apiKeyOverride = urlKey; }
     } catch {}
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
-    var scope = 'https://www.googleapis.com/auth/youtube.readonly https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl https://www.googleapis.com/auth/youtube.channel-memberships.creator';
     var username = "";
     var channel = '';
     var videoId = '';
@@ -345,6 +349,62 @@ try {
 		  isCustom: true
 		});
 	  });
+	}
+	
+	function getTranslation(key, value = false) {
+		try {
+			if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
+				return settings.translation.innerHTML[key];
+			} else if (settings.translation && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
+				return settings.translation.miscellaneous[key];
+			}
+		} catch (e) {}
+		if (value !== false) {
+			return value;
+		}
+		if (typeof key === "string") {
+			return key.replace(/-/g, " ");
+		}
+		return "";
+	}
+
+	var currentSourceName = "";
+	var currentSourceImage = "";
+
+	function setSourceIdentity(name, imageUrl) {
+		currentSourceName = name || "";
+		currentSourceImage = imageUrl || "";
+	}
+
+	function clearSourceIdentity() {
+		currentSourceName = "";
+		currentSourceImage = "";
+	}
+
+	function applySourceIdentity(payload) {
+		if (currentSourceName) {
+			payload.sourceName = currentSourceName;
+		}
+		if (currentSourceImage) {
+			payload.sourceImg = currentSourceImage;
+		}
+		return payload;
+	}
+
+	function resolveThumbnailUrl(thumbnails) {
+		if (!thumbnails) {
+			return "";
+		}
+		if (thumbnails.high && thumbnails.high.url) {
+			return thumbnails.high.url;
+		}
+		if (thumbnails.medium && thumbnails.medium.url) {
+			return thumbnails.medium.url;
+		}
+		if (thumbnails.default && thumbnails.default.url) {
+			return thumbnails.default.url;
+		}
+		return "";
 	}
 	
 	
@@ -599,6 +659,8 @@ try {
         document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.remove('hidden');
+        const signedInCreds = document.getElementById('credentials-container-signedin');
+        if (signedInCreds) signedInCreds.classList.remove('hidden');
     }
     function showSocketInterface() {
         const authElement = document.querySelector('.auth');
@@ -606,6 +668,8 @@ try {
         if (authElement) authElement.classList.add("hidden");
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.add('hidden');
+        const signedInCreds = document.getElementById('credentials-container-signedin');
+        if (signedInCreds) signedInCreds.classList.add('hidden');
     }
 	function handleVisibilityChange() {
 		const wasVisible = isPageVisible;
@@ -899,39 +963,59 @@ try {
 							});
 						}
 						if (item.snippet.membershipDetails) {
-							// Process membership events with the isMembershipMessage flag
-							const membershipMessage = item.snippet.displayMessage || '';
-							if (membershipMessage && !isBacklogMessage) {
-								// This is a monthly featured message from a member
-								queueMessage({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									message: membershipMessage,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									isChatOwner: item.authorDetails.isChatOwner,
-									isChatSponsor: item.authorDetails.isChatSponsor,
-									isChatModerator: item.authorDetails.isChatModerator,
-									authorChannelId: item.authorDetails.channelId,
-									publishedAt,
-									skipEvent: isBacklogMessage,
-									isMembershipMessage: true // This is a special membership message
-								});
-							} else {
-								// Build badges for membership author
-								let membershipBadges = [];
-								if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "👑"});
-								if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "🛡️"});
-								membershipBadges.push({"type": "text", "text": "⭐"}); // Always add member badge
-								
-								// New membership, renewal, or upgrade without a message
-								processMembership({
-									authorName: item.authorDetails.displayName.replace(/^@/, ''),
-									level: item.snippet.membershipDetails.memberLevelName,
-									profileImageUrl: item.authorDetails.profileImageUrl,
-									authorChannelId: item.authorDetails.channelId,
-									badges: membershipBadges
-								});
+							const membershipEventInfo = deriveMembershipEventContext(item.snippet, item.snippet.membershipDetails);
+							if (!isBacklogMessage) {
+								// Process membership events with the isMembershipMessage flag
+								const membershipMessage = item.snippet.displayMessage || '';
+								if (membershipMessage) {
+									const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
+										// This is a monthly featured message from a member
+										const membershipPayload = {
+											authorName: item.authorDetails.displayName.replace(/^@/, ''),
+											message: membershipMessage,
+											profileImageUrl: item.authorDetails.profileImageUrl,
+											isChatOwner: item.authorDetails.isChatOwner,
+											isChatSponsor: item.authorDetails.isChatSponsor,
+											isChatModerator: item.authorDetails.isChatModerator,
+											authorChannelId: item.authorDetails.channelId,
+											publishedAt,
+											skipEvent: isBacklogMessage,
+											isMembershipMessage: true // This is a special membership message
+										};
+										if (membershipDetailsCopy) {
+											membershipPayload.meta = {
+												membershipDetails: membershipDetailsCopy,
+												snippetType: item.snippet.type
+											};
+										}
+										if (membershipEventInfo.mapping) {
+											membershipPayload.meta = membershipPayload.meta || {};
+											membershipPayload.meta.eventTypeMapping = membershipEventInfo.mapping;
+											membershipPayload.meta.derivedEventType = membershipEventInfo.eventType;
+										}
+										queueMessage(membershipPayload);
+									} else {
+										// Build badges for membership author
+										let membershipBadges = [];
+										if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "👑"});
+										if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "🛡️"});
+										membershipBadges.push({"type": "text", "text": "⭐"}); // Always add member badge
+										
+										// New membership, renewal, or upgrade without a message
+										processMembership({
+											authorName: item.authorDetails.displayName.replace(/^@/, ''),
+											level: item.snippet.membershipDetails.memberLevelName,
+											profileImageUrl: item.authorDetails.profileImageUrl,
+											authorChannelId: item.authorDetails.channelId,
+											badges: membershipBadges,
+											membershipDetails: item.snippet.membershipDetails,
+											rawSnippetType: item.snippet.type,
+											eventType: membershipEventInfo.eventType,
+											eventTypeMapping: membershipEventInfo.mapping
+										});
+									}
+								}
 							}
-						}
 						
 						// Update timestamp once for all message types
 						lastMessageTime = publishedAt;
@@ -1100,6 +1184,7 @@ try {
 		return 'https://ytauth.socialstream.ninja/auth' +
 			'?client_id=' + clientId +
 			'&redirect_uri=' + encodeURIComponent(redirectURI) +
+			'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
 			'&state=' + state;
 	}
 	async function refreshAccessToken(refreshTokenValue) {
@@ -1568,6 +1653,7 @@ try {
 		lastMessageTime = null;
 		isPolling = false;
 		currentStream = null;
+		clearSourceIdentity();
 		messageQueue = [];
 		quickPollCount = 0;
 		consecutiveMaxMessages = 0; // Reset consecutive max message counter
@@ -1595,12 +1681,12 @@ try {
 				if (stats.subscriberCount) {
 					updateStats('subscriber_update', { meta: stats.subscriberCount });
 					if (settings.showsubscount !== false) { // Only skip if explicitly false
-						pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'subscriber_update', meta: stats.subscriberCount });
+						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'subscriber_update', meta: stats.subscriberCount }));
 					}
 				}
 				if (stats.viewCount) {
 					if (settings.showviewcount || settings.hypemode) {
-						pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount });
+						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount }));
 					}
 				}
 			}
@@ -1672,6 +1758,10 @@ try {
 					} else if (effectiveChannelIdToUse) {
 						await getSubscriberCount(effectiveChannelIdToUse);
 					}
+					const endedSourceImage = channelInfoForHeaderAndStats
+						? resolveThumbnailUrl(channelInfoForHeaderAndStats?.snippet?.thumbnails)
+						: resolveThumbnailUrl(streamInfoToUse?.snippet?.thumbnails);
+					setSourceIdentity(channelDisplayNameToUse || "", endedSourceImage);
 					currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
 					notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
 
@@ -1728,6 +1818,10 @@ try {
 
                 updateHeaderInfo(username, channelDisplayNameToUse + (liveChatId ? ` (Live: ${streamTitleToUse.substring(0,20)}...)` : ` (Upcoming Stream)`));
             }
+			const resolvedSourceImage = channelInfoForHeaderAndStats
+				? resolveThumbnailUrl(channelInfoForHeaderAndStats?.snippet?.thumbnails)
+				: resolveThumbnailUrl(streamInfoToUse?.snippet?.thumbnails);
+			setSourceIdentity(channelDisplayNameToUse || "", resolvedSourceImage);
             document.getElementById('textarea').innerHTML = '';
             const connectMessageDiv = document.createElement("div");
             connectMessageDiv.innerText = `Target: ${channelDisplayNameToUse} - Stream: ${streamTitleToUse || 'N/A'}`;
@@ -1916,7 +2010,7 @@ try {
 					}
 				}
 				
-				pushMessage({
+				const outgoingMessage = {
 					chatname: messageData.authorName,
 					chatbadges: chatbadges.length > 0 ? chatbadges : "",
 					userid: messageData.authorChannelId,
@@ -1931,7 +2025,11 @@ try {
 					mod: messageData.isChatModerator || false,
 					type: youtubeShorts ? "youtubeshorts" : "youtube",
 					textonly: settings.textonlymode || false // Pass the setting to the extension
-				});
+				};
+				if (messageData.meta && typeof messageData.meta === 'object') {
+					outgoingMessage.meta = messageData.meta;
+				}
+				pushMessage(applySourceIdentity(outgoingMessage));
 			}
 		} catch (e) {
 			console.error('Error processing message:', e);
@@ -1940,7 +2038,8 @@ try {
 	
     function processSuperChat(superChatData) {
 		try {
-			addEvent(`Super Chat: ${superChatData.authorName} - ${superChatData.amount}`);
+			const superChatLabel = getTranslation("super-chat-label", "Super Chat");
+			addEvent(`${superChatLabel}: ${superChatData.authorName} - ${superChatData.amount}`);
 			
 			// Only update DOM if page is visible
 			if (isPageVisible) {
@@ -1960,7 +2059,7 @@ try {
 					}
 				}
 			}
-			pushMessage({
+			pushMessage(applySourceIdentity({
 				chatname: superChatData.authorName,
 				chatbadges: superChatData.badges || "", // Use any badges passed in
 				userid: superChatData.authorChannelId,
@@ -1973,50 +2072,121 @@ try {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "donation",
 				textonly: settings.textonlymode || false
-			});
+			}));
 		} catch (e) {
 			console.error('Error processing super chat:', e);
 		}
 	}
-	
-	function processMembership(membershipData) {
-		try {
-			let eventType = membershipData.eventType || "new_member";
-			let displayMessage = '';
-			let nameColor = !settings.nosubcolor ? "#107516" : "";
-			
-			if (eventType === "renewal") {
-				displayMessage = `renewed membership (${membershipData.level})`;
-				addEvent(`Member Renewal: ${membershipData.authorName} - ${membershipData.level}`);
-			} else if (eventType === "upgrade") {
-				displayMessage = `upgraded membership to ${membershipData.level}`;
-				addEvent(`Member Upgrade: ${membershipData.authorName} - ${membershipData.level}`);
-			} else {
-				displayMessage = `joined as a member (${membershipData.level})`;
-				addEvent(`New Member: ${membershipData.authorName} - ${membershipData.level}`);
+	function deriveMembershipEventContext(snippet, membershipDetails) {
+		const mapping = {};
+		const rawType = typeof snippet?.type === "string" ? snippet.type : "";
+		const normalizedType = rawType.toLowerCase();
+		if (rawType) {
+			mapping.snippetType = rawType;
+		}
+		const newSponsorDetails = snippet?.newSponsorDetails;
+		if (newSponsorDetails && typeof newSponsorDetails.isUpgrade === "boolean") {
+			mapping.isUpgrade = newSponsorDetails.isUpgrade;
+		}
+		const totalDuration = Number(membershipDetails?.membershipsDuration?.memberTotalDurationMonths);
+		if (Number.isFinite(totalDuration)) {
+			mapping.totalDurationMonths = totalDuration;
+		}
+		const levelDuration = Number(membershipDetails?.membershipsDurationAtLevel?.memberTotalDurationMonths);
+		if (Number.isFinite(levelDuration)) {
+			mapping.levelDurationMonths = levelDuration;
+		}
+		const memberSince = membershipDetails?.membershipsDuration?.memberSince;
+		if (memberSince) {
+			mapping.memberSince = memberSince;
+		}
+
+		let eventType = "new_member";
+		if (normalizedType === "newsponsorevent") {
+			if (newSponsorDetails?.isUpgrade) {
+				eventType = "upgrade";
+			} else if (Number.isFinite(totalDuration) && totalDuration > 1) {
+				eventType = "renewal";
 			}
-			
-			// Only update DOM if page is visible
-			if (isPageVisible) {
-				const textarea = document.querySelector("#textarea");
-				if (textarea) {
-					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>${displayMessage}</span>`;
-					textarea.appendChild(span);
-					
-					// Use same cleanup limit as regular messages
-					const maxMessages = 50;
-					while (textarea.childNodes.length > maxMessages) {
-						textarea.removeChild(textarea.firstChild);
-					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
-						textarea.scrollTop = textarea.scrollHeight;
+		} else if (normalizedType === "membermilestonechatevent" || normalizedType === "membershipsupdateevent") {
+			eventType = "renewal";
+		}
+
+		mapping.derivedEventType = eventType;
+		return { eventType, mapping };
+	}
+	
+		function processMembership(membershipData) {
+			try {
+				const membershipDetails = membershipData.membershipDetails || null;
+				const resolvedLevel = membershipData.level || membershipDetails?.memberLevelName || "";
+				const providedEventType = membershipData.eventType || "";
+				let eventType = providedEventType || "new_member";
+				let displayMessage = "";
+				let nameColor = !settings.nosubcolor ? "#107516" : "";
+				let eventName = "sponsorship";
+				const membershipMeta = {};
+
+				if (providedEventType) {
+					membershipMeta.originalEventType = providedEventType;
+				}
+				if (membershipData.rawSnippetType) {
+					membershipMeta.snippetType = membershipData.rawSnippetType;
+				}
+				if (resolvedLevel) {
+					membershipMeta.level = resolvedLevel;
+				}
+				if (membershipDetails) {
+					membershipMeta.membershipDetails = { ...membershipDetails };
+				}
+				if (membershipData.eventTypeMapping && typeof membershipData.eventTypeMapping === "object") {
+					membershipMeta.eventTypeMapping = { ...membershipData.eventTypeMapping };
+				}
+
+				const genericMembershipLabel = getTranslation("membership-generic", "Membership");
+
+				if (eventType === "renewal") {
+					const renewalMessage = getTranslation("membership-renewed-message", "renewed membership");
+					displayMessage = resolvedLevel ? `${renewalMessage} (${resolvedLevel})` : renewalMessage;
+					const renewalEventLabel = getTranslation("membership-renewal-event", "Member Renewal");
+					addEvent(`${renewalEventLabel}: ${membershipData.authorName} - ${resolvedLevel || genericMembershipLabel}`);
+					eventName = "resub";
+				} else if (eventType === "upgrade") {
+					const upgradeMessage = getTranslation("membership-upgraded-message", "upgraded membership");
+					const toLabel = getTranslation("membership-to-word", "to");
+					displayMessage = resolvedLevel ? `${upgradeMessage} ${toLabel} ${resolvedLevel}` : upgradeMessage;
+					const upgradeEventLabel = getTranslation("membership-upgrade-event", "Member Upgrade");
+					addEvent(`${upgradeEventLabel}: ${membershipData.authorName} - ${resolvedLevel || genericMembershipLabel}`);
+					eventName = "resub";
+				} else {
+					const joinMessage = getTranslation("membership-joined-message", "joined as a member");
+					displayMessage = resolvedLevel ? `${joinMessage} (${resolvedLevel})` : joinMessage;
+					const newMemberEventLabel = getTranslation("membership-new-event", "New Member");
+					addEvent(`${newMemberEventLabel}: ${membershipData.authorName} - ${resolvedLevel || genericMembershipLabel}`);
+				}
+				membershipMeta.eventType = eventType;
+				
+				// Only update DOM if page is visible
+				if (isPageVisible) {
+					const textarea = document.querySelector("#textarea");
+					if (textarea) {
+						var span = document.createElement("div");
+						span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>${escapeHtml(displayMessage)}</span>`;
+						textarea.appendChild(span);
+						
+						// Use same cleanup limit as regular messages
+						const maxMessages = 50;
+						while (textarea.childNodes.length > maxMessages) {
+							textarea.removeChild(textarea.firstChild);
+						}
+						// Only auto-scroll if user is near bottom
+						if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+							textarea.scrollTop = textarea.scrollHeight;
+						}
 					}
 				}
-			}
 			
-			pushMessage({
+			pushMessage(applySourceIdentity({
 				chatname: escapeHtml(membershipData.authorName),
 				chatbadges: membershipData.badges || [{"type":"text", "text": "⭐"}], // Use passed badges or default to star
 				userid: membershipData.authorChannelId,
@@ -2027,20 +2197,24 @@ try {
 				chatimg: membershipData.profileImageUrl || "",
 				hasDonation: "",
 				membership: eventType === "renewal" ? "renewed_member" : eventType === "upgrade" ? "upgraded_member" : "new_member",
-				subtitle: membershipData.level,
+				subtitle: resolvedLevel,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
-				event: eventType,
-				textonly: settings.textonlymode || false
-			});
-		} catch (e) {
-			console.error('Error processing membership:', e);
+				event: eventName,
+				textonly: settings.textonlymode || false,
+				meta: membershipMeta
+			}));
+			} catch (e) {
+				console.error('Error processing membership:', e);
+			}
 		}
-	}
 	
 	function processGiftRedemption(giftData) {
 		try {
-			const displayMessage = giftData.displayMessage || `received a gift membership`;
-			addEvent(`Gift Redeemed: ${giftData.authorName} - ${giftData.memberLevelName}`);
+			const fallbackMessage = getTranslation("membership-gift-received-message", "received a gift membership");
+			const displayMessage = giftData.displayMessage || fallbackMessage;
+			const redemptionLabel = getTranslation("membership-gift-redeemed-event", "Gift Redeemed");
+			const membershipLabel = giftData.memberLevelName || getTranslation("membership-generic", "Membership");
+			addEvent(`${redemptionLabel}: ${giftData.authorName} - ${membershipLabel}`);
 			
 			// Only update DOM if page is visible
 			if (isPageVisible) {
@@ -2061,7 +2235,7 @@ try {
 				}
 			}
 			
-			pushMessage({
+			pushMessage(applySourceIdentity({
 				chatname: escapeHtml(giftData.authorName),
 				chatbadges: [{"type": "text", "text": "🎁"}], // Gift emoji for received gifts
 				userid: giftData.authorChannelId,
@@ -2076,7 +2250,7 @@ try {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftredemption",
 				textonly: settings.textonlymode || false
-			});
+			}));
 		} catch (e) {
 			console.error('Error processing gift redemption:', e);
 		}
@@ -2085,8 +2259,16 @@ try {
 	function processGiftPurchase(giftData) {
 		try {
 			const giftCount = giftData.giftCount || 1;
-			const displayMessage = giftData.displayMessage || `gifted ${giftCount} membership${giftCount > 1 ? 's' : ''} (${giftData.memberLevelName})`;
-			addEvent(`Gift Purchase: ${giftData.authorName} - ${giftCount} x ${giftData.memberLevelName}`);
+			const giftVerb = getTranslation("membership-gifted-verb", "gifted");
+			const singularMembership = getTranslation("membership-singular", "membership");
+			const pluralMembership = getTranslation("membership-plural", "memberships");
+			const membershipWord = giftCount === 1 ? singularMembership : pluralMembership;
+			const levelSuffix = giftData.memberLevelName ? ` (${giftData.memberLevelName})` : "";
+			const defaultMessage = `${giftVerb} ${giftCount} ${membershipWord}${levelSuffix}`;
+			const displayMessage = giftData.displayMessage || defaultMessage;
+			const purchaseLabel = getTranslation("membership-gift-purchase-event", "Gift Purchase");
+			const levelDescriptor = giftData.memberLevelName ? `${giftCount} x ${giftData.memberLevelName}` : `${giftCount} ${membershipWord}`;
+			addEvent(`${purchaseLabel}: ${giftData.authorName} - ${levelDescriptor}`);
 			
 			// Only update DOM if page is visible
 			if (isPageVisible) {
@@ -2107,7 +2289,7 @@ try {
 				}
 			}
 			
-			pushMessage({
+			pushMessage(applySourceIdentity({
 				chatname: escapeHtml(giftData.authorName),
 				chatbadges: [{"type": "text", "text": "💝"}], // Gift giving emoji
 				userid: giftData.authorChannelId,
@@ -2118,11 +2300,11 @@ try {
 				chatimg: giftData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "gift_giver",
-				subtitle: `${giftCount} x ${giftData.memberLevelName}`,
+				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "giftpurchase",
 				textonly: settings.textonlymode || false
-			});
+			}));
 		} catch (e) {
 			console.error('Error processing gift purchase:', e);
 		}
@@ -2130,8 +2312,11 @@ try {
 	
 	function processNewSponsorship(sponsorData) {
 		try {
-			const displayMessage = sponsorData.displayMessage || `just became a member!`;
-			addEvent(`New Sponsor: ${sponsorData.authorName} - ${sponsorData.memberLevelName}`);
+			const fallbackMessage = getTranslation("membership-new-member-message", "just became a member!");
+			const displayMessage = sponsorData.displayMessage || fallbackMessage;
+			const sponsorLabel = getTranslation("membership-new-sponsor-event", "New Sponsor");
+			const membershipLabel = sponsorData.memberLevelName || getTranslation("membership-generic", "Membership");
+			addEvent(`${sponsorLabel}: ${sponsorData.authorName} - ${membershipLabel}`);
 			
 			// Only update DOM if page is visible
 			if (isPageVisible) {
@@ -2152,7 +2337,7 @@ try {
 				}
 			}
 			
-			pushMessage({
+			pushMessage(applySourceIdentity({
 				chatname: escapeHtml(sponsorData.authorName),
 				chatbadges: [{"type": "text", "text": "⭐"}], // Star for new members
 				userid: sponsorData.authorChannelId,
@@ -2167,7 +2352,7 @@ try {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "sponsorship",
 				textonly: settings.textonlymode || false
-			});
+			}));
 		} catch (e) {
 			console.error('Error processing new sponsorship:', e);
 		}
@@ -2175,8 +2360,23 @@ try {
 	
 	function processMemberMilestone(milestoneData) {
 		try {
-			const displayMessage = milestoneData.displayMessage || `celebrates ${milestoneData.memberMonth} month${milestoneData.memberMonth > 1 ? 's' : ''} of membership`;
-			addEvent(`Member Milestone: ${milestoneData.authorName} - ${milestoneData.memberMonth} months`);
+			const months = Number(milestoneData.memberMonth) || 0;
+			const singularMonth = getTranslation("membership-month-singular", "month");
+			const pluralMonth = getTranslation("membership-month-plural", "months");
+			const monthWord = months === 1 ? singularMonth : pluralMonth;
+			const ofWord = getTranslation("membership-of-word", "of");
+			const membershipWord = getTranslation("membership-generic", "membership");
+			const celebratesWord = getTranslation("membership-milestone-celebrates", "celebrates");
+			const genericMilestone = getTranslation("membership-milestone-generic", "membership milestone");
+			let fallbackMessage = `${celebratesWord} ${genericMilestone}`;
+			if (months > 0) {
+				fallbackMessage = `${celebratesWord} ${months} ${monthWord} ${ofWord} ${membershipWord}`;
+			}
+			const displayMessage = milestoneData.displayMessage || fallbackMessage;
+			const milestoneLabel = getTranslation("membership-milestone-event", "Member Milestone");
+			const monthsDescriptor = months > 0 ? `${months} ${monthWord}` : genericMilestone;
+			const levelDescriptor = milestoneData.memberLevelName ? `${monthsDescriptor} - ${milestoneData.memberLevelName}` : monthsDescriptor;
+			addEvent(`${milestoneLabel}: ${milestoneData.authorName} - ${levelDescriptor}`);
 			
 			// Build badges for milestone author
 			let milestoneBadges = [];
@@ -2203,7 +2403,7 @@ try {
 				}
 			}
 			
-			pushMessage({
+			pushMessage(applySourceIdentity({
 				chatname: escapeHtml(milestoneData.authorName),
 				chatbadges: milestoneBadges,
 				userid: milestoneData.authorChannelId,
@@ -2214,11 +2414,11 @@ try {
 				chatimg: milestoneData.profileImageUrl || "",
 				hasDonation: "",
 				membership: "member_milestone",
-				subtitle: `${milestoneData.memberMonth} months - ${milestoneData.memberLevelName}`,
+				subtitle: levelDescriptor,
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "membermilestone",
 				textonly: settings.textonlymode || false
-			});
+			}));
 		} catch (e) {
 			console.error('Error processing member milestone:', e);
 		}
@@ -2226,11 +2426,12 @@ try {
 	
 	function processSuperSticker(stickerData) {
 		try {
-			addEvent(`Super Sticker: ${stickerData.authorName} - ${stickerData.amount}`);
+			const stickerLabel = getTranslation("super-sticker-label", "Super Sticker");
+			addEvent(`${stickerLabel}: ${stickerData.authorName} - ${stickerData.amount}`);
 			
 			// Extract the actual message from displayMessage
 			// Format is typically: "£10.00 from @username: "actual message""
-			let actualMessage = stickerData.displayMessage || '';
+			let actualMessage = stickerData.displayMessage || "";
 			const messageMatch = actualMessage.match(/:\s*"(.+)"$/);
 			if (messageMatch) {
 				actualMessage = messageMatch[1];
@@ -2242,7 +2443,7 @@ try {
 				if (textarea) {
 					var span = document.createElement("div");
 					// Use the actual message or alt text for display
-					const stickerText = actualMessage || stickerData.altText || 'Super Sticker';
+					const stickerText = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
 					span.innerHTML = `<strong>${escapeHtml(stickerData.authorName)}</strong> <span>${stickerData.amount}</span>: 🎨 ${escapeHtml(stickerText)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
@@ -2259,9 +2460,9 @@ try {
 			
 			// Note: YouTube API doesn't provide sticker image URLs
 			// In youtube.js, sticker images are captured from the rendered chat
-			const stickerMessage = actualMessage || stickerData.altText || 'Super Sticker';
+			const stickerMessage = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
 			
-			pushMessage({
+			pushMessage(applySourceIdentity({
 				chatname: escapeHtml(stickerData.authorName),
 				chatbadges: stickerData.badges || "",
 				userid: stickerData.authorChannelId,
@@ -2274,7 +2475,7 @@ try {
 				type: youtubeShorts ? "youtubeshorts" : "youtube",
 				event: "supersticker",
 				textonly: settings.textonlymode || false
-			});
+			}));
 		} catch (e) {
 			console.error('Error processing super sticker:', e);
 		}
@@ -2285,7 +2486,7 @@ try {
 			case 'viewer_update':
 				document.getElementById('viewer-count').textContent = data.meta;
 				if (settings.showviewercount || settings.hypemode){
-					pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'viewer_update', meta: data.meta });
+					pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'viewer_update', meta: data.meta }));
 				}
 				break;
 			case 'subscriber_update':
