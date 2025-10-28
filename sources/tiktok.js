@@ -963,12 +963,27 @@
 		try {
 			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
 			if (chatNameEle) {
-				if (chatNameEle.dataset.skip) {
-					return;
+				if (!chatNameEle.dataset.skip) {
+					chatNameEle.dataset.skip = true;
 				}
-				chatNameEle.dataset.skip = true;
-				chatname = chatNameEle.textContent;
-				chatname = escapeHtml(chatname);
+				let extractedName = "";
+				try {
+					if (typeof chatNameEle.textContent === "string") {
+						extractedName = chatNameEle.textContent;
+					}
+				} catch (e) {}
+				if (!extractedName || !extractedName.trim()) {
+					const titleAttr = chatNameEle.getAttribute && chatNameEle.getAttribute("title");
+					if (titleAttr) {
+						extractedName = titleAttr;
+					}
+				}
+				if ((!extractedName || !extractedName.trim()) && (typeof chatNameEle.innerText === "string")) {
+					extractedName = chatNameEle.innerText;
+				}
+				if (extractedName && extractedName.trim()) {
+					chatname = escapeHtml(extractedName.trim());
+				}
 			}
 		} catch (e) {}
 		try {
@@ -1172,7 +1187,10 @@
 			avatarCache.add(chatname, chatimg, chatbadges, membership, nameColor);
 		}
 		const compactMessage = normalizedMessage.replace(/[^a-z]/g, "");
-		const joinFromMessage = containsJoinKeyword(chatmessage || normalizedMessage);
+		const combinedJoinText = [chatmessage, normalizedMessage, ele?.textContent]
+			.filter(Boolean)
+			.join(" ");
+		const joinFromMessage = containsJoinKeyword(combinedJoinText);
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");
@@ -1289,12 +1307,27 @@
 		try {
 			let chatNameEle = ele.querySelector("[data-e2e='message-owner-name']");
 			if (chatNameEle) {
-				if (chatNameEle.dataset.skip) {
-					return;
+				if (!chatNameEle.dataset.skip) {
+					chatNameEle.dataset.skip = true;
 				}
-				chatNameEle.dataset.skip = true;
-				chatname = chatNameEle.textContent;
-				chatname = escapeHtml(chatname);
+				let extractedName = "";
+				try {
+					if (typeof chatNameEle.textContent === "string") {
+						extractedName = chatNameEle.textContent;
+					}
+				} catch (e) {}
+				if (!extractedName || !extractedName.trim()) {
+					const titleAttr = chatNameEle.getAttribute && chatNameEle.getAttribute("title");
+					if (titleAttr) {
+						extractedName = titleAttr;
+					}
+				}
+				if ((!extractedName || !extractedName.trim()) && (typeof chatNameEle.innerText === "string")) {
+					extractedName = chatNameEle.innerText;
+				}
+				if (extractedName && extractedName.trim()) {
+					chatname = escapeHtml(extractedName.trim());
+				}
 			}
 		} catch (e) {}
 		ele.dataset.skip = ++msgCount;
@@ -1380,7 +1413,10 @@
 		}
 		const normalizedMessage = chatmessage ? chatmessage.toLowerCase() : "";
 		const compactMessage = normalizedMessage.replace(/[^a-z]/g, "");
-		const joinFromMessage = containsJoinKeyword(chatmessage || normalizedMessage);
+		const combinedJoinText = [chatmessage, normalizedMessage, ele?.textContent]
+			.filter(Boolean)
+			.join(" ");
+		const joinFromMessage = containsJoinKeyword(combinedJoinText);
 		const shareFromMessage = compactMessage.includes("share");
 		const followFromMessage = compactMessage.includes("follow");
 		const likeFromMessage = compactMessage.includes("like");

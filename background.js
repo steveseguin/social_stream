@@ -1070,37 +1070,57 @@ var miscTranslations = {
 };
 // In background.js or a shared utility file
 async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8000) {
-	const isPlainObject = (value) => value && typeof value === "object" && !Array.isArray(value);
+	const argCount = arguments.length;
+	const isPlainObject = (value) => value && typeof value === "object" && Object.getPrototypeOf(value) === Object.prototype;
+	const headersToObject = (value) => {
+		if (isPlainObject(value)) {
+			return { ...value };
+		}
+		if (typeof Headers !== "undefined" && value instanceof Headers) {
+			const obj = {};
+			value.forEach((val, key) => {
+				obj[key] = val;
+			});
+			return obj;
+		}
+		return {};
+	};
 
 	let timeout = 8000;
 	let options = {};
 
-	if (typeof optionsOrTimeout === "number") {
-		timeout = Number.isFinite(optionsOrTimeout) ? optionsOrTimeout : timeout;
-	} else if (isPlainObject(optionsOrTimeout)) {
-		options = { ...optionsOrTimeout };
-		if (isPlainObject(options.headers)) {
-			options.headers = { ...options.headers };
+	if (argCount >= 2) {
+		if (typeof optionsOrTimeout === "number") {
+			timeout = Number.isFinite(optionsOrTimeout) ? optionsOrTimeout : timeout;
+		} else if (isPlainObject(optionsOrTimeout)) {
+			options = { ...optionsOrTimeout };
+			if (isPlainObject(options.headers)) {
+				options.headers = { ...options.headers };
+			}
 		}
 	}
 
-	if (typeof optionsOrTimeout === "number") {
-		if (typeof timeoutOrHeaders === "number") {
-			timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
-		} else if (isPlainObject(timeoutOrHeaders)) {
-			options.headers = {
-				...(options.headers || {}),
-				...timeoutOrHeaders
-			};
-		}
-	} else {
-		if (typeof timeoutOrHeaders === "number") {
-			timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
-		} else if (isPlainObject(timeoutOrHeaders)) {
-			options.headers = {
-				...(options.headers || {}),
-				...timeoutOrHeaders
-			};
+	if (argCount >= 3) {
+		if (typeof optionsOrTimeout === "number") {
+			if (typeof timeoutOrHeaders === "number") {
+				timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
+			} else if (isPlainObject(timeoutOrHeaders)) {
+				const merged = {
+					...headersToObject(options.headers),
+					...timeoutOrHeaders
+				};
+				options = { ...options, headers: merged };
+			}
+		} else {
+			if (typeof timeoutOrHeaders === "number") {
+				timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
+			} else if (isPlainObject(timeoutOrHeaders)) {
+				const merged = {
+					...headersToObject(options.headers),
+					...timeoutOrHeaders
+				};
+				options = { ...options, headers: merged };
+			}
 		}
 	}
 
