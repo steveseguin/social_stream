@@ -1797,8 +1797,21 @@ async function cleanupCurrentConnection() {
 		socket.onclose = () => {
 			if (isDisconnecting) return;
 
+			// Ignore closes from superseded sockets created during a reconnect hand-off.
+			if (socket !== eventSocket) {
+				return;
+			}
+
 			if (eventSubReconnectInProgress) {
-				// Intentional close during reconnect hand-off.
+				// The reconnection attempt did not succeed (new socket closed before handshake).
+				console.warn('EventSub reconnect attempt failed; falling back to fresh connection.');
+				eventSubReconnectInProgress = false;
+				if (reconnectTimeout) {
+					clearTimeout(reconnectTimeout);
+					reconnectTimeout = null;
+				}
+				eventSocket = null;
+				reconnectTimeout = setTimeout(connectEventSub, 5000);
 				return;
 			}
 
