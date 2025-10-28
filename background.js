@@ -1069,35 +1069,66 @@ var miscTranslations = {
 	someone: "Someone"
 };
 // In background.js or a shared utility file
-async function fetchWithTimeout(url, options = {}, timeout = 8000) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+async function fetchWithTimeout(url, optionsOrTimeout = {}, timeoutOrHeaders = 8000) {
+	const isPlainObject = (value) => value && typeof value === "object" && !Array.isArray(value);
 
-    const fetchOptions = {
-        ...options, // User-provided options (method, headers, body)
-        signal: controller.signal
-    };
+	let timeout = 8000;
+	let options = {};
 
-    try {
-        const response = await fetch(url, fetchOptions);
-        clearTimeout(timeoutId);
-        return response;
-    } catch (error) {
-        clearTimeout(timeoutId); // Ensure timeout is cleared on error too
-        if (error.name === 'AbortError') {
-            console.warn(`[fetchWithTimeout] Request to ${url} timed out after ${timeout}ms.`);
-            // You might want to throw a specific timeout error or return a custom object
-            // For now, re-throwing to let the caller handle it.
-            throw new Error(`Timeout: Request to ${url} aborted after ${timeout}ms.`);
-        }
-        // Assuming errorlog is defined elsewhere
-        if (typeof errorlog === 'function') {
-            errorlog(`[fetchWithTimeout] Fetch error for ${url}:`, error);
-        } else {
-            console.error(`[fetchWithTimeout] Fetch error for ${url}:`, error);
-        }
-        throw error; // Re-throw the original error for the caller to handle
-    }
+	if (typeof optionsOrTimeout === "number") {
+		timeout = Number.isFinite(optionsOrTimeout) ? optionsOrTimeout : timeout;
+	} else if (isPlainObject(optionsOrTimeout)) {
+		options = { ...optionsOrTimeout };
+		if (isPlainObject(options.headers)) {
+			options.headers = { ...options.headers };
+		}
+	}
+
+	if (typeof optionsOrTimeout === "number") {
+		if (typeof timeoutOrHeaders === "number") {
+			timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
+		} else if (isPlainObject(timeoutOrHeaders)) {
+			options.headers = {
+				...(options.headers || {}),
+				...timeoutOrHeaders
+			};
+		}
+	} else {
+		if (typeof timeoutOrHeaders === "number") {
+			timeout = Number.isFinite(timeoutOrHeaders) ? timeoutOrHeaders : timeout;
+		} else if (isPlainObject(timeoutOrHeaders)) {
+			options.headers = {
+				...(options.headers || {}),
+				...timeoutOrHeaders
+			};
+		}
+	}
+
+	const controller = new AbortController();
+	const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+	const fetchOptions = {
+		...options,
+		signal: controller.signal
+	};
+
+	try {
+		const response = await fetch(url, fetchOptions);
+		clearTimeout(timeoutId);
+		return response;
+	} catch (error) {
+		clearTimeout(timeoutId); // Ensure timeout is cleared on error too
+		if (error.name === 'AbortError') {
+			console.warn(`[fetchWithTimeout] Request to ${url} timed out after ${timeout}ms.`);
+			throw new Error(`Timeout: Request to ${url} aborted after ${timeout}ms.`);
+		}
+		if (typeof errorlog === 'function') {
+			errorlog(`[fetchWithTimeout] Fetch error for ${url}:`, error);
+		} else {
+			console.error(`[fetchWithTimeout] Fetch error for ${url}:`, error);
+		}
+		throw error; // Re-throw the original error for the caller to handle
+	}
 }
 // Make it globally available if needed by other parts of background.js, or export if using modules
 window.fetchWithTimeout = fetchWithTimeout;
