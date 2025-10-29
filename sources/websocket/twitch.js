@@ -47,10 +47,155 @@ modulesReady.catch((error) => {
   console.error('Failed to load Twitch shared modules', error);
 });
 
-const TMI_SOURCES = [
-  '../../lite/vendor/tmi.js',
-  'https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/lib/tmi.min.js'
-];
+const TMI_MODULE_EXTENSION_PATH = 'shared/vendor/tmi.module.js';
+const TMI_MODULE_RELATIVE_PATH = '../../shared/vendor/tmi.module.js';
+const TMI_SCRIPT_EXTENSION_PATH = 'shared/vendor/tmi.js';
+const TMI_SCRIPT_RELATIVE_PATH = '../../shared/vendor/tmi.js';
+
+function isExtensionRuntime() {
+  return (
+    typeof chrome !== 'undefined' &&
+    !!chrome?.runtime &&
+    typeof chrome.runtime.getURL === 'function'
+  );
+}
+
+function resolveAssetUrl(path) {
+  if (!path) {
+    return null;
+  }
+  try {
+    if (typeof document !== 'undefined' && typeof document.baseURI === 'string') {
+      return new URL(path, document.baseURI).href;
+    }
+  } catch (error) {
+    console.warn('Failed to resolve asset URL relative to document.baseURI', error);
+  }
+  return path;
+}
+
+function shouldUseDocumentRelativeSharedAssets() {
+  if (typeof window === 'undefined' || typeof window.location === 'undefined') {
+    return true;
+  }
+  const { protocol, host } = window.location;
+  if (protocol === 'file:') {
+    return true;
+  }
+  return /(?:localhost(?::\d+)?|(?:^|\.)socialstream\.ninja)$/i.test(host || '');
+}
+
+function clearGlobalTmi() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    delete window.tmi;
+  } catch (error) {
+    window.tmi = undefined;
+  }
+}
+
+function resolveTmiModuleSpecifiers() {
+  const specifiers = [];
+  if (isExtensionRuntime()) {
+    try {
+      specifiers.push(chrome.runtime.getURL(TMI_MODULE_EXTENSION_PATH));
+    } catch (error) {
+      console.warn('Failed to resolve tmi module via chrome.runtime.getURL', error);
+    }
+  }
+  if (!isExtensionRuntime() || shouldUseDocumentRelativeSharedAssets()) {
+    const resolvedRelative = resolveAssetUrl(TMI_MODULE_RELATIVE_PATH);
+    if (resolvedRelative && resolvedRelative !== TMI_MODULE_RELATIVE_PATH) {
+      specifiers.push(resolvedRelative);
+    }
+    specifiers.push(TMI_MODULE_RELATIVE_PATH);
+  }
+  return Array.from(
+    specifiers.filter(Boolean).reduce((set, entry) => {
+      set.add(entry);
+      return set;
+    }, new Set())
+  );
+}
+
+function resolveTmiScriptSources() {
+  const sources = [];
+  if (isExtensionRuntime()) {
+    try {
+      sources.push(chrome.runtime.getURL(TMI_SCRIPT_EXTENSION_PATH));
+    } catch (error) {
+      console.warn('Failed to resolve tmi.js via chrome.runtime.getURL', error);
+    }
+  }
+  if (!isExtensionRuntime() || shouldUseDocumentRelativeSharedAssets()) {
+    sources.push(TMI_SCRIPT_RELATIVE_PATH);
+    const resolvedRelative = resolveAssetUrl(TMI_SCRIPT_RELATIVE_PATH);
+    if (resolvedRelative && resolvedRelative !== TMI_SCRIPT_RELATIVE_PATH) {
+      sources.push(resolvedRelative);
+    }
+  }
+  return Array.from(
+    sources.filter(Boolean).reduce((set, entry) => {
+      set.add(entry);
+      return set;
+    }, new Set())
+  );
+}
+
+async function evaluateScriptAtUrl(url) {
+  const targetUrl = resolveAssetUrl(url);
+  if (!targetUrl) {
+    throw new Error('Invalid tmi.js source path');
+  }
+
+  try {
+    await loadScriptSequential([targetUrl], { timeout: 20000 });
+  } catch (error) {
+    const message =
+      error && typeof error.message === 'string' ? error.message : String(error || '');
+    throw new Error(`Failed to load tmi.js from ${targetUrl}: ${message}`);
+  }
+  return targetUrl;
+}
+
+async function importTmiModule(specifier) {
+  if (!specifier) {
+    return null;
+  }
+  try {
+    const module = await import(specifier);
+    const library =
+      (module?.default && typeof module.default.Client === 'function' && module.default) ||
+      (module && typeof module.Client === 'function' && module);
+    if (library?.Client) {
+      if (typeof window !== 'undefined') {
+        window.tmi = library;
+      }
+      return library;
+    }
+    console.warn(`tmi module at ${specifier} did not expose a Client constructor.`);
+  } catch (error) {
+    console.warn(`Failed to import tmi module from ${specifier}`, error);
+  }
+  return null;
+}
+
+async function tryLoadTmiViaModule() {
+  for (const specifier of TMI_MODULE_SPECIFIERS) {
+    const library = await importTmiModule(specifier);
+    if (library?.Client) {
+      console.debug('Loaded tmi.js via module import', specifier);
+      return library;
+    }
+    clearGlobalTmi();
+  }
+  return null;
+}
+
+const TMI_MODULE_SPECIFIERS = resolveTmiModuleSpecifiers();
+const TMI_SCRIPT_SOURCES = resolveTmiScriptSources();
 
 let tmiLoaderPromise = null;
 let chatClient = null;
@@ -414,30 +559,50 @@ let getSubscribersInterval = null;
 let tokenValidationInterval = null;
 let badges = null;
 
-async function ensureTmiClient() {
-	try {
-		if (window.tmi?.Client) {
-			return window.tmi;
-		}
-		if (!tmiLoaderPromise) {
-			tmiLoaderPromise = (async () => {
-				await loadScriptSequential(TMI_SOURCES, { timeout: 20000 });
+	async function ensureTmiClient() {
+		try {
+			if (window.tmi?.Client) {
 				return window.tmi;
-			})().catch((err) => {
-				tmiLoaderPromise = null;
-				throw err;
-			});
+			}
+			if (!tmiLoaderPromise) {
+				tmiLoaderPromise = (async () => {
+					const moduleLibrary = await tryLoadTmiViaModule();
+					if (moduleLibrary?.Client) {
+						return moduleLibrary;
+					}
+					let lastError = null;
+					for (const source of TMI_SCRIPT_SOURCES) {
+						try {
+							const loadedFrom = await evaluateScriptAtUrl(source);
+							if (window.tmi?.Client) {
+								console.debug('Loaded tmi.js from source', loadedFrom);
+								return window.tmi;
+							}
+							lastError = new Error(
+								`tmi.js loaded from ${loadedFrom} but Twitch client constructor is unavailable.`
+							);
+							clearGlobalTmi();
+						} catch (error) {
+							lastError = error;
+							clearGlobalTmi();
+						}
+					}
+					throw lastError || new Error('Unable to load tmi.js from available sources.');
+				})().catch((err) => {
+					tmiLoaderPromise = null;
+					throw err;
+				});
+			}
+			const library = await tmiLoaderPromise;
+			if (!library || typeof library.Client !== 'function') {
+				throw new Error('tmi.js loaded but Twitch client is unavailable.');
+			}
+			return library;
+		} catch (error) {
+			console.error('Failed to load tmi.js library', error);
+			throw error;
 		}
-		const library = await tmiLoaderPromise;
-		if (!library || typeof library.Client !== 'function') {
-			throw new Error('tmi.js loaded but Twitch client is unavailable.');
-		}
-		return library;
-	} catch (error) {
-		console.error('Failed to load tmi.js library', error);
-		throw error;
 	}
-}
 
 function ensureClientFactory() {
 	if (!tmiClientFactory) {

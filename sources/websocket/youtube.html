@@ -339,11 +339,14 @@ try {
 		  console.warn('Skipping emoji with incomplete data:', emoji);
 		  return;
 		}
+
+		const altText = buildEmojiAltText(emoji);
 		
 		// Map the Unicode emoji with its data
 		unicodeMap.set(emoji.emojiId, {
 		  url: emoji.image.thumbnails[0].url,
-		  id: emoji.emojiId
+		  id: emoji.emojiId,
+		  alt: altText
 		});
 		
 		// Map all shortcuts to a separate map
@@ -351,7 +354,8 @@ try {
 		  emoji.shortcuts.forEach(shortcut => {
 			shortcutMap.set(shortcut, {
 			  url: emoji.image.thumbnails[0].url,
-			  id: emoji.emojiId
+			  id: emoji.emojiId,
+			  alt: altText
 			});
 		  });
 		}
@@ -370,10 +374,12 @@ try {
 	  // Map custom emotes by their name (only in shortcut map)
 	  data.forEach(emote => {
 		const emoteName = `:${emote[0]}:`;
+		const customLabel = getAsciiLabel(emote[0]) || 'custom emoji';
 		shortcutMap.set(emoteName, {
 		  url: emote[1],
 		  id: "", // Empty alt for custom emotes
-		  isCustom: true
+		  isCustom: true,
+		  alt: `custom ${customLabel}`
 		});
 	  });
 	}
@@ -467,6 +473,64 @@ try {
 				"'": '&#039;'
 			}[m];
 		});
+	}
+
+	function describeEmojiCodepoints(emojiString) {
+		if (!emojiString) {
+			return 'emoji';
+		}
+		try {
+			const codepoints = Array.from(emojiString).map(char => {
+				const code = char.codePointAt(0);
+				return code !== undefined ? `U+${code.toString(16).toUpperCase()}` : '';
+			}).filter(Boolean);
+			return codepoints.length ? `emoji ${codepoints.join(' ')}` : 'emoji';
+		} catch (e) {
+			return 'emoji';
+		}
+	}
+
+	function getAsciiLabel(value) {
+		if (!value || typeof value !== 'string') {
+			return '';
+		}
+		// Strip non-printable or non-ASCII characters to avoid reintroducing emoji glyphs
+		return value.replace(/[^\x20-\x7E]/g, '').trim();
+	}
+
+	function buildEmojiAltText(emoji) {
+		if (!emoji) {
+			return 'emoji';
+		}
+		const shortcutLabel = Array.isArray(emoji.shortcuts)
+			? emoji.shortcuts.map(getAsciiLabel).find(Boolean)
+			: '';
+		if (shortcutLabel) {
+			return shortcutLabel;
+		}
+		const searchTermLabel = Array.isArray(emoji.searchTerms)
+			? emoji.searchTerms.map(getAsciiLabel).find(Boolean)
+			: '';
+		if (searchTermLabel) {
+			return searchTermLabel;
+		}
+		return describeEmojiCodepoints(emoji.emojiId || '');
+	}
+
+	function resolveEmojiAltAttribute(emojiInfo, fallback) {
+		const candidate =
+			(emojiInfo && getAsciiLabel(emojiInfo.alt)) ||
+			(emojiInfo && emojiInfo.id ? describeEmojiCodepoints(emojiInfo.id) : '') ||
+			getAsciiLabel(fallback) ||
+			'emoji';
+		return strictEscapeHtml(candidate);
+	}
+
+	function shouldStickToBottom(element, threshold = 120) {
+		if (!element) {
+			return false;
+		}
+		return (element.scrollHeight - element.scrollTop - element.clientHeight) <= threshold;
 	}
 	
 	function replaceEmotesWithImages(text) {
@@ -611,7 +675,7 @@ try {
 				if (emojiInfo.isCustom) return '';
 				return emojiInfo.id;
 			} else {
-				const altText = emojiInfo.isCustom ? "" : emojiInfo.id;
+				const altText = resolveEmojiAltAttribute(emojiInfo, match);
 				return `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
 			}
 		});
@@ -641,9 +705,9 @@ try {
 					  `/${baseCode}_${skinToneCode}/`
 					);
 					
-					// Properly escape the match for HTML attributes
-					const escapedMatch = match.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-					return `<img class="regular-emote" src="${combinedUrl}" alt="${escapedMatch}" title="${escapedMatch}" />`;
+					const baseInfo = unicodeMap.get(baseEmoji);
+					const altText = resolveEmojiAltAttribute(baseInfo, describeEmojiCodepoints(match));
+					return `<img class="regular-emote" src="${combinedUrl}" alt="${altText}" title="${altText}" />`;
 				  }
 				}
 				
@@ -657,9 +721,8 @@ try {
 			// Then handle remaining standalone Unicode emoji characters
 			for (const [unicodeChar, emojiInfo] of unicodeMap.entries()) {
 			  if (result.includes(unicodeChar)) {
-				// Properly escape the unicode character for HTML attributes
-				const escapedChar = unicodeChar.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-				const imgTag = `<img src="${emojiInfo.url}" alt="${escapedChar}" class="chat-emoji" title="${escapedChar}" />`;
+				const altText = resolveEmojiAltAttribute(emojiInfo, describeEmojiCodepoints(unicodeChar));
+				const imgTag = `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
 				result = result.replace(new RegExp(unicodeChar, 'g'), imgTag);
 			  }
 			}
@@ -2051,6 +2114,7 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					let badgeHtml = '';
 					// Display badges in the same order as they're sent
@@ -2065,8 +2129,8 @@ try {
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2116,6 +2180,7 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					const safeAuthor = strictEscapeHtml(superChatData.authorName || '');
 					const safeAmount = strictEscapeHtml(superChatData.amount || '');
@@ -2127,8 +2192,8 @@ try {
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2244,6 +2309,7 @@ try {
 				if (isPageVisible) {
 					const textarea = document.querySelector("#textarea");
 					if (textarea) {
+						const shouldStick = shouldStickToBottom(textarea);
 						var span = document.createElement("div");
 						span.innerHTML = `<strong>${strictEscapeHtml(membershipData.authorName || '')}</strong> <span>${strictEscapeHtml(displayMessage)}</span>`;
 						textarea.appendChild(span);
@@ -2253,8 +2319,8 @@ try {
 						while (textarea.childNodes.length > maxMessages) {
 							textarea.removeChild(textarea.firstChild);
 						}
-						// Only auto-scroll if user is near bottom
-						if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						// Only auto-scroll if user was near bottom
+						if (shouldStick) {
 							textarea.scrollTop = textarea.scrollHeight;
 						}
 					}
@@ -2294,6 +2360,7 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
@@ -2302,8 +2369,8 @@ try {
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2348,6 +2415,7 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
@@ -2356,8 +2424,8 @@ try {
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2396,6 +2464,7 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					span.innerHTML = `<strong>${strictEscapeHtml(sponsorData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
@@ -2404,8 +2473,8 @@ try {
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2462,6 +2531,7 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					span.innerHTML = `<strong>${strictEscapeHtml(milestoneData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
@@ -2470,8 +2540,8 @@ try {
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2515,6 +2585,7 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					// Use the actual message or alt text for display
 					const stickerText = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
@@ -2528,8 +2599,8 @@ try {
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}

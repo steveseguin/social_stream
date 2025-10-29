@@ -1,0 +1,200 @@
+{
+  "name": "SocialStream",
+  "version": "0.3.62",
+  "description": "Standalone version of Social Stream Ninja",
+  "author": "Steve Seguin <steve@seguin.email>",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "start2": "electron . --running-from-source",
+    "start3": "electron . --running-from-source --filesource C:/Users/steve/Code/social_stream/",
+    "start4": "electron . --running-from-source --filesource /Users/steveseguin/Code/social_stream/",
+    "update:fallback": "node scripts/updateSocialStreamFallback.js",
+    "test": "electron .",
+    "build": "run-os",
+    "prebuild": "npm run update:fallback",
+    "prebuild:win32": "npm run clean && npm run update:fallback && timeout /t 5 /nobreak",
+    "build:win32": "npm run prebuild:win32 && electron-builder --win",
+    "prebuild:darwin": "npm run clean && npm run prebuild",
+    "build:darwin": "electron-builder --mac --x64 && electron-builder --mac --arm64",
+    "prebuild:linux": "npm run clean && npm run prebuild",
+    "build:linux": "electron-builder --linux",
+    "build:rpi": "USE_SYSTEM_FPM=true electron-builder --armv7l --linux deb",
+    "clean": "rimraf ./dist",
+    "release": "electron-builder --publish always",
+    "preinstall": "npx npm-force-resolutions"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/steveseguin/ssn_app.git"
+  },
+  "build": {
+    "appId": "socialstream.electron",
+    "productName": "socialstream",
+    "files": [
+      "**/*",
+      "build/Release/*",
+      "assets/icons/*.*",
+      "assets/icons/mac/*.*",
+      "assets/icons/png/*.*",
+      "assets/icons/win/*.*",
+      "worker-tts.js",
+      "!certs/**",
+      "!*.pem",
+      "code-signing-cert.pem",
+      "!*.key",
+      "!*.pfx",
+      "!*.p12",
+      "!*.crt",
+      "!*.cer",
+      "!.claude/**",
+      "!claude-artifacts/**",
+      "!aur/**",
+      "!old-certs-backup/**",
+      "!electron-builder.env",
+      "!build-config.env",
+      "!.env",
+      "!mac.sh",
+      "!*.sh",
+      "aur-deploy.sh"
+    ],
+    "asarUnpack": [
+      "Kokoro-82M-ONNX/**/*"
+    ],
+    "mac": {
+      "category": "public.build.automation",
+      "icon": "assets/icons/mac/icon.icns",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "hardenedRuntime": true,
+      "entitlements": "./build/entitlements.mac.inherit.plist",
+      "extendInfo": {
+        "NSCameraUsageDescription": "This app requires camera access to record video.",
+        "NSMicrophoneUsageDescription": "This app requires microphone access to record audio."
+      },
+      "artifactName": "socialstreamninja_mac_v${version}_${arch}.${ext}"
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 110,
+          "y": 150
+        },
+        {
+          "x": 440,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "artifactName": "socialstreamninja_mac_v${version}.dmg",
+      "writeUpdateInfo": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icons/win/icon.ico",
+      "signtoolOptions": {
+        "certificateFile": "certs/socialstream.pfx",
+        "publisherName": "Steve Seguin",
+        "timeStampServer": "http://timestamp.digicert.com",
+        "sign": "./customSign.js"
+      }
+    },
+    "linux": {
+      "category": "public.build.automation",
+      "icon": "assets/icons/png/256x256.png",
+      "artifactName": "socialstreamninja_linux_v${version}_${arch}.${ext}",
+      "target": "AppImage",
+      "executableName": "socialstreamninja"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Social Stream Ninja",
+      "include": "installer.nsh",
+      "artifactName": "socialstreamninja-setup-${version}.${ext}",
+      "installerIcon": "assets/icons/win/icon.ico",
+      "uninstallerIcon": "assets/icons/win/icon.ico",
+      "differentialPackage": false,
+      "warningsAsErrors": false
+    },
+    "portable": {
+      "artifactName": "socialstreamninja-portable.exe",
+      "requestExecutionLevel": "user"
+    },
+    "appx": {
+      "applicationId": "socialstream",
+      "backgroundColor": "#464646",
+      "identityName": "socialstream",
+      "publisherDisplayName": "Steve Seguin",
+      "artifactName": "socialstreamninja-${version}.${ext}"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "releaseType": "release"
+      }
+    ],
+    "afterSign": "./afterSign.js",
+    "afterAllArtifactBuild": "./afterPack.js"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1",
+    "electron": "^38.2.2",
+    "electron-builder": "^25.1.8",
+    "electron-notarize": "git://github.com/electron/notarize.git",
+    "fs-extra": "11.3.0",
+    "jsonfile": "^6.1.0",
+    "npm-force-resolutions": "^0.0.10",
+    "rimraf": "^6.0.1",
+    "run-script-os-fix": "^1.0.4",
+    "tsx": "^4.20.5"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "git+https://github.com/steveseguin/transformers.js",
+    "app-builder-lib": "^26.0.12",
+    "bufferutil": "^4.0.9",
+    "color": "^5.0.0",
+    "color-convert": "^3.0.1",
+    "color-name": "^2.0.0",
+    "electron-context-menu": "3.6.1",
+    "electron-fetch": "^1.9.1",
+    "electron-is-dev": "^3.0.1",
+    "electron-prompt": "^1.7.0",
+    "electron-store": "8.2.0",
+    "es5-ext": "git+https://github.com/steveseguin/es5-ext.git#main",
+    "idb": "^8.0.2",
+    "kokoro-js": "^1.2.0",
+    "minimalist": "^1.0.0",
+    "minimist": "git+https://github.com/fortiZde/minimist.git",
+    "phonemizer": "^1.2.1",
+    "sharp": "^0.33.5",
+    "tiktok-live-connector": "^2.1.0",
+    "undici": "^7.5.0",
+    "utf-8-validate": "^6.0.5",
+    "ws": "^8.18.1",
+    "yargs": "^17.7.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

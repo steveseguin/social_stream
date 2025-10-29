@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.34.12",
+  "version": "3.35.0",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -31,7 +31,9 @@
         "providers/kick/core.js",
         "providers/twitch/chatClient.js",
         "providers/youtube/liveChat.js",
-        "shared/utils/scriptLoader.js"
+        "shared/utils/scriptLoader.js",
+        "shared/vendor/tmi.js",
+        "shared/vendor/tmi.module.js"
       ],
       "matches": ["<all_urls>"]
     },
@@ -564,7 +566,7 @@
 		"https://beta.socialstream.ninja/sources/websocket/youtube*",
 		"https://socialstream.ninja/beta/sources/websocket/youtube*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/youtube.html*",
-		"http://localhost:8080/youtube.html*"
+		"http://localhost:8080/*/youtube.html*"
       ]
     },
     {
@@ -636,7 +638,7 @@
 		"https://socialstream.ninja/beta/sources/websocket/bilibili*",
 		"https://beta.socialstream.ninja/sources/websocket/bilibili*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/bilibili.html*",
-		"http://localhost:8080/bilibili.html*"
+		"http://localhost:8080/*/bilibili.html*"
       ]
     },
     {
@@ -671,7 +673,7 @@
 		"https://beta.socialstream.ninja/sources/websocket/twitch*",
 		"https://socialstream.ninja/beta/sources/websocket/twitch*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*",
-		"http://localhost:8080/twitch.html*"
+		"http://localhost:8080/*/twitch.html*"
       ]
     },
     {
@@ -681,7 +683,7 @@
 		"https://beta.socialstream.ninja/sources/websocket/kick*",
 		"https://socialstream.ninja/beta/sources/websocket/kick*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*",
-		"http://localhost:8080/kick.html*"
+		"http://localhost:8080/*/kick.html*"
       ]
     },
 	{
@@ -691,7 +693,7 @@
 		"https://socialstream.ninja/beta/sources/websocket/irc*",
 		"https://beta.socialstream.ninja/sources/websocket/irc*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/irc.html*",
-		"http://localhost:8080/irc.html*"
+		"http://localhost:8080/*/irc.html*"
       ]
     },
 	{
@@ -701,7 +703,7 @@
 		"https://socialstream.ninja/beta/sources/websocket/stageten*",
 		"https://beta.socialstream.ninja/sources/websocket/stageten*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/stageten.html*",
-		"http://localhost:8080/stageten.html*"
+		"http://localhost:8080/*/stageten.html*"
       ]
     },
     {
@@ -851,7 +853,7 @@
       "matches": [
         "https://www.tiktok.com/*live*",
         "https://livecenter.tiktok.com/*",
-		"http://localhost:8080/fav.html"
+		"http://localhost:8080/*/fav.html"
       ]
     },
     {
