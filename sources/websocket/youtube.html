@@ -1213,6 +1213,11 @@ try {
 							const userImage = document.createElement('img');
 							userImage.src = userItem.snippet.thumbnails.default.url;
 							userImage.className = 'header-avatar';
+							userImage.alt = username || 'YouTube user avatar';
+							userImage.onerror = function handleAvatarError() {
+								this.onerror = null; // prevent infinite loops
+								this.style.display = 'none';
+							};
 							avatarContainer.appendChild(userImage);
 						}
 					}
