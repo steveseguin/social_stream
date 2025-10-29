@@ -2882,6 +2882,7 @@
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
+			var treatTikTokFansAsMembers = urlParams.has("tiktokfans");
 			var channel = null;
 			var iframes = [];
 			var queue = [];
@@ -8515,6 +8516,23 @@
 					} else {
 						data.type = data.type.toString();
 						showType = data.type;
+					}
+					
+					if (treatTikTokFansAsMembers && data.type == "tiktok" && !data.membership && Array.isArray(data.chatbadges)) {
+						var fanBadge = data.chatbadges.find(url => /fans_badge/i.test(url));
+						if (fanBadge) {
+							data.membership = "SUPER FAN";
+						} else {
+							var gradeBadge = data.chatbadges.find(url => /grade_badge/i.test(url));
+							if (gradeBadge) {
+								var levelMatch = gradeBadge.match(/_lv(\d+)/i);
+								if (levelMatch && levelMatch[1]) {
+									data.membership = "TEAM LEVEL " + levelMatch[1];
+								} else {
+									data.membership = "TEAM LEVEL";
+								}
+							}
+						}
 					}
 					
 					if (stripDonationData){
