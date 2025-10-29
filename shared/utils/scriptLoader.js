@@ -70,7 +70,10 @@ export async function loadScriptSequential(urls, options) {
     }
     const attrs = typeof entry === 'object' && entry !== null ? entry.attributes : undefined;
     try {
-      await loadScript(url, { ...(options || {}), attributes: { ...(options?.attributes || {}), ...(attrs || {}) } });
+      await loadScript(url, {
+        ...(options || {}),
+        attributes: { ...(options?.attributes || {}), ...(attrs || {}) }
+      });
       return url;
     } catch (err) {
       lastError = err;

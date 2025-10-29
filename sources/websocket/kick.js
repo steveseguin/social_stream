@@ -1,3 +1,49 @@
+const KICK_CORE_EXTENSION_PATH = 'providers/kick/core.js';
+const KICK_CORE_RELATIVE_PATH = '../../providers/kick/core.js';
+
+let normalizeChannel;
+let normalizeImage;
+let formatBadgesForDisplay;
+let getProfileCacheEntry;
+let storeProfileCacheEntry;
+let mergeBadges;
+let mergeProfileDetails;
+let mapBadges;
+
+async function importWithFallback(extensionPath, relativePath) {
+    if (
+        typeof chrome !== 'undefined' &&
+        chrome?.runtime &&
+        typeof chrome.runtime.getURL === 'function'
+    ) {
+        try {
+            const specifier = chrome.runtime.getURL(extensionPath);
+            return await import(specifier);
+        } catch (error) {
+            console.warn(`Failed to import ${extensionPath} via chrome.runtime.getURL`, error);
+        }
+    }
+    return import(relativePath);
+}
+
+const kickCoreReady = (async () => {
+    const kickModule = await importWithFallback(KICK_CORE_EXTENSION_PATH, KICK_CORE_RELATIVE_PATH);
+    ({
+        normalizeChannel,
+        normalizeImage,
+        formatBadgesForDisplay,
+        getProfileCacheEntry,
+        storeProfileCacheEntry,
+        mergeBadges,
+        mergeProfileDetails,
+        mapBadges
+    } = kickModule);
+})();
+
+kickCoreReady.catch((error) => {
+    console.error('Failed to load Kick shared core module', error);
+});
+
 const STORAGE_KEY = 'kickApiConfig';
 const TOKEN_KEY = 'kickApiTokens';
 const CODE_VERIFIER_KEY = 'kickPkceVerifier';
@@ -25,6 +71,8 @@ const state = {
     refreshTimer: null,
     authUser: null,
     profilePromise: null,
+    profileCache: new Map(),
+    profileFetches: new Map(),
     eventTypesUnavailable: false,
     autoStart: {
         running: false,
@@ -65,6 +113,180 @@ let extensionInitialized = false;
 let lastBridgeNotifyStatus = null;
 let lastAuthNotifyStatus = null;
 const ignoredEventTypesLogged = new Set();
+
+const LITE_MESSAGE_PREFIX = 'kick-lite-';
+let liteBridgeCoreReady = false;
+let liteMessageQueue = [];
+
+kickCoreReady
+    .then(() => {
+        liteBridgeCoreReady = true;
+        if (liteMessageQueue.length) {
+            const queue = liteMessageQueue;
+            liteMessageQueue = [];
+            queue.forEach((evt) => processLiteMessage(evt));
+        }
+    })
+    .catch((error) => {
+        liteBridgeCoreReady = true;
+        liteMessageQueue = [];
+        console.error('Kick core module failed to load for lite bridge', error);
+    });
+
+function isLiteEmbedded() {
+    if (typeof window === 'undefined') {
+        return false;
+    }
+    return window.parent && window.parent !== window;
+}
+
+function sendLiteMessage(type, payload = {}, targetWindow = null, targetOrigin = null) {
+    if (typeof window === 'undefined') {
+        return;
+    }
+    const recipient = targetWindow || (isLiteEmbedded() ? window.parent : null);
+    if (!recipient) {
+        return;
+    }
+    try {
+        const message = { ...payload, type };
+        const origin = targetOrigin || (typeof window.location !== 'undefined' ? window.location.origin : '*');
+        recipient.postMessage(message, origin);
+    } catch (err) {
+        console.warn('Failed to send Kick Lite message', err);
+    }
+}
+
+function getLiteStatusSnapshot() {
+    return {
+        channel: state.channelSlug || '',
+        channelId: state.channelId,
+        bridgeStatus: state.bridge?.status || 'disconnected',
+        authenticated: Boolean(state.tokens?.access_token) && !isTokenExpired(),
+        hasTokens: Boolean(state.tokens?.access_token),
+        expiresAt: state.tokens?.expires_at || null,
+        lastSlug: state.autoStart?.lastSlug || ''
+    };
+}
+
+function notifyLiteStatus(reason) {
+    if (!isLiteEmbedded()) return;
+    sendLiteMessage('kick-lite-status', { status: getLiteStatusSnapshot(), reason });
+}
+
+function applyLiteConfig(message) {
+    if (!message || typeof message !== 'object') {
+        return;
+    }
+    let changed = false;
+    if (typeof message.clientId === 'string' && message.clientId.trim()) {
+        const next = message.clientId.trim();
+        if (next !== state.clientId) {
+            state.clientId = next;
+            changed = true;
+        }
+    }
+    if (typeof message.redirectUri === 'string' && message.redirectUri.trim()) {
+        const next = message.redirectUri.trim();
+        if (next !== state.redirectUri) {
+            state.redirectUri = next;
+            changed = true;
+        }
+    }
+    if (typeof message.bridgeUrl === 'string' && message.bridgeUrl.trim()) {
+        const next = message.bridgeUrl.trim();
+        if (next !== state.bridgeUrl) {
+            state.bridgeUrl = next;
+            changed = true;
+        }
+    }
+    if (typeof message.chatType === 'string' && message.chatType.trim()) {
+        const next = message.chatType.trim();
+        if (next !== state.chat.type) {
+            state.chat.type = next;
+            changed = true;
+        }
+    }
+    if (changed) {
+        persistConfig();
+        updateInputsFromState();
+        notifyLiteStatus('config');
+    }
+}
+
+function processLiteMessage(event) {
+    if (
+        !event ||
+        !event.data ||
+        typeof event.data !== 'object' ||
+        typeof event.data.type !== 'string' ||
+        !event.data.type.startsWith(LITE_MESSAGE_PREFIX)
+    ) {
+        return;
+    }
+    if (event.origin && typeof window !== 'undefined' && window.location && event.origin !== window.location.origin) {
+        return;
+    }
+    const { type } = event.data;
+    switch (type) {
+        case 'kick-lite-handshake': {
+            sendLiteMessage('kick-lite-ready', { status: getLiteStatusSnapshot() }, event.source, event.origin || '*');
+            break;
+        }
+        case 'kick-lite-set-config': {
+            applyLiteConfig(event.data);
+            break;
+        }
+        case 'kick-lite-set-channel': {
+            const slug = event.data.slug || event.data.channel;
+            if (slug) {
+                setChannelSlug(slug, { source: 'lite', force: event.data.force === true });
+                notifyLiteStatus('channel');
+            }
+            break;
+        }
+        case 'kick-lite-connect': {
+            maybeAutoStart(true);
+            notifyLiteStatus('connect');
+            break;
+        }
+        case 'kick-lite-disconnect': {
+            disconnectBridge();
+            notifyLiteStatus('disconnect');
+            break;
+        }
+        case 'kick-lite-get-status': {
+            sendLiteMessage('kick-lite-status', { status: getLiteStatusSnapshot() }, event.source, event.origin || '*');
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+function handleLiteMessage(event) {
+    if (
+        !event ||
+        !event.data ||
+        typeof event.data !== 'object' ||
+        typeof event.data.type !== 'string' ||
+        !event.data.type.startsWith(LITE_MESSAGE_PREFIX)
+    ) {
+        return;
+    }
+    const messageType = event.data.type;
+    const requiresCore =
+        messageType !== 'kick-lite-handshake' && messageType !== 'kick-lite-get-status';
+    if (!liteBridgeCoreReady && requiresCore) {
+        liteMessageQueue.push(event);
+        return;
+    }
+    processLiteMessage(event);
+}
+
+if (typeof window !== 'undefined') {
+    window.addEventListener('message', handleLiteMessage, false);
+}
 
 let settings = {};
 let EMOTELIST = false;
@@ -116,6 +338,369 @@ function escapeAttribute(value) {
         .replace(/'/g, '&#39;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+function resolveProfileIdentifiers(...sources) {
+    let userId = null;
+    let username = null;
+    for (const source of sources) {
+        if (!source || typeof source !== 'object') {
+            continue;
+        }
+        if (!userId) {
+            const idCandidates = [
+                source.id,
+                source.user_id,
+                source.userId,
+                source.broadcaster_user_id,
+                source.broadcasterUserId,
+                source.identity?.id,
+                source.user?.id,
+                source.user?.user_id,
+                source.profile?.id,
+                source.account?.id,
+                source.sub,
+                source.channel?.id,
+                source.channel?.user_id
+            ];
+            for (const candidate of idCandidates) {
+                if (candidate == null) {
+                    continue;
+                }
+                const str = String(candidate).trim();
+                if (str) {
+                    userId = str;
+                    break;
+                }
+            }
+        }
+        if (!username) {
+            const usernameCandidates = [
+                source.username,
+                source.user_login,
+                source.userLogin,
+                source.slug,
+                source.display_name,
+                source.displayName,
+                source.name,
+                source.channelSlug,
+                source.login,
+                source.user?.slug,
+                source.user?.username,
+                source.user?.display_name,
+                source.channel?.slug,
+                source.channel?.username,
+                source.profile?.username,
+                source.profile?.slug,
+                source.account?.username
+            ];
+            for (const candidate of usernameCandidates) {
+                if (typeof candidate === 'string') {
+                    const normalized = normalizeChannel(candidate);
+                    if (normalized) {
+                        username = normalized;
+                        break;
+                    }
+                }
+            }
+        }
+        if (userId && username) {
+            break;
+        }
+    }
+    if (!userId && !username) {
+        return null;
+    }
+    return { userId, username };
+}
+
+function getCachedProfile(ids, options = {}) {
+    if (!ids) {
+        return undefined;
+    }
+    return getProfileCacheEntry(state.profileCache, ids, options);
+}
+
+function rememberProfile(profile, ...sources) {
+    if (!profile || typeof profile !== 'object') {
+        return;
+    }
+    const ids = resolveProfileIdentifiers(profile, ...sources);
+    if (!ids) {
+        return;
+    }
+    storeProfileCacheEntry(state.profileCache, ids, profile);
+}
+
+function rememberProfileMiss(...sources) {
+    const ids = resolveProfileIdentifiers(...sources);
+    if (!ids) {
+        return;
+    }
+    storeProfileCacheEntry(state.profileCache, ids, null);
+}
+
+function extractProfileFromSource(source) {
+    if (!source || typeof source !== 'object') {
+        return null;
+    }
+    const profile = { badges: [] };
+    let touched = false;
+
+    const displayName = pickFirstString(
+        [
+            source.display_name,
+            source.displayName,
+            source.username,
+            source.name,
+            source.title,
+            source.nickname,
+            source.user?.display_name,
+            source.user?.username,
+            source.profile?.display_name,
+            source.profile?.username
+        ],
+        ''
+    );
+    if (displayName) {
+        profile.displayName = displayName;
+        touched = true;
+    }
+
+    const subtitle = pickFirstString(
+        [
+            source.subtitle,
+            source.status,
+            source.role,
+            source.rank,
+            source.membership?.tier,
+            source.membership?.title,
+            source.profile?.title
+        ],
+        ''
+    );
+    if (subtitle) {
+        profile.subtitle = subtitle;
+        touched = true;
+    }
+
+    const avatarCandidates = [
+        source.profile_picture,
+        source.profilePicture,
+        source.profile_pic,
+        source.profile_picture_url,
+        source.profilePictureUrl,
+        source.avatar,
+        source.image,
+        source.image_url,
+        source.picture,
+        source.photo,
+        source.icon,
+        source.logo,
+        source.profile?.picture,
+        source.profile?.avatar,
+        source.user?.profile_picture,
+        source.user?.avatar
+    ];
+    for (const candidate of avatarCandidates) {
+        if (typeof candidate === 'string' && candidate.trim()) {
+            profile.avatar = normalizeImage(candidate.trim());
+            touched = true;
+            break;
+        }
+    }
+
+    const colorCandidates = [
+        source.identity?.color,
+        source.identity?.username_color,
+        source.identity?.name_color,
+        source.identity?.hex_color,
+        source.name_color,
+        source.username_color,
+        source.color,
+        source.display_color,
+        source.user?.name_color
+    ];
+    for (const candidate of colorCandidates) {
+        if (typeof candidate === 'string' && candidate.trim()) {
+            profile.nameColor = candidate.trim();
+            touched = true;
+            break;
+        }
+    }
+
+    const membershipCandidate = pickFirstString(
+        [
+            typeof source.membership === 'string' ? source.membership : null,
+            source.membership_name,
+            source.membership?.name,
+            source.membership?.display_name,
+            source.membership?.title,
+            source.membership?.tier,
+            source.subscription?.name,
+            source.subscription?.title,
+            source.subscription?.tier,
+            source.subscription_name,
+            source.plan,
+            source.tier
+        ],
+        ''
+    );
+    if (membershipCandidate) {
+        profile.membership = membershipCandidate;
+        touched = true;
+    }
+
+    const badgeCollections = [
+        source.identity?.badges,
+        source.badges,
+        source.badge_collection,
+        source.badgeCollection,
+        source.profile?.badges,
+        source.membership?.badges,
+        source.subscription?.badges
+    ];
+    for (const collection of badgeCollections) {
+        const normalized = mapBadges(collection);
+        if (normalized.length) {
+            profile.badges = mergeBadges(profile.badges, normalized);
+            touched = true;
+        }
+    }
+
+    const badgeInfo = source.identity?.badge_info || source.identity?.badgeInfo || {};
+    if (badgeInfo.moderator || badgeInfo.mod || badgeInfo.staff || source.identity?.moderator) {
+        profile.isMod = true;
+        touched = true;
+    }
+    if (badgeInfo.vip || badgeInfo.vip_since || source.identity?.vip) {
+        profile.isVip = true;
+        touched = true;
+    }
+
+    if (source.is_moderator || source.moderator || source.isMod) {
+        profile.isMod = true;
+        touched = true;
+    }
+    if (source.is_vip || source.vip || source.isVip) {
+        profile.isVip = true;
+        touched = true;
+    }
+
+    if (Array.isArray(source.roles)) {
+        if (source.roles.some(role => typeof role === 'string' && role.toLowerCase().includes('mod'))) {
+            profile.isMod = true;
+            touched = true;
+        }
+        if (source.roles.some(role => typeof role === 'string' && role.toLowerCase().includes('vip'))) {
+            profile.isVip = true;
+            touched = true;
+        }
+    }
+
+    const levelCandidate = source.level ?? source.rank ?? source.identity?.level ?? source.membership?.level;
+    if (typeof levelCandidate === 'number' && Number.isFinite(levelCandidate)) {
+        profile.level = levelCandidate;
+        touched = true;
+    } else if (typeof levelCandidate === 'string' && levelCandidate.trim()) {
+        profile.level = levelCandidate.trim();
+        touched = true;
+    }
+
+    if (!touched) {
+        return null;
+    }
+    if (!Array.isArray(profile.badges)) {
+        profile.badges = [];
+    }
+    return profile;
+}
+
+function buildProfileSnapshot(...sources) {
+    let snapshot = { badges: [] };
+    let hasData = false;
+    for (const source of sources) {
+        const candidate = extractProfileFromSource(source);
+        if (!candidate) continue;
+        snapshot = mergeProfileDetails(snapshot, candidate);
+        hasData = true;
+    }
+    if (!hasData) {
+        return null;
+    }
+    if (!Array.isArray(snapshot.badges)) {
+        snapshot.badges = [];
+    }
+    return snapshot;
+}
+
+function collectBadgesFromSources(...sources) {
+    let badges = [];
+    for (const source of sources) {
+        if (!source || typeof source !== 'object') {
+            continue;
+        }
+        const collections = [
+            source.identity?.badges,
+            source.badges,
+            source.badge_collection,
+            source.badgeCollection,
+            source.profile?.badges,
+            source.membership?.badges,
+            source.subscription?.badges
+        ];
+        for (const collection of collections) {
+            const normalized = mapBadges(collection);
+            if (normalized.length) {
+                badges = mergeBadges(badges, normalized);
+            }
+        }
+    }
+    return badges;
+}
+
+function collectNameColorFromSources(...sources) {
+    for (const source of sources) {
+        if (!source || typeof source !== 'object') {
+            continue;
+        }
+        const color = pickFirstString(
+            [
+                source.identity?.username_color,
+                source.identity?.color,
+                source.identity?.name_color,
+                source.name_color,
+                source.username_color,
+                source.color,
+                source.profile?.name_color
+            ],
+            ''
+        );
+        if (color) {
+            return color;
+        }
+    }
+    return '';
+}
+
+function gatherProfileState(...sources) {
+    const ids = resolveProfileIdentifiers(...sources);
+    const cachedEntry = ids ? getCachedProfile(ids) : undefined;
+    let profile = { badges: [] };
+    if (cachedEntry && cachedEntry.hasProfile && cachedEntry.profile) {
+        profile = mergeProfileDetails(profile, cachedEntry.profile);
+    }
+    const snapshot = buildProfileSnapshot(...sources);
+    if (snapshot) {
+        profile = mergeProfileDetails(profile, snapshot);
+        rememberProfile(snapshot, ...sources);
+    } else if (!snapshot && ids && cachedEntry === undefined) {
+        rememberProfileMiss(ids);
+    }
+    if (!Array.isArray(profile.badges)) {
+        profile.badges = [];
+    }
+    return { ids, profile, cachedEntry, snapshot };
 }
 
 function deepMerge(target, source) {
@@ -439,15 +1024,16 @@ function consumeThirdPartyPayload(request) {
     if (request.type && request.type !== 'kick') {
         return false;
     }
-    const currentSlug = (state.channelSlug || '').toLowerCase();
-    const payloadSlug = (
+    const currentSlug = normalizeChannel(state.channelSlug);
+    const payloadSlugRaw = (
         typeof request.channel === 'string'
             ? request.channel
             : typeof request.slug === 'string'
                 ? request.slug
                 : null
     );
-    if (currentSlug && payloadSlug && payloadSlug.toLowerCase() !== currentSlug) {
+    const payloadSlug = normalizeChannel(payloadSlugRaw);
+    if (currentSlug && payloadSlug && payloadSlug !== currentSlug) {
         return false;
     }
     let changed = false;
@@ -479,7 +1065,7 @@ function requestThirdPartyEmotes(options = {}) {
         return;
     }
     const { force = false } = options || {};
-    const slug = (state.channelSlug || '').trim().toLowerCase();
+    const slug = normalizeChannel(state.channelSlug);
     const userId = state.channelId != null ? String(state.channelId) : null;
 
     if (!slug && !userId) {
@@ -676,8 +1262,8 @@ function setChannelSlug(value, options = {}) {
     const { persist = true, source = 'manual', force = false } = options;
     const slug = (value || '').trim();
     if (!slug) return;
-    const normalized = slug.toLowerCase();
-    const current = (state.channelSlug || '').toLowerCase();
+    const normalized = normalizeChannel(slug);
+    const current = normalizeChannel(state.channelSlug);
     const cameFromQuery = state.channelSlugSource === 'query';
     const sameValue = normalized === current;
 
@@ -719,6 +1305,7 @@ function setChannelSlug(value, options = {}) {
     }
     updateInputsFromState();
     maybeAutoStart();
+    notifyLiteStatus('channel');
 }
 
 function loadConfig() {
@@ -839,6 +1426,7 @@ function updateAuthStatus() {
             }
         });
     }
+    notifyLiteStatus('auth');
 }
 
 function bindEvents() {
@@ -1162,35 +1750,65 @@ function unwrapKickProfile(payload) {
     return null;
 }
 
+function applyAuthenticatedProfile(profile, idsHint = null) {
+    if (!profile || typeof profile !== 'object') {
+        return null;
+    }
+    state.authUser = profile;
+    if (idsHint) {
+        rememberProfile(profile, idsHint, state.tokens, state.tokens?.profile, { username: state.channelSlug });
+    } else {
+        rememberProfile(profile, state.tokens, state.tokens?.profile, { username: state.channelSlug });
+    }
+    const username = pickFirstString(
+        [
+            profile.display_name,
+            profile.displayName,
+            profile.username,
+            profile.name,
+            profile.user?.display_name,
+            profile.user?.username
+        ],
+        ''
+    );
+    if (username) {
+        state.channelName = username;
+    }
+    const slug = pickFirstString(
+        [
+            profile.slug,
+            profile.channel?.slug,
+            profile.user?.slug,
+            profile.username,
+            idsHint?.username
+        ],
+        ''
+    );
+    if (slug) {
+        setChannelSlug(slug, { source: 'profile' });
+    }
+    return profile;
+}
+
 async function loadAuthenticatedProfile() {
     if (!state.tokens?.access_token) return null;
+    const cacheIds = resolveProfileIdentifiers(
+        state.authUser,
+        state.tokens?.profile,
+        state.tokens,
+        { username: state.channelSlug }
+    );
+    const cached = cacheIds ? getCachedProfile(cacheIds) : undefined;
+    if (cached !== undefined) {
+        if (cached.hasProfile && cached.profile) {
+            return applyAuthenticatedProfile(cached.profile, cacheIds);
+        }
+        return null;
+    }
     if (state.profilePromise) {
         return state.profilePromise;
     }
     state.profilePromise = (async () => {
-        const applyProfile = profile => {
-            if (!profile || typeof profile !== 'object') return null;
-            state.authUser = profile;
-            const username =
-                profile.username ||
-                profile.display_name ||
-                profile.name ||
-                profile.user?.username ||
-                '';
-            if (username) {
-                state.channelName = username;
-            }
-            const slug =
-                profile.slug ||
-                profile.channel?.slug ||
-                profile.user?.slug ||
-                profile.username ||
-                '';
-            if (slug) {
-                setChannelSlug(slug, { source: 'profile' });
-            }
-            return profile;
-        };
         const endpoints = [
             {
                 path: '/public/v1/users',
@@ -1208,7 +1826,7 @@ async function loadAuthenticatedProfile() {
                 const data = await apiFetch(endpoint.path);
                 const profile = unwrapKickProfile(data);
                 if (profile && typeof profile === 'object') {
-                    return applyProfile(profile);
+                    return applyAuthenticatedProfile(profile, cacheIds);
                 }
             } catch (err) {
                 const message = err?.message || '';
@@ -1227,7 +1845,10 @@ async function loadAuthenticatedProfile() {
         }
         const fallback = extractProfileFromTokens();
         if (fallback) {
-            return applyProfile(fallback);
+            return applyAuthenticatedProfile(fallback, cacheIds);
+        }
+        if (cacheIds) {
+            rememberProfileMiss(cacheIds);
         }
         return null;
     })();
@@ -1423,23 +2044,23 @@ function reportSubscriptionResults(response, requested) {
 }
 
 async function resolveChannelId(force = false) {
-    const slug = state.channelSlug?.trim();
-    if (!slug) throw new Error('Channel slug required.');
-    const slugLower = slug.toLowerCase();
+    const slugInput = state.channelSlug?.trim();
+    if (!slugInput) throw new Error('Channel slug required.');
+    const slugLower = normalizeChannel(slugInput);
     if (!force && state.channelId && state.lastResolvedSlug === slugLower) {
         return state.channelId;
     }
     const previousId = state.channelId;
     const previousSlug = state.lastResolvedSlug;
-    const params = new URLSearchParams({ slug });
+    const params = new URLSearchParams({ slug: slugLower });
     const data = await apiFetch(`/public/v1/channels?${params.toString()}`);
     const entries = Array.isArray(data?.data) ? data.data : [];
-    const channel = entries.find(item => (item.slug || '').toLowerCase() === slugLower) || entries[0];
+    const channel = entries.find(item => normalizeChannel(item.slug) === slugLower) || entries[0];
     if (!channel?.broadcaster_user_id) {
         throw new Error('Unable to resolve channel user id.');
     }
     state.channelId = channel.broadcaster_user_id;
-    state.channelName = channel.slug || channel.channel_description || slug;
+    state.channelName = channel.slug || channel.channel_description || slugInput;
     state.lastResolvedSlug = slugLower;
     updateInputsFromState();
     if (force || state.channelId !== previousId || previousSlug !== slugLower) {
@@ -1541,7 +2162,7 @@ async function maybeAutoStart(force = false) {
 
     clearSubscriptionRetryTimer();
 
-    const normalizedSlug = slug.toLowerCase();
+    const normalizedSlug = normalizeChannel(slug);
     if (state.autoStart.running) {
         if (force) {
             state.autoStart.pendingForce = true;
@@ -1805,8 +2426,7 @@ function normalizeIdForComparison(value, expectNumeric) {
 }
 
 function normalizeSlug(value) {
-    if (value == null) return '';
-    return String(value).trim().replace(/^@+/, '').toLowerCase();
+    return normalizeChannel(value);
 }
 
 function bridgeEventMatchesCurrentChannel(packet) {
@@ -1814,7 +2434,7 @@ function bridgeEventMatchesCurrentChannel(packet) {
         return true;
     }
     const expectedId = state.channelId != null ? String(state.channelId).trim() : '';
-    const expectedSlug = state.channelSlug ? state.channelSlug.trim().toLowerCase() : '';
+    const expectedSlug = normalizeChannel(state.channelSlug);
     if (!expectedId && !expectedSlug) {
         return true;
     }
@@ -1879,6 +2499,7 @@ function updateBridgeState() {
             }
         });
     }
+    notifyLiteStatus('bridge');
 }
 
 function handleBridgeEvent(packet) {
@@ -1937,27 +2558,55 @@ function forwardChatMessage(evt, bridgeMeta) {
         log('Chat event missing message payload.', 'warning');
         return;
     }
-    const chatname = pickDisplayName([
-        sender?.display_name,
-        sender?.username,
-        sender?.name,
-        message?.sender?.display_name,
-        message?.sender?.username,
-        payload.username
-    ]);
+    const profileSources = [
+        sender,
+        message?.sender,
+        payload.profile,
+        payload.user,
+        evt?.sender
+    ];
+    const { profile: actorProfile } = gatherProfileState(...profileSources);
+    const chatname =
+        actorProfile.displayName ||
+        pickDisplayName([
+            sender?.display_name,
+            sender?.username,
+            sender?.name,
+            message?.sender?.display_name,
+            message?.sender?.username,
+            payload.username
+        ]);
     const content = extractMessageContent(message) || extractMessageContent(payload) || '';
-    const badges = normalizeBadges(
-        sender?.identity?.badges ||
-        sender?.badges ||
-        message?.sender?.identity?.badges ||
-        []
-    );
-    const chatimg = sender?.profile_picture || sender?.avatar || sender?.profilePicture || message?.sender?.profile_picture || '';
-    const nameColor = sender?.identity?.username_color || sender?.color || message?.sender?.identity?.username_color || '';
+    const badgeCandidates = collectBadgesFromSources(...profileSources);
+    const rawBadges = (actorProfile.badges && actorProfile.badges.length) ? actorProfile.badges : badgeCandidates;
+    const badges = formatBadgesForDisplay(rawBadges);
+    const chatimg =
+        actorProfile.avatar ||
+        pickImage(
+            sender?.profile_picture,
+            sender?.profilePicture,
+            sender?.avatar,
+            message?.sender?.profile_picture,
+            message?.sender?.profilePicture,
+            message?.sender?.avatar
+        );
+    const fallbackColor = collectNameColorFromSources(...profileSources);
+    const nameColor = actorProfile.nameColor || fallbackColor || '';
+    const rawEventType =
+        message?.type ||
+        payload.event ||
+        payload.type ||
+        message?.event ||
+        message?.message_type ||
+        payload.message_type ||
+        payload.event_type ||
+        'chat';
+    const normalizedEvent = eventNameForType(rawEventType);
     const messageId = message?.id || payload.message_id || payload.id || null;
     const chatmessageHtml = renderKickMessageHtml(message, content);
     const messagePayload = {
         type: 'kick',
+        event: normalizedEvent || 'message',
         chatname,
         chatmessage: chatmessageHtml,
         chatimg: chatimg || '',
@@ -1976,14 +2625,35 @@ function forwardChatMessage(evt, bridgeMeta) {
 }
 
 function forwardFollower(evt, bridgeMeta) {
-    const follower = pickDisplayName([
-        evt?.follower?.display_name,
-        evt?.follower?.username,
-        evt?.user?.display_name,
-        evt?.user?.username,
-        evt?.username
-    ]) || '';
-    const chatimg = evt?.follower?.profile_picture || evt?.follower?.avatar || evt?.user?.profile_picture || evt?.user?.avatar || null;
+    const followerSources = [
+        evt?.follower,
+        evt?.user,
+        evt?.profile,
+        evt?.account,
+        evt
+    ];
+    const { profile: followerProfile } = gatherProfileState(...followerSources);
+    const follower =
+        followerProfile.displayName ||
+        pickDisplayName([
+            evt?.follower?.display_name,
+            evt?.follower?.username,
+            evt?.user?.display_name,
+            evt?.user?.username,
+            evt?.username
+        ]) ||
+        '';
+    const chatimg =
+        followerProfile.avatar ||
+        pickImage(
+            evt?.follower?.profile_picture,
+            evt?.follower?.profilePicture,
+            evt?.follower?.avatar,
+            evt?.user?.profile_picture,
+            evt?.user?.profilePicture,
+            evt?.user?.avatar
+        ) ||
+        null;
     const chatmessage = follower ? `${follower} started following` : 'New follower';
 
     pushMessage({
@@ -2043,7 +2713,22 @@ function forwardFollower(evt, bridgeMeta) {
 
 
 function forwardSubscription(eventType, evt, bridgeMeta) {
-    const subscriber = pickDisplayName([
+    const subscriberSources = [
+        evt?.subscriber,
+        evt?.user,
+        evt?.recipient,
+        evt?.target,
+        evt
+    ];
+    const gifterSources = [
+        evt?.gifter,
+        evt?.gifted_by,
+        evt?.sender,
+        evt
+    ];
+    const { profile: subscriberProfile } = gatherProfileState(...subscriberSources);
+    const { profile: gifterProfile } = gatherProfileState(...gifterSources);
+    const subscriber = subscriberProfile.displayName || pickDisplayName([
         evt?.subscriber?.display_name,
         evt?.subscriber?.username,
         evt?.user?.display_name,
@@ -2051,7 +2736,7 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
         evt?.gifter?.display_name,
         evt?.gifter?.username
     ]);
-    const gifter = pickDisplayName([
+    const gifter = gifterProfile.displayName || pickDisplayName([
         evt?.gifter?.display_name,
         evt?.gifter?.username,
         evt?.gifted_by?.display_name,
@@ -2069,22 +2754,26 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
         }
         return null;
     };
-    const subscriberImage = pickImage(
-        evt?.subscriber?.profile_picture,
-        evt?.subscriber?.profilePicture,
-        evt?.subscriber?.avatar,
-        evt?.user?.profile_picture,
-        evt?.user?.profilePicture,
-        evt?.user?.avatar
-    );
-    const gifterImage = pickImage(
-        evt?.gifter?.profile_picture,
-        evt?.gifter?.profilePicture,
-        evt?.gifter?.avatar,
-        evt?.gifted_by?.profile_picture,
-        evt?.gifted_by?.profilePicture,
-        evt?.gifted_by?.avatar
-    );
+    const subscriberImage =
+        subscriberProfile.avatar ||
+        pickImage(
+            evt?.subscriber?.profile_picture,
+            evt?.subscriber?.profilePicture,
+            evt?.subscriber?.avatar,
+            evt?.user?.profile_picture,
+            evt?.user?.profilePicture,
+            evt?.user?.avatar
+        );
+    const gifterImage =
+        gifterProfile.avatar ||
+        pickImage(
+            evt?.gifter?.profile_picture,
+            evt?.gifter?.profilePicture,
+            evt?.gifter?.avatar,
+            evt?.gifted_by?.profile_picture,
+            evt?.gifted_by?.profilePicture,
+            evt?.gifted_by?.avatar
+        );
     const totalGifted = takeNumber(evt?.gifted_quantity ?? evt?.quantity ?? evt?.total_gifted ?? evt?.totalGifted);
     const duration = takeNumber(evt?.duration ?? evt?.months ?? evt?.streak ?? evt?.tenure);
     const rawPlan = evt?.tier ?? evt?.plan ?? evt?.membership ?? null;
@@ -2138,7 +2827,16 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
 }
 
 function forwardSupportEvent(eventType, evt, bridgeMeta) {
-    const supporter = pickDisplayName([
+    const supporterSources = [
+        evt?.supporter,
+        evt?.sender,
+        evt?.user,
+        evt?.gifter,
+        evt?.account,
+        evt
+    ];
+    const { profile: supporterProfile } = gatherProfileState(...supporterSources);
+    const supporter = supporterProfile.displayName || pickDisplayName([
         evt?.supporter?.display_name,
         evt?.supporter?.username,
         evt?.sender?.display_name,
@@ -2174,16 +2872,18 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
     }
     const chatmessage = messageSegments.length ? messageSegments.join(' • ') : 'New support received!';
     const chatname = supporter || 'Kick supporter';
-    const chatimg = pickImage(
-        evt?.supporter?.profile_picture,
-        evt?.supporter?.avatar,
-        evt?.sender?.profile_picture,
-        evt?.sender?.avatar,
-        evt?.user?.profile_picture,
-        evt?.user?.avatar,
-        evt?.gifter?.profile_picture,
-        evt?.gifter?.avatar
-    );
+    const chatimg =
+        supporterProfile.avatar ||
+        pickImage(
+            evt?.supporter?.profile_picture,
+            evt?.supporter?.avatar,
+            evt?.sender?.profile_picture,
+            evt?.sender?.avatar,
+            evt?.user?.profile_picture,
+            evt?.user?.avatar,
+            evt?.gifter?.profile_picture,
+            evt?.gifter?.avatar
+        );
     const meta = {
         eventType,
         supporter,
@@ -2365,25 +3065,10 @@ function pickDisplayName(candidates) {
 function pickImage(...candidates) {
     for (const value of candidates) {
         if (typeof value === 'string' && value.trim()) {
-            return value.trim();
+            return normalizeImage(value.trim());
         }
     }
     return '';
-}
-
-function normalizeBadges(badges) {
-    if (!Array.isArray(badges)) return [];
-    return badges
-        .map(badge => {
-            if (!badge) return null;
-            if (typeof badge === 'string') {
-                return { text: badge, type: 'badge' };
-            }
-            const text = badge.text || badge.label || badge.title || badge.type || badge.slug || '';
-            const type = badge.type || badge.slug || 'badge';
-            return text ? { text, type } : null;
-        })
-        .filter(Boolean);
 }
 
 function extractMessageContent(message) {
@@ -2467,6 +3152,7 @@ async function createCodeChallenge(verifier) {
 }
 
 async function bootstrap() {
+    await kickCoreReady;
     initElements();
     initExtensionBridge();
     updateBridgeState();
@@ -2484,6 +3170,10 @@ async function bootstrap() {
         await listSubscriptions();
     }
     await handleAuthCallback();
+    notifyLiteStatus('ready');
+    if (isLiteEmbedded()) {
+        sendLiteMessage('kick-lite-ready', { status: getLiteStatusSnapshot() });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', bootstrap);

@@ -1,4 +1,98 @@
+const TWITCH_CORE_EXTENSION_PATH = 'providers/twitch/chatClient.js';
+const TWITCH_CORE_RELATIVE_PATH = '../../providers/twitch/chatClient.js';
+const SCRIPT_LOADER_EXTENSION_PATH = 'shared/utils/scriptLoader.js';
+const SCRIPT_LOADER_RELATIVE_PATH = '../../shared/utils/scriptLoader.js';
+
+let createTwitchChatClient;
+let createTmiClientFactory;
+let TWITCH_CHAT_EVENTS;
+let TWITCH_CHAT_STATUS;
+let loadScriptSequential;
+
+async function importWithFallback(extensionPath, relativePath) {
+  if (
+    typeof chrome !== 'undefined' &&
+    chrome?.runtime &&
+    typeof chrome.runtime.getURL === 'function'
+  ) {
+    try {
+      const specifier = chrome.runtime.getURL(extensionPath);
+      return await import(specifier);
+    } catch (error) {
+      console.warn(`Failed to import ${extensionPath} via chrome.runtime.getURL`, error);
+    }
+  }
+  return import(relativePath);
+}
+
+const modulesReady = (async () => {
+  const twitchModule = await importWithFallback(
+    TWITCH_CORE_EXTENSION_PATH,
+    TWITCH_CORE_RELATIVE_PATH
+  );
+  const utilsModule = await importWithFallback(
+    SCRIPT_LOADER_EXTENSION_PATH,
+    SCRIPT_LOADER_RELATIVE_PATH
+  );
+  ({
+    createTwitchChatClient,
+    createTmiClientFactory,
+    TWITCH_CHAT_EVENTS,
+    TWITCH_CHAT_STATUS
+  } = twitchModule);
+  ({ loadScriptSequential } = utilsModule);
+})();
+
+modulesReady.catch((error) => {
+  console.error('Failed to load Twitch shared modules', error);
+});
+
+const TMI_SOURCES = [
+  '../../lite/vendor/tmi.js',
+  'https://cdn.jsdelivr.net/npm/tmi.js@1.8.5/lib/tmi.min.js'
+];
+
+let tmiLoaderPromise = null;
+let chatClient = null;
+let chatClientOffHandlers = [];
+let tmiClientFactory = null;
+const WEBSOCKET_READY_STATE = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3
+};
+const websocketProxy = {
+  readyState: 3,
+  close: () => {
+    if (chatClient) {
+      chatClient.disconnect();
+    }
+  },
+  send: (rawMessage) => {
+    if (!chatClient || !rawMessage) {
+      return;
+    }
+    try {
+      if (typeof rawMessage === 'string') {
+        const colonIndex = rawMessage.indexOf(' :');
+        const payload = colonIndex >= 0 ? rawMessage.slice(colonIndex + 2) : rawMessage;
+        chatClient.sendMessage(payload, channel).catch((err) => {
+          console.warn('Twitch chat proxy send failed', err);
+        });
+      }
+    } catch (err) {
+      console.warn('Twitch chat proxy send error', err);
+    }
+  }
+};
+
+function setWebsocketReadyState(state) {
+  websocketProxy.readyState = state;
+}
+
 try{
+	window.websocket = websocketProxy;
 	var isExtensionOn = true;
 	var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
 	var redirectURI = window.location.href.split("/twitch")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
@@ -16,10 +110,8 @@ try{
 		'channel:manage:ads',
 		'channel:read:redemptions'
 	].join('+');
-	var ws;
 	var channel = '';
 	var username = "SocialStreamNinja"; // Not supported at the moment
-	let websocket;
 	var BTTV = false;
 	var SEVENTV = false;
 	var FFZ = false;
@@ -75,8 +167,13 @@ try{
 		sessionStorage.removeItem('twitchOAuthToken');
 		
 		// Clean up connections
-		if (websocket && websocket.readyState === WebSocket.OPEN) {
-			websocket.close();
+		if (chatClient) {
+			try {
+				chatClient.disconnect();
+			} catch (err) {
+				console.warn('Failed to disconnect Twitch chat client on token expiration', err);
+			}
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 		if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
 			eventSocket.close();
@@ -130,7 +227,9 @@ try{
 
 		const sendButton = document.querySelector('#sendmessage');
 		if (sendButton) {
-			sendButton.onclick = handleSendMessage;
+			sendButton.onclick = (event) => {
+				handleSendMessage(event).catch((err) => console.error('Twitch send button handler failed', err));
+			};
 		}
 
 		const inputText = document.querySelector('#input-text');
@@ -309,11 +408,92 @@ try{
 		}
 	}
 
-	let getViewerCountInterval = null;
-	let getFollowersInterval = null;
+let getViewerCountInterval = null;
+let getFollowersInterval = null;
 let getSubscribersInterval = null;
 let tokenValidationInterval = null;
 let badges = null;
+
+async function ensureTmiClient() {
+	try {
+		if (window.tmi?.Client) {
+			return window.tmi;
+		}
+		if (!tmiLoaderPromise) {
+			tmiLoaderPromise = (async () => {
+				await loadScriptSequential(TMI_SOURCES, { timeout: 20000 });
+				return window.tmi;
+			})().catch((err) => {
+				tmiLoaderPromise = null;
+				throw err;
+			});
+		}
+		const library = await tmiLoaderPromise;
+		if (!library || typeof library.Client !== 'function') {
+			throw new Error('tmi.js loaded but Twitch client is unavailable.');
+		}
+		return library;
+	} catch (error) {
+		console.error('Failed to load tmi.js library', error);
+		throw error;
+	}
+}
+
+function ensureClientFactory() {
+	if (!tmiClientFactory) {
+		tmiClientFactory = createTmiClientFactory(() => ensureTmiClient());
+	}
+	return tmiClientFactory;
+}
+
+function resetChatClientHandlers() {
+	if (Array.isArray(chatClientOffHandlers) && chatClientOffHandlers.length) {
+		chatClientOffHandlers.forEach((off) => {
+			try {
+				off();
+			} catch (err) {
+				console.warn('Failed to remove Twitch chat listener', err);
+			}
+		});
+	}
+	chatClientOffHandlers = [];
+}
+
+async function ensureChatClientInstance() {
+	if (!chatClient) {
+		await modulesReady;
+		chatClient = createTwitchChatClient({
+			logger: console
+		});
+		resetChatClientHandlers();
+		const add = (event, handler) => {
+			const off = chatClient.on(event, handler);
+			chatClientOffHandlers.push(off);
+		};
+
+		add(TWITCH_CHAT_EVENTS.STATUS, handleChatStatusEvent);
+		add(TWITCH_CHAT_EVENTS.MESSAGE, (payload) => {
+			handleNormalizedChatMessage(payload).catch((err) => {
+				console.error('Twitch normalized chat handler failed', err);
+			});
+		});
+		add(TWITCH_CHAT_EVENTS.MEMBERSHIP, (payload) => {
+			handleNormalizedMembership(payload).catch((err) => {
+				console.error('Twitch membership handler failed', err);
+			});
+		});
+		add(TWITCH_CHAT_EVENTS.RAID, (payload) => {
+			handleNormalizedRaid(payload).catch((err) => {
+				console.error('Twitch raid handler failed', err);
+			});
+		});
+		add(TWITCH_CHAT_EVENTS.NOTICE, (payload) => handleNormalizedNotice(payload));
+		add(TWITCH_CHAT_EVENTS.CLEAR_CHAT, (payload) => handleNormalizedClear(payload));
+		add(TWITCH_CHAT_EVENTS.WHISPER, (payload) => handleNormalizedWhisper(payload));
+		add(TWITCH_CHAT_EVENTS.ERROR, (error) => handleNormalizedError(error));
+	}
+	return chatClient;
+}
 
 	async function validateToken(token) {
 		try {
@@ -372,18 +552,17 @@ let badges = null;
 			return;
 		}
 
-		// Clean up existing connections
+		await modulesReady;
 		await cleanupCurrentConnection();
-		
-		// Clean the channel name
+
 		channel = channel.replace(/^#/, '');
-		
+
 		const channelInfo = await getUserInfo(channel);
 		if (!channelInfo) {
 			console.log('Failed to get channel info');
 			return;
 		}
-		
+
 		const authUser = await validateToken(token);
 		if (!authUser) {
 			clearStoredToken();
@@ -391,53 +570,43 @@ let badges = null;
 			return;
 		}
 
-		// Fetch badges before setting up the chat connection
+		username = authUser.login || username;
+
 		const badgeData = await fetchBadges(channelInfo.id);
 		if (badgeData) {
 			globalBadges = badgeData.globalBadges;
 			channelBadges = badgeData.channelBadges;
 		} else {
 			console.log('Failed to fetch badges');
-			// Continue anyway, just won't show badges
 		}
 
-		// Set current channel ID
 		currentChannelId = channelInfo.id;
-		
-		// Update header
 		updateHeaderInfo(authUser.login, channel);
 
 		try {
 			const permissions = await checkUserPermissions(channelInfo.id, authUser.user_id);
 			updateUIBasedOnPermissions(permissions);
 
-			// Set up chat connection
-			websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-			
-			websocket.onopen = () => {
-				console.log('Chat Connected');
-				websocket.send(`PASS oauth:${token}`);
-				websocket.send(`NICK ${username}`);
-				websocket.send(`JOIN #${channel}`);
-				websocket.send('CAP REQ :twitch.tv/commands');
-				websocket.send('CAP REQ :twitch.tv/tags');
-				
-				const textarea = document.querySelector("#textarea");
-				if (textarea) {
-					var span = document.createElement("div");
-					span.innerText = `Joined the channel: ${channel}`;
-					textarea.appendChild(span);
-					if (textarea.childNodes.length > 20) {
-						textarea.childNodes[0].remove();
-					}
-				}
-			};
-			
-			websocket.onmessage = (event) => handleWebSocketMessage(event, badges);
-			websocket.onerror = (error) => !isDisconnecting && console.error('WebSocket error:', error);
-			websocket.onclose = (event) => !isDisconnecting && handleWebSocketClose(event);
+			const chat = await ensureChatClientInstance();
+			const clientFactory = ensureClientFactory();
 
-			// Only set up EventSub if we have permissions
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+
+			await chat.connect({
+				channel,
+				credentials: {
+					token,
+					identity: {
+						login: authUser.login,
+						userId: authUser.user_id
+					}
+				},
+				clientFactory
+			});
+
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+			showSocketInterface();
+
 			if (permissions && (permissions.canViewFollowers || permissions.isBroadcaster || permissions.isModerator)) {
 				await connectEventSub();
 				
@@ -451,69 +620,203 @@ let badges = null;
 					getSubscribersInterval = setInterval(() => getSubscribers(channelInfo.id), 60000);
 				}
 			}
-			console.log(channel);
+
 			getViewerCount(channel);
 			clearInterval(getViewerCountInterval);
 			getViewerCountInterval = setInterval(() => getViewerCount(channel), 60000);
-			
-			// Set up periodic token validation
+
 			clearInterval(tokenValidationInterval);
 			tokenValidationInterval = setInterval(async () => {
-				const token = getStoredToken();
-				if (token) {
-					const validationResult = await validateToken(token);
+				const refreshedToken = getStoredToken();
+				if (refreshedToken) {
+					const validationResult = await validateToken(refreshedToken);
 					if (!validationResult) {
 						console.log('Token validation failed during periodic check');
 					}
 				}
-			}, 300000); // Check every 5 minutes
+			}, 300000);
 			
 		} catch (error) {
 			console.log('Error during connection setup:', error);
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 	}
 
-	function handleWebSocketMessage(event) {
-	  const messages = event.data.split('\r\n');
-	  messages.forEach((rawMessage) => {
-		if (rawMessage) {
-		  //console.log('Raw message:', rawMessage);
-		  const parsedMessage = parseMessage(rawMessage);
-		 // console.log('Parsed message:', parsedMessage);
-
-		  switch (parsedMessage.command) {
-			case 'PING':
-			  websocket.send('PONG :tmi.twitch.tv');
-			  break;
-			case 'PRIVMSG':
-			  processMessage(parsedMessage);
-			  break;
-			case 'USERNOTICE':
-			  // Handle raids and other user notices
-			  if (settings.captureevents) {
-				processUserNotice(parsedMessage);
-			  }
-			  break;
-			case '366': // End of NAMES list
-			case 'CAP': // Capability acknowledgment
-			case '001': // Welcome message
-			case '002': // Your host
-			case '003': // Server info
-			case '004': // Server version
-			case '375': // MOTD start
-			case '372': // MOTD
-			case '376': // MOTD end
-			  // These are normal connection messages, we can safely ignore them
-			  break;
+	function handleChatStatusEvent({ status, meta = {} }) {
+		switch (status) {
+			case TWITCH_CHAT_STATUS.CONNECTING:
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+				break;
+			case TWITCH_CHAT_STATUS.CONNECTED: {
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+				isDisconnecting = false;
+				const textarea = document.querySelector("#textarea");
+				const joinedChannel = meta.channel || channel;
+				if (textarea && joinedChannel) {
+					const span = document.createElement("div");
+					span.innerText = `Joined the channel: ${joinedChannel}`;
+					textarea.appendChild(span);
+					if (textarea.childNodes.length > 20) {
+						textarea.childNodes[0].remove();
+					}
+				}
+				break;
+			}
+			case TWITCH_CHAT_STATUS.DISCONNECTED:
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				if (!isDisconnecting) {
+					console.log('Twitch chat disconnected', meta?.reason || '');
+				}
+				break;
+			case TWITCH_CHAT_STATUS.ERROR:
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				if (meta?.error) {
+					console.error('Twitch chat error', meta.error);
+				}
+				break;
 			default:
-			  if (parsedMessage.type) {
-				handleEventSubNotification(parsedMessage);
-			  } else {
-			   // console.log('Unhandled command:', parsedMessage.command);
-			  }
-		  }
+				break;
 		}
-	  });
+	}
+
+	function badgesToString(badges) {
+		if (!badges) return '';
+		if (typeof badges === 'string') return badges;
+		if (Array.isArray(badges)) return badges.join(',');
+		return Object.entries(badges)
+			.filter(([key, value]) => key && value !== undefined && value !== null)
+			.map(([key, value]) => `${key}/${value}`)
+			.join(',');
+	}
+
+	function convertChatPayloadToLegacyMessage(payload) {
+		const raw = payload.raw || {};
+		const tags = {};
+		const sourceTags = [raw.userstate, raw.tags];
+		for (let i = 0; i < sourceTags.length; i += 1) {
+			const source = sourceTags[i];
+			if (!source || typeof source !== 'object') {
+				continue;
+			}
+			Object.assign(tags, source);
+		}
+		if (tags.badges && typeof tags.badges === 'object') {
+			tags.badges = badgesToString(tags.badges);
+		}
+		if (payload.bits && !tags.bits) {
+			tags.bits = payload.bits;
+		}
+		if (!tags['tmi-sent-ts'] && payload.timestamp) {
+			tags['tmi-sent-ts'] = payload.timestamp;
+		}
+		const channelName = (raw.channel || payload.channel || channel || '').replace(/^#/, '');
+		const login = (tags.username || payload.username || payload.chatname || 'twitchuser').toLowerCase();
+		const trailing = payload.rawMessage ?? payload.chatmessage ?? '';
+
+		return {
+			tags,
+			prefix: `${login}!${login}@${login}.tmi.twitch.tv`,
+			command: 'PRIVMSG',
+			params: [`#${channelName}`],
+			trailing,
+			raw,
+			__normalizedPayload: payload
+		};
+	}
+
+	function convertMembershipPayloadToUserNotice(payload) {
+		const tags = { ...(payload.raw?.userstate || {}) };
+		if (!tags['display-name']) {
+			tags['display-name'] = payload.chatname || tags.username || '';
+		}
+		if (!tags['msg-id']) {
+			tags['msg-id'] = payload.event || 'notification';
+		}
+		if (!tags['system-msg'] && payload.chatmessage) {
+			tags['system-msg'] = payload.chatmessage;
+		}
+		if (payload.viewers && !tags['msg-param-viewerCount']) {
+			tags['msg-param-viewerCount'] = payload.viewers;
+		}
+		return {
+			tags,
+			trailing: payload.rawMessage || payload.chatmessage || '',
+			__normalizedPayload: payload
+		};
+	}
+
+	async function handleNormalizedChatMessage(payload) {
+		if (!payload) {
+			return;
+		}
+		const legacy = convertChatPayloadToLegacyMessage(payload);
+		await processMessage(legacy);
+	}
+
+	async function handleNormalizedMembership(payload) {
+		if (!payload) {
+			return;
+		}
+		if (payload.event === 'cheer') {
+			await handleNormalizedChatMessage({
+				...payload,
+				raw: payload.raw,
+				rawMessage: payload.rawMessage ?? payload.chatmessage ?? ''
+			});
+			return;
+		}
+		if (!settings.captureevents) {
+			return;
+		}
+		const notice = convertMembershipPayloadToUserNotice(payload);
+		await processUserNotice(notice);
+	}
+
+	async function handleNormalizedRaid(payload) {
+		if (!payload || !settings.captureevents) {
+			return;
+		}
+		const tags = {
+			'display-name': payload.chatname || '',
+			'system-msg': payload.chatmessage || '',
+			'msg-id': payload.event || 'raid',
+			'msg-param-viewerCount': payload.viewers || ''
+		};
+		const notice = {
+			tags,
+			trailing: payload.rawMessage || payload.chatmessage || '',
+			__normalizedPayload: payload
+		};
+		await processUserNotice(notice);
+	}
+
+	function handleNormalizedNotice(payload) {
+		if (!payload) {
+			return;
+		}
+		console.log('Twitch notice', payload);
+	}
+
+	function handleNormalizedClear(payload) {
+		if (!payload) {
+			return;
+		}
+		console.log('Twitch chat cleared', payload);
+	}
+
+	function handleNormalizedWhisper(payload) {
+		if (!payload) {
+			return;
+		}
+		console.log('Twitch whisper', payload);
+	}
+
+	function handleNormalizedError(error) {
+		if (!error) {
+			return;
+		}
+		console.error('Twitch chat client error', error);
+		setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 	}
 
 	// Listen for UI moderation/ad requests from twitch.html
@@ -599,12 +902,6 @@ let badges = null;
 	}
 
 
-	function handleWebSocketClose(event) {
-	   // console.log('Disconnected:', event);
-		console.log('Attempting to reconnect...');
-		setTimeout(connect, 10000); // Reconnect after 10 seconds
-	}
-
 	function signOut() {
 		localStorage.removeItem('twitchOAuthToken');
 		localStorage.removeItem('twitchChannel');
@@ -612,8 +909,13 @@ let badges = null;
 		sessionStorage.removeItem('twitchOAuthState');
 		sessionStorage.removeItem('twitchOAuthToken');
 		
-		if (typeof websocket !== 'undefined' && websocket && websocket.readyState === WebSocket.OPEN) {
-			websocket.close();
+		if (chatClient) {
+			try {
+				chatClient.disconnect();
+			} catch (err) {
+				console.warn('Failed to disconnect Twitch chat client on sign out', err);
+			}
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 
 		updateHeaderInfo(null, null);
@@ -624,13 +926,14 @@ let badges = null;
 		console.log('Signed out successfully');
 	}
 
-	function handleSendMessage(event) {
+	async function handleSendMessage(event) {
 		event.preventDefault();
 		const inputElement = document.querySelector('#input-text');
 		if (inputElement) {
 			var msg = inputElement.value.trim();
 			if (msg) {
-				if (sendMessage(msg)) {
+				const sent = await sendMessage(msg);
+				if (sent) {
 					inputElement.value = "";
 					let builtmsg = {};
 					builtmsg.command = "PRIVMSG";
@@ -644,14 +947,14 @@ let badges = null;
 						badges: userBadges || '',
 						color: localStorage.getItem('userColor') || ''
 					};
-					processMessage(builtmsg);
+					await processMessage(builtmsg);
 				}
 			}
 		}
 	}
 	function handleEnterKey(event) {
 		if (event.key === 'Enter') {
-			handleSendMessage(event);
+			handleSendMessage(event).catch((err) => console.error('Twitch handleSendMessage failed', err));
 		}
 	}
 
@@ -810,63 +1113,19 @@ let badges = null;
 		return text;
 	}
 
-
-	function parseMessage(rawMessage) {
-	  let parsedMessage = {
-		tags: {},
-		prefix: null,
-		command: null,
-		params: [],
-		trailing: null
-	  };
-
-	  // Parse tags
-	  if (rawMessage.startsWith('@')) {
-		const tagsEnd = rawMessage.indexOf(' ');
-		const tagsPart = rawMessage.slice(1, tagsEnd);
-		rawMessage = rawMessage.slice(tagsEnd + 1);
-		
-		tagsPart.split(';').forEach(tag => {
-		  const [key, value] = tag.split('=');
-		  parsedMessage.tags[key] = value || true;
-		});
-	  }
-
-	  // Parse prefix
-	  if (rawMessage.startsWith(':')) {
-		const prefixEnd = rawMessage.indexOf(' ');
-		parsedMessage.prefix = rawMessage.slice(1, prefixEnd);
-		rawMessage = rawMessage.slice(prefixEnd + 1);
-	  }
-
-	  // Parse command and params
-	  const parts = rawMessage.split(' ');
-	  parsedMessage.command = parts.shift().toUpperCase();
-
-	  // Parse trailing
-	  const trailingStart = rawMessage.indexOf(' :');
-	  if (trailingStart !== -1) {
-		parsedMessage.trailing = rawMessage.slice(trailingStart + 2);
-		parts.pop(); // Remove trailing from parts
-	  }
-
-	  parsedMessage.params = parts;
-
-	  return parsedMessage;
-	}
-
-	function sendMessage(message) {
-		if (checkAuthStatus()){
-			if (websocket.readyState === WebSocket.OPEN) {
-				const command = `PRIVMSG #${channel} :${message}`;
-				//console.log('Sending message:', command);
-				websocket.send(command);
-				return true;
-			} else {
-				console.error('WebSocket is not open.');
-			}
+	async function sendMessage(message) {
+		await modulesReady;
+		if (!checkAuthStatus()) {
+			return false;
 		}
-		return false;
+		const client = await ensureChatClientInstance();
+		try {
+			await client.sendMessage(message, channel);
+			return true;
+		} catch (error) {
+			console.error('Failed to send Twitch chat message', error);
+			return false;
+		}
 	}
 	function replaceEmotesWithImages(text, twitchEmotes = null, isBitMessage = false) {
 		// First, handle Twitch native emotes if provided
@@ -1115,8 +1374,9 @@ let badges = null;
 	async function processMessage(parsedMessage) {
 		try {
 		//console.log("Processing message:", parsedMessage);
+		const normalizedPayload = parsedMessage.__normalizedPayload || null;
 		const user = parsedMessage.prefix.split('!')[0];
-		const message = parsedMessage.trailing;
+		const message = normalizedPayload?.rawMessage ?? parsedMessage.trailing;
 		// Clean channel name from params (remove # prefix)
 		if (parsedMessage.params[0]) {
 			channel = parsedMessage.params[0].replace(/^#/, '');
@@ -1195,14 +1455,16 @@ let badges = null;
 			displayMessage = `<i><small>${escapeHtml(replyMessage)}:</small></i> ${displayMessage}`;
 		}
 		
-		span.innerHTML = `${badgeHtml}${escapeHtml((userInfo ? userInfo.display_name : user))}: ${displayMessage}`;
+		const resolvedDisplayName = normalizedPayload?.chatname || (userInfo ? userInfo.display_name : user);
+		span.innerHTML = `${badgeHtml}${escapeHtml(resolvedDisplayName)}: ${displayMessage}`;
 		document.querySelector("#textarea").appendChild(span);
 		if (document.querySelector("#textarea").childNodes.length > 10) {
 			document.querySelector("#textarea").childNodes[0].remove();
 		}
 
 		var data = {};
-		data.chatname = userInfo ? userInfo.display_name : user;
+		data.event = normalizedPayload?.event || 'message';
+		data.chatname = resolvedDisplayName;
 		data.username = user;
 		
 		// Convert badge URLs to badge objects
@@ -1264,9 +1526,18 @@ let badges = null;
 		data.mod = mod;
 
 		try {
-			data.chatimg = userInfo ? userInfo.profile_image_url : "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
+			if (userInfo && userInfo.profile_image_url) {
+				data.chatimg = userInfo.profile_image_url;
+			} else if (normalizedPayload?.chatimg) {
+				data.chatimg = normalizedPayload.chatimg;
+			} else {
+				data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
+			}
 		} catch (e) {
-			data.chatimg = "";
+			data.chatimg = normalizedPayload?.chatimg || "";
+		}
+		if (normalizedPayload?.timestamp) {
+			data.timestamp = normalizedPayload.timestamp;
 		}
 		data.hasDonation = hasDonation;
 		if (channel) {
@@ -1693,12 +1964,14 @@ async function cleanupCurrentConnection() {
 			tokenValidationInterval = null;
 		}
 
-		// Close WebSocket connections
-		if (websocket) {
-			if (websocket.readyState === WebSocket.OPEN || websocket.readyState === WebSocket.CONNECTING) {
-				websocket.close();
+		// Close chat connection
+		if (chatClient) {
+			try {
+				chatClient.disconnect();
+			} catch (err) {
+				console.warn('Failed to disconnect Twitch chat client during cleanup', err);
 			}
-			websocket = null;
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 		
 		if (eventSocket) {

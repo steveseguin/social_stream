@@ -1,6 +1,18 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
 import { safeHtml, htmlToText } from '../utils/helpers.js';
+import {
+  sanitizeKickTokenCode,
+  normalizeChannel,
+  normalizeImage,
+  mapBadges,
+  mergeBadges,
+  mergeProfileDetails,
+  eventNameForType,
+  buildProfileCacheKeys,
+  getProfileCacheEntry,
+  storeProfileCacheEntry
+} from '../../providers/kick/core.js';
 
 const CHANNEL_KEY = 'kick.channel';
 const API_BASE_KEY = 'kick.apiBase';
@@ -9,114 +21,15 @@ const ADVANCED_VISIBLE_KEY = 'kick.advancedVisible';
 const MANUAL_OVERRIDES_KEY = 'kick.manualOverrides';
 const METADATA_CACHE_KEY = 'kick.metadataCache';
 const STORAGE_VERSION_KEY = 'kick.storageVersion';
-const STORAGE_VERSION = 4;
+const STORAGE_VERSION = 5;
 
 const DEFAULT_API_BASE = 'https://kick.com/api/v2';
 const DEFAULT_WS_BASE = 'wss://ws-us2.pusher.com';
-const LEGACY_PROXY_WS_BASE = 'wss://kick.socialstream.ninja:3900';
-const LEGACY_WS_DEFAULTS = new Set(['ws://localhost:3900', 'wss://localhost:3900', LEGACY_PROXY_WS_BASE]);
 const HISTORY_LIMIT = 400;
 const PUSHER_APP_KEY = '32cbd69e4b950bf97679';
 const CHANNEL_WHITESPACE_MESSAGE = 'Kick channel names cannot contain spaces. Enter the channel slug (e.g. "evarate").';
 const WHITESPACE_PATTERN = /\s/;
-const PROFILE_CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
-const PROFILE_CACHE_FAILURE_TTL_MS = 5 * 60 * 1000; // 5 minutes
-const PROFILE_CACHE_LIMIT = 500;
 const KICK_TOKEN_PATTERN = /\[(emote|sticker):(\d+):([^\]]+)\]/gi;
-
-function sanitizeKickTokenCode(value) {
-  if (value === undefined || value === null) {
-    return '';
-  }
-  return String(value)
-    .replace(/[\[\]]+/g, '')
-    .trim();
-}
-
-function normalizeChannel(value) {
-  return (value || '').trim().replace(/^@+/, '').toLowerCase();
-}
-
-function normalizeImage(url) {
-  if (!url) {
-    return '';
-  }
-  if (url.startsWith('http://') || url.startsWith('https://')) {
-    return url;
-  }
-  if (url.startsWith('//')) {
-    return `https:${url}`;
-  }
-  if (url.startsWith('/')) {
-    return `https://kick.com${url}`;
-  }
-  return `https://kick.com/${url}`;
-}
-
-function mapBadges(badges) {
-  if (!Array.isArray(badges) || !badges.length) {
-    return [];
-  }
-  return badges
-    .map((badge) => {
-      if (!badge) return null;
-      if (typeof badge === 'string') {
-        return badge;
-      }
-      const image = badge.image || badge.icon || badge.source;
-      if (image && typeof image === 'object') {
-        const src = image.url || image.light || image.dark;
-        if (src) {
-          return normalizeImage(src);
-        }
-      }
-      if (badge.image_url) {
-        return normalizeImage(badge.image_url);
-      }
-      if (badge.asset) {
-        return normalizeImage(badge.asset);
-      }
-      if (badge.svg) {
-        return { type: 'svg', html: badge.svg };
-      }
-      if (badge.label || badge.name) {
-        return badge.label || badge.name;
-      }
-      return null;
-    })
-    .filter(Boolean);
-}
-
-function badgeSignature(badge) {
-  if (!badge) return 'null';
-  if (typeof badge === 'string') return `text:${badge}`;
-  if (badge.type === 'svg' && badge.html) return `svg:${badge.html}`;
-  if (badge.src) return `src:${badge.src}`;
-  if (badge.image) return `img:${badge.image}`;
-  if (badge.url) return `url:${badge.url}`;
-  if (badge.code) return `code:${badge.code}`;
-  try {
-    return `json:${JSON.stringify(badge)}`;
-  } catch (err) {
-    return `obj:${String(badge)}`;
-  }
-}
-
-function mergeBadges(base = [], incoming = []) {
-  if (!incoming.length) {
-    return Array.isArray(base) ? [...base] : [];
-  }
-  const result = Array.isArray(base) ? [...base] : [];
-  const seen = new Set(result.map((badge) => badgeSignature(badge)));
-  incoming.forEach((badge) => {
-    const signature = badgeSignature(badge);
-    if (signature && !seen.has(signature)) {
-      seen.add(signature);
-      result.push(badge);
-    }
-  });
-  return result;
-}
 
 function extractSegments(message) {
   if (!message) {
@@ -199,27 +112,6 @@ function extractSegments(message) {
   return '';
 }
 
-function eventNameForType(type) {
-  if (!type) return 'message';
-  const lower = type.toLowerCase();
-  if (lower === 'chat' || lower === 'message' || lower === 'chatroom_message') {
-    return 'message';
-  }
-  if (lower.includes('gift')) {
-    return 'gift';
-  }
-  if (lower.includes('tip') || lower.includes('donation')) {
-    return 'donation';
-  }
-  if (lower.includes('sub')) {
-    return 'subscription';
-  }
-  if (lower.includes('ban') || lower.includes('moderation')) {
-    return 'moderation';
-  }
-  return lower;
-}
-
 export class KickPlugin extends BasePlugin {
   constructor(options) {
     super({
@@ -244,17 +136,18 @@ export class KickPlugin extends BasePlugin {
     this.channelUserId = null;
     this.seenIds = new Set();
 
-    this.ws = null;
-    this.reconnectTimer = null;
-    this.pingTimer = null;
-    this.connectionEstablished = false;
-    this.wsOpenHandler = null;
-    this.wsMessageHandler = null;
-    this.wsCloseHandler = null;
-    this.wsErrorHandler = null;
-    this.manualClose = false;
-    this.desiredChannels = null;
-    this.pendingSubscriptions = null;
+    this.bridgeFrame = null;
+    this.bridgeReady = false;
+    this.bridgeQueue = [];
+    this.bridgeOrigin = typeof window !== 'undefined' ? window.location.origin : '*';
+    this.bridgeReadyPromise = null;
+    this.resolveBridgeReady = null;
+    this.bridgeStatus = 'disconnected';
+    this.bridgeEventSourceId = Math.random().toString(36).slice(2);
+    if (typeof window !== 'undefined') {
+      this.handleBridgeMessage = this.handleBridgeMessage.bind(this);
+      window.addEventListener('message', this.handleBridgeMessage);
+    }
 
     this.profileCache = new Map();
     this.profileFetches = new Map();
@@ -327,23 +220,14 @@ export class KickPlugin extends BasePlugin {
     });
     apiRow.append(apiLabel, apiInput);
 
-    const wsRow = document.createElement('label');
-    wsRow.className = 'field';
-    const wsLabel = document.createElement('span');
-    wsLabel.className = 'field__label';
-    wsLabel.textContent = 'Websocket host (optional)';
-    const wsInput = document.createElement('input');
-    wsInput.type = 'url';
-    wsInput.placeholder = DEFAULT_WS_BASE;
-    wsInput.autocomplete = 'off';
-    const initialWs = storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
-    wsInput.value = typeof initialWs === 'string' && initialWs.trim() ? initialWs.trim() : DEFAULT_WS_BASE;
-    wsInput.addEventListener('change', () => {
-      const value = wsInput.value.trim() || DEFAULT_WS_BASE;
-      storage.set(WS_BASE_KEY, value);
-      this.refreshStatus();
-    });
-    wsRow.append(wsLabel, wsInput);
+    const bridgeHelper = document.createElement('p');
+    bridgeHelper.className = 'field__hint';
+    const bridgeLink = document.createElement('a');
+    bridgeLink.href = '../../sources/websocket/kick.html';
+    bridgeLink.target = '_blank';
+    bridgeLink.rel = 'noopener noreferrer';
+    bridgeLink.textContent = 'Open Kick webhook manager';
+    bridgeHelper.append('Sign in with Kick and manage webhook subscriptions using the ', bridgeLink, ' page.');
 
     const chatroomRow = document.createElement('label');
     chatroomRow.className = 'field';
@@ -404,11 +288,10 @@ export class KickPlugin extends BasePlugin {
       storage.set(ADVANCED_VISIBLE_KEY, nextVisible ? '1' : '0');
     });
 
-    container.append(channelRow, wsRow, advancedToggle, advancedGroup);
+    container.append(channelRow, bridgeHelper, advancedToggle, advancedGroup);
     // Advanced inputs live inside the group so append after we set up toggle
     this.channelInput = channelInput;
     this.apiBaseInput = apiInput;
-    this.wsBaseInput = wsInput;
     this.chatroomInput = chatroomInput;
     this.channelIdInput = channelIdInput;
 
@@ -418,6 +301,177 @@ export class KickPlugin extends BasePlugin {
     this.populateDerivedInputs(initialChannel);
 
     return container;
+  }
+
+  ensureBridgeFrame() {
+    if (this.bridgeFrame || typeof document === 'undefined') {
+      return;
+    }
+    const iframe = document.createElement('iframe');
+    iframe.src = '../../sources/websocket/kick.html?embed=lite';
+    iframe.style.display = 'none';
+    iframe.tabIndex = -1;
+    iframe.setAttribute('aria-hidden', 'true');
+    iframe.addEventListener('load', () => {
+      this.postBridgeMessage('kick-lite-handshake', { source: this.bridgeEventSourceId }, { queue: false });
+    });
+    document.body.appendChild(iframe);
+    this.bridgeFrame = iframe;
+  }
+
+  async ensureBridgeReady() {
+    if (this.bridgeReady) {
+      return;
+    }
+    this.ensureBridgeFrame();
+    if (!this.bridgeReadyPromise) {
+      this.bridgeReadyPromise = new Promise((resolve) => {
+        this.resolveBridgeReady = resolve;
+      });
+    }
+    await this.bridgeReadyPromise;
+  }
+
+  postBridgeMessage(type, payload = {}, { queue = true } = {}) {
+    const frameWindow = this.bridgeFrame?.contentWindow;
+    const message = { ...payload, type };
+    if (!frameWindow) {
+      if (queue) {
+        this.bridgeQueue.push(message);
+      }
+      return;
+    }
+    if (!this.bridgeReady && queue && type !== 'kick-lite-handshake') {
+      this.bridgeQueue.push(message);
+      return;
+    }
+    try {
+      frameWindow.postMessage(message, this.bridgeOrigin || '*');
+    } catch (err) {
+      console.warn('Failed to post Kick bridge message', err);
+    }
+  }
+
+  flushBridgeQueue() {
+    if (!this.bridgeFrame?.contentWindow) {
+      return;
+    }
+    const frameWindow = this.bridgeFrame.contentWindow;
+    while (this.bridgeQueue.length) {
+      const message = this.bridgeQueue.shift();
+      try {
+        frameWindow.postMessage(message, this.bridgeOrigin || '*');
+      } catch (err) {
+        console.warn('Failed to flush Kick bridge message', err);
+        break;
+      }
+    }
+  }
+
+  handleBridgeReady(status) {
+    this.bridgeReady = true;
+    this.bridgeStatus = status?.bridgeStatus || 'disconnected';
+    if (typeof this.resolveBridgeReady === 'function') {
+      this.resolveBridgeReady();
+    }
+    this.resolveBridgeReady = null;
+    this.bridgeReadyPromise = null;
+    this.flushBridgeQueue();
+    if (status) {
+      this.handleBridgeStatus(status, 'ready');
+    }
+  }
+
+  handleBridgeStatus(status, reason = '') {
+    if (!status) {
+      return;
+    }
+    const bridgeStatus = status.bridgeStatus || status.status || 'disconnected';
+    this.bridgeStatus = bridgeStatus;
+    if (bridgeStatus === 'connected') {
+      if (this.state !== 'connected') {
+        this.setState('connected');
+        this.log('Connected to Kick webhook bridge.', { channel: this.channelSlug || '' });
+      }
+    } else if (bridgeStatus === 'connecting') {
+      if (this.state !== 'connecting') {
+        this.setState('connecting');
+      }
+    } else {
+      if (this.state !== 'idle') {
+        this.setState('idle');
+      }
+    }
+    this.refreshStatus();
+    if (reason && this.debug) {
+      this.debugLog(`Bridge status update (${reason})`, status);
+    }
+  }
+
+  async ensureBridge() {
+    await this.ensureBridgeReady();
+  }
+
+  disconnectBridge() {
+    this.postBridgeMessage('kick-lite-disconnect', {});
+    this.bridgeStatus = 'disconnected';
+    this.refreshStatus();
+  }
+
+  handleBridgeMessage(event) {
+    if (!this.bridgeFrame || event.source !== this.bridgeFrame.contentWindow) {
+      return;
+    }
+    const { data } = event;
+    if (!data) {
+      return;
+    }
+    if (data.type === 'kick-lite-ready') {
+      this.handleBridgeReady(data.status);
+      return;
+    }
+    if (data.type === 'kick-lite-status') {
+      this.handleBridgeStatus(data.status, data.reason || 'status');
+      return;
+    }
+    if (data.wssStatus && data.wssStatus.platform === 'kick') {
+      this.handleBridgeStatus({ bridgeStatus: data.wssStatus.status }, 'wssStatus');
+      if (data.wssStatus.status === 'error') {
+        this.reportError(new Error(data.wssStatus.message || 'Kick bridge error'));
+      } else if (data.wssStatus.status === 'signin_required') {
+        this.reportError(new Error(data.wssStatus.message || 'Sign in with Kick to continue.'));
+      }
+      return;
+    }
+    if (data.source === 'socialstream' && data.payload) {
+      this.processBridgePayload(data.payload, data.meta || {});
+      return;
+    }
+  }
+
+  async processBridgePayload(payload, meta = {}) {
+    if (!payload || typeof payload !== 'object') {
+      return;
+    }
+    try {
+      const rawMessage =
+        payload.meta?.plainText ||
+        meta.preview ||
+        payload.previewText ||
+        (typeof payload.chatmessage === 'string' ? htmlToText(payload.chatmessage) : '');
+      await this.publishWithEmotes(
+        { ...payload },
+        {
+          channel: this.channelSlug,
+          overrides: {},
+          rawMessage,
+          silent: payload.event === 'message',
+          note: null
+        }
+      );
+    } catch (err) {
+      this.debugLog('Failed to publish Kick webhook payload', { error: err?.message || err });
+    }
   }
 
   ensureStorageVersion() {
@@ -437,17 +491,11 @@ export class KickPlugin extends BasePlugin {
       this.metadataCache = null;
     }
 
-    if (version < 3) {
-      const stored = storage.get(WS_BASE_KEY, '').trim();
-      if (!stored || LEGACY_WS_DEFAULTS.has(stored)) {
-        storage.set(WS_BASE_KEY, DEFAULT_WS_BASE);
-      }
-    }
-
-    if (version < 4) {
-      const stored = storage.get(WS_BASE_KEY, '').trim();
-      if (!stored || stored === LEGACY_PROXY_WS_BASE) {
-        storage.set(WS_BASE_KEY, DEFAULT_WS_BASE);
+    if (version < 5) {
+      try {
+        storage.remove(WS_BASE_KEY);
+      } catch (err) {
+        // ignore
       }
     }
 
@@ -654,14 +702,9 @@ export class KickPlugin extends BasePlugin {
         this.detailsLabel.hidden = false;
         this.detailsLabel.textContent = `Chatroom ID: ${chatroomDisplay}${sourceLabel}`;
       } else {
-        const wsBase = this.wsBaseInput ? this.wsBaseInput.value.trim() : storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
-        if (wsBase && wsBase !== DEFAULT_WS_BASE) {
-          this.detailsLabel.hidden = false;
-          this.detailsLabel.textContent = `Websocket host: ${wsBase}`;
-        } else {
-          this.detailsLabel.hidden = true;
-          this.detailsLabel.textContent = '';
-        }
+        this.detailsLabel.hidden = false;
+        const bridgeStatus = this.bridgeStatus || 'disconnected';
+        this.detailsLabel.textContent = `Bridge status: ${bridgeStatus}`;
       }
     }
   }
@@ -715,11 +758,6 @@ export class KickPlugin extends BasePlugin {
     storage.set(CHANNEL_KEY, channel);
     this.apiBase = this.normalizeApiBase(this.apiBaseInput ? this.apiBaseInput.value : storage.get(API_BASE_KEY, DEFAULT_API_BASE));
     storage.set(API_BASE_KEY, this.apiBase);
-
-    const storedWsBase = storage.get(WS_BASE_KEY, DEFAULT_WS_BASE);
-    const wsBaseInputValue = this.wsBaseInput ? this.wsBaseInput.value.trim() : '';
-    const wsBase = wsBaseInputValue || (typeof storedWsBase === 'string' ? storedWsBase.trim() : DEFAULT_WS_BASE) || DEFAULT_WS_BASE;
-    storage.set(WS_BASE_KEY, wsBase);
 
     this.refreshStatus();
 
@@ -777,8 +815,14 @@ export class KickPlugin extends BasePlugin {
       this.refreshStatus();
 
       await this.prepareEmotesForChannel(channel);
-      this.connectWebsocket({ wsBase, chatroomId: this.chatroomId, channelId: this.channelNumericId });
-      this.log(`Connecting to Kick channel ${channel} via websocket (${wsBase || DEFAULT_WS_BASE})`);
+      await this.ensureBridge();
+      this.setState('connecting');
+      this.bridgeStatus = 'connecting';
+      this.refreshStatus();
+      this.postBridgeMessage('kick-lite-set-config', { chatType: 'user' });
+      this.postBridgeMessage('kick-lite-set-channel', { slug: channel, force: true });
+      this.postBridgeMessage('kick-lite-connect', { force: true });
+      this.log(`Connecting to Kick channel ${channel} via webhook bridge.`);
     } catch (err) {
       this.resetConnectionState();
       const error = err instanceof Error ? err : new Error(err?.message || String(err));
@@ -1251,97 +1295,16 @@ export class KickPlugin extends BasePlugin {
     return Array.from(new Set(base.filter(Boolean)));
   }
 
-  profileCacheKeys({ userId, username }) {
-    const keys = [];
-    if (userId) {
-      keys.push(`id:${userId}`);
-    }
-    if (username) {
-      keys.push(`name:${username}`);
-    }
-    return keys;
+  profileCacheKeys(ids) {
+    return buildProfileCacheKeys(ids);
   }
 
   getCachedProfile(ids) {
-    if (!ids) {
-      return undefined;
-    }
-    const now = Date.now();
-    const keys = this.profileCacheKeys(ids);
-    for (let i = 0; i < keys.length; i += 1) {
-      const entry = this.profileCache.get(keys[i]);
-      if (!entry) {
-        continue;
-      }
-      const ttl = entry.hasProfile ? PROFILE_CACHE_TTL_MS : PROFILE_CACHE_FAILURE_TTL_MS;
-      if (now - entry.timestamp > ttl) {
-        this.profileCache.delete(keys[i]);
-        continue;
-      }
-      return entry;
-    }
-    return undefined;
+    return getProfileCacheEntry(this.profileCache, ids);
   }
 
   storeProfileCache(ids, profile) {
-    if (!ids) {
-      return;
-    }
-    const entry = {
-      profile: profile || null,
-      hasProfile: !!profile,
-      timestamp: Date.now()
-    };
-    const keys = this.profileCacheKeys(ids);
-    keys.forEach((key) => {
-      this.profileCache.set(key, entry);
-    });
-
-    while (this.profileCache.size > PROFILE_CACHE_LIMIT) {
-      const oldestKey = this.profileCache.keys().next().value;
-      if (!oldestKey) {
-        break;
-      }
-      this.profileCache.delete(oldestKey);
-    }
-  }
-
-  mergeProfileDetails(base, profile) {
-    if (!profile) {
-      return base;
-    }
-    const merged = { ...base };
-
-    if (profile.displayName) {
-      merged.displayName = profile.displayName;
-    }
-    if (profile.subtitle) {
-      merged.subtitle = profile.subtitle;
-    }
-
-    if (profile.avatar) {
-      merged.avatar = normalizeImage(profile.avatar);
-    }
-    if (profile.nameColor && !merged.nameColor) {
-      merged.nameColor = profile.nameColor;
-    }
-    merged.badges = mergeBadges(merged.badges, profile.badges || []);
-
-    if (profile.membership && !merged.membership) {
-      merged.membership = profile.membership;
-    }
-    if (profile.isVip) {
-      merged.isVip = true;
-    }
-    if (profile.isMod) {
-      merged.isMod = true;
-    }
-
-    if (profile.level && !merged.level) {
-      merged.level = profile.level;
-    }
-
-    return merged;
+    storeProfileCacheEntry(this.profileCache, ids, profile);
   }
 
   async resolveSenderDetails(sender) {
@@ -1391,7 +1354,7 @@ export class KickPlugin extends BasePlugin {
     const cacheEntry = this.getCachedProfile(ids);
     if (cacheEntry !== undefined) {
       if (cacheEntry.hasProfile && cacheEntry.profile) {
-        return this.mergeProfileDetails(details, cacheEntry.profile);
+        return mergeProfileDetails(details, cacheEntry.profile);
       }
       return details;
     }
@@ -1400,7 +1363,7 @@ export class KickPlugin extends BasePlugin {
     if (fetched !== undefined) {
       this.storeProfileCache(ids, fetched);
       if (fetched) {
-        return this.mergeProfileDetails(details, fetched);
+        return mergeProfileDetails(details, fetched);
       }
     }
 
@@ -1844,7 +1807,7 @@ export class KickPlugin extends BasePlugin {
   }
 
   resetConnectionState() {
-    this.disconnectWebsocket();
+    this.disconnectBridge();
     this.chatroomId = null;
     this.channelNumericId = null;
     this.channelUserId = null;

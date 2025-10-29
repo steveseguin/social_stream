@@ -1,7 +1,7 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
 import { safeHtml } from '../utils/helpers.js';
-import { loadScriptSequential } from '../utils/scriptLoader.js';
+import { loadScriptSequential } from '../../shared/utils/scriptLoader.js';
 
 const UNIQUE_ID_KEY = 'tiktok.uniqueId';
 const SERVER_URL_KEY = 'tiktok.serverUrl';
