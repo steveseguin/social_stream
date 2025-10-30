@@ -136,28 +136,6 @@ async function processMessageQueue() {
   }
 }
 
-function forwardToBackground(messageWrapper, sendResponse) {
-  checkBackgroundPageIsOpen().then((isOpen) => {
-    if (!isOpen) {
-      ensureBackgroundPageIsOpen().then(() => {
-        if (backgroundPageTabIdLoaded) {
-          sendMessageToBackgroundPage(messageWrapper, sendResponse);
-        } else {
-          messageQueue.push({ message: messageWrapper, sendResponse });
-        }
-      }).catch(error => {
-        console.error("Error ensuring background page is open:", error);
-        sendResponse({ error: 'Failed to open background page' });
-      });
-    } else {
-      sendMessageToBackgroundPage(messageWrapper, sendResponse);
-    }
-  }).catch(error => {
-    console.error("Error checking background page state:", error);
-    sendResponse({ error: 'Failed to communicate with background page' });
-  });
-}
-
 // Modified tab removal listener
 chrome.tabs.onRemoved.addListener(async (tabId) => {
   if (tabId === backgroundPageTabId) {
@@ -170,12 +148,10 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 
 function sendMessageToBackgroundPage(message, sendResponse) {
   log("sending message", message);
-
-  const payload = message && typeof message === 'object' && 'data' in message ? message.data : message;
-
+  
   // Always use runtime.sendMessage - the background page listens to chrome.runtime.onMessage
   // regardless of whether it's a service worker background or a tab
-  chrome.runtime.sendMessage(payload, (response) => {
+  chrome.runtime.sendMessage(message.data, (response) => {
     log("response", response);
     if (chrome.runtime.lastError) {
       console.error("Error sending message to background:", chrome.runtime.lastError);
@@ -211,12 +187,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     injectCustomSource(message.source, message.tabId);
   } else if (message.type === 'toBackground') {
     log("SERVICE WORKER: ", message);
-    forwardToBackground(message, sendResponse);
+
+    checkBackgroundPageIsOpen().then((isOpen) => {
+      if (!isOpen) {
+        ensureBackgroundPageIsOpen().then(() => {
+          if (backgroundPageTabIdLoaded) {
+            sendMessageToBackgroundPage(message, sendResponse);
+          } else {
+            // Queue the message if the background page is not ready
+            messageQueue.push({ message, sendResponse });
+          }
+        }).catch(error => {
+          console.error("Error ensuring background page is open:", error);
+          sendResponse({ error: 'Failed to open background page' });
+        });
+      } else {
+        sendMessageToBackgroundPage(message, sendResponse);
+      }
+    });
+
     return true; // Indicates that the response will be sent asynchronously
-  } else if (message && typeof message === 'object' && !message.type) {
-    // Legacy direct messages from content scripts (no service worker wrapper)
-    forwardToBackground({ data: message }, sendResponse);
-    return true; // Response handled asynchronously once background replies
   } else if (message.type === 'checkBackgroundPage') {
     // New message type to handle background page check
     checkBackgroundPageIsOpen().then((isOpen) => {

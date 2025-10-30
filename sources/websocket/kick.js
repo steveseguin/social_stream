@@ -55,6 +55,8 @@ const DEFAULT_CONFIG = {
 };
 
 const SUBSCRIPTION_RETRY_DELAY_MS = 10000;
+const CHAT_FEED_LIMIT = 200;
+const CHAT_SCROLL_THRESHOLD_PX = 48;
 
 const state = {
     clientId: '',
@@ -86,7 +88,8 @@ const state = {
     bridge: {
         source: null,
         retryTimer: null,
-        status: 'disconnected'
+        status: 'disconnected',
+        lastErrorLoggedAt: 0
     },
     chat: {
         sending: false,
@@ -95,7 +98,13 @@ const state = {
 };
 
 const els = {};
+const EVENT_TYPES_CACHE_KEY = 'kickEventTypesCache';
+const EVENT_TYPES_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const EVENT_TYPES_UNAVAILABLE_COOLDOWN_MS = 60 * 60 * 1000;
+
 let cachedEventTypes = null;
+let cachedEventTypesFetchedAt = 0;
+let eventTypesUnavailableUntil = 0;
 
 const TAB_ID = typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
     ? window.__SSAPP_TAB_ID__
@@ -1249,6 +1258,8 @@ function initElements() {
         startAuth: q('start-auth'),
         channelLabel: q('channel-label'),
         eventLog: q('event-log'),
+        chatFeed: q('chat-feed'),
+        chatFeedEmpty: q('chat-feed-empty'),
         bridgeState: q('bridge-state'),
         subscriptionSummary: q('subscription-summary'),
         chatMessage: q('chat-message'),
@@ -1289,6 +1300,7 @@ function setChannelSlug(value, options = {}) {
         state.lastResolvedSlug = '';
         state.autoStart.lastSlug = '';
         resetThirdPartyEmoteCache();
+        resetChatFeed();
     } else {
         state.channelSlug = slug; // Preserve original casing.
     }
@@ -1393,13 +1405,87 @@ function persistTokens() {
     localStorage.setItem(TOKEN_KEY, JSON.stringify(state.tokens));
 }
 
+function persistEventTypesCache() {
+    try {
+        const payload = {
+            types: Array.isArray(cachedEventTypes) ? cachedEventTypes : [],
+            timestamp: cachedEventTypesFetchedAt || Date.now(),
+            unavailableUntil: state.eventTypesUnavailable ? eventTypesUnavailableUntil : 0
+        };
+        localStorage.setItem(EVENT_TYPES_CACHE_KEY, JSON.stringify(payload));
+    } catch (err) {
+        console.warn('Failed to persist Kick event type cache', err);
+    }
+}
+
+function setCachedEventTypes(list) {
+    cachedEventTypes = Array.isArray(list) ? list : [];
+    cachedEventTypesFetchedAt = Date.now();
+    eventTypesUnavailableUntil = 0;
+    state.eventTypesUnavailable = false;
+    persistEventTypesCache();
+}
+
+function markEventTypesUnavailable() {
+    const now = Date.now();
+    if (!Array.isArray(cachedEventTypes)) {
+        cachedEventTypes = [];
+    }
+    cachedEventTypesFetchedAt = now;
+    state.eventTypesUnavailable = true;
+    eventTypesUnavailableUntil = now + EVENT_TYPES_UNAVAILABLE_COOLDOWN_MS;
+    persistEventTypesCache();
+}
+
+function loadEventTypesCache() {
+    state.eventTypesUnavailable = false;
+    eventTypesUnavailableUntil = 0;
+    try {
+        const stored = localStorage.getItem(EVENT_TYPES_CACHE_KEY);
+        if (!stored) return;
+        const payload = JSON.parse(stored);
+        if (payload && typeof payload === 'object') {
+            if (Array.isArray(payload.types)) {
+                cachedEventTypes = payload.types;
+            }
+            if (typeof payload.timestamp === 'number') {
+                cachedEventTypesFetchedAt = payload.timestamp;
+            }
+            if (
+                typeof payload.unavailableUntil === 'number' &&
+                payload.unavailableUntil > Date.now()
+            ) {
+                state.eventTypesUnavailable = true;
+                eventTypesUnavailableUntil = payload.unavailableUntil;
+            }
+        }
+    } catch (err) {
+        console.warn('Failed to load Kick event type cache', err);
+    }
+}
+
 function updateInputsFromState() {
     if (els.channelLabel) {
         if (state.channelSlug) {
             const name = state.channelName || state.channelSlug;
-            els.channelLabel.textContent = `Channel: ${name}`;
+            const slug = state.channelSlug;
+            if (isTextOnlyMode()) {
+                const label = slug && slug.toLowerCase() !== name.toLowerCase()
+                    ? `Channel: ${name} (@${slug})`
+                    : `Channel: ${name}`;
+                els.channelLabel.textContent = label;
+            } else {
+                const safeName = escapeHtml(name);
+                const safeSlug = escapeHtml(slug);
+                const showSlug = safeSlug && safeSlug.toLowerCase() !== safeName.toLowerCase();
+                els.channelLabel.innerHTML = `Channel: <span class="status-emphasis">${safeName}</span>${showSlug ? ` <span class="status-subtle">(@${safeSlug})</span>` : ''}`;
+            }
         } else {
-            els.channelLabel.textContent = 'Channel: —';
+            if (isTextOnlyMode()) {
+                els.channelLabel.textContent = 'Channel: —';
+            } else {
+                els.channelLabel.innerHTML = 'Channel: <span class="status-subtle">—</span>';
+            }
         }
     }
     if (els.chatType) {
@@ -1410,10 +1496,63 @@ function updateInputsFromState() {
     }
 }
 
+function resolveAuthIdentity() {
+    const fallbackProfile = extractProfileFromTokens();
+    const candidates = [state.authUser, state.tokens?.profile, fallbackProfile];
+    for (const profile of candidates) {
+        if (!profile || typeof profile !== 'object') continue;
+        const displayName = pickFirstString(
+            [
+                profile.display_name,
+                profile.displayName,
+                profile.name,
+                profile.username,
+                profile.user?.display_name,
+                profile.user?.username
+            ],
+            ''
+        );
+        const username = pickFirstString(
+            [
+                profile.username,
+                profile.slug,
+                profile.user?.username,
+                profile.user?.slug,
+                state.channelSlug
+            ],
+            ''
+        );
+        if (displayName || username) {
+            return {
+                displayName: displayName || username || '',
+                username: username || ''
+            };
+        }
+    }
+    return null;
+}
+
 function updateAuthStatus() {
     if (!els.authState) return;
     const authed = state.tokens?.access_token && !isTokenExpired();
-    els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
+    const identity = authed ? resolveAuthIdentity() : null;
+    if (authed && identity) {
+        const safeDisplay = escapeHtml(identity.displayName || identity.username || '');
+        const username = identity.username && identity.username.toLowerCase() !== (identity.displayName || '').toLowerCase()
+            ? identity.username
+            : '';
+        const safeUsername = username ? escapeHtml(username) : '';
+        if (isTextOnlyMode()) {
+            const label = username
+                ? `Signed in as ${identity.displayName || identity.username} (@${username})`
+                : `Signed in as ${identity.displayName || identity.username}`;
+            els.authState.textContent = label;
+        } else {
+            els.authState.innerHTML = `Signed in as <span class="status-emphasis">${safeDisplay}</span>${safeUsername ? ` <span class="status-subtle">(@${safeUsername})</span>` : ''}`;
+        }
+    } else {
+        els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
+    }
     els.authState.className = authed ? 'status-chip' : 'status-chip warning';
     const status = authed ? 'authorized' : 'signin_required';
     if (status !== lastAuthNotifyStatus) {
@@ -1859,33 +1998,36 @@ async function loadAuthenticatedProfile() {
 }
 
 async function fetchEventTypes(force = false) {
+    const now = Date.now();
     if (!force) {
-        if (state.eventTypesUnavailable) {
-            return cachedEventTypes || [];
+        if (state.eventTypesUnavailable && eventTypesUnavailableUntil && now < eventTypesUnavailableUntil) {
+            return Array.isArray(cachedEventTypes) ? cachedEventTypes : [];
         }
-        if (cachedEventTypes) {
+        if (
+            Array.isArray(cachedEventTypes) &&
+            cachedEventTypesFetchedAt &&
+            now - cachedEventTypesFetchedAt < EVENT_TYPES_CACHE_TTL_MS
+        ) {
             return cachedEventTypes;
         }
     }
     try {
         const data = await apiFetch('/public/v1/events/types');
         const list = Array.isArray(data?.data) ? data.data : [];
-        state.eventTypesUnavailable = false;
-        cachedEventTypes = list;
+        setCachedEventTypes(list);
         return list;
     } catch (err) {
         const message = err?.message || '';
         const wasUnavailable = state.eventTypesUnavailable;
         if (/404/.test(message)) {
-            state.eventTypesUnavailable = true;
+            markEventTypesUnavailable();
             if (!wasUnavailable) {
                 log('Kick has not published the event type list for this app yet. Using the default set instead.', 'warning');
             }
         } else {
             log(`Unable to fetch event types: ${message}`, 'error');
         }
-        cachedEventTypes = [];
-        return cachedEventTypes;
+        return Array.isArray(cachedEventTypes) ? cachedEventTypes : [];
     }
 }
 
@@ -2241,14 +2383,34 @@ function connectBridge() {
 
         source.onopen = () => {
             state.bridge.status = 'connected';
+            state.bridge.lastErrorLoggedAt = Date.now();
             updateBridgeState();
             log('Connected to webhook bridge.');
         };
 
         source.onerror = () => {
-            log('Bridge connection error.', 'error');
+            const now = Date.now();
+            const lastLogged = state.bridge.lastErrorLoggedAt || 0;
+            const shouldLog = !lastLogged || now - lastLogged > 10000;
+            if (shouldLog) {
+                const wasConnected = state.bridge.status === 'connected';
+                const severity = wasConnected ? 'warning' : 'error';
+                const message = wasConnected
+                    ? 'Bridge connection interrupted. Retrying shortly...'
+                    : 'Unable to reach the bridge. Retrying shortly...';
+                log(message, severity);
+                state.bridge.lastErrorLoggedAt = now;
+            }
             state.bridge.status = 'disconnected';
             updateBridgeState();
+            try {
+                source.close();
+            } catch (_) {
+                // Ignore close errors; we'll replace the source during retry.
+            }
+            if (state.bridge.source === source) {
+                state.bridge.source = null;
+            }
             scheduleBridgeRetry();
         };
 
@@ -2278,6 +2440,7 @@ function disconnectBridge() {
         state.bridge.source = null;
     }
     state.bridge.status = 'disconnected';
+    state.bridge.lastErrorLoggedAt = 0;
     updateBridgeState();
 }
 
@@ -2620,6 +2783,7 @@ function forwardChatMessage(evt, bridgeMeta) {
         messagePayload.meta = { plainText: content };
     }
     pushMessage(messagePayload);
+    appendChatFeedMessage(messagePayload);
     const prefix = bridgeMeta?.verified === false ? '[CHAT ⚠]' : '[CHAT]';
     log(`${prefix} ${chatname}: ${content || '[no text]'}`);
 }
@@ -3053,6 +3217,210 @@ function log(msg, level = 'info') {
     els.eventLog.scrollTop = els.eventLog.scrollHeight;
 }
 
+function shouldStickChatFeed() {
+    if (!els.chatFeed) return false;
+    const { scrollTop, scrollHeight, clientHeight } = els.chatFeed;
+    return scrollHeight - (scrollTop + clientHeight) <= CHAT_SCROLL_THRESHOLD_PX;
+}
+
+function ensureChatFeedEmptyVisible(visible) {
+    if (!els.chatFeedEmpty) return;
+    els.chatFeedEmpty.style.display = visible ? '' : 'none';
+    if (visible && els.chatFeed && !els.chatFeed.contains(els.chatFeedEmpty)) {
+        els.chatFeed.appendChild(els.chatFeedEmpty);
+    }
+}
+
+function resetChatFeed() {
+    if (!els.chatFeed) return;
+    const entries = els.chatFeed.querySelectorAll('.chat-line');
+    entries.forEach(entry => entry.remove());
+    ensureChatFeedEmptyVisible(true);
+}
+
+function sanitizeCssColor(value) {
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (/^#([0-9a-f]{3}|[0-9a-f]{4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(trimmed)) {
+        return trimmed;
+    }
+    if (/^rgb(a)?\(\s*\d+\s*,\s*\d+\s*,\s*\d+(\s*,\s*(0|0?\.\d+|1(\.0*)?))?\s*\)$/i.test(trimmed)) {
+        return trimmed;
+    }
+    if (/^hsl(a)?\(\s*\d+\s*,\s*\d+%\s*,\s*\d+%(\s*,\s*(0|0?\.\d+|1(\.0*)?))?\s*\)$/i.test(trimmed)) {
+        return trimmed;
+    }
+    return '';
+}
+
+function extractInitialFromName(name) {
+    if (typeof name !== 'string') return '?';
+    const trimmed = name.trim();
+    if (!trimmed) return '?';
+    return trimmed.charAt(0).toUpperCase();
+}
+
+function createChatBadgeElement(badge) {
+    if (!badge) return null;
+    if (typeof badge === 'string') {
+        const span = document.createElement('span');
+        span.className = 'chat-badge';
+        span.textContent = badge;
+        return span;
+    }
+    const type = typeof badge.type === 'string' ? badge.type.toLowerCase() : '';
+    const label = badge.text || badge.label || badge.title || badge.alt || '';
+
+    if ((type === 'img' || type === 'image' || (!type && badge.src)) && badge.src) {
+        const span = document.createElement('span');
+        span.className = 'chat-badge';
+        const img = document.createElement('img');
+        img.src = badge.src;
+        if (label) {
+            img.alt = label;
+            img.title = label;
+        } else {
+            img.alt = '';
+        }
+        img.loading = 'lazy';
+        span.appendChild(img);
+        return span;
+    }
+
+    if ((type === 'svg' || type === 'html') && badge.html) {
+        const span = document.createElement('span');
+        span.className = 'chat-badge';
+        span.innerHTML = badge.html;
+        if (label) {
+            span.title = label;
+        }
+        return span;
+    }
+
+    if (badge.html) {
+        const span = document.createElement('span');
+        span.className = 'chat-badge';
+        span.innerHTML = badge.html;
+        if (label) {
+            span.title = label;
+        }
+        return span;
+    }
+
+    if (label) {
+        const span = document.createElement('span');
+        span.className = 'chat-badge';
+        span.textContent = label;
+        return span;
+    }
+
+    if (badge.src) {
+        const span = document.createElement('span');
+        span.className = 'chat-badge';
+        const img = document.createElement('img');
+        img.src = badge.src;
+        img.alt = '';
+        img.loading = 'lazy';
+        span.appendChild(img);
+        return span;
+    }
+
+    return null;
+}
+
+function appendChatBadges(container, badges) {
+    if (!container) return;
+    if (!Array.isArray(badges) || !badges.length) {
+        return;
+    }
+    badges.forEach((badge) => {
+        const node = createChatBadgeElement(badge);
+        if (node) {
+            container.appendChild(node);
+        }
+    });
+}
+
+function appendChatFeedMessage(message) {
+    if (!els.chatFeed || !message) return;
+    const stick = shouldStickChatFeed();
+    ensureChatFeedEmptyVisible(false);
+
+    const line = document.createElement('div');
+    line.className = 'chat-line';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'chat-avatar';
+    const avatarUrl = typeof message.chatimg === 'string' ? message.chatimg.trim() : '';
+    if (avatarUrl) {
+        const img = document.createElement('img');
+        img.src = avatarUrl;
+        img.alt = message.chatname ? `${message.chatname} avatar` : '';
+        img.loading = 'lazy';
+        avatar.appendChild(img);
+    } else {
+        avatar.textContent = extractInitialFromName(message.chatname);
+    }
+    line.appendChild(avatar);
+
+    const details = document.createElement('div');
+    details.className = 'chat-details';
+    const meta = document.createElement('div');
+    meta.className = 'chat-meta';
+
+    const name = document.createElement('span');
+    name.className = 'chat-name';
+    name.textContent = message.chatname || 'Kick viewer';
+    const safeColor = sanitizeCssColor(message.nameColor);
+    if (safeColor) {
+        name.style.color = safeColor;
+    }
+    meta.appendChild(name);
+
+    const badgesContainer = document.createElement('div');
+    badgesContainer.className = 'chat-badges';
+    appendChatBadges(badgesContainer, message.chatbadges);
+    if (badgesContainer.children.length) {
+        meta.appendChild(badgesContainer);
+    }
+    details.appendChild(meta);
+
+    const body = document.createElement('div');
+    body.className = 'chat-message';
+    if (isTextOnlyMode()) {
+        if (message.meta?.plainText) {
+            body.textContent = message.meta.plainText;
+        } else if (message.chatmessage) {
+            body.textContent = message.chatmessage;
+        } else {
+            body.textContent = '';
+        }
+    } else if (message.chatmessage) {
+        body.innerHTML = message.chatmessage;
+    } else if (message.meta?.plainText) {
+        body.textContent = message.meta.plainText;
+    } else {
+        body.textContent = '';
+    }
+    details.appendChild(body);
+
+    line.appendChild(details);
+    els.chatFeed.appendChild(line);
+
+    const entries = els.chatFeed.querySelectorAll('.chat-line');
+    if (entries.length > CHAT_FEED_LIMIT) {
+        const removeCount = entries.length - CHAT_FEED_LIMIT;
+        for (let i = 0; i < removeCount; i += 1) {
+            entries[i].remove();
+        }
+    }
+
+    if (stick) {
+        els.chatFeed.scrollTop = els.chatFeed.scrollHeight;
+    }
+}
+
 function pickDisplayName(candidates) {
     for (const value of candidates || []) {
         if (typeof value === 'string' && value.trim()) {
@@ -3159,6 +3527,7 @@ async function bootstrap() {
     loadConfig();
     applyDefaultConfig();
     loadTokens();
+    loadEventTypesCache();
     applyUrlParams();
     updateInputsFromState();
     updateAuthStatus();

@@ -73,6 +73,13 @@
             align-items: center;
             gap: 10px;
         }
+        .status-emphasis {
+            font-weight: 600;
+            color: var(--kick-green);
+        }
+        .status-subtle {
+            color: rgba(244, 244, 244, 0.65);
+        }
         .hero-status .status-note {
             color: rgba(244, 244, 244, 0.75);
             font-size: 0.95rem;
@@ -210,6 +217,96 @@
             overflow-y: auto;
             font-size: 0.9rem;
         }
+        .chat-feed {
+            background: #0e0e0e;
+            border-radius: 12px;
+            border: 1px solid #292929;
+            max-height: 380px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-feed-empty {
+            padding: 24px 20px;
+            color: rgba(224, 224, 224, 0.7);
+            font-style: italic;
+            text-align: center;
+        }
+        .chat-line {
+            display: flex;
+            gap: 14px;
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .chat-line:last-child {
+            border-bottom: none;
+        }
+        .chat-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: rgba(244, 244, 244, 0.78);
+            overflow: hidden;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+        .chat-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .chat-details {
+            flex: 1;
+            min-width: 0;
+        }
+        .chat-meta {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 6px;
+            font-size: 0.92rem;
+        }
+        .chat-name {
+            font-weight: 600;
+        }
+        .chat-badges {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .chat-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(244, 244, 244, 0.12);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+        .chat-badge img,
+        .chat-badge svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+        }
+        .chat-message {
+            font-size: 0.95rem;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+        .chat-message img {
+            max-height: 32px;
+            vertical-align: middle;
+        }
         .log-line {
             margin-bottom: 6px;
         }
@@ -256,7 +353,7 @@
                     <span id="auth-state" class="status-chip warning">Not signed in</span>
                 </div>
                 <div class="hero-status">
-                    <span id="channel-label" class="status-note">Channel: —</span>
+                    <span id="channel-label" class="status-note">Channel: <span class="status-subtle">—</span></span>
                     <span id="bridge-state" class="status-chip danger">Bridge disconnected</span>
                     <span id="subscription-summary" class="status-chip warning">Subscriptions pending</span>
                 </div>
@@ -269,6 +366,14 @@
                         <h2>Live event feed</h2>
                         <p class="hint">Every webhook that reaches the bridge is echoed here. It’s perfect for testing alerts before you go live.</p>
                         <div id="event-log" class="log"></div>
+                    </section>
+
+                    <section class="panel step">
+                        <h2>Live chat</h2>
+                        <p class="hint">Incoming Kick chat messages appear here as they arrive.</p>
+                        <div id="chat-feed" class="chat-feed">
+                            <div id="chat-feed-empty" class="chat-feed-empty">No chat messages yet.</div>
+                        </div>
                     </section>
 
                     <section class="panel step">
