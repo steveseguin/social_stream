@@ -1,4 +1,5 @@
 import SETTINGS_METADATA, { SETTINGS_CATEGORY_INFO } from '../../shared/config/settingsMetadata.js';
+import URL_PARAMETER_GROUPS from '../../shared/config/urlParameters.js';
 
 const POPUP_SOURCE = '../popup.html';
 const TYPE_GUESS = {
@@ -28,22 +29,45 @@ if (!CATEGORY_ORDER.has('__uncategorized')) {
   CATEGORY_ORDER.set('__uncategorized', 1000);
 }
 
+const PARAMETER_TARGETS = new Map(URL_PARAMETER_GROUPS.map(target => [target.slug, target]));
+const PARAMETER_RECORDS = buildParameterRecords(URL_PARAMETER_GROUPS);
+const TOTAL_PARAMETER_COUNT = PARAMETER_RECORDS.length;
+
 const state = {
   query: '',
   groupMode: 'section',
   records: [],
-  loading: false
+  loading: false,
+  activePanel: 'settings'
+};
+
+const parameterState = {
+  query: '',
+  target: 'all',
+  section: 'all',
+  records: PARAMETER_RECORDS
 };
 
 const domRefs = {
   root: document.getElementById('settings-root'),
   search: document.getElementById('setting-search'),
   group: document.getElementById('group-mode'),
-  reload: document.getElementById('reload-settings')
+  reload: document.getElementById('reload-settings'),
+  parameterRoot: document.getElementById('parameters-root'),
+  parameterSearch: document.getElementById('parameter-search'),
+  parameterTarget: document.getElementById('parameter-target'),
+  parameterSection: document.getElementById('parameter-section'),
+  panelContext: document.getElementById('parameter-target-context'),
+  tabButtons: Array.from(document.querySelectorAll('.tab-button')),
+  panels: Array.from(document.querySelectorAll('.reference-panel'))
 };
 
 if (!domRefs.root) {
   throw new Error('settings-root container is missing.');
+}
+
+if (!domRefs.parameterRoot) {
+  throw new Error('parameters-root container is missing.');
 }
 
 function cleanText(value) {
@@ -345,6 +369,353 @@ function collectSettings(doc) {
   return finalizeRecords(map);
 }
 
+function buildParameterRecords(groups) {
+  const records = [];
+  groups.forEach((target, targetIndex) => {
+    target.sections.forEach((section, sectionIndex) => {
+      section.items.forEach((item, itemIndex) => {
+        const aliases = Array.isArray(item.aliases) && item.aliases.length
+          ? item.aliases.map(alias => String(alias).trim())
+          : [String(item.key || '').trim()].filter(Boolean);
+        const searchTokens = [
+          item.displayName,
+          ...aliases,
+          item.values,
+          item.description,
+          target.title,
+          section.title
+        ]
+          .filter(Boolean)
+          .join(' ')
+          .toLowerCase();
+
+        records.push({
+          key: item.key,
+          displayName: item.displayName || item.key,
+          aliases,
+          values: item.values || '',
+          description: item.description || '',
+          targetSlug: target.slug,
+          targetTitle: target.title,
+          targetDescription: target.description || '',
+          targetIndex,
+          sectionSlug: section.slug,
+          sectionTitle: section.title,
+          sectionDescription: section.description || '',
+          sectionIndex,
+          itemIndex,
+          searchText: searchTokens
+        });
+      });
+    });
+  });
+  return records;
+}
+
+function filterParameterRecords() {
+  const query = parameterState.query;
+  return parameterState.records.filter(record => {
+    if (parameterState.target !== 'all' && record.targetSlug !== parameterState.target) {
+      return false;
+    }
+    if (parameterState.target !== 'all' && parameterState.section !== 'all' && record.sectionSlug !== parameterState.section) {
+      return false;
+    }
+    if (query && !record.searchText.includes(query)) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function groupParameterRecords(records) {
+  const groups = new Map();
+  records.forEach(record => {
+    const key = `${record.targetSlug}::${record.sectionSlug}`;
+    if (!groups.has(key)) {
+      groups.set(key, {
+        targetSlug: record.targetSlug,
+        targetTitle: record.targetTitle,
+        targetDescription: record.targetDescription,
+        targetIndex: record.targetIndex,
+        sectionSlug: record.sectionSlug,
+        sectionTitle: record.sectionTitle,
+        sectionDescription: record.sectionDescription,
+        sectionIndex: record.sectionIndex,
+        items: []
+      });
+    }
+    groups.get(key).items.push(record);
+  });
+
+  return [...groups.values()].sort((a, b) => {
+    if (a.targetIndex !== b.targetIndex) {
+      return a.targetIndex - b.targetIndex;
+    }
+    if (a.sectionIndex !== b.sectionIndex) {
+      return a.sectionIndex - b.sectionIndex;
+    }
+    return a.sectionTitle.localeCompare(b.sectionTitle);
+  });
+}
+
+function getParameterUniverseCount(targetSlug, sectionSlug) {
+  return parameterState.records.filter(record => {
+    if (targetSlug !== 'all' && record.targetSlug !== targetSlug) {
+      return false;
+    }
+    if (targetSlug !== 'all' && sectionSlug !== 'all' && record.sectionSlug !== sectionSlug) {
+      return false;
+    }
+    return true;
+  }).length;
+}
+
+function createParameterCard(record) {
+  const card = document.createElement('article');
+  card.className = 'setting-card parameter-card';
+  card.dataset.parameterKey = record.key;
+
+  const header = document.createElement('div');
+  header.className = 'setting-card-header';
+
+  const title = document.createElement('h3');
+  title.className = 'setting-title';
+  title.textContent = record.displayName;
+
+  const key = document.createElement('code');
+  key.className = 'setting-key';
+  key.textContent = record.key;
+
+  header.appendChild(title);
+  header.appendChild(key);
+  card.appendChild(header);
+
+  const description = document.createElement('p');
+  description.className = 'setting-description';
+  description.textContent =
+    record.description ||
+    'No description yet. Update parameters.md to document this parameter.';
+  card.appendChild(description);
+
+  const meta = document.createElement('dl');
+  meta.className = 'setting-meta parameter-meta';
+
+  const metaItems = [
+    createMetaItem('Overlay', record.targetTitle),
+    createMetaItem('Category', record.sectionTitle),
+    createMetaItem('Accepts', record.values || '—')
+  ];
+
+  if (record.aliases.length > 1) {
+    metaItems.push(createMetaItem('Aliases', record.aliases.join(', ')));
+  }
+
+  metaItems.forEach(({ dt, dd }) => {
+    meta.appendChild(dt);
+    meta.appendChild(dd);
+  });
+
+  if (meta.childElementCount) {
+    card.appendChild(meta);
+  }
+
+  return card;
+}
+
+function renderParameters(records) {
+  domRefs.parameterRoot.innerHTML = '';
+
+  if (!records.length) {
+    const empty = document.createElement('div');
+    empty.className = 'settings-empty';
+    empty.textContent = 'No parameters match your filters.';
+    domRefs.parameterRoot.appendChild(empty);
+    return;
+  }
+
+  const groups = groupParameterRecords(records);
+
+  groups.forEach(group => {
+    const section = document.createElement('section');
+    section.className = 'settings-section parameter-section';
+
+    const header = document.createElement('div');
+    header.className = 'settings-section-header';
+
+    const title = document.createElement('h2');
+    title.className = 'settings-section-title';
+    title.textContent =
+      parameterState.target === 'all'
+        ? `${group.sectionTitle} · ${group.targetTitle}`
+        : group.sectionTitle;
+
+    const meta = document.createElement('span');
+    meta.className = 'settings-section-meta';
+    meta.textContent = `${group.items.length} parameter${group.items.length === 1 ? '' : 's'}`;
+
+    header.appendChild(title);
+    header.appendChild(meta);
+    section.appendChild(header);
+
+    if (group.sectionDescription) {
+      const description = document.createElement('p');
+      description.className = 'parameter-section-description';
+      description.textContent = group.sectionDescription;
+      section.appendChild(description);
+    }
+
+    const grid = document.createElement('div');
+    grid.className = 'settings-grid parameter-grid';
+
+    group.items
+      .slice()
+      .sort((a, b) => a.itemIndex - b.itemIndex || a.key.localeCompare(b.key))
+      .forEach(item => {
+        grid.appendChild(createParameterCard(item));
+      });
+
+    section.appendChild(grid);
+    domRefs.parameterRoot.appendChild(section);
+  });
+}
+
+function populateParameterTargetOptions() {
+  if (!domRefs.parameterTarget) {
+    return;
+  }
+
+  const select = domRefs.parameterTarget;
+  select.innerHTML = '';
+
+  const allOption = document.createElement('option');
+  allOption.value = 'all';
+  allOption.textContent = 'All overlays';
+  allOption.selected = parameterState.target === 'all';
+  select.appendChild(allOption);
+
+  URL_PARAMETER_GROUPS.forEach(target => {
+    const option = document.createElement('option');
+    option.value = target.slug;
+    option.textContent = target.title;
+    option.selected = parameterState.target === target.slug;
+    select.appendChild(option);
+  });
+}
+
+function updateParameterSectionOptions(targetSlug) {
+  if (!domRefs.parameterSection) {
+    return;
+  }
+
+  const select = domRefs.parameterSection;
+  select.innerHTML = '';
+
+  const defaultOption = document.createElement('option');
+  defaultOption.value = 'all';
+  defaultOption.textContent = 'All categories';
+  defaultOption.selected = parameterState.section === 'all';
+  select.appendChild(defaultOption);
+
+  if (targetSlug === 'all') {
+    select.value = 'all';
+    select.disabled = true;
+    parameterState.section = 'all';
+    return;
+  }
+
+  const target = PARAMETER_TARGETS.get(targetSlug);
+  if (!target) {
+    select.value = 'all';
+    select.disabled = true;
+    parameterState.section = 'all';
+    return;
+  }
+
+  target.sections.forEach(section => {
+    const option = document.createElement('option');
+    option.value = section.slug;
+    option.textContent = section.title;
+    option.selected = parameterState.section === section.slug;
+    select.appendChild(option);
+  });
+
+  select.disabled = false;
+
+  if (!target.sections.some(section => section.slug === parameterState.section)) {
+    parameterState.section = 'all';
+    select.value = 'all';
+  }
+}
+
+function updateParameterContext(visibleCount) {
+  if (!domRefs.panelContext) {
+    return;
+  }
+
+  const baseCount =
+    parameterState.target === 'all' && parameterState.section === 'all'
+      ? TOTAL_PARAMETER_COUNT
+      : getParameterUniverseCount(parameterState.target, parameterState.section);
+  const count = typeof visibleCount === 'number' ? visibleCount : baseCount;
+
+  const target =
+    parameterState.target === 'all' ? null : PARAMETER_TARGETS.get(parameterState.target);
+  const section =
+    target && parameterState.section !== 'all'
+      ? target.sections.find(entry => entry.slug === parameterState.section)
+      : null;
+
+  const labelParts = [];
+  if (target) {
+    labelParts.push(target.title);
+  }
+  if (section) {
+    labelParts.push(section.title);
+  }
+  const label = labelParts.length ? labelParts.join(' → ') : 'all overlays';
+
+  const denominator =
+    count !== baseCount && baseCount > 0
+      ? `${count} of ${baseCount} parameter${baseCount === 1 ? '' : 's'}`
+      : `${count} parameter${count === 1 ? '' : 's'}`;
+
+  let text = `Showing ${denominator} for ${label}.`;
+
+  const extraContext = section?.description || target?.description || '';
+  if (extraContext) {
+    text += ` ${extraContext}`;
+  }
+
+  domRefs.panelContext.textContent = text;
+}
+
+function refreshParameters() {
+  const filtered = filterParameterRecords();
+  renderParameters(filtered);
+  updateParameterContext(filtered.length);
+}
+
+function activatePanel(panelId) {
+  if (!panelId) {
+    return;
+  }
+
+  state.activePanel = panelId;
+
+  domRefs.tabButtons.forEach(button => {
+    const isActive = button.dataset.panel === panelId;
+    button.classList.toggle('is-active', isActive);
+    button.setAttribute('aria-selected', String(isActive));
+    button.setAttribute('tabindex', isActive ? '0' : '-1');
+  });
+
+  domRefs.panels.forEach(panel => {
+    const matches = panel.dataset.panel === panelId;
+    panel.toggleAttribute('hidden', !matches);
+  });
+}
+
 function groupRecords(records, options) {
   const { mode } = options;
   const groups = new Map();
@@ -638,10 +1009,59 @@ function initEvents() {
       }
     });
   }
+
+  if (domRefs.parameterSearch) {
+    domRefs.parameterSearch.addEventListener('input', event => {
+      parameterState.query = event.target.value.trim().toLowerCase();
+      refreshParameters();
+    });
+  }
+
+  if (domRefs.parameterTarget) {
+    domRefs.parameterTarget.addEventListener('change', event => {
+      const value = event.target.value || 'all';
+      parameterState.target = value;
+      parameterState.section = 'all';
+      updateParameterSectionOptions(value);
+      refreshParameters();
+    });
+  }
+
+  if (domRefs.parameterSection) {
+    domRefs.parameterSection.addEventListener('change', event => {
+      parameterState.section = event.target.value || 'all';
+      refreshParameters();
+    });
+  }
+
+  if (domRefs.tabButtons.length) {
+    domRefs.tabButtons.forEach((button, index) => {
+      button.addEventListener('click', () => {
+        activatePanel(button.dataset.panel);
+      });
+
+      button.addEventListener('keydown', event => {
+        if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') {
+          return;
+        }
+        event.preventDefault();
+        const delta = event.key === 'ArrowRight' ? 1 : -1;
+        const buttons = domRefs.tabButtons;
+        const nextIndex = (index + delta + buttons.length) % buttons.length;
+        const nextButton = buttons[nextIndex];
+        nextButton.focus();
+        activatePanel(nextButton.dataset.panel);
+      });
+    });
+  }
 }
 
 function init() {
   initEvents();
+  populateParameterTargetOptions();
+  updateParameterSectionOptions(parameterState.target);
+  refreshParameters();
+  activatePanel(state.activePanel);
   loadSettings();
 }
 

@@ -70,7 +70,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "aiProvider": {
     type: "select",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Choose which LLM provider powers the chat bot and automation features."
   },
   "allmemberchat": {
     type: "boolean",
@@ -109,19 +110,23 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "bedrockAccessKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "AWS access key used when authenticating to Bedrock."
   },
   "bedrockRegion": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "AWS region where your Bedrock deployment runs, such as us-east-1."
   },
   "bedrockSecretKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "AWS secret key paired with the Bedrock access key."
   },
   "bedrockmodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Bedrock model identifier to request (for example anthropic.claude-v2)."
   },
   "beepvolume": {
     type: "number",
@@ -200,11 +205,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "chatgptApiKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "OpenAI API key used when the ChatGPT provider is selected."
   },
   "chatgptmodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Model slug to request from OpenAI (for example gpt-4o-mini)."
   },
   "chatwebhookpost": {
     type: "boolean",
@@ -248,15 +255,18 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "comment_background": {
     type: "text",
-    category: "colors"
+    category: "colors",
+    description: "Hex or CSS color used for comment card backgrounds on overlays."
   },
   "comment_color": {
     type: "text",
-    category: "colors"
+    category: "colors",
+    description: "Color applied to the comment text on overlays."
   },
   "custom1_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 1 quick-launch button is clicked."
   },
   "custom1_url_newwindow": {
     type: "boolean",
@@ -265,7 +275,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom2_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 2 quick-launch button is clicked."
   },
   "custom2_url_newwindow": {
     type: "boolean",
@@ -274,7 +285,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom3_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 3 quick-launch button is clicked."
   },
   "custom3_url_newwindow": {
     type: "boolean",
@@ -283,7 +295,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom4_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 4 quick-launch button is clicked."
   },
   "custom4_url_newwindow": {
     type: "boolean",
@@ -292,7 +305,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom5_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 5 quick-launch button is clicked."
   },
   "custom5_url_newwindow": {
     type: "boolean",
@@ -301,7 +315,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom6_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 6 quick-launch button is clicked."
   },
   "custom6_url_newwindow": {
     type: "boolean",
@@ -310,7 +325,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom7_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 7 quick-launch button is clicked."
   },
   "custom7_url_newwindow": {
     type: "boolean",
@@ -319,7 +335,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom8_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 8 quick-launch button is clicked."
   },
   "custom8_url_newwindow": {
     type: "boolean",
@@ -328,7 +345,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "custom9_url": {
     type: "text",
-    category: "custom"
+    category: "custom",
+    description: "URL opened when the Custom 9 quick-launch button is clicked."
   },
   "custom9_url_newwindow": {
     type: "boolean",
@@ -337,15 +355,18 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "customAIApiKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "API key for your custom OpenAI-compatible endpoint (optional)."
   },
   "customAIEndpoint": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Base URL for the custom OpenAI-compatible API to call."
   },
   "customAIModel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Model identifier exposed by the custom OpenAI-compatible service."
   },
   "customJsEnabled": {
     type: "boolean",
@@ -354,71 +375,88 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "customdiscordchannel": {
     type: "text",
-    category: "opt_in_options"
+    category: "opt_in_options",
+    description: "Comma separated Discord channel identifiers to capture; leave blank to allow every channel."
   },
   "customkickaccount": {
     type: "text",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Kick channel name to keep capturing when the Kick opt-out toggle is enabled."
   },
   "customkickstate": {
     type: "boolean",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Disable capturing Kick chat except for channels listed in the allow field."
   },
   "customriversideaccount": {
     type: "text",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Riverside room identifier to keep capturing when the opt-out toggle is enabled."
   },
   "customriversidestate": {
     type: "boolean",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Disable capturing Riverside chat except for the allow list."
   },
   "customtiktokaccount": {
     type: "text",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "TikTok channel handle to keep capturing when the opt-out toggle is enabled."
   },
   "customtiktokstate": {
     type: "boolean",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Disable capturing TikTok chat except for the allow list."
   },
   "customtwitchaccount": {
     type: "text",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Twitch channel name to keep capturing when the opt-out toggle is enabled."
   },
   "customtwitchstate": {
     type: "boolean",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Disable capturing Twitch chat except for the allow list."
   },
   "customwaitlistcommand": {
     type: "text",
-    category: "must_enable_the_trigger_to_use"
+    category: "must_enable_the_trigger_to_use",
+    description: "Custom chat command viewers type (for example !queue) to join the waitlist overlay."
   },
   "customwaitlistmessage": {
     type: "text",
-    category: "other_customization_options"
+    category: "other_customization_options",
+    description: "Headline text displayed on the waitlist overlay; supports the {trigger} placeholder."
   },
   "customwaitlistmessagetoggle": {
     type: "boolean",
-    category: "other_customization_options"
+    category: "other_customization_options",
+    description: "Display the custom waitlist message instead of the default prompt."
   },
   "customyoutubeaccount": {
     type: "text",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "YouTube channel ID to keep capturing when the opt-out toggle is enabled."
   },
   "customyoutubestate": {
     type: "boolean",
-    category: "opt_out_options"
+    category: "opt_out_options",
+    description: "Disable capturing YouTube chat except for the allow list."
   },
   "deepseekApiKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "DeepSeek API key used when that provider is active."
   },
   "deepseekmodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "DeepSeek model name to request (e.g., deepseek-chat)."
   },
   "defaultavatar": {
     type: "text",
-    category: "other_filters"
+    category: "other_filters",
+    description: "Fallback avatar image URL to use when a message has no profile picture."
   },
   "delaykick": {
     type: "boolean",
@@ -467,11 +505,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "discord_channelid": {
     type: "text",
-    category: "opened_in_new_tab"
+    category: "opened_in_new_tab",
+    description: "Discord channel ID appended when opening the Discord chat shortcut."
   },
   "discord_serverid": {
     type: "text",
-    category: "opened_in_new_tab"
+    category: "opened_in_new_tab",
+    description: "Discord server (guild) ID used for the Discord chat shortcut."
   },
   "discordmemberships": {
     type: "boolean",
@@ -480,7 +520,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "dlive_username": {
     type: "text",
-    category: "opened_in_new_window"
+    category: "opened_in_new_window",
+    description: "DLive channel name used by the open chat button."
   },
   "drawmode": {
     type: "boolean",
@@ -519,7 +560,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "elevenstyle": {
     type: "number",
-    category: "elevenlabs_tts_options"
+    category: "elevenlabs_tts_options",
+    description: "ElevenLabs style intensity parameter (0.0-1.0)."
   },
   "enableCustomGifCommands": {
     type: "boolean",
@@ -563,7 +605,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "facebook_username": {
     type: "text",
-    category: "opened_in_new_tab"
+    category: "opened_in_new_tab",
+    description: "Facebook page or profile slug opened by the chat shortcut."
   },
   "featuredOverlayStyle": {
     type: "select",
@@ -582,7 +625,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "filtercommandscustomtoggle": {
     type: "boolean",
-    category: "other_filters"
+    category: "other_filters",
+    description: "Enable the custom command filter so messages starting with listed words are blocked."
   },
   "filtercommandscustomwords": {
     type: "text",
@@ -596,7 +640,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "filtereventstoggle": {
     type: "boolean",
-    category: "custom_injection"
+    category: "custom_injection",
+    description: "Enable the event filter to hide events containing the provided keywords."
   },
   "firstsourceonly": {
     type: "boolean",
@@ -620,11 +665,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "geminiApiKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Google AI Studio API key required for Gemini access."
   },
   "geminimodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Gemini model identifier to call (for example gemini-1.5-flash)."
   },
   "giphy": {
     type: "boolean",
@@ -638,7 +685,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "giphyKey": {
     type: "text",
-    category: "giphy_tenor_support"
+    category: "giphy_tenor_support",
+    description: "Giphy API key used to enable GIF search support."
   },
   "goodwordslist": {
     type: "boolean",
@@ -647,7 +695,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "googlepitch": {
     type: "number",
-    category: "google_cloud_tts_options"
+    category: "google_cloud_tts_options",
+    description: "Pitch adjustment (-20 to +20) for Google Cloud TTS voices."
   },
   "googlerate": {
     type: "number",
@@ -656,19 +705,23 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "groqApiKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Groq API key used when leveraging Groq-hosted models."
   },
   "groqmodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Model slug provided by Groq (for example llama-3.1-8b-instant)."
   },
   "h2r": {
     type: "boolean",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Send all captured events to the configured H2R Graphics endpoint."
   },
   "h2rserver": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "H2R Graphics server identifier or full URL to receive forwarded events."
   },
   "hidePaidPromotion": {
     type: "boolean",
@@ -762,7 +815,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "instagramlive_username": {
     type: "text",
-    category: "opened_in_new_tab"
+    category: "opened_in_new_tab",
+    description: "Instagram account handle used for the open chat shortcut."
   },
   "joke": {
     type: "boolean",
@@ -771,7 +825,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "kick_username": {
     type: "text",
-    category: "opened_in_new_tab"
+    category: "opened_in_new_tab",
+    description: "Kick channel slug opened by the chat shortcut."
   },
   "kittenspeed": {
     type: "number",
@@ -810,7 +865,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "limitcharactersstate": {
     type: "boolean",
-    category: "management"
+    category: "management",
+    description: "Enable truncating relayed chat to the maximum length specified below."
   },
   "limitedyoutubememberchat": {
     type: "boolean",
@@ -854,7 +910,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "midiOutputDevice": {
     type: "select",
-    category: "trigger_midi_note_on_command"
+    category: "trigger_midi_note_on_command",
+    description: "Default MIDI output device used for trigger commands."
   },
   "modLLMonly": {
     type: "boolean",
@@ -868,15 +925,18 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "multipleChoiceOptions": {
     type: "text",
-    category: "poll_settings"
+    category: "poll_settings",
+    description: "Comma separated answer list for multiple choice polls."
   },
   "name_background": {
     type: "text",
-    category: "colors"
+    category: "colors",
+    description: "Custom background color behind usernames in overlays."
   },
   "name_color": {
     type: "text",
-    category: "colors"
+    category: "colors",
+    description: "Custom text color for usernames in overlays."
   },
   "noduplicates": {
     type: "boolean",
@@ -950,15 +1010,18 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "ollamabotname": {
     type: "text",
-    category: "chat_bot"
+    category: "chat_bot",
+    description: "Display name the Ollama bot uses when replying."
   },
   "ollamaendpoint": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "HTTP endpoint where your local Ollama server is reachable."
   },
   "ollamamodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Ollama model tag to load (for example gemma3:1b)."
   },
   "ollamaoverlayonly": {
     type: "boolean",
@@ -967,7 +1030,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "ollamaprompt": {
     type: "text",
-    category: "chat_bot"
+    category: "chat_bot",
+    description: "System prompt prepended to every Ollama bot response."
   },
   "ollamatts": {
     type: "boolean",
@@ -991,11 +1055,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "openrouterApiKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "OpenRouter API key for routing hosted model calls."
   },
   "openroutermodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Model identifier from the OpenRouter catalog (e.g., openai/gpt-4o)."
   },
   "overlayPreset": {
     type: "select",
@@ -1009,11 +1075,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "picarto_username": {
     type: "text",
-    category: "opened_in_new_window"
+    category: "opened_in_new_window",
+    description: "Picarto channel name used by the open chat button."
   },
   "pitch": {
     type: "number",
-    category: "built_in_system_tts_options"
+    category: "built_in_system_tts_options",
+    description: "Pitch multiplier (0.1-2.0) for the system TTS voice."
   },
   "pointsPerEngagement": {
     type: "number",
@@ -1027,7 +1095,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "pollQuestion": {
     type: "text",
-    category: "poll_settings"
+    category: "poll_settings",
+    description: "Prompt shown to viewers when the poll overlay is active."
   },
   "pollSpam": {
     type: "boolean",
@@ -1036,7 +1105,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "pollStyle": {
     type: "select",
-    category: "poll_settings"
+    category: "poll_settings",
+    description: "Visual theme applied to the poll overlay."
   },
   "pollTally": {
     type: "boolean",
@@ -1055,35 +1125,43 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "pollType": {
     type: "select",
-    category: "poll_settings"
+    category: "poll_settings",
+    description: "Poll mode (free-form, yes/no, or multiple choice)."
   },
   "post": {
     type: "boolean",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Forward all captured events to the custom POST endpoint below."
   },
   "postalldiscord": {
     type: "boolean",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Forward all captured messages to the Discord webhook URL."
   },
   "postallserverdiscord": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Discord webhook URL that receives every captured message."
   },
   "postdiscord": {
     type: "boolean",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Forward only donation events to the Discord webhook URL."
   },
   "postserver": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Custom HTTP endpoint or identifier to receive forwarded events."
   },
   "postserverdiscord": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Discord webhook URL that receives donation events."
   },
   "printerName": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Local printer name to use when printing chat from the dock."
   },
   "pronouns": {
     type: "boolean",
@@ -1157,11 +1235,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "s10": {
     type: "boolean",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Enable the Stage TEN Chat API relay."
   },
   "s10apikey": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Stage TEN API key used when the relay is enabled."
   },
   "s10relay": {
     type: "boolean",
@@ -1210,7 +1290,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "speechifyspeed": {
     type: "number",
-    category: "speechify_tts_options"
+    category: "speechify_tts_options",
+    description: "Playback speed multiplier for Speechify TTS voices."
   },
   "speed": {
     type: "number",
@@ -1219,7 +1300,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "spotifyAnnounceFormat": {
     type: "text",
-    category: "now_playing_features"
+    category: "now_playing_features",
+    description: "Template used when announcing tracks in chat (supports {song} and {artist})."
   },
   "spotifyAnnounceNewTrack": {
     type: "boolean",
@@ -1228,15 +1310,18 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "spotifyBotName": {
     type: "text",
-    category: "now_playing_features"
+    category: "now_playing_features",
+    description: "Display name used when Spotify announcements are sent to chat."
   },
   "spotifyClientId": {
     type: "text",
-    category: "spotify_configuration"
+    category: "spotify_configuration",
+    description: "Client ID from your Spotify developer app."
   },
   "spotifyClientSecret": {
     type: "text",
-    category: "spotify_configuration"
+    category: "spotify_configuration",
+    description: "Client secret from your Spotify developer app."
   },
   "spotifyEnabled": {
     type: "boolean",
@@ -1260,15 +1345,18 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "streamerbotactionid": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Streamer.bot action GUID triggered for relayed events."
   },
   "streamerbotendpoint": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Streamer.bot WebSocket endpoint URL."
   },
   "streamerbotpassword": {
     type: "text",
-    category: "printer_control"
+    category: "printer_control",
+    description: "Password used when connecting to the Streamer.bot WebSocket."
   },
   "t1": {
     type: "number",
@@ -1302,7 +1390,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "tenorKey": {
     type: "text",
-    category: "giphy_tenor_support"
+    category: "giphy_tenor_support",
+    description: "Tenor API key used to enable GIF search support."
   },
   "textonlymode": {
     type: "boolean",
@@ -1326,7 +1415,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "tiktok_username": {
     type: "text",
-    category: "opened_in_new_window"
+    category: "opened_in_new_window",
+    description: "TikTok channel handle opened by the chat shortcut."
   },
   "totalcolors": {
     type: "number",
@@ -1345,7 +1435,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "trovo_username": {
     type: "text",
-    category: "opened_in_new_window"
+    category: "opened_in_new_window",
+    description: "Trovo channel name opened in a new window."
   },
   "ttsProvider": {
     type: "select",
@@ -1364,7 +1455,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "twitch_username": {
     type: "text",
-    category: "opened_in_new_window"
+    category: "opened_in_new_window",
+    description: "Twitch channel name opened in a new window."
   },
   "unlimitedDB": {
     type: "boolean",
@@ -1398,7 +1490,8 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "waitlistmode": {
     type: "boolean",
-    category: "must_enable_the_trigger_to_use"
+    category: "must_enable_the_trigger_to_use",
+    description: "Enable the waitlist/queue overlay and listen for the join command."
   },
   "webhookrelay": {
     type: "boolean",
@@ -1422,15 +1515,18 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "wordcloud": {
     type: "boolean",
-    category: "must_enable_the_trigger_to_use"
+    category: "must_enable_the_trigger_to_use",
+    description: "Enable the word cloud overlay trigger."
   },
   "xaiApiKey": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "xAI (Grok) API key for authenticated requests."
   },
   "xaimodel": {
     type: "text",
-    category: "configure_llm_api"
+    category: "configure_llm_api",
+    description: "Model slug to call via the xAI API."
   },
   "xcapture": {
     type: "boolean",
@@ -1444,11 +1540,13 @@ const SETTINGS_METADATA = Object.freeze({
   },
   "youtube_username": {
     type: "text",
-    category: "opened_in_new_window"
+    category: "opened_in_new_window",
+    description: "YouTube channel ID used when opening the pop-out chat window."
   },
   "youtubeapikey": {
     type: "text",
-    category: "youtube_api"
+    category: "youtube_api",
+    description: "YouTube Data API key used for overlays that query YouTube."
   },
 });
 

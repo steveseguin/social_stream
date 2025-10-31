@@ -73,14 +73,30 @@
         </div>
     </section>
 
-    <main class="container">
-        <section class="settings-intro">
-            <p>
-                This page pulls live data from <code>popup.html</code> to stay in sync with the extension and desktop app.
-                Use the search field to filter by keyword, or open the metadata file at
-                <code>shared/config/settingsMetadata.js</code> to expand descriptions and scopes.
+    <main class="container page-content">
+        <section class="reference-tabs" aria-label="Reference views">
+            <div class="tab-buttons" role="tablist">
+                <button type="button" id="tab-settings" class="tab-button is-active" data-panel="settings" role="tab" aria-selected="true" aria-controls="panel-settings">
+                    Popup settings
+                </button>
+                <button type="button" id="tab-parameters" class="tab-button" data-panel="parameters" role="tab" aria-selected="false" aria-controls="panel-parameters">
+                    URL parameters
+                </button>
+            </div>
+            <p class="tab-hint">
+                Switch between the popup controls catalogue and the overlay URL parameter index. Both views pull from the shared configuration for consistency.
             </p>
-            <div class="settings-controls">
+        </section>
+
+        <section class="reference-panel settings-panel" id="panel-settings" data-panel="settings" role="tabpanel" aria-labelledby="tab-settings">
+            <div class="panel-intro">
+                <p>
+                    This page pulls live data from <code>popup.html</code> to stay in sync with the extension and desktop app.
+                    Use the search field to filter by keyword, or open the metadata file at
+                    <code>shared/config/settingsMetadata.js</code> to expand descriptions and scopes.
+                </p>
+            </div>
+            <div class="reference-controls">
                 <div class="control">
                     <label for="setting-search" class="control-label">Search settings</label>
                     <input type="search" id="setting-search" class="setting-search" placeholder="Search by name, key, or behavior…">
@@ -99,13 +115,46 @@
                     </button>
                 </div>
             </div>
+            <section id="settings-root" class="settings-root" aria-live="polite">
+                <div class="loading-state">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Loading settings from popup.html…</p>
+                </div>
+            </section>
         </section>
 
-        <section id="settings-root" class="settings-root" aria-live="polite">
-            <div class="loading-state">
-                <div class="spinner" aria-hidden="true"></div>
-                <p>Loading settings from popup.html…</p>
+        <section class="reference-panel parameters-panel" id="panel-parameters" data-panel="parameters" role="tabpanel" aria-labelledby="tab-parameters" hidden>
+            <div class="panel-intro">
+                <p>
+                    Need to tune the overlays via query string? Browse the complete list of URL switches, grouped by surface and category.
+                    The data is generated from <code>parameters.md</code> and exported through <code>shared/config/urlParameters.js</code> so it can power docs and in-app helpers.
+                </p>
+                <p id="parameter-target-context" class="panel-context"></p>
             </div>
+            <div class="reference-controls">
+                <div class="control">
+                    <label for="parameter-search" class="control-label">Search parameters</label>
+                    <input type="search" id="parameter-search" class="setting-search" placeholder="Search by name, alias, or description…">
+                </div>
+                <div class="control">
+                    <label for="parameter-target" class="control-label">Overlay</label>
+                    <select id="parameter-target" class="group-select">
+                        <option value="all" selected>All overlays</option>
+                    </select>
+                </div>
+                <div class="control">
+                    <label for="parameter-section" class="control-label">Category</label>
+                    <select id="parameter-section" class="group-select" disabled>
+                        <option value="all" selected>All categories</option>
+                    </select>
+                </div>
+            </div>
+            <section id="parameters-root" class="parameters-root" aria-live="polite">
+                <div class="loading-state">
+                    <div class="spinner" aria-hidden="true"></div>
+                    <p>Loading URL parameter index…</p>
+                </div>
+            </section>
         </section>
     </main>
 
