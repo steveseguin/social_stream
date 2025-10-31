@@ -1181,19 +1181,24 @@ try {
 			// Schedule next poll
 			fetchTimeout = setTrackedTimeout(fetchChatMessages, nextPollInterval, !isPageVisible);
 			
-		} catch (error) {
-			console.error('Error fetching chat messages:', error);
-			// Use exponential backoff for errors
-			const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
-			quickPollCount++;
-			
-			// Clear any existing timeout before setting new one
-			if (fetchTimeout) {
-				clearTimeout(fetchTimeout);
-				fetchTimeout = null;
-			}
-			
-			fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
+	} catch (error) {
+		if (error && error.ytReason === 'liveChatEnded') {
+			console.log('YouTube reported live chat ended; stopping polling.');
+			handleLiveChatEnded();
+			return;
+		}
+		console.error('Error fetching chat messages:', error);
+		// Use exponential backoff for errors
+		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
+		quickPollCount++;
+		
+		// Clear any existing timeout before setting new one
+		if (fetchTimeout) {
+			clearTimeout(fetchTimeout);
+			fetchTimeout = null;
+		}
+		
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
 		} finally {
 			isPolling = false;
 		}
@@ -1802,6 +1807,41 @@ try {
 			chatHeader.className = '';
 			chatHeader.textContent = 'Chat Messages';
 		}
+	}
+	function handleLiveChatEnded() {
+		const endedSourceName = currentSourceName;
+		const endedSourceImage = currentSourceImage;
+		const endedStreamTitle = currentStream && currentStream.title ? currentStream.title : '';
+		console.log('Live chat ended for current YouTube stream.');
+		clearPolling();
+		if (endedSourceName || endedSourceImage) {
+			setSourceIdentity(endedSourceName, endedSourceImage);
+		}
+		const textarea = document.getElementById('textarea');
+		if (textarea) {
+			textarea.innerHTML = '<div>Live chat is no longer available for this stream.</div>';
+		}
+		const connectButton = document.getElementById('connect-button');
+		if (connectButton) {
+			connectButton.textContent = 'Connect';
+			connectButton.style.backgroundColor = '#2255dd';
+		}
+		updateHeaderInfo(username, (endedSourceName || 'YouTube') + ' (Stream ended)');
+		const viewerCount = document.getElementById('viewer-count');
+		if (viewerCount) viewerCount.textContent = '-';
+		const subscriberCount = document.getElementById('subscriber-count');
+		if (subscriberCount) subscriberCount.textContent = '-';
+		const likesCount = document.getElementById('likes-count');
+		if (likesCount) likesCount.textContent = '-';
+		addEvent('Live chat ended');
+		const endedPayload = {
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: 'live_chat_ended'
+		};
+		if (endedStreamTitle) {
+			endedPayload.meta = { streamTitle: endedStreamTitle };
+		}
+		pushMessage(applySourceIdentity(endedPayload));
 	}
 	async function getChannelStats(channelIdForStats) {
 		const token = getStoredToken();
@@ -2895,11 +2935,15 @@ try {
 				// Try to parse error for quota/rate limit signals
 				let errorText = '';
 				let quotaHit = false;
+				let reason = '';
+				let message = '';
+				let fullPayload = null;
 				try {
 					const cloned = response.clone();
 					const json = await cloned.json();
-					const reason = json?.error?.errors?.[0]?.reason || '';
-					const message = json?.error?.message || '';
+					fullPayload = json;
+					reason = json?.error?.errors?.[0]?.reason || '';
+					message = json?.error?.message || '';
 					errorText = JSON.stringify(json);
 					if (response.status === 403 || response.status === 429) {
 						if (/quota|rateLimit|dailyLimit/i.test(reason) || /quota|rate/i.test(message)) quotaHit = true;
@@ -2909,7 +2953,12 @@ try {
 				}
 				if (quotaHit) showQuotaBanner();
 				console.error('API error response:', errorText || (response.status + ' ' + response.statusText));
-				throw new Error(`API error: ${response.status} ${response.statusText}`);
+				const err = new Error(`API error: ${response.status} ${response.statusText || reason || ''}`);
+				err.ytStatus = response.status;
+				if (reason) err.ytReason = reason;
+				if (message) err.ytMessage = message;
+				if (fullPayload) err.ytPayload = fullPayload;
+				throw err;
 			}
 			return response;
 		} catch (e) {

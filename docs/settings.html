@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings Reference - Social Stream Ninja</title>
+    <meta name="description" content="Complete reference for every setting in the Social Stream Ninja popup, including scopes, surfaces, and behavior.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"/>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="data:image/svg+xml;base64,PHN2ZyBpZD0iQ2FwYV8xIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCA1MTIgNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIHdpZHRoPSI1MTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGc+PGc+PHBhdGggZD0ibTI4NS41NzcgMTQyLjc2OGgtMjI2LjgyM2MtMjguMzExIDAtNTEuMjYyIDIyLjk1MS01MS4yNjIgNTEuMjYydjE5My44NDVjMCAyOC4zMTEgMjIuOTUxIDUxLjI2MyA1MS4yNjMgNTEuMjYzaDEzLjQ0NGM0LjY5NSAwIDguODIyIDMuMjA0IDkuODk0IDcuNzc1IDQuMTE3IDE3LjU0Ny0xMC43NDYgMzQuMTEzLTIwLjE4OCA0Mi41ODItMi4yNjYgMi4wMzItLjY2MSA1Ljc2MSAyLjM3NSA1LjU2NCA1Mi41NTMtMy40MSA2OC40MTktMzQuNjMgNzIuOTQ2LTQ4Ljg4MyAxLjMzNi00LjIwNSA1LjI2Ni03LjAzOCA5LjY3OC03LjAzOGgxMzguNjc0YzI4LjMxMSAwIDUxLjI2Mi0yMi45NTEgNTEuMjYyLTUxLjI2MnYtMTkzLjg0NmMtLjAwMS0yOC4zMTEtMjIuOTUyLTUxLjI2Mi01MS4yNjMtNTEuMjYyeiIgZmlsbD0iI2ZlN2FiNiIvPjwvZz48Zz48cGF0aCBkPSJtMTI1LjkzMiA0MzkuMTMzaDIwLjk3NGMtNC40MTUgMC04LjM1IDIuODM3LTkuNjc4IDcuMDQxLTQuNTM0IDE0LjI1Mi0yMC4zOTUgNDUuNDc0LTcyLjk0OSA0OC44NzktMS43MTguMTEtMi45NzYtMS4wMjktMy4zMzYtMi40MDcgMzguNjIyLTguMzU5IDUxLjMyNi0zMy45NTggNTUuMzExLTQ2LjQ3MiAxLjMyOC00LjIwNSA1LjI2My03LjA0MSA5LjY3OC03LjA0MXoiIGZpbGw9IiNmZTVjYTciLz48L2c+PGc+PHBhdGggZD0ibTMzNi44NCAxOTQuMDI3djE5My44NDljMCAyOC4zMDUtMjIuOTUxIDUxLjI1Ni01MS4yNjYgNTEuMjU2aC0yMC45NzRjMjguMzE1IDAgNTEuMjY2LTIyLjk1MSA1MS4yNjYtNTEuMjU2di0xOTMuODQ5YzAtMjguMzA1LTIyLjk1MS01MS4yNTYtNTEuMjY2LTUxLjI1NmgyMC45NzRjMjguMzE0IDAgNTEuMjY2IDIyLjk1MSA1MS4yNjYgNTEuMjU2eiIgZmlsbD0iI2ZlNWNhNyIvPjwvZz48Zz48cGF0aCBkPSJtNDUzLjI0NyAxNi45MzVoLTIyNi44MjNjLTI4LjMxMSAwLTUxLjI2MiAyMi45NTEtNTEuMjYyIDUxLjI2MnYxOTMuODQ1YzAgMjguMzExIDIyLjk1MSA1MS4yNjMgNTEuMjYzIDUxLjI2M2gxMzguNjczYzQuNDEyIDAgOC4zNDMgMi44MzMgOS42NzggNy4wMzggNC41MjcgMTQuMjUzIDIwLjM5MyA0NS40NzMgNzIuOTQ2IDQ4Ljg4MyAzLjAzNy4xOTcgNC42NDEtMy41MzMgMi4zNzUtNS41NjQtOS40NDItOC40NjgtMjQuMzA2LTI1LjAzNC0yMC4xODgtNDIuNTgyIDEuMDcyLTQuNTcxIDUuMTk5LTcuNzc1IDkuODk0LTcuNzc1aDEzLjQ0NGMyOC4zMTEgMCA1MS4yNjItMjIuOTUxIDUxLjI2Mi01MS4yNjJ2LTE5My44NDZjMC0yOC4zMTEtMjIuOTUtNTEuMjYyLTUxLjI2Mi01MS4yNjJ6IiBmaWxsPSIjNmVkNWExIi8+PC9nPjxnPjxwYXRoIGQ9Im01MDQuNTEyIDY4LjE5M3YxOTMuODQ5YzAgMjguMzE1LTIyLjk1MSA1MS4yNjYtNTEuMjY2IDUxLjI2NmgtMTMuNDQzYy00LjY5NCAwLTguODE5IDMuMTk2LTkuODk4IDcuNzctNC4xMTUgMTcuNTQ4IDEwLjc0NyAzNC4xMTggMjAuMTk1IDQyLjU3NyAyLjI2NyAyLjAzOC42NTkgNS43NjMtMi4zNzcgNS41NzMtNi4wNDMtLjM5LTExLjU5Ni0xLjE0OS0xNi42OTktMi4yMTcuMzctMS4xMDguMTUtMi40MTctLjg5OS0zLjM1Ni05LjQ0OC04LjQ1OS0yNC4zMS0yNS4wMjktMjAuMTk1LTQyLjU3NyAxLjA3OS00LjU3NCA1LjIwNC03Ljc3IDkuODk4LTcuNzdoMTMuNDQzYzI4LjMxNSAwIDUxLjI2Ni0yMi45NTEgNTEuMjY2LTUxLjI2NnYtMTkzLjg0OWMwLTI4LjMwNS0yMi45NTEtNTEuMjU2LTUxLjI2Ni01MS4yNTZoMTkuOTc1YzI4LjMxNCAwIDUxLjI2NiAyMi45NTIgNTEuMjY2IDUxLjI1NnoiIGZpbGw9IiM0NmNjOGQiLz48L2c+PGc+PHBhdGggZD0ibTM1MC41ODkgODkuNzE3IDE3LjE5MSAzNC44MzJjMS43NDcgMy41MzkgNS4xMjMgNS45OTMgOS4wMjkgNi41NmwzOC40NCA1LjU4NmM5LjgzNiAxLjQyOSAxMy43NjQgMTMuNTE3IDYuNjQ2IDIwLjQ1NWwtMjcuODE1IDI3LjExM2MtMi44MjYgMi43NTUtNC4xMTYgNi43MjQtMy40NDkgMTAuNjE1bDYuNTY2IDM4LjI4NGMxLjY4IDkuNzk2LTguNjAyIDE3LjI2Ny0xNy40IDEyLjY0MmwtMzQuMzgxLTE4LjA3NWMtMy40OTQtMS44MzctNy42NjctMS44MzctMTEuMTYxIDBsLTM0LjM4MSAxOC4wNzVjLTguNzk4IDQuNjI1LTE5LjA4LTIuODQ1LTE3LjQtMTIuNjQybDYuNTY2LTM4LjI4NGMuNjY3LTMuODktLjYyMy03Ljg2LTMuNDQ5LTEwLjYxNWwtMjcuODE1LTI3LjExM2MtNy4xMTgtNi45MzgtMy4xOS0xOS4wMjYgNi42NDYtMjAuNDU1bDM4LjQ0LTUuNTg2YzMuOTA2LS41NjggNy4yODMtMy4wMjEgOS4wMjktNi41NmwxNy4xOTEtMzQuODMyYzQuMzk5LTguOTEzIDE3LjEwOC04LjkxMyAyMS41MDcgMHoiIGZpbGw9IiNmZWRmMzAiLz48L2c+PGc+PHBhdGggZD0ibTM5NC4wNzkgMTg0LjI1OWMtMi44MjcgMi43NTctNC4xMTUgNi43MzItMy40NDYgMTAuNjE3bDYuNTYyIDM4LjI4MmMxLjY3OCA5Ljc5OC04LjU5OSAxNy4yNjktMTcuMzk4IDEyLjY0NGwtMTMuNjMzLTcuMTcxYzMuNjg1LTIuNDU3IDYuMDIzLTYuOTExIDUuMTU0LTExLjk4NWwtNi41NzItMzguMjkyYy0uNjU5LTMuODg1LjYyOS03Ljg1IDMuNDU2LTEwLjYwN2wyNy44MTUtMjcuMTE2YzQuOTU0LTQuODM0IDQuNTU0LTEyLjE1NS41MzktMTYuNjQ5bDE4LjY5NyAyLjcxN2M5LjgyOCAxLjQyOCAxMy43NjMgMTMuNTEzIDYuNjQyIDIwLjQ1NXoiIGZpbGw9IiNmYWM2MDAiLz48L2c+PGc+PHBhdGggZD0ibTg0LjE5NCAyNTEuMDIxaDU0LjQ1MmM0LjEzNyAwIDcuNDkxLTMuMzU0IDcuNDkxLTcuNDkxcy0zLjM1My03LjQ5MS03LjQ5MS03LjQ5MWgtNTQuNDUyYy00LjEzNyAwLTcuNDkxIDMuMzU0LTcuNDkxIDcuNDkxcyAzLjM1MyA3LjQ5MSA3LjQ5MSA3LjQ5MXoiIGZpbGw9IiNmZTVjYTciLz48L2c+PC9nPjwvc3ZnPg==" alt="Social Stream Ninja Logo">
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="features.html">Features</a></li>
+                    <li><a href="download.html">Download</a></li>
+                    <li><a href="guides.html">Guides</a></li>
+                    <li><a href="settings.html" class="active">Settings Reference</a></li>
+                    <li><a href="commands.html">Commands & API</a></li>
+                    <li><a href="supported-sites.html">Supported Sites</a></li>
+                    <li><a href="templates.html">Templates</a></li>
+                    <li><a href="support.html">Support</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+                <div class="mobile-nav-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="page-hero">
+        <div class="container">
+            <h1>Settings Reference</h1>
+            <p>Browse every toggle, text field, and dropdown from the Social Stream Ninja popup with contextual descriptions and scopes.</p>
+        </div>
+    </section>
+
+    <main class="container">
+        <section class="settings-intro">
+            <p>
+                This page pulls live data from <code>popup.html</code> to stay in sync with the extension and desktop app.
+                Use the search field to filter by keyword, or open the metadata file at
+                <code>shared/config/settingsMetadata.js</code> to expand descriptions and scopes.
+            </p>
+            <div class="settings-controls">
+                <div class="control">
+                    <label for="setting-search" class="control-label">Search settings</label>
+                    <input type="search" id="setting-search" class="setting-search" placeholder="Search by name, key, or behavior…">
+                </div>
+                <div class="control">
+                    <label for="group-mode" class="control-label">Group by</label>
+                    <select id="group-mode" class="group-select">
+                        <option value="section" selected>Popup section</option>
+                        <option value="category">Metadata category</option>
+                    </select>
+                </div>
+                <div class="control">
+                    <button type="button" id="reload-settings" class="refresh-button">
+                        <span class="refresh-icon" aria-hidden="true">⟳</span>
+                        Reload from popup.html
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="settings-root" class="settings-root" aria-live="polite">
+            <div class="loading-state">
+                <div class="spinner" aria-hidden="true"></div>
+                <p>Loading settings from popup.html…</p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="page-footer">
+        <div class="container">
+            <p>
+                Missing detail or spotted something outdated? Update the reference by editing
+                <code>shared/config/settingsMetadata.js</code> or file an issue on GitHub.
+            </p>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script type="module" src="js/settings.js"></script>
+</body>
+</html>
