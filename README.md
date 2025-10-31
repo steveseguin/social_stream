@@ -23,7 +23,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 
 ## ✨ Key Features
 
- [Jump to Download and Install instructions](#to-install)
+ [Jump to Download and Install instructions](#manually-install-extension)
 
 - **Cross-platform chat**: Connect 120+ platforms with automated two-way messaging
 - **Open API architecture**: Programmatically control, access, and engage with chat data
