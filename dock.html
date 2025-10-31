@@ -8461,7 +8461,24 @@
 					} else if (!data.question && onlyquestions) {
 						return;
 					}
-					
+				
+				if (treatTikTokFansAsMembers && data.type == "tiktok" && !data.membership && Array.isArray(data.chatbadges)) {
+					var fanBadge = data.chatbadges.find(url => /fans_badge/i.test(url));
+					if (fanBadge) {
+						data.membership = "SUPER FAN";
+					} else {
+						var gradeBadge = data.chatbadges.find(url => /grade_badge/i.test(url));
+						if (gradeBadge) {
+							var levelMatch = gradeBadge.match(/_lv(\d+)/i);
+							if (levelMatch && levelMatch[1]) {
+								data.membership = "TEAM LEVEL " + levelMatch[1];
+							} else {
+								data.membership = "TEAM LEVEL";
+							}
+						}
+					}
+				}
+				
 				if (hardFilter) {
 					var hasDonation = !!(data.donation || data.hasDonation);
 					var hasMembership = !!(data.membership || data.member || data.hasMembershp || data.hasMembership);
@@ -8517,24 +8534,6 @@
 						data.type = data.type.toString();
 						showType = data.type;
 					}
-					
-					if (treatTikTokFansAsMembers && data.type == "tiktok" && !data.membership && Array.isArray(data.chatbadges)) {
-						var fanBadge = data.chatbadges.find(url => /fans_badge/i.test(url));
-						if (fanBadge) {
-							data.membership = "SUPER FAN";
-						} else {
-							var gradeBadge = data.chatbadges.find(url => /grade_badge/i.test(url));
-							if (gradeBadge) {
-								var levelMatch = gradeBadge.match(/_lv(\d+)/i);
-								if (levelMatch && levelMatch[1]) {
-									data.membership = "TEAM LEVEL " + levelMatch[1];
-								} else {
-									data.membership = "TEAM LEVEL";
-								}
-							}
-						}
-					}
-					
 					if (stripDonationData){
 						data.hasDonation = "";
 					}
