@@ -18,6 +18,7 @@ var messageTimeout = {};
 var lastSentMessage = "";
 var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
+const relayThrottleState = new Map();
 var sentimentAnalysisLoaded = false;
 
 // Spotify integration
@@ -2133,6 +2134,54 @@ async function getPronounsNames(username = "") {
 var Globalbttv = false;
 var Globalseventv = false;
 var Globalffz = false;
+const youtubeSeventvChannelCache = new Map();
+const youtubeChannelByTab = new Map();
+
+function normalizeYouTubeChannelId(value) {
+	if (value === undefined || value === null) {
+		return null;
+	}
+	const normalized = String(value).trim();
+	return normalized ? normalized : null;
+}
+
+function cacheYouTubeSeventvChannelEmotes(channelId, emotes) {
+	const key = normalizeYouTubeChannelId(channelId);
+	if (!key) {
+		return;
+	}
+	if (emotes && Object.keys(emotes).length) {
+		youtubeSeventvChannelCache.set(key, emotes);
+	} else {
+		youtubeSeventvChannelCache.set(key, null);
+	}
+}
+
+function getCachedYouTubeSeventvChannelEmotes(channelId) {
+	const key = normalizeYouTubeChannelId(channelId);
+	if (!key) {
+		return null;
+	}
+	if (!youtubeSeventvChannelCache.has(key)) {
+		return undefined;
+	}
+	return youtubeSeventvChannelCache.get(key);
+}
+
+function rememberYouTubeChannel(tabId, channelId) {
+	const key = normalizeYouTubeChannelId(channelId);
+	if (!tabId || !key) {
+		return;
+	}
+	youtubeChannelByTab.set(tabId, key);
+}
+
+function forgetYouTubeChannel(tabId) {
+	if (tabId === undefined || tabId === null) {
+		return;
+	}
+	youtubeChannelByTab.delete(tabId);
+}
 
 async function getBTTVEmotes(url = false, type=null, channel=null) {
 	var bttv = {};
@@ -2376,18 +2425,45 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null, userID=fal
 		}
 
 		if (type == "youtube") {
-			var vid = false;
+			let vid = false;
 			if (url) {
 				vid = YouTubeGetID(url);
 			}
 
-			if (vid) {
-				userID = localStorage.getItem("vid2uid:" + vid);
+			let resolvedChannelId = normalizeYouTubeChannelId(channel) || normalizeYouTubeChannelId(userID);
+			if (vid && resolvedChannelId) {
+				localStorage.setItem("vid2uid:" + vid, resolvedChannelId);
+			}
 
-				if (!userID) {
-					userID = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
+			if (!resolvedChannelId && vid) {
+				resolvedChannelId = localStorage.getItem("vid2uid:" + vid);
+			}
+
+			if (!resolvedChannelId && vid) {
+				resolvedChannelId = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
+					.then(result => {
+						return result.text();
+					})
+					.then(result => {
+						return result;
+					})
+					.catch(err => {
+						console.error(err);
+					});
+				if (resolvedChannelId) {
+					localStorage.setItem("vid2uid:" + vid, resolvedChannelId);
+				} else {
+					return false;
+				}
+			}
+
+			userID = resolvedChannelId;
+			if (userID) {
+				seventv = getItemWithExpiry("uid2seventv.youtube:" + userID);
+				if (!seventv) {
+					seventv = await fetch("https://7tv.io/v3/users/youtube/" + userID)
 						.then(result => {
-							return result.text();
+							return result.json();
 						})
 						.then(result => {
 							return result;
@@ -2395,42 +2471,28 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null, userID=fal
 						.catch(err => {
 							console.error(err);
 						});
-					if (userID) {
-						localStorage.setItem("vid2uid:" + vid, userID);
-					} else {
-						return false;
+
+					if (seventv && seventv.emote_set && seventv.emote_set.emotes) {
+						seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+							const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+							if ((emote.data && emote.data.flags) || emote.flags) {
+								acc[emote.name] = { url: imageUrl, zw: true };
+							} else {
+								acc[emote.name] = imageUrl;
+							}
+							return acc;
+						}, {});
+					}
+
+					if (seventv) {
+						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv);
 					}
 				}
-				if (userID) {
-					seventv = getItemWithExpiry("uid2seventv.youtube:" + userID);
-					if (!seventv) {
-						seventv = await fetch("https://7tv.io/v3/users/youtube/" + userID)
-							.then(result => {
-								return result.json();
-							})
-							.then(result => {
-								return result;
-							})
-							.catch(err => {
-								console.error(err);
-							});
 
-						if (seventv) {
-							if (seventv.emote_set && seventv.emote_set.emotes) {
-								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
-									if ((emote.data && emote.data.flags) || emote.flags) {
-										acc[emote.name] = { url: imageUrl, zw: true };
-									} else {
-										acc[emote.name] = imageUrl;
-									}
-									return acc;
-								}, {});
-							}
-
-							setItemWithExpiry("uid2seventv.youtube:" + userID, seventv);
-						}
-					}
+				if (seventv && seventv.channelEmotes) {
+					cacheYouTubeSeventvChannelEmotes(userID, seventv.channelEmotes);
+				} else if (userID) {
+					cacheYouTubeSeventvChannelEmotes(userID, null);
 				}
 			}
 		} else if (type == "twitch") {
@@ -2873,11 +2935,14 @@ let activeChatSources = new Map();
 try {
   if (chrome.tabs.onRemoved){
     chrome.tabs.onRemoved.addListener((tabId) => {
+      forgetYouTubeChannel(tabId);
       for (let key of activeChatSources.keys()) {
         if (key.startsWith(`${tabId}-`)) {
           activeChatSources.delete(key);
         }
       }
+      clearThrottleState(tabId);
+      delete messageTimeout[tabId];
     });
   }
   if (chrome.tabs.onUpdated){
@@ -3655,7 +3720,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (sender.tab.url || request.url) {
 				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
 				var urlToUse = request.url || sender.tab.url;
-				var SEVENTV2 = await getSEVENTVEmotes(urlToUse, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
+				const channelIdentifier = request?.channel || request?.channelId;
+				const inferredType = request?.type || ((urlToUse && urlToUse.includes("youtube.com")) ? "youtube" : null);
+				if (inferredType === "youtube" && sender?.tab?.id && channelIdentifier) {
+					rememberYouTubeChannel(sender.tab.id, channelIdentifier);
+				}
+				var SEVENTV2 = await getSEVENTVEmotes(urlToUse, inferredType, channelIdentifier, request?.userid || request?.userId); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
 					//	//console.logsender);
 					//	//console.logSEVENTV2);
@@ -8709,7 +8779,7 @@ function delayedDetach(tabid) {
   }, 1000, tabid);
 }
 
-async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 3500) {
+async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
     // console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
     //     data: data,
     //     reverse: reverse,
@@ -8785,6 +8855,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             };
             const applyPlatformLimit = (message, platform) => limitMessageForPlatform(message, platform);
             published[tab.url] = true;
+            const throttleProfile = getThrottleProfileForTab(tab, data);
                 
             // Handle different site types
             if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
@@ -8794,27 +8865,27 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
                 let restxt = applyPlatformLimit(data.response, 'twitch');
                 storeMessageForTab(restxt);
-                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
+                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout, undefined, throttleProfile);
             } else if (tab.url.startsWith("https://boltplus.tv/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
+                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile);
             } else if (tab.url.startsWith("https://rumble.com/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile);
             } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
+                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile);
             } else if (tab.url.startsWith("https://kick.com/")) {
                 let restxt = applyPlatformLimit(data.response, 'kick');
                 const messageForKick = isSSAPP ? ` ${restxt}` : restxt;
                 storeMessageForTab(messageForKick);
-                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout);
+                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout, undefined, throttleProfile);
             } else if (tab.url.startsWith("https://app.slack.com")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
+                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout, undefined, throttleProfile); 
             } else if (tab.url.startsWith("https://app.zoom.us/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat);
+                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile);
                 return;
             } else {
                 // Generic handler
@@ -8822,7 +8893,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     getYoutubeAvatarImage(tab.url, true);
                     let restxt = applyPlatformLimit(data.response, 'youtube');
                     storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile);
                     return;
                 }
                 
@@ -8834,12 +8905,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     }
                     let restxt = applyPlatformLimit(tiktokMessage, 'tiktok');
                     storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile);
                     return;
                 }
                 
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile);
             }
         };
         
@@ -9090,7 +9161,7 @@ function handleStageTen(data, metadata) {
 }
 
 // Helper function to attach debugger and send chat
-async function attachAndChat(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, chatFunction = generalFakeChat) {
+async function attachAndChat(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, chatFunction = generalFakeChat, throttleProfile = null) {
     await new Promise((resolve, reject) => {
         safeDebuggerAttach(tabId, "1.3", (error) => {
             if (error) {
@@ -9102,7 +9173,9 @@ async function attachAndChat(tabId, message, middle, keypress, backspace, delaye
         });
     });
 
-    await Promise.resolve(chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout));
+    await Promise.resolve(
+      chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, throttleProfile)
+    );
 }
  
 function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
@@ -9194,6 +9267,31 @@ const PLATFORM_MESSAGE_LIMITS = {
 	kick: 500
 };
 
+const MAX_RELAY_THROTTLE_QUEUE_DEFAULT = 3;
+const RELAY_THROTTLE_MAX_QUEUE_AGE = 10000; // Drop items older than 10s
+const RELAY_THROTTLE_DEFAULT_INTERVAL = 200;
+const RELAY_THROTTLE_RULES = [
+  {
+    key: "websocketSurface",
+    minInterval: 0,
+    maxQueue: 0,
+    matches(url = "", data = {}) {
+      return typeof url === "string" && /\/sources\/websocket\//i.test(url);
+    }
+  },
+  {
+    key: "youtubeLiveChat",
+    minInterval: 3500,
+    maxQueue: 3,
+    matches(url) {
+      return (
+        typeof url === "string" &&
+        (url.includes("youtube.com/live_chat") || url.includes("studio.youtube.com/live_chat"))
+      );
+    }
+  }
+];
+
 function limitMessageForPlatform(message, platform) {
 	if (!message || !platform) {
 		return message;
@@ -9203,6 +9301,215 @@ function limitMessageForPlatform(message, platform) {
 		return message;
 	}
 	return limitString(message, limit);
+}
+
+function getThrottleProfileForTab(tab, data) {
+  if (!tab || !tab.url) {
+    return null;
+  }
+  if (settings && settings.disableRelayThrottle) {
+    return null;
+  }
+  for (const rule of RELAY_THROTTLE_RULES) {
+    try {
+      if (rule.matches(tab.url, data)) {
+        return {
+          key: rule.key,
+          minInterval: Number(rule.minInterval) || 0,
+          maxQueue:
+            typeof rule.maxQueue === "number"
+              ? Math.max(0, rule.maxQueue)
+              : MAX_RELAY_THROTTLE_QUEUE_DEFAULT
+        };
+      }
+    } catch (e) {
+      warnlog(`Throttle rule error (${rule.key}): ${e?.message || e}`);
+    }
+  }
+  return null;
+}
+
+function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
+  if (settings && settings.disableRelayThrottle) {
+    return null;
+  }
+
+  let profile = null;
+
+  if (throttleProfile && typeof throttleProfile === "object") {
+    profile = {
+      key: throttleProfile.key || `tab-${tabId}`,
+      minInterval: Number(throttleProfile.minInterval) || 0,
+      maxQueue: throttleProfile.maxQueue
+    };
+  } else if (typeof throttleProfile === "string") {
+    const rule = RELAY_THROTTLE_RULES.find((item) => item.key === throttleProfile);
+    if (rule) {
+      profile = {
+        key: rule.key,
+        minInterval: Number(rule.minInterval) || 0,
+        maxQueue: rule.maxQueue
+      };
+    }
+  }
+
+  if (!profile && typeof overrideTimeout === "number" && overrideTimeout > 0) {
+    profile = {
+      key: `tab-${tabId}`,
+      minInterval: Number(overrideTimeout) || 0,
+      maxQueue: MAX_RELAY_THROTTLE_QUEUE_DEFAULT
+    };
+  }
+
+  if (!profile) {
+    profile = {
+      key: `tab-${tabId}`,
+      minInterval: RELAY_THROTTLE_DEFAULT_INTERVAL,
+      maxQueue: MAX_RELAY_THROTTLE_QUEUE_DEFAULT
+    };
+  }
+
+  profile.maxQueue = Number.isFinite(profile.maxQueue)
+    ? Math.max(0, profile.maxQueue)
+    : MAX_RELAY_THROTTLE_QUEUE_DEFAULT;
+
+  if (profile.minInterval <= 0) {
+    return null;
+  }
+
+  return profile;
+}
+
+function ensureThrottleState(tabId) {
+  let state = relayThrottleState.get(tabId);
+  if (!state) {
+    state = {
+      queue: [],
+      lastSent: 0,
+      processing: false,
+      timer: null
+    };
+    relayThrottleState.set(tabId, state);
+  }
+  return state;
+}
+
+function clearThrottleState(tabId) {
+  const state = relayThrottleState.get(tabId);
+  if (!state) {
+    return;
+  }
+  if (state.timer) {
+    clearTimeout(state.timer);
+  }
+  relayThrottleState.delete(tabId);
+}
+
+function scheduleThrottledSend(tabId, profile, payload) {
+  const state = ensureThrottleState(tabId);
+  return new Promise((resolve) => {
+    const entry = { profile, payload, resolve, queuedAt: Date.now() };
+
+    if (profile.maxQueue > 0 && state.queue.length >= profile.maxQueue) {
+      const dropped = state.queue.shift();
+      if (dropped && typeof dropped.resolve === "function") {
+        dropped.resolve({ dropped: true, reason: "capacity" });
+      }
+      delayedDetach(tabId);
+      warnlog(
+        `Relay throttle queue full for tab ${tabId} (${profile.key}); dropping oldest message.`
+      );
+    }
+
+    state.queue.push(entry);
+    processThrottleQueue(tabId);
+  });
+}
+
+function processThrottleQueue(tabId) {
+  const state = relayThrottleState.get(tabId);
+  if (!state || state.processing) {
+    return;
+  }
+
+  const entry = state.queue.shift();
+  if (!entry) {
+    clearThrottleState(tabId);
+    return;
+  }
+
+  state.processing = true;
+  const finish = () => {
+    state.processing = false;
+    if (state.queue.length > 0) {
+      processThrottleQueue(tabId);
+    } else {
+      clearThrottleState(tabId);
+    }
+  };
+
+  const maxAge = Number.isFinite(entry.profile?.maxAge)
+    ? Math.max(0, entry.profile.maxAge)
+    : RELAY_THROTTLE_MAX_QUEUE_AGE;
+
+  if (maxAge > 0 && typeof entry.queuedAt === "number") {
+    const age = Date.now() - entry.queuedAt;
+    if (age > maxAge) {
+      warnlog(
+        `Relay throttle stale message dropped for tab ${tabId} (${entry.profile?.key || "unknown"}); age ${
+          age || 0
+        }ms exceeded ${maxAge}ms.`
+      );
+      if (typeof entry.resolve === "function") {
+        entry.resolve({ dropped: true, reason: "stale" });
+      }
+      finish();
+      return;
+    }
+  }
+
+  const execute = async () => {
+    try {
+      const now = Date.now();
+      const elapsed = now - state.lastSent;
+      const wait = Math.max(0, entry.profile.minInterval - elapsed);
+
+      if (wait > 0) {
+        await new Promise((resolve) => {
+          state.timer = setTimeout(() => {
+            state.timer = null;
+            resolve();
+          }, wait);
+        });
+      }
+
+      await performGeneralFakeChatSend(tabId, entry.payload);
+    } catch (error) {
+      warnlog(
+        `Relay throttle send failed for tab ${tabId} (${entry.profile.key}): ${
+          error?.message || error
+        }`
+      );
+    } finally {
+      state.lastSent = Date.now();
+      if (typeof entry.resolve === "function") {
+        entry.resolve();
+      }
+      finish();
+    }
+  };
+
+  execute().catch((error) => {
+    warnlog(
+      `Relay throttle send crashed for tab ${tabId} (${entry.profile.key}): ${
+        error?.message || error
+      }`
+    );
+    if (typeof entry.resolve === "function") {
+      entry.resolve();
+    }
+    finish();
+  });
 }
 const KEY_EVENTS = {
   ENTER: {
@@ -9260,14 +9567,52 @@ async function getSourceType(tabId) {
   });
 }
 
-async function generalFakeChat(tabId, message, middle = true, keypress = true, backspace = false, delayedPress = false, overrideTimeout = false) {
+async function generalFakeChat(
+  tabId,
+  message,
+  middle = true,
+  keypress = true,
+  backspace = false,
+  delayedPress = false,
+  overrideTimeout = false,
+  throttleProfile = null
+) {
+  const normalizedTimeout = typeof overrideTimeout === "number" ? overrideTimeout : 0;
+  const resolvedProfile = resolveThrottleProfile(tabId, throttleProfile, normalizedTimeout);
+
+  if (resolvedProfile) {
+    return scheduleThrottledSend(tabId, resolvedProfile, {
+      message,
+      middle,
+      keypress,
+      backspace,
+      delayedPress
+    });
+  }
+
+  return performGeneralFakeChatSend(tabId, {
+    message,
+    middle,
+    keypress,
+    backspace,
+    delayedPress
+  });
+}
+
+async function performGeneralFakeChatSend(
+  tabId,
+  { message, middle = true, keypress = true, backspace = false, delayedPress = false }
+) {
   try {
-    const cooldown = typeof overrideTimeout === 'number' && overrideTimeout > 0 ? overrideTimeout : 0;
-    if (cooldown > 0 && messageTimeout[tabId]) {
-      if (Date.now() - messageTimeout[tabId] < cooldown) {
-        return;
-      }
-    }
+    await new Promise((resolve, reject) => {
+      safeDebuggerAttach(tabId, "1.3", (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
 
     const isFocused = await focusChat(tabId);
     if (!isFocused) {
@@ -9287,36 +9632,35 @@ async function generalFakeChat(tabId, message, middle = true, keypress = true, b
 
     if (backspace) {
       await sendKeyEvent(tabId, "rawKeyDown", KEY_EVENTS.BACKSPACE);
-      await new Promise(resolve => setTimeout(resolve, 30));
+      await new Promise((resolve) => setTimeout(resolve, 30));
       await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.BACKSPACE);
     }
 
     await insertText(tabId, message);
 
-	if (keypress) {
-	  await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-	  await new Promise(resolve => setTimeout(resolve, 10));
-	}
-
-	if (middle) {
-	  await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
-	}
-
-	if (keypress) {
-	  await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
-	}
-	
-	if (delayedPress) {
-        await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-		await new Promise(resolve => setTimeout(resolve, 500));
-		if (middle){
-			await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
-		}
-        await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+    if (keypress) {
+      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
-	
-    await delayedDetach(tabId);
 
+    if (middle) {
+      await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+    }
+
+    if (keypress) {
+      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+    }
+
+    if (delayedPress) {
+      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (middle) {
+        await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+      }
+      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+    }
+
+    await delayedDetach(tabId);
   } catch (e) {
     chrome.runtime.lastError;
     log(e);
@@ -9951,7 +10295,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		// Handle Spotify commands
-		if (spotify && settings.spotifyEnabled && data.chatmessage) {
+		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
 			const response = spotify.handleCommand(data.chatmessage);
 			if (response) {
 				const botResponse = {
@@ -9969,8 +10313,10 @@ async function applyBotActions(data, tab = false) {
 					timestamp: Date.now()
 				};
 				
-				sendToS10(botResponse);
-				sendToPost(botResponse);
+				sendToS10({ ...botResponse });
+				setTimeout(() => {
+					sendToDestinations({ ...botResponse });
+				}, 50);
 				return null; // Don't process the original command further
 			}
 		}
@@ -10019,31 +10365,6 @@ async function applyBotActions(data, tab = false) {
 			// if we send the normal messages, it will screw things up.
 			//}
 		}
-		
-		// Handle Spotify commands
-		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
-			const spotifyResponse = spotify.handleCommand(data.chatmessage);
-			if (spotifyResponse) {
-				setTimeout(() => {
-					const botMessage = {
-						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
-						chatbadges: "",
-						backgroundColor: "",
-						textColor: "",
-						chatmessage: spotifyResponse,
-						chatimg: "https://socialstream.ninja/icons/bot.png",
-						hasDonation: "",
-						membership: "",
-						isRelay: false,
-						type: "spotify",
-						bot: "spotify",
-						timestamp: Date.now()
-					};
-					sendToDestinations(botMessage);
-				}, 50);
-			}
-		}
-		
 		
 		const messageToCheck = data.textContent || data.chatmessage;
 		if (settings.relayall && data.chatmessage && !data.event && tab && messageToCheck.includes(miscTranslations.said)){

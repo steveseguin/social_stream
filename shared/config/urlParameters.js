@@ -35,12 +35,14 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
         "items": [
           {
             "key": "session",
-            "displayName": "session",
+            "displayName": "session or s or id",
             "aliases": [
-              "session"
+              "session",
+              "s",
+              "id"
             ],
             "values": "string",
-            "description": "Sets the session ID for connecting to the chat. Also accepts s or id as alternatives"
+            "description": "Sets the session ID for connecting to the chat"
           },
           {
             "key": "password",
@@ -80,9 +82,10 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "hidemenu",
-            "displayName": "hidemenu",
+            "displayName": "hidemenu or nomenu",
             "aliases": [
-              "hidemenu"
+              "hidemenu",
+              "nomenu"
             ],
             "values": "boolean or \"2\"",
             "description": "Hides the menu bar. Value of \"2\" keeps scroll lock functionality"
@@ -98,12 +101,28 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "cssb64",
-            "displayName": "cssb64",
+            "displayName": "cssb64 or b64css or base64css or cssbase64",
             "aliases": [
-              "cssb64"
+              "cssb64",
+              "b64css",
+              "base64css",
+              "cssbase64"
             ],
             "values": "base64 string",
             "description": "Applies custom CSS styling via base64 encoded string"
+          },
+          {
+            "key": "js",
+            "displayName": "js or base64js or b64js or jsbase64 or jsb64",
+            "aliases": [
+              "js",
+              "base64js",
+              "b64js",
+              "jsbase64",
+              "jsb64"
+            ],
+            "values": "URL or base64 string",
+            "description": "Loads external JavaScript (limited to trusted hosting contexts)"
           },
           {
             "key": "label",
@@ -141,9 +160,10 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "transparent",
-            "displayName": "transparent",
+            "displayName": "transparent or transparency",
             "aliases": [
-              "transparent"
+              "transparent",
+              "transparency"
             ],
             "values": "boolean",
             "description": "Makes background transparent and hides scrollbar"
@@ -159,18 +179,20 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "blur",
-            "displayName": "blur",
+            "displayName": "blur or blurred",
             "aliases": [
-              "blur"
+              "blur",
+              "blurred"
             ],
             "values": "number",
             "description": "Applies blur effect to messages (value in pixels)"
           },
           {
             "key": "compact",
-            "displayName": "compact",
+            "displayName": "compact or overlaymode",
             "aliases": [
-              "compact"
+              "compact",
+              "overlaymode"
             ],
             "values": "boolean",
             "description": "Enables compact mode with less spacing"
@@ -195,9 +217,10 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "emoji",
-            "displayName": "emoji",
+            "displayName": "emoji or emojis",
             "aliases": [
-              "emoji"
+              "emoji",
+              "emojis"
             ],
             "values": "number",
             "description": "Sets emoji size scaling (percentage, default: 140)"
@@ -228,6 +251,189 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "string",
             "description": "Loads and uses a Google Font"
+          },
+          {
+            "key": "color",
+            "displayName": "color or colorednames",
+            "aliases": [
+              "color",
+              "colorednames"
+            ],
+            "values": "boolean",
+            "description": "Uses platform accent colors for usernames"
+          },
+          {
+            "key": "fontcolor",
+            "displayName": "fontcolor",
+            "aliases": [
+              "fontcolor"
+            ],
+            "values": "hex color",
+            "description": "Overrides the body text color"
+          },
+          {
+            "key": "namecolor",
+            "displayName": "namecolor",
+            "aliases": [
+              "namecolor"
+            ],
+            "values": "hex color",
+            "description": "Overrides the username text color"
+          },
+          {
+            "key": "fontweight",
+            "displayName": "fontweight",
+            "aliases": [
+              "fontweight"
+            ],
+            "values": "number or keyword",
+            "description": "Sets font weight for message text"
+          },
+          {
+            "key": "nameweight",
+            "displayName": "nameweight",
+            "aliases": [
+              "nameweight"
+            ],
+            "values": "number or keyword",
+            "description": "Sets font weight for usernames"
+          },
+          {
+            "key": "outlinewidth",
+            "displayName": "outlinewidth",
+            "aliases": [
+              "outlinewidth"
+            ],
+            "values": "number",
+            "description": "Width (px) of the outer outline highlight"
+          },
+          {
+            "key": "outlinecolor",
+            "displayName": "outlinecolor",
+            "aliases": [
+              "outlinecolor"
+            ],
+            "values": "hex color",
+            "description": "Color applied to the outer outline highlight"
+          },
+          {
+            "key": "strokewidth",
+            "displayName": "strokewidth or stroke",
+            "aliases": [
+              "strokewidth",
+              "stroke"
+            ],
+            "values": "number",
+            "description": "Width (px) for the text stroke effect"
+          },
+          {
+            "key": "strokecolor",
+            "displayName": "strokecolor or strokeColor",
+            "aliases": [
+              "strokecolor",
+              "strokeColor"
+            ],
+            "values": "hex color",
+            "description": "Color applied to the text stroke effect"
+          },
+          {
+            "key": "border",
+            "displayName": "border",
+            "aliases": [
+              "border"
+            ],
+            "values": "hex color",
+            "description": "Adds a profile image border using the provided color (without #)"
+          },
+          {
+            "key": "pressedcolor",
+            "displayName": "pressedcolor",
+            "aliases": [
+              "pressedcolor"
+            ],
+            "values": "hex color or empty",
+            "description": "Custom highlight color for pinned/featured states"
+          },
+          {
+            "key": "hideshadow",
+            "displayName": "hideshadow",
+            "aliases": [
+              "hideshadow"
+            ],
+            "values": "boolean",
+            "description": "Removes alternating card drop shadows"
+          },
+          {
+            "key": "largecontent",
+            "displayName": "largecontent",
+            "aliases": [
+              "largecontent"
+            ],
+            "values": "boolean",
+            "description": "Enlarges embedded content or image cards"
+          },
+          {
+            "key": "donationright",
+            "displayName": "donationright",
+            "aliases": [
+              "donationright"
+            ],
+            "values": "number",
+            "description": "Sets donation amount margin-right in pixels"
+          },
+          {
+            "key": "bolder",
+            "displayName": "bolder",
+            "aliases": [
+              "bolder"
+            ],
+            "values": "boolean",
+            "description": "Applies a thicker drop shadow around text"
+          },
+          {
+            "key": "thinner",
+            "displayName": "thinner",
+            "aliases": [
+              "thinner"
+            ],
+            "values": "boolean",
+            "description": "Applies a thinner drop shadow around text"
+          },
+          {
+            "key": "unhighlight",
+            "displayName": "unhighlight",
+            "aliases": [
+              "unhighlight"
+            ],
+            "values": "boolean",
+            "description": "Uses an alternate style when un-featuring messages"
+          },
+          {
+            "key": "nofeaturedhightlight",
+            "displayName": "nofeaturedhightlight",
+            "aliases": [
+              "nofeaturedhightlight"
+            ],
+            "values": "boolean",
+            "description": "Disables the flash highlight when a card is featured"
+          },
+          {
+            "key": "nomemberhighlight",
+            "displayName": "nomemberhighlight",
+            "aliases": [
+              "nomemberhighlight"
+            ],
+            "values": "boolean",
+            "description": "Disables highlight color for member messages"
+          },
+          {
+            "key": "noquestionhightlight",
+            "displayName": "noquestionhightlight",
+            "aliases": [
+              "noquestionhightlight"
+            ],
+            "values": "boolean",
+            "description": "Disables highlight color for question cards"
           }
         ]
       },
@@ -325,6 +531,24 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Fades out the top of the overlay"
+          },
+          {
+            "key": "reverse",
+            "displayName": "reverse",
+            "aliases": [
+              "reverse"
+            ],
+            "values": "boolean",
+            "description": "Displays the feed in reverse order (newest at the top)"
+          },
+          {
+            "key": "dropdown",
+            "displayName": "dropdown",
+            "aliases": [
+              "dropdown"
+            ],
+            "values": "boolean",
+            "description": "Enables reverse order with drop-down style animations"
           }
         ]
       },
@@ -458,9 +682,11 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Hides usernames completely"
           },
           {
-            "key": "firstnames",
-            "displayName": "firstnames",
+            "key": "firstnamesonly",
+            "displayName": "firstnamesonly or firstname or firstnames",
             "aliases": [
+              "firstnamesonly",
+              "firstname",
               "firstnames"
             ],
             "values": "boolean",
@@ -477,18 +703,20 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "noavatar",
-            "displayName": "noavatar",
+            "displayName": "noavatar or noavatars",
             "aliases": [
-              "noavatar"
+              "noavatar",
+              "noavatars"
             ],
             "values": "boolean",
             "description": "Hides user avatars"
           },
           {
             "key": "nobadges",
-            "displayName": "nobadges",
+            "displayName": "nobadges or hidebadges",
             "aliases": [
-              "nobadges"
+              "nobadges",
+              "hidebadges"
             ],
             "values": "boolean",
             "description": "Hides user badges"
@@ -504,12 +732,23 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "notime",
-            "displayName": "notime",
+            "displayName": "notime or notimestamp or nodate",
             "aliases": [
-              "notime"
+              "notime",
+              "notimestamp",
+              "nodate"
             ],
             "values": "boolean",
             "description": "Hides timestamp"
+          },
+          {
+            "key": "24hr",
+            "displayName": "24hr",
+            "aliases": [
+              "24hr"
+            ],
+            "values": "boolean",
+            "description": "Displays timestamps using 24-hour format"
           },
           {
             "key": "sequence",
@@ -519,6 +758,96 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Hides name/icons if sequential messages from same user"
+          },
+          {
+            "key": "attachmentsonly",
+            "displayName": "attachmentsonly",
+            "aliases": [
+              "attachmentsonly"
+            ],
+            "values": "boolean",
+            "description": "Displays only messages that include an attached image or clip"
+          },
+          {
+            "key": "hidequestions",
+            "displayName": "hidequestions",
+            "aliases": [
+              "hidequestions"
+            ],
+            "values": "boolean",
+            "description": "Hides cards flagged as questions"
+          },
+          {
+            "key": "onlyquestions",
+            "displayName": "onlyquestions",
+            "aliases": [
+              "onlyquestions"
+            ],
+            "values": "boolean",
+            "description": "Shows only messages that contain question metadata"
+          },
+          {
+            "key": "hidenumbers",
+            "displayName": "hidenumbers",
+            "aliases": [
+              "hidenumbers"
+            ],
+            "values": "boolean",
+            "description": "Hides numerical message counters on cards"
+          },
+          {
+            "key": "showsourcename",
+            "displayName": "showsourcename",
+            "aliases": [
+              "showsourcename"
+            ],
+            "values": "boolean",
+            "description": "Displays the originating platform label on each card"
+          },
+          {
+            "key": "showviewercount",
+            "displayName": "showviewercount",
+            "aliases": [
+              "showviewercount"
+            ],
+            "values": "boolean",
+            "description": "Shows the current viewer count indicator"
+          },
+          {
+            "key": "nocolon",
+            "displayName": "nocolon",
+            "aliases": [
+              "nocolon"
+            ],
+            "values": "boolean",
+            "description": "Removes the colon between username and message body"
+          },
+          {
+            "key": "namefilter",
+            "displayName": "namefilter",
+            "aliases": [
+              "namefilter"
+            ],
+            "values": "boolean",
+            "description": "Applies filters to usernames instead of message text"
+          },
+          {
+            "key": "stripreplyto",
+            "displayName": "stripreplyto",
+            "aliases": [
+              "stripreplyto"
+            ],
+            "values": "boolean",
+            "description": "Removes “replying to” prefaces from imported messages"
+          },
+          {
+            "key": "normalize",
+            "displayName": "normalize",
+            "aliases": [
+              "normalize"
+            ],
+            "values": "boolean",
+            "description": "Normalizes characters (e.g., removes diacritics) for comparisons"
           }
         ]
       },
@@ -565,9 +894,10 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "striphtml",
-            "displayName": "striphtml",
+            "displayName": "striphtml or strip",
             "aliases": [
-              "striphtml"
+              "striphtml",
+              "strip"
             ],
             "values": "boolean",
             "description": "Removes HTML formatting from messages"
@@ -619,18 +949,20 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
           },
           {
             "key": "hidefrom",
-            "displayName": "hidefrom",
+            "displayName": "hidefrom or exclude",
             "aliases": [
-              "hidefrom"
+              "hidefrom",
+              "exclude"
             ],
             "values": "comma-separated strings",
             "description": "List of usernames to hide messages from"
           },
           {
             "key": "onlyfrom",
-            "displayName": "onlyfrom",
+            "displayName": "onlyfrom or fromonly",
             "aliases": [
-              "onlyfrom"
+              "onlyfrom",
+              "fromonly"
             ],
             "values": "comma-separated strings",
             "description": "List of usernames to exclusively show"
@@ -643,6 +975,33 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "0.0-1.0",
             "description": "Filters messages based on sentiment score"
+          },
+          {
+            "key": "showonlymods",
+            "displayName": "showonlymods",
+            "aliases": [
+              "showonlymods"
+            ],
+            "values": "boolean",
+            "description": "Shows messages from moderators only"
+          },
+          {
+            "key": "showonlyvips",
+            "displayName": "showonlyvips",
+            "aliases": [
+              "showonlyvips"
+            ],
+            "values": "boolean",
+            "description": "Shows messages from VIPs only"
+          },
+          {
+            "key": "excludefiltered",
+            "displayName": "excludefiltered",
+            "aliases": [
+              "excludefiltered"
+            ],
+            "values": "boolean",
+            "description": "Prevents filtered messages from being auto-featured"
           }
         ]
       },
@@ -706,6 +1065,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Auto-shows queued messages"
           },
           {
+            "key": "autoshowcontentimages",
+            "displayName": "autoshowcontentimages",
+            "aliases": [
+              "autoshowcontentimages"
+            ],
+            "values": "boolean",
+            "description": "Auto-features queued messages that include image/content attachments"
+          },
+          {
             "key": "queueonly",
             "displayName": "queueonly",
             "aliases": [
@@ -751,13 +1119,179 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Enables view/pin/queue mode (no chat/feature)"
           },
           {
-            "key": "sync",
-            "displayName": "sync",
+            "key": "chatonly",
+            "displayName": "chatonly",
             "aliases": [
-              "sync"
+              "chatonly"
+            ],
+            "values": "boolean",
+            "description": "Moves the chat input into the toolbar for a chat-centric layout"
+          },
+          {
+            "key": "openchat",
+            "displayName": "openchat",
+            "aliases": [
+              "openchat"
+            ],
+            "values": "boolean",
+            "description": "Automatically opens the chat composer on load"
+          },
+          {
+            "key": "showmenu",
+            "displayName": "showmenu",
+            "aliases": [
+              "showmenu"
+            ],
+            "values": "boolean",
+            "description": "Forces the main toolbar to remain visible"
+          },
+          {
+            "key": "sync",
+            "displayName": "sync or synced",
+            "aliases": [
+              "sync",
+              "synced"
             ],
             "values": "boolean",
             "description": "Syncs message selection across multiple docks"
+          },
+          {
+            "key": "autopindonations",
+            "displayName": "autopindonations",
+            "aliases": [
+              "autopindonations"
+            ],
+            "values": "boolean",
+            "description": "Auto-pins donation cards as they arrive"
+          },
+          {
+            "key": "autopinquestions",
+            "displayName": "autopinquestions or autopinquestion",
+            "aliases": [
+              "autopinquestions",
+              "autopinquestion"
+            ],
+            "values": "boolean",
+            "description": "Auto-pins cards marked as questions"
+          },
+          {
+            "key": "autoqueuedonations",
+            "displayName": "autoqueuedonations or autoqueuedonation",
+            "aliases": [
+              "autoqueuedonations",
+              "autoqueuedonation"
+            ],
+            "values": "boolean",
+            "description": "Auto-queues donation cards"
+          },
+          {
+            "key": "autoqueuequestions",
+            "displayName": "autoqueuequestions or autoqueuequestion",
+            "aliases": [
+              "autoqueuequestions",
+              "autoqueuequestion"
+            ],
+            "values": "boolean",
+            "description": "Auto-queues question cards"
+          },
+          {
+            "key": "skipdonations",
+            "displayName": "skipdonations",
+            "aliases": [
+              "skipdonations"
+            ],
+            "values": "boolean",
+            "description": "Prevents donation cards from being auto-featured"
+          },
+          {
+            "key": "selfqueue",
+            "displayName": "selfqueue",
+            "aliases": [
+              "selfqueue"
+            ],
+            "values": "comma-separated strings",
+            "description": "Viewer commands that add themselves to the queue (e.g., !queue)"
+          },
+          {
+            "key": "deleteonlylast",
+            "displayName": "deleteonlylast",
+            "aliases": [
+              "deleteonlylast"
+            ],
+            "values": "boolean",
+            "description": "Only removes the most recent card when clearing messages"
+          },
+          {
+            "key": "disabletimeout",
+            "displayName": "disabletimeout",
+            "aliases": [
+              "disabletimeout"
+            ],
+            "values": "boolean",
+            "description": "Disables the auto-timeout on featured messages"
+          },
+          {
+            "key": "altselect",
+            "displayName": "altselect",
+            "aliases": [
+              "altselect"
+            ],
+            "values": "boolean",
+            "description": "Keeps the Feature button visible when menus are hidden"
+          },
+          {
+            "key": "autoscroll",
+            "displayName": "autoscroll",
+            "aliases": [
+              "autoscroll"
+            ],
+            "values": "boolean",
+            "description": "Scrolls to the latest message once and leaves scrolling unlocked"
+          },
+          {
+            "key": "buffer",
+            "displayName": "buffer",
+            "aliases": [
+              "buffer"
+            ],
+            "values": "boolean",
+            "description": "Enables adaptive buffering for smoother message pacing"
+          },
+          {
+            "key": "bufferdelay",
+            "displayName": "bufferdelay",
+            "aliases": [
+              "bufferdelay"
+            ],
+            "values": "number",
+            "description": "Base delay (ms) used when buffering messages"
+          },
+          {
+            "key": "buffermin",
+            "displayName": "buffermin",
+            "aliases": [
+              "buffermin"
+            ],
+            "values": "number",
+            "description": "Minimum delay (ms) used when buffering messages"
+          },
+          {
+            "key": "buffermax",
+            "displayName": "buffermax",
+            "aliases": [
+              "buffermax"
+            ],
+            "values": "number",
+            "description": "Maximum delay (ms) used when buffering messages"
+          },
+          {
+            "key": "random",
+            "displayName": "random",
+            "aliases": [
+              "random"
+            ],
+            "values": "boolean",
+            "description": "Randomizes which queued message is featured next"
           }
         ]
       },
@@ -901,6 +1435,24 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Disables background highlighting for donations"
           },
           {
+            "key": "autoyoutubememberchat",
+            "displayName": "autoyoutubememberchat",
+            "aliases": [
+              "autoyoutubememberchat"
+            ],
+            "values": "boolean",
+            "description": "Auto-features YouTube member milestone chat cards"
+          },
+          {
+            "key": "tiktokfans",
+            "displayName": "tiktokfans",
+            "aliases": [
+              "tiktokfans"
+            ],
+            "values": "boolean",
+            "description": "Treats TikTok fans as channel members for highlighting"
+          },
+          {
             "key": "t1",
             "displayName": "t1",
             "aliases": [
@@ -963,10 +1515,11 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
         "items": [
           {
             "key": "myname",
-            "displayName": "myname or botlist",
+            "displayName": "myname or botlist or botnames",
             "aliases": [
               "myname",
-              "botlist"
+              "botlist",
+              "botnames"
             ],
             "values": "comma-separated strings",
             "description": "List of bot usernames to identify"
@@ -1112,6 +1665,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Replaces asterisks with \"beep\" in messages"
+          },
+          {
+            "key": "quietcommands",
+            "displayName": "quietcommands",
+            "aliases": [
+              "quietcommands"
+            ],
+            "values": "boolean",
+            "description": "Disables the TTS beep when command shortcuts trigger"
           }
         ]
       },
@@ -1182,6 +1744,112 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             ],
             "values": "boolean",
             "description": "Restricts P2P connections to LAN only"
+          }
+        ]
+      },
+      {
+        "title": "External Automation & Integrations",
+        "slug": "external-automation-integrations",
+        "description": "",
+        "items": [
+          {
+            "key": "postserver",
+            "displayName": "postserver",
+            "aliases": [
+              "postserver"
+            ],
+            "values": "URL",
+            "description": "Endpoint that receives featured message data via POST"
+          },
+          {
+            "key": "putserver",
+            "displayName": "putserver",
+            "aliases": [
+              "putserver"
+            ],
+            "values": "URL",
+            "description": "Endpoint that receives featured message data via PUT"
+          },
+          {
+            "key": "h2rurl",
+            "displayName": "h2rurl",
+            "aliases": [
+              "h2rurl"
+            ],
+            "values": "URL",
+            "description": "Base URL for H2R Graphics API posts"
+          },
+          {
+            "key": "h2r",
+            "displayName": "h2r",
+            "aliases": [
+              "h2r"
+            ],
+            "values": "string",
+            "description": "Path or endpoint suffix appended to h2rurl"
+          },
+          {
+            "key": "spxserver",
+            "displayName": "spxserver",
+            "aliases": [
+              "spxserver"
+            ],
+            "values": "URL",
+            "description": "Base URL for SPX-GC"
+          },
+          {
+            "key": "spxfunction",
+            "displayName": "spxfunction",
+            "aliases": [
+              "spxfunction"
+            ],
+            "values": "string",
+            "description": "SPX function invoked when a message is featured"
+          },
+          {
+            "key": "spxlayer",
+            "displayName": "spxlayer",
+            "aliases": [
+              "spxlayer"
+            ],
+            "values": "string",
+            "description": "SPX template/layer identifier to update"
+          },
+          {
+            "key": "singular",
+            "displayName": "singular",
+            "aliases": [
+              "singular"
+            ],
+            "values": "string",
+            "description": "Singular.live data node ID for webhook updates"
+          },
+          {
+            "key": "passtts",
+            "displayName": "passtts",
+            "aliases": [
+              "passtts"
+            ],
+            "values": "boolean",
+            "description": "Allows the !pass shortcut to forward TTS to remote automation"
+          },
+          {
+            "key": "passttsmod",
+            "displayName": "passttsmod",
+            "aliases": [
+              "passttsmod"
+            ],
+            "values": "boolean",
+            "description": "Restricts the !pass TTS shortcut to moderators"
+          },
+          {
+            "key": "v",
+            "displayName": "v",
+            "aliases": [
+              "v"
+            ],
+            "values": "string",
+            "description": "Overrides the dock version used for remote compatibility checks"
           }
         ]
       },

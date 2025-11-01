@@ -396,16 +396,93 @@ class PointsSystem {
         return await this.migrateFromMessageStore();
     }
 
-    async processNewMessage(message) {
-        if (!message || !message.chatname) return null;
-        
-        const type = message.type || 'default';
+	async processNewMessage(message) {
+		if (!message || !message.chatname) return null;
+		if (message.chatname === 'PointsBot') return null;
+		
+		const type = message.type || 'default';
         const username = message.chatname;
         const timestamp = message.timestamp || Date.now();
         
         return await this.recordEngagement(username, type, timestamp);
     }
 }
+
+function getActiveSettings() {
+	if (typeof settings !== 'undefined' && settings) {
+		return settings;
+	}
+	if (typeof window !== 'undefined' && window.settings) {
+		return window.settings;
+	}
+	return null;
+}
+
+function resolveBooleanSetting(value, defaultValue = false) {
+	if (value === undefined || value === null) {
+		return defaultValue;
+	}
+	if (typeof value === 'object') {
+		if ('setting' in value) {
+			return resolveBooleanSetting(value.setting, defaultValue);
+		}
+		if ('value' in value) {
+			return resolveBooleanSetting(value.value, defaultValue);
+		}
+		if ('checked' in value) {
+			return resolveBooleanSetting(value.checked, defaultValue);
+		}
+	}
+	if (typeof value === 'string') {
+		const normalized = value.trim().toLowerCase();
+		if (!normalized) {
+			return defaultValue;
+		}
+		if (['false', '0', 'no', 'off', 'disabled'].includes(normalized)) {
+			return false;
+		}
+		if (['true', '1', 'yes', 'on', 'enabled'].includes(normalized)) {
+			return true;
+		}
+		return defaultValue;
+	}
+	return !!value;
+}
+
+function isPointsSystemEnabled() {
+	const activeSettings = getActiveSettings();
+	return resolveBooleanSetting(activeSettings?.enablePointsSystem, false);
+}
+
+const pointsCommandToggleMap = {
+	'!points': 'enablePointsCommand',
+	'!leaderboard': 'enableLeaderboardCommand',
+	'!rewards': 'enableRewardsCommand',
+	'!spend': 'enableRewardsCommand'
+};
+
+function isPointsCommandAllowed(commandName) {
+	if (!isPointsSystemEnabled()) {
+		return false;
+	}
+	if (!commandName) {
+		return false;
+	}
+	const normalizedName = commandName.toLowerCase();
+	const activeSettings = getActiveSettings();
+	const toggleKey = pointsCommandToggleMap[normalizedName];
+	if (!toggleKey) {
+		return true;
+	}
+	return resolveBooleanSetting(activeSettings?.[toggleKey], true);
+}
+
+if (typeof window !== 'undefined') {
+	window.isPointsSystemEnabled = isPointsSystemEnabled;
+	window.isPointsCommandAllowed = isPointsCommandAllowed;
+}
+
+let pointsSystemHookInstalled = false;
 
 // Create the points system instance
 const pointsSystem = new PointsSystem({
@@ -431,13 +508,18 @@ async function initializePointsSystem() {
             console.log('No migration needed, points system ready');
         }
         
-        // Hook into message database to automatically record points
-        const originalAddMessage = messageStoreDB.addMessage;
-        messageStoreDB.addMessage = async function(message) {
-            const result = await originalAddMessage.call(this, message);
-            await pointsSystem.processNewMessage(message);
-            return result;
-        };
+		// Hook into message database to automatically record points
+		if (!pointsSystemHookInstalled) {
+			const originalAddMessage = messageStoreDB.addMessage;
+			messageStoreDB.addMessage = async function(message) {
+				const result = await originalAddMessage.call(this, message);
+				if (isPointsSystemEnabled() && message?.chatname !== 'PointsBot') {
+					await pointsSystem.processNewMessage(message);
+				}
+				return result;
+			};
+			pointsSystemHookInstalled = true;
+		}
         
         console.log('Points system initialized');
     } catch (error) {

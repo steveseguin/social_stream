@@ -775,7 +775,7 @@ var lastMessage = {};
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
-		var receiveChannelCallback = function (e) {
+		var receiveChannelCallback = function (event) {
 			remoteConnection.datachannel = event.channel;
 			remoteConnection.datachannel.onmessage = function (e) {};
 			remoteConnection.datachannel.onopen = function (e) {};

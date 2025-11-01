@@ -172,26 +172,38 @@ class PointsActions {
         }, duration + 1000);
     }
     
-    async processCommand(message) {
-        if (!message || !message.chatmessage || !message.chatname || !message.type) {
-            return null;
-        }
+	async processCommand(message) {
+		if (!message || !message.chatmessage || !message.chatname || !message.type) {
+			return null;
+		}
+		
+		if (typeof window !== 'undefined' && typeof window.isPointsSystemEnabled === 'function') {
+			if (!window.isPointsSystemEnabled()) {
+				return null;
+			}
+		}
+		
+		const input = message.chatmessage.trim();
+		const parts = input.split(' ');
+		const commandName = parts[0].toLowerCase();
+		const args = parts.slice(1);
         
-        const input = message.chatmessage.trim();
-        const parts = input.split(' ');
-        const commandName = parts[0].toLowerCase();
-        const args = parts.slice(1);
-        
-        // Check if this is a valid command
-        const command = this.customCommands.get(commandName);
-        if (!command) {
-            return null; // Not a command
-        }
-        
-        // Check for cooldown
-        if (this.isOnCooldown(message.chatname, message.type, commandName)) {
-            return { 
-                success: false,
+		// Check if this is a valid command
+		const command = this.customCommands.get(commandName);
+		if (!command) {
+			return null; // Not a command
+		}
+		
+		if (typeof window !== 'undefined' && typeof window.isPointsCommandAllowed === 'function') {
+			if (!window.isPointsCommandAllowed(commandName)) {
+				return null;
+			}
+		}
+		
+		// Check for cooldown
+		if (this.isOnCooldown(message.chatname, message.type, commandName)) {
+			return { 
+				success: false,
                 message: "This command is on cooldown",
                 commandName
             };
@@ -488,44 +500,66 @@ class PointsActions {
 
 // Create and initialize the points actions system
 const pointsActions = new PointsActions({
-    pointsSystem: pointsSystem // Reference to existing points system
+	pointsSystem: pointsSystem // Reference to existing points system
 });
+
+let pointsActionsHookInstalled = false;
 
 // Initialize point actions after the points system is ready
 async function initializePointsActions() {
-    try {
-        await pointsActions.ensureDB();
-        console.log('Points actions system initialized');
-        
-        // Hook into message processing to handle commands
-        const originalAddMessage = messageStoreDB.addMessage;
-        messageStoreDB.addMessage = async function(message) {
-            const result = await originalAddMessage.call(this, message);
-            
-            // Process any points commands
-            if (message && message.chatmessage && message.chatmessage.startsWith('!')) {
-                const commandResult = await pointsActions.processCommand(message);
-                
-                // Handle command response if needed
-                if (commandResult && commandResult.success && commandResult.message && commandResult.type === 'chat') {
-                    // Create a response message
-                    const responseMessage = {
-                        chatname: 'PointsBot',
-                        chatmessage: commandResult.message,
-                        type: 'bot',
-                        timestamp: Date.now()
-                    };
-                    
-                    // Add to message store (which will trigger display)
-                    await originalAddMessage.call(this, responseMessage);
-                }
-            }
-            
-            return result;
-        };
-    } catch (error) {
-        console.error('Failed to initialize points actions system:', error);
-    }
+	try {
+		await pointsActions.ensureDB();
+		console.log('Points actions system initialized');
+		
+		// Hook into message processing to handle commands
+		if (!pointsActionsHookInstalled) {
+			const originalAddMessage = messageStoreDB.addMessage;
+			messageStoreDB.addMessage = async function(message) {
+				const result = await originalAddMessage.call(this, message);
+				
+				if (typeof window !== 'undefined' && typeof window.isPointsSystemEnabled === 'function') {
+					if (!window.isPointsSystemEnabled()) {
+						return result;
+					}
+				}
+				
+				if (!message || typeof message.chatmessage !== 'string') {
+					return result;
+				}
+				
+				if (message.chatname === 'PointsBot') {
+					return result;
+				}
+				
+				const trimmedMessage = message.chatmessage.trim();
+				if (!trimmedMessage.startsWith('!')) {
+					return result;
+				}
+				
+				const normalizedMessage = { ...message, chatmessage: trimmedMessage };
+				const commandResult = await pointsActions.processCommand(normalizedMessage);
+				
+				// Handle command response if needed
+				if (commandResult && commandResult.success && commandResult.message && commandResult.type === 'chat') {
+					// Create a response message
+					const responseMessage = {
+						chatname: 'PointsBot',
+						chatmessage: commandResult.message,
+						type: 'bot',
+						timestamp: Date.now()
+					};
+					
+					// Add to message store (which will trigger display)
+					await originalAddMessage.call(this, responseMessage);
+				}
+				
+				return result;
+			};
+			pointsActionsHookInstalled = true;
+		}
+	} catch (error) {
+		console.error('Failed to initialize points actions system:', error);
+	}
 }
 
 // Start initialization after points system is ready

@@ -498,6 +498,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "printer_control",
     description: "Disable the host chat option in the dock and the api. Featured chat remains enabled."
   },
+  "disableRelayThrottle": {
+    type: "boolean",
+    category: "global_settings_and_tools",
+    description: "Send relayed chat messages without per-site throttling or queues."
+  },
   "discord": {
     type: "boolean",
     category: "opt_in_options",

@@ -26,14 +26,15 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 
 | Parameter | Values | Description |
 |-----------|---------|-------------|
-| `session` | string | Sets the session ID for connecting to the chat. Also accepts `s` or `id` as alternatives |
+| `session` or `s` or `id` | string | Sets the session ID for connecting to the chat |
 | `password` | string | Sets a password for the session |
 | `scale` | float | Adjusts the size scaling of the overlay (default: 1.0) |
 | `limit` | number | Maximum number of messages to show before older ones are removed |
 | `opacity` | 0.0-1.0 | Sets the opacity of the main overlay window |
-| `hidemenu` | boolean or "2" | Hides the menu bar. Value of "2" keeps scroll lock functionality |
+| `hidemenu` or `nomenu` | boolean or "2" | Hides the menu bar. Value of "2" keeps scroll lock functionality |
 | `css` | URL or CSS string | Applies custom CSS styling via URL or direct CSS |
-| `cssb64` | base64 string | Applies custom CSS styling via base64 encoded string |
+| `cssb64` or `b64css` or `base64css` or `cssbase64` | base64 string | Applies custom CSS styling via base64 encoded string |
+| `js` or `base64js` or `b64js` or `jsbase64` or `jsb64` | URL or base64 string | Loads external JavaScript (limited to trusted hosting contexts) |
 | `label` | string | Assigns a label to this instance |
 
 ### Visual Style Parameters
@@ -42,16 +43,36 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 |-----------|---------|-------------|
 | `darkmode` | boolean | Enables dark theme with black background |
 | `lightmode` | boolean | Enables light theme with white background |
-| `transparent` | boolean | Makes background transparent and hides scrollbar |
+| `transparent` or `transparency` | boolean | Makes background transparent and hides scrollbar |
 | `chroma` | hex color | Sets a specific background color (without #) |
-| `blur` | number | Applies blur effect to messages (value in pixels) |
-| `compact` | boolean | Enables compact mode with less spacing |
+| `blur` or `blurred` | number | Applies blur effect to messages (value in pixels) |
+| `compact` or `overlaymode` | boolean | Enables compact mode with less spacing |
 | `padding` | number | Sets padding between messages in pixels |
 | `largeavatar` | boolean | Shows larger user avatars on the left side |
-| `emoji` | number | Sets emoji size scaling (percentage, default: 140) |
+| `emoji` or `emojis` | number | Sets emoji size scaling (percentage, default: 140) |
 | `nooutline` | boolean | Removes text outline effects |
 | `font` | string | Sets custom font family |
 | `googlefont` | string | Loads and uses a Google Font |
+| `color` or `colorednames` | boolean | Uses platform accent colors for usernames |
+| `fontcolor` | hex color | Overrides the body text color |
+| `namecolor` | hex color | Overrides the username text color |
+| `fontweight` | number or keyword | Sets font weight for message text |
+| `nameweight` | number or keyword | Sets font weight for usernames |
+| `outlinewidth` | number | Width (px) of the outer outline highlight |
+| `outlinecolor` | hex color | Color applied to the outer outline highlight |
+| `strokewidth` or `stroke` | number | Width (px) for the text stroke effect |
+| `strokecolor` or `strokeColor` | hex color | Color applied to the text stroke effect |
+| `border` | hex color | Adds a profile image border using the provided color (without `#`) |
+| `pressedcolor` | hex color or empty | Custom highlight color for pinned/featured states |
+| `hideshadow` | boolean | Removes alternating card drop shadows |
+| `largecontent` | boolean | Enlarges embedded content or image cards |
+| `donationright` | number | Sets donation amount margin-right in pixels |
+| `bolder` | boolean | Applies a thicker drop shadow around text |
+| `thinner` | boolean | Applies a thinner drop shadow around text |
+| `unhighlight` | boolean | Uses an alternate style when un-featuring messages |
+| `nofeaturedhightlight` | boolean | Disables the flash highlight when a card is featured |
+| `nomemberhighlight` | boolean | Disables highlight color for member messages |
+| `noquestionhightlight` | boolean | Disables highlight color for question cards |
 
 ### Layout Parameters
 
@@ -67,6 +88,8 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `split` | boolean | Enables split mode for message alignment |
 | `bubble` | boolean | Styles messages as chat bubbles |
 | `fadedtop` | boolean | Fades out the top of the overlay |
+| `reverse` | boolean | Displays the feed in reverse order (newest at the top) |
+| `dropdown` | boolean | Enables reverse order with drop-down style animations |
 
 ### Animation Parameters
 
@@ -90,13 +113,24 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `trim` | number | Trims messages longer than specified characters |
 | `trimname` | number | Trims usernames longer than specified characters |
 | `hidenames` | boolean | Hides usernames completely |
-| `firstnames` | boolean | Shows only first names of users |
+| `firstnamesonly` or `firstname` or `firstnames` | boolean | Shows only first names of users |
 | `hidesource` | boolean | Hides the source platform icons (YouTube, Twitch, etc.) |
-| `noavatar` | boolean | Hides user avatars |
-| `nobadges` | boolean | Hides user badges |
+| `noavatar` or `noavatars` | boolean | Hides user avatars |
+| `nobadges` or `hidebadges` | boolean | Hides user badges |
 | `limitbadges` | number | Limits number of badges shown per message |
-| `notime` | boolean | Hides timestamp |
+| `notime` or `notimestamp` or `nodate` | boolean | Hides timestamp |
+| `24hr` | boolean | Displays timestamps using 24-hour format |
 | `sequence` | boolean | Hides name/icons if sequential messages from same user |
+| `attachmentsonly` | boolean | Displays only messages that include an attached image or clip |
+| `hidequestions` | boolean | Hides cards flagged as questions |
+| `onlyquestions` | boolean | Shows only messages that contain question metadata |
+| `hidenumbers` | boolean | Hides numerical message counters on cards |
+| `showsourcename` | boolean | Displays the originating platform label on each card |
+| `showviewercount` | boolean | Shows the current viewer count indicator |
+| `nocolon` | boolean | Removes the colon between username and message body |
+| `namefilter` | boolean | Applies filters to usernames instead of message text |
+| `stripreplyto` | boolean | Removes “replying to” prefaces from imported messages |
+| `normalize` | boolean | Normalizes characters (e.g., removes diacritics) for comparisons |
 
 ### Filtering Parameters
 
@@ -106,15 +140,18 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `hideshortmessages` | number | Hides messages shorter than specified length |
 | `noemojisonly` | boolean | Filters out messages containing only emojis |
 | `stripemoji` | boolean | Removes all emojis from messages |
-| `striphtml` | boolean | Removes HTML formatting from messages |
+| `striphtml` or `strip` | boolean | Removes HTML formatting from messages |
 | `striplinks` | boolean | Removes links from messages |
 | `activelinks` | boolean | Makes URLs clickable |
 | `shortlink` | boolean | Shortens displayed links |
 | `onlytwitch` | boolean | Shows only Twitch messages |
 | `hidetwitch` | boolean | Hides Twitch messages |
-| `hidefrom` | comma-separated strings | List of usernames to hide messages from |
-| `onlyfrom` | comma-separated strings | List of usernames to exclusively show |
+| `hidefrom` or `exclude` | comma-separated strings | List of usernames to hide messages from |
+| `onlyfrom` or `fromonly` | comma-separated strings | List of usernames to exclusively show |
 | `badkarma` | 0.0-1.0 | Filters messages based on sentiment score |
+| `showonlymods` | boolean | Shows messages from moderators only |
+| `showonlyvips` | boolean | Shows messages from VIPs only |
+| `excludefiltered` | boolean | Prevents filtered messages from being auto-featured |
 
 ### Message Selection & Queue Parameters
 
@@ -126,12 +163,31 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `autoshowdonos` | boolean | Auto-features only donation messages |
 | `autoshowmembers` | boolean | Auto-features only member messages |
 | `autoshowqueued` | boolean | Auto-shows queued messages |
+| `autoshowcontentimages` | boolean | Auto-features queued messages that include image/content attachments |
 | `queueonly` | boolean | Shows only queued messages |
 | `pinnedonly` | boolean | Shows only pinned messages |
 | `viewonly` | boolean | Disables chat, pin, and feature capabilities |
 | `chatmode` | boolean | Enables chat-only mode (no pin/feature) |
 | `helpermode` | boolean | Enables view/pin/queue mode (no chat/feature) |
-| `sync` | boolean | Syncs message selection across multiple docks |
+| `chatonly` | boolean | Moves the chat input into the toolbar for a chat-centric layout |
+| `openchat` | boolean | Automatically opens the chat composer on load |
+| `showmenu` | boolean | Forces the main toolbar to remain visible |
+| `sync` or `synced` | boolean | Syncs message selection across multiple docks |
+| `autopindonations` | boolean | Auto-pins donation cards as they arrive |
+| `autopinquestions` or `autopinquestion` | boolean | Auto-pins cards marked as questions |
+| `autoqueuedonations` or `autoqueuedonation` | boolean | Auto-queues donation cards |
+| `autoqueuequestions` or `autoqueuequestion` | boolean | Auto-queues question cards |
+| `skipdonations` | boolean | Prevents donation cards from being auto-featured |
+| `selfqueue` | comma-separated strings | Viewer commands that add themselves to the queue (e.g., `!queue`) |
+| `deleteonlylast` | boolean | Only removes the most recent card when clearing messages |
+| `disabletimeout` | boolean | Disables the auto-timeout on featured messages |
+| `altselect` | boolean | Keeps the Feature button visible when menus are hidden |
+| `autoscroll` | boolean | Scrolls to the latest message once and leaves scrolling unlocked |
+| `buffer` | boolean | Enables adaptive buffering for smoother message pacing |
+| `bufferdelay` | number | Base delay (ms) used when buffering messages |
+| `buffermin` | number | Minimum delay (ms) used when buffering messages |
+| `buffermax` | number | Maximum delay (ms) used when buffering messages |
+| `random` | boolean | Randomizes which queued message is featured next |
 
 ### Text-to-Speech (TTS) Parameters
 
@@ -156,6 +212,8 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `showonlymembers` | boolean | Shows only messages from members |
 | `stripdonations` | boolean | Removes donation data from messages |
 | `nodonohighlight` | boolean | Disables background highlighting for donations |
+| `autoyoutubememberchat` | boolean | Auto-features YouTube member milestone chat cards |
+| `tiktokfans` | boolean | Treats TikTok fans as channel members for highlighting |
 | `t1` | number | First donation threshold amount (USD) |
 | `t1c` | hex/color | Color for first donation threshold messages |
 | `t2` | number | Second donation threshold amount (USD) |
@@ -167,7 +225,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 
 | Parameter | Values | Description |
 |-----------|---------|-------------|
-| `myname` or `botlist` | comma-separated strings | List of bot usernames to identify |
+| `myname` or `botlist` or `botnames` | comma-separated strings | List of bot usernames to identify |
 | `hidebots` | boolean | Hides messages from identified bots |
 | `hidebotnames` | boolean | Hides names of identified bots |
 | `hidehosts` | boolean | Hides messages from hosts |
@@ -188,6 +246,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `beepvolume` | 0-100 | Sets volume for notification sound (percentage) |
 | `custombeep` | URL | Custom sound file URL for notifications |
 | `beepwords` | boolean | Replaces asterisks with "beep" in messages |
+| `quietcommands` | boolean | Disables the TTS beep when command shortcuts trigger |
 
 ### OBS Integration Parameters
 
@@ -200,6 +259,22 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `server2` | URL | Secondary WebSocket server URL |
 | `server3` | URL | Tertiary WebSocket server URL |
 | `lanonly` | boolean | Restricts P2P connections to LAN only |
+
+### External Automation & Integrations
+
+| Parameter | Values | Description |
+|-----------|---------|-------------|
+| `postserver` | URL | Endpoint that receives featured message data via POST |
+| `putserver` | URL | Endpoint that receives featured message data via PUT |
+| `h2rurl` | URL | Base URL for H2R Graphics API posts |
+| `h2r` | string | Path or endpoint suffix appended to `h2rurl` |
+| `spxserver` | URL | Base URL for SPX-GC |
+| `spxfunction` | string | SPX function invoked when a message is featured |
+| `spxlayer` | string | SPX template/layer identifier to update |
+| `singular` | string | Singular.live data node ID for webhook updates |
+| `passtts` | boolean | Allows the `!pass` shortcut to forward TTS to remote automation |
+| `passttsmod` | boolean | Restricts the `!pass` TTS shortcut to moderators |
+| `v` | string | Overrides the dock version used for remote compatibility checks |
 
 ### Export & Saving Parameters
 
