@@ -1008,8 +1008,28 @@
 		try {
 			if ("getSource" == request){sendResponse("youtube");	return;	}
 			if ("focusChat" == request) {
-				document.querySelector("div#input").focus();
-				simulateFocus(document.querySelector("div#input"));
+				const editableInput = document.querySelector('yt-live-chat-text-input-field-renderer div#input[contenteditable]');
+				if (editableInput) {
+					editableInput.focus();
+					simulateFocus(editableInput);
+					if (editableInput.textContent && editableInput.textContent.length) {
+						editableInput.textContent = "";
+						if (editableInput.innerHTML && editableInput.innerHTML.length) {
+							editableInput.innerHTML = "";
+						}
+						try {
+							const inputEvent = new InputEvent("input", { bubbles: true, cancelable: true });
+							editableInput.dispatchEvent(inputEvent);
+						} catch (e) {}
+					}
+					sendResponse(true);
+					return;
+				}
+				const fallbackInput = document.querySelector("div#input");
+				if (fallbackInput) {
+					fallbackInput.focus();
+					simulateFocus(fallbackInput);
+				}
 				sendResponse(true);
 				return;
 			}

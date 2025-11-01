@@ -1422,41 +1422,57 @@
 		}, 20);
 	}
 
-	var checkReady = setInterval(function () {
-		counter += 1;
-		
-		if (counter == 10) {
-			checkElement = ".chat-list--other, .chat-list--default, .chat-room__content, #root";
-		}
-		
-		if (document.querySelector(checkElement)) {
-			// just in case
-			console.log("Social Stream Start");
-			clearInterval(checkReady);
-			setTimeout(function () {
-				var clear = document.querySelectorAll("seventv-container, .seventv-message, .chat-line__message, .paid-pinned-chat-message-content-wrapper");
-				for (var i = 0; i < clear.length; i++) {
-					clear[i].dataset.ignore = true; // don't let already loaded messages to re-load.
-				}
-				console.log("Social Stream ready to go");
-				onElementInsertedTwitch(document.querySelector(checkElement));
+	var checkReady = null;
 
-				if (document.querySelector('[data-a-target="consent-banner-accept"]')) {
-					document.querySelector('[data-a-target="consent-banner-accept"]').click();
-					if (document.querySelector(".consent-banner")) {
-						document.querySelector(".consent-banner").remove();
-					}
-				}
-			}, 3000);
-		}
-
-		if (document.querySelector('[data-a-target="consent-banner-accept"]')) {
-			document.querySelector('[data-a-target="consent-banner-accept"]').click();
-			if (document.querySelector(".consent-banner")) {
-				document.querySelector(".consent-banner").remove();
+	function startChatWatcher() {
+		return setInterval(function () {
+			counter += 1;
+			
+			if (counter == 10) {
+				checkElement = ".chat-list--other, .chat-list--default, .chat-room__content, #root";
 			}
-		}
-	}, 500);
+			
+			const initialTarget = document.querySelector(checkElement);
+			
+			if (initialTarget) {
+				// just in case
+				console.log("Social Stream Start");
+				clearInterval(checkReady);
+				setTimeout(function () {
+					var clear = document.querySelectorAll("seventv-container, .seventv-message, .chat-line__message, .paid-pinned-chat-message-content-wrapper");
+					for (var i = 0; i < clear.length; i++) {
+						clear[i].dataset.ignore = true; // don't let already loaded messages to re-load.
+					}
+					console.log("Social Stream ready to go");
+
+					let target = initialTarget.isConnected ? initialTarget : document.querySelector(checkElement);
+					if (!target) {
+						console.warn("Social Stream: chat container missing, retrying…");
+						checkReady = startChatWatcher();
+						return;
+					}
+
+					onElementInsertedTwitch(target);
+
+					if (document.querySelector('[data-a-target="consent-banner-accept"]')) {
+						document.querySelector('[data-a-target="consent-banner-accept"]').click();
+						if (document.querySelector(".consent-banner")) {
+							document.querySelector(".consent-banner").remove();
+						}
+					}
+				}, 3000);
+			}
+
+			if (document.querySelector('[data-a-target="consent-banner-accept"]')) {
+				document.querySelector('[data-a-target="consent-banner-accept"]').click();
+				if (document.querySelector(".consent-banner")) {
+					document.querySelector(".consent-banner").remove();
+				}
+			}
+		}, 500);
+	}
+
+	checkReady = startChatWatcher();
 	
 	function checkFollowers(){
 		if (channelName && isExtensionOn && (settings.showviewercount || settings.hypemode)){
@@ -1521,7 +1537,7 @@
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
-		var receiveChannelCallback = function (e) {
+		var receiveChannelCallback = function (event) {
 			remoteConnection.datachannel = event.channel;
 			remoteConnection.datachannel.onmessage = function (e) {};
 			remoteConnection.datachannel.onopen = function (e) {};
