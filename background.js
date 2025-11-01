@@ -18,7 +18,7 @@ var messageTimeout = {};
 var lastSentMessage = "";
 var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
-const relayThrottleState = new Map();
+const fakeChatThrottleState = new Map();
 var sentimentAnalysisLoaded = false;
 
 // Spotify integration
@@ -8856,6 +8856,11 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             const applyPlatformLimit = (message, platform) => limitMessageForPlatform(message, platform);
             published[tab.url] = true;
             const throttleProfile = getThrottleProfileForTab(tab, data);
+            const throttleOptions = {
+                origin: messageOrigin || "relay",
+                dropProtected: messageOrigin === "host",
+                priority: messageOrigin === "host" ? 1 : 0
+            };
                 
             // Handle different site types
             if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
@@ -8865,27 +8870,27 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
                 let restxt = applyPlatformLimit(data.response, 'twitch');
                 storeMessageForTab(restxt);
-                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout, undefined, throttleProfile);
+                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://boltplus.tv/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile);
+                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://rumble.com/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile);
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile);
+                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://kick.com/")) {
                 let restxt = applyPlatformLimit(data.response, 'kick');
                 const messageForKick = isSSAPP ? ` ${restxt}` : restxt;
                 storeMessageForTab(messageForKick);
-                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout, undefined, throttleProfile);
+                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://app.slack.com")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout, undefined, throttleProfile); 
+                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions); 
             } else if (tab.url.startsWith("https://app.zoom.us/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile);
+                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile, throttleOptions);
                 return;
             } else {
                 // Generic handler
@@ -8893,7 +8898,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     getYoutubeAvatarImage(tab.url, true);
                     let restxt = applyPlatformLimit(data.response, 'youtube');
                     storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile);
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
                     return;
                 }
                 
@@ -8905,12 +8910,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     }
                     let restxt = applyPlatformLimit(tiktokMessage, 'tiktok');
                     storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile);
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
                     return;
                 }
                 
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile);
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             }
         };
         
@@ -9161,7 +9166,18 @@ function handleStageTen(data, metadata) {
 }
 
 // Helper function to attach debugger and send chat
-async function attachAndChat(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, chatFunction = generalFakeChat, throttleProfile = null) {
+async function attachAndChat(
+  tabId,
+  message,
+  middle,
+  keypress,
+  backspace,
+  delayedPress,
+  overrideTimeout,
+  chatFunction = generalFakeChat,
+  throttleProfile = null,
+  throttleOptions = null
+) {
     await new Promise((resolve, reject) => {
         safeDebuggerAttach(tabId, "1.3", (error) => {
             if (error) {
@@ -9174,7 +9190,17 @@ async function attachAndChat(tabId, message, middle, keypress, backspace, delaye
     });
 
     await Promise.resolve(
-      chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, throttleProfile)
+      chatFunction(
+        tabId,
+        message,
+        middle,
+        keypress,
+        backspace,
+        delayedPress,
+        overrideTimeout,
+        throttleProfile,
+        throttleOptions
+      )
     );
 }
  
@@ -9267,10 +9293,10 @@ const PLATFORM_MESSAGE_LIMITS = {
 	kick: 500
 };
 
-const MAX_RELAY_THROTTLE_QUEUE_DEFAULT = 3;
-const RELAY_THROTTLE_MAX_QUEUE_AGE = 10000; // Drop items older than 10s
-const RELAY_THROTTLE_DEFAULT_INTERVAL = 200;
-const RELAY_THROTTLE_RULES = [
+const MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT = 3;
+const FAKE_CHAT_THROTTLE_MAX_QUEUE_AGE = 10000; // Drop items older than 10s
+const FAKE_CHAT_THROTTLE_DEFAULT_INTERVAL = 200;
+const FAKE_CHAT_THROTTLE_RULES = [
   {
     key: "websocketSurface",
     minInterval: 0,
@@ -9280,14 +9306,24 @@ const RELAY_THROTTLE_RULES = [
     }
   },
   {
-    key: "youtubeLiveChat",
-    minInterval: 3500,
+    key: "youtubeSurface",
+    minInterval: 500,
     maxQueue: 3,
     matches(url) {
-      return (
-        typeof url === "string" &&
-        (url.includes("youtube.com/live_chat") || url.includes("studio.youtube.com/live_chat"))
-      );
+      if (typeof url !== "string") {
+        return false;
+      }
+      const normalized = url.toLowerCase();
+      if (normalized.includes("youtube.com/live_chat") || normalized.includes("studio.youtube.com/live_chat")) {
+        return true;
+      }
+      if (normalized.includes("youtube.com/watch?") || normalized.includes("youtube.com/live/")) {
+        return true;
+      }
+      if (normalized.includes("studio.youtube.com/video/")) {
+        return true;
+      }
+      return false;
     }
   }
 ];
@@ -9310,7 +9346,7 @@ function getThrottleProfileForTab(tab, data) {
   if (settings && settings.disableRelayThrottle) {
     return null;
   }
-  for (const rule of RELAY_THROTTLE_RULES) {
+  for (const rule of FAKE_CHAT_THROTTLE_RULES) {
     try {
       if (rule.matches(tab.url, data)) {
         return {
@@ -9319,7 +9355,7 @@ function getThrottleProfileForTab(tab, data) {
           maxQueue:
             typeof rule.maxQueue === "number"
               ? Math.max(0, rule.maxQueue)
-              : MAX_RELAY_THROTTLE_QUEUE_DEFAULT
+              : MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
         };
       }
     } catch (e) {
@@ -9343,7 +9379,7 @@ function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
       maxQueue: throttleProfile.maxQueue
     };
   } else if (typeof throttleProfile === "string") {
-    const rule = RELAY_THROTTLE_RULES.find((item) => item.key === throttleProfile);
+    const rule = FAKE_CHAT_THROTTLE_RULES.find((item) => item.key === throttleProfile);
     if (rule) {
       profile = {
         key: rule.key,
@@ -9357,21 +9393,21 @@ function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
     profile = {
       key: `tab-${tabId}`,
       minInterval: Number(overrideTimeout) || 0,
-      maxQueue: MAX_RELAY_THROTTLE_QUEUE_DEFAULT
+      maxQueue: MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
     };
   }
 
   if (!profile) {
     profile = {
       key: `tab-${tabId}`,
-      minInterval: RELAY_THROTTLE_DEFAULT_INTERVAL,
-      maxQueue: MAX_RELAY_THROTTLE_QUEUE_DEFAULT
+      minInterval: FAKE_CHAT_THROTTLE_DEFAULT_INTERVAL,
+      maxQueue: MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
     };
   }
 
   profile.maxQueue = Number.isFinite(profile.maxQueue)
     ? Math.max(0, profile.maxQueue)
-    : MAX_RELAY_THROTTLE_QUEUE_DEFAULT;
+    : MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT;
 
   if (profile.minInterval <= 0) {
     return null;
@@ -9381,7 +9417,7 @@ function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
 }
 
 function ensureThrottleState(tabId) {
-  let state = relayThrottleState.get(tabId);
+  let state = fakeChatThrottleState.get(tabId);
   if (!state) {
     state = {
       queue: [],
@@ -9389,50 +9425,95 @@ function ensureThrottleState(tabId) {
       processing: false,
       timer: null
     };
-    relayThrottleState.set(tabId, state);
+    fakeChatThrottleState.set(tabId, state);
   }
   return state;
 }
 
 function clearThrottleState(tabId) {
-  const state = relayThrottleState.get(tabId);
+  const state = fakeChatThrottleState.get(tabId);
   if (!state) {
     return;
   }
   if (state.timer) {
     clearTimeout(state.timer);
   }
-  relayThrottleState.delete(tabId);
+  fakeChatThrottleState.delete(tabId);
 }
 
-function scheduleThrottledSend(tabId, profile, payload) {
+function scheduleThrottledSend(tabId, profile, payload, options = {}) {
   const state = ensureThrottleState(tabId);
   return new Promise((resolve) => {
-    const entry = { profile, payload, resolve, queuedAt: Date.now() };
+    const entry = {
+      profile,
+      payload,
+      resolve,
+      queuedAt: Date.now(),
+      priority: Number.isFinite(options.priority)
+        ? options.priority
+        : options.dropProtected
+        ? 1
+        : 0,
+      dropProtected: Boolean(options.dropProtected),
+      origin: options.origin ?? null
+    };
 
-    if (profile.maxQueue > 0 && state.queue.length >= profile.maxQueue) {
-      const dropped = state.queue.shift();
-      if (dropped && typeof dropped.resolve === "function") {
-        dropped.resolve({ dropped: true, reason: "capacity" });
+    const queueLimit = Number(profile.maxQueue);
+    if (queueLimit > 0 && state.queue.length >= queueLimit) {
+      const dropNonProtected = state.queue.findIndex((item) => !item.dropProtected);
+
+      if (dropNonProtected !== -1) {
+        const dropped = state.queue.splice(dropNonProtected, 1)[0];
+        if (dropped && typeof dropped.resolve === "function") {
+          dropped.resolve({ dropped: true, reason: "capacity" });
+        }
+        delayedDetach(tabId);
+        warnlog(
+          `Fake chat throttle queue full for tab ${tabId} (${profile.key}); dropping queued relay message.`
+        );
+      } else if (!entry.dropProtected) {
+        resolve({ dropped: true, reason: "capacity" });
+        warnlog(
+          `Fake chat throttle queue full of protected messages for tab ${tabId} (${profile.key}); dropping incoming relay message.`
+        );
+        return;
+      } else {
+        const droppedProtected = state.queue.shift();
+        if (droppedProtected && typeof droppedProtected.resolve === "function") {
+          droppedProtected.resolve({ dropped: true, reason: "capacity" });
+        }
+        delayedDetach(tabId);
+        warnlog(
+          `Fake chat throttle queue full for tab ${tabId} (${profile.key}); dropping oldest protected message to keep capacity.`
+        );
       }
-      delayedDetach(tabId);
-      warnlog(
-        `Relay throttle queue full for tab ${tabId} (${profile.key}); dropping oldest message.`
-      );
     }
 
-    state.queue.push(entry);
+    if (entry.priority > 0) {
+      const insertIndex = state.queue.findIndex((item) => item.priority < entry.priority);
+      if (insertIndex === -1) {
+        state.queue.push(entry);
+      } else {
+        state.queue.splice(insertIndex, 0, entry);
+      }
+    } else {
+      state.queue.push(entry);
+    }
     processThrottleQueue(tabId);
   });
 }
 
 function processThrottleQueue(tabId) {
-  const state = relayThrottleState.get(tabId);
+  const state = fakeChatThrottleState.get(tabId);
   if (!state || state.processing) {
     return;
   }
 
-  const entry = state.queue.shift();
+  let entryIndex = state.queue.findIndex((item) => item.priority > 0);
+  if (entryIndex === -1) {
+    entryIndex = 0;
+  }
+  const entry = state.queue.splice(entryIndex, 1)[0];
   if (!entry) {
     clearThrottleState(tabId);
     return;
@@ -9450,13 +9531,13 @@ function processThrottleQueue(tabId) {
 
   const maxAge = Number.isFinite(entry.profile?.maxAge)
     ? Math.max(0, entry.profile.maxAge)
-    : RELAY_THROTTLE_MAX_QUEUE_AGE;
+    : FAKE_CHAT_THROTTLE_MAX_QUEUE_AGE;
 
   if (maxAge > 0 && typeof entry.queuedAt === "number") {
     const age = Date.now() - entry.queuedAt;
-    if (age > maxAge) {
+    if (!entry.dropProtected && age > maxAge) {
       warnlog(
-        `Relay throttle stale message dropped for tab ${tabId} (${entry.profile?.key || "unknown"}); age ${
+        `Fake chat throttle stale message dropped for tab ${tabId} (${entry.profile?.key || "unknown"}); age ${
           age || 0
         }ms exceeded ${maxAge}ms.`
       );
@@ -9486,7 +9567,7 @@ function processThrottleQueue(tabId) {
       await performGeneralFakeChatSend(tabId, entry.payload);
     } catch (error) {
       warnlog(
-        `Relay throttle send failed for tab ${tabId} (${entry.profile.key}): ${
+        `Fake chat throttle send failed for tab ${tabId} (${entry.profile.key}): ${
           error?.message || error
         }`
       );
@@ -9501,7 +9582,7 @@ function processThrottleQueue(tabId) {
 
   execute().catch((error) => {
     warnlog(
-      `Relay throttle send crashed for tab ${tabId} (${entry.profile.key}): ${
+      `Fake chat throttle send crashed for tab ${tabId} (${entry.profile.key}): ${
         error?.message || error
       }`
     );
@@ -9575,19 +9656,40 @@ async function generalFakeChat(
   backspace = false,
   delayedPress = false,
   overrideTimeout = false,
-  throttleProfile = null
+  throttleProfile = null,
+  throttleOptions = null
 ) {
   const normalizedTimeout = typeof overrideTimeout === "number" ? overrideTimeout : 0;
   const resolvedProfile = resolveThrottleProfile(tabId, throttleProfile, normalizedTimeout);
+  const queueOptions = throttleOptions
+    ? {
+        ...throttleOptions,
+        origin: throttleOptions.origin ?? null,
+        dropProtected:
+          throttleOptions.dropProtected ??
+          (throttleOptions.origin === "host"),
+        priority: Number.isFinite(throttleOptions.priority)
+          ? throttleOptions.priority
+          : (throttleOptions.dropProtected ??
+              throttleOptions.origin === "host")
+          ? 1
+          : 0
+      }
+    : undefined;
 
   if (resolvedProfile) {
-    return scheduleThrottledSend(tabId, resolvedProfile, {
-      message,
-      middle,
-      keypress,
-      backspace,
-      delayedPress
-    });
+    return scheduleThrottledSend(
+      tabId,
+      resolvedProfile,
+      {
+        message,
+        middle,
+        keypress,
+        backspace,
+        delayedPress
+      },
+      queueOptions
+    );
   }
 
   return performGeneralFakeChatSend(tabId, {
