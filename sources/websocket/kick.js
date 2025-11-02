@@ -2794,6 +2794,7 @@ function forwardChatMessage(evt, bridgeMeta) {
     const donationLabel = extractChatDonationLabel(message, payload);
     const replyDetails = extractReplyDetails(message, payload);
     const textOnlyMode = Boolean(isTextOnlyMode());
+    const allowReplies = !settings.excludeReplyingTo && (chatmessageHtml || content);
     const messagePayload = {
         type: 'kick',
         chatname,
@@ -2806,7 +2807,11 @@ function forwardChatMessage(evt, bridgeMeta) {
         textonly: textOnlyMode
     };
     if (resolvedId != null) {
-        messagePayload.id = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
+        const normalizedId = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
+        messagePayload.id = normalizedId;
+        messagePayload.messageId = normalizedId;
+    } else if (messageId != null) {
+        messagePayload.messageId = typeof messageId === 'string' ? messageId : String(messageId);
     }
     if (isModerator) {
         messagePayload.mod = true;
@@ -2820,7 +2825,7 @@ function forwardChatMessage(evt, bridgeMeta) {
     if (channelBranding.sourceImg) {
         messagePayload.sourceImg = channelBranding.sourceImg;
     }
-    if (replyDetails) {
+    if (allowReplies && replyDetails) {
         messagePayload.initial = replyDetails.label;
         messagePayload.reply = chatmessageHtml;
         if (textOnlyMode) {
@@ -2837,27 +2842,8 @@ function forwardChatMessage(evt, bridgeMeta) {
     if (normalizedEvent && normalizedEvent !== 'message') {
         messagePayload.event = normalizedEvent;
     }
-    const meta = {};
-    if (content) {
-        meta.plainText = content;
-    }
-    if (bridgeMeta) {
-        meta.bridge = bridgeMeta;
-    }
-    if (messageId != null) {
-        meta.messageId = messageId;
-    }
-    if (evt) {
-        meta.raw = evt;
-    }
-    if (replyDetails && replyDetails.meta) {
-        meta.reply = replyDetails.meta;
-    }
-    if (Object.keys(meta).length > 0) {
-        messagePayload.meta = meta;
-    }
     pushMessage(messagePayload);
-    appendChatFeedMessage(messagePayload);
+    appendChatFeedMessage(messagePayload, content);
     const prefix = bridgeMeta?.verified === false ? '[CHAT ⚠]' : '[CHAT]';
     log(`${prefix} ${chatname}: ${content || '[no text]'}`);
 }
@@ -3057,11 +3043,7 @@ function extractReplyDetails(message, payload) {
             return {
                 text,
                 author: '',
-                label: text,
-                meta: {
-                    text,
-                    author: null
-                }
+                label: text
             };
         }
         if (Array.isArray(value)) {
@@ -3101,12 +3083,7 @@ function extractReplyDetails(message, payload) {
             return {
                 text,
                 author,
-                label,
-                meta: {
-                    text,
-                    author: author || null,
-                    raw: value
-                }
+                label
             };
         }
         for (const key of nestedKeys) {
@@ -3167,9 +3144,7 @@ function forwardFollower(evt, bridgeMeta) {
         event: 'new_follower',
         chatname: follower || '',
         chatmessage: escapeHtml(chatmessage),
-        chatimg: chatimg || '',
-        bridge: bridgeMeta || null,
-        raw: evt
+        chatimg: chatimg || ''
     });
 
     const followerCountCandidates = [
@@ -3324,9 +3299,7 @@ function forwardSubscription(eventType, evt, bridgeMeta) {
         chatname,
         chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',
-        bridge: bridgeMeta || null,
-        meta,
-        raw: evt
+        meta
     });
     const prefix = bridgeMeta?.verified === false ? '[SUB ⚠]' : '[SUB]';
     log(`${prefix} ${chatmessage}`);
@@ -3395,8 +3368,7 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
         supporter,
         amount,
         currency,
-        message: note,
-        raw: evt
+        message: note
     };
     pushMessage({
         type: 'kick',
@@ -3404,7 +3376,6 @@ function forwardSupportEvent(eventType, evt, bridgeMeta) {
         chatname,
         chatmessage: escapeHtml(chatmessage),
         chatimg: chatimg || '',
-        bridge: bridgeMeta || null,
         meta
     });
     const noteLabel = note ? ` – ${note}` : '';
@@ -3421,9 +3392,7 @@ function forwardLiveStatus(evt, bridgeMeta) {
         event: isLive ? 'stream_online' : 'stream_offline',
         chatname,
         chatmessage: escapeHtml(chatmessage),
-        bridge: bridgeMeta || null,
-        meta: evt,
-        raw: evt
+        meta: evt
     });
     const prefix = bridgeMeta?.verified === false ? '[LIVE ⚠]' : '[LIVE]';
     log(`${prefix} ${isLive ? 'Online' : 'Offline'}`);
@@ -3684,7 +3653,7 @@ function appendChatBadges(container, badges) {
     });
 }
 
-function appendChatFeedMessage(message) {
+function appendChatFeedMessage(message, plainText = '') {
     if (!els.chatFeed || !message) return;
     const stick = shouldStickChatFeed();
     ensureChatFeedEmptyVisible(false);
@@ -3730,20 +3699,18 @@ function appendChatFeedMessage(message) {
 
     const body = document.createElement('div');
     body.className = 'chat-message';
+    const plainTextMessage =
+        (typeof plainText === 'string' && plainText.trim())
+            ? plainText.trim()
+            : (typeof message.chatmessage === 'string'
+                ? message.chatmessage.replace(/<[^>]+>/g, '')
+                : '');
     if (isTextOnlyMode()) {
-        if (message.meta?.plainText) {
-            body.textContent = message.meta.plainText;
-        } else if (message.chatmessage) {
-            body.textContent = message.chatmessage;
-        } else {
-            body.textContent = '';
-        }
+        body.textContent = plainTextMessage || '';
     } else if (message.chatmessage) {
         body.innerHTML = message.chatmessage;
-    } else if (message.meta?.plainText) {
-        body.textContent = message.meta.plainText;
     } else {
-        body.textContent = '';
+        body.textContent = plainTextMessage || '';
     }
     details.appendChild(body);
 
