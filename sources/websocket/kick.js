@@ -2766,7 +2766,34 @@ function forwardChatMessage(evt, bridgeMeta) {
         'chat';
     const normalizedEvent = eventNameForType(rawEventType);
     const messageId = message?.id || payload.message_id || payload.id || null;
+    const bridgeMessageId = bridgeMeta?.messageId || null;
+    const resolvedId = messageId ?? bridgeMessageId;
     const chatmessageHtml = renderKickMessageHtml(message, content);
+    const membership = actorProfile.membership || pickFirstString(
+        [
+            sender?.membership,
+            sender?.membership_name,
+            sender?.membership?.name,
+            sender?.membership?.display_name,
+            sender?.subscription?.name,
+            payload?.membership,
+            payload?.membership_name,
+            message?.membership,
+            message?.membership_name
+        ],
+        ''
+    );
+    const isModerator =
+        actorProfile.isMod === true ||
+        sender?.is_moderator === true ||
+        sender?.moderator === true ||
+        (Array.isArray(sender?.roles) && sender.roles.some(
+            role => typeof role === 'string' && role.toLowerCase().includes('mod')
+        ));
+    const channelBranding = resolveChannelBranding();
+    const donationLabel = extractChatDonationLabel(message, payload);
+    const replyDetails = extractReplyDetails(message, payload);
+    const textOnlyMode = Boolean(isTextOnlyMode());
     const messagePayload = {
         type: 'kick',
         chatname,
@@ -2774,21 +2801,333 @@ function forwardChatMessage(evt, bridgeMeta) {
         chatimg: chatimg || '',
         chatbadges: badges,
         nameColor: nameColor || '',
-        messageId,
-        bridge: bridgeMeta || null,
-        raw: evt
+        membership: membership || '',
+        hasDonation: donationLabel,
+        textonly: textOnlyMode
     };
+    if (resolvedId != null) {
+        messagePayload.id = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
+    }
+    if (isModerator) {
+        messagePayload.mod = true;
+    }
+    if (actorProfile.isVip) {
+        messagePayload.vip = true;
+    }
+    if (channelBranding.sourceName) {
+        messagePayload.sourceName = channelBranding.sourceName;
+    }
+    if (channelBranding.sourceImg) {
+        messagePayload.sourceImg = channelBranding.sourceImg;
+    }
+    if (replyDetails) {
+        messagePayload.initial = replyDetails.label;
+        messagePayload.reply = chatmessageHtml;
+        if (textOnlyMode) {
+            const prefix = replyDetails.label ? `${replyDetails.label}: ` : '';
+            const baseText = content || '';
+            const combined = `${prefix}${baseText}`.trim();
+            messagePayload.chatmessage = combined || baseText || replyDetails.label || '';
+        } else if (replyDetails.label) {
+            const safeReply = escapeHtml(replyDetails.label);
+            messagePayload.chatmessage = `<i><small>${safeReply}:&nbsp;</small></i> ${chatmessageHtml}`;
+        }
+    }
     // Chat messages should not be flagged as events; only propagate data.event for actual system-level items.
     if (normalizedEvent && normalizedEvent !== 'message') {
         messagePayload.event = normalizedEvent;
     }
+    const meta = {};
     if (content) {
-        messagePayload.meta = { plainText: content };
+        meta.plainText = content;
+    }
+    if (bridgeMeta) {
+        meta.bridge = bridgeMeta;
+    }
+    if (messageId != null) {
+        meta.messageId = messageId;
+    }
+    if (evt) {
+        meta.raw = evt;
+    }
+    if (replyDetails && replyDetails.meta) {
+        meta.reply = replyDetails.meta;
+    }
+    if (Object.keys(meta).length > 0) {
+        messagePayload.meta = meta;
     }
     pushMessage(messagePayload);
     appendChatFeedMessage(messagePayload);
     const prefix = bridgeMeta?.verified === false ? '[CHAT ⚠]' : '[CHAT]';
     log(`${prefix} ${chatname}: ${content || '[no text]'}`);
+}
+
+function resolveChannelBranding() {
+    const { profile } = gatherProfileState(
+        state.authUser,
+        state.tokens?.profile,
+        state.tokens,
+        {
+            username: state.channelSlug || '',
+            display_name: state.channelName || '',
+            slug: state.channelSlug || ''
+        }
+    );
+    const sourceName = pickFirstString(
+        [
+            state.channelName,
+            state.channelSlug,
+            profile?.displayName,
+            profile?.username
+        ],
+        ''
+    );
+    const sourceImg = profile?.avatar || '';
+    return {
+        sourceName,
+        sourceImg
+    };
+}
+
+function extractChatDonationLabel(...sources) {
+    const visited = new Set();
+    const amountFields = ['amount', 'value', 'total', 'quantity', 'kicks', 'price', 'amount_total', 'price_amount'];
+    const currencyFields = ['currency', 'unit', 'unit_name', 'currency_code', 'symbol', 'currencySymbol'];
+    const nestedKeys = [
+        'donation',
+        'tip',
+        'support',
+        'purchase',
+        'payment',
+        'monetization',
+        'economy',
+        'order',
+        'transaction',
+        'data',
+        'payload',
+        'details',
+        'meta',
+        'extra'
+    ];
+
+    const formatAmount = value => {
+        if (value == null) return '';
+        if (typeof value === 'number') {
+            return Number.isFinite(value) ? value.toString() : '';
+        }
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed || '';
+        }
+        if (typeof value === 'object') {
+            if ('amount' in value) return formatAmount(value.amount);
+            if ('value' in value) return formatAmount(value.value);
+        }
+        return '';
+    };
+
+    const formatCurrency = value => {
+        if (!value) return '';
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            return trimmed ? trimmed.toUpperCase() : '';
+        }
+        if (typeof value === 'object') {
+            if ('currency' in value) return formatCurrency(value.currency);
+            if ('code' in value) return formatCurrency(value.code);
+            if ('unit' in value) return formatCurrency(value.unit);
+            if ('symbol' in value) {
+                const symbol = typeof value.symbol === 'string' ? value.symbol.trim() : '';
+                if (symbol) return symbol;
+            }
+        }
+        return '';
+    };
+
+    const readEntry = entry => {
+        if (!entry || typeof entry !== 'object') {
+            return '';
+        }
+        const amountCandidate = amountFields
+            .map(field => entry[field])
+            .map(formatAmount)
+            .find(Boolean);
+        if (!amountCandidate) {
+            return '';
+        }
+        const currencyCandidate = currencyFields
+            .map(field => entry[field])
+            .map(formatCurrency)
+            .find(Boolean);
+        return currencyCandidate ? `${amountCandidate} ${currencyCandidate}` : amountCandidate;
+    };
+
+    const walk = value => {
+        if (!value) return '';
+        if (typeof value === 'string' || typeof value === 'number') {
+            return '';
+        }
+        if (visited.has(value)) {
+            return '';
+        }
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                const result = walk(item);
+                if (result) {
+                    return result;
+                }
+            }
+            return '';
+        }
+        if (typeof value !== 'object') {
+            return '';
+        }
+        visited.add(value);
+        const direct = readEntry(value);
+        if (direct) {
+            return direct;
+        }
+        for (const key of nestedKeys) {
+            if (!Object.prototype.hasOwnProperty.call(value, key)) {
+                continue;
+            }
+            const result = walk(value[key]);
+            if (result) {
+                return result;
+            }
+        }
+        return '';
+    };
+
+    for (const source of sources) {
+        const result = walk(source);
+        if (result) {
+            return result;
+        }
+    }
+    return '';
+}
+
+function extractReplyDetails(message, payload) {
+    const candidates = [
+        message?.reply_to,
+        message?.replyTo,
+        message?.replied_to,
+        message?.parent,
+        message?.thread?.parent,
+        message?.quoted_message,
+        message?.quote,
+        message?.reference,
+        message?.referenced_message,
+        message?.original_message,
+        message?.initial_message,
+        payload?.reply_to,
+        payload?.reply,
+        payload?.parent,
+        payload?.reference,
+        payload?.referenced_message,
+        payload?.original_message,
+        payload?.initial_message
+    ];
+    const visited = new Set();
+    const nestedKeys = [
+        'message',
+        'payload',
+        'data',
+        'reply',
+        'reply_to',
+        'replyTo',
+        'replied_to',
+        'parent',
+        'quoted_message',
+        'quote',
+        'reference',
+        'referenced_message',
+        'original_message',
+        'initial_message'
+    ];
+
+    const resolve = value => {
+        if (!value) return null;
+        if (typeof value === 'string' || typeof value === 'number') {
+            const text = String(value).trim();
+            if (!text) {
+                return null;
+            }
+            return {
+                text,
+                author: '',
+                label: text,
+                meta: {
+                    text,
+                    author: null
+                }
+            };
+        }
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                const result = resolve(item);
+                if (result) {
+                    return result;
+                }
+            }
+            return null;
+        }
+        if (typeof value !== 'object') {
+            return null;
+        }
+        if (visited.has(value)) {
+            return null;
+        }
+        visited.add(value);
+        const text = extractMessageContent(value);
+        if (text) {
+            const author = pickFirstString(
+                [
+                    value?.sender?.display_name,
+                    value?.sender?.username,
+                    value?.user?.display_name,
+                    value?.user?.username,
+                    value?.author?.display_name,
+                    value?.author?.username,
+                    value?.identity?.display_name,
+                    value?.identity?.username,
+                    value?.username,
+                    value?.name
+                ],
+                ''
+            );
+            const label = author ? `${author}: ${text}` : text;
+            return {
+                text,
+                author,
+                label,
+                meta: {
+                    text,
+                    author: author || null,
+                    raw: value
+                }
+            };
+        }
+        for (const key of nestedKeys) {
+            if (!Object.prototype.hasOwnProperty.call(value, key)) {
+                continue;
+            }
+            const result = resolve(value[key]);
+            if (result) {
+                return result;
+            }
+        }
+        return null;
+    };
+
+    for (const candidate of candidates) {
+        const result = resolve(candidate);
+        if (result) {
+            return result;
+        }
+    }
+    return null;
 }
 
 function forwardFollower(evt, bridgeMeta) {

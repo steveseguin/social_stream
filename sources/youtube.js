@@ -302,6 +302,137 @@
 	  return target;
 	}
 
+	function stripHtmlContent(html) {
+		if (!html) {
+			return "";
+		}
+		const tempDiv = document.createElement("div");
+		tempDiv.innerHTML = html;
+		return (tempDiv.textContent || tempDiv.innerText || "").trim();
+	}
+
+	// Presence of excludeReplyingTo indicates the user opted out, even if the stored value is falsy.
+	function repliesAreExcluded() {
+		return Object.prototype.hasOwnProperty.call(settings, "excludeReplyingTo");
+	}
+
+	function extractReplyDetails(ele, currentPlainMessage = "") {
+		if (!ele) {
+			return null;
+		}
+
+		const normalizedCurrent = typeof currentPlainMessage === "string"
+			? currentPlainMessage.trim().toLowerCase()
+			: "";
+
+		const selectors = [
+			'yt-live-chat-text-message-renderer #reply-message',
+			'#reply-message',
+			'yt-live-chat-text-message-reply-renderer',
+			'yt-live-chat-text-message-reply-view-model',
+			'.yt-live-chat-text-message-reply-view-model',
+			'.yt-live-chat-text-message-renderer-reply',
+			'[id*="reply-view-model"]',
+			'[id*="reply-message"]',
+			'[data-reply-message]'
+		];
+
+		for (const selector of selectors) {
+			let node = null;
+			try {
+				node = ele.querySelector(selector);
+			} catch (e) {
+				node = null;
+			}
+			if (!node) {
+				continue;
+			}
+			let html = "";
+			try {
+				html = getAllContentNodes(node);
+			} catch (e) {
+				html = node.textContent || "";
+			}
+			const text = stripHtmlContent(html);
+			const normalizedText = text.toLowerCase();
+			if (normalizedText && normalizedCurrent && normalizedText === normalizedCurrent) {
+				continue;
+			}
+			const normalizedLabel = (text || html || "").replace(/\s+/g, " ").trim();
+			if (!normalizedLabel || normalizedLabel.toLowerCase() === "reply") {
+				continue;
+			}
+			const truncatedLabel = normalizedLabel.length > 160
+				? normalizedLabel.slice(0, 157).trimEnd() + "…"
+				: normalizedLabel;
+			const trimmedText = text ? text.replace(/\s+/g, " ").trim() : "";
+			const truncatedText = trimmedText.length > 160
+				? trimmedText.slice(0, 157).trimEnd() + "…"
+				: trimmedText;
+			return {
+				label: truncatedLabel,
+				text: truncatedText || truncatedLabel
+			};
+		}
+
+		const dataset = ele.dataset || {};
+		for (const key in dataset) {
+			if (!Object.prototype.hasOwnProperty.call(dataset, key)) {
+				continue;
+			}
+			if (!key.toLowerCase().includes("reply")) {
+				continue;
+			}
+			const rawValue = (dataset[key] || "").toString().replace(/\s+/g, " ").trim();
+			if (!rawValue || rawValue.toLowerCase() === "reply") {
+				continue;
+			}
+			if (normalizedCurrent && rawValue.toLowerCase() === normalizedCurrent) {
+				continue;
+			}
+			const truncatedValue = rawValue.length > 160
+				? rawValue.slice(0, 157).trimEnd() + "…"
+				: rawValue;
+			return {
+				label: truncatedValue,
+				text: truncatedValue
+			};
+		}
+
+		try {
+			const ariaLabel = ele.getAttribute("aria-label") || "";
+			const match = ariaLabel.match(/Replying to\s+([^:]+)(?::\s*(.*))?/i);
+			if (match && match[1]) {
+				const target = match[1].trim();
+				const remainder = match[2] ? match[2].trim() : "";
+				let label = target;
+				if (remainder) {
+					label = `${target}: ${remainder}`;
+				}
+				if (normalizedCurrent && remainder && remainder.toLowerCase() === normalizedCurrent) {
+					return {
+						label: `${getTranslation("replying-to", "Replying to")} ${target}`,
+						text: remainder
+					};
+				}
+				const normalizedLabel = label.replace(/\s+/g, " ").trim();
+				const truncatedLabel = normalizedLabel.length > 160
+					? normalizedLabel.slice(0, 157).trimEnd() + "…"
+					: normalizedLabel;
+				const normalizedRemainder = remainder ? remainder.replace(/\s+/g, " ").trim() : "";
+				const truncatedRemainder = normalizedRemainder.length > 160
+					? normalizedRemainder.slice(0, 157).trimEnd() + "…"
+					: normalizedRemainder;
+				return {
+					label: truncatedLabel,
+					text: truncatedRemainder || truncatedLabel
+				};
+			}
+		} catch (e) {}
+
+		return null;
+	}
+
 	var EMOTELIST = false;
 	function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 		
@@ -478,12 +609,15 @@
 		var hasMembership = "";
 		var subtitle = "";
 
-		var chatmessage = "";
-		var chatname = "";
-		var chatimg = "";
-		var nameColor = "";
-		var member = false;
-		var mod = false;
+			var chatmessage = "";
+			var originalMessage = "";
+			var replyLabel = "";
+			var replyPlainText = "";
+			var chatname = "";
+			var chatimg = "";
+			var nameColor = "";
+			var member = false;
+			var mod = false;
 		
 		
 		var donoValue = "";
@@ -911,6 +1045,28 @@
 			//console.error(chatmessage);
 			chatmessage = "";
 		}
+
+		if (!repliesAreExcluded()) {
+			const textOnlyMode = Boolean(settings.textonlymode);
+			const baseMessagePlain = stripHtmlContent(chatmessage);
+			const replyInfo = extractReplyDetails(ele, baseMessagePlain);
+			if (replyInfo && replyInfo.label) {
+				replyLabel = replyInfo.label;
+				replyPlainText = replyInfo.text || replyInfo.label;
+				originalMessage = chatmessage;
+				if (!replyPlainText && replyLabel) {
+					replyPlainText = stripHtmlContent(replyLabel);
+				}
+				if (textOnlyMode) {
+					const prefix = replyLabel ? `${replyLabel}: ` : "";
+					const combined = `${prefix}${baseMessagePlain}`.trim();
+					chatmessage = combined || baseMessagePlain || replyLabel || chatmessage;
+				} else {
+					const safeReply = escapeHtml(replyLabel);
+					chatmessage = "<i><small>" + safeReply + ":&nbsp;</small></i> " + chatmessage;
+				}
+			}
+		}
 		
 		if (!chatname && chatmessage.startsWith("Subscribers-only mode.")){
 			return;
@@ -927,6 +1083,24 @@
 		data.backgroundColor = backgroundColor;
 		data.textColor = textColor;
 		data.chatmessage = chatmessage;
+		if (replyLabel) {
+			data.initial = replyLabel;
+		}
+		if (originalMessage) {
+			data.reply = originalMessage;
+		}
+		if (replyLabel || replyPlainText) {
+			data.meta = data.meta && typeof data.meta === "object" ? data.meta : {};
+			data.meta.reply = Object.assign(
+				{},
+				data.meta.reply,
+				{
+					label: replyLabel || replyPlainText || "",
+					text: replyPlainText || replyLabel || "",
+					source: "youtube-dom"
+				}
+			);
+		}
 		data.chatimg = chatimg;
 		data.hasDonation = hasDonation;
 		if (donoValue){

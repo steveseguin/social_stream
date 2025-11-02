@@ -115,6 +115,11 @@ body, html {
     color: #fff;
 }
 
+.event-status {
+    background-color: #5f6f7f;
+    color: #f0f3f5;
+}
+
 .donation {
     color: #4cd137;
     font-weight: 600;
@@ -456,29 +461,117 @@ body.light-mode .message.active {
 		return null;
 	}
 
-	function formatMetricValue(data, fallback = 0) {
+	const DEDUPLICATED_STATUS_EVENTS = new Set(['follower_update', 'subscriber_update']);
+	const statusLastValues = Object.create(null);
+
+	function getStatusCacheKey(normalizedEvent, data) {
+		const type = data && typeof data.type === 'string' ? data.type.toLowerCase() : 'unknown';
+		const candidates = [];
+		if (data) {
+			candidates.push(
+				data.channelId,
+				data.channel_id,
+				data.channel,
+				data.room,
+				data.roomid,
+				data.roomID,
+				data.sourceId,
+				data.source_id,
+				data.__tabID__,
+				data.tabId,
+				data.tabID,
+				data.sourceName,
+				data.user,
+				data.username
+			);
+		}
+		const meta = data && data.meta && typeof data.meta === 'object' ? data.meta : null;
+		if (meta) {
+			candidates.push(
+				meta.channelId,
+				meta.channel_id,
+				meta.channel,
+				meta.streamer,
+				meta.owner,
+				meta.__tabID__,
+				meta.tabId,
+				meta.tabID
+			);
+		}
+		let identifier = '';
+		for (let i = 0; i < candidates.length; i++) {
+			const value = candidates[i];
+			if (typeof value === 'string' && value.trim().length > 0) {
+				identifier = value.trim().toLowerCase();
+				break;
+			}
+			if (typeof value === 'number' && isFinite(value)) {
+				identifier = String(value);
+				break;
+			}
+		}
+		return type + ':' + normalizedEvent + ':' + identifier;
+	}
+
+	function resolveMetricNumber(data, fallback) {
 		const candidates = [];
 
-		if (data.meta !== undefined) {
+		if (data && data.meta !== undefined) {
 			const meta = data.meta;
-			if (typeof meta === 'object' && meta !== null) {
-				candidates.push(meta.current, meta.count, meta.total, meta.viewers, meta.viewer_count, meta.value, meta.amount);
+			if (meta && typeof meta === 'object') {
+				const priorityKeys = [
+					'current',
+					'count',
+					'total',
+					'viewers',
+					'viewer_count',
+					'value',
+					'amount',
+					'followers',
+					'follower_count',
+					'subscribers',
+					'subscriber_count'
+				];
+				for (let i = 0; i < priorityKeys.length; i++) {
+					const key = priorityKeys[i];
+					if (Object.prototype.hasOwnProperty.call(meta, key)) {
+						candidates.push(meta[key]);
+					}
+				}
+				for (const key in meta) {
+					if (Object.prototype.hasOwnProperty.call(meta, key) && priorityKeys.indexOf(key) === -1) {
+						candidates.push(meta[key]);
+					}
+				}
 			} else {
 				candidates.push(meta);
 			}
 		}
 
-		candidates.push(data.count, data.total, data.value);
-		candidates.push(fallback);
+		if (data) {
+			candidates.push(data.count, data.total, data.value);
+		}
+		if (fallback !== undefined) {
+			candidates.push(fallback);
+		}
 
-		for (const candidate of candidates) {
-			const numeric = extractNumeric(candidate);
+		for (let i = 0; i < candidates.length; i++) {
+			const numeric = extractNumeric(candidates[i]);
 			if (numeric !== null) {
-				return numeric.toLocaleString();
+				return numeric;
 			}
 		}
 
-		return Number(fallback || 0).toLocaleString();
+		return null;
+	}
+
+	function formatMetricValue(data, fallback = 0) {
+		const numeric = resolveMetricNumber(data, fallback);
+		if (numeric === null) {
+			const fallbackValue = fallback !== undefined ? fallback : 0;
+			return Number(fallbackValue).toLocaleString();
+		}
+		return Number(numeric).toLocaleString();
 	}
 
 	function buildEventDisplay(data) {
@@ -502,6 +595,7 @@ body.light-mode .message.active {
 
 		if (STATUS_EVENT_TYPES.has(normalizedEvent)) {
 			eventTypeText = 'STATUS';
+			eventTypeClass = 'event-status';
 			eventSpecificText = {
 				viewer_update: 'Viewers',
 				follower_update: 'Followers',
@@ -509,7 +603,18 @@ body.light-mode .message.active {
 				view_update: 'Views',
 				likes_update: 'Likes'
 			}[normalizedEvent] || eventSpecificText;
-			message = `Current ${eventSpecificText.toLowerCase()}: ${formatMetricValue(data, 0)}`;
+			const metricNumber = resolveMetricNumber(data);
+			if (DEDUPLICATED_STATUS_EVENTS.has(normalizedEvent) && metricNumber !== null) {
+				const statusKey = getStatusCacheKey(normalizedEvent, data);
+				const lastValue = statusLastValues[statusKey];
+				if (lastValue !== undefined && lastValue === metricNumber) {
+					return null;
+				}
+				statusLastValues[statusKey] = metricNumber;
+			}
+			const label = eventSpecificText ? eventSpecificText.toLowerCase() : 'status';
+			const formattedMetric = formatMetricValue(data, 0);
+			message = `Current ${label}: ${formattedMetric}`;
 			name = data.sourceName || `${capitalizeSource(data.type)} Stats`;
 			forceShow = true;
 		} else if (STREAM_EVENT_TYPES.has(normalizedEvent)) {
@@ -585,6 +690,9 @@ body.light-mode .message.active {
 		}
 		
 		const display = buildEventDisplay(data);
+		if (!display) {
+			return;
+		}
 
 		if (!(data.event || data.hasDonation) && !display.forceShow) {
 			return;

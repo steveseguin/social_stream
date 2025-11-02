@@ -28,7 +28,8 @@
                     
                     <div class="landing-description">
                         <p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
-                        <p><strong>Note:</strong> Events related to subscriptions, memberships, and followers are only available for your own channel. Chat functionality will work across most public channels.</p>
+                        <p><strong>Note:</strong> The YouTube Data API only provides aggregate subscriber totals (polled roughly every 30 minutes). It does not emit real-time “new follower” events, so you will not see Twitch-style follow pings here.</p>
+                        <p>Membership-related events and subscriber counts remain limited to channels you own; chat functionality will work across most public channels.</p>
                     </div>
 
                     <details id="credentials-details" class="credentials-details">
@@ -211,7 +212,11 @@ try {
 	var currentStream = null;
 	var messageQueue = [];
 	var queueDrainTimeout = null;
-	var pendingRelayMessages = [];
+    var pendingRelayMessages = [];
+    const MAX_CACHED_CHAT_MESSAGES = 500;
+    var messageContextCache = new Map();
+    var messageCacheOrder = [];
+    var channelNameCache = new Map();
 	var emojiAssetsReady = false;
 	var displayInterval;
 	var quickPollCount = 0
@@ -422,6 +427,226 @@ try {
 			payload.sourceImg = currentSourceImage;
 		}
 		return payload;
+	}
+
+	function rememberChannelName(channelId, displayName) {
+		if (!channelId || !displayName) {
+			return;
+		}
+		channelNameCache.set(String(channelId), displayName);
+	}
+
+	function lookupChannelName(channelId) {
+		if (!channelId) {
+			return null;
+		}
+		return channelNameCache.get(String(channelId)) || null;
+	}
+
+	function stripHtmlContent(value) {
+		if (!value) {
+			return '';
+		}
+		const temp = document.createElement('div');
+		temp.innerHTML = value;
+		return (temp.textContent || temp.innerText || '').trim();
+	}
+
+	function truncatePreviewText(text, maxLength) {
+		if (!text || typeof text !== 'string') {
+			return '';
+		}
+		const normalized = text.trim();
+		if (normalized.length <= maxLength) {
+			return normalized;
+		}
+		return normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd() + '…';
+	}
+
+	function rememberChatMessage(messageId, context) {
+		if (messageId === undefined || messageId === null) {
+			return;
+		}
+		const id = String(messageId);
+		if (messageContextCache.has(id)) {
+			messageContextCache.set(id, context);
+			const existingIndex = messageCacheOrder.indexOf(id);
+			if (existingIndex > -1) {
+				messageCacheOrder.splice(existingIndex, 1);
+			}
+		} else if (messageCacheOrder.length >= MAX_CACHED_CHAT_MESSAGES) {
+			const expired = messageCacheOrder.shift();
+			if (expired !== undefined) {
+				messageContextCache.delete(expired);
+			}
+		}
+		messageCacheOrder.push(id);
+		messageContextCache.set(id, context);
+	}
+
+	function lookupChatMessage(messageId) {
+		if (messageId === undefined || messageId === null) {
+			return null;
+		}
+		return messageContextCache.get(String(messageId)) || null;
+	}
+
+	// Treat the presence of the excludeReplyingTo key as an opt-out toggle, regardless of its stored value.
+	function repliesAreExcluded() {
+		return Object.prototype.hasOwnProperty.call(settings, 'excludeReplyingTo');
+	}
+
+	function resolveReplyContext(messageData) {
+		if (!messageData) {
+			return null;
+		}
+
+		const explicitMeta =
+			messageData.meta &&
+			typeof messageData.meta === 'object' &&
+			messageData.meta.reply &&
+			typeof messageData.meta.reply === 'object'
+				? messageData.meta.reply
+				: null;
+		const rawReplyDetails = messageData.replyDetails || null;
+
+		const candidateIds = [];
+		const candidateChannelIds = [];
+		const rawSources = [];
+
+		if (messageData.replyMessageId) {
+			candidateIds.push(messageData.replyMessageId);
+		}
+		if (messageData.replyToId) {
+			candidateIds.push(messageData.replyToId);
+		}
+		if (messageData.messageReplyId) {
+			candidateIds.push(messageData.messageReplyId);
+		}
+		if (rawReplyDetails && rawReplyDetails.messageId) {
+			candidateIds.push(rawReplyDetails.messageId);
+		}
+		if (explicitMeta && explicitMeta.messageId) {
+			candidateIds.push(explicitMeta.messageId);
+		}
+
+		if (messageData.replyChannelId) {
+			candidateChannelIds.push(messageData.replyChannelId);
+		}
+		if (rawReplyDetails && rawReplyDetails.channelId) {
+			candidateChannelIds.push(rawReplyDetails.channelId);
+		}
+		if (explicitMeta && explicitMeta.channelId) {
+			candidateChannelIds.push(explicitMeta.channelId);
+		}
+
+		if (rawReplyDetails && rawReplyDetails.raw) {
+			rawSources.push(rawReplyDetails.raw);
+		}
+		if (explicitMeta && explicitMeta.raw) {
+			rawSources.push(explicitMeta.raw);
+		}
+
+		let cachedContext = null;
+		let resolvedMessageId = null;
+
+		for (const id of candidateIds) {
+			if (id === undefined || id === null || id === '') {
+				continue;
+			}
+			const context = lookupChatMessage(id);
+			if (context) {
+				cachedContext = context;
+				resolvedMessageId = String(id);
+				break;
+			}
+		}
+
+		let author =
+			(cachedContext && cachedContext.authorName) ||
+			(explicitMeta && typeof explicitMeta.author === 'string' && explicitMeta.author) ||
+			null;
+
+		if ((!author || !author.trim()) && candidateChannelIds.length) {
+			for (const candidateChannelId of candidateChannelIds) {
+				if (candidateChannelId === undefined || candidateChannelId === null || candidateChannelId === '') {
+					continue;
+				}
+				const cachedName = lookupChannelName(candidateChannelId);
+				if (cachedName) {
+					author = cachedName;
+					break;
+				}
+			}
+		}
+
+		let originalText = '';
+		if (cachedContext && typeof cachedContext.plainText === 'string') {
+			originalText = cachedContext.plainText;
+		} else if (explicitMeta && typeof explicitMeta.text === 'string') {
+			originalText = explicitMeta.text;
+		} else if (typeof messageData.replyText === 'string') {
+			originalText = messageData.replyText;
+		}
+		originalText = typeof originalText === 'string' ? originalText.trim() : '';
+		if (!originalText && cachedContext && cachedContext.html) {
+			originalText = stripHtmlContent(cachedContext.html);
+		}
+
+		const trimmedAuthor = author ? author.trim() : '';
+		const trimmedText = originalText ? originalText.replace(/\s+/g, ' ').trim() : '';
+
+		const labelParts = [];
+		if (trimmedAuthor) {
+			labelParts.push(trimmedAuthor);
+		}
+		if (trimmedText) {
+			labelParts.push(truncatePreviewText(trimmedText, 140));
+		}
+
+		if (!labelParts.length && !candidateIds.length && !candidateChannelIds.length) {
+			return null;
+		}
+
+		let label = labelParts.join(': ');
+		if (!label) {
+			if (trimmedAuthor) {
+				label = `${getTranslation("replying-to", "Replying to")} ${trimmedAuthor}`;
+			} else {
+				label = getTranslation("replying-to", "Replying to");
+			}
+		}
+
+		const meta = {
+			messageId: resolvedMessageId || (candidateIds.length ? String(candidateIds[0]) : null),
+			channelId: candidateChannelIds.length ? String(candidateChannelIds[0]) : null,
+			commentId:
+				(rawReplyDetails && rawReplyDetails.commentId) ||
+				(explicitMeta && explicitMeta.commentId) ||
+				null,
+			author: trimmedAuthor || null,
+			text: trimmedText || null
+		};
+
+		if (!meta.channelId && cachedContext && cachedContext.channelId) {
+			meta.channelId = String(cachedContext.channelId);
+		}
+
+		if (rawSources.length) {
+			meta.raw = rawSources.length === 1 ? rawSources[0] : rawSources;
+		} else if (rawReplyDetails && !meta.raw) {
+			meta.raw = rawReplyDetails;
+		}
+
+		const replyHtml = cachedContext ? cachedContext.html : null;
+		const replyPlain = trimmedText || (replyHtml ? stripHtmlContent(replyHtml) : '');
+
+		return {
+			label,
+			replyHtml,
+			replyPlain,
+			meta
+		};
 	}
 
 	function resolveThumbnailUrl(thumbnails) {
@@ -954,20 +1179,35 @@ try {
 											  item.snippet.type === 'superStickerEvent';
 						
 						// Process regular messages (skip if it's a special event)
-						if (!isBacklogMessage && !isSpecialEvent) {
-							queueMessage({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								isChatOwner: item.authorDetails.isChatOwner,
-								isChatSponsor: item.authorDetails.isChatSponsor,
-								isChatModerator: item.authorDetails.isChatModerator,
-								authorChannelId: item.authorDetails.channelId,
-								publishedAt,
-								skipEvent: isBacklogMessage,
-								isMembershipMessage: false // Regular messages are not membership messages
-							});
-						}
+							if (!isBacklogMessage && !isSpecialEvent) {
+								const textMessageDetails = item.snippet.textMessageDetails || {};
+								const messageReplyDetails = textMessageDetails.messageReplyDetails || null;
+								const normalizedReplyDetails = messageReplyDetails
+									? {
+										messageId: messageReplyDetails.messageId || null,
+										channelId: messageReplyDetails.channelId || null,
+										commentId: messageReplyDetails.commentId || null,
+										raw: messageReplyDetails
+									}
+									: null;
+								queueMessage({
+									messageId: item.id,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
+									plainTextMessage: textMessageDetails.messageText || '',
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									isChatOwner: item.authorDetails.isChatOwner,
+									isChatSponsor: item.authorDetails.isChatSponsor,
+									isChatModerator: item.authorDetails.isChatModerator,
+									authorChannelId: item.authorDetails.channelId,
+									publishedAt,
+									skipEvent: isBacklogMessage,
+									isMembershipMessage: false, // Regular messages are not membership messages
+									replyDetails: normalizedReplyDetails,
+									replyMessageId: normalizedReplyDetails ? normalizedReplyDetails.messageId : null,
+									replyChannelId: normalizedReplyDetails ? normalizedReplyDetails.channelId : null
+								});
+							}
 						
 						// Process special message types
 						
@@ -1080,14 +1320,16 @@ try {
 								if (membershipMessage) {
 									const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
 										// This is a monthly featured message from a member
-										const membershipPayload = {
-											authorName: item.authorDetails.displayName.replace(/^@/, ''),
-											message: membershipMessage,
-											profileImageUrl: item.authorDetails.profileImageUrl,
-											isChatOwner: item.authorDetails.isChatOwner,
-											isChatSponsor: item.authorDetails.isChatSponsor,
-											isChatModerator: item.authorDetails.isChatModerator,
-											authorChannelId: item.authorDetails.channelId,
+											const membershipPayload = {
+												messageId: item.id,
+												authorName: item.authorDetails.displayName.replace(/^@/, ''),
+												message: membershipMessage,
+												plainTextMessage: membershipMessage,
+												profileImageUrl: item.authorDetails.profileImageUrl,
+												isChatOwner: item.authorDetails.isChatOwner,
+												isChatSponsor: item.authorDetails.isChatSponsor,
+												isChatModerator: item.authorDetails.isChatModerator,
+												authorChannelId: item.authorDetails.channelId,
 											publishedAt,
 											skipEvent: isBacklogMessage,
 											isMembershipMessage: true // This is a special membership message
@@ -2151,67 +2393,124 @@ try {
 			if (!messageData.message && messageData.message !== '') {
 				console.warn('Message data missing message property:', messageData);
 			}
-			const messageText = messageData.message || '';
-			const messageWithEmojis = replaceEmojis(messageText);
-			const safeAuthorName = strictEscapeHtml(messageData.authorName || '');
+				const messageText = messageData.message || '';
+				const messageWithEmojis = replaceEmojis(messageText);
+				const textOnlyMode = Boolean(settings.textonlymode);
+				let basePlainText = (typeof messageData.plainTextMessage === 'string' && messageData.plainTextMessage.trim())
+					? messageData.plainTextMessage
+					: stripHtmlContent(messageWithEmojis || messageText);
+				if (!basePlainText && messageText) {
+					basePlainText = messageText;
+				}
+				const safeAuthorName = strictEscapeHtml(messageData.authorName || '');
 
-			// Only update DOM if page is visible
-			if (isPageVisible) {
-				const textarea = document.querySelector("#textarea");
-				if (textarea) {
-					const shouldStick = shouldStickToBottom(textarea);
-					var span = document.createElement("div");
-					let badgeHtml = '';
-					// Display badges in the same order as they're sent
-					if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
-					if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
-					if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
-					
-					span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${messageWithEmojis}`;
-					textarea.appendChild(span);
-					// More aggressive cleanup to prevent memory buildup
-					const maxMessages = 50;
-					while (textarea.childNodes.length > maxMessages) {
-						textarea.removeChild(textarea.firstChild);
-					}
-					// Only auto-scroll if user was near bottom
-					if (shouldStick) {
-						textarea.scrollTop = textarea.scrollHeight;
+				rememberChannelName(messageData.authorChannelId, messageData.authorName);
+				if (messageData.messageId) {
+					rememberChatMessage(messageData.messageId, {
+						messageId: messageData.messageId,
+						authorName: messageData.authorName || '',
+						channelId: messageData.authorChannelId || null,
+						html: messageWithEmojis,
+						plainText: basePlainText
+					});
+				}
+
+				const replyContext = repliesAreExcluded() ? null : resolveReplyContext(messageData);
+				let finalChatMessage = textOnlyMode ? basePlainText : messageWithEmojis;
+				if (replyContext) {
+					if (textOnlyMode) {
+						const prefix = replyContext.label ? `${replyContext.label}: ` : '';
+						const combinedText = `${prefix}${basePlainText || ''}`.trim();
+						finalChatMessage = combinedText || basePlainText || replyContext.label || '';
+					} else {
+						const safeLabel = strictEscapeHtml(replyContext.label);
+						finalChatMessage = `<i><small>${safeLabel}:&nbsp;</small></i> ${messageWithEmojis}`;
 					}
 				}
-			}
-			if (!suppressRelay && !messageData.skipEvent && messageWithEmojis) {
-				// Determine membership status based on settings
-				let membershipStatus = "";
-				if (messageData.isChatSponsor) {
-					// If limitedyoutubememberchat is enabled, only mark as member if it's a special membership message
-					if (!settings.limitedyoutubememberchat || messageData.isMembershipMessage) {
+
+				// Only update DOM if page is visible
+				if (isPageVisible) {
+					const textarea = document.querySelector("#textarea");
+					if (textarea) {
+						const shouldStick = shouldStickToBottom(textarea);
+						var span = document.createElement("div");
+						let badgeHtml = '';
+						// Display badges in the same order as they're sent
+						if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
+						if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
+						if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
+						
+						const renderedMessage = textOnlyMode ? strictEscapeHtml(finalChatMessage) : finalChatMessage;
+						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${renderedMessage}`;
+						textarea.appendChild(span);
+						// More aggressive cleanup to prevent memory buildup
+						const maxMessages = 50;
+						while (textarea.childNodes.length > maxMessages) {
+							textarea.removeChild(textarea.firstChild);
+						}
+						// Only auto-scroll if user was near bottom
+						if (shouldStick) {
+							textarea.scrollTop = textarea.scrollHeight;
+						}
+					}
+				}
+				const renderableMessage = finalChatMessage;
+				if (!suppressRelay && !messageData.skipEvent && renderableMessage) {
+					// Determine membership status based on settings
+					let membershipStatus = "";
+					if (messageData.isChatSponsor) {
+						// If limitedyoutubememberchat is enabled, only mark as member if it's a special membership message
+						if (!settings.limitedyoutubememberchat || messageData.isMembershipMessage) {
 						membershipStatus = "member";
 					}
 				}
 				
 				// Chat messages must never carry an event flag; reserve event usage for system-level notifications only.
-				const outgoingMessage = {
-					chatname: messageData.authorName,
-					chatbadges: chatbadges.length > 0 ? chatbadges : "",
-					userid: messageData.authorChannelId,
-					nameColor: nameColor,
-					backgroundColor: "",
-					textColor: "",
-					chatmessage: messageWithEmojis, // Use the version with emojis replaced
-					chatimg: messageData.profileImageUrl || "",
-					hasDonation: "",
-					videoid: videoId,
-					membership: membershipStatus,
-					mod: messageData.isChatModerator || false,
-					type: youtubeShorts ? "youtubeshorts" : "youtube",
-					textonly: settings.textonlymode || false // Pass the setting to the extension
-				};
-				if (messageData.meta && typeof messageData.meta === 'object') {
-					outgoingMessage.meta = messageData.meta;
+					const outgoingMessage = {
+						chatname: messageData.authorName,
+						chatbadges: chatbadges.length > 0 ? chatbadges : "",
+						userid: messageData.authorChannelId,
+						nameColor: nameColor,
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: finalChatMessage,
+						chatimg: messageData.profileImageUrl || "",
+						hasDonation: "",
+						videoid: videoId,
+						membership: membershipStatus,
+						mod: messageData.isChatModerator || false,
+						type: youtubeShorts ? "youtubeshorts" : "youtube",
+						textonly: textOnlyMode // Pass the setting to the extension
+					};
+					if (replyContext) {
+						outgoingMessage.initial = replyContext.label;
+						outgoingMessage.reply = textOnlyMode ? basePlainText : messageWithEmojis;
+					}
+					if (messageData.meta && typeof messageData.meta === 'object') {
+						outgoingMessage.meta = { ...messageData.meta };
+					}
+					if (replyContext && replyContext.meta) {
+						outgoingMessage.meta = outgoingMessage.meta || {};
+						const replyMeta = {
+							messageId: replyContext.meta.messageId || null,
+							channelId: replyContext.meta.channelId || null,
+							commentId: replyContext.meta.commentId || null,
+							author: replyContext.meta.author || null,
+							text: replyContext.meta.text || null
+						};
+						if (replyContext.meta.raw) {
+							replyMeta.raw = replyContext.meta.raw;
+						}
+						if (replyContext.replyHtml) {
+							replyMeta.html = replyContext.replyHtml;
+						}
+						if (replyContext.replyPlain && !replyMeta.text) {
+							replyMeta.text = replyContext.replyPlain;
+						}
+						outgoingMessage.meta.reply = replyMeta;
+					}
+					pushMessage(applySourceIdentity(outgoingMessage));
 				}
-				pushMessage(applySourceIdentity(outgoingMessage));
-			}
 		} catch (e) {
 			console.error('Error processing message:', e);
 		}
