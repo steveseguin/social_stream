@@ -2769,7 +2769,6 @@ function forwardChatMessage(evt, bridgeMeta) {
     const chatmessageHtml = renderKickMessageHtml(message, content);
     const messagePayload = {
         type: 'kick',
-        event: normalizedEvent || 'message',
         chatname,
         chatmessage: chatmessageHtml,
         chatimg: chatimg || '',
@@ -2779,6 +2778,10 @@ function forwardChatMessage(evt, bridgeMeta) {
         bridge: bridgeMeta || null,
         raw: evt
     };
+    // Chat messages should not be flagged as events; only propagate data.event for actual system-level items.
+    if (normalizedEvent && normalizedEvent !== 'message') {
+        messagePayload.event = normalizedEvent;
+    }
     if (content) {
         messagePayload.meta = { plainText: content };
     }

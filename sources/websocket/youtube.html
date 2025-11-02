@@ -2190,6 +2190,7 @@ try {
 					}
 				}
 				
+				// Chat messages must never carry an event flag; reserve event usage for system-level notifications only.
 				const outgoingMessage = {
 					chatname: messageData.authorName,
 					chatbadges: chatbadges.length > 0 ? chatbadges : "",

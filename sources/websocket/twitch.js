@@ -1628,7 +1628,13 @@ async function ensureChatClientInstance() {
 		}
 
 		var data = {};
-		data.event = normalizedPayload?.event || 'message';
+		const normalizedEventType = normalizedPayload?.event;
+		const normalizedEventTypeLower =
+			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
+		// Chat messages must never set data.event; reserve it for true system events (raids, cheers, /me actions, etc.).
+		if (normalizedEventType && normalizedEventTypeLower !== 'message' && normalizedEventTypeLower !== 'chat') {
+			data.event = normalizedEventType;
+		}
 		data.chatname = resolvedDisplayName;
 		data.username = user;
 		
