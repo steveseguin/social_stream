@@ -1,3 +1,8 @@
+(() => {
+'use strict';
+
+const globalScope = typeof window !== 'undefined' ? window : globalThis;
+
 const YT_CORE_EXTENSION_PATH = 'providers/youtube/liveChat.js';
 const YT_CORE_RELATIVE_PATH = '../../providers/youtube/liveChat.js';
 const YT_CONTEXT_RESOLVER_EXTENSION_PATH = 'providers/youtube/contextResolver.js';
@@ -50,11 +55,16 @@ modulesReady.catch((error) => {
 });
 
 const STREAMING_MAX_CHAT_ENTRIES = 50;
-var settings = typeof settings !== 'undefined' ? settings : {};
-var BTTV = typeof BTTV !== 'undefined' ? BTTV : false;
-var SEVENTV = typeof SEVENTV !== 'undefined' ? SEVENTV : false;
-var FFZ = typeof FFZ !== 'undefined' ? FFZ : false;
-var EMOTELIST = typeof EMOTELIST !== 'undefined' ? EMOTELIST : false;
+let settings = globalScope.settings;
+if (!settings || typeof settings !== 'object') {
+  settings = {};
+  globalScope.settings = settings;
+}
+let BTTV = typeof globalScope.BTTV !== 'undefined' ? globalScope.BTTV : false;
+let SEVENTV = typeof globalScope.SEVENTV !== 'undefined' ? globalScope.SEVENTV : false;
+let FFZ = typeof globalScope.FFZ !== 'undefined' ? globalScope.FFZ : false;
+let EMOTELIST =
+  typeof globalScope.EMOTELIST !== 'undefined' ? globalScope.EMOTELIST : false;
 let emojiAssetsReady = false;
 const shortcutMap = new Map();
 const unicodeMap = new Map();
@@ -289,6 +299,7 @@ function mergeEmotes() {
     }
   }
   EMOTELIST = Object.keys(merged).length ? merged : false;
+  globalScope.EMOTELIST = EMOTELIST;
   if (EMOTELIST) {
     window.dispatchEvent(
       new CustomEvent('settingsChanged', {
@@ -555,6 +566,7 @@ function handleExtensionMessage(request, sender, sendResponse) {
     if (request && typeof request === 'object') {
       if ('settings' in request) {
         settings = request.settings || {};
+        globalScope.settings = settings;
         window.dispatchEvent(
           new CustomEvent('settingsChanged', {
             detail: { settings },
@@ -568,6 +580,7 @@ function handleExtensionMessage(request, sender, sendResponse) {
       }
       if ('BTTV' in request) {
         BTTV = request.BTTV || false;
+        globalScope.BTTV = BTTV;
         mergeEmotes();
         refreshStreamingEmoteContext();
         sendResponse(true);
@@ -575,6 +588,7 @@ function handleExtensionMessage(request, sender, sendResponse) {
       }
       if ('SEVENTV' in request) {
         SEVENTV = request.SEVENTV || false;
+        globalScope.SEVENTV = SEVENTV;
         mergeEmotes();
         refreshStreamingEmoteContext();
         sendResponse(true);
@@ -582,6 +596,7 @@ function handleExtensionMessage(request, sender, sendResponse) {
       }
       if ('FFZ' in request) {
         FFZ = request.FFZ || false;
+        globalScope.FFZ = FFZ;
         mergeEmotes();
         refreshStreamingEmoteContext();
         sendResponse(true);
@@ -609,6 +624,7 @@ function requestInitialSettings() {
       }
       if ('settings' in response) {
         settings = response.settings || {};
+        globalScope.settings = settings;
         window.dispatchEvent(
           new CustomEvent('settingsChanged', {
             detail: { settings },
@@ -623,6 +639,18 @@ function requestInitialSettings() {
             bubbles: true
           })
         );
+      }
+      if ('BTTV' in response) {
+        BTTV = response.BTTV || false;
+        globalScope.BTTV = BTTV;
+      }
+      if ('SEVENTV' in response) {
+        SEVENTV = response.SEVENTV || false;
+        globalScope.SEVENTV = SEVENTV;
+      }
+      if ('FFZ' in response) {
+        FFZ = response.FFZ || false;
+        globalScope.FFZ = FFZ;
       }
       mergeEmotes();
       refreshStreamingEmoteContext();
@@ -1829,3 +1857,4 @@ const YT_SCOPES = [
   'https://www.googleapis.com/auth/youtube.force-ssl',
   'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
 ];
+})();
