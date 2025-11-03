@@ -366,14 +366,99 @@ try {
 		}
 	  });
 	}
-	function setTrackedTimeout(callback, delay, isBackground = false) {
-		const timeoutHandle = setTimeout(() => {
-			activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
-			callback();
-		}, delay);
-		activeTimeouts.add(timeoutHandle);
-		return timeoutHandle;
+function setTrackedTimeout(callback, delay, isBackground = false) {
+	const timeoutHandle = setTimeout(() => {
+		activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
+		callback();
+	}, delay);
+	activeTimeouts.add(timeoutHandle);
+	return timeoutHandle;
+}
+
+function isElectronEnvironment() {
+	try {
+		if (window.electron && window.electron.ipcRenderer) return true;
+		if (navigator.userAgent && navigator.userAgent.indexOf('Electron') !== -1) return true;
+	} catch (_) {}
+	return false;
+}
+
+let keepAliveInitialized = false;
+function enableBackgroundKeepAlive() {
+	if (keepAliveInitialized) return;
+	keepAliveInitialized = true;
+
+	try {
+		const receiveChannelCallback = function (event) {
+			const channel = event.channel;
+			if (!channel) return;
+			channel.onmessage = function () {};
+			channel.onopen = function () {};
+			channel.onclose = function () {};
+			setInterval(function () {
+				try { channel.send("KEEPALIVE"); } catch (_) {}
+			}, 1000);
+		};
+		const errorHandle = function () {};
+		const localConnection = new RTCPeerConnection();
+		const remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function () {
+			try { localConnection.sendChannel.send("CONNECTED"); } catch (_) {}
+		};
+		localConnection.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => localConnection.setRemoteDescription(remoteConnection.localDescription))
+			.then(() => {
+				console.log("YouTube keep-alive channel established");
+			})
+			.catch(errorHandle);
+	} catch (e) {
+		console.log("YouTube keep-alive setup failed:", e);
 	}
+
+	const preventBackgroundThrottling = function () {
+		try {
+			window.onblur = null;
+			window.blurred = false;
+			document.hasFocus = () => true;
+			Object.defineProperties(document, {
+				hidden: { value: false, configurable: true },
+				mozHidden: { value: false, configurable: true },
+				msHidden: { value: false, configurable: true },
+				webkitHidden: { value: false, configurable: true },
+				visibilityState: {
+					get: () => "visible",
+					configurable: true
+				}
+			});
+		} catch (_) {}
+	};
+
+	const visibilityEvents = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"mozvisibilitychange",
+		"msvisibilitychange",
+		"blur"
+	];
+	visibilityEvents.forEach(eventName => {
+		window.addEventListener(eventName, (event) => {
+			try {
+				event.stopImmediatePropagation();
+				event.preventDefault();
+			} catch (_) {}
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
+}
 	function processCustomEmoteData(data) {
 	  customEmoteData = data;
 	  // Map custom emotes by their name (only in shortcut map)
@@ -1047,14 +1132,19 @@ try {
 				console.log(`Trimmed message queue to 200 messages (was ${messageQueue.length})`);
 			}
 			
-			// Cancel any pending fetch if we're going to background
+			// Keep next poll scheduled while hidden so we don't stall
 			if (fetchTimeout && !isPolling) {
-				if (typeof fetchTimeout.clear === 'function') {
-					fetchTimeout.clear();
-				} else {
-					clearTimeout(fetchTimeout);
-				}
-				fetchTimeout = null;
+				const elapsed = Date.now() - lastPollingTime;
+				const baseInterval = youtubeRecommendedInterval || 5000;
+				const remaining = Math.max(0, baseInterval - elapsed);
+				try {
+					if (typeof fetchTimeout.clear === 'function') {
+						fetchTimeout.clear();
+					} else {
+						clearTimeout(fetchTimeout);
+					}
+				} catch (_) {}
+				fetchTimeout = setTrackedTimeout(fetchChatMessages, remaining || baseInterval, true);
 			}
 			
 			if (queueDrainTimeout) {
@@ -3086,6 +3176,9 @@ try {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		registerCleanup(() => document.removeEventListener('visibilitychange', handleVisibilityChange));
 		isPageVisible = document.visibilityState === 'visible';
+		if (!isElectronEnvironment()) {
+			enableBackgroundKeepAlive();
+		}
 		const sendButton = document.querySelector('#sendmessage');
 		if (sendButton) sendButton.onclick = handleSendMessage;
 		const inputText = document.querySelector('#input-text');
