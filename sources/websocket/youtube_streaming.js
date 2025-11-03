@@ -50,7 +50,7 @@ modulesReady.catch((error) => {
 });
 
 const STREAMING_MAX_CHAT_ENTRIES = 50;
-let settings = {};
+var settings = typeof settings !== 'undefined' ? settings : {};
 let BTTV = false;
 let SEVENTV = false;
 let FFZ = false;
