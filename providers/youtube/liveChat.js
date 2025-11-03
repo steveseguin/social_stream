@@ -1,4 +1,4 @@
-const STREAM_ENDPOINT = 'https://youtube.googleapis.com/youtube/v3/liveChat/messages:stream';
+const STREAM_ENDPOINT = 'https://www.googleapis.com/youtube/v3/liveChat/messages:stream';
 const DEFAULT_STREAMING = {
   endpoint: STREAM_ENDPOINT,
   maxResults: 500,
@@ -157,12 +157,20 @@ export function createYouTubeLiveChat(options = {}) {
     if (state.status === STATUS.RUNNING || state.status === STATUS.STARTING) {
       return;
     }
+    logDebug('Attempting to start YouTube live chat', {
+      mode: state.mode,
+      startOptions: sanitizeStartOptions(startOptions)
+    });
     state.manualStop = false;
     state.lastStartOptions = { ...startOptions };
     updateStatus(STATUS.STARTING, { mode: state.mode });
     try {
       await ensureChatId(startOptions);
       await ensureToken(startOptions);
+      logDebug('Live chat start prerequisites satisfied', {
+        chatId: state.chatId,
+        tokenPresent: Boolean(state.token?.accessToken)
+      });
       if (state.mode === 'stream') {
         await startStream();
         return;
@@ -182,6 +190,7 @@ export function createYouTubeLiveChat(options = {}) {
 
   function stop(options = {}) {
     state.manualStop = true;
+    logDebug('Stopping YouTube live chat client', { suppressStatus: options.suppressStatus });
     cleanupStream();
     if (state.pollTimer) {
       clearTimeout(state.pollTimer);
@@ -221,10 +230,17 @@ export function createYouTubeLiveChat(options = {}) {
   async function ensureChatId(startOptions = {}) {
     if (startOptions.chatId) {
       state.chatId = startOptions.chatId;
+      logDebug('Chat ID supplied via start options');
       return;
     }
     if (typeof opts.chatIdResolver === 'function') {
       state.chatId = await opts.chatIdResolver();
+      logDebug('Resolved chat ID via resolver', { chatId: state.chatId });
+    }
+    if (!state.chatId) {
+      logDebug('Chat ID unavailable after resolution', {
+        startOptions: sanitizeStartOptions(startOptions)
+      });
     }
   }
 
@@ -232,15 +248,20 @@ export function createYouTubeLiveChat(options = {}) {
     const startToken = normalizeToken(startOptions.token);
     if (startToken) {
       state.token = startToken;
+      logDebug('Access token supplied via start options');
       return;
     }
 
     if (state.token && state.token.accessToken && !startOptions.forceRefreshToken) {
+      logDebug('Reusing cached access token');
       return;
     }
 
     if (typeof opts.tokenProvider === 'function') {
       state.token = normalizeToken(await opts.tokenProvider());
+      logDebug('Fetched token via provider', {
+        tokenPresent: Boolean(state.token?.accessToken)
+      });
     }
 
     if (!state.token || !state.token.accessToken) {
@@ -285,6 +306,12 @@ export function createYouTubeLiveChat(options = {}) {
     const controller = createAbortController();
     state.streamAbortController = controller;
     state.retryCount = 0;
+    logDebug('Starting streaming loop', {
+      endpoint: opts.streaming.endpoint,
+      chatId: state.chatId,
+      maxResults: opts.streaming.maxResults,
+      reconnectDelayMs: opts.streaming.reconnectDelayMs
+    });
     updateStatus(STATUS.RUNNING, { mode: 'stream' });
     try {
       await consumeStream(fetchImpl, controller.signal);
@@ -312,12 +339,19 @@ export function createYouTubeLiveChat(options = {}) {
       params.set('pageToken', state.pageToken);
     }
 
+    logDebug('Opening YouTube streaming request', {
+      endpoint: opts.streaming.endpoint,
+      params: Object.fromEntries(params.entries())
+    });
+
     const res = await fetchImpl(`${opts.streaming.endpoint}?${params.toString()}`, {
       headers: {
         Authorization: `Bearer ${state.token.accessToken}`,
         Accept: 'application/json'
       },
-      signal
+      signal,
+      mode: 'cors',
+      credentials: 'omit'
     });
 
     if (res.status === 401) {
@@ -333,6 +367,11 @@ export function createYouTubeLiveChat(options = {}) {
       } catch (_) {
         errBody = null;
       }
+      logDebug('Streaming request failed', {
+        status: res.status,
+        statusText: res.statusText,
+        error: errBody?.error?.message || errBody
+      });
       const error = new Error(
         `YouTube live chat stream failed (${res.status} ${res.statusText || ''})`.trim()
       );
@@ -342,6 +381,7 @@ export function createYouTubeLiveChat(options = {}) {
     }
 
     if (!res.body || typeof res.body.getReader !== 'function') {
+      logDebug('Streaming response missing readable body');
       throw new Error('Environment does not support streaming responses for YouTube live chat.');
     }
 
@@ -352,6 +392,7 @@ export function createYouTubeLiveChat(options = {}) {
     while (state.status === STATUS.RUNNING && !signal.aborted) {
       const { value, done } = await state.streamReader.read();
       if (done) {
+        logDebug('Streaming reader reported completion');
         break;
       }
       buffer += decoder.decode(value, { stream: true });
@@ -360,6 +401,7 @@ export function createYouTubeLiveChat(options = {}) {
 
     buffer += decoder.decode();
     await processStreamBuffer(buffer, { flush: true });
+    logDebug('Finished consuming YouTube streaming response');
   }
 
   async function processStreamBuffer(buffer, options = {}) {
@@ -404,16 +446,33 @@ export function createYouTubeLiveChat(options = {}) {
     emitter.emit(EVENTS.DEBUG, { type: 'stream_chunk', payload });
 
     if (Array.isArray(payload.items) && payload.items.length) {
+      logDebug('Processed YouTube streaming chunk', {
+        itemCount: payload.items.length,
+        sampleKeys: Object.keys(payload.items[0] || {}),
+        sample: payload.items[0] ? sanitizeChunkPreview(payload.items[0]) : null
+      });
       await Promise.all(
         payload.items.map(async (item) => {
           try {
             const normalized = normalizeChatItem(item);
-            emitChat(normalized);
+            if (normalized?.raw) {
+              emitChat(normalized);
+            } else {
+              logDebug('Dropping YouTube streaming item without payload', {
+                itemId: item?.id,
+                reason: 'NO_RAW_MESSAGE'
+              });
+            }
           } catch (err) {
             logDebug('Failed to process YouTube streaming item', { error: err, itemId: item?.id });
           }
         })
       );
+    } else {
+      logDebug('YouTube streaming chunk contained no chat items', {
+        rawKeys: Object.keys(payload || {}),
+        nextPageToken: payload.nextPageToken || null
+      });
     }
   }
 
@@ -424,19 +483,172 @@ export function createYouTubeLiveChat(options = {}) {
     if (!state.manualStop) {
       scheduleRetry();
     }
+    logDebug('Streaming error occurred', {
+      message: error?.message,
+      code: error?.code,
+      status: error?.status
+    });
   }
 
   function normalizeChatItem(raw) {
+    const timestamp = Date.now();
+    const unwrapped = unwrapLiveChatMessage(raw);
+    const snippet = unwrapped?.snippet || null;
+    const author = unwrapped?.authorDetails || null;
+    const badges = deriveAuthorBadges(author);
+    const superChat = snippet?.superChatDetails || null;
+
     return {
-      raw,
-      message: '',
-      badges: [],
-      author: null,
-      isMember: false,
-      amountMicros: null,
-      currency: null,
-      timestamp: Date.now()
+      raw: unwrapped || raw || null,
+      rawChunk: raw,
+      snippet,
+      author,
+      message: snippet?.displayMessage || '',
+      badges,
+      isMember: Boolean(author?.isChatSponsor),
+      isModerator: Boolean(author?.isChatModerator),
+      isOwner: Boolean(author?.isChatOwner),
+      amountMicros: superChat?.amountMicros ?? null,
+      currency: superChat?.currency ?? null,
+      timestamp
     };
+  }
+
+  function unwrapLiveChatMessage(payload) {
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+
+    const queue = [payload];
+    const visited = new Set();
+
+    const enqueue = (value) => {
+      if (!value || (typeof value !== 'object' && !Array.isArray(value))) {
+        return;
+      }
+      if (visited.has(value)) {
+        return;
+      }
+      queue.push(value);
+    };
+
+    while (queue.length) {
+      const current = queue.shift();
+      if (!current || (typeof current !== 'object' && !Array.isArray(current))) {
+        continue;
+      }
+      if (visited.has(current)) {
+        continue;
+      }
+      visited.add(current);
+
+      if (
+        (current.kind && current.kind === 'youtube#liveChatMessage') ||
+        (current.snippet && typeof current.snippet === 'object')
+      ) {
+        return current;
+      }
+
+      if (Array.isArray(current)) {
+        current.forEach((item) => enqueue(item));
+        continue;
+      }
+
+      const candidates = [
+        current.liveChatMessage,
+        current.chatMessage,
+        current.chatMessageEvent,
+        current.chatMessageCreatedEvent,
+        current.message,
+        current.resource,
+        current.result,
+        current.results,
+        current.response,
+        current.responses,
+        current.payload,
+        current.event,
+        current.body,
+        current.value,
+        current.entry,
+        current.details,
+        current.data,
+        current.item
+      ];
+
+      candidates.forEach((candidate) => enqueue(candidate));
+
+      if (Array.isArray(current.items)) {
+        current.items.forEach((item) => enqueue(item));
+      }
+    }
+
+    return null;
+  }
+
+  function sanitizeChunkPreview(value) {
+    try {
+      if (!value || typeof value !== 'object') {
+        return value ?? null;
+      }
+      const clone = Array.isArray(value) ? value.slice(0, 5) : { ...value };
+      if (clone.raw) {
+        delete clone.raw;
+      }
+      if (clone.rawChunk) {
+        delete clone.rawChunk;
+      }
+      return clone;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function sanitizeStartOptions(options) {
+    if (!options || typeof options !== 'object') {
+      return options ?? null;
+    }
+    const clone = { ...options };
+    if (clone.token) {
+      clone.token = redactToken(clone.token);
+    }
+    return clone;
+  }
+
+  function redactToken(token) {
+    if (!token) {
+      return null;
+    }
+    if (typeof token === 'string') {
+      return `${token.slice(0, 6)}…`;
+    }
+    if (typeof token === 'object') {
+      const clone = { ...token };
+      if (clone.accessToken) {
+        clone.accessToken = `${clone.accessToken.slice(0, 6)}…`;
+      }
+      if (clone.access_token) {
+        clone.access_token = `${clone.access_token.slice(0, 6)}…`;
+      }
+      return clone;
+    }
+    return token;
+  }
+
+  function deriveAuthorBadges(author) {
+    if (!author) {
+      return [];
+    }
+    const badges = [];
+    if (author.isChatOwner) {
+      badges.push({ type: 'text', text: '👑' });
+    }
+    if (author.isChatModerator) {
+      badges.push({ type: 'text', text: '🛡️' });
+    }
+    if (author.isChatSponsor) {
+      badges.push({ type: 'text', text: '⭐' });
+    }
+    return badges;
   }
 
   function emitChat(chat) {
@@ -465,6 +677,7 @@ export function createYouTubeLiveChat(options = {}) {
 
   function scheduleRetry(options = {}) {
     if (state.manualStop) {
+      logDebug('Retry skipped because client stopped manually');
       return;
     }
     if (state.retryTimer) {
