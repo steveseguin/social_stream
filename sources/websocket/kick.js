@@ -2809,9 +2809,6 @@ function forwardChatMessage(evt, bridgeMeta) {
     if (resolvedId != null) {
         const normalizedId = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
         messagePayload.id = normalizedId;
-        messagePayload.messageId = normalizedId;
-    } else if (messageId != null) {
-        messagePayload.messageId = typeof messageId === 'string' ? messageId : String(messageId);
     }
     if (isModerator) {
         messagePayload.mod = true;

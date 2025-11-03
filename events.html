@@ -321,6 +321,75 @@ body.light-mode .message.active {
     font-weight: bold;
     text-transform: uppercase;
 }
+
+.meta-details {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background-color: rgba(255, 255, 255, 0.06);
+    font-size: 0.85em;
+    line-height: 1.4;
+}
+
+body.light-mode .meta-details {
+    border-color: rgba(0, 0, 0, 0.08);
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+.meta-section + .meta-section {
+    margin-top: 10px;
+}
+
+.meta-section-title {
+    font-size: 0.8em;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #9fb3d1;
+    margin-bottom: 6px;
+}
+
+body.light-mode .meta-section-title {
+    color: #4a5a73;
+}
+
+.meta-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 6px 12px;
+}
+
+.meta-field {
+    display: flex;
+    flex-direction: column;
+}
+
+.meta-label {
+    font-size: 0.7em;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.7;
+}
+
+.meta-value {
+    font-size: 0.95em;
+    font-weight: 600;
+    word-break: break-word;
+    white-space: pre-wrap;
+}
+
+.meta-value.badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.25);
+    font-weight: 500;
+}
+
+body.light-mode .meta-value.badge {
+    background: rgba(0, 0, 0, 0.08);
+}
 </style>
 </head>
 <body>
@@ -357,6 +426,7 @@ body.light-mode .message.active {
 	var showUSD = urlParams.has("currency") ? true : false;
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
 	var lightMode = urlParams.has("lightmode");
+	var hideMetaPanels = urlParams.has("hidemeta");
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
@@ -574,6 +644,291 @@ body.light-mode .message.active {
 		return Number(numeric).toLocaleString();
 	}
 
+	function isPlainObject(value) {
+		if (value === null || typeof value !== 'object') {
+			return false;
+		}
+		return Object.prototype.toString.call(value) === '[object Object]';
+	}
+
+	function formatMetaLabel(key) {
+		if (typeof key !== 'string' || !key.length) {
+			return 'Field';
+		}
+		return key
+			.replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+			.replace(/[_\-\s]+/g, ' ')
+			.trim()
+			.replace(/\b\w/g, char => char.toUpperCase());
+	}
+
+	function formatMetaValue(value) {
+		if (value === undefined || value === null) {
+			return '';
+		}
+		if (typeof value === 'boolean') {
+			return value ? 'Yes' : 'No';
+		}
+		if (typeof value === 'number') {
+			return Number.isFinite(value) ? Number(value).toLocaleString() : String(value);
+		}
+		if (value instanceof Date) {
+			return value.toLocaleString();
+		}
+		if (Array.isArray(value)) {
+			return value.map(item => formatMetaValue(item)).filter(Boolean).join(', ');
+		}
+		if (isPlainObject(value)) {
+			try {
+				return JSON.stringify(value, null, 2);
+			} catch (err) {
+				return '[object]';
+			}
+		}
+		return String(value);
+	}
+
+	function normalizeHexColor(hex) {
+		if (typeof hex !== 'string') return null;
+		const trimmed = hex.trim();
+		const match = trimmed.match(/^#?([0-9a-f]{3}|[0-9a-f]{6})$/i);
+		if (!match) return null;
+		let value = match[1];
+		if (value.length === 3) {
+			value = value
+				.split('')
+				.map(char => char + char)
+				.join('');
+		}
+		return '#' + value.toLowerCase();
+	}
+
+	function getReadableTextColor(hex) {
+		const normalized = normalizeHexColor(hex);
+		if (!normalized) return null;
+		const r = parseInt(normalized.slice(1, 3), 16);
+		const g = parseInt(normalized.slice(3, 5), 16);
+		const b = parseInt(normalized.slice(5, 7), 16);
+		const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+		return luminance > 160 ? '#111111' : '#f5f5f5';
+	}
+
+	function buildMetaSections(data) {
+		const sections = [];
+		const normalizedEvent = normalizeEventKey(data.event);
+		const meta = data && isPlainObject(data.meta) ? data.meta : null;
+		const consumedMetaKeys = new Set();
+
+		function addSection(title, fields) {
+			if (!Array.isArray(fields)) return;
+			const normalizedFields = [];
+			for (let i = 0; i < fields.length; i++) {
+				const field = fields[i];
+				if (!field || !field.label) continue;
+				const formatted = formatMetaValue(field.value);
+				if (formatted === '' || formatted === null || typeof formatted === 'undefined') continue;
+				const entry = {
+					label: field.label,
+					value: formatted,
+					badge: Boolean(field.badge),
+					badgeColor: field.badgeColor ? normalizeHexColor(field.badgeColor) : null
+				};
+				normalizedFields.push(entry);
+			}
+			if (normalizedFields.length > 0) {
+				sections.push({ title, fields: normalizedFields });
+			}
+		}
+
+		if (normalizedEvent === 'channel_points' && isPlainObject(data.reward)) {
+			const reward = data.reward;
+			const rewardFields = [];
+			if (reward.title) {
+				rewardFields.push({ label: 'Title', value: reward.title });
+			}
+			if (typeof reward.cost !== 'undefined' && reward.cost !== null) {
+				const cost = Number(reward.cost);
+				const formattedCost = Number.isFinite(cost) ? `${cost.toLocaleString()} pts` : String(reward.cost);
+				rewardFields.push({ label: 'Cost', value: formattedCost });
+			}
+			if (reward.prompt) {
+				rewardFields.push({ label: 'Prompt', value: reward.prompt });
+			}
+			if (reward.userInput) {
+				rewardFields.push({ label: 'User Input', value: reward.userInput });
+			}
+			if (reward.status) {
+				rewardFields.push({ label: 'Status', value: reward.status });
+			}
+			if (reward.redemptionId) {
+				rewardFields.push({ label: 'Redemption ID', value: reward.redemptionId });
+			}
+			if (reward.id) {
+				rewardFields.push({ label: 'Reward ID', value: reward.id });
+			}
+			if (reward.backgroundColor) {
+				rewardFields.push({
+					label: 'Color',
+					value: reward.backgroundColor,
+					badge: true,
+					badgeColor: reward.backgroundColor
+				});
+			}
+			addSection('Reward', rewardFields);
+		}
+
+		if (normalizedEvent === 'channel_points' && meta) {
+			const metaFields = [];
+			if ('userId' in meta) {
+				metaFields.push({ label: 'User ID', value: meta.userId });
+				consumedMetaKeys.add('userId');
+			}
+			if ('rewardId' in meta) {
+				metaFields.push({ label: 'Reward ID', value: meta.rewardId });
+				consumedMetaKeys.add('rewardId');
+			}
+			if ('cost' in meta) {
+				const metaCost = Number(meta.cost);
+				const formattedMetaCost = Number.isFinite(metaCost) ? `${metaCost.toLocaleString()} pts` : formatMetaValue(meta.cost);
+				metaFields.push({ label: 'Cost', value: formattedMetaCost });
+				consumedMetaKeys.add('cost');
+			}
+			if ('alias' in meta) {
+				metaFields.push({ label: 'Alias', value: meta.alias });
+				consumedMetaKeys.add('alias');
+			}
+			addSection('Reward Metadata', metaFields);
+		}
+
+		const type = typeof data.type === 'string' ? data.type.toLowerCase() : '';
+		if (type === 'kick' && meta) {
+			const supportFields = [];
+			if ('supporter' in meta) {
+				supportFields.push({ label: 'Supporter', value: meta.supporter });
+				consumedMetaKeys.add('supporter');
+			}
+			if ('amount' in meta) {
+				supportFields.push({ label: 'Amount', value: meta.amount });
+				consumedMetaKeys.add('amount');
+			}
+			if ('currency' in meta) {
+				supportFields.push({ label: 'Currency', value: meta.currency });
+				consumedMetaKeys.add('currency');
+			}
+			if ('message' in meta) {
+				supportFields.push({ label: 'Message', value: meta.message });
+				consumedMetaKeys.add('message');
+			}
+			addSection('Support Details', supportFields);
+		}
+
+		if (type.includes('youtube') && meta) {
+			const membershipFields = [];
+			if ('level' in meta) {
+				membershipFields.push({ label: 'Level', value: meta.level });
+				consumedMetaKeys.add('level');
+			}
+			if ('eventType' in meta) {
+				membershipFields.push({ label: 'Event Type', value: meta.eventType });
+				consumedMetaKeys.add('eventType');
+			}
+			if ('originalEventType' in meta) {
+				membershipFields.push({ label: 'Original Event', value: meta.originalEventType });
+				consumedMetaKeys.add('originalEventType');
+			}
+			if ('snippetType' in meta) {
+				membershipFields.push({ label: 'Snippet Type', value: meta.snippetType });
+				consumedMetaKeys.add('snippetType');
+			}
+			if ('previewText' in meta) {
+				membershipFields.push({ label: 'Preview Text', value: meta.previewText });
+				consumedMetaKeys.add('previewText');
+			}
+			addSection('Membership', membershipFields);
+
+			if ('membershipDetails' in meta && isPlainObject(meta.membershipDetails)) {
+				consumedMetaKeys.add('membershipDetails');
+				const details = meta.membershipDetails;
+				const detailFields = [];
+				for (const key in details) {
+					if (!Object.prototype.hasOwnProperty.call(details, key)) continue;
+					const label = formatMetaLabel(key);
+					detailFields.push({ label, value: details[key] });
+				}
+				addSection('Membership Details', detailFields);
+			}
+		}
+
+		if (meta) {
+			const additionalFields = [];
+			for (const key in meta) {
+				if (!Object.prototype.hasOwnProperty.call(meta, key)) continue;
+				if (consumedMetaKeys.has(key)) continue;
+				additionalFields.push({ label: formatMetaLabel(key), value: meta[key] });
+			}
+			addSection('Additional Metadata', additionalFields);
+		}
+
+		return sections;
+	}
+
+	function createMetaDetailsNode(data) {
+		const sections = buildMetaSections(data);
+		if (!sections.length) {
+			return null;
+		}
+		const container = document.createElement('div');
+		container.className = 'meta-details';
+		for (let i = 0; i < sections.length; i++) {
+			const section = sections[i];
+			const sectionNode = document.createElement('div');
+			sectionNode.className = 'meta-section';
+
+			if (section.title) {
+				const title = document.createElement('div');
+				title.className = 'meta-section-title';
+				title.textContent = section.title;
+				sectionNode.appendChild(title);
+			}
+
+			const fieldsWrapper = document.createElement('div');
+			fieldsWrapper.className = 'meta-fields';
+
+			for (let j = 0; j < section.fields.length; j++) {
+				const field = section.fields[j];
+				const fieldNode = document.createElement('div');
+				fieldNode.className = 'meta-field';
+
+				const labelNode = document.createElement('span');
+				labelNode.className = 'meta-label';
+				labelNode.textContent = field.label;
+				fieldNode.appendChild(labelNode);
+
+				const valueNode = document.createElement('span');
+				valueNode.className = 'meta-value';
+				if (field.badge) {
+					valueNode.classList.add('badge');
+					if (field.badgeColor) {
+						valueNode.style.backgroundColor = field.badgeColor;
+						const readable = getReadableTextColor(field.badgeColor);
+						if (readable) {
+							valueNode.style.color = readable;
+						}
+						valueNode.style.border = '1px solid rgba(0, 0, 0, 0.2)';
+					}
+				}
+				valueNode.textContent = field.value;
+				fieldNode.appendChild(valueNode);
+
+				fieldsWrapper.appendChild(fieldNode);
+			}
+
+			sectionNode.appendChild(fieldsWrapper);
+			container.appendChild(sectionNode);
+		}
+		return container;
+	}
+
 	function buildEventDisplay(data) {
 		const normalizedEvent = normalizeEventKey(data.event);
 		let name = data.chatname || data.sourceName || `${capitalizeSource(data.type)} Alerts`;
@@ -783,6 +1138,11 @@ body.light-mode .message.active {
 			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
 			<div class="timestamp">${timeString}</div>
 		`;
+
+		const metaDetailsNode = hideMetaPanels ? null : createMetaDetailsNode(data);
+		if (metaDetailsNode) {
+			messageDiv.appendChild(metaDetailsNode);
+		}
 		
 		chatContainer.prepend(messageDiv);
 		

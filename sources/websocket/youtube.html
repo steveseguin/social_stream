@@ -1340,11 +1340,6 @@ try {
 												snippetType: item.snippet.type
 											};
 										}
-										if (membershipEventInfo.mapping) {
-											membershipPayload.meta = membershipPayload.meta || {};
-											membershipPayload.meta.eventTypeMapping = membershipEventInfo.mapping;
-											membershipPayload.meta.derivedEventType = membershipEventInfo.eventType;
-										}
 										queueMessage(membershipPayload);
 									} else {
 										// Build badges for membership author
@@ -1355,15 +1350,14 @@ try {
 										
 										// New membership, renewal, or upgrade without a message
 										processMembership({
-											authorName: item.authorDetails.displayName.replace(/^@/, ''),
-											level: item.snippet.membershipDetails.memberLevelName,
-											profileImageUrl: item.authorDetails.profileImageUrl,
-											authorChannelId: item.authorDetails.channelId,
-											badges: membershipBadges,
-											membershipDetails: item.snippet.membershipDetails,
-											rawSnippetType: item.snippet.type,
-											eventType: membershipEventInfo.eventType,
-											eventTypeMapping: membershipEventInfo.mapping
+												authorName: item.authorDetails.displayName.replace(/^@/, ''),
+												level: item.snippet.membershipDetails.memberLevelName,
+												profileImageUrl: item.authorDetails.profileImageUrl,
+												authorChannelId: item.authorDetails.channelId,
+												badges: membershipBadges,
+												membershipDetails: item.snippet.membershipDetails,
+												rawSnippetType: item.snippet.type,
+												eventType: membershipEventInfo.eventType
 										});
 									}
 								}
@@ -2487,27 +2481,10 @@ try {
 						outgoingMessage.reply = textOnlyMode ? basePlainText : messageWithEmojis;
 					}
 					if (messageData.meta && typeof messageData.meta === 'object') {
-						outgoingMessage.meta = { ...messageData.meta };
-					}
-					if (replyContext && replyContext.meta) {
-						outgoingMessage.meta = outgoingMessage.meta || {};
-						const replyMeta = {
-							messageId: replyContext.meta.messageId || null,
-							channelId: replyContext.meta.channelId || null,
-							commentId: replyContext.meta.commentId || null,
-							author: replyContext.meta.author || null,
-							text: replyContext.meta.text || null
-						};
-						if (replyContext.meta.raw) {
-							replyMeta.raw = replyContext.meta.raw;
+						const { raw: _raw, reply: _reply, ...safeMeta } = messageData.meta;
+						if (Object.keys(safeMeta).length > 0) {
+							outgoingMessage.meta = safeMeta;
 						}
-						if (replyContext.replyHtml) {
-							replyMeta.html = replyContext.replyHtml;
-						}
-						if (replyContext.replyPlain && !replyMeta.text) {
-							replyMeta.text = replyContext.replyPlain;
-						}
-						outgoingMessage.meta.reply = replyMeta;
 					}
 					pushMessage(applySourceIdentity(outgoingMessage));
 				}
@@ -2623,10 +2600,6 @@ try {
 				if (membershipDetails) {
 					membershipMeta.membershipDetails = { ...membershipDetails };
 				}
-				if (membershipData.eventTypeMapping && typeof membershipData.eventTypeMapping === "object") {
-					membershipMeta.eventTypeMapping = { ...membershipData.eventTypeMapping };
-				}
-
 				const genericMembershipLabel = getTranslation("membership-generic", "Membership");
 
 				if (eventType === "renewal") {
