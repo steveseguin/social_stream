@@ -1626,8 +1626,30 @@ class YoutubeStreamingApp {
 
   handleStreamError(error) {
     const message = error?.message || 'Failed to start YouTube streaming.';
+    const detail = error?.detail;
+    const code = error?.code || error?.status;
     this.updateStatusText(message, 'error');
-    console.error('YouTube streaming error', error);
+    console.error('YouTube streaming error', {
+      message,
+      code,
+      status: error?.status,
+      detail,
+      raw: error
+    });
+    if (detail?.error?.message) {
+      console.error('[YT Streaming] API detail:', detail.error);
+    }
+    window.dispatchEvent(
+      new CustomEvent('youtubeStreamingError', {
+        detail: {
+          message,
+          code,
+          status: error?.status || null,
+          reason: detail?.error?.errors?.[0]?.reason || detail?.error?.status || null
+        },
+        bubbles: true
+      })
+    );
   }
 
   handleStreamChat(chat) {

@@ -377,6 +377,11 @@ export function createYouTubeLiveChat(options = {}) {
       );
       error.status = res.status;
       error.detail = errBody;
+      if (errBody?.error?.status) {
+        error.code = errBody.error.status;
+      } else if (errBody?.error?.errors && errBody.error.errors.length) {
+        error.code = errBody.error.errors[0].reason;
+      }
       throw error;
     }
 
