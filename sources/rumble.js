@@ -331,6 +331,20 @@
 				//	processMessage(ele);
 				//});
 			}
+		} else {
+			if (window.location.href.endsWith("/live") && document.querySelector('img[src="/img/astronaut-404.png"]')){
+				if (window.location.href.includes("/user/")){
+					window.location.href = window.location.href.replace("/user/","/c/");
+				} else if (window.location.href.includes("/c/")){
+					window.location.href = window.location.href.replace("/c/","/");
+				}
+				
+			} 
+		}
+		
+		if (document.querySelector('video') && !document.querySelector('video').p && document.querySelector('video').played){
+			document.querySelector('video').p = "true";
+			document.querySelector('video').pause();
 		}
 	},1000);
 

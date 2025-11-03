@@ -1,3 +1,5 @@
+export { safeHtml, htmlToText } from '../../shared/utils/html.js';
+
 export function randomSessionId() {
   if (window.crypto && window.crypto.randomUUID) {
     return window.crypto.randomUUID().replace(/-/g, '').slice(0, 12);
@@ -25,18 +27,6 @@ export function assert(condition, message) {
   if (!condition) {
     throw new Error(message || 'Assertion failed');
   }
-}
-
-export function safeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text ?? '';
-  return div.innerHTML;
-}
-
-export function htmlToText(html) {
-  const div = document.createElement('div');
-  div.innerHTML = html ?? '';
-  return div.textContent || '';
 }
 
 export function debounce(fn, wait = 250) {
