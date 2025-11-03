@@ -334,9 +334,9 @@
 		} else {
 			if (window.location.href.endsWith("/live") && document.querySelector('img[src="/img/astronaut-404.png"]')){
 				if (window.location.href.includes("/user/")){
-					window.location.href = window.location.href.replace("/user/","/c/");
+					window.location.href = window.location.href.replace("/user/","/");
 				} else if (window.location.href.includes("/c/")){
-					window.location.href = window.location.href.replace("/c/","/");
+					window.location.href = window.location.href.replace("/c/","/user/");
 				}
 				
 			} 
