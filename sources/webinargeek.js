@@ -190,6 +190,12 @@ function toDataURL(blobUrl, callback) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							setTimeout(function(ele){
+								if (ele.dataset.index){
+									if (historyMsg.has(ele.dataset.index)){
+										return;
+									}
+									historyMsg.add(ele.dataset.index);
+								}
 								processMessage(ele);
 							},300, mutation.addedNodes[i]);
 						} catch(e){}
@@ -206,16 +212,25 @@ function toDataURL(blobUrl, callback) {
 	}
 	console.log("social stream injected");
 
+
+	var historyMsg = new Set();
+	
 	setInterval(function(){
 		try {
-			if (document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']")){
+			if (document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("#sect-chats:not([hidden]) [aria-label='Message list'], ul[class^='ChatList']")){
 				setTimeout(function(){
-					if (!document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']").marked){
-						document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']").marked=true;
+					if (!document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("#sect-chats:not([hidden]) [aria-label='Message list'], uul[class^='ChatList']").marked){
+						document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("#sect-chats:not([hidden]) [aria-label='Message list'], uul[class^='ChatList']").marked=true;
 						console.log("starting..");
-						onElementInserted(document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("ul[class^='ChatList']"));
+						document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("#sect-chats:not([hidden]) [aria-label='Message list'], uul[class^='ChatList']").childNodes.forEach(x=>{
+							x.marked = true;
+							if (x.dataset.index){
+								historyMsg.add(x.dataset.index);
+							}
+						});
+						onElementInserted(document.querySelector("#widget-sp,#streamingPage_webinargeek").shadowRoot.getElementById("sidebar").querySelector("#sect-chats:not([hidden]) [aria-label='Message list'], uul[class^='ChatList']"));
 					}
-				},1500);
+				},1000);
 			}
 		} catch(e){}
 	},2000);
