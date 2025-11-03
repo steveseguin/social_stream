@@ -51,10 +51,10 @@ modulesReady.catch((error) => {
 
 const STREAMING_MAX_CHAT_ENTRIES = 50;
 var settings = typeof settings !== 'undefined' ? settings : {};
-let BTTV = false;
-let SEVENTV = false;
-let FFZ = false;
-let EMOTELIST = false;
+var BTTV = typeof BTTV !== 'undefined' ? BTTV : false;
+var SEVENTV = typeof SEVENTV !== 'undefined' ? SEVENTV : false;
+var FFZ = typeof FFZ !== 'undefined' ? FFZ : false;
+var EMOTELIST = typeof EMOTELIST !== 'undefined' ? EMOTELIST : false;
 let emojiAssetsReady = false;
 const shortcutMap = new Map();
 const unicodeMap = new Map();
