@@ -72,6 +72,81 @@
                 </div>
             </section>
 
+            <section class="section-summary">
+                <h2>Quick Feature Availability</h2>
+                <p>Use this table to see which alert types each capture method currently delivers. Detailed payload notes follow below.</p>
+                <table class="field-table summary-table">
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>New Subs / Members</th>
+                            <th>New Followers</th>
+                            <th>Donations</th>
+                            <th>Counts &amp; Extras</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>YouTube (Data API bridge)</strong></td>
+                            <td>Membership joins, renewals, gifts</td>
+                            <td>Subscriber total updates only*</td>
+                            <td>Super Chats &amp; Super Stickers</td>
+                            <td>Viewer, subscriber, and view totals (polled)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Twitch &ndash; DOM capture</strong></td>
+                            <td>Gift bundle lines &amp; gifted-to notices</td>
+                            <td>&mdash;</td>
+                            <td>Bits flagged via <code>hasDonation</code></td>
+                            <td>Viewer count &amp; community highlight cards</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Twitch &ndash; EventSub/Websocket</strong></td>
+                            <td>Instant subs, resubs, and gifts</td>
+                            <td>Instant follows + follower total</td>
+                            <td>Cheers and channel point redemptions</td>
+                            <td>Viewer/sub/follower totals, stream status, ad notices</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TikTok Live</strong></td>
+                            <td>&mdash;</td>
+                            <td>Follow cards (when TikTok shows them)</td>
+                            <td>Gifts converted to coin totals</td>
+                            <td>Viewer count, join alerts, and like storms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kick &ndash; DOM</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count only; use the Kick bridge for alerts</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kick &ndash; Websocket/Bridge</strong></td>
+                            <td>New subs, renewals, and gifts</td>
+                            <td>Follow alerts + follower total</td>
+                            <td>Support/tip events (amount + currency)</td>
+                            <td>Stream status and profile metadata</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Facebook Live</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count polls only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rumble</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count polls only</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="field-highlights">*YouTube does not expose instant subscriber alerts. Watch for <code>subscriber_update</code> entries (and their deltas) inside <code>events.html</code> to spot milestones.</p>
+            </section>
+
             <section class="field-overview">
                 <h2>Field Overview</h2>
                 <table class="field-table">
@@ -201,7 +276,7 @@
                         <li>Requires OAuth with scopes <code>youtube.readonly</code>, <code>youtube</code>, <code>youtube.force-ssl</code>, and <code>youtube.channel-memberships.creator</code>. Tokens live in <code>localStorage</code>.</li>
                         <li>Non-donation events respect <strong>Capture Stream Events</strong>; channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewcount</code>).</li>
                         <li>The API cannot deliver custom badge imagery; badge fallbacks use emoji icons noted below.</li>
-                        <li>The Data API does not expose real-time subscriber/follower notifications. Social Stream polls <code>statistics.subscriberCount</code> every 30 minutes and emits a <code>subscriber_update</code>, but individual “new follower” alerts are unavailable.</li>
+                        <li>The Data API does not expose real-time subscriber/follower notifications. Social Stream polls <code>statistics.subscriberCount</code> every 30 minutes and emits a <code>subscriber_update</code>; individual “new subscriber” alerts are unavailable, but the <code>events.html</code> dashboard highlights the count changes so you can still react live.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -264,7 +339,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat relays from the API reuse <code>meta.plainText</code> for sanitized content so future adapters can render emote-free summaries. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture.</p>
+                    <p class="field-highlights">Chat relays from the API reuse <code>meta.plainText</code> for sanitized content so future adapters can render emote-free summaries. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture. Watch <code>subscriber_update</code> entries inside <code>events.html</code> to keep an eye on count bumps even though instant alerts are unavailable.</p>
                 </article>
 
                 <article class="platform-card" id="twitch-dom">
@@ -446,7 +521,7 @@
                     <p class="source-note">Implementation: <code>sources/kick.js</code></p>
                     <ul class="requirements">
                         <li>Needs an authenticated session to resolve profile images and subscriber badges.</li>
-                        <li>No dedicated event detection; relies on chat text and badges only.</li>
+                        <li>No dedicated event detection; relies on chat text and badges only (viewer counts still work when the toggle is enabled).</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -458,9 +533,13 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>—</td>
-                                <td>Only standard chat messages are forwarded; Kick’s DOM does not expose system events reliably.</td>
-                                <td>Use <code>membership</code> (subscriber badge text) and <code>hasDonation</code> (currently empty) to decorate chat overlays. Consider moving to the websocket bridge for event coverage.</td>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polls Kick&rsquo;s channel API every 30 seconds (only when viewer stats are enabled).</td>
+                                <td><code>meta</code> integer viewer count; for subs, follows, or tips use the Kick bridge below.</td>
+                            </tr>
+                            <tr>
+                                <td>&mdash;</td>
+                                <td colspan="2">Only standard chat messages are forwarded; Kick&rsquo;s public DOM does not expose membership, follower, or donation alerts.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -591,26 +670,35 @@
     </main>
 
     <footer>
-        <div class="footer-container">
-            <div class="footer-grid">
+        <div class="container">
+            <div class="footer-columns">
                 <div class="footer-column">
-                    <h4>About</h4>
-                    <p>Social Stream Ninja consolidates live chats, alerts, and automations across dozens of platforms so you can focus on your community.</p>
+                    <h3>Social Stream Ninja</h3>
+                    <p>Consolidates your live social messaging streams and alerts so you can focus on the show. Free and open source.</p>
                 </div>
                 <div class="footer-column">
-                    <h4>Resources</h4>
+                    <h3>Quick Links</h3>
                     <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../docs/features.html">Features</a></li>
+                        <li><a href="../docs/download.html">Download</a></li>
                         <li><a href="../docs/guides.html">Guides</a></li>
-                        <li><a href="../docs/templates.html">Templates</a></li>
-                        <li><a href="../docs/support.html">Support</a></li>
-                        <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
-                    <h4>Community</h4>
+                    <h3>Resources</h3>
                     <ul>
-                        <li><a href="https://discord.socialstream.ninja" target="_blank" rel="noopener">Join our Discord</a></li>
-                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub Repository</a></li>
+                        <li><a href="../docs/templates.html">Templates</a></li>
+                        <li><a href="../docs/support.html">Support</a></li>
+                        <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                        <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub</a></li>
                         <li><a href="../docs/support.html#contribute">Contribute</a></li>
                         <li><a href="https://github.com/sponsors/steveseguin" target="_blank" rel="noopener">Donate</a></li>
                     </ul>
