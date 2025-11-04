@@ -244,6 +244,7 @@ try {
 	var lastVisibilityChange = Date.now();
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
+	var tokenRefreshPromise = null;
 	
 
 	var emojiData = [];
@@ -1043,16 +1044,17 @@ function enableBackgroundKeepAlive() {
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
 		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
-		const refreshToken = localStorage.getItem('youtubeRefreshToken');
-		if (storedToken && tokenExpiry && new Date().getTime() < parseInt(tokenExpiry)) {
+		const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
+		const now = Date.now();
+		if (storedToken && tokenExpiry && now < parseInt(tokenExpiry, 10)) {
 			return storedToken;
-		} else if (refreshToken) {
-			refreshAccessToken(refreshToken);
-			return null;
+		}
+		if (storedRefreshToken) {
+			refreshToken();
 		} else {
 			clearStoredToken();
-			return null;
 		}
+		return null;
 	}
 	function setStoredToken(token, expiresIn = 3600, refresh = null) {
 		const expiryTime = new Date().getTime() + (expiresIn * 1000);
@@ -1152,11 +1154,25 @@ function enableBackgroundKeepAlive() {
 				queueDrainTimeout = null;
 			}
 			
-			if (!foregroundPollingInterval && pollInterval) {
-				foregroundPollingInterval = pollInterval;
-			}
-			
+		if (!foregroundPollingInterval && pollInterval) {
+			foregroundPollingInterval = pollInterval;
 		}
+		
+		}
+	}
+	function scheduleAuthRetry(delayOverride) {
+		const resumeDelay = typeof delayOverride === 'number'
+			? delayOverride
+			: Math.max(2000, youtubeRecommendedInterval || 5000);
+		if (fetchTimeout) {
+			try {
+				clearTimeout(fetchTimeout);
+			} catch (_) {}
+			fetchTimeout = null;
+		}
+		console.log(`Waiting ${resumeDelay}ms for token refresh before retrying polling`);
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, resumeDelay, !isPageVisible);
+		return resumeDelay;
 	}
 	async function fetchChatMessages() {
 		if (!liveChatId || isPolling) return;
@@ -1174,7 +1190,10 @@ function enableBackgroundKeepAlive() {
 		const token = getStoredToken();
 		if (!token) {
 			isPolling = false;
-			refreshToken();
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				scheduleAuthRetry();
+			}
 			return;
 		}
 		
@@ -1193,6 +1212,7 @@ function enableBackgroundKeepAlive() {
 				if (status === 401) {
 					isPolling = false;
 					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+					scheduleAuthRetry();
 					return;
 				} else if (status === 403) {
 					// Check if it's a quota error
@@ -1615,14 +1635,25 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 	async function refreshToken() {
-		console.log('Attempting to refresh token or re-authenticate.');
-        const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
-        if (storedRefreshToken) {
-            const refreshed = await refreshAccessToken(storedRefreshToken);
-            if (refreshed) return;
-        }
-		clearStoredToken();
-		showAuthButton();
+		if (tokenRefreshPromise) {
+			return tokenRefreshPromise;
+		}
+		tokenRefreshPromise = (async () => {
+			console.log('Attempting to refresh token or re-authenticate.');
+			const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
+			if (storedRefreshToken) {
+				const refreshed = await refreshAccessToken(storedRefreshToken);
+				if (refreshed) {
+					return true;
+				}
+			}
+			clearStoredToken();
+			showAuthButton();
+			return false;
+		})().finally(() => {
+			tokenRefreshPromise = null;
+		});
+		return tokenRefreshPromise;
 	}
 	function authUrl() {
 		const state = nonce(15);
