@@ -2,6 +2,7 @@ import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
 import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
 import { loadScriptSequential } from '../../shared/utils/scriptLoader.js';
+import { renderTwitchNativeEmotes } from '../../shared/utils/twitchEmotes.js';
 import {
   createTwitchChatClient,
   createTmiClientFactory,
@@ -563,7 +564,49 @@ export class TwitchPlugin extends BasePlugin {
     }
 
     const context = this.buildEmoteContext(channel, overrides);
-    if (this.emotes && payload.chatmessage && !payload.textonly) {
+    const textOnly = Boolean(payload.textonly);
+    const twitchEmotes = payload?.raw?.tags?.emotes || null;
+    const nativeEmoteSource =
+      typeof rawMessage === 'string' && rawMessage.length
+        ? rawMessage
+        : typeof payload.rawMessage === 'string' && payload.rawMessage.length
+          ? payload.rawMessage
+          : '';
+
+    let replyPrefix = '';
+    let replySeparator = '';
+    if (typeof payload.chatmessage === 'string') {
+      const replyMatch = payload.chatmessage.match(/^(<i><small>[\s\S]*?<\/small><\/i>)([\s\S]*)/i);
+      if (replyMatch) {
+        replyPrefix = replyMatch[1];
+        const remainder = replyMatch[2] || '';
+        const separatorMatch = remainder.match(/^((?:&nbsp;|\s)+)/);
+        replySeparator = separatorMatch ? separatorMatch[1] : ' ';
+      }
+    }
+
+    if (!textOnly && twitchEmotes && nativeEmoteSource && typeof renderTwitchNativeEmotes === 'function') {
+      try {
+        const renderedNativeMessage = renderTwitchNativeEmotes(nativeEmoteSource, twitchEmotes, {
+          textOnly,
+          escapeHtml: safeHtml,
+          imageClassName: 'native-emote',
+          imageAttributes: { loading: 'lazy', decoding: 'async' },
+          textIsSafe: false
+        });
+        if (replyPrefix) {
+          payload.chatmessage = `${replyPrefix}${replySeparator || ' '}${renderedNativeMessage}`;
+        } else {
+          payload.chatmessage = renderedNativeMessage;
+        }
+      } catch (err) {
+        this.debugLog('Failed to render native Twitch emotes', { error: err?.message || err });
+      }
+    } else if (!payload.chatmessage && rawMessage) {
+      payload.chatmessage = safeHtml(rawMessage);
+    }
+
+    if (this.emotes && payload.chatmessage && !textOnly) {
       try {
         payload.chatmessage = await this.emotes.render(payload.chatmessage, context);
       } catch (err) {

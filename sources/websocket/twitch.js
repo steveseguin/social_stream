@@ -2,12 +2,17 @@ const TWITCH_CORE_EXTENSION_PATH = 'providers/twitch/chatClient.js';
 const TWITCH_CORE_RELATIVE_PATH = '../../providers/twitch/chatClient.js';
 const SCRIPT_LOADER_EXTENSION_PATH = 'shared/utils/scriptLoader.js';
 const SCRIPT_LOADER_RELATIVE_PATH = '../../shared/utils/scriptLoader.js';
+const TWITCH_EMOTE_UTILS_EXTENSION_PATH = 'shared/utils/twitchEmotes.js';
+const TWITCH_EMOTE_UTILS_RELATIVE_PATH = '../../shared/utils/twitchEmotes.js';
 
 let createTwitchChatClient;
 let createTmiClientFactory;
 let TWITCH_CHAT_EVENTS;
 let TWITCH_CHAT_STATUS;
 let loadScriptSequential;
+let renderTwitchNativeEmotes;
+let parseTwitchEmotes;
+let stringifyTwitchEmotes;
 
 async function importWithFallback(extensionPath, relativePath) {
   if (
@@ -34,6 +39,10 @@ const modulesReady = (async () => {
     SCRIPT_LOADER_EXTENSION_PATH,
     SCRIPT_LOADER_RELATIVE_PATH
   );
+  const twitchEmoteModule = await importWithFallback(
+    TWITCH_EMOTE_UTILS_EXTENSION_PATH,
+    TWITCH_EMOTE_UTILS_RELATIVE_PATH
+  );
   ({
     createTwitchChatClient,
     createTmiClientFactory,
@@ -41,6 +50,11 @@ const modulesReady = (async () => {
     TWITCH_CHAT_STATUS
   } = twitchModule);
   ({ loadScriptSequential } = utilsModule);
+  ({
+    renderTwitchNativeEmotes,
+    parseTwitchEmotes,
+    stringifyTwitchEmotes
+  } = twitchEmoteModule);
 })();
 
 modulesReady.catch((error) => {
@@ -142,6 +156,61 @@ function resolveTmiScriptSources() {
       return set;
     }, new Set())
   );
+}
+
+function fallbackStringifyParsedEmotes(parsed) {
+  if (!Array.isArray(parsed) || !parsed.length) {
+    return '';
+  }
+  return parsed
+    .map(({ id, positions }) => {
+      if (!Array.isArray(positions) || !positions.length) {
+        return null;
+      }
+      const serialized = positions
+        .map((entry) => {
+          if (!entry) {
+            return null;
+          }
+          const start = Number.parseInt(entry.start ?? entry[0], 10);
+          const end = Number.parseInt(entry.end ?? entry[1], 10);
+          if (!Number.isFinite(start) || !Number.isFinite(end)) {
+            return null;
+          }
+          const safeStart = Math.max(0, start);
+          const safeEnd = Math.max(safeStart, end);
+          return `${safeStart}-${safeEnd}`;
+        })
+        .filter(Boolean)
+        .join(',');
+      if (!serialized) {
+        return null;
+      }
+      return `${id}:${serialized}`;
+    })
+    .filter(Boolean)
+    .join('/');
+}
+
+function serializeTwitchEmotesForLegacy(emotes) {
+  if (!emotes) {
+    return '';
+  }
+  if (typeof emotes === 'string') {
+    return emotes;
+  }
+  if (typeof stringifyTwitchEmotes === 'function') {
+    const serialized = stringifyTwitchEmotes(emotes);
+    if (serialized) {
+      return serialized;
+    }
+  }
+  const parsed =
+    typeof parseTwitchEmotes === 'function' ? parseTwitchEmotes(emotes) : [];
+  if (!parsed.length) {
+    return '';
+  }
+  return fallbackStringifyParsedEmotes(parsed);
 }
 
 async function evaluateScriptAtUrl(url) {
@@ -854,23 +923,31 @@ async function ensureChatClientInstance() {
 			.join(',');
 	}
 
-	function convertChatPayloadToLegacyMessage(payload) {
-		const raw = payload.raw || {};
-		const tags = {};
-		const sourceTags = [raw.userstate, raw.tags];
-		for (let i = 0; i < sourceTags.length; i += 1) {
-			const source = sourceTags[i];
-			if (!source || typeof source !== 'object') {
-				continue;
+		function convertChatPayloadToLegacyMessage(payload) {
+			const raw = payload.raw || {};
+			const tags = {};
+			const sourceTags = [raw.userstate, raw.tags];
+			for (let i = 0; i < sourceTags.length; i += 1) {
+				const source = sourceTags[i];
+				if (!source || typeof source !== 'object') {
+					continue;
+				}
+				Object.assign(tags, source);
 			}
-			Object.assign(tags, source);
-		}
-		if (tags.badges && typeof tags.badges === 'object') {
-			tags.badges = badgesToString(tags.badges);
-		}
-		if (payload.bits && !tags.bits) {
-			tags.bits = payload.bits;
-		}
+			if (tags.badges && typeof tags.badges === 'object') {
+				tags.badges = badgesToString(tags.badges);
+			}
+			if (tags.emotes && typeof tags.emotes !== 'string') {
+				const legacyEmotes = serializeTwitchEmotesForLegacy(tags.emotes);
+				if (legacyEmotes) {
+					tags.emotes = legacyEmotes;
+				} else if (typeof tags.emotes !== 'string') {
+					delete tags.emotes;
+				}
+			}
+			if (payload.bits && !tags.bits) {
+				tags.bits = payload.bits;
+			}
 		if (!tags['tmi-sent-ts'] && payload.timestamp) {
 			tags['tmi-sent-ts'] = payload.timestamp;
 		}
@@ -1293,29 +1370,13 @@ async function ensureChatClientInstance() {
 		}
 	}
 	function replaceEmotesWithImages(text, twitchEmotes = null, isBitMessage = false) {
-		// First, handle Twitch native emotes if provided
-		if (twitchEmotes && Object.keys(twitchEmotes).length > 0) {
-			// Sort emote positions to replace from end to start (to maintain indices)
-			const sortedEmotes = Object.entries(twitchEmotes)
-				.flatMap(([emoteId, positions]) => 
-					positions.map(pos => ({ emoteId, start: parseInt(pos.start), end: parseInt(pos.end) }))
-				)
-				.sort((a, b) => b.start - a.start);
-			
-			// Replace emotes from end to start
-			let result = text;
-			sortedEmotes.forEach(({ emoteId, start, end }) => {
-				const emoteName = text.substring(start, end + 1);
-				if (settings.textonlymode) {
-					// In text-only mode, just keep the emote name
-					result = result.substring(0, start) + emoteName + result.substring(end + 1);
-				} else {
-					const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
-					const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
-					result = result.substring(0, start) + emoteImg + result.substring(end + 1);
-				}
-			});
-			text = result;
+		let workingText = typeof text === 'string' ? text : '';
+		if (workingText && twitchEmotes) {
+			workingText = renderNativeEmotesWithFallback(
+				workingText,
+				twitchEmotes,
+				Boolean(settings.textonlymode)
+			);
 		}
 		
 		// Handle cheermotes (bit emotes) if this is a bit message
@@ -1324,7 +1385,7 @@ async function ensureChatClientInstance() {
 			// Matches patterns like: Cheer100, 4Head100, Kappa1000, etc.
 			const cheermoteRegex = /\b(Cheer|Kappa|Kreygasm|SwiftRage|4Head|PJSalt|MrDestructoid|TriHard|NotLikeThis|FailFish|VoHiYo|PogChamp|FrankerZ|HeyGuys|DansGame|EleGiggle|BibleThump|Jebaited|SeemsGood|LUL|VoteYea|VoteNay|HotPokket|OpieOP|FutureMan|FBCatch|TBAngel|PeteZaroll|TwitchUnity|CoolStoryBob|PopCorn|KAPOW|PowerUpR|PowerUpL|DarkMode|HSCheers|PurpleStar|FBPass|FBRun|FBChallenge|RedCoat|GreenTeam|PurpleTeam|HolidayCheer|BitBoss|Streamlabs)(\d+)\b/gi;
 			
-			text = text.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
+			workingText = workingText.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
 				const amount = parseInt(bitAmount);
 				
 				if (settings.textonlymode) {
@@ -1356,10 +1417,10 @@ async function ensureChatClientInstance() {
 		
 		// Then handle third-party emotes (BTTV, 7TV, FFZ)
 		if (!EMOTELIST) {
-			return text;
+			return workingText;
 		}
 		
-		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+		return workingText.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
 			const emote = EMOTELIST[emoteMatch];
 			if (emote) {
 				if (settings.textonlymode) {
@@ -1372,6 +1433,97 @@ async function ensureChatClientInstance() {
 			}
 			return match;
 		});
+	}
+
+	function fallbackParseTwitchEmotes(source) {
+		if (!source) {
+			return [];
+		}
+		if (typeof parseTwitchEmotes === 'function') {
+			return parseTwitchEmotes(source);
+		}
+		if (typeof source === 'string') {
+			return source
+				.split('/')
+				.map((part) => {
+					const [id, positions] = part.split(':');
+					if (!id || !positions) {
+						return null;
+					}
+					return {
+						id,
+						positions: positions.split(',').map((range) => {
+							const [start, end] = range.split('-');
+							return { start, end };
+						})
+					};
+				})
+				.filter(Boolean);
+		}
+		if (source && typeof source === 'object') {
+			return Object.entries(source)
+				.map(([id, positions]) => ({ id, positions }))
+				.filter(Boolean);
+		}
+		return [];
+	}
+
+	function legacyRenderNativeEmotes(text, emotesSource, textOnlyMode) {
+		const parsed = fallbackParseTwitchEmotes(emotesSource);
+		if (!parsed.length) {
+			return text;
+		}
+		const flattened = parsed
+			.flatMap(({ id, positions }) =>
+				Array.isArray(positions)
+					? positions.map((pos) => ({
+							emoteId: id,
+							start: Number.parseInt(pos.start ?? pos[0], 10),
+							end: Number.parseInt(pos.end ?? pos[1], 10)
+						}))
+					: []
+			)
+			.filter(
+				(entry) =>
+					Number.isFinite(entry.start) &&
+					Number.isFinite(entry.end) &&
+					entry.end >= entry.start
+			)
+			.sort((a, b) => b.start - a.start);
+		if (!flattened.length) {
+			return text;
+		}
+		let result = text;
+		flattened.forEach(({ emoteId, start, end }) => {
+			const emoteName = text.substring(start, end + 1);
+			if (textOnlyMode) {
+				result = result.substring(0, start) + emoteName + result.substring(end + 1);
+			} else {
+				const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
+				const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
+				result = result.substring(0, start) + emoteImg + result.substring(end + 1);
+			}
+		});
+		return result;
+	}
+
+	function renderNativeEmotesWithFallback(text, emoteSource, textOnlyMode) {
+		if (!text || !emoteSource) {
+			return text;
+		}
+		if (typeof renderTwitchNativeEmotes === 'function') {
+			try {
+				return renderTwitchNativeEmotes(text, emoteSource, {
+					textOnly: textOnlyMode,
+					escapeHtml,
+					imageClassName: 'regular-emote',
+					textIsSafe: true
+				});
+			} catch (error) {
+				console.warn('Falling back to legacy Twitch emote renderer', error);
+			}
+		}
+		return legacyRenderNativeEmotes(text, emoteSource, textOnlyMode);
 	}
 
 	function escapeHtml(unsafe) {
@@ -1646,27 +1798,10 @@ async function ensureChatClientInstance() {
 		data.nameColor = parsedMessage.tags?.color || "";
 		
 		// Parse Twitch emotes from tags
-		let twitchEmotes = null;
-		if (parsedMessage.tags && parsedMessage.tags.emotes && typeof parsedMessage.tags.emotes === 'string' && parsedMessage.tags.emotes.trim() !== '') {
-			try {
-				twitchEmotes = {};
-				// Emotes format: "emote_id:start-end,start-end/emote_id:start-end"
-				const emoteParts = parsedMessage.tags.emotes.split('/');
-				emoteParts.forEach(part => {
-					if (!part) return;
-					const [emoteId, positions] = part.split(':');
-					if (emoteId && positions) {
-						twitchEmotes[emoteId] = positions.split(',').map(pos => {
-							const [start, end] = pos.split('-');
-							return { start, end };
-						});
-					}
-				});
-			} catch (e) {
-				console.error('Error parsing Twitch emotes:', e);
-				twitchEmotes = null;
-			}
-		}
+		const twitchEmotes =
+			parsedMessage?.tags && parsedMessage.tags.emotes
+				? parsedMessage.tags.emotes
+				: null;
 		
 		// Check if this is a bit message
 		const isBitMessage = !!(parsedMessage.tags && parsedMessage.tags.bits);
