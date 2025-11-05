@@ -1,0 +1,153 @@
+@import url('https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap');
+
+body, html {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  color-scheme: light dark;
+}
+
+yt-live-chat-renderer {
+  background: transparent !important;
+  font-family: 'Patrick Hand', cursive !important;
+  font-size: 16px !important;
+  color: #000 !important;
+}
+
+yt-live-chat-item-list-renderer {
+  scrollbar-width: none !important;
+  overflow: hidden !important;
+}
+yt-live-chat-item-list-renderer::-webkit-scrollbar {
+  display: none !important;
+}
+
+/* Base bubble style */
+yt-live-chat-text-message-renderer {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start !important;
+  background: #ffffff !important;
+  border: 3px solid #000 !important;
+  border-radius: 18px 18px 18px 0 !important;
+  margin: 12px 16px !important;
+  padding: 10px 14px !important;
+  max-width: 90% !important;
+  position: relative;
+  box-shadow: 4px 4px 0 #000;
+  animation: slideFadeIn 0.4s ease-out;
+}
+
+/* Viewer tail */
+yt-live-chat-text-message-renderer::after {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-top: 12px solid #ffffff;
+  border-left: 12px solid transparent;
+  transform: rotate(-15deg);
+  box-shadow: -3px 3px 0 #000;
+}
+
+/* Moderator variation */
+yt-live-chat-text-message-renderer[author-type="moderator"] {
+  border-radius: 20px 20px 5px 20px !important;
+  border: 3px dashed #000 !important;
+  background: #f2f2f2 !important;
+}
+yt-live-chat-text-message-renderer[author-type="moderator"]::after {
+  left: auto;
+  right: 30px;
+  transform: rotate(15deg);
+}
+
+/* Member variation */
+yt-live-chat-text-message-renderer[author-type="member"] {
+  border-radius: 20px 5px 20px 20px !important;
+  border: 3px dotted #000 !important;
+  background: #f9f9f9 !important;
+}
+yt-live-chat-text-message-renderer[author-type="member"]::after {
+  left: 50%;
+  transform: rotate(5deg);
+}
+
+/* Profile Picture */
+yt-live-chat-text-message-renderer #author-photo {
+  width: 36px !important;
+  height: 36px !important;
+  border-radius: 6px !important;
+  margin-right: 12px;
+  box-shadow: 2px 2px 0 #000;
+}
+yt-img-shadow#author-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  border-radius: 6px !important;
+}
+
+/* Content layout */
+yt-live-chat-text-message-renderer #content {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px;
+}
+
+/* Name */
+yt-live-chat-text-message-renderer #author-name {
+  font-weight: bold !important;
+  font-size: 16px !important;
+  color: #000 !important;
+  margin-bottom: 2px;
+  text-shadow: 1px 1px 0 #fff;
+}
+
+/* Name colors */
+yt-live-chat-text-message-renderer[author-type="moderator"] #author-name {
+  color: #2e5cff !important;
+}
+yt-live-chat-text-message-renderer[author-type="member"] #author-name {
+  color: #29a329 !important;
+}
+
+/* Badges */
+yt-live-chat-text-message-renderer #chat-badges {
+  display: inline-flex !important;
+  gap: 4px;
+  margin-left: 6px;
+}
+yt-live-chat-text-message-renderer #chat-badges img {
+  height: 16px !important;
+  width: 16px !important;
+  border-radius: 4px;
+  background: #fff;
+  padding: 1px;
+  border: 1px solid #000;
+  box-shadow: 1px 1px 0 #000;
+}
+
+/* Message */
+#message {
+  font-weight: bold !important;
+  font-size: 18px !important;
+  color: #000 !important;
+  line-height: 1.4em;
+  word-break: break-word;
+}
+
+/* Animation */
+@keyframes slideFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
