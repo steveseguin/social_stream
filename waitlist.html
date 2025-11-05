@@ -543,9 +543,14 @@
 	function updateAudioSource(newUrl) {
 		var audioElement = document.getElementById('sound');
 		var sources = audioElement.getElementsByTagName('source');
-		var extension = newUrl.split('.').pop().toLowerCase();
-		var mimeType;
 
+		var urlWithoutParams = newUrl.split(/[?#]/)[0];
+		var lastSlash = urlWithoutParams.lastIndexOf('/');
+		var filename = lastSlash >= 0 ? urlWithoutParams.substring(lastSlash + 1) : urlWithoutParams;
+		var lastDot = filename.lastIndexOf('.');
+		var extension = lastDot >= 0 ? filename.substring(lastDot + 1).toLowerCase() : '';
+
+		var mimeType = '';
 		switch (extension) {
 			case 'mp3':
 				mimeType = 'audio/mpeg';
@@ -570,17 +575,29 @@
 				mimeType = 'audio/webm';
 				break;
 			default:
-				console.error('Unsupported file type:', extension);
-				return;
+				if (!extension) {
+					console.warn('Custom sound URL has no file extension; letting browser detect audio type.');
+				} else {
+					console.warn('Unknown sound file extension:', extension, '- letting browser detect audio type.');
+				}
+				break;
 		}
+
+		var applySourceAttributes = function (sourceEl) {
+			sourceEl.src = newUrl;
+			if (mimeType) {
+				sourceEl.type = mimeType;
+			} else {
+				sourceEl.removeAttribute('type');
+			}
+		};
+
 		if (sources.length === 1) {
-			sources[0].src = newUrl;
-			sources[0].type = mimeType;
+			applySourceAttributes(sources[0]);
 		} else {
 			audioElement.innerHTML = '';
 			var newSource = document.createElement('source');
-			newSource.src = newUrl;
-			newSource.type = mimeType;
+			applySourceAttributes(newSource);
 			audioElement.appendChild(newSource);
 		}
 		audioElement.load();
