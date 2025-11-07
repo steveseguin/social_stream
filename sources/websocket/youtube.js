@@ -7,9 +7,14 @@
 
     var TAB_ID = (typeof window.__SSAPP_TAB_ID__ !== 'undefined') ? window.__SSAPP_TAB_ID__ : null;
 
-    function __ssNotifyApp(status, message){
+    function __ssNotifyApp(status, message, meta){
       try {
         var payload = { wssStatus: { platform: 'youtube', status: status, message: message } };
+        if (meta && typeof meta === 'object') {
+          Object.keys(meta).forEach(function(key){
+            if (typeof meta[key] !== 'undefined') payload.wssStatus[key] = meta[key];
+          });
+        }
         if (window.chrome && window.chrome.runtime && window.chrome.runtime.id) {
           window.chrome.runtime.sendMessage(window.chrome.runtime.id, payload, function(){});
         } else if (window.ninjafy && window.ninjafy.sendMessage) {
@@ -57,9 +62,9 @@
         if (typeof _orig !== 'function') return;
         var lastAt = 0;
         var throttle = 3000; // 3s
-        var ping = function(status, msg){
+        var ping = function(status, msg, meta){
           var now = Date.now();
-          if (now - lastAt > throttle) { __ssNotifyApp('error', msg || ('YouTube API error: ' + status)); lastAt = now; }
+          if (now - lastAt > throttle) { __ssNotifyApp('error', msg || ('YouTube API error: ' + status), meta); lastAt = now; }
         };
         window.fetch = async function(input, init){
           try {
@@ -82,7 +87,11 @@
             }
             return res;
           } catch(e){
-            ping('network_error', (e && e.message) ? e.message : 'Network error');
+            var meta = null;
+            if (e && e.name === 'AbortError') {
+              meta = { recoverable: true, code: 'youtube_fetch_abort' };
+            }
+            ping('network_error', (e && e.message) ? e.message : 'Network error', meta);
             throw e;
           }
         };

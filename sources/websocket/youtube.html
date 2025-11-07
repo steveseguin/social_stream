@@ -3305,7 +3305,17 @@ function enableBackgroundKeepAlive() {
 	
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
 		const controller = new AbortController();
-		const timeout_id = setTimeout(() => controller.abort(), timeout);
+		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${URL}`;
+		const abortReason = (typeof DOMException === 'function')
+			? new DOMException(friendlyTimeoutMessage, 'AbortError')
+			: new Error(friendlyTimeoutMessage);
+		const timeout_id = setTimeout(() => {
+			try {
+				if (!controller.signal.aborted) controller.abort(abortReason);
+			} catch (_) {
+				controller.abort();
+			}
+		}, timeout);
 		try {
 			const options = { signal: controller.signal };
 			if (headers) {
@@ -3360,13 +3370,15 @@ function enableBackgroundKeepAlive() {
 			return response;
 		} catch (e) {
 			clearTimeout(timeout_id);
-			if (e.name === 'AbortError') {
-				console.error('Request timed out after', timeout, 'ms:', URL);
-				throw new Error(`Request timed out after ${timeout}ms: ${URL}`);
-			} else {
-				console.error('Fetch error:', e.name, e.message, URL);
-				throw e;
+			if (e && e.name === 'AbortError') {
+				const err = new Error(friendlyTimeoutMessage);
+				err.name = 'AbortError';
+				err.code = 'SSAPP_YT_TIMEOUT';
+				console.error(err.message);
+				throw err;
 			}
+			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', URL);
+			throw e;
 		} finally {
 			clearTimeout(timeout_id);
 		}
