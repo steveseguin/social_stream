@@ -918,6 +918,118 @@ body.activity-fallback-fullscreen main.layout {
   max-width: none;
 }
 
+body.obs-dock {
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+body.obs-dock main.layout {
+  width: min(640px, 96vw);
+  margin: 0 auto;
+  gap: 1rem;
+}
+
+body.obs-dock .masthead,
+body.obs-dock .mobile-nav {
+  display: none;
+}
+
+body.obs-dock #session .session__advanced,
+body.obs-dock #session .session__toggle-group {
+  display: none !important;
+}
+
+body.obs-dock #session .card__header-controls button {
+  display: none;
+}
+
+body.obs-dock #sources .sources__footnote {
+  display: none;
+}
+
+body.obs-dock .card {
+  padding: 1rem 1.25rem;
+}
+
+body.obs-dock .source-card {
+  padding: 1rem;
+}
+
+body.obs-dock .source-card__description,
+body.obs-dock .source-card__subtext {
+  display: none;
+}
+
+body.obs-dock .source-card__settings {
+  display: none !important;
+}
+
+body.obs-dock .source-card__header-controls button {
+  display: none;
+}
+
+body.obs-dock .source-card__primary {
+  gap: 0.75rem;
+}
+
+body.obs-dock .plugin-status {
+  gap: 0.5rem;
+}
+
+body.obs-dock .plugin-actions {
+  width: 100%;
+  display: grid;
+  gap: 0.5rem;
+}
+
+body.obs-dock .plugin-actions .btn {
+  width: 100%;
+}
+
+body.obs-dock .session__link-row,
+body.obs-dock .session__actions {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+body.activity-popout {
+  min-height: 100vh;
+  padding: 0;
+}
+
+body.activity-popout main.layout {
+  width: min(560px, 96vw);
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1rem, 4vw, 1.75rem);
+  gap: 0;
+}
+
+body.activity-popout .masthead,
+body.activity-popout .mobile-nav,
+body.activity-popout #session,
+body.activity-popout #sources {
+  display: none;
+}
+
+body.activity-popout #activity {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+body.activity-popout #activity .card__header {
+  margin-bottom: 1rem;
+}
+
+body.activity-popout #activity .activity__log {
+  flex: 1;
+  max-height: none;
+  min-height: 0;
+}
+
 .activity-status__meta {
   font-size: 0.75rem;
   color: var(--text-secondary);
