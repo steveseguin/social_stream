@@ -49,6 +49,118 @@ var isExtensionOn = false;
 var ssapp = false;
 var USERNAMES = [];
 
+const HANDLE_STATUS_STATES = {
+	ACTIVE: "active",
+	READY: "ready",
+	MISSING: "missing",
+	NEEDS_PERMISSION: "needs-permission",
+	ERROR: "error"
+};
+const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "savedNames"];
+const HANDLE_STATUS_LABELS = {
+	ticker: "Ticker source",
+	chatLog: "Last message file",
+	savedNames: "Names log"
+};
+const HANDLE_STATUS_HELP = {
+	ticker: "Select a ticker source file to stream text",
+	chatLog: "Choose where the last message should be saved",
+	savedNames: "Choose where unique chat names should be stored"
+};
+const popupHandleStatusState = {};
+HANDLE_STATUS_KEYS.forEach((key) => {
+	popupHandleStatusState[key] = createPopupHandleStatus();
+});
+
+function createPopupHandleStatus(overrides = {}) {
+	return Object.assign({
+		name: null,
+		status: HANDLE_STATUS_STATES.MISSING,
+		detail: "",
+		persisted: false
+	}, overrides);
+}
+
+function areHandleStatusEntriesEqual(a = {}, b = {}) {
+	const fields = ["name", "status", "detail", "persisted"];
+	return fields.every((field) => (a[field] || null) === (b[field] || null));
+}
+
+function mergeHandleStatusFromBackground(statusMap = {}) {
+	let changed = false;
+	Object.keys(statusMap || {}).forEach((key) => {
+		if (!popupHandleStatusState[key]) {
+			popupHandleStatusState[key] = createPopupHandleStatus();
+		}
+		const existing = popupHandleStatusState[key];
+		const incoming = statusMap[key] || {};
+		const merged = { ...existing, ...incoming };
+		if (!areHandleStatusEntriesEqual(existing, merged)) {
+			popupHandleStatusState[key] = merged;
+			changed = true;
+		}
+	});
+	if (changed) {
+		renderHandleStatus();
+	}
+}
+
+function getHandleStatusLabel(key, entry) {
+	const fallback = HANDLE_STATUS_LABELS[key] || "Selected file";
+	const fileName = entry.name || fallback;
+	switch (entry.status) {
+		case HANDLE_STATUS_STATES.ACTIVE:
+			return `Active: ${fileName}`;
+		case HANDLE_STATUS_STATES.READY:
+			return `Ready: ${fileName}`;
+		case HANDLE_STATUS_STATES.NEEDS_PERMISSION:
+			return entry.name ? `Needs permission: ${entry.name}` : "Needs permission";
+		case HANDLE_STATUS_STATES.ERROR:
+			return entry.name ? `Error: ${entry.name}` : "File error";
+		default:
+			return "No file selected";
+	}
+}
+
+function getHandleStatusDetail(key, entry) {
+	if (entry.detail) {
+		return entry.detail;
+	}
+	if (entry.status === HANDLE_STATUS_STATES.MISSING) {
+		return HANDLE_STATUS_HELP[key] || "";
+	}
+	if (!entry.persisted && (entry.status === HANDLE_STATUS_STATES.ACTIVE || entry.status === HANDLE_STATUS_STATES.READY)) {
+		return "Needs to be selected again after reloading.";
+	}
+	return "";
+}
+
+function renderHandleStatus() {
+	document.querySelectorAll("[data-handle-status]").forEach((node) => {
+		const key = node.dataset.handleStatus;
+		const entry = popupHandleStatusState[key] || createPopupHandleStatus();
+		const status = entry.status || HANDLE_STATUS_STATES.MISSING;
+		node.dataset.status = status;
+		node.dataset.persisted = entry.persisted ? "true" : "false";
+		const labelNode = node.querySelector(".status-label");
+		if (labelNode) {
+			labelNode.textContent = getHandleStatusLabel(key, entry);
+		}
+		const detailNode = node.querySelector(".status-detail");
+		if (detailNode) {
+			const detailText = getHandleStatusDetail(key, entry);
+			detailNode.textContent = detailText;
+			detailNode.style.display = detailText ? "" : "none";
+		}
+	});
+}
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+	renderHandleStatus();
+} else {
+	document.addEventListener("DOMContentLoaded", renderHandleStatus);
+}
+
 // Function to open Event Flow Editor
 function openEventFlowEditor() {
     // For all contexts, just open actions/index.html
@@ -2129,6 +2241,10 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        if (response.handleStatus) {
+            mergeHandleStatusFromBackground(response.handleStatus);
+        }
+
         if (response.documents) {
             updateDocumentList(response.documents);
         }
@@ -3869,6 +3985,10 @@ try {
 				log("Message received in popup:", request.forPopup);
 				if (request.forPopup.documents){
 					updateDocumentList(request.forPopup.documents);
+				}
+
+				if (request.forPopup.handleStatus) {
+					mergeHandleStatusFromBackground(request.forPopup.handleStatus);
 				}
 				
 				if (request.forPopup.alert){

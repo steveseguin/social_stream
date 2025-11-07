@@ -158,6 +158,82 @@ hr {
 	justify-content: center;
     align-items: center;
 }
+
+.file-handle-status {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.65);
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 230px;
+    font-size: 0.9em;
+    color: var(--default-text-color);
+}
+
+.file-handle-status .status-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    flex-wrap: wrap;
+}
+
+.file-handle-status .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #bdbdbd;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.file-handle-status .status-detail {
+    font-size: 0.85em;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+.file-handle-status .status-detail:empty {
+    display: none;
+}
+
+.file-handle-status[data-status="active"] .status-dot {
+    background: #1ed760;
+    box-shadow: 0 0 6px rgba(30, 215, 96, 0.6);
+}
+
+.file-handle-status[data-status="ready"] .status-dot {
+    background: #2d8bff;
+}
+
+.file-handle-status[data-status="needs-permission"] .status-dot {
+    background: #ffb347;
+}
+
+.file-handle-status[data-status="error"] .status-dot {
+    background: #ff4d4f;
+}
+
+.file-handle-status[data-status="missing"] .status-row {
+    opacity: 0.8;
+}
+
+.file-handle-status[data-persisted="false"][data-status="active"],
+.file-handle-status[data-persisted="false"][data-status="ready"] {
+    border-style: dashed;
+}
+
+@media (prefers-color-scheme: dark) {
+    .file-handle-status {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--default-text-color);
+    }
+    .file-handle-status .status-detail {
+        color: rgba(255, 255, 255, 0.75);
+    }
+}
 #newUsername {
 	flex-grow: 1;
 	margin-right: 5px;
@@ -7458,6 +7534,13 @@ input:checked + .slider:before {
 											<span style="height:20px"><span data-translate="select-ticker-source-file">📄 Select the ticker source file</span></span>
 										</button>
 									</div>
+									<div class="file-handle-status" data-handle-status="ticker" data-status="missing" data-persisted="false" role="status" aria-live="polite">
+										<div class="status-row">
+											<span class="status-dot" aria-hidden="true"></span>
+											<span class="status-label">No file selected.</span>
+										</div>
+										<span class="status-detail"></span>
+									</div>
                                 </div>
                                 <h3><span data-translate="other-customization-options">Other customization options</span></h3>
                                 <div>
@@ -9457,6 +9540,13 @@ input:checked + .slider:before {
                                         <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
                                     </button>
                                 </div>
+                                <div class="file-handle-status" data-handle-status="chatLog" data-status="missing" data-persisted="false" role="status" aria-live="polite">
+                                    <div class="status-row">
+                                        <span class="status-dot" aria-hidden="true"></span>
+                                        <span class="status-label">No file selected.</span>
+                                    </div>
+                                    <span class="status-detail"></span>
+                                </div>
 
                                 <h3>
                                     <span data-translate="save-all-messages-to">Save all messages to 📗 </span><b><span data-translate="excel">Excel</span></b><span data-translate="file"> file</span>
@@ -9485,6 +9575,13 @@ input:checked + .slider:before {
 									<button class="glowingButton"  data-action="savenamesClear">
                                         <span style="font-size: 0.8em;"><span data-translate="reset-user-list">Reset list</span></span>
                                     </button>
+                                </div>
+                                <div class="file-handle-status" data-handle-status="savedNames" data-status="missing" data-persisted="false" role="status" aria-live="polite">
+                                    <div class="status-row">
+                                        <span class="status-dot" aria-hidden="true"></span>
+                                        <span class="status-label">No file selected.</span>
+                                    </div>
+                                    <span class="status-detail"></span>
                                 </div>
 
                                 <h3><span data-translate="reset-all-settings">Reset all settings to defaults</span></h3>

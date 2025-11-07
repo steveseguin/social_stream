@@ -32,6 +32,273 @@ var lastAntiSpam = 0;
 var connectedPeers = {};
 var isSSAPP = false;
 
+const HANDLE_DB_NAME = "ssn-file-handles";
+const HANDLE_STORE_NAME = "handles";
+let fileHandleDBPromise = null;
+const HANDLE_KEYS = {
+	chatLog: "chatLog",
+	savedNames: "savedNames",
+	ticker: "tickerFile"
+};
+
+const HANDLE_STATUS_KEYS = ["chatLog", "savedNames", "ticker"];
+const HANDLE_STATUS_FIELDS = ["name", "status", "detail", "persisted"];
+const HANDLE_STATUS_STATES = {
+	ACTIVE: "active",
+	READY: "ready",
+	MISSING: "missing",
+	NEEDS_PERMISSION: "needs-permission",
+	ERROR: "error"
+};
+
+function createDefaultHandleStatus() {
+	return {
+		name: null,
+		status: HANDLE_STATUS_STATES.MISSING,
+		detail: "",
+		persisted: false,
+		lastUpdated: 0
+	};
+}
+
+function createHandleStatusState() {
+	const state = {};
+	for (const key of HANDLE_STATUS_KEYS) {
+		state[key] = createDefaultHandleStatus();
+	}
+	return state;
+}
+
+const handleStatusState = createHandleStatusState();
+
+function cloneHandleStatusEntry(entry) {
+	return { ...entry };
+}
+
+function ensureHandleStatusCache() {
+	return handleStatusState;
+}
+
+function getHandleStatusSnapshot() {
+	const snapshot = {};
+	for (const key of HANDLE_STATUS_KEYS) {
+		snapshot[key] = cloneHandleStatusEntry(handleStatusState[key]);
+	}
+	return snapshot;
+}
+
+function getFileHandleDisplayName(handle) {
+	if (!handle) {
+		return null;
+	}
+	try {
+		if (typeof handle === "string") {
+			const normalized = handle.replace(/\\/g, "/");
+			const parts = normalized.split("/");
+			return parts.pop() || normalized;
+		}
+		if (handle.name) {
+			return handle.name;
+		}
+	} catch (error) {
+		console.warn("Could not derive handle name", error);
+	}
+	return null;
+}
+
+function broadcastHandleStatus(keys = HANDLE_STATUS_KEYS) {
+	if (!handleStatusState || !keys || !keys.length) {
+		return;
+	}
+	const payload = {};
+	keys.forEach((key) => {
+		if (handleStatusState[key]) {
+			payload[key] = cloneHandleStatusEntry(handleStatusState[key]);
+		}
+	});
+	if (Object.keys(payload).length) {
+		messagePopup({ handleStatus: payload });
+	}
+}
+
+async function updateHandleStatus(key, updates = {}, options = {}) {
+	ensureHandleStatusCache();
+	if (!HANDLE_STATUS_KEYS.includes(key)) {
+		return null;
+	}
+	const current = handleStatusState[key] || createDefaultHandleStatus();
+	const next = { ...current };
+	let changed = false;
+
+	for (const field of Object.keys(updates)) {
+		if (updates[field] === undefined) {
+			continue;
+		}
+		if (next[field] !== updates[field]) {
+			next[field] = updates[field];
+			if (HANDLE_STATUS_FIELDS.includes(field)) {
+				changed = true;
+			}
+		}
+	}
+
+	if (!changed && !options.forceUpdate) {
+		return current;
+	}
+
+	next.lastUpdated = Date.now();
+	handleStatusState[key] = next;
+	if (options.broadcast !== false) {
+		broadcastHandleStatus([key]);
+	}
+	return next;
+}
+
+async function markHandleNeedsAttention(key, detail = "") {
+	ensureHandleStatusCache();
+	const existing = handleStatusState[key] || createDefaultHandleStatus();
+	if (existing.name) {
+		return updateHandleStatus(key, {
+			status: HANDLE_STATUS_STATES.NEEDS_PERMISSION,
+			detail: detail || "Click select to re-authorize access",
+			persisted: false
+		});
+	}
+	return updateHandleStatus(key, {
+		name: null,
+		status: HANDLE_STATUS_STATES.MISSING,
+		detail: detail || "",
+		persisted: false
+	});
+}
+
+function shouldUseBrowserHandleStore() {
+	return !isSSAPP && typeof indexedDB !== "undefined";
+}
+
+function getFileHandleDB() {
+	if (!shouldUseBrowserHandleStore()) {
+		return Promise.resolve(null);
+	}
+	if (fileHandleDBPromise) {
+		return fileHandleDBPromise;
+	}
+	fileHandleDBPromise = new Promise((resolve, reject) => {
+		try {
+			const request = indexedDB.open(HANDLE_DB_NAME, 1);
+			request.onerror = () => {
+				console.warn("File handle store open failed", request.error);
+				reject(request.error);
+			};
+			request.onupgradeneeded = () => {
+				const db = request.result;
+				if (!db.objectStoreNames.contains(HANDLE_STORE_NAME)) {
+					db.createObjectStore(HANDLE_STORE_NAME, { keyPath: "key" });
+				}
+			};
+			request.onsuccess = () => resolve(request.result);
+		} catch (error) {
+			console.warn("File handle store init error", error);
+			reject(error);
+		}
+	}).catch(error => {
+		console.warn("Disabling file handle persistence", error);
+		return null;
+	});
+	return fileHandleDBPromise;
+}
+
+async function persistBrowserHandle(key, handle) {
+	if (!handle || typeof handle === "string" || !shouldUseBrowserHandleStore()) {
+		return;
+	}
+	const db = await getFileHandleDB();
+	if (!db) {
+		return;
+	}
+	try {
+		await new Promise((resolve, reject) => {
+			const tx = db.transaction(HANDLE_STORE_NAME, "readwrite");
+			tx.oncomplete = resolve;
+			tx.onerror = () => reject(tx.error);
+			tx.objectStore(HANDLE_STORE_NAME).put({ key, handle });
+		});
+	} catch (error) {
+		console.warn("Unable to persist file handle", key, error);
+	}
+}
+
+async function dropBrowserHandle(key) {
+	if (!shouldUseBrowserHandleStore()) {
+		return;
+	}
+	const db = await getFileHandleDB();
+	if (!db) {
+		return;
+	}
+	try {
+		await new Promise((resolve, reject) => {
+			const tx = db.transaction(HANDLE_STORE_NAME, "readwrite");
+			tx.oncomplete = resolve;
+			tx.onerror = () => reject(tx.error);
+			tx.objectStore(HANDLE_STORE_NAME).delete(key);
+		});
+	} catch (error) {
+		console.warn("Unable to drop file handle", key, error);
+	}
+}
+
+async function ensureHandlePermission(handle, mode = "readwrite") {
+	if (!handle || typeof handle.queryPermission !== "function" || typeof handle.requestPermission !== "function") {
+		return handle;
+	}
+	try {
+		let status = await handle.queryPermission({ mode });
+		if (status === "granted") {
+			return handle;
+		}
+		if (status !== "denied") {
+			status = await handle.requestPermission({ mode });
+			if (status === "granted") {
+				return handle;
+			}
+		}
+	} catch (error) {
+		console.warn("File handle permission check failed", error);
+	}
+	return null;
+}
+
+async function restoreBrowserHandle(key, mode = "readwrite") {
+	if (!shouldUseBrowserHandleStore()) {
+		return null;
+	}
+	const db = await getFileHandleDB();
+	if (!db) {
+		return null;
+	}
+	try {
+		const record = await new Promise((resolve, reject) => {
+			const tx = db.transaction(HANDLE_STORE_NAME, "readonly");
+			tx.onerror = () => reject(tx.error);
+			const request = tx.objectStore(HANDLE_STORE_NAME).get(key);
+			request.onsuccess = () => resolve(request.result);
+			request.onerror = () => reject(request.error);
+		});
+		if (!record || !record.handle) {
+			return null;
+		}
+		const permittedHandle = await ensureHandlePermission(record.handle, mode);
+		if (permittedHandle) {
+			return permittedHandle;
+		}
+		await dropBrowserHandle(key);
+	} catch (error) {
+		console.warn("Unable to restore file handle", key, error);
+	}
+	return null;
+}
+
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
 var lastUseNinjaSDK = undefined; // track effective SDK usage across settings loads
@@ -1525,11 +1792,20 @@ async function overwriteFile(data = false) {
         } finally {
             await restorePreviousTabAfterPicker(restoreTarget);
         }
+        await persistBrowserHandle(HANDLE_KEYS.chatLog, newFileHandle);
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newFileHandle === "string") {
             localStorage.setItem("savedFilePath", newFileHandle);
         }
+
+        const displayName = getFileHandleDisplayName(newFileHandle);
+        await updateHandleStatus("chatLog", {
+            name: displayName,
+            status: HANDLE_STATUS_STATES.ACTIVE,
+            detail: "",
+            persisted: shouldUseBrowserHandleStore() || isSSAPP
+        });
     } else if (newFileHandle && data) {
         if (typeof newFileHandle == "string") {
             ipcRenderer.send("write-to-file", { filePath: newFileHandle, data: data });
@@ -1564,11 +1840,20 @@ async function overwriteSavedNames(data = false) {
         } finally {
             await restorePreviousTabAfterPicker(restoreTarget);
         }
+        await persistBrowserHandle(HANDLE_KEYS.savedNames, newSavedNamesFileHandle);
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newSavedNamesFileHandle === "string") {
             localStorage.setItem("savedNamesFilePath", newSavedNamesFileHandle);
         }
+
+        const displayName = getFileHandleDisplayName(newSavedNamesFileHandle);
+        await updateHandleStatus("savedNames", {
+            name: displayName,
+            status: HANDLE_STATUS_STATES.ACTIVE,
+            detail: "",
+            persisted: shouldUseBrowserHandleStore() || isSSAPP
+        });
     } else if (data == "clear") {
         uniqueNameSet = [];
     } else if (data == "stop") {
@@ -1579,6 +1864,13 @@ async function overwriteSavedNames(data = false) {
         if (isSSAPP) {
             localStorage.removeItem("savedNamesFilePath");
         }
+        await dropBrowserHandle(HANDLE_KEYS.savedNames);
+        await updateHandleStatus("savedNames", {
+            name: null,
+            status: HANDLE_STATUS_STATES.MISSING,
+            detail: "",
+            persisted: false
+        });
     } else if (newSavedNamesFileHandle && data) {
         if (uniqueNameSet.includes(data)) {
             return;
@@ -3242,12 +3534,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
+			ensureHandleStatusCache();
 			let responseData;
 			try { 
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG};
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG, handleStatus: getHandleStatusSnapshot()};
 			} catch(e){
 				console.warn("Error including documentsRAG:", e);
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings};
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, handleStatus: getHandleStatusSnapshot()};
 			}
 			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "saveSetting") {
@@ -3819,6 +4112,17 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "singlesaveStop") {
 			sendResponse({ state: isExtensionOn });
 			newFileHandle = false;
+			if (isSSAPP) {
+				localStorage.removeItem("savedFilePath");
+			} else {
+				await dropBrowserHandle(HANDLE_KEYS.chatLog);
+			}
+			await updateHandleStatus("chatLog", {
+				name: null,
+				status: HANDLE_STATUS_STATES.MISSING,
+				detail: "",
+				persisted: false
+			});
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			////console.logrequest);
 			if ("value" in request) {
@@ -11385,17 +11689,13 @@ window.onload = async function () {
                             loadSettings(oldItem, false);
                             
                             // Initialize file handles after settings are loaded
-                            if (isSSAPP) {
-                                initializeFileHandles();
-                            }
+                            initializeFileHandles();
                         } else {
                             // No migration needed, just load what we have
                             loadSettings(item, false);
                             
                             // Initialize file handles after settings are loaded
-                            if (isSSAPP) {
-                                initializeFileHandles();
-                            }
+                            initializeFileHandles();
                         }
                     });
                 } else {
@@ -11403,9 +11703,7 @@ window.onload = async function () {
                     loadSettings(item, false);
                     
                     // Initialize file handles after settings are loaded
-                    if (isSSAPP) {
-                        initializeFileHandles();
-                    }
+                    initializeFileHandles();
                 }
             });
         });
@@ -11427,55 +11725,182 @@ async function selectTickerFile() {
 	const restoreTarget = await bringBackgroundPageToFrontForPicker();
 
 	try {
-		fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
+	fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
 	} finally {
 		await restorePreviousTabAfterPicker(restoreTarget);
 	}
 
 	if (!isSSAPP) {
 		fileHandleTicker = fileHandleTicker[0];
+		await persistBrowserHandle(HANDLE_KEYS.ticker, fileHandleTicker);
 	} else if (typeof fileHandleTicker === "string") {
         // Store file path when isSSAPP is true
         localStorage.setItem("tickerFilePath", fileHandleTicker);
     }
+	const tickerName = getFileHandleDisplayName(fileHandleTicker);
+	await updateHandleStatus("ticker", {
+		name: tickerName,
+		status: HANDLE_STATUS_STATES.READY,
+		detail: settings.ticker ? "" : "Enable the ticker to broadcast",
+		persisted: shouldUseBrowserHandleStore() || isSSAPP
+	});
      
     try {
         await loadFileTicker();
     } catch(e){}
 }
 async function initializeFileHandles() {
-    if (!isSSAPP) return;
-    
-    // Restore main file handle
-    const savedFilePath = localStorage.getItem("savedFilePath");
-    if (savedFilePath) {
-        newFileHandle = savedFilePath;
-    }
-    
-    // Restore saved names file handle
-    const savedNamesFilePath = localStorage.getItem("savedNamesFilePath");
-    if (savedNamesFilePath) {
-        newSavedNamesFileHandle = savedNamesFilePath;
-        try {
-            // Load the existing names
-            const data = await ipcRenderer.invoke("read-from-file", savedNamesFilePath);
-            if (data) {
-                uniqueNameSet = data.split("\r\n").filter(name => name.trim() !== "");
+    ensureHandleStatusCache();
+
+    if (isSSAPP) {
+        // Restore main file handle
+        const savedFilePath = localStorage.getItem("savedFilePath");
+        if (savedFilePath) {
+            newFileHandle = savedFilePath;
+            await updateHandleStatus("chatLog", {
+                name: getFileHandleDisplayName(savedFilePath),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await updateHandleStatus("chatLog", {
+                name: null,
+                status: HANDLE_STATUS_STATES.MISSING,
+                detail: "",
+                persisted: false
+            });
+        }
+        
+        // Restore saved names file handle
+        const savedNamesFilePath = localStorage.getItem("savedNamesFilePath");
+        if (savedNamesFilePath) {
+            newSavedNamesFileHandle = savedNamesFilePath;
+            try {
+                // Load the existing names
+                const data = await ipcRenderer.invoke("read-from-file", savedNamesFilePath);
+                if (data) {
+                    uniqueNameSet = data.split("\r\n").filter(name => name.trim() !== "");
+                }
+            } catch(e) {
+                console.warn("Could not load saved names file:", e);
             }
-        } catch(e) {
-            console.warn("Could not load saved names file:", e);
+            await updateHandleStatus("savedNames", {
+                name: getFileHandleDisplayName(savedNamesFilePath),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await updateHandleStatus("savedNames", {
+                name: null,
+                status: HANDLE_STATUS_STATES.MISSING,
+                detail: "",
+                persisted: false
+            });
         }
+        
+        // Restore ticker file handle
+        const tickerFilePath = localStorage.getItem("tickerFilePath");
+        if (tickerFilePath) {
+            fileHandleTicker = tickerFilePath;
+            await updateHandleStatus("ticker", {
+                name: getFileHandleDisplayName(tickerFilePath),
+                status: HANDLE_STATUS_STATES.READY,
+                detail: settings.ticker ? "" : "Enable the ticker to broadcast",
+                persisted: true
+            });
+            if (settings.ticker) {
+                try {
+                    await loadFileTicker();
+                } catch(e) {
+                    console.warn("Could not load ticker file:", e);
+                }
+            }
+        } else {
+            await markHandleNeedsAttention("ticker", "Select a ticker source file");
+        }
+        return;
     }
-    
-    // Restore ticker file handle
-    const tickerFilePath = localStorage.getItem("tickerFilePath");
-    if (tickerFilePath && settings.ticker) {
-        fileHandleTicker = tickerFilePath;
-        try {
-            await loadFileTicker();
-        } catch(e) {
-            console.warn("Could not load ticker file:", e);
+
+    try {
+        const restoredChatHandle = await restoreBrowserHandle(HANDLE_KEYS.chatLog, "readwrite");
+        if (restoredChatHandle) {
+            newFileHandle = restoredChatHandle;
+            await updateHandleStatus("chatLog", {
+                name: getFileHandleDisplayName(restoredChatHandle),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await markHandleNeedsAttention("chatLog", "Select a file to save the last message");
         }
+    } catch (error) {
+        console.warn("Could not restore chat log handle:", error);
+        await updateHandleStatus("chatLog", {
+            status: HANDLE_STATUS_STATES.ERROR,
+            detail: "Could not restore chat log file",
+            persisted: false
+        });
+    }
+
+    try {
+        const restoredNamesHandle = await restoreBrowserHandle(HANDLE_KEYS.savedNames, "readwrite");
+        if (restoredNamesHandle) {
+            newSavedNamesFileHandle = restoredNamesHandle;
+            try {
+                const savedNamesFile = await newSavedNamesFileHandle.getFile();
+                const text = await savedNamesFile.text();
+                uniqueNameSet = text.split(/\r?\n/).filter(name => name.trim() !== "");
+            } catch (error) {
+                console.warn("Could not read saved names content:", error);
+            }
+            await updateHandleStatus("savedNames", {
+                name: getFileHandleDisplayName(restoredNamesHandle),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await markHandleNeedsAttention("savedNames", "Select a file to track viewer names");
+        }
+    } catch (error) {
+        console.warn("Could not restore saved names handle:", error);
+        await updateHandleStatus("savedNames", {
+            status: HANDLE_STATUS_STATES.ERROR,
+            detail: "Could not restore saved names file",
+            persisted: false
+        });
+    }
+
+    try {
+        const restoredTickerHandle = await restoreBrowserHandle(HANDLE_KEYS.ticker, "read");
+        if (restoredTickerHandle) {
+            fileHandleTicker = restoredTickerHandle;
+            await updateHandleStatus("ticker", {
+                name: getFileHandleDisplayName(restoredTickerHandle),
+                status: HANDLE_STATUS_STATES.READY,
+                detail: settings.ticker ? "" : "Enable the ticker to broadcast",
+                persisted: true
+            });
+            if (settings.ticker) {
+                try {
+                    await loadFileTicker();
+                } catch (error) {
+                    console.warn("Could not load ticker file:", error);
+                }
+            }
+        } else {
+            await markHandleNeedsAttention("ticker", "Select a ticker source file");
+        }
+    } catch (error) {
+        console.warn("Could not restore ticker handle:", error);
+        await updateHandleStatus("ticker", {
+            status: HANDLE_STATUS_STATES.ERROR,
+            detail: "Could not restore ticker source",
+            persisted: false
+        });
     }
 }
 
@@ -11494,24 +11919,58 @@ async function loadFileTicker(file=null) {
 			fileContentTicker = "";
 			sendTickerP2P([]);
 		}
+		if (fileHandleTicker) {
+			await updateHandleStatus("ticker", {
+				name: getFileHandleDisplayName(fileHandleTicker),
+				status: HANDLE_STATUS_STATES.READY,
+				detail: "Enable the ticker to broadcast",
+				persisted: shouldUseBrowserHandleStore() || isSSAPP
+			});
+		} else {
+			await updateHandleStatus("ticker", {
+				name: null,
+				status: HANDLE_STATUS_STATES.MISSING,
+				detail: "",
+				persisted: false
+			});
+		}
 		return;
 	}
 	if (fileHandleTicker) {
-		if (!isSSAPP){
-			if (!file){
-				file = await fileHandleTicker.getFile();
+		try {
+			if (!isSSAPP){
+				if (!file){
+					file = await fileHandleTicker.getFile();
+				}
+				fileContentTicker = await file.text();
+			} else {
+				fileContentTicker = fileHandleTicker;
 			}
-			fileContentTicker = await file.text();
-		} else {
-			fileContentTicker = fileHandleTicker;
-		}
-		sendTickerP2P([fileContentTicker]);
-		fileSizeTicker = file.size;
-		if (!isSSAPP){
-			monitorFileChanges();
+			sendTickerP2P([fileContentTicker]);
+			if (file?.size) {
+				fileSizeTicker = file.size;
+			}
+			if (!isSSAPP){
+				monitorFileChanges();
+			}
+			await updateHandleStatus("ticker", {
+				name: getFileHandleDisplayName(fileHandleTicker),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: shouldUseBrowserHandleStore() || isSSAPP
+			});
+		} catch (error) {
+			console.warn("Could not read ticker file:", error);
+			await updateHandleStatus("ticker", {
+				status: HANDLE_STATUS_STATES.ERROR,
+				detail: "Could not read the ticker file",
+				persisted: Boolean(fileHandleTicker)
+			});
 		}
 	} else {
-		selectTickerFile();
+		await markHandleNeedsAttention("ticker", "Select or re-authorize a ticker source file");
+		fileContentTicker = "";
+		sendTickerP2P([]);
 	}
 }
 
