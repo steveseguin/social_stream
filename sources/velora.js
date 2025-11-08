@@ -213,7 +213,10 @@
 				
 				if ("getSource" == request){sendResponse("velora");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('[aria-label="Chat message input"][contenteditable="true"][data-placeholder][spellcheck="false"][role="textbox"]').focus();
+					let cc = document.querySelectorAll('[aria-label="Chat message input"][contenteditable="true"][data-placeholder][spellcheck="false"][role="textbox"]');
+					if(cc.length){
+						cc[cc.length-1].focus();
+					}
 					sendResponse(true);
 					return;
 				}
