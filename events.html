@@ -166,6 +166,19 @@ body, html {
     font-style: italic;
 }
 
+body.obsstudio-mode {
+    --bg-color: #13141A;
+    background-color: #13141A;
+}
+
+body.obsstudio-mode #header {
+    display: none;
+}
+
+body.obsstudio-mode #chat-container {
+    height: 100vh;
+}
+
 #header {
     background-color: #0f1824;
     color: white;
@@ -413,7 +426,7 @@ body.light-mode .meta-value.badge {
     
     const chatContainer = document.getElementById('chat-container');
     let noEventsMessage = document.querySelector('.no-events');
-	
+
 	var sources = false; // Default sources
 	if (urlParams.get("sources")) {
 		sources = urlParams.get("sources").split(',').map(s => s.trim().toLowerCase());
@@ -449,6 +462,13 @@ body.light-mode .meta-value.badge {
 		document.body.style.fontFamily = `'${googleFont}', sans-serif`;
 	} else if (fontFamily && fontFamily !== "Roboto") {
 		document.body.style.fontFamily = fontFamily;
+	}
+
+	const isObsStudio = typeof window !== 'undefined' && typeof window.obsstudio !== 'undefined';
+	if (isObsStudio) {
+		document.body.classList.add('obsstudio-mode');
+		document.body.style.backgroundColor = '#13141A';
+		document.documentElement.style.setProperty('--bg-color', '#13141A');
 	}
     
     const FRIENDLY_EVENT_LABELS = {
