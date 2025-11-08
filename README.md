@@ -232,6 +232,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - streamelements (overlay page)
 - versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
+- velora.tv (no popup; just channel watch page)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
