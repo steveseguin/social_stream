@@ -14,7 +14,9 @@ class SpotifyIntegration {
         };
 
         this.browserRedirectUri = 'https://socialstream.ninja/spotify.html';
-        this.electronRedirectUri = 'http://localhost:8888/callback';
+        this.electronRedirectUri = 'http://127.0.0.1:8888/callback';
+        this._isElectronEnv = undefined;
+        this._electronIpc = null;
     }
 
     async initialize(settings, callbacks = {}) {
@@ -64,30 +66,118 @@ class SpotifyIntegration {
         }
     }
 
+    getElectronIpc() {
+        if (this._electronIpc) {
+            return this._electronIpc;
+        }
+
+        try {
+            if (typeof ipcRenderer !== 'undefined' && typeof ipcRenderer.invoke === 'function') {
+                this._electronIpc = ipcRenderer;
+                return this._electronIpc;
+            }
+        } catch (_) {}
+
+        if (typeof window !== 'undefined') {
+            if (window.ipcRenderer && typeof window.ipcRenderer.invoke === 'function') {
+                this._electronIpc = window.ipcRenderer;
+                return this._electronIpc;
+            }
+
+            if (typeof window.require === 'function') {
+                try {
+                    const electronModule = window.require('electron');
+                    if (electronModule && typeof electronModule.ipcRenderer?.invoke === 'function') {
+                        this._electronIpc = electronModule.ipcRenderer;
+                        return this._electronIpc;
+                    }
+                } catch (_) {}
+            }
+        }
+
+        return null;
+    }
+
+    hasElectronBridge() {
+        return !!this.getElectronIpc();
+    }
+
     isElectronEnvironment() {
+        if (typeof this._isElectronEnv === 'boolean') {
+            return this._isElectronEnv;
+        }
+
+        let detected = false;
         try {
             if (typeof window !== 'undefined') {
-                if (window.ssapp) {
-                    return true;
-                }
-                if (window.process && window.process.versions && window.process.versions.electron) {
-                    return true;
+                if (window.ninjafy || window.ssapp === true) {
+                    detected = true;
+                } else if (window.location && typeof window.location.search === 'string' && window.location.search.includes('ssapp')) {
+                    detected = true;
+                } else if (window.process && window.process.versions && window.process.versions.electron) {
+                    detected = true;
                 }
             }
-        } catch (e) {}
-        return typeof ipcRenderer !== 'undefined';
+
+            if (!detected && typeof navigator !== 'undefined' && navigator.userAgent && navigator.userAgent.includes('Electron')) {
+                detected = true;
+            }
+        } catch (_) {}
+
+        if (!detected && this.hasElectronBridge()) {
+            detected = true;
+        }
+
+        this._isElectronEnv = detected;
+        return detected;
     }
 
     getDefaultRedirectUri() {
-        return this.isElectronEnvironment() ? this.electronRedirectUri : this.browserRedirectUri;
+        return this.hasElectronBridge()
+            ? this.normalizeLoopbackRedirectUri(this.electronRedirectUri)
+            : this.browserRedirectUri;
     }
 
     buildAuthUrl({ redirectUri, scopes, state }) {
         return `https://accounts.spotify.com/authorize?client_id=${this.settings.spotifyClientId.textsetting}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}&state=${state}`;
     }
 
+    normalizeLoopbackRedirectUri(uri) {
+        if (!uri || typeof uri !== 'string') {
+            return uri;
+        }
+
+        try {
+            const parsed = new URL(uri);
+            if ((parsed.hostname === 'localhost' || parsed.hostname === '[::1]' || parsed.hostname === '::1') && parsed.port === '8888') {
+                parsed.hostname = '127.0.0.1';
+                return parsed.toString();
+            }
+        } catch (_) {
+            // Fall back to simple string replacement
+        }
+
+        return uri.replace('http://localhost:8888', 'http://127.0.0.1:8888')
+                  .replace('https://localhost:8888', 'http://127.0.0.1:8888');
+    }
+
+    describeElectronOAuthError(error) {
+        const message = (error?.message || '').toLowerCase();
+        if (message.includes('eaddrinuse')) {
+            return 'Spotify login is already running. Close the existing browser window or wait a few seconds, then try again or paste the callback URL below.';
+        }
+        if (message.includes('timeout')) {
+            return 'Spotify did not finish signing in within five minutes. If the browser is still waiting, finish the login and paste the callback URL into Social Stream.';
+        }
+        if (message.includes('auth window closed')) {
+            return 'The Spotify login window closed before we received a response. Re-run the login or paste the callback URL below after finishing in your browser.';
+        }
+        return 'Spotify could not finish connecting automatically. Authorize the app in your regular browser and paste the callback URL into Social Stream Ninja.';
+    }
+
     async invokeElectronOAuth({ authUrl, redirectUri, state }) {
-        if (typeof ipcRenderer === 'undefined' || !ipcRenderer.invoke) {
+        const electronIpc = this.getElectronIpc();
+        if (!electronIpc) {
             throw new Error('IPC handler not available');
         }
 
@@ -96,7 +186,7 @@ class SpotifyIntegration {
 
         for (const channel of channels) {
             try {
-                const result = await ipcRenderer.invoke(channel, { authUrl, redirectUri, state });
+                const result = await electronIpc.invoke(channel, { authUrl, redirectUri, state });
                 if (result) {
                     return result;
                 }
@@ -371,32 +461,42 @@ class SpotifyIntegration {
             console.log('Chrome identity approach failed:', error.message);
             console.log('Using web-based OAuth flow instead');
             
-            // Fallback to web-based flow
-            const preferredRedirectUri = this.getDefaultRedirectUri();
+            const hasElectronBridge = this.hasElectronBridge();
+            let preferredRedirectUri = hasElectronBridge ? this.electronRedirectUri : this.browserRedirectUri;
+            preferredRedirectUri = this.normalizeLoopbackRedirectUri(preferredRedirectUri);
             let authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
             let fallbackStatus = { success: false, waitingForCallback: true };
+
+            const persistAuthState = async () => {
+                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                    try {
+                        await chrome.storage.local.set({ spotifyAuthState: state });
+                    } catch (storageError) {
+                        console.warn('Failed to persist Spotify auth state:', storageError);
+                    }
+                }
+            };
             
-            // Check if we're in Electron environment
-            if (this.isElectronEnvironment() && typeof ipcRenderer !== 'undefined' && ipcRenderer.invoke) {
+            if (hasElectronBridge) {
                 console.log('Using Electron OAuth flow with IPC handler');
                 
-                // Store state for callback validation
                 this.pendingAuthState = state;
-                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                    await chrome.storage.local.set({ spotifyAuthState: state });
+                await persistAuthState();
+
+                if (preferredRedirectUri !== this.electronRedirectUri) {
+                    preferredRedirectUri = this.normalizeLoopbackRedirectUri(this.electronRedirectUri);
+                    authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
                 }
                 
-                // Use the Electron main process handler that can intercept navigation
                 try {
                     const result = await this.invokeElectronOAuth({ authUrl, redirectUri: preferredRedirectUri, state });
                     
                     if (result && result.code) {
                         console.log('OAuth code received from Electron IPC handler');
-                        // Process the callback directly
                         const success = await this.handleAuthCallback(
                             result.code,
                             result.state,
-                            result.redirectUri || preferredRedirectUri
+                            this.normalizeLoopbackRedirectUri(result.redirectUri || preferredRedirectUri)
                         );
                         
                         if (success) {
@@ -408,36 +508,35 @@ class SpotifyIntegration {
                     } else if (result && result.error) {
                         console.error('OAuth error from Electron:', result.error);
                         throw new Error(`OAuth failed: ${result.error}`);
-                    } else if (result && result.waitingForCallback) {
+                    } else if (result && (result.waitingForCallback || result.waitingForManualCallback)) {
                         return result;
                     } else {
-                        // Window closed without auth
-                        console.log('OAuth window closed without completing authentication');
+                        console.log('OAuth flow exited without a result');
                         return { success: false, error: 'Authentication cancelled' };
                     }
-                } catch (error) {
-                    console.error('Electron OAuth error:', error);
+                } catch (electronError) {
+                    console.error('Electron OAuth error:', electronError);
                     const manualAuthUrl = this.buildAuthUrl({ redirectUri: this.browserRedirectUri, scopes, state });
-                    window.open(manualAuthUrl, 'spotify-auth', 'width=500,height=700');
-                    return { success: false, waitingForManualCallback: true };
+                    return {
+                        success: false,
+                        waitingForManualCallback: true,
+                        message: this.describeElectronOAuthError(electronError),
+                        error: electronError?.message,
+                        manualAuthUrl
+                    };
                 }
             } else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
-                // For Chrome extension, open the auth page in a new tab
                 chrome.tabs.create({ url: authUrl });
                 fallbackStatus = {
                     success: false,
                     waitingForManualCallback: true,
                     message: 'After authorizing Spotify in the newly opened tab, copy the full callback URL and paste it back into Social Stream Ninja to finish connecting.'
                 };
+                await persistAuthState();
             } else {
-                // Fallback to window.open
                 window.open(authUrl, 'spotify-auth', 'width=500,height=700');
                 fallbackStatus = { success: false, waitingForCallback: true };
-            }
-
-            // Store state for manual callback handling
-            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                await chrome.storage.local.set({ spotifyAuthState: state });
+                await persistAuthState();
             }
 
             return fallbackStatus;
@@ -466,7 +565,7 @@ class SpotifyIntegration {
             return false;
         }
 
-        const redirectUri = redirectUriOverride || this.getDefaultRedirectUri();
+        const redirectUri = this.normalizeLoopbackRedirectUri(redirectUriOverride || this.getDefaultRedirectUri());
         await this.exchangeCodeForToken(code, redirectUri);
         return true;
     }

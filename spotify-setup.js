@@ -9,146 +9,24 @@ const redirectUriFromLocation = window.location.origin + window.location.pathnam
 const isExtension = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL;
 const extensionId = isExtension ? chrome.runtime.id : null;
 
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(() => {
-        // Flash the button to indicate success
-        event.target.textContent = 'Copied!';
-        setTimeout(() => {
-            event.target.textContent = 'Copy';
-        }, 2000);
-    }).catch(err => {
-        console.error('Failed to copy:', err);
-        alert('Failed to copy to clipboard');
-    });
-}
-
 function showSetupInstructions() {
-    const redirectUris = [];
-    
-    // Always include the web URI
-    redirectUris.push('https://socialstream.ninja/spotify.html');
-
-    // Add extension URI if applicable
-    if (extensionId) {
-        redirectUris.push('https://' + extensionId + '.chromiumapp.org/spotify');
-    }
-
-    // Localhost URI is required for the standalone desktop app (SSAPP)
-    redirectUris.push('http://localhost:8888/callback');
-
-    // Build the redirect URIs HTML
-    let redirectUrisHtml = '';
-    for (let i = 0; i < redirectUris.length; i++) {
-        const uri = redirectUris[i];
-        redirectUrisHtml += '<div class="uri-item">';
-        redirectUrisHtml += '<span class="uri-text">' + uri + '</span>';
-        redirectUrisHtml += '<button class="copy-button" data-uri="' + uri + '">Copy</button>';
-        redirectUrisHtml += '</div>';
-    }
-
-    const extensionNote = isExtension ? 
-        '<div class="info-box" style="background-color: #282828; border-left-color: #ff6b35;">' +
-        '<strong>Chrome Extension Users:</strong><br>' +
-        'Make sure you\'ve added the extension-specific redirect URI shown above. The extension ID (' + extensionId + ') is unique to your installation.' +
-        '</div>' : '';
-
-    const desktopNote = '<div class="info-box" style="background-color: #1b2b3a; border-left-color: #1db954;">' +
-        '<strong>Standalone Desktop App Users:</strong><br>' +
-        'Add http://localhost:8888/callback to your Spotify app. The SSAPP OAuth flow uses a local callback server, so this URI must be whitelisted even if you also use the browser extension.' +
-        '</div>';
+    const isElectronApp = typeof window !== 'undefined' &&
+        ((window.location && window.location.search && window.location.search.includes('ssapp')) || window.ninjafy);
+    const environmentLabel = isElectronApp ? 'the Social Stream app' : 'the browser extension popup';
 
     document.getElementById('content').innerHTML = 
-        '<h1>🎵 Spotify Integration Setup</h1>' +
-        '<p>Follow these steps to connect your Spotify account to Social Stream Ninja!</p>' +
-        
-        '<div class="info-box">' +
-        '<strong>Why do I need my own Spotify app?</strong><br>' +
-        'Spotify requires each application to register separately. This ensures your listening data stays private and you control your own integration.' +
-        '</div>' +
-        
-        '<h2>Step 1: Create a Spotify App</h2>' +
-        '<div class="step">' +
-        '<div class="step-number">1</div>' +
-        '<p>First, you\'ll need to create your own Spotify app to get credentials:</p>' +
-        '<a href="https://developer.spotify.com/dashboard" target="_blank" class="button">Open Spotify Dashboard →</a>' +
-        '<p style="margin-top: 15px;">Log in with your Spotify account and click "Create app"</p>' +
-        '</div>' +
-        
-        '<h2>Step 2: Configure Your App</h2>' +
-        '<div class="step">' +
-        '<div class="step-number">2</div>' +
-        '<p>Fill in the following details:</p>' +
-        '<ul>' +
-        '<li><strong>App name:</strong> Social Stream Ninja</li>' +
-        '<li><strong>App description:</strong> Integration for streaming current playing track</li>' +
-        '<li><strong>Website:</strong> https://socialstream.ninja</li>' +
-        '<li><strong>Redirect URIs:</strong> Add ALL of these URIs:</li>' +
-        '</ul>' +
-        
-        '<div id="redirect-uri-list">' +
-        redirectUrisHtml +
-        '</div>' +
-        
-        '<div class="warning">' +
-        '⚠️ Important: You must add ALL redirect URIs shown above to your Spotify app!' +
-        '</div>' +
-        '</div>' +
-        
-        '<h2>Step 3: Get Your Credentials</h2>' +
-        '<div class="step">' +
-        '<div class="step-number">3</div>' +
-        '<p>After creating your app:</p>' +
+        '<h1>🎵 Finish connecting Spotify</h1>' +
+        '<p>If this page opened after you granted Spotify permissions, Social Stream Ninja just needs the URL from your address bar to finish signing in.</p>' +
         '<ol style="list-style: decimal; padding-left: 20px;">' +
-        '<li>Click on your app in the dashboard</li>' +
-        '<li>Go to "Settings"</li>' +
-        '<li>Find your <strong>Client ID</strong> and <strong>Client Secret</strong></li>' +
-        '<li>Copy these values - you\'ll need them in the next step</li>' +
+        '<li>Copy the entire URL from your browser (it should contain <code>code=</code> and <code>state=</code>).</li>' +
+        '<li>Return to ' + environmentLabel + ' and paste that URL into the "Paste callback URL" field.</li>' +
+        '<li>Click <strong>Complete Auth</strong>.</li>' +
         '</ol>' +
-        '<p style="margin-top: 15px;">' +
-        '<strong>Note:</strong> Keep your Client Secret private! Never share it publicly.' +
-        '</p>' +
+        '<div class="info-box" style="background-color:#1b2b3a; border-left-color:#1db954;">' +
+        '<strong>Why this extra step?</strong><br>' +
+        'Some environments block embedded login windows or label them as insecure. Copying the callback URL lets the app finish the secure token exchange without ever seeing your Spotify password.' +
         '</div>' +
-        
-        '<h2>Step 4: Configure Social Stream</h2>' +
-        '<div class="step">' +
-        '<div class="step-number">4</div>' +
-        '<p>Return to Social Stream Ninja and:</p>' +
-        '<ol style="list-style: decimal; padding-left: 20px;">' +
-        '<li>Open the Social Stream settings (' + (isExtension ? 'click the extension icon' : 'open the menu') + ')</li>' +
-        '<li>Find the "🎵 Spotify Integration" section</li>' +
-        '<li>Enter your Client ID and Client Secret</li>' +
-        '<li>Click "Connect to Spotify"</li>' +
-        '</ol>' +
-        '</div>' +
-        
-        '<div class="info-box" style="margin-top: 30px;">' +
-        '<strong>Features available after connecting:</strong>' +
-        '<ul>' +
-        '<li>Automatic "Now Playing" updates in chat</li>' +
-        '<li>Chat commands: !song, !nowplaying, !np</li>' +
-        '<li>Configurable polling interval (3-60 seconds)</li>' +
-        '<li>Coming soon: Song queue functionality</li>' +
-        '</ul>' +
-        '</div>' +
-        
-        extensionNote + desktopNote;
-    
-    // Add event listeners to copy buttons
-    const copyButtons = document.querySelectorAll('.copy-button');
-    copyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const uri = this.getAttribute('data-uri');
-            navigator.clipboard.writeText(uri).then(() => {
-                this.textContent = 'Copied!';
-                setTimeout(() => {
-                    this.textContent = 'Copy';
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy:', err);
-                alert('Failed to copy to clipboard');
-            });
-        });
-    });
+        '<p style="margin-top:20px;">After the app confirms the connection, you can close this tab. If it still says "waiting", click Reconnect to Spotify and try again.</p>';
 }
 
 function showAuthCallback() {

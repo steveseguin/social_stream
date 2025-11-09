@@ -7586,6 +7586,81 @@ input:checked + .slider:before {
 								<div>
 									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
 								</div>
+
+								<div style="margin: 16px 0 8px; font-size: 0.85em; color: var(--default-text-color, #333);">
+									<strong data-translate="ticker-help-title">Need more control?</strong>
+									<span data-translate="ticker-help-copy">Use the toggles below to add URL parameters automatically or review the <a href="https://socialstream.ninja/seo.html#ticker" target="_blank" rel="noreferrer">ticker tips guide</a>.</span>
+								</div>
+
+								<div style="padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.04); margin-bottom: 15px;">
+									<h4 style="margin: 0 0 10px;" data-translate="ticker-playback-header">Playback &amp; rotation</h4>
+									<div style="margin-bottom: 8px;">
+										<span data-translate="ticker-display-mode">Display style</span>
+										<select data-optionparam6="display" style="margin-left: 6px;">
+											<option value="" data-translate="ticker-display-scroll">Scrolling marquee (default)</option>
+											<option value="rotate" data-translate="ticker-display-rotate">One-by-one rotation</option>
+										</select>
+									</div>
+									<div style="margin-bottom: 8px;">
+										<label class="switch">
+											<input type="checkbox" data-param6="rotateinterval" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-rotate-interval">
+											⏱️ Hold each line for
+											<input type="number" style="max-width: 8ch;" min="1000" max="60000" step="250" value="4000" data-numbersetting6="rotateinterval" />
+											ms (rotate mode)
+										</span>
+									</div>
+									<div style="margin-bottom: 8px;">
+										<label class="switch">
+											<input type="checkbox" data-param6="rotatepause" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-rotate-pause">
+											⏸️ Pause after a full loop for
+											<input type="number" style="max-width: 8ch;" min="0" max="60000" step="250" value="0" data-numbersetting6="rotatepause" />
+											ms
+										</span>
+									</div>
+									<div>
+										<span data-translate="ticker-rotate-order">
+											Order when rotating
+										</span>
+										<select data-optionparam6="rotateorder" style="margin-left: 6px;">
+											<option value="" data-translate="ticker-order-sequential">Sequential (A → Z)</option>
+											<option value="random" data-translate="ticker-order-random">Shuffle each loop</option>
+										</select>
+									</div>
+								</div>
+
+								<div style="padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.02);">
+									<h4 style="margin: 0 0 10px;" data-translate="ticker-spacing-header">Spacing &amp; separators</h4>
+									<div style="margin-bottom: 8px;">
+										<label class="switch">
+											<input type="checkbox" data-param6="gap" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-gap-label">
+											↔️ Extra padding per item
+											<input type="number" style="max-width: 8ch;" min="0" max="1000" step="5" value="150" data-numbersetting6="gap" />
+											px
+										</span>
+									</div>
+									<div class="textInputContainer" style="width: 95%; margin-bottom: 8px;" title="Optional separator symbol that appears between entries">
+										<input type="text" id="tickerseparator" class="textInput instant" maxlength="10" autocomplete="off" placeholder="• | —" data-textparam6="separator" />
+										<label for="tickerseparator"><span data-translate="ticker-separator-label">&gt; Separator symbol (optional)</span></label>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param6="preserveSpaces" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-preserve-spaces">
+											🧱 Preserve spaces &amp; blank lines from the text file
+										</span>
+									</div>
+								</div>
                             </div>
                         </div>
                     </div>

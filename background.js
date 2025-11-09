@@ -4364,6 +4364,8 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						success: false,
 						waitingForManualCallback: manual,
 						waitingForCallback: !manual,
+						manualAuthUrl: normalized.manualAuthUrl,
+						error: normalized.error,
 						message: normalized.message || (manual
 							? "After authorizing Spotify, copy the callback URL and paste it into Social Stream Ninja to finish sign-in."
 							: "Waiting for Spotify to redirect back with authorization. Leave the popup open until the flow completes.")

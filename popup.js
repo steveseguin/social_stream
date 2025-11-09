@@ -43,10 +43,17 @@ window.addEventListener('message', function(event) {
 var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
 var sourcemode = urlParams.get("sourcemode") || false;
-ssapp = urlParams.has("ssapp") || ssapp;
+var ssapp = false;
+
+if (urlParams.has("ssapp")) {
+	ssapp = true;
+}
+
+if (typeof window !== "undefined") {
+	window.ssapp = ssapp;
+}
 
 var isExtensionOn = false;
-var ssapp = false;
 var USERNAMES = [];
 
 const HANDLE_STATUS_STATES = {
@@ -318,6 +325,9 @@ if (typeof(chrome.runtime)=='undefined'){
 		window.shell = shell;
 		
 		ssapp = true;
+		if (typeof window !== "undefined") {
+			window.ssapp = true;
+		}
 		
 		try {
 			window.showOpenFilePicker = async function (a = null, c = null) {
@@ -5906,6 +5916,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			</p>
 			<input type="text" id="spotifyCallbackInput" placeholder="Paste callback URL here" style="width: 100%; padding: 5px; margin: 5px 0;">
 			<button id="spotifyCallbackSubmit" class="button">Complete Auth</button>
+			<div id="spotifyManualLinkContainer" style="display:none; margin-top:10px;">
+				<p style="color:#bbb; font-size:0.85em; margin-bottom:6px;">
+					If no browser opened, copy this login link into Chrome/Edge, finish signing in, then paste the callback URL above:
+				</p>
+				<textarea id="spotifyManualAuthUrl" readonly style="width:100%; min-height:60px; resize:vertical; padding:5px; font-size:0.85em;"></textarea>
+				<button id="spotifyManualCopy" type="button" class="button" style="margin-top:6px;">Copy Login Link</button>
+			</div>
 		`;
 		spotifyAuthButton.parentElement.appendChild(callbackDiv);
 		
@@ -5944,6 +5961,29 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		
+		const manualCopyButton = document.getElementById('spotifyManualCopy');
+		if (manualCopyButton) {
+			manualCopyButton.addEventListener('click', async () => {
+				const manualUrlField = document.getElementById('spotifyManualAuthUrl');
+				if (!manualUrlField || !manualUrlField.value) {
+					alert('A manual login link is not available yet. Try reconnecting first.');
+					return;
+				}
+				try {
+					if (navigator.clipboard && navigator.clipboard.writeText) {
+						await navigator.clipboard.writeText(manualUrlField.value);
+					} else {
+						manualUrlField.select();
+						document.execCommand('copy');
+					}
+					alert('Login link copied! Paste it into your regular browser to continue.');
+				} catch (err) {
+					console.error('Failed to copy Spotify login link:', err);
+					alert('Copy failed. Please select and copy the link manually.');
+				}
+			});
+		}
+		
 		spotifyAuthButton.addEventListener('click', async function() {
 			// Prevent multiple clicks
 			if (spotifyAuthButton.disabled) {
@@ -5964,6 +6004,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				console.log('Spotify auth response received:', response);
 				spotifyAuthButton.disabled = false;
 				const callbackDiv = document.getElementById('spotifyCallbackDiv');
+				const manualLinkContainer = document.getElementById('spotifyManualLinkContainer');
+				const manualLinkField = document.getElementById('spotifyManualAuthUrl');
 				
 				if (response && response.success) {
 					spotifyAuthStatus.style.display = 'inline';
@@ -5972,10 +6014,16 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						spotifySignOutButton.style.display = 'inline-block';
 					}
 					// Hide manual callback input on success
-					if (callbackDiv) {
-						callbackDiv.style.display = 'none';
-						document.getElementById('spotifyCallbackInput').value = '';
-					}
+						if (callbackDiv) {
+							callbackDiv.style.display = 'none';
+							document.getElementById('spotifyCallbackInput').value = '';
+							if (manualLinkContainer) {
+								manualLinkContainer.style.display = 'none';
+							}
+							if (manualLinkField) {
+								manualLinkField.value = '';
+							}
+						}
 					// Show success message if already connected
 						if (response.alreadyConnected) {
 							console.log('Already connected to Spotify');
@@ -6007,6 +6055,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							}
 						}
 
+						if (manualLinkContainer) {
+							if (response?.manualAuthUrl && waitingForManual) {
+								manualLinkContainer.style.display = 'block';
+								if (manualLinkField) {
+									manualLinkField.value = response.manualAuthUrl;
+								}
+							} else {
+								manualLinkContainer.style.display = 'none';
+								if (manualLinkField) {
+									manualLinkField.value = '';
+								}
+							}
+						}
+
 						const waitMessage = response.message || (waitingForManual
 							? 'After authorizing Spotify in the browser window, paste the callback URL into Social Stream Ninja.'
 							: 'Please finish the Spotify login in the newly opened tab.');
@@ -6024,6 +6086,20 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					if (callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
 						callbackDiv.style.display = 'block';
 						console.log('Please paste the callback URL manually.');
+					}
+
+					if (manualLinkContainer) {
+						if (response?.manualAuthUrl) {
+							manualLinkContainer.style.display = 'block';
+							if (manualLinkField) {
+								manualLinkField.value = response.manualAuthUrl;
+							}
+						} else {
+							manualLinkContainer.style.display = 'none';
+							if (manualLinkField) {
+								manualLinkField.value = '';
+							}
+						}
 					}
 					
 					// Only show alert if not already connected
