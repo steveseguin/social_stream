@@ -3,6 +3,7 @@ const urlParams = new URLSearchParams(window.location.search);
 const code = urlParams.get('code');
 const error = urlParams.get('error');
 const state = urlParams.get('state');
+const redirectUriFromLocation = window.location.origin + window.location.pathname;
 
 // Detect environment
 const isExtension = typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL;
@@ -26,11 +27,14 @@ function showSetupInstructions() {
     
     // Always include the web URI
     redirectUris.push('https://socialstream.ninja/spotify.html');
-    
+
     // Add extension URI if applicable
     if (extensionId) {
         redirectUris.push('https://' + extensionId + '.chromiumapp.org/spotify');
     }
+
+    // Localhost URI is required for the standalone desktop app (SSAPP)
+    redirectUris.push('http://localhost:8888/callback');
 
     // Build the redirect URIs HTML
     let redirectUrisHtml = '';
@@ -47,6 +51,11 @@ function showSetupInstructions() {
         '<strong>Chrome Extension Users:</strong><br>' +
         'Make sure you\'ve added the extension-specific redirect URI shown above. The extension ID (' + extensionId + ') is unique to your installation.' +
         '</div>' : '';
+
+    const desktopNote = '<div class="info-box" style="background-color: #1b2b3a; border-left-color: #1db954;">' +
+        '<strong>Standalone Desktop App Users:</strong><br>' +
+        'Add http://localhost:8888/callback to your Spotify app. The SSAPP OAuth flow uses a local callback server, so this URI must be whitelisted even if you also use the browser extension.' +
+        '</div>';
 
     document.getElementById('content').innerHTML = 
         '<h1>🎵 Spotify Integration Setup</h1>' +
@@ -122,7 +131,7 @@ function showSetupInstructions() {
         '</ul>' +
         '</div>' +
         
-        extensionNote;
+        extensionNote + desktopNote;
     
     // Add event listeners to copy buttons
     const copyButtons = document.querySelectorAll('.copy-button');
@@ -172,6 +181,7 @@ function showAuthCallback() {
                 cmd: "spotifyAuthCallback",
                 code: code,
                 state: state,
+                redirectUri: redirectUriFromLocation,
                 _authToken: window.ninjafy._authToken // Include auth token for security
             };
             
@@ -182,7 +192,8 @@ function showAuthCallback() {
             window.ninjafy.sendMessage(null, {
                 cmd: "spotifyAuthCallback",
                 code: code,
-                state: state
+                state: state,
+                redirectUri: redirectUriFromLocation
             }, function(response) {
                 if (response && response.success) {
                     updateStatus('Successfully connected to Spotify! 🎵');
@@ -197,12 +208,13 @@ function showAuthCallback() {
                     }, 2000);
                 }
             });
-        } else if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+        } else if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
             // Chrome extension environment
             chrome.runtime.sendMessage({
                 cmd: "spotifyAuthCallback",
                 code: code,
-                state: state
+                state: state,
+                redirectUri: redirectUriFromLocation
             }, function(response) {
                 if (response && response.success) {
                     updateStatus('Successfully connected to Spotify! 🎵');
@@ -218,12 +230,13 @@ function showAuthCallback() {
                 window.opener.postMessage({
                     type: 'spotifyAuthCallback',
                     code: code,
-                    state: state
+                    state: state,
+                    redirectUri: redirectUriFromLocation
                 }, '*');
                 updateStatus('Successfully connected to Spotify! 🎵');
                 setTimeout(() => window.close(), 2000);
             } else {
-                updateStatus('Authorization code received. Please return to Social Stream Ninja.');
+                updateStatus('Authorization code received. Copy this page\'s full URL and paste it into the Social Stream Ninja settings panel to finish connecting.');
             }
         }
     } else {

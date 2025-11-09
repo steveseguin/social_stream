@@ -5835,6 +5835,37 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			console.log('Spotify credentials saved');
 		}
 	}
+
+	function sendSpotifyCommand(message, timeout = 20000) {
+		return new Promise((resolve) => {
+			let resolved = false;
+			const skipTimeout = message?.cmd === 'spotifyAuth';
+			let timer = null;
+			if (!skipTimeout && typeof timeout === 'number' && timeout > 0) {
+				timer = setTimeout(() => {
+					if (!resolved) {
+						resolved = true;
+						resolve({ success: false, error: 'Command timed out' });
+					}
+				}, timeout);
+			}
+
+			chrome.runtime.sendMessage({ type: 'toBackground', data: message }, (response) => {
+				if (!resolved) {
+					resolved = true;
+					if (timer) {
+						clearTimeout(timer);
+					}
+					if (chrome.runtime.lastError) {
+						console.error('Spotify command failed:', chrome.runtime.lastError);
+						resolve({ success: false, error: chrome.runtime.lastError.message });
+					} else {
+						resolve(response);
+					}
+				}
+			});
+		});
+	}
 	
 	// Save on input change
 	if (spotifyClientIdInput) {
@@ -5864,49 +5895,54 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 		});
 		
-		// Add manual callback handler for Electron app (ssapp)
-		if (window.ssapp) {
-			// Add a text input for manual callback URL
-			const callbackDiv = document.createElement('div');
-			callbackDiv.style.marginTop = '10px';
-			callbackDiv.style.display = 'none';
-			callbackDiv.id = 'spotifyCallbackDiv';
-			callbackDiv.innerHTML = `
-				<input type="text" id="spotifyCallbackInput" placeholder="Paste callback URL here" style="width: 100%; padding: 5px; margin: 5px 0;">
-				<button id="spotifyCallbackSubmit" class="button">Complete Auth</button>
-			`;
-			spotifyAuthButton.parentElement.appendChild(callbackDiv);
-			
-			// Only show callback input as a fallback if automatic auth fails
-			// Don't show it immediately anymore since we have automatic detection
-			
-			// Handle callback submission
-			document.getElementById('spotifyCallbackSubmit')?.addEventListener('click', function() {
-				const callbackUrl = document.getElementById('spotifyCallbackInput').value;
-				if (callbackUrl && callbackUrl.includes('code=')) {
-					chrome.runtime.sendMessage({
-						cmd: "spotifyManualCallback",
-						url: callbackUrl
-					}, response => {
-						console.log("Manual callback result:", response);
-						if (response && response.success) {
-							spotifyAuthStatus.style.display = 'inline';
-							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
-							if (spotifySignOutButton) {
-								spotifySignOutButton.style.display = 'inline-block';
-							}
-							callbackDiv.style.display = 'none';
-							document.getElementById('spotifyCallbackInput').value = '';
-							alert('Spotify connected successfully!');
-						} else {
-							alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
-						}
-					});
-				} else {
-					alert('Please paste the complete callback URL');
+		// Manual callback helper (SSAPP primary, extension fallback when chrome.identity is unavailable)
+		const callbackDiv = document.createElement('div');
+		callbackDiv.style.marginTop = '10px';
+		callbackDiv.style.display = 'none';
+		callbackDiv.id = 'spotifyCallbackDiv';
+		callbackDiv.innerHTML = `
+			<p class="spotify-callback-helper" style="margin:6px 0; color:#bbb; font-size:0.9em;">
+				If the authorization window doesn't close automatically, copy the entire URL you were redirected to (it contains <code>code=</code>) and paste it below.
+			</p>
+			<input type="text" id="spotifyCallbackInput" placeholder="Paste callback URL here" style="width: 100%; padding: 5px; margin: 5px 0;">
+			<button id="spotifyCallbackSubmit" class="button">Complete Auth</button>
+		`;
+		spotifyAuthButton.parentElement.appendChild(callbackDiv);
+		
+		// Handle callback submission
+		document.getElementById('spotifyCallbackSubmit')?.addEventListener('click', function() {
+			const callbackUrl = document.getElementById('spotifyCallbackInput').value;
+			if (callbackUrl && callbackUrl.includes('code=')) {
+				let redirectUri = null;
+				try {
+					const parsed = new URL(callbackUrl);
+					redirectUri = `${parsed.origin}${parsed.pathname}`;
+				} catch (e) {
+					console.warn('Failed to parse redirect URI from callback', e);
 				}
-			});
-		}
+				sendSpotifyCommand({
+					cmd: "spotifyManualCallback",
+					url: callbackUrl,
+					redirectUri
+				}).then(response => {
+					console.log("Manual callback result:", response);
+					if (response && response.success) {
+						spotifyAuthStatus.style.display = 'inline';
+						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+						if (spotifySignOutButton) {
+							spotifySignOutButton.style.display = 'inline-block';
+						}
+						callbackDiv.style.display = 'none';
+						document.getElementById('spotifyCallbackInput').value = '';
+						alert('Spotify connected successfully!');
+					} else {
+						alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
+					}
+				});
+			} else {
+				alert('Please paste the complete callback URL');
+			}
+		});
 		
 		spotifyAuthButton.addEventListener('click', async function() {
 			// Prevent multiple clicks
@@ -5921,36 +5957,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			
 			console.log('Attempting Spotify auth...');
 			
-			// Try to open the background page directly if needed
-			try {
-				// First, try to communicate normally
-				chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
-					// Check for Chrome runtime errors
-					if (chrome.runtime.lastError) {
-						console.error('Chrome runtime error:', chrome.runtime.lastError);
-						// If communication failed, try opening background page directly
-						chrome.tabs.create({
-							url: chrome.runtime.getURL('background.html'),
-							active: false
-						}, function(tab) {
-							// Wait a bit for background page to load, then retry
-							setTimeout(() => {
-								chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(retryResponse) {
-									handleSpotifyAuthResponse(retryResponse);
-								});
-							}, 2000);
-						});
-						return;
-					}
-					
-					handleSpotifyAuthResponse(response);
-				});
-			} catch (error) {
-				console.error('Error during Spotify auth:', error);
-				spotifyAuthButton.disabled = false;
-				spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-				alert('Failed to initiate Spotify connection. Please try again.');
-			}
+			const response = await sendSpotifyCommand({ cmd: "spotifyAuth" });
+			handleSpotifyAuthResponse(response);
 			
 			function handleSpotifyAuthResponse(response) {
 				console.log('Spotify auth response received:', response);
@@ -5964,15 +5972,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						spotifySignOutButton.style.display = 'inline-block';
 					}
 					// Hide manual callback input on success
-					if (window.ssapp && callbackDiv) {
+					if (callbackDiv) {
 						callbackDiv.style.display = 'none';
 						document.getElementById('spotifyCallbackInput').value = '';
 					}
 					// Show success message if already connected
-					if (response.alreadyConnected) {
-						console.log('Already connected to Spotify');
-					} else if (response.message && response.message.includes('authorization')) {
-						// For SSAPP, the OAuth window opened - wait for callback
+						if (response.alreadyConnected) {
+							console.log('Already connected to Spotify');
+						} else if (response.message && response.message.includes('authorization')) {
+							// For SSAPP, the OAuth window opened - wait for callback
 						console.log('OAuth window opened - waiting for authorization');
 						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
 						// Show manual input as backup after 5 seconds
@@ -5985,13 +5993,35 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							}, 5000);
 						}
 					}
-				} else {
-					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-					const errorMsg = response?.error || 'Unknown error';
-					console.error('Spotify auth failed:', errorMsg);
+					} else if (response?.waitingForManualCallback || response?.waitingForCallback) {
+						const waitingForManual = !!response.waitingForManualCallback;
+						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+
+						if (callbackDiv) {
+							callbackDiv.style.display = waitingForManual ? 'block' : 'none';
+							if (!waitingForManual) {
+								const callbackInput = document.getElementById('spotifyCallbackInput');
+								if (callbackInput) {
+									callbackInput.value = '';
+								}
+							}
+						}
+
+						const waitMessage = response.message || (waitingForManual
+							? 'After authorizing Spotify in the browser window, paste the callback URL into Social Stream Ninja.'
+							: 'Please finish the Spotify login in the newly opened tab.');
+
+						console.log(waitMessage);
+						if (waitingForManual) {
+							alert(waitMessage);
+						}
+					} else {
+						spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+						const errorMsg = response?.error || 'Unknown error';
+						console.error('Spotify auth failed:', errorMsg);
 					
-					// Show manual callback input only if in Electron and auth failed
-					if (window.ssapp && callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
+					// Show manual callback input if the background specifically asked for manual completion
+					if (callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
 						callbackDiv.style.display = 'block';
 						console.log('Please paste the callback URL manually.');
 					}
@@ -6010,13 +6040,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		spotifySignOutButton.addEventListener('click', function() {
 			if (confirm('Are you sure you want to sign out of Spotify?')) {
 				// Send message to background script to clear Spotify tokens
-				chrome.runtime.sendMessage({cmd: "spotifySignOut"}, function(response) {
-					if (chrome.runtime.lastError) {
-						console.error('Error signing out:', chrome.runtime.lastError);
-						alert('Failed to sign out. Please try again.');
-						return;
-					}
-					
+				sendSpotifyCommand({ cmd: "spotifySignOut" }).then(response => {
 					if (response && response.success) {
 						// Update UI
 						spotifyAuthStatus.style.display = 'none';

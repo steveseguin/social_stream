@@ -4306,7 +4306,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (spotify && request.code) {
 				(async () => {
 					try {
-						const success = await spotify.handleAuthCallback(request.code, request.state);
+						const success = await spotify.handleAuthCallback(request.code, request.state, request.redirectUri);
 						sendResponse({success: success});
 					} catch (error) {
 						console.error("Spotify callback error:", error);
@@ -4342,19 +4342,39 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Process the OAuth flow asynchronously
 			console.log("Starting OAuth flow...");
 			spotify.startOAuthFlow().then(result => {
-				console.log("OAuth flow result:", result);
-				
-				// Handle the response
-				if (typeof result === 'object' && result.alreadyConnected) {
-					sendResponse({success: true, alreadyConnected: true});
-				} else if (isSSAPP && result) {
-					sendResponse({
-						success: true,
-						message: "Please complete authorization in your browser. After authorizing, copy the full URL from the callback page and use the 'Paste Callback URL' option in the settings."
-					});
-				} else {
-					sendResponse({success: !!result});
+				const normalized = (typeof result === 'object' && result !== null)
+					? result
+					: { success: !!result };
+
+				console.log("OAuth flow result:", normalized);
+
+				if (normalized.success && normalized.alreadyConnected) {
+					sendResponse({ success: true, alreadyConnected: true });
+					return;
 				}
+
+				if (normalized.success) {
+					sendResponse({ success: true, message: normalized.message });
+					return;
+				}
+
+				if (normalized.waitingForManualCallback || normalized.waitingForCallback) {
+					const manual = !!normalized.waitingForManualCallback;
+					sendResponse({
+						success: false,
+						waitingForManualCallback: manual,
+						waitingForCallback: !manual,
+						message: normalized.message || (manual
+							? "After authorizing Spotify, copy the callback URL and paste it into Social Stream Ninja to finish sign-in."
+							: "Waiting for Spotify to redirect back with authorization. Leave the popup open until the flow completes.")
+					});
+					return;
+				}
+
+				sendResponse({
+					success: false,
+					error: normalized.error || "Failed to start Spotify authorization."
+				});
 			}).catch(error => {
 				console.error("Spotify auth error:", error);
 				sendResponse({success: false, error: error.message || error.toString()});
@@ -4390,6 +4410,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					const code = url.searchParams.get('code');
 					const state = url.searchParams.get('state');
 					const error = url.searchParams.get('error');
+					const redirectUri = `${url.origin}${url.pathname}`;
 					
 					console.log("Parsed OAuth callback - code:", code ? "present" : "missing", "state:", state, "error:", error);
 					
@@ -4398,7 +4419,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					} else if (code) {
 						console.log("Processing Spotify callback with code...");
 						// Process the callback
-						const success = await spotify.handleAuthCallback(code, state);
+						const success = await spotify.handleAuthCallback(code, state, request.redirectUri || redirectUri);
 						console.log("Spotify callback completed, success:", success);
 						
 						if (success) {
