@@ -138,6 +138,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "other_filters",
     description: "Censor common bad words with asterixis. Create badwords.txt to make your own blocklist."
   },
+  "blacklistblockmessages": {
+    type: "boolean",
+    category: "other_filters",
+    description: "Block entire chat messages if they contain words from the bad word list."
+  },
   "blacklistname": {
     type: "boolean",
     category: "other_filters",

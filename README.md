@@ -50,6 +50,8 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
     - [Firefox support](#firefox-support)
   - [Standalone version of the app](#standalone-version-of-the-app)
   - [To use the extension](#to-use-the-extension)
+      - [Please note:  If the Extension's icon is RED, then it means it is still off and wil not work.  You have to click "Enable extension", and the icon must change to the color green.](#please-note--if-the-extensions-icon-is-red-then-it-means-it-is-still-off-and-wil-not-work--you-have-to-click-enable-extension-and-the-icon-must-change-to-the-color-green)
+      - [Note: If things do not work,](#note-if-things-do-not-work)
   - [Customize](#customize)
     - [More advanced styling customizations](#more-advanced-styling-customizations)
     - [Removing text-outlines](#removing-text-outlines)
@@ -59,6 +61,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
     - [Custom Overlays from scratch](#custom-overlays-from-scratch)
     - [Custom Javascript](#custom-javascript)
     - [Auto responding / custom actions](#auto-responding--custom-actions)
+    - [Profanity filtering and blocking](#profanity-filtering-and-blocking)
   - [Queuing messages](#queuing-messages)
   - [Pinning messages](#pinning-messages)
   - [Togglable Menu Commands](#togglable-menu-commands)
@@ -66,14 +69,39 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
   - [Hotkey (MIDI / Streamlabs) support](#hotkey-midi--streamlabs-support)
   - [Server API support](#server-api-support)
     - [Social Stream Ninja's server API (ingest and clear messages via remote request)](#social-stream-ninjas-server-api-ingest-and-clear-messages-via-remote-request)
+      - [API Sandbox with many examples as buttons](#api-sandbox-with-many-examples-as-buttons)
+      - [A couple common examples](#a-couple-common-examples)
+      - [Target specific docks](#target-specific-docks)
+      - [General technical concept of the API logic iteslf](#general-technical-concept-of-the-api-logic-iteslf)
+        - [GET/POST API structure](#getpost-api-structure)
+        - [Websocket API](#websocket-api)
+        - [Server Side Events](#server-side-events)
     - [Message structure](#message-structure)
     - [Remote server API support (publish messages to third parties)](#remote-server-api-support-publish-messages-to-third-parties)
+      - [Singular Live](#singular-live)
+      - [H2R](#h2r)
+      - [Generic POST / PUT](#generic-post--put)
+      - [POST without dock](#post-without-dock)
     - [Inbound third-party donation support](#inbound-third-party-donation-support)
+      - [Stripe webhook donation support](#stripe-webhook-donation-support)
+      - [Ko-Fi webhook donation support](#ko-fi-webhook-donation-support)
+      - [BuyMeACoffee webhook support](#buymeacoffee-webhook-support)
+      - [Fourthwall webhook donation support](#fourthwall-webhook-donation-support)
   - [Text to Speech](#text-to-speech)
     - [Installing Additional Language Packs](#installing-additional-language-packs)
+      - [Windows 11 Method](#windows-11-method)
+      - [Windows 10 Method](#windows-10-method)
+      - [Testing Different Languages](#testing-different-languages)
     - [Customizing System TTS](#customizing-system-tts)
     - [Premium TTS Options](#premium-tts-options)
+      - [Kokoro Premium FREE TTS](#kokoro-premium-free-tts)
+      - [Google Cloud TTS](#google-cloud-tts)
+      - [ElevenLabs TTS](#elevenlabs-tts)
+      - [Speechify TTS](#speechify-tts)
     - [Capturing TTS Audio in OBS](#capturing-tts-audio-in-obs)
+      - [Method 1: Virtual Audio Cable](#method-1-virtual-audio-cable)
+      - [Method 2: Application Audio Capture with explorer.exe](#method-2-application-audio-capture-with-explorerexe)
+      - [Method 3: Desktop Audio Capture](#method-3-desktop-audio-capture)
     - [Toggle Controls and Important Notes](#toggle-controls-and-important-notes)
   - [Branded channel support](#branded-channel-support)
   - [Random other commands not documented elsewhere](#random-other-commands-not-documented-elsewhere)
@@ -517,6 +545,17 @@ For example,
 You can create your own custom auto-responding triggers or other actions by including a `custom.js` file. You don't need to host the featured or dock file for this.
 
 Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
+#### Profanity filtering and blocking
+
+Social Stream Ninja ships with a shared profanity list (`shared/data/badwords.json`) that merges the legacy vocabulary with the MIT-licensed MauriceButler corpus (743 normalized entries at the moment). The list is loaded everywhere via `libs/objects.js`, so ship the `shared/` directory next to any surface (extension, Electron, Lite embeds) to keep the filter consistent.
+
+- Toggle `🤬🚫 Replace common swear words with asterixis` (`blacklist`) to redact matches inside messages.
+- Toggle `🤬🚫 Block messages that contain swear words` (`blacklistblockmessages`) when you need offending messages dropped before they are relayed anywhere else.
+- Upload `badwords.txt` (one entry per line) from `popup.html` to augment or replace the packaged list, and use the Delete button to revert to the shared defaults.
+- Usernames can be scrubbed separately via `👤🚫 Replace common bad words in user names` (`blacklistname`).
+- Run `node tests/profanity-filter.test.js` after touching the list or generator to confirm the data loads and sentinel words survive the variation cap.
+
+The profanity toggles live under **Other filters** inside the extension popup and are also exposed through `shared/config/settingsMetadata.js` for remote configuration tooling.
 
 It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or remove the URL-parameter trigger needed to activate it.
 

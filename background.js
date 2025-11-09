@@ -653,11 +653,11 @@ function generateVariations(word) {
 
 function generateVariationsList(words) {
   // Cap input size
-  const maxWordList = 1000;
+  const maxWordList = 1500;
   const wordsTrimmed = words.slice(0, maxWordList);
   
   const variationsList = [];
-  const maxTotalVariations = 10000;
+  const maxTotalVariations = 20000;
   
   for (const word of wordsTrimmed) {
     if (variationsList.length >= maxTotalVariations) break;
@@ -10907,9 +10907,18 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (settings.blacklist && data.chatmessage) {
+		if ((settings.blacklist || settings.blacklistblockmessages) && data.chatmessage) {
 			try {
-				data.chatmessage = filterProfanity(data.chatmessage);
+				const filteredMessage = filterProfanity(data.chatmessage);
+				const containsProfanity = filteredMessage !== data.chatmessage;
+				
+				if (containsProfanity && settings.blacklistblockmessages) {
+					return null;
+				}
+				
+				if (settings.blacklist) {
+					data.chatmessage = filteredMessage;
+				}
 			} catch (e) {
 				console.error(e);
 			}

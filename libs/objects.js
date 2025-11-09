@@ -139,8 +139,91 @@ function compareVersions(v1, v2) {
 }
 
 /////////////// bad word filter
-// I welcome updates/additions. The raw list can be found here: https://gist.github.com/steveseguin/da09a700e4fccd7ff82e68f32e384c9d
-var badWords = ["fuck","shit","cunt","bitch","nigger","fag","retard","rape","pussy","cock","asshole","whore","slut","gay","lesbian","transgender","transsexual","tranny","chink","spic","kike","jap","wop","redneck","hillbilly","white trash","douche","dick","bastard","fucker","motherfucker","ass","anus","vagina","penis","testicles","masturbate","orgasm","ejaculate","clitoris","pubic","genital","erect","erotic","porn","xxx","dildo","butt plug","anal","sodomy","pedophile","bestiality","necrophilia","incest","suicide","murder","terrorism","drugs","alcohol","smoking","weed","meth","crack","heroin","cocaine","opiate","opium","benzodiazepine","xanax","adderall","ritalin","steroids","viagra","cialis","prostitution","escort"];
+// I welcome updates/additions; keep this list environment-agnostic and profanity-focused.
+var badWords = [];
+(function initializeDefaultBadWords() {
+  const DATA_PATH = "shared/data/badwords.json";
+  const FALLBACK_BAD_WORDS = [
+    "anal",
+    "ass",
+    "asshole",
+    "bastard",
+    "bitch",
+    "clit",
+    "cock",
+    "cunt",
+    "dick",
+    "fuck",
+    "motherfucker",
+    "piss",
+    "prick",
+    "pussy",
+    "shit",
+    "slut",
+    "whore"
+  ];
+
+  function sanitizeList(list) {
+    if (!Array.isArray(list)) {
+      return FALLBACK_BAD_WORDS.slice();
+    }
+    return list
+      .filter(entry => typeof entry === "string")
+      .map(entry => entry.trim().toLowerCase())
+      .filter(entry => entry);
+  }
+
+  function assignBadWords(list) {
+    badWords = sanitizeList(list);
+    if (typeof window !== "undefined") {
+      window.__SSN_DEFAULT_BAD_WORDS__ = badWords.slice();
+    }
+  }
+
+  if (typeof window !== "undefined" && Array.isArray(window.__SSN_DEFAULT_BAD_WORDS__)) {
+    badWords = window.__SSN_DEFAULT_BAD_WORDS__.slice();
+    return;
+  }
+
+  if (typeof require === "function" && typeof module !== "undefined" && module.exports) {
+    try {
+      const fs = require("fs");
+      const path = require("path");
+      const baseDir = typeof __dirname !== "undefined" ? __dirname : ".";
+      const jsonPath = path.join(baseDir, "..", DATA_PATH);
+      const raw = fs.readFileSync(jsonPath, "utf8");
+      assignBadWords(JSON.parse(raw));
+      return;
+    } catch (err) {
+      console.warn("Failed to load badWords via fs:", err);
+    }
+  }
+
+  if (typeof XMLHttpRequest !== "undefined") {
+    const candidates = [];
+    if (typeof chrome !== "undefined" && chrome.runtime && typeof chrome.runtime.getURL === "function") {
+      candidates.push(chrome.runtime.getURL(DATA_PATH));
+    }
+    candidates.push(DATA_PATH);
+    candidates.push("./" + DATA_PATH);
+
+    for (const url of candidates) {
+      try {
+        const request = new XMLHttpRequest();
+        request.open("GET", url, false);
+        request.send(null);
+        if (request.status >= 200 && request.status < 300 && request.responseText) {
+          assignBadWords(JSON.parse(request.responseText));
+          return;
+        }
+      } catch (err) {
+        console.warn("Failed to load badWords via XHR:", err);
+      }
+    }
+  }
+
+  assignBadWords(FALLBACK_BAD_WORDS);
+})();
 
 const alternativeChars = {
 	a: ["@", "4"],
