@@ -167,6 +167,11 @@
 		if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
 			try {
 				let viewerSpan = document.querySelector(".inline-flex.items-center.gap-2.rounded-full > .tracking-normal.text-white.font-semibold").parentNode.nextElementSibling.childNodes[1];
+				
+				if (!viewerSpan && (window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat")){
+					viewerSpan = document.querySelector(".min-w-0 > .mt-1").childNodes[0];
+				}
+				
 				if (viewerSpan && viewerSpan.textContent){
 					let views = viewerSpan.textContent.toUpperCase();
 					let multiplier = 1;
