@@ -656,16 +656,15 @@ var lastMessage = {};
 
 			// Process reactions in regular DOM
 			querySelectorAllIncludingShadow('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction => {
-			reaction.dataset.skip = true;
-
-			var data = {};
-			data.chatname = "";
-			data.chatmessage = reaction.querySelector("svg,img")?.outerHTML;
-			if (!data.chatmessage) return;
-			data.event = "reaction";
-			data.type = "zoom";
-			data.textonlymode = false;
-			pushMessage(data);
+				reaction.dataset.skip = true;
+				var data = {};
+				data.chatname = "";
+				data.chatmessage = reaction.querySelector("svg,img")?.outerHTML;
+				if (!data.chatmessage) return;
+				data.event = "reaction";
+				data.type = "zoom";
+				data.textonlymode = false;
+				pushMessage(data);
 			});
 
 			  // Process reactions in regular DOM

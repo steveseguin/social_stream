@@ -1537,6 +1537,85 @@ const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
+function collectSourcesFromManifest(manifestData) {
+    if (!manifestData || !Array.isArray(manifestData.content_scripts)) {
+        return 0;
+    }
+
+    let added = 0;
+    try {
+        manifestData.content_scripts.forEach(script => {
+            if (!script || !Array.isArray(script.js)) {
+                return;
+            }
+            script.js.forEach(jsFile => {
+                if (typeof jsFile !== 'string') {
+                    return;
+                }
+                const normalized = jsFile.trim();
+                if (!normalized.startsWith('./sources/') || !normalized.endsWith('.js')) {
+                    return;
+                }
+                const sourceName = normalized.replace('./sources/', '').replace('.js', '');
+                if (sourceName) {
+                    const previousSize = sourcesList.size;
+                    sourcesList.add(sourceName);
+                    if (sourcesList.size > previousSize) {
+                        added++;
+                    }
+                }
+            });
+        });
+    } catch (error) {
+        console.warn('Failed to collect sources from manifest:', error);
+    }
+    return added;
+}
+
+async function ensureSourcesListLoaded(options = {}) {
+    if (sourcesList.size > 0) {
+        return true;
+    }
+
+    try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
+            const manifest = chrome.runtime.getManifest();
+            if (collectSourcesFromManifest(manifest)) {
+                return true;
+            }
+        }
+    } catch (error) {
+        console.warn('Unable to load sources from chrome.runtime manifest:', error);
+    }
+
+    if (window.ssappFallback && typeof window.ssappFallback.readJson === 'function') {
+        try {
+            const branch = options.branch || urlParams.get('branch') || 'main';
+            const manifestData = await window.ssappFallback.readJson('manifest.json', { branch });
+            if (collectSourcesFromManifest(manifestData)) {
+                return true;
+            }
+        } catch (error) {
+            console.warn('Unable to load sources via ssapp fallback manifest:', error);
+        }
+    }
+
+    try {
+        const manifestUrl = new URL('manifest.json', window.location.href).toString();
+        const response = await fetch(manifestUrl);
+        if (response.ok) {
+            const manifestData = await response.json();
+            if (collectSourcesFromManifest(manifestData)) {
+                return true;
+            }
+        }
+    } catch (error) {
+        console.warn('Unable to fetch manifest.json for sources list:', error);
+    }
+
+    return sourcesList.size > 0;
+}
+
 
 // Function to handle custom JS file upload
 function uploadCustomJsFile() {
@@ -2839,20 +2918,7 @@ function processManifestData(data, manifestData) {
             document.getElementById("newVersion").innerHTML = "";
         }
         
-        if (manifestData && manifestData.content_scripts) {
-            // Extract source filenames from content_scripts
-            manifestData.content_scripts.forEach(script => {
-                if (script.js && script.js.length > 0) {
-                    script.js.forEach(jsFile => {
-                        if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-                            // Extract just the filename without path and extension
-                            const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-                            sourcesList.add(sourceName);
-                        }
-                    });
-                }
-            });
-        }
+        collectSourcesFromManifest(manifestData);
     } catch (e) {
         console.error("Error processing manifest data:", e);
         document.getElementById("newVersion").classList.add('show');
@@ -5237,6 +5303,7 @@ const PollManager = {
 
 
 document.addEventListener("DOMContentLoaded", async function(event) {
+    await ensureSourcesListLoaded();
 	// Add event listener for Event Flow Editor link
 	const eventFlowLink = document.getElementById('open-event-flow-editor-link');
 	if (eventFlowLink) {
@@ -5379,56 +5446,42 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return false;
 	};
 	if (!ssapp) {
-		// Get reference to the select element first
 		const sourceSelector = document.getElementById('source-selector');
 		
-		// Check if the element exists
 		if (!sourceSelector) {
 		  console.error("Could not find source-selector element");
-		  return;
-		}
-		
-		const manifestData = chrome.runtime.getManifest();
-		
-		if (manifestData && manifestData.content_scripts) {
-		  // Set to store unique source files
-		  
-		  
-		  // Extract source filenames from content_scripts
-		  manifestData.content_scripts.forEach(script => {
-			if (script.js && script.js.length > 0) {
-			  script.js.forEach(jsFile => {
-				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-				  // Extract just the filename without path and extension
-				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-				  sourcesList.add(sourceName);
-				}
-			  });
+		} else {
+			if (!sourcesList.size) {
+				await ensureSourcesListLoaded();
 			}
-		  });
-		  
-		  // Create and add options for each source
-		  Array.from(sourcesList).sort().forEach(source => {
-			const option = document.createElement('option');
-			option.value = source;
-			// Capitalize first letter for display
-			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
-			sourceSelector.appendChild(option);
-		  });
+			
+			Array.from(sourcesList).sort().forEach(source => {
+				const option = document.createElement('option');
+				option.value = source;
+				option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
+				sourceSelector.appendChild(option);
+			});
 		}
 		
-		document.getElementById("custominject").classList.remove("hidden");
-		document.getElementById('inject-button').addEventListener('click', function() {
-		  const source = document.getElementById('source-selector').value;
-		  
-		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-			chrome.runtime.sendMessage({
-			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
-			  source: source,
-			  tabId: tabs[0].id
+		const customInject = document.getElementById("custominject");
+		if (customInject) {
+			customInject.classList.remove("hidden");
+		}
+		const injectButton = document.getElementById('inject-button');
+		if (injectButton) {
+			injectButton.addEventListener('click', function() {
+			  const sourceDropdown = document.getElementById('source-selector');
+			  const source = sourceDropdown ? sourceDropdown.value : '';
+			  
+			  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+				chrome.runtime.sendMessage({
+				  type: 'injectCustomSource',
+				  source: source,
+				  tabId: tabs[0].id
+				});
+			  });
 			});
-		  });
-		});
+		}
 	}
 	
 	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
