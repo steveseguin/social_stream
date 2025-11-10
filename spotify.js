@@ -13,7 +13,7 @@ class SpotifyIntegration {
            onCommandResponse: null
        };
 
-		this.browserRedirectUri = 'https://socialstream.ninja/spotify.html';
+		this.browserRedirectUri = 'https://socialstream.ninja/spotify_callback.html';
 		this.electronRedirectUri = 'http://127.0.0.1:8888/callback';
 		this._isElectronEnv = undefined;
 		this._electronIpc = null;

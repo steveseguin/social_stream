@@ -1,101 +1,125 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Spotify Integration - Social Stream Ninja</title>
+    <title>Spotify Integration Setup - Social Stream Ninja</title>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
+        :root {
+            color-scheme: dark;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #121212;
-            color: #fff;
+            background-color: #0f0f0f;
+            color: #f5f5f5;
             line-height: 1.6;
         }
         .container {
-            max-width: 800px;
+            max-width: 900px;
             margin: 0 auto;
-            padding: 30px;
-            background-color: #1e1e1e;
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            padding: 32px;
+            background: #1c1c1c;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.65);
         }
         h1 {
+            margin-top: 0;
             color: #1db954;
-            margin-bottom: 10px;
+            font-size: 2rem;
         }
         h2 {
-            color: #fff;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            font-size: 1.4em;
+            margin-top: 2rem;
+            font-size: 1.35rem;
         }
-        .success {
-            color: #1db954;
-        }
-        .error {
-            color: #e74c3c;
-        }
-        .warning {
-            background-color: #ff6b35;
-            color: #fff;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        .info-box {
-            background-color: #282828;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border-left: 4px solid #1db954;
-        }
-        .code-block {
-            background-color: #000;
-            color: #1db954;
-            padding: 15px;
-            border-radius: 6px;
-            font-family: 'Courier New', monospace;
-            word-break: break-all;
-            margin: 10px 0;
-            user-select: all;
-            cursor: text;
-        }
+        p { margin: 0.5rem 0; }
         .step {
-            background-color: #282828;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 15px 0;
+            background: #242424;
+            border-radius: 12px;
+            padding: 20px 24px 20px 64px;
+            margin: 22px 0;
             position: relative;
-            padding-left: 50px;
+            border: 1px solid rgba(255,255,255,0.06);
         }
         .step-number {
             position: absolute;
-            left: 15px;
-            top: 20px;
-            background-color: #1db954;
-            color: #000;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
+            left: 20px;
+            top: 24px;
+            width: 32px;
+            height: 32px;
+            border-radius: 999px;
+            background: #1db954;
+            color: #0f0f0f;
+            font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
+            box-shadow: 0 6px 16px rgba(29,185,84,0.45);
         }
         .button {
-            display: inline-block;
-            background-color: #1db954;
-            color: #000;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #1db954;
+            color: #0f0f0f;
+            border-radius: 999px;
             padding: 12px 24px;
-            border-radius: 30px;
+            font-weight: 600;
             text-decoration: none;
-            font-weight: bold;
-            margin: 10px 5px;
-            transition: transform 0.2s;
+            box-shadow: 0 10px 20px rgba(29,185,84,0.35);
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
         }
         .button:hover {
-            transform: scale(1.05);
+            transform: translateY(-1px);
+            box-shadow: 0 14px 22px rgba(29,185,84,0.45);
+        }
+        ul { padding-left: 1.1rem; }
+        .uri-list {
+            background: #111;
+            border-radius: 10px;
+            padding: 16px 18px;
+            margin-top: 10px;
+        }
+        .uri-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        .uri-text {
+            flex: 1;
+            font-family: 'SFMono-Regular', Consolas, 'Courier New', monospace;
+            font-size: 0.95rem;
+            word-break: break-all;
+        }
+        .copy-button {
+            border: none;
+            background: #333;
+            color: #f5f5f5;
+            border-radius: 6px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .copy-button:hover { background: #4a4a4a; }
+        .note {
+            background: rgba(29,185,84,0.1);
+            border-left: 4px solid #1db954;
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin: 18px 0;
+        }
+        ol.checklist {
+            padding-left: 1.2rem;
+        }
+        ol.checklist li {
+            margin: 10px 0;
+        }
+        .auth-container {
+            text-align: center;
+            padding: 40px;
         }
         .loader {
             border: 3px solid #333;
@@ -110,63 +134,125 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        ul li:before {
-            content: "✓ ";
-            color: #1db954;
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        .auth-container {
-            text-align: center;
-            padding: 40px;
-        }
-        #redirect-uri-list {
-            background-color: #000;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        .copy-button {
-            background-color: #535353;
-            color: #fff;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-            font-size: 0.9em;
-        }
-        .copy-button:hover {
-            background-color: #737373;
-        }
-        .uri-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 10px 0;
-            padding: 10px;
-            background-color: #1a1a1a;
-            border-radius: 4px;
-        }
-        .uri-text {
-            flex: 1;
-            margin-right: 10px;
-            word-break: break-all;
-            font-family: monospace;
+        @media (max-width: 640px) {
+            .step {
+                padding: 18px;
+            }
+            .step-number {
+                position: static;
+                margin-bottom: 12px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container" id="main-container">
-        <div id="content">
-            <!-- Content will be dynamically inserted here -->
+    <div class="container" id="guide-container">
+        <h1>🎵 Spotify Integration Setup</h1>
+        <p>Follow these four steps to connect your Spotify account to Social Stream Ninja. You only need to do this once per Spotify app.</p>
+
+        <div class="note">
+            <strong>Why do I need my own Spotify app?</strong><br />
+            Spotify requires every integration to use its own credentials. This keeps your listening history private and under your control.
+        </div>
+
+        <div class="step">
+            <div class="step-number">1</div>
+            <h2>Create a Spotify App</h2>
+            <p>Sign in to the Spotify Developer Dashboard and create a new app.</p>
+            <a class="button" href="https://developer.spotify.com/dashboard" target="_blank" rel="noopener noreferrer">Open Spotify Dashboard →</a>
+        </div>
+
+        <div class="step">
+            <div class="step-number">2</div>
+            <h2>Configure the App</h2>
+            <p>Use these values in the Spotify form:</p>
+            <ul>
+                <li><strong>App name:</strong> Social Stream Ninja</li>
+                <li><strong>Description:</strong> Integration for displaying Spotify "Now Playing" data</li>
+                <li><strong>Website:</strong> https://socialstream.ninja</li>
+            </ul>
+            <p>Add <strong>all</strong> of the following Redirect URIs (these cover Electron + hosted flows):</p>
+            <div class="uri-list">
+                <div class="uri-item">
+                    <span class="uri-text" data-uri>https://socialstream.ninja/spotify_callback.html</span>
+                    <button class="copy-button" data-copy>Copy</button>
+                </div>
+                <div class="uri-item">
+                    <span class="uri-text" data-uri>http://127.0.0.1:8888/callback</span>
+                    <button class="copy-button" data-copy>Copy</button>
+                </div>
+            </div>
+            <p class="note" style="margin-top:14px;">Tip: If you use a custom domain for hosting Social Stream Ninja, add that version of the callback URL as well.</p>
+        </div>
+
+        <div class="step">
+            <div class="step-number">3</div>
+            <h2>Collect Your Credentials</h2>
+            <p>From the Spotify app's <em>Settings</em> tab:</p>
+            <ol class="checklist">
+                <li>Reveal and copy the <strong>Client ID</strong>.</li>
+                <li>Reveal the <strong>Client Secret</strong> and copy it somewhere secure.</li>
+                <li>Keep the Spotify dashboard open— you may need it again.</li>
+            </ol>
+        </div>
+
+        <div class="step">
+            <div class="step-number">4</div>
+            <h2>Paste the Details into Social Stream Ninja</h2>
+            <p>Back in the Social Stream Ninja popup:</p>
+            <ol class="checklist">
+                <li>Open <strong>Settings → 🎵 Spotify Integration</strong>.</li>
+                <li>Paste your Client ID and Client Secret into the matching fields.</li>
+                <li>Click <strong>Connect to Spotify</strong> and follow the prompts.</li>
+            </ol>
+            <p>Once connected you unlock:</p>
+            <ul>
+                <li>Automatic “Now Playing” announcements.</li>
+                <li>Chat commands such as <code>!song</code>, <code>!nowplaying</code>, and <code>!np</code>.</li>
+                <li>Future Spotify queue tooling and Streamer.bot automations.</li>
+            </ul>
+        </div>
+
+        <div class="note">
+            <strong>Need to finish an in-progress login?</strong><br />
+            If Spotify redirects you to a page that says "Processing authorization", just leave that tab open—Social Stream Ninja will finish automatically. If it ever gets stuck, re-run the login and paste the callback URL into the popup’s manual field.
         </div>
     </div>
-    
-    <script src="spotify-setup.js"></script>
+    <div class="container" id="callback-container" style="display:none;">
+        <div id="content"></div>
+    </div>
+
+    <script>
+        document.querySelectorAll('[data-copy]').forEach((button) => {
+            button.addEventListener('click', () => {
+                const uri = button.parentElement.querySelector('[data-uri]').textContent.trim();
+                navigator.clipboard.writeText(uri).then(() => {
+                    button.textContent = 'Copied!';
+                    setTimeout(() => button.textContent = 'Copy', 1600);
+                }).catch(() => {
+                    alert('Press Ctrl+C (Cmd+C on Mac) to copy the highlighted text.');
+                    const range = document.createRange();
+                    range.selectNode(button.parentElement.querySelector('[data-uri]'));
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                });
+            });
+        });
+
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.has('code') || params.has('error')) {
+                const guide = document.getElementById('guide-container');
+                if (guide) guide.style.display = 'none';
+                const callbackShell = document.getElementById('callback-container');
+                if (callbackShell) callbackShell.style.display = 'block';
+
+                const script = document.createElement('script');
+                script.src = 'spotify-callback.js';
+                document.body.appendChild(script);
+            }
+        })();
+    </script>
 </body>
 </html>

@@ -5952,7 +5952,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		chrome.storage.local.get(['settings'], function(result) {
 			if (result.settings && result.settings.spotifyAccessToken) {
 				spotifyAuthStatus.style.display = 'inline';
-				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 				if (spotifySignOutButton) {
 					spotifySignOutButton.style.display = 'inline-block';
 				}
@@ -5999,7 +5999,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					console.log("Manual callback result:", response);
 					if (response && response.success) {
 						spotifyAuthStatus.style.display = 'inline';
-						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 						if (spotifySignOutButton) {
 							spotifySignOutButton.style.display = 'inline-block';
 						}
@@ -6063,7 +6063,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				
 				if (response && response.success) {
 					spotifyAuthStatus.style.display = 'inline';
-					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 					if (spotifySignOutButton) {
 						spotifySignOutButton.style.display = 'inline-block';
 					}
