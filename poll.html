@@ -373,6 +373,68 @@
 // Replace the existing script with this optimized version
 
 const urlParams = new URLSearchParams(window.location.search);
+const TRUE_STRINGS = new Set(['1', 'true', 'yes', 'on', 'enabled']);
+const FALSE_STRINGS = new Set(['0', 'false', 'no', 'off', 'disabled']);
+
+function normalizeBoolean(value) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (!normalized) return undefined;
+        if (TRUE_STRINGS.has(normalized)) return true;
+        if (FALSE_STRINGS.has(normalized)) return false;
+        return undefined;
+    }
+    return undefined;
+}
+
+function normalizeNumber(value, fallback) {
+    if (value === null || value === undefined) return fallback;
+    const parsed = parseInt(value, 10);
+    if (Number.isNaN(parsed) || parsed <= 0) return fallback;
+    return parsed;
+}
+
+function normalizeOptionsList(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) {
+        return value.map(option => option.trim()).filter(option => option.length);
+    }
+    if (typeof value === 'string') {
+        return value.split(',').map(option => option.trim()).filter(option => option.length);
+    }
+    return [];
+}
+
+function arraysEqual(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i += 1) {
+        if (a[i] !== b[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+const debugMode = (() => {
+    if (!urlParams.has('debug')) return false;
+    const raw = urlParams.get('debug');
+    if (raw === null || raw === '') return true;
+    const parsed = normalizeBoolean(raw);
+    return parsed === undefined ? true : parsed;
+})();
+
+function debugLog(message, payload) {
+    if (!debugMode) return;
+    if (payload !== undefined) {
+        console.log('[poll debug]', message, payload);
+    } else {
+        console.log('[poll debug]', message);
+    }
+}
+
 const settings = {
     pollType: urlParams.get('pollType') || 'freeform',
     pollQuestion: urlParams.get('pollQuestion') || 'Loading poll ...',
@@ -384,6 +446,12 @@ const settings = {
     pollClosed: false,
     pollTally: urlParams.has('pollTally') || false, 
 };
+
+settings.pollEnabled = normalizeBoolean(settings.pollEnabled) ?? false;
+settings.pollSpam = normalizeBoolean(settings.pollSpam) ?? false;
+settings.pollTally = normalizeBoolean(settings.pollTally) ?? false;
+settings.pollTimer = normalizeNumber(settings.pollTimer, 60) || 60;
+settings.pollOptions = normalizeOptionsList(settings.pollOptions);
 
 let results = {};
 let totalVotes = 0;
@@ -405,6 +473,12 @@ function initializePoll() {
     pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
     pollTitle.innerText = settings.pollQuestion;
     updatePollOptions();
+    debugLog('Poll UI initialized', {
+        pollEnabled: settings.pollEnabled,
+        pollType: settings.pollType,
+        pollQuestion: settings.pollQuestion,
+        styleType: settings.styleType
+    });
 }
 
 function updatePollOptions() {
@@ -541,8 +615,43 @@ const noMatches = new Set(['no', 'n', 'nah', 'nope', '0', '2']);
 const messageQueue = [];
 let processingQueue = false;
 
-function queueVote(vote, name, source) {
-    messageQueue.push({vote, name, source});
+function buildVoterKey(name, source, userId) {
+    const normalizedSource = source ? source.toString().trim().toLowerCase() : 'unknown';
+    if (userId) {
+        return `${userId.toString().trim().toLowerCase()}:${normalizedSource}`;
+    }
+    if (name) {
+        return `${name.toString().trim().toLowerCase()}:${normalizedSource}`;
+    }
+    return `anonymous:${normalizedSource}`;
+}
+
+function extractVoterId(payload) {
+    if (!payload) return null;
+    return payload.userid || payload.userId || payload.user_id || payload.uid || null;
+}
+
+function recordVote(option, voterKey, context = {}) {
+    results[option] = (results[option] || 0) + 1;
+    totalVotes++;
+    if (!settings.pollSpam) {
+        alreadyVoted[voterKey] = true;
+    }
+    debugLog('Vote counted', {
+        option,
+        voterKey,
+        totalVotes,
+        ...context
+    });
+}
+
+function logVoteIgnored(reason, context = {}) {
+    debugLog(`Vote ignored: ${reason}`, context);
+}
+
+function queueVote(vote, name, source, userId) {
+    messageQueue.push({vote, name, source, userId});
+    debugLog('Queued vote message', { vote, name, source, userId });
     if (!processingQueue) {
         processingQueue = true;
         setTimeout(processVoteQueue, 50); // Process votes in batches every 50ms
@@ -554,8 +663,8 @@ function processVoteQueue() {
     const timeLimit = 20; // Process for max 20ms to avoid UI freezing
     
     while (messageQueue.length > 0 && (Date.now() - startTime < timeLimit)) {
-        const {vote, name, source} = messageQueue.shift();
-        processVoteSingle(vote, name, source);
+        const {vote, name, source, userId} = messageQueue.shift();
+        processVoteSingle(vote, name, source, userId);
     }
     
     if (messageQueue.length > 0) {
@@ -567,39 +676,58 @@ function processVoteQueue() {
     }
 }
 
-function processVoteSingle(vote, name, source) {
-    if (settings.pollClosed) return;
+function processVoteSingle(vote, name, source, userId) {
+    if (settings.pollClosed) {
+        logVoteIgnored('poll closed', { name, source, userId, vote });
+        return;
+    }
+
+    if (typeof vote !== 'string') {
+        logVoteIgnored('invalid vote payload', { name, source, userId, vote });
+        return;
+    }
     
-    const voterKey = name+":"+source;
-    if (!settings.pollSpam && alreadyVoted[voterKey]) return;
+    const voterKey = buildVoterKey(name, source, userId);
+    if (!settings.pollSpam && alreadyVoted[voterKey]) {
+        logVoteIgnored('duplicate voter', { voterKey, name, source, userId, vote });
+        return;
+    }
     
+    const rawVote = vote;
     // Clean the vote: lowercase and remove common punctuation
     vote = vote.trim().toLowerCase().replace(/[!.,?]+$/, '');
+
+    if (!vote) {
+        logVoteIgnored('empty vote after normalization', { name, source, userId, rawVote });
+        return;
+    }
+
+    const voteContext = {
+        name,
+        source,
+        userId,
+        rawVote,
+        normalizedVote: vote
+    };
     
     if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
         // Handle numeric votes first
-        const numericVote = parseInt(vote);
-        if (!isNaN(numericVote)) {
+        const numericVote = parseInt(vote, 10);
+        if (!Number.isNaN(numericVote)) {
             // For yes/no, 1 = Yes, 2 = No
             if (settings.pollType === 'yesno') {
                 if (numericVote === 1) {
-                    results['Yes'] = (results['Yes'] || 0) + 1;
-                    totalVotes++;
-                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    recordVote('Yes', voterKey, { ...voteContext, matchedBy: 'yesno-numeric' });
                     return;
                 } else if (numericVote === 2 || numericVote === 0) {
-                    results['No'] = (results['No'] || 0) + 1;
-                    totalVotes++;
-                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    recordVote('No', voterKey, { ...voteContext, matchedBy: 'yesno-numeric' });
                     return;
                 }
             } else {
                 // Regular multiple choice handling
                 const option = settings.pollOptions[numericVote - 1];
                 if (option) {
-                    results[option] = (results[option] || 0) + 1;
-                    totalVotes++;
-                    if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                    recordVote(option, voterKey, { ...voteContext, matchedBy: 'multiple-numeric' });
                     return;
                 }
             }
@@ -608,15 +736,11 @@ function processVoteSingle(vote, name, source) {
         // Special handling for yes/no polls
         if (settings.pollType === 'yesno') {
             if (yesMatches.has(vote)) {
-                results['Yes'] = (results['Yes'] || 0) + 1;
-                totalVotes++;
-                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                recordVote('Yes', voterKey, { ...voteContext, matchedBy: 'yesno-text' });
                 return;
             }
             if (noMatches.has(vote)) {
-                results['No'] = (results['No'] || 0) + 1;
-                totalVotes++;
-                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                recordVote('No', voterKey, { ...voteContext, matchedBy: 'yesno-text' });
                 return;
             }
         }
@@ -629,7 +753,7 @@ function processVoteSingle(vote, name, source) {
             cleanVote = cleanVote.substring(1);
         }
         
-        for (let i = 0; i < settings.pollOptions.length; i++) {
+        for (let i = 0; i < settings.pollOptions.length; i += 1) {
             const option = settings.pollOptions[i];
             const normalizedOption = option.toLowerCase();
             
@@ -637,9 +761,7 @@ function processVoteSingle(vote, name, source) {
                 normalizedOption === cleanVote + 's' || 
                 cleanVote === normalizedOption + 's') {
                 
-                results[option] = (results[option] || 0) + 1;
-                totalVotes++;
-                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                recordVote(option, voterKey, { ...voteContext, matchedBy: 'multiple-text' });
                 return;
             }
         }
@@ -648,22 +770,21 @@ function processVoteSingle(vote, name, source) {
         if (vote.startsWith('#') && vote.length > 1) {
             const hashtag = vote.substring(1).toUpperCase();
             if (hashtag.match(/^\w+$/)) {
-                results[hashtag] = (results[hashtag] || 0) + 1;
-                totalVotes++;
-                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                recordVote(hashtag, voterKey, { ...voteContext, matchedBy: 'freeform-hashtag' });
                 return;
             }
         } else {
             const numericVote = parseInt(vote, 10);
             const resultsKeys = Object.keys(results);
-            if (!isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
+            if (!Number.isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
                 const selectedOption = resultsKeys[numericVote - 1];
-                results[selectedOption] = (results[selectedOption] || 0) + 1;
-                totalVotes++;
-                if (!settings.pollSpam) alreadyVoted[voterKey] = true;
+                recordVote(selectedOption, voterKey, { ...voteContext, matchedBy: 'freeform-numeric' });
+                return;
             }
         }
     }
+
+    logVoteIgnored('no matching option', voteContext);
 }
 function updatePollVisibility() {
     if (settings.pollEnabled) {
@@ -671,6 +792,7 @@ function updatePollVisibility() {
     } else {
         pollContainer.classList.add('hidden');
     }
+    debugLog('Poll visibility updated', { visible: settings.pollEnabled });
 }
 function processData(data) {
     if (data.setting && !data.settings) {
@@ -692,43 +814,90 @@ function processData(data) {
     if (data.settings) {
         let settingsChanged = false;
         let justUIChange = false;
+        const coreChanges = [];
+        const uiChanges = [];
+
+        const updateCoreSetting = (key, value) => {
+            if (value === undefined || value === null) return;
+            const currentValue = settings[key];
+            const sameValue = Array.isArray(value) && Array.isArray(currentValue)
+                ? arraysEqual(value, currentValue)
+                : currentValue === value;
+            if (!sameValue) {
+                settings[key] = value;
+                settingsChanged = true;
+                coreChanges.push({ key, value });
+            }
+        };
+
+        const updateUiSetting = (key, value) => {
+            if (value === undefined || value === null) return;
+            if (settings[key] !== value) {
+                settings[key] = value;
+                justUIChange = true;
+                uiChanges.push({ key, value });
+            }
+        };
         
-        if (data.settings.pollEnabled) {
-            settings.pollEnabled = data.settings.pollEnabled.setting;
-            settingsChanged = true;
+        if (data.settings.pollEnabled && Object.prototype.hasOwnProperty.call(data.settings.pollEnabled, 'setting')) {
+            const incoming = normalizeBoolean(data.settings.pollEnabled.setting);
+            if (typeof incoming === 'boolean') {
+                updateCoreSetting('pollEnabled', incoming);
+            }
         }
         if (data.settings.pollType) {
-            settings.pollType = data.settings.pollType.optionsetting || 'multiple';
-            settingsChanged = true;
+            const nextType = data.settings.pollType.optionsetting || 'multiple';
+            updateCoreSetting('pollType', nextType);
         }
         if (data.settings.pollQuestion) {
-            settings.pollQuestion = data.settings.pollQuestion.textsetting || 'Loading poll...';
-            settingsChanged = true;
+            const incomingQuestion = typeof data.settings.pollQuestion.textsetting === 'string'
+                ? data.settings.pollQuestion.textsetting
+                : '';
+            const normalizedQuestion = incomingQuestion || 'Loading poll...';
+            updateCoreSetting('pollQuestion', normalizedQuestion);
         }
-        if (data.settings.pollTally) {
-            settings.pollTally = data.settings.pollTally.setting;
-            justUIChange = true;
+        if (data.settings.pollTally && Object.prototype.hasOwnProperty.call(data.settings.pollTally, 'setting')) {
+            const incomingTally = normalizeBoolean(data.settings.pollTally.setting);
+            if (typeof incomingTally === 'boolean') {
+                updateUiSetting('pollTally', incomingTally);
+            }
         }
-        if (data.settings.pollStyle) {
-            settings.styleType = data.settings.pollStyle.optionsetting || 'default';
-            let pollContainer = document.getElementById('poll-container');
-			pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
+        if (data.settings.pollStyle && data.settings.pollStyle.optionsetting) {
+            const nextStyle = data.settings.pollStyle.optionsetting;
+            if (settings.styleType !== nextStyle) {
+                settings.styleType = nextStyle;
+                const pollContainer = document.getElementById('poll-container');
+                if (pollContainer) {
+                    pollContainer.className = `poll-container style-${settings.styleType} ${settings.pollEnabled ? '' : 'hidden'}`;
+                }
+                justUIChange = true;
+                uiChanges.push({ key: 'styleType', value: nextStyle });
+            }
         }
-        if (data.settings.pollSpam) {
-            settings.pollSpam = data.settings.pollSpam.setting;
-            justUIChange = true;
+        if (data.settings.pollSpam && Object.prototype.hasOwnProperty.call(data.settings.pollSpam, 'setting')) {
+            const incomingSpam = normalizeBoolean(data.settings.pollSpam.setting);
+            if (typeof incomingSpam === 'boolean') {
+                updateUiSetting('pollSpam', incomingSpam);
+            }
         }
-        if (data.settings.multipleChoiceOptions) {
-            settings.pollOptions = data.settings.multipleChoiceOptions.textsetting
-                .split(',')
-                .map(option => option.trim());
-            settingsChanged = true;
+        if (data.settings.multipleChoiceOptions && typeof data.settings.multipleChoiceOptions.textsetting === 'string') {
+            const normalizedOptions = normalizeOptionsList(data.settings.multipleChoiceOptions.textsetting);
+            updateCoreSetting('pollOptions', normalizedOptions);
         }
-        if (data.settings.pollTimer) {
-            settings.pollTimer = data.settings.pollTimer.numbersetting || 60;
-            settingsChanged = true;
+        if (data.settings.pollTimer && (data.settings.pollTimer.numbersetting !== undefined || data.settings.pollTimer.setting !== undefined)) {
+            const rawTimer = data.settings.pollTimer.numbersetting ?? data.settings.pollTimer.setting;
+            const normalizedTimer = normalizeNumber(rawTimer, null);
+            if (normalizedTimer !== null) {
+                updateCoreSetting('pollTimer', normalizedTimer);
+            }
         }
-        settings.pollTimerState = data.settings.pollTimerState ? true : false;
+        if (Object.prototype.hasOwnProperty.call(data.settings, 'pollTimerState')) {
+            const rawState = data.settings.pollTimerState.setting ?? data.settings.pollTimerState;
+            const timerState = normalizeBoolean(rawState);
+            if (typeof timerState === 'boolean') {
+                updateUiSetting('pollTimerState', timerState);
+            }
+        }
         
         if (settingsChanged) {
             results = {};
@@ -737,12 +906,16 @@ function processData(data) {
             settings.pollClosed = false;
             initializePoll();
             updatePollVisibility();
+            debugLog('Core poll settings changed; reinitialized poll', { coreChanges, uiChanges: justUIChange ? uiChanges : undefined });
         }
-		if (justUIChange) {
+        if (justUIChange && !settingsChanged) {
             updatePollResults();
+            debugLog('Poll UI updated without reset', { uiChanges });
+        } else if (justUIChange && settingsChanged) {
+            debugLog('UI adjustments applied alongside core reset', { uiChanges });
         }
     } else if (data.chatmessage) {
-        queueVote(data.chatmessage, data.chatname, data.type);
+        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data));
     } else if (data.cmd) {
         if (data.cmd === "closepoll") {
             closePoll();
@@ -758,6 +931,7 @@ function closePoll() {
     settings.pollClosed = true;
     pollTitle.innerText = settings.pollQuestion + " (Closed)";
     updatePollResults();
+    debugLog('Poll closed', { pollQuestion: settings.pollQuestion });
 }
 
 function startPoll() {
@@ -768,6 +942,10 @@ function startPoll() {
     results = {};
     initializePoll();
     updatePollVisibility();
+    debugLog('Poll started/reset', {
+        pollQuestion: settings.pollQuestion,
+        pollType: settings.pollType
+    });
 }
 
 function resetPoll() {
@@ -776,14 +954,18 @@ function resetPoll() {
     totalVotes = 0;
     alreadyVoted = {};
     initializePoll();
+    debugLog('Poll reset without changing visibility', {
+        pollQuestion: settings.pollQuestion
+    });
 }
 
 function processInput(data) {
     if (!data) return false;
 	
-	console.log(data);
+	debugLog('Incoming payload', data);
 	
     if ("action" in data) {
+        debugLog('Action command received', data.action);
         if (data.action === "closepoll") {
             closePoll();
         } else if (data.action === "resetpoll") {
@@ -793,13 +975,16 @@ function processInput(data) {
         }
         return true;
     } else if (data.chatmessage) {
-        queueVote(data.chatmessage, data.chatname, data.type);
+        debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type });
+        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data));
         return true;
     } else if (data.settings) {
+        debugLog('Settings payload received', data.settings);
         // Process settings updates
         processData(data);
         return true;
     } else if (data.cmd) {
+        debugLog('Command received', data.cmd);
         // Process commands
         processData(data);
         return true;
