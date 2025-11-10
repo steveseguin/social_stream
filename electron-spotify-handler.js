@@ -230,7 +230,7 @@ function runLoopbackOAuthSession({ authUrl, redirectUri, state }) {
 // Method 1: Local HTTP Server (Recommended)
 // Add to your Spotify app: http://127.0.0.1:8888/callback
 function setupSpotifyOAuthWithLocalServer(options = {}) {
-    const { fallbackToIntercept = true } = options;
+    const { fallbackToIntercept = false } = options;
 
     const handler = async (event, payload = {}) => {
         if (activeSession && typeof activeSession.fail === 'function') {
@@ -245,7 +245,10 @@ function setupSpotifyOAuthWithLocalServer(options = {}) {
                 console.warn('[Spotify OAuth] Loopback port unavailable; falling back to intercept handler.');
                 return runInterceptOAuthFlow(payload);
             }
-            throw error;
+            const wrappedError = new Error(`[Spotify OAuth] Loopback handler failed: ${error.message || error}`);
+            wrappedError.code = error.code || wrappedError.code;
+            wrappedError.cause = error;
+            throw wrappedError;
         }
     };
 
