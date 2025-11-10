@@ -1,10 +1,10 @@
-const pointsSettingsHelpers = (typeof window !== 'undefined' && window.pointsSettingsHelpers)
+const pointsActionsSettingsHelpers = (typeof window !== 'undefined' && window.pointsSettingsHelpers)
     ? window.pointsSettingsHelpers
     : null;
 
 const readBooleanSetting = (key, defaultValue = true) => {
-    if (pointsSettingsHelpers && typeof pointsSettingsHelpers.getBooleanSetting === 'function') {
-        return pointsSettingsHelpers.getBooleanSetting(key, defaultValue);
+    if (pointsActionsSettingsHelpers && typeof pointsActionsSettingsHelpers.getBooleanSetting === 'function') {
+        return pointsActionsSettingsHelpers.getBooleanSetting(key, defaultValue);
     }
     return defaultValue;
 };
@@ -562,8 +562,18 @@ class PointsActions {
 }
 
 // Create and initialize the points actions system
+const initialPointsSystem = (() => {
+    if (typeof window !== 'undefined' && window.pointsSystem) {
+        return window.pointsSystem;
+    }
+    if (typeof pointsSystem !== 'undefined') {
+        return pointsSystem;
+    }
+    return null;
+})();
+
 const pointsActions = new PointsActions({
-    pointsSystem: pointsSystem // Reference to existing points system
+    pointsSystem: initialPointsSystem
 });
 
 // Initialize point actions after the points system is ready
@@ -627,64 +637,53 @@ if (typeof window !== 'undefined' && typeof window.pointsSystemReady === 'functi
 } else {
     setTimeout(initializePointsActions, 3000);
 }
-
-// Admin API for managing commands
-window.pointsActions = {
-    // Get all available commands
-    getCommands: async () => {
-        return await pointsActions.getCommands();
-    },
-    
-    // Create a new command
-    createCommand: async (commandData) => {
-        return await pointsActions.createCustomCommand(commandData);
-    },
-    
-    // Update an existing command
-    updateCommand: async (commandName, updates) => {
-        return await pointsActions.updateCommand(commandName, updates);
-    },
-    
-    // Delete a command
-    deleteCommand: async (commandName) => {
-        return await pointsActions.deleteCommand(commandName);
-    },
-    
-    // Examples of creating different types of commands
-    createMediaCommand: async (name, cost, mediaUrl, options = {}) => {
-        return await pointsActions.createCustomCommand({
-            commandName: name,
-            cost: cost,
-            cooldown: options.cooldown || 30000,
-            description: options.description || `Display media for ${cost} points`,
-            mediaUrl: mediaUrl,
-            mediaType: options.mediaType || 'image',
-            mediaDuration: options.duration || 5000,
-            mediaStyle: options.style,
-            mediaPosition: options.position,
-            successMessage: options.successMessage
-        });
-    },
-    
-    createChatCommand: async (name, cost, responseMessage, options = {}) => {
-        return await pointsActions.createCustomCommand({
-            commandName: name,
-            cost: cost,
-            cooldown: options.cooldown || 10000,
-            description: options.description || `Chat response for ${cost} points`,
-            responseMessage: responseMessage
-        });
-    },
-    
-    createWebhookCommand: async (name, cost, webhookUrl, options = {}) => {
-        return await pointsActions.createCustomCommand({
-            commandName: name,
-            cost: cost,
-            cooldown: options.cooldown || 60000,
-            description: options.description || `Trigger webhook for ${cost} points`,
-            actionType: 'webhook',
-            webhookUrl: webhookUrl,
-            successMessage: options.successMessage
-        });
-    }
-};
+if (typeof window !== 'undefined') {
+    window.pointsActions = {
+        getCommands: async () => {
+            return await pointsActions.getCommands();
+        },
+        createCommand: async (commandData) => {
+            return await pointsActions.createCustomCommand(commandData);
+        },
+        updateCommand: async (commandName, updates) => {
+            return await pointsActions.updateCommand(commandName, updates);
+        },
+        deleteCommand: async (commandName) => {
+            return await pointsActions.deleteCommand(commandName);
+        },
+        createMediaCommand: async (name, cost, mediaUrl, options = {}) => {
+            return await pointsActions.createCustomCommand({
+                commandName: name,
+                cost: cost,
+                cooldown: options.cooldown || 30000,
+                description: options.description || `Display media for ${cost} points`,
+                mediaUrl: mediaUrl,
+                mediaType: options.mediaType || 'image',
+                mediaDuration: options.duration || 5000,
+                mediaStyle: options.style,
+                mediaPosition: options.position,
+                successMessage: options.successMessage
+            });
+        },
+        createChatCommand: async (name, cost, responseMessage, options = {}) => {
+            return await pointsActions.createCustomCommand({
+                commandName: name,
+                cost: cost,
+                cooldown: options.cooldown || 10000,
+                description: options.description || `Chat response for ${cost} points`,
+                responseMessage: responseMessage
+            });
+        },
+        createWebhookCommand: async (name, cost, webhookUrl, options = {}) => {
+            return await pointsActions.createCustomCommand({
+                commandName: name,
+                cost: cost,
+                cooldown: options.cooldown || 60000,
+                description: options.description || `Trigger webhook for ${cost} points`,
+                actionType: 'webhook',
+                webhookUrl: webhookUrl,
+                successMessage: options.successMessage
+            });
+        }
+    };
+}

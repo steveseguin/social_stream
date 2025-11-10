@@ -1,5 +1,5 @@
-const MS_PER_MINUTE = 60 * 1000;
-const MS_PER_HOUR = 60 * MS_PER_MINUTE;
+const POINTS_MS_PER_MINUTE = 60 * 1000;
+const POINTS_MS_PER_HOUR = 60 * POINTS_MS_PER_MINUTE;
 const DEFAULT_POINTS_LEADERBOARD_LIMIT = 50;
 const POINTS_LEADERBOARD_BROADCAST_DELAY = 2500;
 
@@ -81,9 +81,9 @@ class PointsSystem {
         this.dbName = options.dbName || 'pointsSystemDB';
         this.storeName = options.storeName || 'userPoints';
         this.pointsPerEngagement = options.pointsPerEngagement || 1;
-        this.engagementWindow = options.engagementWindow || 15 * MS_PER_MINUTE;
-        this.streakWindow = options.streakWindow || MS_PER_HOUR;
-        this.streakBreakTime = options.streakBreakTime || MS_PER_HOUR;
+        this.engagementWindow = options.engagementWindow || 15 * POINTS_MS_PER_MINUTE;
+        this.streakWindow = options.streakWindow || POINTS_MS_PER_HOUR;
+        this.streakBreakTime = options.streakBreakTime || POINTS_MS_PER_HOUR;
         this.streakMultiplierBase = options.streakMultiplierBase || 0.1;
         this.streakCap = options.streakCap || 10;
         this.messageStore = options.messageStore;
@@ -514,9 +514,9 @@ const configuredEngagementWindowMinutes = normalizePositiveNumber(
 // Create the points system instance
 const pointsSystem = new PointsSystem({
     pointsPerEngagement: configuredPointsPerEngagement,
-    engagementWindow: configuredEngagementWindowMinutes * MS_PER_MINUTE,  // minutes -> ms
-    streakWindow: MS_PER_HOUR,             // 1 hour window for streaks
-    streakBreakTime: MS_PER_HOUR,          // Break streak if no activity for 1 hour
+    engagementWindow: configuredEngagementWindowMinutes * POINTS_MS_PER_MINUTE,  // minutes -> ms
+    streakWindow: POINTS_MS_PER_HOUR,             // 1 hour window for streaks
+    streakBreakTime: POINTS_MS_PER_HOUR,          // Break streak if no activity for 1 hour
     streakMultiplierBase: 0.1,             // 10% bonus per streak hour, so 10 hours = 2x points
     streakCap: 10,                         // Cap multiplier at 10x (100% bonus)
     messageStore: messageStoreDB           // Link to existing message store
@@ -535,12 +535,12 @@ function syncPointsSystemConfigFromSettings() {
         pointsSystem.pointsPerEngagement = nextPointsPerEngagement;
     }
 
-    const currentWindowMinutes = pointsSystem.engagementWindow / MS_PER_MINUTE;
+    const currentWindowMinutes = pointsSystem.engagementWindow / POINTS_MS_PER_MINUTE;
     const nextWindowMinutes = normalizePositiveNumber(
         getNumericSettingValue('engagementWindow', currentWindowMinutes),
         currentWindowMinutes || 15
     );
-    const nextWindowMs = nextWindowMinutes * MS_PER_MINUTE;
+    const nextWindowMs = nextWindowMinutes * POINTS_MS_PER_MINUTE;
     if (pointsSystem.engagementWindow !== nextWindowMs) {
         pointsSystem.engagementWindow = nextWindowMs;
     }
