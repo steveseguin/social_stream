@@ -5848,13 +5848,27 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const viewPointsLeaderboardBtn = document.getElementById('viewPointsLeaderboard');
 	if (viewPointsLeaderboardBtn) {
 		viewPointsLeaderboardBtn.addEventListener('click', function() {
-			// Open leaderboard in new tab
+			const leaderboardLink = document.getElementById('leaderboardlink');
+			const leaderboardContainer = document.getElementById('leaderboard');
+			const fallbackUrl = chrome.runtime.getURL('leaderboard.html');
+			const baseHref = leaderboardLink?.href || leaderboardContainer?.raw || fallbackUrl;
+			let resolvedUrl;
+
+			try {
+				resolvedUrl = new URL(baseHref, fallbackUrl);
+			} catch (error) {
+				resolvedUrl = new URL(fallbackUrl);
+			}
+
+			resolvedUrl.searchParams.set('rankby', 'loyalty');
+			if (!resolvedUrl.searchParams.has('title')) {
+				resolvedUrl.searchParams.set('title', 'Points Leaderboard');
+			}
+
 			chrome.tabs.create({
-				url: chrome.runtime.getURL('leaderboard.html')
+				url: resolvedUrl.toString()
 			});
 		});
-	}
-
 	const resetPointsBtn = document.getElementById('resetPoints');
 	if (resetPointsBtn) {
 		resetPointsBtn.addEventListener('click', async function() {

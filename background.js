@@ -4097,6 +4097,88 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "loadmidi") {
 			await loadmidi();
 			sendResponse({ settings: settings, state: isExtensionOn });
+		} else if (request.cmd === 'manageUserPoints') {
+			const username = (request.username || '').trim();
+			const action = (request.action || '').toLowerCase();
+			const allowedActions = new Set(['add', 'subtract', 'set']);
+			const rawAmount = Number(request.points);
+			const type = request.type || 'default';
+
+			if (!username || !allowedActions.has(action) || !Number.isFinite(rawAmount)) {
+				sendResponse({ success: false, error: 'Invalid manageUserPoints payload' });
+				return response;
+			}
+
+			try {
+				if (typeof window.pointsSystemReady === 'function') {
+					await window.pointsSystemReady();
+				}
+				const system = window.pointsSystem;
+				if (!system) {
+					throw new Error('Points system unavailable');
+				}
+
+				const normalizedAmount = action === 'set' ? Math.round(rawAmount) : Math.abs(Math.round(rawAmount));
+				if (action !== 'set' && normalizedAmount <= 0) {
+					throw new Error('Amount must be greater than zero');
+				}
+
+				const userData = await system.getUserPoints(username, type);
+				const availableBefore = userData.points - userData.pointsSpent;
+				let availableAfter = availableBefore;
+
+				if (action === 'add') {
+					userData.points += normalizedAmount;
+					availableAfter = availableBefore + normalizedAmount;
+				} else if (action === 'subtract') {
+					const nextAvailable = Math.max(0, availableBefore - normalizedAmount);
+					userData.points = userData.pointsSpent + nextAvailable;
+					availableAfter = nextAvailable;
+				} else if (action === 'set') {
+					const nonNegative = Math.max(0, normalizedAmount);
+					userData.points = userData.pointsSpent + nonNegative;
+					availableAfter = nonNegative;
+				}
+
+				userData.lastActive = Date.now();
+				await system.saveUserPoints(userData);
+				if (typeof window.requestPointsLeaderboardBroadcast === 'function') {
+					window.requestPointsLeaderboardBroadcast('admin', { immediate: true });
+				}
+
+				sendResponse({
+					success: true,
+					username,
+					type,
+					action,
+					points: userData.points,
+					pointsSpent: userData.pointsSpent,
+					available: availableAfter
+				});
+			} catch (error) {
+				console.error('manageUserPoints failed:', error);
+				sendResponse({ success: false, error: error?.message || 'Failed to manage user points' });
+			}
+			return response;
+		} else if (request.cmd === 'resetAllPoints') {
+			try {
+				if (typeof window.pointsSystemReady === 'function') {
+					await window.pointsSystemReady();
+				}
+				const system = window.pointsSystem;
+				if (!system) {
+					throw new Error('Points system unavailable');
+				}
+				await system.resetAllPoints();
+				if (typeof window.requestPointsLeaderboardBroadcast === 'function') {
+					window.requestPointsLeaderboardBroadcast('reset', { immediate: true });
+				}
+				sendResponse({ success: true });
+			} catch (error) {
+				console.error('resetAllPoints failed:', error);
+				sendResponse({ success: false, error: error?.message || 'Failed to reset points' });
+			}
+			return response;
 		} else if (request.cmd && request.cmd === "export") {
 			sendResponse({ state: isExtensionOn });
 			await exportSettings();
