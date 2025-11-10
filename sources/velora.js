@@ -76,7 +76,7 @@
 	var channelName = "";
 	
 	function processMessage(ele){
-	//	console.log(ele);
+		console.log(ele);
 		if (!ele || !ele.isConnected){
 		//	console.log("no connected");
 			return;
@@ -98,7 +98,7 @@
 
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector("[title^='View profile for']").textContent);
+			name = escapeHtml(ele.querySelector("[title^='View profile for'], [class*='border-amber'] .text-sm.font-semibold.leading-tight.text-white").textContent);
 		} catch(e){
 		}
 		
@@ -114,10 +114,19 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector("div > div > div.text-sm.break-words.text-white")).trim();
+			msg = getAllContentNodes(ele.querySelector("div > div > div.text-sm.break-words.text-white, [class*='border-amber'] > div > div > p")).trim();
 		} catch(e){
 		}
 		
+		
+		var donation = "";
+		try {
+			donation = escapeHtml(ele.querySelector(".flex-1.space-y-2 svg>path[d='m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z']").parentNode.nextSibling.textContent);
+			if (msg){
+				msg = msg.replaceAll('“',"").replaceAll('”',"").trim(); 
+			}
+		} catch(e){
+		}
 		
 		if (!msg || !name){
 	//		console.log("no name");
@@ -136,7 +145,7 @@
 		data.nameColor = namecolor;
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = donation;
 		data.membership = "";
 		data.contentimg = "";
 		data.textonly = settings.textonlymode || false;
