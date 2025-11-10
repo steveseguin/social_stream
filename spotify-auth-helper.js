@@ -6,11 +6,20 @@ function completeSpotifyAuth(callbackUrl) {
         console.error("Please provide the callback URL from Spotify");
         return;
     }
+
+    let redirectUri = null;
+    try {
+        const parsed = new URL(callbackUrl);
+        redirectUri = `${parsed.origin}${parsed.pathname}`;
+    } catch (e) {
+        console.warn("Failed to parse redirect URI from callback:", e);
+    }
     
     // Send the callback to background.js
     chrome.runtime.sendMessage({
         cmd: "spotifyManualCallback",
-        url: callbackUrl
+        url: callbackUrl,
+        redirectUri
     }, response => {
         if (response && response.success) {
             console.log("✅ Spotify authentication successful!");
@@ -29,4 +38,4 @@ console.log("Spotify Auth Helper loaded!");
 console.log("To complete authentication, run:");
 console.log('completeSpotifyAuth("YOUR_CALLBACK_URL_HERE")');
 console.log("\nExample:");
-console.log('completeSpotifyAuth("https://socialstream.ninja/spotify.html?code=AQD...&state=...")');
+console.log('completeSpotifyAuth("https://socialstream.ninja/spotify_callback.html?code=AQD...&state=...")');
