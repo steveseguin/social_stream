@@ -895,29 +895,29 @@
 			}
 		});
 		
-		svgs.forEach(img=>{
-			var node = document.createElement('div');
-			node.appendChild(img);
-			node.classList.add("emoji");
-			node.classList.add("el-wrap");
-			img.classList.add("el");
-			
-			if (floatup){
-				var speedup = Math.pow(Math.random(),0.05)*timeoutDelay;
-				img.style.animation = "y1 "+speedup+"ms reverse linear 1";
-				img.style.transform = "translateY(-"+width+"px)";
-				img.style.top = -1*width+"px";
-				img.style.position = "relative";
-			} else {
-				img.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
-				img.style.animationDelay = Math.random()*-35*speed+"s";
-			}
-			
-			svg.setAttribute("width", "100%");
-			svg.setAttribute("height", "100%");
-			
-			if (data.type){
-				node.dataset.sourceType = data.type;
+			svgs.forEach(svgEl=>{
+				var node = document.createElement('div');
+				node.appendChild(svgEl);
+				node.classList.add("emoji");
+				node.classList.add("el-wrap");
+				svgEl.classList.add("el");
+				
+				if (floatup){
+					var speedup = Math.pow(Math.random(),0.05)*timeoutDelay;
+					svgEl.style.animation = "y1 "+speedup+"ms reverse linear 1";
+					svgEl.style.transform = "translateY(-"+width+"px)";
+					svgEl.style.top = -1*width+"px";
+					svgEl.style.position = "relative";
+				} else {
+					svgEl.style.animation = "y "+(Math.random()*5*speed+5*speed)+"s linear infinite alternate";
+					svgEl.style.animationDelay = Math.random()*-35*speed+"s";
+				}
+				
+				svgEl.setAttribute("width", "100%");
+				svgEl.setAttribute("height", "100%");
+				
+				if (data.type){
+					node.dataset.sourceType = data.type;
 			}
 			node.classList.add("hidden");
 			mainOutputWindow.appendChild(node)
