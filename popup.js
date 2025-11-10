@@ -183,6 +183,56 @@ function log(msg,a,b){
 	console.log(msg,a,b);
 }
 
+function handleSpotifyAuthResultFromBackground(result) {
+	const spotifyAuthButton = document.getElementById('spotifyAuthButton');
+	if (!spotifyAuthButton) {
+		return;
+	}
+
+	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');
+	const spotifySignOutButton = document.getElementById('spotifySignOutButton');
+	const callbackDiv = document.getElementById('spotifyCallbackDiv');
+	const manualLinkContainer = document.getElementById('spotifyManualLinkContainer');
+	const manualLinkField = document.getElementById('spotifyManualAuthUrl');
+	const callbackInput = document.getElementById('spotifyCallbackInput');
+
+	console.log('Spotify auth result from background:', result);
+	spotifyAuthButton.disabled = false;
+	if (spotifyAuthButton.querySelector('span')) {
+		spotifyAuthButton.querySelector('span').textContent = result?.success
+			? '🔄 Reconnect to Spotify'
+			: '🔗 Connect to Spotify';
+	}
+
+	if (result?.success) {
+		if (spotifyAuthStatus) {
+			spotifyAuthStatus.style.display = 'inline';
+		}
+		if (spotifySignOutButton) {
+			spotifySignOutButton.style.display = 'inline-block';
+		}
+		if (callbackDiv) {
+			callbackDiv.style.display = 'none';
+		}
+		if (callbackInput) {
+			callbackInput.value = '';
+		}
+		if (manualLinkContainer) {
+			manualLinkContainer.style.display = 'none';
+		}
+		if (manualLinkField) {
+			manualLinkField.value = '';
+		}
+		console.log('Spotify connected successfully.');
+	} else {
+		const errorMsg = result?.error || 'Unknown error';
+		console.error('Spotify auth failed (async result):', errorMsg);
+		alert('Failed to connect to Spotify. Error: ' + errorMsg);
+	}
+}
+
+window.handleSpotifyAuthResultFromBackground = handleSpotifyAuthResultFromBackground;
+
 // MIDI-related functions
 async function loadWebMidiScript(callback) {
 	const script = document.createElement("script");
@@ -3991,19 +4041,23 @@ try {
 	chrome.runtime.onMessage.addListener(
 		function(request, sender, sendResponse) {
 			log("INCOMING MESSAGE--------------------------");
-			if (request.forPopup) {
-				log("Message received in popup:", request.forPopup);
-				if (request.forPopup.documents){
-					updateDocumentList(request.forPopup.documents);
-				}
+		if (request.forPopup) {
+			log("Message received in popup:", request.forPopup);
+			if (request.forPopup.documents){
+				updateDocumentList(request.forPopup.documents);
+			}
 
-				if (request.forPopup.handleStatus) {
-					mergeHandleStatusFromBackground(request.forPopup.handleStatus);
-				}
-				
-				if (request.forPopup.alert){
-					alert(request.forPopup.alert);
-				}
+			if (request.forPopup.handleStatus) {
+				mergeHandleStatusFromBackground(request.forPopup.handleStatus);
+			}
+
+			if (request.forPopup.spotifyAuthResult) {
+				handleSpotifyAuthResultFromBackground(request.forPopup.spotifyAuthResult);
+			}
+			
+			if (request.forPopup.alert){
+				alert(request.forPopup.alert);
+			}
 				// Handle the message data here
 				sendResponse({status: "Message received in popup"});
 			}
@@ -5876,7 +5930,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			});
 		});
 	}
-	
+
 	// Save on input change
 	if (spotifyClientIdInput) {
 		spotifyClientIdInput.addEventListener('change', saveSpotifyCredentials);
@@ -6041,9 +6095,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							}, 5000);
 						}
 					}
-					} else if (response?.waitingForManualCallback || response?.waitingForCallback) {
-						const waitingForManual = !!response.waitingForManualCallback;
-						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+				} else if (response?.waitingForManualCallback || response?.waitingForCallback) {
+					spotifyAuthButton.disabled = true;
+					const waitingForManual = !!response.waitingForManualCallback;
+					spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
 
 						if (callbackDiv) {
 							callbackDiv.style.display = waitingForManual ? 'block' : 'none';

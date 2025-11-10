@@ -1,23 +1,24 @@
 // Spotify Integration Module for Social Stream
 
 class SpotifyIntegration {
-    constructor() {
-        this.accessToken = null;
-        this.refreshToken = null;
-        this.tokenExpiry = null;
-        this.currentTrack = null;
-        this.pollingInterval = null;
-        this.settings = null;
-        this.callbacks = {
-            onNewTrack: null,
-            onCommandResponse: null
-        };
+	constructor() {
+		this.accessToken = null;
+		this.refreshToken = null;
+		this.tokenExpiry = null;
+		this.currentTrack = null;
+		this.pollingInterval = null;
+       this.settings = null;
+       this.callbacks = {
+           onNewTrack: null,
+           onCommandResponse: null
+       };
 
-        this.browserRedirectUri = 'https://socialstream.ninja/spotify.html';
-        this.electronRedirectUri = 'http://127.0.0.1:8888/callback';
-        this._isElectronEnv = undefined;
-        this._electronIpc = null;
-    }
+		this.browserRedirectUri = 'https://socialstream.ninja/spotify.html';
+		this.electronRedirectUri = 'http://127.0.0.1:8888/callback';
+		this._isElectronEnv = undefined;
+		this._electronIpc = null;
+		this.identityAuthInFlight = false;
+	}
 
     async initialize(settings, callbacks = {}) {
         this.settings = settings;
@@ -141,6 +142,73 @@ class SpotifyIntegration {
     buildAuthUrl({ redirectUri, scopes, state }) {
         return `https://accounts.spotify.com/authorize?client_id=${this.settings.spotifyClientId.textsetting}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes.join(' '))}&state=${state}`;
     }
+
+	notifySpotifyAuthResult(result) {
+		if (typeof chrome === 'undefined' || !chrome.runtime || !chrome.runtime.sendMessage) {
+			return;
+		}
+
+		try {
+			chrome.runtime.sendMessage({ forPopup: { spotifyAuthResult: result } }, () => {
+				// Swallow errors when popup isn't open
+				if (chrome.runtime.lastError) {
+					console.debug('Spotify auth result delivery status:', chrome.runtime.lastError.message);
+				}
+			});
+		} catch (err) {
+			console.warn('Failed to send Spotify auth result to popup:', err);
+		}
+	}
+
+	async launchChromeIdentityFlow({ authUrl, redirectUri, state }) {
+		if (this.identityAuthInFlight) {
+			console.log('Spotify Chrome identity flow already running');
+			return;
+		}
+
+		this.identityAuthInFlight = true;
+
+		try {
+			const responseUrl = await chrome.identity.launchWebAuthFlow({
+				url: authUrl,
+				interactive: true
+			});
+
+			if (!responseUrl) {
+				throw new Error('Spotify authorization did not complete.');
+			}
+
+			const url = new URL(responseUrl);
+			const code = url.searchParams.get('code');
+			const returnedState = url.searchParams.get('state');
+			const errorParam = url.searchParams.get('error');
+
+			if (returnedState !== state) {
+				throw new Error('State mismatch in OAuth callback');
+			}
+
+			if (errorParam) {
+				throw new Error(`Spotify authorization failed: ${errorParam}`);
+			}
+
+			if (!code) {
+				throw new Error('Spotify authorization did not complete.');
+			}
+
+			const success = await this.handleAuthCallback(code, returnedState, redirectUri);
+			if (!success) {
+				throw new Error('Failed to process Spotify authorization response.');
+			}
+
+			this.notifySpotifyAuthResult({ success: true, message: 'Connected to Spotify!' });
+		} catch (error) {
+			const message = error?.message || error?.toString() || 'Spotify authorization failed.';
+			console.error('Chrome identity Spotify auth error:', message);
+			this.notifySpotifyAuthResult({ success: false, error: message });
+		} finally {
+			this.identityAuthInFlight = false;
+		}
+	}
 
     normalizeLoopbackRedirectUri(uri) {
         if (!uri || typeof uri !== 'string') {
@@ -384,10 +452,10 @@ class SpotifyIntegration {
     }
 
     // OAuth flow methods for initial setup
-    async startOAuthFlow() {
-        if (!this.settings.spotifyClientId?.textsetting) {
-            throw new Error("Spotify Client ID not configured");
-        }
+	async startOAuthFlow() {
+		if (!this.settings.spotifyClientId?.textsetting) {
+			throw new Error("Spotify Client ID not configured");
+		}
 
         // Ensure tokens are loaded from settings
         if (!this.accessToken && this.settings.spotifyAccessToken) {
@@ -409,83 +477,73 @@ class SpotifyIntegration {
             return { success: true, alreadyConnected: true };
         }
 
-        const scopes = ['user-read-currently-playing', 'user-read-playback-state'];
-        const state = Math.random().toString(36).substring(7); // Generate random state for security
-        
-        // Store state for verification
-        this.pendingAuthState = state;
+		const scopes = ['user-read-currently-playing', 'user-read-playback-state'];
+		const state = Math.random().toString(36).substring(7); // Generate random state for security
 
-        // Try different approaches based on environment
-        try {
-            // Check if we have chrome.identity available
-            if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getRedirectURL) {
-                // Use Chrome Identity API - it generates its own redirect URL
-                const redirectUri = chrome.identity.getRedirectURL('spotify');
-                console.log('Chrome extension redirect URI:', redirectUri);
-                // This will be something like: https://EXTENSION_ID.chromiumapp.org/spotify
-                
-                const authUrl = `https://accounts.spotify.com/authorize?client_id=${this.settings.spotifyClientId.textsetting}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(' ')}&state=${state}`;
-                
-                if (chrome.identity.launchWebAuthFlow) {
-                    const responseUrl = await chrome.identity.launchWebAuthFlow({
-                        url: authUrl,
-                        interactive: true
-                    });
+		const persistAuthState = () => {
+			if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+				try {
+					chrome.storage.local.set({ spotifyAuthState: state });
+				} catch (storageError) {
+					console.warn('Failed to persist Spotify auth state:', storageError);
+				}
+			}
+		};
 
-                    const urlParams = new URL(responseUrl).searchParams;
-                    const code = urlParams.get('code');
-                    const returnedState = urlParams.get('state');
-                    
-                    if (returnedState !== state) {
-                        throw new Error('State mismatch in OAuth callback');
-                    }
-                    
-                    if (code) {
-                        await this.exchangeCodeForToken(code, redirectUri);
-                        return { success: true };
-                    }
+		// Try different approaches based on environment
+		try {
+			// Check if we have chrome.identity available
+			if (typeof chrome !== 'undefined' && chrome.identity && chrome.identity.getRedirectURL) {
+				if (this.identityAuthInFlight) {
+					return {
+						success: false,
+						waitingForCallback: true,
+						message: 'Spotify login is already running. Please finish the existing authorization window.'
+					};
+				}
 
-                    const errorParam = urlParams.get('error');
-                    if (errorParam) {
-                        throw new Error(`Spotify authorization failed: ${errorParam}`);
-                    }
+				this.pendingAuthState = state;
+				persistAuthState();
 
-                    throw new Error('Spotify authorization did not complete.');
-                } else {
-                    throw new Error('chrome.identity.launchWebAuthFlow not available');
-                }
-            } else {
-                throw new Error('Chrome identity API not available, using fallback');
-            }
-        } catch (error) {
-            console.log('Chrome identity approach failed:', error.message);
-            console.log('Using web-based OAuth flow instead');
-            
-            const hasElectronBridge = this.hasElectronBridge();
-            let preferredRedirectUri = hasElectronBridge ? this.electronRedirectUri : this.browserRedirectUri;
-            preferredRedirectUri = this.normalizeLoopbackRedirectUri(preferredRedirectUri);
-            let authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
-            let fallbackStatus = { success: false, waitingForCallback: true };
+				// Use Chrome Identity API - it generates its own redirect URL
+				const redirectUri = chrome.identity.getRedirectURL('spotify');
+				console.log('Chrome extension redirect URI:', redirectUri);
+				// This will be something like: https://EXTENSION_ID.chromiumapp.org/spotify
+				
+				const authUrl = `https://accounts.spotify.com/authorize?client_id=${this.settings.spotifyClientId.textsetting}&response_type=code&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scopes.join(' ')}&state=${state}`;
+				
+				if (chrome.identity.launchWebAuthFlow) {
+					console.log('Starting Chrome identity OAuth flow (async)');
+					this.launchChromeIdentityFlow({ authUrl, redirectUri, state });
+					return {
+						success: false,
+						waitingForCallback: true,
+						message: 'Please finish the Spotify login in the newly opened window. This popup will update after Spotify responds.'
+					};
+				} else {
+					throw new Error('chrome.identity.launchWebAuthFlow not available');
+				}
+			} else {
+				throw new Error('Chrome identity API not available, using fallback');
+			}
+		} catch (error) {
+			console.log('Chrome identity approach failed:', error.message);
+			console.log('Using web-based OAuth flow instead');
+			this.pendingAuthState = state;
+			persistAuthState();
+			
+			const hasElectronBridge = this.hasElectronBridge();
+			let preferredRedirectUri = hasElectronBridge ? this.electronRedirectUri : this.browserRedirectUri;
+			preferredRedirectUri = this.normalizeLoopbackRedirectUri(preferredRedirectUri);
+			let authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
+			let fallbackStatus = { success: false, waitingForCallback: true };
 
-            const persistAuthState = async () => {
-                if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-                    try {
-                        await chrome.storage.local.set({ spotifyAuthState: state });
-                    } catch (storageError) {
-                        console.warn('Failed to persist Spotify auth state:', storageError);
-                    }
-                }
-            };
-            
-            if (hasElectronBridge) {
-                console.log('Using Electron OAuth flow with IPC handler');
-                
-                this.pendingAuthState = state;
-                await persistAuthState();
+			if (hasElectronBridge) {
+				console.log('Using Electron OAuth flow with IPC handler');
 
-                if (preferredRedirectUri !== this.electronRedirectUri) {
-                    preferredRedirectUri = this.normalizeLoopbackRedirectUri(this.electronRedirectUri);
-                    authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
+		        if (preferredRedirectUri !== this.electronRedirectUri) {
+		            preferredRedirectUri = this.normalizeLoopbackRedirectUri(this.electronRedirectUri);
+		            authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
                 }
                 
                 try {
@@ -525,22 +583,20 @@ class SpotifyIntegration {
                         manualAuthUrl
                     };
                 }
-            } else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
-                chrome.tabs.create({ url: authUrl });
-                fallbackStatus = {
-                    success: false,
-                    waitingForManualCallback: true,
-                    message: 'After authorizing Spotify in the newly opened tab, copy the full callback URL and paste it back into Social Stream Ninja to finish connecting.'
-                };
-                await persistAuthState();
-            } else {
-                window.open(authUrl, 'spotify-auth', 'width=500,height=700');
-                fallbackStatus = { success: false, waitingForCallback: true };
-                await persistAuthState();
-            }
+			} else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+				chrome.tabs.create({ url: authUrl });
+				fallbackStatus = {
+					success: false,
+		            waitingForManualCallback: true,
+		            message: 'After authorizing Spotify in the newly opened tab, copy the full callback URL and paste it back into Social Stream Ninja to finish connecting.'
+		        };
+			} else {
+				window.open(authUrl, 'spotify-auth', 'width=500,height=700');
+				fallbackStatus = { success: false, waitingForCallback: true };
+		    }
 
-            return fallbackStatus;
-        }
+		    return fallbackStatus;
+		}
     }
 
     // Handle OAuth callback
