@@ -520,7 +520,7 @@ You can create your own custom auto-responding triggers or other actions by incl
 Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
 #### Profanity filtering and blocking
 
-Social Stream Ninja ships with a shared profanity list (`shared/data/badwords.json`) that merges the legacy vocabulary with the MIT-licensed MauriceButler corpus (743 normalized entries at the moment). The list is loaded everywhere via `libs/objects.js`, so ship the `shared/` directory next to any surface (extension, Electron, Lite embeds) to keep the filter consistent.
+Social Stream Ninja ships with a shared profanity list baked directly into `libs/objects.js` (the legacy vocabulary merged with the MIT-licensed MauriceButler corpus — 743 normalized entries at the moment). Because the list now lives beside the core library again, every surface (extension, Electron, Lite embeds) gets the same data without needing to fetch `shared/data/badwords.json`.
 
 - Toggle `🤬🚫 Replace common swear words with asterixis` (`blacklist`) to redact matches inside messages.
 - Toggle `🤬🚫 Block messages that contain swear words` (`blacklistblockmessages`) when you need offending messages dropped before they are relayed anywhere else.

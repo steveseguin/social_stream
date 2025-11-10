@@ -66,7 +66,7 @@ lite/
 
 - The page is built as ES modules without a bundler; load it via HTTP(S) so OAuth redirects succeed.
 - `tmi.js` lives under `shared/vendor/` so the Lite site, extension, and Electron app all load the same copy; the npm package no longer ships `dist/` bundles on CDNs.
-- Ship the entire `shared/` directory (including `shared/data/badwords.json`) alongside `lite/` when deploying so profanity filtering and other shared assets continue to load in dock + extension surfaces that the Lite UI embeds.
+- Ship the entire `shared/` directory alongside `lite/` when deploying so shared helpers (script loader, vendor libs, etc.) continue to load in dock + extension surfaces that the Lite UI embeds; the profanity list now lives directly in `libs/objects.js`, so there’s no extra `shared/data/badwords.json` asset to host.
 - Messages relayed to the dock follow the existing `overlayNinja` payload conventions (e.g., `type`, `chatname`, `chatmessage`).
 - Append `?debug=1` to the Lite URL (persisted in local storage) to surface verbose relay logs in the browser console and activity feed; use `?debug=0` to turn it back off.
 - Activity logging stays lightweight unless debug mode is enabled; adjust in `app.js` if you need deeper instrumentation.

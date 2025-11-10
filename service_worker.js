@@ -161,10 +161,21 @@ function sendMessageToBackgroundPage(message, sendResponse) {
     }
   };
 
-  if (backgroundPageTabId !== null) {
-    chrome.tabs.sendMessage(backgroundPageTabId, payload, deliverResponse);
-  } else {
+  const sendViaRuntime = () => {
     chrome.runtime.sendMessage(payload, deliverResponse);
+  };
+
+  if (backgroundPageTabId !== null) {
+    chrome.tabs.sendMessage(backgroundPageTabId, payload, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn("Tab messaging failed, falling back to runtime:", chrome.runtime.lastError);
+        sendViaRuntime();
+      } else {
+        deliverResponse(response);
+      }
+    });
+  } else {
+    sendViaRuntime();
   }
 }
 

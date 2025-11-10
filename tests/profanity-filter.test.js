@@ -8,24 +8,14 @@
  * sentinel words/variations are missing from the generated hash input.
  */
 
-const fs = require("fs");
-const path = require("path");
-
-const DATA_PATH = path.join(__dirname, "..", "shared", "data", "badwords.json");
+const { DEFAULT_BAD_WORDS } = require("../libs/objects.js");
 const SENTINEL_WORDS = ["suicide", "motherfucker", "bastard", "whore"];
 
-function requireDataset() {
-  try {
-    const raw = fs.readFileSync(DATA_PATH, "utf8");
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed) || parsed.length < 700) {
-      throw new Error(`Unexpected dataset shape (length=${parsed?.length ?? "n/a"})`);
-    }
-    return parsed;
-  } catch (err) {
-    console.error("[profanity-test] Failed to load bad word dataset:", err);
-    process.exit(1);
+function loadDataset() {
+  if (!Array.isArray(DEFAULT_BAD_WORDS) || DEFAULT_BAD_WORDS.length < 700) {
+    throw new Error(`Unexpected dataset shape (length=${DEFAULT_BAD_WORDS?.length ?? "n/a"})`);
   }
+  return DEFAULT_BAD_WORDS.slice();
 }
 
 const alternativeChars = {
@@ -84,7 +74,14 @@ function generateVariationsList(words) {
   return variationsList.filter(entry => entry && !/[A-Z]/.test(entry));
 }
 
-const dataset = requireDataset();
+let dataset;
+try {
+  dataset = loadDataset();
+} catch (err) {
+  console.error("[profanity-test] Failed to load bad word dataset:", err);
+  process.exit(1);
+}
+
 const normalizedDataset = dataset.map(entry => entry.trim().toLowerCase());
 
 for (const sentinel of SENTINEL_WORDS) {
