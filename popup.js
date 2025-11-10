@@ -5845,31 +5845,33 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
-	const viewPointsLeaderboardBtn = document.getElementById('viewPointsLeaderboard');
-	if (viewPointsLeaderboardBtn) {
-		viewPointsLeaderboardBtn.addEventListener('click', function() {
-			const leaderboardLink = document.getElementById('leaderboardlink');
-			const leaderboardContainer = document.getElementById('leaderboard');
-			const fallbackUrl = chrome.runtime.getURL('leaderboard.html');
-			const baseHref = leaderboardLink?.href || leaderboardContainer?.raw || fallbackUrl;
-			let resolvedUrl;
+		const viewPointsLeaderboardBtn = document.getElementById('viewPointsLeaderboard');
+		if (viewPointsLeaderboardBtn) {
+			viewPointsLeaderboardBtn.addEventListener('click', function() {
+				const leaderboardLink = document.getElementById('leaderboardlink');
+				const leaderboardContainer = document.getElementById('leaderboard');
+				const fallbackUrl = chrome.runtime.getURL('leaderboard.html');
+				const baseHref = leaderboardLink?.href || leaderboardContainer?.raw || fallbackUrl;
+				let resolvedUrl;
 
-			try {
-				resolvedUrl = new URL(baseHref, fallbackUrl);
-			} catch (error) {
-				resolvedUrl = new URL(fallbackUrl);
-			}
+				try {
+					resolvedUrl = new URL(baseHref, fallbackUrl);
+				} catch (error) {
+					resolvedUrl = new URL(fallbackUrl);
+				}
 
-			resolvedUrl.searchParams.set('rankby', 'loyalty');
-			if (!resolvedUrl.searchParams.has('title')) {
-				resolvedUrl.searchParams.set('title', 'Points Leaderboard');
-			}
+				resolvedUrl.searchParams.set('rankby', 'loyalty');
+				if (!resolvedUrl.searchParams.has('title')) {
+					resolvedUrl.searchParams.set('title', 'Points Leaderboard');
+				}
 
-			chrome.tabs.create({
-				url: resolvedUrl.toString()
+				chrome.tabs.create({
+					url: resolvedUrl.toString()
+				});
 			});
-		});
-	const resetPointsBtn = document.getElementById('resetPoints');
+		}
+
+		const resetPointsBtn = document.getElementById('resetPoints');
 	if (resetPointsBtn) {
 		resetPointsBtn.addEventListener('click', async function() {
 			if (confirm('Are you sure you want to reset all user points? This cannot be undone.')) {
