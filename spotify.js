@@ -40,9 +40,7 @@ class SpotifyIntegration {
         await this.loadTokens();
         
         // Start polling if enabled
-        if (this.settings.spotifyNowPlaying) {
-            this.startPolling();
-        }
+        this.startPolling();
     }
 
     async loadTokens() {
@@ -317,25 +315,35 @@ class SpotifyIntegration {
             clearInterval(this.pollingInterval);
         }
 
+        if (!this.settings?.spotifyEnabled) {
+            return;
+        }
+
         // Get polling interval from settings (default 5 seconds, min 3, max 60)
         const interval = Math.max(3, Math.min(60, this.settings.spotifyPollingInterval?.numbersetting || 5)) * 1000;
         console.log(`Starting Spotify polling with ${interval/1000}s interval`);
 
-        // Poll at specified interval
-        this.pollingInterval = setInterval(() => {
-            if (!this.settings.spotifyNowPlaying || !this.accessToken) {
+        const tick = () => {
+            if (!this.settings?.spotifyEnabled) {
                 this.stopPolling();
                 return;
             }
 
+            if (!this.accessToken) {
+                return;
+            }
+
             // Refresh token if needed
-            if (Date.now() >= this.tokenExpiry) {
+            if (this.tokenExpiry && Date.now() >= this.tokenExpiry) {
                 this.refreshAccessToken();
                 return;
             }
 
             this.getCurrentTrack();
-        }, interval);
+        };
+
+        // Poll at specified interval
+        this.pollingInterval = setInterval(tick, interval);
 
         // Get initial track
         this.getCurrentTrack();
@@ -370,7 +378,7 @@ class SpotifyIntegration {
                 
                 // Resume after the retry period
                 setTimeout(() => {
-                    if (this.settings.spotifyNowPlaying) {
+                    if (this.settings?.spotifyEnabled) {
                         this.startPolling();
                     }
                 }, parseInt(retryAfter) * 1000);
@@ -662,6 +670,9 @@ class SpotifyIntegration {
                 });
                 
                 console.log('Spotify tokens saved successfully');
+                if (this.settings?.spotifyEnabled) {
+                    this.startPolling();
+                }
             } else {
                 throw new Error('No access token received from Spotify');
             }

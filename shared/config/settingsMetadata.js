@@ -1316,7 +1316,7 @@ const SETTINGS_METADATA = Object.freeze({
   "spotifyAnnounceNewTrack": {
     type: "boolean",
     category: "now_playing_features",
-    description: "When enabled, announce new tracks in chat."
+    description: "When enabled, Social Stream announces new tracks in its overlays/relays (not posted to platform chat)."
   },
   "spotifyBotName": {
     type: "text",
@@ -1337,11 +1337,6 @@ const SETTINGS_METADATA = Object.freeze({
     type: "boolean",
     category: "spotify_configuration",
     description: "Enable to spotify integration"
-  },
-  "spotifyNowPlaying": {
-    type: "boolean",
-    category: "now_playing_features",
-    description: "Enable to now playing tracking"
   },
   "spotifyPollingInterval": {
     type: "number",
