@@ -256,7 +256,7 @@
 	var observer = null;
 	
 	
-	function onElementInserted(target) {
+	function onElementInserted(target, subtree=false) {
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
@@ -280,7 +280,7 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: subtree };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -301,6 +301,10 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector(".duration-300.rounded-none > .flex-1.overflow-y-auto.p-4.space-y-3.min-h-0");
+				if (!container && window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat"){
+					container = document.querySelector("body");
+				} 
+				
 				if (!container.marked){
 					container.marked=true;
 
@@ -308,7 +312,11 @@
 
 					setTimeout(function(){
 						dataIndex = 0;
-						onElementInserted(container);
+						if (window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat"){
+							onElementInserted(container, true);
+						} else {
+							onElementInserted(container);
+						}
 					},2000);
 				}
 				checkViewers();
