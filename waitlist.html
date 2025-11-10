@@ -15,6 +15,7 @@
             --font-family: 'Sora', Roboto, Arial, sans-serif;
             --background-color: #0000;
             --font-size: 300%;
+            --waitlist-message-scale: 0.35;
             --electron-drag-fix: drag;
             --width: 48px;
             --x-speed: 13s;
@@ -96,12 +97,24 @@
             flex-shrink: 0;
         }
 
-        .guestListHolder span {
+        .guestListHolder .waitlist-entry-text {
             flex: 1;
             word-break: break-word;
             min-width: 0;
             font-size: var(--font-size);
             line-height: 1.2;
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 0.35em;
+            align-items: baseline;
+        }
+
+        .waitlist-message {
+            font-size: calc(var(--font-size) * var(--waitlist-message-scale));
+            font-weight: 500;
+            opacity: 0.85;
+            margin-left: 0.2em;
+            word-break: break-word;
         }
 
         #waitlisttitle, 
@@ -244,6 +257,23 @@
 	var randomize = false;
 	if (urlParams.has("randomize") || urlParams.has("random")){
 		randomize = true;
+	}
+
+	var includeJoinMessage = false;
+	if (urlParams.has("includemessage")){
+		includeJoinMessage = true;
+	}
+
+	if (urlParams.has("messagesize")){
+		var scale = parseFloat(urlParams.get("messagesize"));
+		if (!isNaN(scale) && isFinite(scale)){
+			if (scale <= 0){
+				scale = 0.2;
+			} else if (scale > 1.5){
+				scale = 1.5;
+			}
+			document.documentElement.style.setProperty("--waitlist-message-scale", scale);
+		}
 	}
 	
 	var showsource = false;
@@ -676,6 +706,74 @@
 			ele.outerHTML = ele.alt;
 		}
 	}
+
+	function escapeHtml(unsafe) {
+		if (unsafe === null || unsafe === undefined) {
+			return "";
+		}
+		return unsafe
+			.replace(/&/g, "&amp;")
+			.replace(/</g, "&lt;")
+			.replace(/>/g, "&gt;")
+			.replace(/"/g, "&quot;")
+			.replace(/'/g, "&#39;");
+	}
+
+	function escapeRegex(value = "") {
+		try {
+			return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		} catch (e) {
+			return value;
+		}
+	}
+
+	function extractJoinMessage(chatMessage = "", trigger = "") {
+		if (!chatMessage || typeof chatMessage !== "string") {
+			return "";
+		}
+		var trimmed = chatMessage.trim();
+		if (!trimmed) {
+			return "";
+		}
+		if (!trigger) {
+			var pieces = trimmed.split(/\s+/);
+			pieces.shift();
+			return pieces.join(" ").trim();
+		}
+		try {
+			var pattern = new RegExp("^" + escapeRegex(trigger.trim()) + "\\s*", "i");
+			return trimmed.replace(pattern, "").trim();
+		} catch (e) {
+			var fallback = trimmed.split(/\s+/);
+			fallback.shift();
+			return fallback.join(" ").trim();
+		}
+	}
+
+	function getJoinMessage(entry) {
+		if (!includeJoinMessage || !entry) {
+			return "";
+		}
+		if (entry.waitlistJoinMessage) {
+			return entry.waitlistJoinMessage.trim();
+		}
+		if (entry.chatmessage) {
+			return extractJoinMessage(entry.chatmessage, entry.waitlistTrigger);
+		}
+		return "";
+	}
+
+	function formatWaitlistEntryText(entry) {
+		var baseName = (entry && entry.chatname) ? entry.chatname : "";
+		if (!includeJoinMessage) {
+			return "<span class='waitlist-entry-text'>" + baseName + "</span>";
+		}
+		var message = getJoinMessage(entry);
+		if (!message) {
+			return "<span class='waitlist-entry-text'>" + baseName + "</span>";
+		}
+		return "<span class='waitlist-entry-text'>" + baseName + "<span class='waitlist-message'>- " + escapeHtml(message) + "</span></span>";
+	}
 	
 	var drawMode = false;
 	var winnerSelected = false;
@@ -711,11 +809,11 @@
 					}
 					var classAdd = "winner";
 					
-					if (data.winlist[i].chatimg){
-						document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.winlist[i].chatimg+"'>"+data.winlist[i].chatname+"</div>";
-					} else {
-						document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<div class='spacer'></div>"+data.winlist[i].chatname+"</div>";
-					}
+						if (data.winlist[i].chatimg){
+							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.winlist[i].chatimg+"'>"+formatWaitlistEntryText(data.winlist[i])+"</div>";
+						} else {
+							document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<div class='spacer'></div>"+formatWaitlistEntryText(data.winlist[i])+"</div>";
+						}
 					//console.log("added");
 				}
 				
@@ -830,15 +928,15 @@
 							var nodes = document.getElementById("waitlist").childNodes;
 							var choice = randomNumber(0,nodes.length+1);
 							if (choice == 0){
-								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>" + document.getElementById("waitlist").innerHTML;
+								document.getElementById("waitlist").innerHTML = "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+formatWaitlistEntryText(data.waitlist[i])+"</div>" + document.getElementById("waitlist").innerHTML;
 							} else {
-								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								nodes[choice-1].outerHTML = nodes[choice-1].outerHTML+"<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+formatWaitlistEntryText(data.waitlist[i])+"</div>";
 							}
 						} else {
 							if (data.waitlist[i].chatimg){
-								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+data.waitlist[i].chatname+"</div>";
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<img onerror='hideImage(this)' src='"+data.waitlist[i].chatimg+"'>"+formatWaitlistEntryText(data.waitlist[i])+"</div>";
 							} else {
-								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<div class='spacer'></div>"+data.waitlist[i].chatname+"</div>";
+								document.getElementById("waitlist").innerHTML += "<div class='guestListHolder "+classAdd+"'>"+extraData+"<div class='spacer'></div>"+formatWaitlistEntryText(data.waitlist[i])+"</div>";
 							}
 						}
 					}

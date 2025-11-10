@@ -7892,6 +7892,36 @@ var allowNewEntries = true;
 var waitListUsers = {};
 var waitlist = [];
 
+function escapeRegex(input = "") {
+	try {
+		return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	} catch (e) {
+		return input;
+	}
+}
+
+function extractWaitlistMessage(chatMessage = "", trigger = "") {
+	if (!chatMessage || typeof chatMessage !== "string") {
+		return "";
+	}
+	const trimmed = chatMessage.trim();
+	if (!trimmed) {
+		return "";
+	}
+	if (!trigger) {
+		const [, ...rest] = trimmed.split(/\s+/);
+		return rest.join(" ").trim();
+	}
+	try {
+		const pattern = new RegExp("^" + escapeRegex(trigger.trim()) + "\\s*", "i");
+		const result = trimmed.replace(pattern, "").trim();
+		return result;
+	} catch (e) {
+		const [, ...rest] = trimmed.split(/\s+/);
+		return rest.join(" ").trim();
+	}
+}
+
 function processWaitlist(data) {
 	try {
 		if (!allowNewEntries){
@@ -7907,6 +7937,10 @@ function processWaitlist(data) {
 		if (!data.chatmessage || !data.chatmessage.trim().toLowerCase().startsWith(trigger.toLowerCase())) {
 			return;
 		}
+
+		data.waitlistTrigger = trigger;
+		data.waitlistJoinMessage = extractWaitlistMessage(data.chatmessage, trigger);
+
 		var update = false;
 		if (waitListUsers[data.type]) {
 			if (!waitListUsers[data.type][data.chatname]) {
