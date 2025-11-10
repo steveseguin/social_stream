@@ -197,6 +197,44 @@ function handleSpotifyAuthResultFromBackground(result) {
 	const callbackInput = document.getElementById('spotifyCallbackInput');
 
 	console.log('Spotify auth result from background:', result);
+	if (result?.waitingForManualCallback || result?.waitingForCallback) {
+		spotifyAuthButton.disabled = true;
+		if (spotifyAuthButton.querySelector('span')) {
+			spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+		}
+
+		if (callbackDiv) {
+			const waitingForManual = !!result.waitingForManualCallback;
+			callbackDiv.style.display = waitingForManual ? 'block' : 'none';
+			if (!waitingForManual && callbackInput) {
+				callbackInput.value = '';
+			}
+		}
+
+		if (manualLinkContainer) {
+			if (result?.manualAuthUrl && result.waitingForManualCallback) {
+				manualLinkContainer.style.display = 'block';
+				if (manualLinkField) {
+					manualLinkField.value = result.manualAuthUrl;
+				}
+			} else {
+				manualLinkContainer.style.display = 'none';
+				if (manualLinkField) {
+					manualLinkField.value = '';
+				}
+			}
+		}
+
+		if (result?.message) {
+			console.log(result.message);
+			if (result.waitingForManualCallback) {
+				alert(result.message);
+			}
+		}
+
+		return;
+	}
+
 	spotifyAuthButton.disabled = false;
 	if (spotifyAuthButton.querySelector('span')) {
 		spotifyAuthButton.querySelector('span').textContent = result?.success

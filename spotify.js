@@ -18,6 +18,7 @@ class SpotifyIntegration {
 		this._isElectronEnv = undefined;
 		this._electronIpc = null;
 		this.identityAuthInFlight = false;
+		this.pendingElectronOAuth = null;
 	}
 
     async initialize(settings, callbacks = {}) {
@@ -266,6 +267,91 @@ class SpotifyIntegration {
         }
 
         throw lastError || new Error('No Spotify OAuth IPC handler registered');
+    }
+
+    launchElectronOAuthFlow({ authUrl, redirectUri, state, scopes }) {
+        const normalizedRedirect = this.normalizeLoopbackRedirectUri(redirectUri || this.electronRedirectUri);
+        const request = { authUrl, redirectUri: normalizedRedirect, state };
+        let electronPromise;
+
+        try {
+            electronPromise = this.invokeElectronOAuth(request);
+        } catch (error) {
+            throw error;
+        }
+
+        electronPromise
+            .then((result) => this.processElectronOAuthResult(result, {
+                state,
+                redirectUri: normalizedRedirect
+            }))
+            .catch((error) => this.handleElectronOAuthError(error, { state, scopes }));
+
+        this.pendingElectronOAuth = electronPromise;
+    }
+
+    async processElectronOAuthResult(result, { state, redirectUri }) {
+        if (!result) {
+            return;
+        }
+
+        if (result.code) {
+            try {
+                const success = await this.handleAuthCallback(
+                    result.code,
+                    result.state || state,
+                    this.normalizeLoopbackRedirectUri(result.redirectUri || redirectUri)
+                );
+
+                if (success) {
+                    this.notifySpotifyAuthResult({ success: true, message: 'Connected to Spotify!' });
+                } else {
+                    this.notifySpotifyAuthResult({
+                        success: false,
+                        error: 'Failed to process Spotify authorization response.'
+                    });
+                }
+            } catch (error) {
+                console.error('Spotify OAuth callback processing failed:', error);
+                this.notifySpotifyAuthResult({
+                    success: false,
+                    error: error?.message || 'Spotify authorization failed while processing the callback.'
+                });
+            }
+            return;
+        }
+
+        if (result.error) {
+            this.notifySpotifyAuthResult({ success: false, error: result.error });
+            return;
+        }
+
+        if (result.waitingForManualCallback || result.manualAuthUrl || result.waitingForCallback) {
+            this.notifySpotifyAuthResult({
+                success: false,
+                waitingForManualCallback: !!result.waitingForManualCallback,
+                waitingForCallback: !!result.waitingForCallback,
+                manualAuthUrl: result.manualAuthUrl,
+                message: result.message
+            });
+        }
+    }
+
+    handleElectronOAuthError(error, { state, scopes }) {
+        console.error('Electron OAuth error:', error);
+        const manualAuthUrl = this.buildAuthUrl({
+            redirectUri: this.browserRedirectUri,
+            scopes,
+            state
+        });
+
+        this.notifySpotifyAuthResult({
+            success: false,
+            waitingForManualCallback: true,
+            manualAuthUrl,
+            error: error?.message || error?.toString(),
+            message: this.describeElectronOAuthError(error)
+        });
     }
 
     async refreshAccessToken() {
@@ -555,31 +641,12 @@ class SpotifyIntegration {
                 }
                 
                 try {
-                    const result = await this.invokeElectronOAuth({ authUrl, redirectUri: preferredRedirectUri, state });
-                    
-                    if (result && result.code) {
-                        console.log('OAuth code received from Electron IPC handler');
-                        const success = await this.handleAuthCallback(
-                            result.code,
-                            result.state,
-                            this.normalizeLoopbackRedirectUri(result.redirectUri || preferredRedirectUri)
-                        );
-                        
-                        if (success) {
-                            console.log('OAuth callback processed successfully');
-                            return { success: true, message: 'Connected to Spotify!' };
-                        } else {
-                            throw new Error('Failed to process OAuth callback');
-                        }
-                    } else if (result && result.error) {
-                        console.error('OAuth error from Electron:', result.error);
-                        throw new Error(`OAuth failed: ${result.error}`);
-                    } else if (result && (result.waitingForCallback || result.waitingForManualCallback)) {
-                        return result;
-                    } else {
-                        console.log('OAuth flow exited without a result');
-                        return { success: false, error: 'Authentication cancelled' };
-                    }
+                    this.launchElectronOAuthFlow({
+                        authUrl,
+                        redirectUri: preferredRedirectUri,
+                        state,
+                        scopes
+                    });
                 } catch (electronError) {
                     console.error('Electron OAuth error:', electronError);
                     const manualAuthUrl = this.buildAuthUrl({ redirectUri: this.browserRedirectUri, scopes, state });
@@ -591,6 +658,12 @@ class SpotifyIntegration {
                         manualAuthUrl
                     };
                 }
+
+                return {
+                    success: false,
+                    waitingForCallback: true,
+                    message: 'Please finish the Spotify login in the newly opened browser window.'
+                };
 			} else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
 				chrome.tabs.create({ url: authUrl });
 				fallbackStatus = {
