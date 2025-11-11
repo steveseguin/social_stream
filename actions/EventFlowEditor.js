@@ -2467,17 +2467,36 @@ class EventFlowEditor {
 			case 'setProperty': {
 				const commonProperties = [
 					{ value: 'custom', label: '-- Custom Property --' },
+					// Styling
 					{ value: 'nameColor', label: 'Name Color', type: 'color' },
 					{ value: 'backgroundColor', label: 'Background Color', type: 'color' },
 					{ value: 'textColor', label: 'Text Color', type: 'color' },
+					// Message basics
 					{ value: 'chatmessage', label: 'Chat Message', type: 'text' },
-					{ value: 'chatname', label: 'Username', type: 'text' },
-					{ value: 'chatimg', label: 'Avatar URL', type: 'url' },
+					{ value: 'chatname', label: 'Username (chatname)', type: 'text' },
+					{ value: 'type', label: 'Source Type (platform)', type: 'text' },
+					{ value: 'sourceName', label: 'Source / Channel Name', type: 'text' },
+					{ value: 'userid', label: 'User ID', type: 'text' },
+					// Media
+					{ value: 'chatimg', label: 'Avatar URL (chatimg)', type: 'url' },
+					{ value: 'contentimg', label: 'Content Image / Video (contentimg)', type: 'url' },
 					{ value: 'sourceImg', label: 'Source Icon URL', type: 'url' },
+					// Event & metadata
+					{ value: 'title', label: 'Event Title', type: 'text' },
+					{ value: 'subtitle', label: 'Event Subtitle', type: 'text' },
+					{ value: 'membership', label: 'Membership Details', type: 'text' },
+					{ value: 'hasDonation', label: 'Donation Amount (hasDonation)', type: 'text' },
+					{ value: 'event', label: 'Event Flag / Name', type: 'text' },
+					// Status flags
 					{ value: 'mod', label: 'Is Moderator', type: 'boolean' },
 					{ value: 'vip', label: 'Is VIP', type: 'boolean' },
 					{ value: 'verified', label: 'Is Verified', type: 'boolean' },
-					{ value: 'bot', label: 'Is Bot', type: 'boolean' }
+					{ value: 'bot', label: 'Is Bot', type: 'boolean' },
+					{ value: 'host', label: 'Is Host', type: 'boolean' },
+					{ value: 'admin', label: 'Is Admin', type: 'boolean' },
+					{ value: 'question', label: 'Is Question', type: 'boolean' },
+					{ value: 'private', label: 'Is Private / DM', type: 'boolean' },
+					{ value: 'textonly', label: 'Text-only Message', type: 'boolean' }
 				];
 				
 				const selectedProp = commonProperties.find(p => p.value === node.config.property);
@@ -2576,14 +2595,19 @@ class EventFlowEditor {
 							• VIPs → nameColor: #FF69B4<br>
 							• Donors → textColor: #00FF00<br><br>
 							
-							<strong>Dynamic Values:</strong><br>
-							• Property: chatimg<br>
-							• Value: https://api.example.com/avatar/{username}.png<br><br>
-							
-							<strong>Conditional Styling:</strong><br>
-							• Use with "From Source" trigger<br>
-							• Set different colors per platform
-						</div>
+						<strong>Dynamic Values:</strong><br>
+						• Property: chatimg<br>
+						• Value: https://api.example.com/avatar/{username}.png<br><br>
+						
+						<strong>Event Metadata:</strong><br>
+						• Property: event → Value: raid_start<br>
+						• Property: membership → Value: gifted-5<br>
+						• Property: contentimg → Value: https://cdn.example.com/alerts/{userid}.png<br><br>
+						
+						<strong>Conditional Styling:</strong><br>
+						• Use with "From Source" trigger<br>
+						• Set different colors per platform
+					</div>
 					</details>`;
 				break;
 			}
