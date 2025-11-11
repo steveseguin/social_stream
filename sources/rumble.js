@@ -75,6 +75,32 @@
 	
 	function processMessage(ele){
 		
+		var name="";
+		if (ele.querySelector('.chat-history--username, [data-js="raid_owner_name"]')){
+		  if (ele.parentNode.id !== "chat-history-list"){return;}
+		  name = ele.querySelector('.chat-history--username, [data-js="raid_owner_name"]').innerText;
+		  if (name){
+			name = name.trim();
+			name = escapeHtml(name);
+		  }
+		  
+		} else if (ele.querySelector('.chat-history--rant-username')){
+		  name = ele.querySelector('.chat-history--rant-username').innerText;
+		  if (name){
+			name = name.trim();
+			name = escapeHtml(name);
+		  }
+		} else {
+			return;
+		}
+		
+		var nameColor = "";
+		try {
+			nameColor = ele.querySelector('.chat-history--username[style], .chat-history--username [style]').style.color || "";
+		}catch(e){
+			
+		}
+		
 		var eventType = "";
 		if (ele.classList.contains("chat-history__incoming-raid-container")){
 			eventType = "raid";
@@ -88,21 +114,6 @@
 			} catch(e){
 				chatimg = "";
 			}
-		}
-		
-		var name="";
-		if (ele.querySelector('.chat-history--username, [data-js="raid_owner_name"], .chat-history--rant-username')){
-		  name = ele.querySelector('.chat-history--username, [data-js="raid_owner_name"], .chat-history--rant-username').innerText;
-		  if (name){
-			name = name.trim();
-			name = escapeHtml(name);
-		  }
-		} 
-		var nameColor = "";
-		try {
-			nameColor = ele.querySelector('.chat-history--username[style], .chat-history--username [style]').style.color || "";
-		}catch(e){
-			
 		}
 
 		var msg = "";
