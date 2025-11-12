@@ -28,7 +28,8 @@
                     
                     <div class="landing-description">
                         <p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
-                        <p><strong>Note:</strong> Events related to subscriptions, memberships, and followers are only available for your own channel. Chat functionality will work across most public channels.</p>
+                        <p><strong>Note:</strong> The YouTube Data API only provides aggregate subscriber totals (polled roughly every 30 minutes). It does not emit real-time “new follower” events, so you will not see Twitch-style follow pings here.</p>
+                        <p>Membership-related events and subscriber counts remain limited to channels you own; chat functionality will work across most public channels.</p>
                     </div>
 
                     <details id="credentials-details" class="credentials-details">
@@ -208,8 +209,15 @@ try {
     var nextPageToken = null;
     var isPolling = false;
     var userDetails = {};
-    var currentStream = null;
+	var currentStream = null;
 	var messageQueue = [];
+	var queueDrainTimeout = null;
+    var pendingRelayMessages = [];
+    const MAX_CACHED_CHAT_MESSAGES = 500;
+    var messageContextCache = new Map();
+    var messageCacheOrder = [];
+    var channelNameCache = new Map();
+	var emojiAssetsReady = false;
 	var displayInterval;
 	var quickPollCount = 0
     var urlParams = new URLSearchParams(window.location.search);
@@ -236,6 +244,7 @@ try {
 	var lastVisibilityChange = Date.now();
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
+	var tokenRefreshPromise = null;
 	
 
 	var emojiData = [];
@@ -250,6 +259,30 @@ try {
 	var SEVENTV = false;
 	var FFZ = false;
 	var EMOTELIST = false;
+
+	function flushPendingRelayMessages() {
+		if (!pendingRelayMessages.length || !liveChatId) {
+			pendingRelayMessages.length = 0;
+			return;
+		}
+		var pending = pendingRelayMessages.slice();
+		pendingRelayMessages.length = 0;
+		pending.forEach(function(message) {
+			try {
+				processMessage(message);
+			} catch (error) {
+				console.error('Error processing deferred message:', error);
+			}
+		});
+	}
+
+	function markEmojiAssetsReady() {
+		if (emojiAssetsReady) {
+			return;
+		}
+		emojiAssetsReady = true;
+		flushPendingRelayMessages();
+	}
 
 	// Request emotes from extension
 	function requestEmotesFromExtension() {
@@ -312,11 +345,14 @@ try {
 		  console.warn('Skipping emoji with incomplete data:', emoji);
 		  return;
 		}
+
+		const altText = buildEmojiAltText(emoji);
 		
 		// Map the Unicode emoji with its data
 		unicodeMap.set(emoji.emojiId, {
 		  url: emoji.image.thumbnails[0].url,
-		  id: emoji.emojiId
+		  id: emoji.emojiId,
+		  alt: altText
 		});
 		
 		// Map all shortcuts to a separate map
@@ -324,29 +360,117 @@ try {
 		  emoji.shortcuts.forEach(shortcut => {
 			shortcutMap.set(shortcut, {
 			  url: emoji.image.thumbnails[0].url,
-			  id: emoji.emojiId
+			  id: emoji.emojiId,
+			  alt: altText
 			});
 		  });
 		}
 	  });
 	}
-	function setTrackedTimeout(callback, delay, isBackground = false) {
-		const timeoutHandle = setTimeout(() => {
-			activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
-			callback();
-		}, delay);
-		activeTimeouts.add(timeoutHandle);
-		return timeoutHandle;
+function setTrackedTimeout(callback, delay, isBackground = false) {
+	const timeoutHandle = setTimeout(() => {
+		activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
+		callback();
+	}, delay);
+	activeTimeouts.add(timeoutHandle);
+	return timeoutHandle;
+}
+
+function isElectronEnvironment() {
+	try {
+		if (window.electron && window.electron.ipcRenderer) return true;
+		if (navigator.userAgent && navigator.userAgent.indexOf('Electron') !== -1) return true;
+	} catch (_) {}
+	return false;
+}
+
+let keepAliveInitialized = false;
+function enableBackgroundKeepAlive() {
+	if (keepAliveInitialized) return;
+	keepAliveInitialized = true;
+
+	try {
+		const receiveChannelCallback = function (event) {
+			const channel = event.channel;
+			if (!channel) return;
+			channel.onmessage = function () {};
+			channel.onopen = function () {};
+			channel.onclose = function () {};
+			setInterval(function () {
+				try { channel.send("KEEPALIVE"); } catch (_) {}
+			}, 1000);
+		};
+		const errorHandle = function () {};
+		const localConnection = new RTCPeerConnection();
+		const remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function () {
+			try { localConnection.sendChannel.send("CONNECTED"); } catch (_) {}
+		};
+		localConnection.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => localConnection.setRemoteDescription(remoteConnection.localDescription))
+			.then(() => {
+				console.log("YouTube keep-alive channel established");
+			})
+			.catch(errorHandle);
+	} catch (e) {
+		console.log("YouTube keep-alive setup failed:", e);
 	}
+
+	const preventBackgroundThrottling = function () {
+		try {
+			window.onblur = null;
+			window.blurred = false;
+			document.hasFocus = () => true;
+			Object.defineProperties(document, {
+				hidden: { value: false, configurable: true },
+				mozHidden: { value: false, configurable: true },
+				msHidden: { value: false, configurable: true },
+				webkitHidden: { value: false, configurable: true },
+				visibilityState: {
+					get: () => "visible",
+					configurable: true
+				}
+			});
+		} catch (_) {}
+	};
+
+	const visibilityEvents = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"mozvisibilitychange",
+		"msvisibilitychange",
+		"blur"
+	];
+	visibilityEvents.forEach(eventName => {
+		window.addEventListener(eventName, (event) => {
+			try {
+				event.stopImmediatePropagation();
+				event.preventDefault();
+			} catch (_) {}
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
+}
 	function processCustomEmoteData(data) {
 	  customEmoteData = data;
 	  // Map custom emotes by their name (only in shortcut map)
 	  data.forEach(emote => {
 		const emoteName = `:${emote[0]}:`;
+		const customLabel = getAsciiLabel(emote[0]) || 'custom emoji';
 		shortcutMap.set(emoteName, {
 		  url: emote[1],
 		  id: "", // Empty alt for custom emotes
-		  isCustom: true
+		  isCustom: true,
+		  alt: `custom ${customLabel}`
 		});
 	  });
 	}
@@ -391,6 +515,226 @@ try {
 		return payload;
 	}
 
+	function rememberChannelName(channelId, displayName) {
+		if (!channelId || !displayName) {
+			return;
+		}
+		channelNameCache.set(String(channelId), displayName);
+	}
+
+	function lookupChannelName(channelId) {
+		if (!channelId) {
+			return null;
+		}
+		return channelNameCache.get(String(channelId)) || null;
+	}
+
+	function stripHtmlContent(value) {
+		if (!value) {
+			return '';
+		}
+		const temp = document.createElement('div');
+		temp.innerHTML = value;
+		return (temp.textContent || temp.innerText || '').trim();
+	}
+
+	function truncatePreviewText(text, maxLength) {
+		if (!text || typeof text !== 'string') {
+			return '';
+		}
+		const normalized = text.trim();
+		if (normalized.length <= maxLength) {
+			return normalized;
+		}
+		return normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd() + '…';
+	}
+
+	function rememberChatMessage(messageId, context) {
+		if (messageId === undefined || messageId === null) {
+			return;
+		}
+		const id = String(messageId);
+		if (messageContextCache.has(id)) {
+			messageContextCache.set(id, context);
+			const existingIndex = messageCacheOrder.indexOf(id);
+			if (existingIndex > -1) {
+				messageCacheOrder.splice(existingIndex, 1);
+			}
+		} else if (messageCacheOrder.length >= MAX_CACHED_CHAT_MESSAGES) {
+			const expired = messageCacheOrder.shift();
+			if (expired !== undefined) {
+				messageContextCache.delete(expired);
+			}
+		}
+		messageCacheOrder.push(id);
+		messageContextCache.set(id, context);
+	}
+
+	function lookupChatMessage(messageId) {
+		if (messageId === undefined || messageId === null) {
+			return null;
+		}
+		return messageContextCache.get(String(messageId)) || null;
+	}
+
+	// Treat the presence of the excludeReplyingTo key as an opt-out toggle, regardless of its stored value.
+	function repliesAreExcluded() {
+		return Object.prototype.hasOwnProperty.call(settings, 'excludeReplyingTo');
+	}
+
+	function resolveReplyContext(messageData) {
+		if (!messageData) {
+			return null;
+		}
+
+		const explicitMeta =
+			messageData.meta &&
+			typeof messageData.meta === 'object' &&
+			messageData.meta.reply &&
+			typeof messageData.meta.reply === 'object'
+				? messageData.meta.reply
+				: null;
+		const rawReplyDetails = messageData.replyDetails || null;
+
+		const candidateIds = [];
+		const candidateChannelIds = [];
+		const rawSources = [];
+
+		if (messageData.replyMessageId) {
+			candidateIds.push(messageData.replyMessageId);
+		}
+		if (messageData.replyToId) {
+			candidateIds.push(messageData.replyToId);
+		}
+		if (messageData.messageReplyId) {
+			candidateIds.push(messageData.messageReplyId);
+		}
+		if (rawReplyDetails && rawReplyDetails.messageId) {
+			candidateIds.push(rawReplyDetails.messageId);
+		}
+		if (explicitMeta && explicitMeta.messageId) {
+			candidateIds.push(explicitMeta.messageId);
+		}
+
+		if (messageData.replyChannelId) {
+			candidateChannelIds.push(messageData.replyChannelId);
+		}
+		if (rawReplyDetails && rawReplyDetails.channelId) {
+			candidateChannelIds.push(rawReplyDetails.channelId);
+		}
+		if (explicitMeta && explicitMeta.channelId) {
+			candidateChannelIds.push(explicitMeta.channelId);
+		}
+
+		if (rawReplyDetails && rawReplyDetails.raw) {
+			rawSources.push(rawReplyDetails.raw);
+		}
+		if (explicitMeta && explicitMeta.raw) {
+			rawSources.push(explicitMeta.raw);
+		}
+
+		let cachedContext = null;
+		let resolvedMessageId = null;
+
+		for (const id of candidateIds) {
+			if (id === undefined || id === null || id === '') {
+				continue;
+			}
+			const context = lookupChatMessage(id);
+			if (context) {
+				cachedContext = context;
+				resolvedMessageId = String(id);
+				break;
+			}
+		}
+
+		let author =
+			(cachedContext && cachedContext.authorName) ||
+			(explicitMeta && typeof explicitMeta.author === 'string' && explicitMeta.author) ||
+			null;
+
+		if ((!author || !author.trim()) && candidateChannelIds.length) {
+			for (const candidateChannelId of candidateChannelIds) {
+				if (candidateChannelId === undefined || candidateChannelId === null || candidateChannelId === '') {
+					continue;
+				}
+				const cachedName = lookupChannelName(candidateChannelId);
+				if (cachedName) {
+					author = cachedName;
+					break;
+				}
+			}
+		}
+
+		let originalText = '';
+		if (cachedContext && typeof cachedContext.plainText === 'string') {
+			originalText = cachedContext.plainText;
+		} else if (explicitMeta && typeof explicitMeta.text === 'string') {
+			originalText = explicitMeta.text;
+		} else if (typeof messageData.replyText === 'string') {
+			originalText = messageData.replyText;
+		}
+		originalText = typeof originalText === 'string' ? originalText.trim() : '';
+		if (!originalText && cachedContext && cachedContext.html) {
+			originalText = stripHtmlContent(cachedContext.html);
+		}
+
+		const trimmedAuthor = author ? author.trim() : '';
+		const trimmedText = originalText ? originalText.replace(/\s+/g, ' ').trim() : '';
+
+		const labelParts = [];
+		if (trimmedAuthor) {
+			labelParts.push(trimmedAuthor);
+		}
+		if (trimmedText) {
+			labelParts.push(truncatePreviewText(trimmedText, 140));
+		}
+
+		if (!labelParts.length && !candidateIds.length && !candidateChannelIds.length) {
+			return null;
+		}
+
+		let label = labelParts.join(': ');
+		if (!label) {
+			if (trimmedAuthor) {
+				label = `${getTranslation("replying-to", "Replying to")} ${trimmedAuthor}`;
+			} else {
+				label = getTranslation("replying-to", "Replying to");
+			}
+		}
+
+		const meta = {
+			messageId: resolvedMessageId || (candidateIds.length ? String(candidateIds[0]) : null),
+			channelId: candidateChannelIds.length ? String(candidateChannelIds[0]) : null,
+			commentId:
+				(rawReplyDetails && rawReplyDetails.commentId) ||
+				(explicitMeta && explicitMeta.commentId) ||
+				null,
+			author: trimmedAuthor || null,
+			text: trimmedText || null
+		};
+
+		if (!meta.channelId && cachedContext && cachedContext.channelId) {
+			meta.channelId = String(cachedContext.channelId);
+		}
+
+		if (rawSources.length) {
+			meta.raw = rawSources.length === 1 ? rawSources[0] : rawSources;
+		} else if (rawReplyDetails && !meta.raw) {
+			meta.raw = rawReplyDetails;
+		}
+
+		const replyHtml = cachedContext ? cachedContext.html : null;
+		const replyPlain = trimmedText || (replyHtml ? stripHtmlContent(replyHtml) : '');
+
+		return {
+			label,
+			replyHtml,
+			replyPlain,
+			meta
+		};
+	}
+
 	function resolveThumbnailUrl(thumbnails) {
 		if (!thumbnails) {
 			return "";
@@ -427,6 +771,79 @@ try {
 		}
 	}
 	
+	function strictEscapeHtml(value) {
+		if (value === undefined || value === null) {
+			return '';
+		}
+		return String(value).replace(/[&<>"']/g, function(m) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#039;'
+			}[m];
+		});
+	}
+
+	function describeEmojiCodepoints(emojiString) {
+		if (!emojiString) {
+			return 'emoji';
+		}
+		try {
+			const codepoints = Array.from(emojiString).map(char => {
+				const code = char.codePointAt(0);
+				return code !== undefined ? `U+${code.toString(16).toUpperCase()}` : '';
+			}).filter(Boolean);
+			return codepoints.length ? `emoji ${codepoints.join(' ')}` : 'emoji';
+		} catch (e) {
+			return 'emoji';
+		}
+	}
+
+	function getAsciiLabel(value) {
+		if (!value || typeof value !== 'string') {
+			return '';
+		}
+		// Strip non-printable or non-ASCII characters to avoid reintroducing emoji glyphs
+		return value.replace(/[^\x20-\x7E]/g, '').trim();
+	}
+
+	function buildEmojiAltText(emoji) {
+		if (!emoji) {
+			return 'emoji';
+		}
+		const shortcutLabel = Array.isArray(emoji.shortcuts)
+			? emoji.shortcuts.map(getAsciiLabel).find(Boolean)
+			: '';
+		if (shortcutLabel) {
+			return shortcutLabel;
+		}
+		const searchTermLabel = Array.isArray(emoji.searchTerms)
+			? emoji.searchTerms.map(getAsciiLabel).find(Boolean)
+			: '';
+		if (searchTermLabel) {
+			return searchTermLabel;
+		}
+		return describeEmojiCodepoints(emoji.emojiId || '');
+	}
+
+	function resolveEmojiAltAttribute(emojiInfo, fallback) {
+		const candidate =
+			(emojiInfo && getAsciiLabel(emojiInfo.alt)) ||
+			(emojiInfo && emojiInfo.id ? describeEmojiCodepoints(emojiInfo.id) : '') ||
+			getAsciiLabel(fallback) ||
+			'emoji';
+		return strictEscapeHtml(candidate);
+	}
+
+	function shouldStickToBottom(element, threshold = 120) {
+		if (!element) {
+			return false;
+		}
+		return (element.scrollHeight - element.scrollTop - element.clientHeight) <= threshold;
+	}
+	
 	function replaceEmotesWithImages(text) {
 		if (!text || typeof text !== 'string') {
 			return text || '';
@@ -440,7 +857,7 @@ try {
 			const emote = EMOTELIST[emoteMatch];
 			if (emote) {
 				replacedCount++;
-				const escapedMatch = escapeHtml(emoteMatch); // should I be escaping this? It might be wastful CPU?
+				const escapedMatch = strictEscapeHtml(emoteMatch);
 				const isZeroWidth = typeof emote !== "string" && emote.zw;
 				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
 			}
@@ -538,19 +955,19 @@ try {
 		return [];
 	  });
 	  
-	  promises.push(customEmotePromise.then(data => {
-		processCustomEmoteData(data);
-		return data;
-	  }));
-
-	  return Promise.all(promises);
-	}
+		  promises.push(customEmotePromise.then(data => {
+			processCustomEmoteData(data);
+			return data;
+		  }));
+	
+		  return Promise.all(promises).finally(markEmojiAssetsReady);
+		}
 
 	function replaceEmojis(message) {
 		if (!message || typeof message !== 'string') {
 			return message || '';
 		}
-		let result = message;
+	let result = strictEscapeHtml(message);
 		
 		// Process BTTV/7TV/FFZ emotes first
 		if (EMOTELIST) {
@@ -569,7 +986,7 @@ try {
 				if (emojiInfo.isCustom) return '';
 				return emojiInfo.id;
 			} else {
-				const altText = emojiInfo.isCustom ? "" : emojiInfo.id;
+				const altText = resolveEmojiAltAttribute(emojiInfo, match);
 				return `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
 			}
 		});
@@ -599,9 +1016,9 @@ try {
 					  `/${baseCode}_${skinToneCode}/`
 					);
 					
-					// Properly escape the match for HTML attributes
-					const escapedMatch = match.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-					return `<img class="regular-emote" src="${combinedUrl}" alt="${escapedMatch}" title="${escapedMatch}" />`;
+					const baseInfo = unicodeMap.get(baseEmoji);
+					const altText = resolveEmojiAltAttribute(baseInfo, describeEmojiCodepoints(match));
+					return `<img class="regular-emote" src="${combinedUrl}" alt="${altText}" title="${altText}" />`;
 				  }
 				}
 				
@@ -615,9 +1032,8 @@ try {
 			// Then handle remaining standalone Unicode emoji characters
 			for (const [unicodeChar, emojiInfo] of unicodeMap.entries()) {
 			  if (result.includes(unicodeChar)) {
-				// Properly escape the unicode character for HTML attributes
-				const escapedChar = unicodeChar.replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-				const imgTag = `<img src="${emojiInfo.url}" alt="${escapedChar}" class="chat-emoji" title="${escapedChar}" />`;
+				const altText = resolveEmojiAltAttribute(emojiInfo, describeEmojiCodepoints(unicodeChar));
+				const imgTag = `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
 				result = result.replace(new RegExp(unicodeChar, 'g'), imgTag);
 			  }
 			}
@@ -628,16 +1044,17 @@ try {
 	function getStoredToken() {
 		const storedToken = localStorage.getItem('youtubeOAuthToken');
 		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
-		const refreshToken = localStorage.getItem('youtubeRefreshToken');
-		if (storedToken && tokenExpiry && new Date().getTime() < parseInt(tokenExpiry)) {
+		const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
+		const now = Date.now();
+		if (storedToken && tokenExpiry && now < parseInt(tokenExpiry, 10)) {
 			return storedToken;
-		} else if (refreshToken) {
-			refreshAccessToken(refreshToken);
-			return null;
+		}
+		if (storedRefreshToken) {
+			refreshToken();
 		} else {
 			clearStoredToken();
-			return null;
 		}
+		return null;
 	}
 	function setStoredToken(token, expiresIn = 3600, refresh = null) {
 		const expiryTime = new Date().getTime() + (expiresIn * 1000);
@@ -717,21 +1134,45 @@ try {
 				console.log(`Trimmed message queue to 200 messages (was ${messageQueue.length})`);
 			}
 			
-			// Cancel any pending fetch if we're going to background
+			// Keep next poll scheduled while hidden so we don't stall
 			if (fetchTimeout && !isPolling) {
-				if (typeof fetchTimeout.clear === 'function') {
-					fetchTimeout.clear();
-				} else {
-					clearTimeout(fetchTimeout);
-				}
-				fetchTimeout = null;
+				const elapsed = Date.now() - lastPollingTime;
+				const baseInterval = youtubeRecommendedInterval || 5000;
+				const remaining = Math.max(0, baseInterval - elapsed);
+				try {
+					if (typeof fetchTimeout.clear === 'function') {
+						fetchTimeout.clear();
+					} else {
+						clearTimeout(fetchTimeout);
+					}
+				} catch (_) {}
+				fetchTimeout = setTrackedTimeout(fetchChatMessages, remaining || baseInterval, true);
 			}
 			
-			if (!foregroundPollingInterval && pollInterval) {
-				foregroundPollingInterval = pollInterval;
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+				queueDrainTimeout = null;
 			}
 			
+		if (!foregroundPollingInterval && pollInterval) {
+			foregroundPollingInterval = pollInterval;
 		}
+		
+		}
+	}
+	function scheduleAuthRetry(delayOverride) {
+		const resumeDelay = typeof delayOverride === 'number'
+			? delayOverride
+			: Math.max(2000, youtubeRecommendedInterval || 5000);
+		if (fetchTimeout) {
+			try {
+				clearTimeout(fetchTimeout);
+			} catch (_) {}
+			fetchTimeout = null;
+		}
+		console.log(`Waiting ${resumeDelay}ms for token refresh before retrying polling`);
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, resumeDelay, !isPageVisible);
+		return resumeDelay;
 	}
 	async function fetchChatMessages() {
 		if (!liveChatId || isPolling) return;
@@ -749,7 +1190,10 @@ try {
 		const token = getStoredToken();
 		if (!token) {
 			isPolling = false;
-			refreshToken();
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				scheduleAuthRetry();
+			}
 			return;
 		}
 		
@@ -768,6 +1212,7 @@ try {
 				if (status === 401) {
 					isPolling = false;
 					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+					scheduleAuthRetry();
 					return;
 				} else if (status === 403) {
 					// Check if it's a quota error
@@ -844,20 +1289,35 @@ try {
 											  item.snippet.type === 'superStickerEvent';
 						
 						// Process regular messages (skip if it's a special event)
-						if (!isBacklogMessage && !isSpecialEvent) {
-							queueMessage({
-								authorName: item.authorDetails.displayName.replace(/^@/, ''),
-								message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
-								profileImageUrl: item.authorDetails.profileImageUrl,
-								isChatOwner: item.authorDetails.isChatOwner,
-								isChatSponsor: item.authorDetails.isChatSponsor,
-								isChatModerator: item.authorDetails.isChatModerator,
-								authorChannelId: item.authorDetails.channelId,
-								publishedAt,
-								skipEvent: isBacklogMessage,
-								isMembershipMessage: false // Regular messages are not membership messages
-							});
-						}
+							if (!isBacklogMessage && !isSpecialEvent) {
+								const textMessageDetails = item.snippet.textMessageDetails || {};
+								const messageReplyDetails = textMessageDetails.messageReplyDetails || null;
+								const normalizedReplyDetails = messageReplyDetails
+									? {
+										messageId: messageReplyDetails.messageId || null,
+										channelId: messageReplyDetails.channelId || null,
+										commentId: messageReplyDetails.commentId || null,
+										raw: messageReplyDetails
+									}
+									: null;
+								queueMessage({
+									messageId: item.id,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
+									plainTextMessage: textMessageDetails.messageText || '',
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									isChatOwner: item.authorDetails.isChatOwner,
+									isChatSponsor: item.authorDetails.isChatSponsor,
+									isChatModerator: item.authorDetails.isChatModerator,
+									authorChannelId: item.authorDetails.channelId,
+									publishedAt,
+									skipEvent: isBacklogMessage,
+									isMembershipMessage: false, // Regular messages are not membership messages
+									replyDetails: normalizedReplyDetails,
+									replyMessageId: normalizedReplyDetails ? normalizedReplyDetails.messageId : null,
+									replyChannelId: normalizedReplyDetails ? normalizedReplyDetails.channelId : null
+								});
+							}
 						
 						// Process special message types
 						
@@ -970,14 +1430,16 @@ try {
 								if (membershipMessage) {
 									const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
 										// This is a monthly featured message from a member
-										const membershipPayload = {
-											authorName: item.authorDetails.displayName.replace(/^@/, ''),
-											message: membershipMessage,
-											profileImageUrl: item.authorDetails.profileImageUrl,
-											isChatOwner: item.authorDetails.isChatOwner,
-											isChatSponsor: item.authorDetails.isChatSponsor,
-											isChatModerator: item.authorDetails.isChatModerator,
-											authorChannelId: item.authorDetails.channelId,
+											const membershipPayload = {
+												messageId: item.id,
+												authorName: item.authorDetails.displayName.replace(/^@/, ''),
+												message: membershipMessage,
+												plainTextMessage: membershipMessage,
+												profileImageUrl: item.authorDetails.profileImageUrl,
+												isChatOwner: item.authorDetails.isChatOwner,
+												isChatSponsor: item.authorDetails.isChatSponsor,
+												isChatModerator: item.authorDetails.isChatModerator,
+												authorChannelId: item.authorDetails.channelId,
 											publishedAt,
 											skipEvent: isBacklogMessage,
 											isMembershipMessage: true // This is a special membership message
@@ -987,11 +1449,6 @@ try {
 												membershipDetails: membershipDetailsCopy,
 												snippetType: item.snippet.type
 											};
-										}
-										if (membershipEventInfo.mapping) {
-											membershipPayload.meta = membershipPayload.meta || {};
-											membershipPayload.meta.eventTypeMapping = membershipEventInfo.mapping;
-											membershipPayload.meta.derivedEventType = membershipEventInfo.eventType;
 										}
 										queueMessage(membershipPayload);
 									} else {
@@ -1003,15 +1460,14 @@ try {
 										
 										// New membership, renewal, or upgrade without a message
 										processMembership({
-											authorName: item.authorDetails.displayName.replace(/^@/, ''),
-											level: item.snippet.membershipDetails.memberLevelName,
-											profileImageUrl: item.authorDetails.profileImageUrl,
-											authorChannelId: item.authorDetails.channelId,
-											badges: membershipBadges,
-											membershipDetails: item.snippet.membershipDetails,
-											rawSnippetType: item.snippet.type,
-											eventType: membershipEventInfo.eventType,
-											eventTypeMapping: membershipEventInfo.mapping
+												authorName: item.authorDetails.displayName.replace(/^@/, ''),
+												level: item.snippet.membershipDetails.memberLevelName,
+												profileImageUrl: item.authorDetails.profileImageUrl,
+												authorChannelId: item.authorDetails.channelId,
+												badges: membershipBadges,
+												membershipDetails: item.snippet.membershipDetails,
+												rawSnippetType: item.snippet.type,
+												eventType: membershipEventInfo.eventType
 										});
 									}
 								}
@@ -1071,19 +1527,24 @@ try {
 			// Schedule next poll
 			fetchTimeout = setTrackedTimeout(fetchChatMessages, nextPollInterval, !isPageVisible);
 			
-		} catch (error) {
-			console.error('Error fetching chat messages:', error);
-			// Use exponential backoff for errors
-			const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
-			quickPollCount++;
-			
-			// Clear any existing timeout before setting new one
-			if (fetchTimeout) {
-				clearTimeout(fetchTimeout);
-				fetchTimeout = null;
-			}
-			
-			fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
+	} catch (error) {
+		if (error && error.ytReason === 'liveChatEnded') {
+			console.log('YouTube reported live chat ended; stopping polling.');
+			handleLiveChatEnded();
+			return;
+		}
+		console.error('Error fetching chat messages:', error);
+		// Use exponential backoff for errors
+		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
+		quickPollCount++;
+		
+		// Clear any existing timeout before setting new one
+		if (fetchTimeout) {
+			clearTimeout(fetchTimeout);
+			fetchTimeout = null;
+		}
+		
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
 		} finally {
 			isPolling = false;
 		}
@@ -1103,6 +1564,11 @@ try {
 							const userImage = document.createElement('img');
 							userImage.src = userItem.snippet.thumbnails.default.url;
 							userImage.className = 'header-avatar';
+							userImage.alt = username || 'YouTube user avatar';
+							userImage.onerror = function handleAvatarError() {
+								this.onerror = null; // prevent infinite loops
+								this.style.display = 'none';
+							};
 							avatarContainer.appendChild(userImage);
 						}
 					}
@@ -1169,14 +1635,25 @@ try {
 		}
 	}
 	async function refreshToken() {
-		console.log('Attempting to refresh token or re-authenticate.');
-        const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
-        if (storedRefreshToken) {
-            const refreshed = await refreshAccessToken(storedRefreshToken);
-            if (refreshed) return;
-        }
-		clearStoredToken();
-		showAuthButton();
+		if (tokenRefreshPromise) {
+			return tokenRefreshPromise;
+		}
+		tokenRefreshPromise = (async () => {
+			console.log('Attempting to refresh token or re-authenticate.');
+			const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
+			if (storedRefreshToken) {
+				const refreshed = await refreshAccessToken(storedRefreshToken);
+				if (refreshed) {
+					return true;
+				}
+			}
+			clearStoredToken();
+			showAuthButton();
+			return false;
+		})().finally(() => {
+			tokenRefreshPromise = null;
+		});
+		return tokenRefreshPromise;
 	}
 	function authUrl() {
 		const state = nonce(15);
@@ -1490,22 +1967,31 @@ try {
 	  `;
 	  updatePollSpinner(5000);
 	}
-	function queueMessage(messageData) {
-		// Always relay messages immediately
-		processMessage(messageData);
-
-		// If page isn't visible, queue for later DOM rendering
-		if (!isPageVisible) {
-			if (messageQueue.length >= 200) {
-				messageQueue.splice(0, messageQueue.length - 199);
+		function queueMessage(messageData) {
+			if (emojiAssetsReady) {
+				processMessage(messageData);
+			} else {
+				pendingRelayMessages.push(messageData);
 			}
-			messageQueue.push(messageData);
+
+			// If page isn't visible, queue for later DOM rendering
+			if (!isPageVisible) {
+				if (messageQueue.length >= 200) {
+					messageQueue.splice(0, messageQueue.length - 199);
+				}
+				messageQueue.push(messageData);
+			}
 		}
-	}
 	
 	function processQueuedMessages() {
-		// Process all queued messages when page becomes visible
-		if (messageQueue.length === 0) return;
+		// Only process queued messages while page is visible
+		if (!isPageVisible || messageQueue.length === 0) {
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+				queueDrainTimeout = null;
+			}
+			return;
+		}
 		
 		// Process messages in batches to avoid blocking UI
 		const batchSize = Math.min(20, messageQueue.length);
@@ -1514,8 +2000,16 @@ try {
 		batch.forEach(message => processMessage(message, { suppressRelay: true }));
 		
 		// If more messages remain, process them after a short delay
-		if (messageQueue.length > 0) {
-			setTimeout(processQueuedMessages, 50);
+		if (messageQueue.length > 0 && isPageVisible) {
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+			}
+			queueDrainTimeout = setTimeout(() => {
+				queueDrainTimeout = null;
+				processQueuedMessages();
+			}, 50);
+		} else {
+			queueDrainTimeout = null;
 		}
 	}
 		
@@ -1636,6 +2130,10 @@ try {
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
 		}
+		if (queueDrainTimeout) {
+			clearTimeout(queueDrainTimeout);
+			queueDrainTimeout = null;
+		}
 		
 		foregroundPollingInterval = null;
 		pollInterval = null;
@@ -1655,6 +2153,7 @@ try {
 		currentStream = null;
 		clearSourceIdentity();
 		messageQueue = [];
+		pendingRelayMessages = [];
 		quickPollCount = 0;
 		consecutiveMaxMessages = 0; // Reset consecutive max message counter
 		lastSuccessfulPollTime = 0;
@@ -1665,6 +2164,41 @@ try {
 			chatHeader.className = '';
 			chatHeader.textContent = 'Chat Messages';
 		}
+	}
+	function handleLiveChatEnded() {
+		const endedSourceName = currentSourceName;
+		const endedSourceImage = currentSourceImage;
+		const endedStreamTitle = currentStream && currentStream.title ? currentStream.title : '';
+		console.log('Live chat ended for current YouTube stream.');
+		clearPolling();
+		if (endedSourceName || endedSourceImage) {
+			setSourceIdentity(endedSourceName, endedSourceImage);
+		}
+		const textarea = document.getElementById('textarea');
+		if (textarea) {
+			textarea.innerHTML = '<div>Live chat is no longer available for this stream.</div>';
+		}
+		const connectButton = document.getElementById('connect-button');
+		if (connectButton) {
+			connectButton.textContent = 'Connect';
+			connectButton.style.backgroundColor = '#2255dd';
+		}
+		updateHeaderInfo(username, (endedSourceName || 'YouTube') + ' (Stream ended)');
+		const viewerCount = document.getElementById('viewer-count');
+		if (viewerCount) viewerCount.textContent = '-';
+		const subscriberCount = document.getElementById('subscriber-count');
+		if (subscriberCount) subscriberCount.textContent = '-';
+		const likesCount = document.getElementById('likes-count');
+		if (likesCount) likesCount.textContent = '-';
+		addEvent('Live chat ended');
+		const endedPayload = {
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: 'live_chat_ended'
+		};
+		if (endedStreamTitle) {
+			endedPayload.meta = { streamTitle: endedStreamTitle };
+		}
+		pushMessage(applySourceIdentity(endedPayload));
 	}
 	async function getChannelStats(channelIdForStats) {
 		const token = getStoredToken();
@@ -1974,64 +2508,107 @@ try {
 			if (!messageData.message && messageData.message !== '') {
 				console.warn('Message data missing message property:', messageData);
 			}
-			const messageText = messageData.message || '';
-			const messageWithEmojis = replaceEmojis(messageText);
+				const messageText = messageData.message || '';
+				const messageWithEmojis = replaceEmojis(messageText);
+				const textOnlyMode = Boolean(settings.textonlymode);
+				let basePlainText = (typeof messageData.plainTextMessage === 'string' && messageData.plainTextMessage.trim())
+					? messageData.plainTextMessage
+					: stripHtmlContent(messageWithEmojis || messageText);
+				if (!basePlainText && messageText) {
+					basePlainText = messageText;
+				}
+				const safeAuthorName = strictEscapeHtml(messageData.authorName || '');
 
-			// Only update DOM if page is visible
-			if (isPageVisible) {
-				const textarea = document.querySelector("#textarea");
-				if (textarea) {
-					var span = document.createElement("div");
-					let badgeHtml = '';
-					// Display badges in the same order as they're sent
-					if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
-					if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
-					if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
-					
-					span.innerHTML = `${badgeHtml}<strong>${messageData.authorName}</strong>: ${messageWithEmojis}`;
-					textarea.appendChild(span);
-					// More aggressive cleanup to prevent memory buildup
-					const maxMessages = 50;
-					while (textarea.childNodes.length > maxMessages) {
-						textarea.removeChild(textarea.firstChild);
-					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
-						textarea.scrollTop = textarea.scrollHeight;
+				rememberChannelName(messageData.authorChannelId, messageData.authorName);
+				if (messageData.messageId) {
+					rememberChatMessage(messageData.messageId, {
+						messageId: messageData.messageId,
+						authorName: messageData.authorName || '',
+						channelId: messageData.authorChannelId || null,
+						html: messageWithEmojis,
+						plainText: basePlainText
+					});
+				}
+
+				const replyContext = repliesAreExcluded() ? null : resolveReplyContext(messageData);
+				let finalChatMessage = textOnlyMode ? basePlainText : messageWithEmojis;
+				if (replyContext) {
+					if (textOnlyMode) {
+						const prefix = replyContext.label ? `${replyContext.label}: ` : '';
+						const combinedText = `${prefix}${basePlainText || ''}`.trim();
+						finalChatMessage = combinedText || basePlainText || replyContext.label || '';
+					} else {
+						const safeLabel = strictEscapeHtml(replyContext.label);
+						finalChatMessage = `<i><small>${safeLabel}:&nbsp;</small></i> ${messageWithEmojis}`;
 					}
 				}
-			}
-			if (!suppressRelay && !messageData.skipEvent && messageWithEmojis) {
-				// Determine membership status based on settings
-				let membershipStatus = "";
-				if (messageData.isChatSponsor) {
-					// If limitedyoutubememberchat is enabled, only mark as member if it's a special membership message
-					if (!settings.limitedyoutubememberchat || messageData.isMembershipMessage) {
+
+				// Only update DOM if page is visible
+				if (isPageVisible) {
+					const textarea = document.querySelector("#textarea");
+					if (textarea) {
+						const shouldStick = shouldStickToBottom(textarea);
+						var span = document.createElement("div");
+						let badgeHtml = '';
+						// Display badges in the same order as they're sent
+						if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
+						if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
+						if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
+						
+						const renderedMessage = textOnlyMode ? strictEscapeHtml(finalChatMessage) : finalChatMessage;
+						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${renderedMessage}`;
+						textarea.appendChild(span);
+						// More aggressive cleanup to prevent memory buildup
+						const maxMessages = 50;
+						while (textarea.childNodes.length > maxMessages) {
+							textarea.removeChild(textarea.firstChild);
+						}
+						// Only auto-scroll if user was near bottom
+						if (shouldStick) {
+							textarea.scrollTop = textarea.scrollHeight;
+						}
+					}
+				}
+				const renderableMessage = finalChatMessage;
+				if (!suppressRelay && !messageData.skipEvent && renderableMessage) {
+					// Determine membership status based on settings
+					let membershipStatus = "";
+					if (messageData.isChatSponsor) {
+						// If limitedyoutubememberchat is enabled, only mark as member if it's a special membership message
+						if (!settings.limitedyoutubememberchat || messageData.isMembershipMessage) {
 						membershipStatus = "member";
 					}
 				}
 				
-				const outgoingMessage = {
-					chatname: messageData.authorName,
-					chatbadges: chatbadges.length > 0 ? chatbadges : "",
-					userid: messageData.authorChannelId,
-					nameColor: nameColor,
-					backgroundColor: "",
-					textColor: "",
-					chatmessage: messageWithEmojis, // Use the version with emojis replaced
-					chatimg: messageData.profileImageUrl || "",
-					hasDonation: "",
-					videoid: videoId,
-					membership: membershipStatus,
-					mod: messageData.isChatModerator || false,
-					type: youtubeShorts ? "youtubeshorts" : "youtube",
-					textonly: settings.textonlymode || false // Pass the setting to the extension
-				};
-				if (messageData.meta && typeof messageData.meta === 'object') {
-					outgoingMessage.meta = messageData.meta;
+				// Chat messages must never carry an event flag; reserve event usage for system-level notifications only.
+					const outgoingMessage = {
+						chatname: messageData.authorName,
+						chatbadges: chatbadges.length > 0 ? chatbadges : "",
+						userid: messageData.authorChannelId,
+						nameColor: nameColor,
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: finalChatMessage,
+						chatimg: messageData.profileImageUrl || "",
+						hasDonation: "",
+						videoid: videoId,
+						membership: membershipStatus,
+						mod: messageData.isChatModerator || false,
+						type: youtubeShorts ? "youtubeshorts" : "youtube",
+						textonly: textOnlyMode // Pass the setting to the extension
+					};
+					if (replyContext) {
+						outgoingMessage.initial = replyContext.label;
+						outgoingMessage.reply = textOnlyMode ? basePlainText : messageWithEmojis;
+					}
+					if (messageData.meta && typeof messageData.meta === 'object') {
+						const { raw: _raw, reply: _reply, ...safeMeta } = messageData.meta;
+						if (Object.keys(safeMeta).length > 0) {
+							outgoingMessage.meta = safeMeta;
+						}
+					}
+					pushMessage(applySourceIdentity(outgoingMessage));
 				}
-				pushMessage(applySourceIdentity(outgoingMessage));
-			}
 		} catch (e) {
 			console.error('Error processing message:', e);
 		}
@@ -2046,16 +2623,20 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${superChatData.authorName}</strong> <span>${superChatData.amount}</span>: ${superChatData.message || ''}`;
+					const safeAuthor = strictEscapeHtml(superChatData.authorName || '');
+					const safeAmount = strictEscapeHtml(superChatData.amount || '');
+					const safeMessage = strictEscapeHtml(superChatData.message || '');
+					span.innerHTML = `<strong>${safeAuthor}</strong> <span>${safeAmount}</span>: ${safeMessage}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2140,10 +2721,6 @@ try {
 				if (membershipDetails) {
 					membershipMeta.membershipDetails = { ...membershipDetails };
 				}
-				if (membershipData.eventTypeMapping && typeof membershipData.eventTypeMapping === "object") {
-					membershipMeta.eventTypeMapping = { ...membershipData.eventTypeMapping };
-				}
-
 				const genericMembershipLabel = getTranslation("membership-generic", "Membership");
 
 				if (eventType === "renewal") {
@@ -2171,8 +2748,9 @@ try {
 				if (isPageVisible) {
 					const textarea = document.querySelector("#textarea");
 					if (textarea) {
+						const shouldStick = shouldStickToBottom(textarea);
 						var span = document.createElement("div");
-						span.innerHTML = `<strong>${escapeHtml(membershipData.authorName)}</strong> <span>${escapeHtml(displayMessage)}</span>`;
+						span.innerHTML = `<strong>${strictEscapeHtml(membershipData.authorName || '')}</strong> <span>${strictEscapeHtml(displayMessage)}</span>`;
 						textarea.appendChild(span);
 						
 						// Use same cleanup limit as regular messages
@@ -2180,8 +2758,8 @@ try {
 						while (textarea.childNodes.length > maxMessages) {
 							textarea.removeChild(textarea.firstChild);
 						}
-						// Only auto-scroll if user is near bottom
-						if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+						// Only auto-scroll if user was near bottom
+						if (shouldStick) {
 							textarea.scrollTop = textarea.scrollHeight;
 						}
 					}
@@ -2221,16 +2799,17 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(giftData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2275,16 +2854,17 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(giftData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2323,16 +2903,17 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(sponsorData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(sponsorData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2389,16 +2970,17 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
-					span.innerHTML = `<strong>${escapeHtml(milestoneData.authorName)}</strong> ${escapeHtml(displayMessage)}`;
+					span.innerHTML = `<strong>${strictEscapeHtml(milestoneData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2442,18 +3024,22 @@ try {
 			if (isPageVisible) {
 				const textarea = document.querySelector("#textarea");
 				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
 					var span = document.createElement("div");
 					// Use the actual message or alt text for display
 					const stickerText = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
-					span.innerHTML = `<strong>${escapeHtml(stickerData.authorName)}</strong> <span>${stickerData.amount}</span>: 🎨 ${escapeHtml(stickerText)}`;
+					const safeStickerAuthor = strictEscapeHtml(stickerData.authorName || '');
+					const safeAmount = strictEscapeHtml(stickerData.amount || '');
+					const safeStickerText = strictEscapeHtml(stickerText);
+					span.innerHTML = `<strong>${safeStickerAuthor}</strong> <span>${safeAmount}</span>: 🎨 ${safeStickerText}`;
 					textarea.appendChild(span);
 					// Use same cleanup limit as regular messages
 					const maxMessages = 50;
 					while (textarea.childNodes.length > maxMessages) {
 						textarea.removeChild(textarea.firstChild);
 					}
-					// Only auto-scroll if user is near bottom
-					if (textarea.scrollTop > textarea.scrollHeight - textarea.clientHeight - 100) {
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
 						textarea.scrollTop = textarea.scrollHeight;
 					}
 				}
@@ -2621,6 +3207,9 @@ try {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 		registerCleanup(() => document.removeEventListener('visibilitychange', handleVisibilityChange));
 		isPageVisible = document.visibilityState === 'visible';
+		if (!isElectronEnvironment()) {
+			enableBackgroundKeepAlive();
+		}
 		const sendButton = document.querySelector('#sendmessage');
 		if (sendButton) sendButton.onclick = handleSendMessage;
 		const inputText = document.querySelector('#input-text');
@@ -2716,7 +3305,17 @@ try {
 	
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
 		const controller = new AbortController();
-		const timeout_id = setTimeout(() => controller.abort(), timeout);
+		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${URL}`;
+		const abortReason = (typeof DOMException === 'function')
+			? new DOMException(friendlyTimeoutMessage, 'AbortError')
+			: new Error(friendlyTimeoutMessage);
+		const timeout_id = setTimeout(() => {
+			try {
+				if (!controller.signal.aborted) controller.abort(abortReason);
+			} catch (_) {
+				controller.abort();
+			}
+		}, timeout);
 		try {
 			const options = { signal: controller.signal };
 			if (headers) {
@@ -2743,11 +3342,15 @@ try {
 				// Try to parse error for quota/rate limit signals
 				let errorText = '';
 				let quotaHit = false;
+				let reason = '';
+				let message = '';
+				let fullPayload = null;
 				try {
 					const cloned = response.clone();
 					const json = await cloned.json();
-					const reason = json?.error?.errors?.[0]?.reason || '';
-					const message = json?.error?.message || '';
+					fullPayload = json;
+					reason = json?.error?.errors?.[0]?.reason || '';
+					message = json?.error?.message || '';
 					errorText = JSON.stringify(json);
 					if (response.status === 403 || response.status === 429) {
 						if (/quota|rateLimit|dailyLimit/i.test(reason) || /quota|rate/i.test(message)) quotaHit = true;
@@ -2757,18 +3360,25 @@ try {
 				}
 				if (quotaHit) showQuotaBanner();
 				console.error('API error response:', errorText || (response.status + ' ' + response.statusText));
-				throw new Error(`API error: ${response.status} ${response.statusText}`);
+				const err = new Error(`API error: ${response.status} ${response.statusText || reason || ''}`);
+				err.ytStatus = response.status;
+				if (reason) err.ytReason = reason;
+				if (message) err.ytMessage = message;
+				if (fullPayload) err.ytPayload = fullPayload;
+				throw err;
 			}
 			return response;
 		} catch (e) {
 			clearTimeout(timeout_id);
-			if (e.name === 'AbortError') {
-				console.error('Request timed out after', timeout, 'ms:', URL);
-				throw new Error(`Request timed out after ${timeout}ms: ${URL}`);
-			} else {
-				console.error('Fetch error:', e.name, e.message, URL);
-				throw e;
+			if (e && e.name === 'AbortError') {
+				const err = new Error(friendlyTimeoutMessage);
+				err.name = 'AbortError';
+				err.code = 'SSAPP_YT_TIMEOUT';
+				console.error(err.message);
+				throw err;
 			}
+			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', URL);
+			throw e;
 		} finally {
 			clearTimeout(timeout_id);
 		}

@@ -2,6 +2,7 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
 import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
+import { normalizeYouTubeLiveChatItem } from '../../providers/youtube/messageNormalizer.js';
 
 const TOKEN_KEY = 'youtube.token';
 const CLIENT_ID_KEY = 'youtube.clientId';
@@ -1015,40 +1016,21 @@ export class YoutubePlugin extends BasePlugin {
     return error;
   }
 
-  async transformAndPublish(item) {
+  async transformAndPublish(item, options = {}) {
     if (!item) {
       return;
     }
-    const snippet = item.snippet || {};
-    const author = item.authorDetails || {};
-    const rawMessage = snippet.displayMessage || '';
-    const sanitizedMessage = safeHtml(rawMessage);
 
-    const message = {
-      platform: 'youtube',
-      type: 'youtube',
-      chatname: author.displayName || 'YouTube User',
-      chatmessage: sanitizedMessage,
-      chatimg: author.profileImageUrl || '',
-      timestamp: Date.parse(snippet.publishedAt || new Date().toISOString()),
-      hasDonation: Boolean(snippet.superChatDetails || snippet.superStickerDetails),
-      donationAmount: snippet.superChatDetails?.amountDisplayString,
-      donationCurrency: snippet.superChatDetails?.currency,
-      isModerator: !!author.isChatModerator,
-      isOwner: !!author.isChatOwner,
-      isMember: !!author.isChatSponsor,
-      event: this.resolveEvent(snippet),
-      raw: item,
-      previewText: rawMessage
-    };
+    const transport =
+      options.transport ||
+      (this.useStreaming ? 'youtube_streaming_api' : 'youtube_data_api');
 
-    if (item.id) {
-      message.sourceId = item.id;
-    }
-
-    if (author?.channelId) {
-      message.userid = author.channelId;
-    }
+    const { message, note } = normalizeYouTubeLiveChatItem(item, {
+      sanitizeHtml: safeHtml,
+      toPlainText: htmlToText,
+      includeRaw: true,
+      transport
+    });
 
     if (this.debug) {
       const debugSnapshot = { ...message };
@@ -1058,48 +1040,7 @@ export class YoutubePlugin extends BasePlugin {
       this.debugLog('Prepared YouTube chat payload', debugSnapshot);
     }
 
-    const meta = {};
-    let publishNote = null;
-    const membershipInfo = this.deriveMembershipMetadata(snippet, sanitizedMessage);
-
-    if (membershipInfo) {
-      if (membershipInfo.membership) {
-        message.membership = membershipInfo.membership;
-      }
-      if (membershipInfo.subtitle) {
-        message.subtitle = membershipInfo.subtitle;
-      }
-      if (membershipInfo.event) {
-        message.event = membershipInfo.event;
-      }
-      if (membershipInfo.previewText) {
-        message.previewText = membershipInfo.previewText;
-      }
-      if (membershipInfo.chatmessage) {
-        message.chatmessage = membershipInfo.chatmessage;
-      }
-
-      const membershipMeta = this.buildMembershipMeta(snippet, membershipInfo);
-      if (membershipMeta) {
-        meta.membership = membershipMeta;
-      }
-      publishNote = membershipInfo.note || null;
-    }
-
-    const badges = this.buildChatBadges(author, { includeMemberBadge: membershipInfo?.includeMemberBadge });
-    if (badges.length) {
-      message.chatbadges = badges;
-    }
-
-    if (snippet.superChatDetails) {
-      message.color = snippet.superChatDetails.tier || snippet.superChatDetails.tier || null;
-    }
-
-    if (Object.keys(meta).length) {
-      message.meta = { ...(message.meta || {}), ...meta };
-    }
-
-    await this.publishWithEmotes(message, { silent: true, note: publishNote });
+    await this.publishWithEmotes(message, { silent: true, note });
   }
 
   buildChatBadges(author, options = {}) {

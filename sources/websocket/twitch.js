@@ -1,4 +1,312 @@
+const TWITCH_CORE_EXTENSION_PATH = 'providers/twitch/chatClient.js';
+const TWITCH_CORE_RELATIVE_PATH = '../../providers/twitch/chatClient.js';
+const SCRIPT_LOADER_EXTENSION_PATH = 'shared/utils/scriptLoader.js';
+const SCRIPT_LOADER_RELATIVE_PATH = '../../shared/utils/scriptLoader.js';
+const TWITCH_EMOTE_UTILS_EXTENSION_PATH = 'shared/utils/twitchEmotes.js';
+const TWITCH_EMOTE_UTILS_RELATIVE_PATH = '../../shared/utils/twitchEmotes.js';
+
+let createTwitchChatClient;
+let createTmiClientFactory;
+let TWITCH_CHAT_EVENTS;
+let TWITCH_CHAT_STATUS;
+let loadScriptSequential;
+let renderTwitchNativeEmotes;
+let parseTwitchEmotes;
+let stringifyTwitchEmotes;
+
+async function importWithFallback(extensionPath, relativePath) {
+  if (
+    typeof chrome !== 'undefined' &&
+    chrome?.runtime &&
+    typeof chrome.runtime.getURL === 'function'
+  ) {
+    try {
+      const specifier = chrome.runtime.getURL(extensionPath);
+      return await import(specifier);
+    } catch (error) {
+      console.warn(`Failed to import ${extensionPath} via chrome.runtime.getURL`, error);
+    }
+  }
+  return import(relativePath);
+}
+
+const modulesReady = (async () => {
+  const twitchModule = await importWithFallback(
+    TWITCH_CORE_EXTENSION_PATH,
+    TWITCH_CORE_RELATIVE_PATH
+  );
+  const utilsModule = await importWithFallback(
+    SCRIPT_LOADER_EXTENSION_PATH,
+    SCRIPT_LOADER_RELATIVE_PATH
+  );
+  const twitchEmoteModule = await importWithFallback(
+    TWITCH_EMOTE_UTILS_EXTENSION_PATH,
+    TWITCH_EMOTE_UTILS_RELATIVE_PATH
+  );
+  ({
+    createTwitchChatClient,
+    createTmiClientFactory,
+    TWITCH_CHAT_EVENTS,
+    TWITCH_CHAT_STATUS
+  } = twitchModule);
+  ({ loadScriptSequential } = utilsModule);
+  ({
+    renderTwitchNativeEmotes,
+    parseTwitchEmotes,
+    stringifyTwitchEmotes
+  } = twitchEmoteModule);
+})();
+
+modulesReady.catch((error) => {
+  console.error('Failed to load Twitch shared modules', error);
+});
+
+const TMI_MODULE_EXTENSION_PATH = 'shared/vendor/tmi.module.js';
+const TMI_MODULE_RELATIVE_PATH = '../../shared/vendor/tmi.module.js';
+const TMI_SCRIPT_EXTENSION_PATH = 'shared/vendor/tmi.js';
+const TMI_SCRIPT_RELATIVE_PATH = '../../shared/vendor/tmi.js';
+
+function isExtensionRuntime() {
+  return (
+    typeof chrome !== 'undefined' &&
+    !!chrome?.runtime &&
+    typeof chrome.runtime.getURL === 'function'
+  );
+}
+
+function resolveAssetUrl(path) {
+  if (!path) {
+    return null;
+  }
+  try {
+    if (typeof document !== 'undefined' && typeof document.baseURI === 'string') {
+      return new URL(path, document.baseURI).href;
+    }
+  } catch (error) {
+    console.warn('Failed to resolve asset URL relative to document.baseURI', error);
+  }
+  return path;
+}
+
+function shouldUseDocumentRelativeSharedAssets() {
+  if (typeof window === 'undefined' || typeof window.location === 'undefined') {
+    return true;
+  }
+  const { protocol, host } = window.location;
+  if (protocol === 'file:') {
+    return true;
+  }
+  return /(?:localhost(?::\d+)?|(?:^|\.)socialstream\.ninja)$/i.test(host || '');
+}
+
+function clearGlobalTmi() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    delete window.tmi;
+  } catch (error) {
+    window.tmi = undefined;
+  }
+}
+
+function resolveTmiModuleSpecifiers() {
+  const specifiers = [];
+  if (isExtensionRuntime()) {
+    try {
+      specifiers.push(chrome.runtime.getURL(TMI_MODULE_EXTENSION_PATH));
+    } catch (error) {
+      console.warn('Failed to resolve tmi module via chrome.runtime.getURL', error);
+    }
+  }
+  if (!isExtensionRuntime() || shouldUseDocumentRelativeSharedAssets()) {
+    const resolvedRelative = resolveAssetUrl(TMI_MODULE_RELATIVE_PATH);
+    if (resolvedRelative && resolvedRelative !== TMI_MODULE_RELATIVE_PATH) {
+      specifiers.push(resolvedRelative);
+    }
+    specifiers.push(TMI_MODULE_RELATIVE_PATH);
+  }
+  return Array.from(
+    specifiers.filter(Boolean).reduce((set, entry) => {
+      set.add(entry);
+      return set;
+    }, new Set())
+  );
+}
+
+function resolveTmiScriptSources() {
+  const sources = [];
+  if (isExtensionRuntime()) {
+    try {
+      sources.push(chrome.runtime.getURL(TMI_SCRIPT_EXTENSION_PATH));
+    } catch (error) {
+      console.warn('Failed to resolve tmi.js via chrome.runtime.getURL', error);
+    }
+  }
+  if (!isExtensionRuntime() || shouldUseDocumentRelativeSharedAssets()) {
+    sources.push(TMI_SCRIPT_RELATIVE_PATH);
+    const resolvedRelative = resolveAssetUrl(TMI_SCRIPT_RELATIVE_PATH);
+    if (resolvedRelative && resolvedRelative !== TMI_SCRIPT_RELATIVE_PATH) {
+      sources.push(resolvedRelative);
+    }
+  }
+  return Array.from(
+    sources.filter(Boolean).reduce((set, entry) => {
+      set.add(entry);
+      return set;
+    }, new Set())
+  );
+}
+
+function fallbackStringifyParsedEmotes(parsed) {
+  if (!Array.isArray(parsed) || !parsed.length) {
+    return '';
+  }
+  return parsed
+    .map(({ id, positions }) => {
+      if (!Array.isArray(positions) || !positions.length) {
+        return null;
+      }
+      const serialized = positions
+        .map((entry) => {
+          if (!entry) {
+            return null;
+          }
+          const start = Number.parseInt(entry.start ?? entry[0], 10);
+          const end = Number.parseInt(entry.end ?? entry[1], 10);
+          if (!Number.isFinite(start) || !Number.isFinite(end)) {
+            return null;
+          }
+          const safeStart = Math.max(0, start);
+          const safeEnd = Math.max(safeStart, end);
+          return `${safeStart}-${safeEnd}`;
+        })
+        .filter(Boolean)
+        .join(',');
+      if (!serialized) {
+        return null;
+      }
+      return `${id}:${serialized}`;
+    })
+    .filter(Boolean)
+    .join('/');
+}
+
+function serializeTwitchEmotesForLegacy(emotes) {
+  if (!emotes) {
+    return '';
+  }
+  if (typeof emotes === 'string') {
+    return emotes;
+  }
+  if (typeof stringifyTwitchEmotes === 'function') {
+    const serialized = stringifyTwitchEmotes(emotes);
+    if (serialized) {
+      return serialized;
+    }
+  }
+  const parsed =
+    typeof parseTwitchEmotes === 'function' ? parseTwitchEmotes(emotes) : [];
+  if (!parsed.length) {
+    return '';
+  }
+  return fallbackStringifyParsedEmotes(parsed);
+}
+
+async function evaluateScriptAtUrl(url) {
+  const targetUrl = resolveAssetUrl(url);
+  if (!targetUrl) {
+    throw new Error('Invalid tmi.js source path');
+  }
+
+  try {
+    await loadScriptSequential([targetUrl], { timeout: 20000 });
+  } catch (error) {
+    const message =
+      error && typeof error.message === 'string' ? error.message : String(error || '');
+    throw new Error(`Failed to load tmi.js from ${targetUrl}: ${message}`);
+  }
+  return targetUrl;
+}
+
+async function importTmiModule(specifier) {
+  if (!specifier) {
+    return null;
+  }
+  try {
+    const module = await import(specifier);
+    const library =
+      (module?.default && typeof module.default.Client === 'function' && module.default) ||
+      (module && typeof module.Client === 'function' && module);
+    if (library?.Client) {
+      if (typeof window !== 'undefined') {
+        window.tmi = library;
+      }
+      return library;
+    }
+    console.warn(`tmi module at ${specifier} did not expose a Client constructor.`);
+  } catch (error) {
+    console.warn(`Failed to import tmi module from ${specifier}`, error);
+  }
+  return null;
+}
+
+async function tryLoadTmiViaModule() {
+  for (const specifier of TMI_MODULE_SPECIFIERS) {
+    const library = await importTmiModule(specifier);
+    if (library?.Client) {
+      console.debug('Loaded tmi.js via module import', specifier);
+      return library;
+    }
+    clearGlobalTmi();
+  }
+  return null;
+}
+
+const TMI_MODULE_SPECIFIERS = resolveTmiModuleSpecifiers();
+const TMI_SCRIPT_SOURCES = resolveTmiScriptSources();
+
+let tmiLoaderPromise = null;
+let chatClient = null;
+let chatClientOffHandlers = [];
+let tmiClientFactory = null;
+const WEBSOCKET_READY_STATE = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3
+};
+const websocketProxy = {
+  readyState: 3,
+  close: () => {
+    if (chatClient) {
+      chatClient.disconnect();
+    }
+  },
+  send: (rawMessage) => {
+    if (!chatClient || !rawMessage) {
+      return;
+    }
+    try {
+      if (typeof rawMessage === 'string') {
+        const colonIndex = rawMessage.indexOf(' :');
+        const payload = colonIndex >= 0 ? rawMessage.slice(colonIndex + 2) : rawMessage;
+        chatClient.sendMessage(payload, channel).catch((err) => {
+          console.warn('Twitch chat proxy send failed', err);
+        });
+      }
+    } catch (err) {
+      console.warn('Twitch chat proxy send error', err);
+    }
+  }
+};
+
+function setWebsocketReadyState(state) {
+  websocketProxy.readyState = state;
+}
+
 try{
+	window.websocket = websocketProxy;
 	var isExtensionOn = true;
 	var clientId = 'sjjsgy1sgzxmy346tdkghbyz4gtx0k'; 
 	var redirectURI = window.location.href.split("/twitch")[0]+"/twitch.html"; //  'https://socialstream.ninja/sources/websocket/twitch.html';
@@ -16,10 +324,8 @@ try{
 		'channel:manage:ads',
 		'channel:read:redemptions'
 	].join('+');
-	var ws;
 	var channel = '';
 	var username = "SocialStreamNinja"; // Not supported at the moment
-	let websocket;
 	var BTTV = false;
 	var SEVENTV = false;
 	var FFZ = false;
@@ -75,8 +381,13 @@ try{
 		sessionStorage.removeItem('twitchOAuthToken');
 		
 		// Clean up connections
-		if (websocket && websocket.readyState === WebSocket.OPEN) {
-			websocket.close();
+		if (chatClient) {
+			try {
+				chatClient.disconnect();
+			} catch (err) {
+				console.warn('Failed to disconnect Twitch chat client on token expiration', err);
+			}
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 		if (eventSocket && eventSocket.readyState === WebSocket.OPEN) {
 			eventSocket.close();
@@ -130,7 +441,9 @@ try{
 
 		const sendButton = document.querySelector('#sendmessage');
 		if (sendButton) {
-			sendButton.onclick = handleSendMessage;
+			sendButton.onclick = (event) => {
+				handleSendMessage(event).catch((err) => console.error('Twitch send button handler failed', err));
+			};
 		}
 
 		const inputText = document.querySelector('#input-text');
@@ -309,11 +622,112 @@ try{
 		}
 	}
 
-	let getViewerCountInterval = null;
-	let getFollowersInterval = null;
+let getViewerCountInterval = null;
+let getFollowersInterval = null;
 let getSubscribersInterval = null;
 let tokenValidationInterval = null;
 let badges = null;
+
+	async function ensureTmiClient() {
+		try {
+			if (window.tmi?.Client) {
+				return window.tmi;
+			}
+			if (!tmiLoaderPromise) {
+				tmiLoaderPromise = (async () => {
+					const moduleLibrary = await tryLoadTmiViaModule();
+					if (moduleLibrary?.Client) {
+						return moduleLibrary;
+					}
+					let lastError = null;
+					for (const source of TMI_SCRIPT_SOURCES) {
+						try {
+							const loadedFrom = await evaluateScriptAtUrl(source);
+							if (window.tmi?.Client) {
+								console.debug('Loaded tmi.js from source', loadedFrom);
+								return window.tmi;
+							}
+							lastError = new Error(
+								`tmi.js loaded from ${loadedFrom} but Twitch client constructor is unavailable.`
+							);
+							clearGlobalTmi();
+						} catch (error) {
+							lastError = error;
+							clearGlobalTmi();
+						}
+					}
+					throw lastError || new Error('Unable to load tmi.js from available sources.');
+				})().catch((err) => {
+					tmiLoaderPromise = null;
+					throw err;
+				});
+			}
+			const library = await tmiLoaderPromise;
+			if (!library || typeof library.Client !== 'function') {
+				throw new Error('tmi.js loaded but Twitch client is unavailable.');
+			}
+			return library;
+		} catch (error) {
+			console.error('Failed to load tmi.js library', error);
+			throw error;
+		}
+	}
+
+function ensureClientFactory() {
+	if (!tmiClientFactory) {
+		tmiClientFactory = createTmiClientFactory(() => ensureTmiClient());
+	}
+	return tmiClientFactory;
+}
+
+function resetChatClientHandlers() {
+	if (Array.isArray(chatClientOffHandlers) && chatClientOffHandlers.length) {
+		chatClientOffHandlers.forEach((off) => {
+			try {
+				off();
+			} catch (err) {
+				console.warn('Failed to remove Twitch chat listener', err);
+			}
+		});
+	}
+	chatClientOffHandlers = [];
+}
+
+async function ensureChatClientInstance() {
+	if (!chatClient) {
+		await modulesReady;
+		chatClient = createTwitchChatClient({
+			logger: console
+		});
+		resetChatClientHandlers();
+		const add = (event, handler) => {
+			const off = chatClient.on(event, handler);
+			chatClientOffHandlers.push(off);
+		};
+
+		add(TWITCH_CHAT_EVENTS.STATUS, handleChatStatusEvent);
+		add(TWITCH_CHAT_EVENTS.MESSAGE, (payload) => {
+			handleNormalizedChatMessage(payload).catch((err) => {
+				console.error('Twitch normalized chat handler failed', err);
+			});
+		});
+		add(TWITCH_CHAT_EVENTS.MEMBERSHIP, (payload) => {
+			handleNormalizedMembership(payload).catch((err) => {
+				console.error('Twitch membership handler failed', err);
+			});
+		});
+		add(TWITCH_CHAT_EVENTS.RAID, (payload) => {
+			handleNormalizedRaid(payload).catch((err) => {
+				console.error('Twitch raid handler failed', err);
+			});
+		});
+		add(TWITCH_CHAT_EVENTS.NOTICE, (payload) => handleNormalizedNotice(payload));
+		add(TWITCH_CHAT_EVENTS.CLEAR_CHAT, (payload) => handleNormalizedClear(payload));
+		add(TWITCH_CHAT_EVENTS.WHISPER, (payload) => handleNormalizedWhisper(payload));
+		add(TWITCH_CHAT_EVENTS.ERROR, (error) => handleNormalizedError(error));
+	}
+	return chatClient;
+}
 
 	async function validateToken(token) {
 		try {
@@ -372,18 +786,17 @@ let badges = null;
 			return;
 		}
 
-		// Clean up existing connections
+		await modulesReady;
 		await cleanupCurrentConnection();
-		
-		// Clean the channel name
+
 		channel = channel.replace(/^#/, '');
-		
+
 		const channelInfo = await getUserInfo(channel);
 		if (!channelInfo) {
 			console.log('Failed to get channel info');
 			return;
 		}
-		
+
 		const authUser = await validateToken(token);
 		if (!authUser) {
 			clearStoredToken();
@@ -391,53 +804,43 @@ let badges = null;
 			return;
 		}
 
-		// Fetch badges before setting up the chat connection
+		username = authUser.login || username;
+
 		const badgeData = await fetchBadges(channelInfo.id);
 		if (badgeData) {
 			globalBadges = badgeData.globalBadges;
 			channelBadges = badgeData.channelBadges;
 		} else {
 			console.log('Failed to fetch badges');
-			// Continue anyway, just won't show badges
 		}
 
-		// Set current channel ID
 		currentChannelId = channelInfo.id;
-		
-		// Update header
 		updateHeaderInfo(authUser.login, channel);
 
 		try {
 			const permissions = await checkUserPermissions(channelInfo.id, authUser.user_id);
 			updateUIBasedOnPermissions(permissions);
 
-			// Set up chat connection
-			websocket = new WebSocket('wss://irc-ws.chat.twitch.tv:443');
-			
-			websocket.onopen = () => {
-				console.log('Chat Connected');
-				websocket.send(`PASS oauth:${token}`);
-				websocket.send(`NICK ${username}`);
-				websocket.send(`JOIN #${channel}`);
-				websocket.send('CAP REQ :twitch.tv/commands');
-				websocket.send('CAP REQ :twitch.tv/tags');
-				
-				const textarea = document.querySelector("#textarea");
-				if (textarea) {
-					var span = document.createElement("div");
-					span.innerText = `Joined the channel: ${channel}`;
-					textarea.appendChild(span);
-					if (textarea.childNodes.length > 20) {
-						textarea.childNodes[0].remove();
-					}
-				}
-			};
-			
-			websocket.onmessage = (event) => handleWebSocketMessage(event, badges);
-			websocket.onerror = (error) => !isDisconnecting && console.error('WebSocket error:', error);
-			websocket.onclose = (event) => !isDisconnecting && handleWebSocketClose(event);
+			const chat = await ensureChatClientInstance();
+			const clientFactory = ensureClientFactory();
 
-			// Only set up EventSub if we have permissions
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+
+			await chat.connect({
+				channel,
+				credentials: {
+					token,
+					identity: {
+						login: authUser.login,
+						userId: authUser.user_id
+					}
+				},
+				clientFactory
+			});
+
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+			showSocketInterface();
+
 			if (permissions && (permissions.canViewFollowers || permissions.isBroadcaster || permissions.isModerator)) {
 				await connectEventSub();
 				
@@ -451,69 +854,211 @@ let badges = null;
 					getSubscribersInterval = setInterval(() => getSubscribers(channelInfo.id), 60000);
 				}
 			}
-			console.log(channel);
+
 			getViewerCount(channel);
 			clearInterval(getViewerCountInterval);
 			getViewerCountInterval = setInterval(() => getViewerCount(channel), 60000);
-			
-			// Set up periodic token validation
+
 			clearInterval(tokenValidationInterval);
 			tokenValidationInterval = setInterval(async () => {
-				const token = getStoredToken();
-				if (token) {
-					const validationResult = await validateToken(token);
+				const refreshedToken = getStoredToken();
+				if (refreshedToken) {
+					const validationResult = await validateToken(refreshedToken);
 					if (!validationResult) {
 						console.log('Token validation failed during periodic check');
 					}
 				}
-			}, 300000); // Check every 5 minutes
+			}, 300000);
 			
 		} catch (error) {
 			console.log('Error during connection setup:', error);
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 	}
 
-	function handleWebSocketMessage(event) {
-	  const messages = event.data.split('\r\n');
-	  messages.forEach((rawMessage) => {
-		if (rawMessage) {
-		  //console.log('Raw message:', rawMessage);
-		  const parsedMessage = parseMessage(rawMessage);
-		 // console.log('Parsed message:', parsedMessage);
-
-		  switch (parsedMessage.command) {
-			case 'PING':
-			  websocket.send('PONG :tmi.twitch.tv');
-			  break;
-			case 'PRIVMSG':
-			  processMessage(parsedMessage);
-			  break;
-			case 'USERNOTICE':
-			  // Handle raids and other user notices
-			  if (settings.captureevents) {
-				processUserNotice(parsedMessage);
-			  }
-			  break;
-			case '366': // End of NAMES list
-			case 'CAP': // Capability acknowledgment
-			case '001': // Welcome message
-			case '002': // Your host
-			case '003': // Server info
-			case '004': // Server version
-			case '375': // MOTD start
-			case '372': // MOTD
-			case '376': // MOTD end
-			  // These are normal connection messages, we can safely ignore them
-			  break;
+	function handleChatStatusEvent({ status, meta = {} }) {
+		switch (status) {
+			case TWITCH_CHAT_STATUS.CONNECTING:
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.CONNECTING);
+				break;
+			case TWITCH_CHAT_STATUS.CONNECTED: {
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.OPEN);
+				isDisconnecting = false;
+				const textarea = document.querySelector("#textarea");
+				const joinedChannel = meta.channel || channel;
+				if (textarea && joinedChannel) {
+					const span = document.createElement("div");
+					span.innerText = `Joined the channel: ${joinedChannel}`;
+					textarea.appendChild(span);
+					if (textarea.childNodes.length > 20) {
+						textarea.childNodes[0].remove();
+					}
+				}
+				break;
+			}
+			case TWITCH_CHAT_STATUS.DISCONNECTED:
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				if (!isDisconnecting) {
+					console.log('Twitch chat disconnected', meta?.reason || '');
+				}
+				break;
+			case TWITCH_CHAT_STATUS.ERROR:
+				setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
+				if (meta?.error) {
+					console.error('Twitch chat error', meta.error);
+				}
+				break;
 			default:
-			  if (parsedMessage.type) {
-				handleEventSubNotification(parsedMessage);
-			  } else {
-			   // console.log('Unhandled command:', parsedMessage.command);
-			  }
-		  }
+				break;
 		}
-	  });
+	}
+
+	function badgesToString(badges) {
+		if (!badges) return '';
+		if (typeof badges === 'string') return badges;
+		if (Array.isArray(badges)) return badges.join(',');
+		return Object.entries(badges)
+			.filter(([key, value]) => key && value !== undefined && value !== null)
+			.map(([key, value]) => `${key}/${value}`)
+			.join(',');
+	}
+
+		function convertChatPayloadToLegacyMessage(payload) {
+			const raw = payload.raw || {};
+			const tags = {};
+			const sourceTags = [raw.userstate, raw.tags];
+			for (let i = 0; i < sourceTags.length; i += 1) {
+				const source = sourceTags[i];
+				if (!source || typeof source !== 'object') {
+					continue;
+				}
+				Object.assign(tags, source);
+			}
+			if (tags.badges && typeof tags.badges === 'object') {
+				tags.badges = badgesToString(tags.badges);
+			}
+			if (tags.emotes && typeof tags.emotes !== 'string') {
+				const legacyEmotes = serializeTwitchEmotesForLegacy(tags.emotes);
+				if (legacyEmotes) {
+					tags.emotes = legacyEmotes;
+				} else if (typeof tags.emotes !== 'string') {
+					delete tags.emotes;
+				}
+			}
+			if (payload.bits && !tags.bits) {
+				tags.bits = payload.bits;
+			}
+		if (!tags['tmi-sent-ts'] && payload.timestamp) {
+			tags['tmi-sent-ts'] = payload.timestamp;
+		}
+		const channelName = (raw.channel || payload.channel || channel || '').replace(/^#/, '');
+		const login = (tags.username || payload.username || payload.chatname || 'twitchuser').toLowerCase();
+		const trailing = payload.rawMessage ?? payload.chatmessage ?? '';
+
+		return {
+			tags,
+			prefix: `${login}!${login}@${login}.tmi.twitch.tv`,
+			command: 'PRIVMSG',
+			params: [`#${channelName}`],
+			trailing,
+			raw,
+			__normalizedPayload: payload
+		};
+	}
+
+	function convertMembershipPayloadToUserNotice(payload) {
+		const tags = { ...(payload.raw?.userstate || {}) };
+		if (!tags['display-name']) {
+			tags['display-name'] = payload.chatname || tags.username || '';
+		}
+		if (!tags['msg-id']) {
+			tags['msg-id'] = payload.event || 'notification';
+		}
+		if (!tags['system-msg'] && payload.chatmessage) {
+			tags['system-msg'] = payload.chatmessage;
+		}
+		if (payload.viewers && !tags['msg-param-viewerCount']) {
+			tags['msg-param-viewerCount'] = payload.viewers;
+		}
+		return {
+			tags,
+			trailing: payload.rawMessage || payload.chatmessage || '',
+			__normalizedPayload: payload
+		};
+	}
+
+	async function handleNormalizedChatMessage(payload) {
+		if (!payload) {
+			return;
+		}
+		const legacy = convertChatPayloadToLegacyMessage(payload);
+		await processMessage(legacy);
+	}
+
+	async function handleNormalizedMembership(payload) {
+		if (!payload) {
+			return;
+		}
+		if (payload.event === 'cheer') {
+			await handleNormalizedChatMessage({
+				...payload,
+				raw: payload.raw,
+				rawMessage: payload.rawMessage ?? payload.chatmessage ?? ''
+			});
+			return;
+		}
+		if (!settings.captureevents) {
+			return;
+		}
+		const notice = convertMembershipPayloadToUserNotice(payload);
+		await processUserNotice(notice);
+	}
+
+	async function handleNormalizedRaid(payload) {
+		if (!payload || !settings.captureevents) {
+			return;
+		}
+		const tags = {
+			'display-name': payload.chatname || '',
+			'system-msg': payload.chatmessage || '',
+			'msg-id': payload.event || 'raid',
+			'msg-param-viewerCount': payload.viewers || ''
+		};
+		const notice = {
+			tags,
+			trailing: payload.rawMessage || payload.chatmessage || '',
+			__normalizedPayload: payload
+		};
+		await processUserNotice(notice);
+	}
+
+	function handleNormalizedNotice(payload) {
+		if (!payload) {
+			return;
+		}
+		console.log('Twitch notice', payload);
+	}
+
+	function handleNormalizedClear(payload) {
+		if (!payload) {
+			return;
+		}
+		console.log('Twitch chat cleared', payload);
+	}
+
+	function handleNormalizedWhisper(payload) {
+		if (!payload) {
+			return;
+		}
+		console.log('Twitch whisper', payload);
+	}
+
+	function handleNormalizedError(error) {
+		if (!error) {
+			return;
+		}
+		console.error('Twitch chat client error', error);
+		setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 	}
 
 	// Listen for UI moderation/ad requests from twitch.html
@@ -599,12 +1144,6 @@ let badges = null;
 	}
 
 
-	function handleWebSocketClose(event) {
-	   // console.log('Disconnected:', event);
-		console.log('Attempting to reconnect...');
-		setTimeout(connect, 10000); // Reconnect after 10 seconds
-	}
-
 	function signOut() {
 		localStorage.removeItem('twitchOAuthToken');
 		localStorage.removeItem('twitchChannel');
@@ -612,8 +1151,13 @@ let badges = null;
 		sessionStorage.removeItem('twitchOAuthState');
 		sessionStorage.removeItem('twitchOAuthToken');
 		
-		if (typeof websocket !== 'undefined' && websocket && websocket.readyState === WebSocket.OPEN) {
-			websocket.close();
+		if (chatClient) {
+			try {
+				chatClient.disconnect();
+			} catch (err) {
+				console.warn('Failed to disconnect Twitch chat client on sign out', err);
+			}
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 
 		updateHeaderInfo(null, null);
@@ -624,13 +1168,14 @@ let badges = null;
 		console.log('Signed out successfully');
 	}
 
-	function handleSendMessage(event) {
+	async function handleSendMessage(event) {
 		event.preventDefault();
 		const inputElement = document.querySelector('#input-text');
 		if (inputElement) {
 			var msg = inputElement.value.trim();
 			if (msg) {
-				if (sendMessage(msg)) {
+				const sent = await sendMessage(msg);
+				if (sent) {
 					inputElement.value = "";
 					let builtmsg = {};
 					builtmsg.command = "PRIVMSG";
@@ -644,14 +1189,14 @@ let badges = null;
 						badges: userBadges || '',
 						color: localStorage.getItem('userColor') || ''
 					};
-					processMessage(builtmsg);
+					await processMessage(builtmsg);
 				}
 			}
 		}
 	}
 	function handleEnterKey(event) {
 		if (event.key === 'Enter') {
-			handleSendMessage(event);
+			handleSendMessage(event).catch((err) => console.error('Twitch handleSendMessage failed', err));
 		}
 	}
 
@@ -810,88 +1355,28 @@ let badges = null;
 		return text;
 	}
 
-
-	function parseMessage(rawMessage) {
-	  let parsedMessage = {
-		tags: {},
-		prefix: null,
-		command: null,
-		params: [],
-		trailing: null
-	  };
-
-	  // Parse tags
-	  if (rawMessage.startsWith('@')) {
-		const tagsEnd = rawMessage.indexOf(' ');
-		const tagsPart = rawMessage.slice(1, tagsEnd);
-		rawMessage = rawMessage.slice(tagsEnd + 1);
-		
-		tagsPart.split(';').forEach(tag => {
-		  const [key, value] = tag.split('=');
-		  parsedMessage.tags[key] = value || true;
-		});
-	  }
-
-	  // Parse prefix
-	  if (rawMessage.startsWith(':')) {
-		const prefixEnd = rawMessage.indexOf(' ');
-		parsedMessage.prefix = rawMessage.slice(1, prefixEnd);
-		rawMessage = rawMessage.slice(prefixEnd + 1);
-	  }
-
-	  // Parse command and params
-	  const parts = rawMessage.split(' ');
-	  parsedMessage.command = parts.shift().toUpperCase();
-
-	  // Parse trailing
-	  const trailingStart = rawMessage.indexOf(' :');
-	  if (trailingStart !== -1) {
-		parsedMessage.trailing = rawMessage.slice(trailingStart + 2);
-		parts.pop(); // Remove trailing from parts
-	  }
-
-	  parsedMessage.params = parts;
-
-	  return parsedMessage;
-	}
-
-	function sendMessage(message) {
-		if (checkAuthStatus()){
-			if (websocket.readyState === WebSocket.OPEN) {
-				const command = `PRIVMSG #${channel} :${message}`;
-				//console.log('Sending message:', command);
-				websocket.send(command);
-				return true;
-			} else {
-				console.error('WebSocket is not open.');
-			}
+	async function sendMessage(message) {
+		await modulesReady;
+		if (!checkAuthStatus()) {
+			return false;
 		}
-		return false;
+		const client = await ensureChatClientInstance();
+		try {
+			await client.sendMessage(message, channel);
+			return true;
+		} catch (error) {
+			console.error('Failed to send Twitch chat message', error);
+			return false;
+		}
 	}
 	function replaceEmotesWithImages(text, twitchEmotes = null, isBitMessage = false) {
-		// First, handle Twitch native emotes if provided
-		if (twitchEmotes && Object.keys(twitchEmotes).length > 0) {
-			// Sort emote positions to replace from end to start (to maintain indices)
-			const sortedEmotes = Object.entries(twitchEmotes)
-				.flatMap(([emoteId, positions]) => 
-					positions.map(pos => ({ emoteId, start: parseInt(pos.start), end: parseInt(pos.end) }))
-				)
-				.sort((a, b) => b.start - a.start);
-			
-			// Replace emotes from end to start
-			let result = text;
-			sortedEmotes.forEach(({ emoteId, start, end }) => {
-				const emoteName = text.substring(start, end + 1);
-				if (settings.textonlymode) {
-					// In text-only mode, just keep the emote name
-					result = result.substring(0, start) + emoteName + result.substring(end + 1);
-				} else {
-					const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
-					const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
-					result = result.substring(0, start) + emoteImg + result.substring(end + 1);
-				}
-			});
-			text = result;
+		let workingText = typeof text === 'string' ? text : '';
+		if (workingText && twitchEmotes) {
+			workingText = renderNativeEmotesWithFallback(
+				workingText,
+				twitchEmotes,
+				Boolean(settings.textonlymode)
+			);
 		}
 		
 		// Handle cheermotes (bit emotes) if this is a bit message
@@ -900,7 +1385,7 @@ let badges = null;
 			// Matches patterns like: Cheer100, 4Head100, Kappa1000, etc.
 			const cheermoteRegex = /\b(Cheer|Kappa|Kreygasm|SwiftRage|4Head|PJSalt|MrDestructoid|TriHard|NotLikeThis|FailFish|VoHiYo|PogChamp|FrankerZ|HeyGuys|DansGame|EleGiggle|BibleThump|Jebaited|SeemsGood|LUL|VoteYea|VoteNay|HotPokket|OpieOP|FutureMan|FBCatch|TBAngel|PeteZaroll|TwitchUnity|CoolStoryBob|PopCorn|KAPOW|PowerUpR|PowerUpL|DarkMode|HSCheers|PurpleStar|FBPass|FBRun|FBChallenge|RedCoat|GreenTeam|PurpleTeam|HolidayCheer|BitBoss|Streamlabs)(\d+)\b/gi;
 			
-			text = text.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
+			workingText = workingText.replace(cheermoteRegex, (match, emoteName, bitAmount) => {
 				const amount = parseInt(bitAmount);
 				
 				if (settings.textonlymode) {
@@ -932,10 +1417,10 @@ let badges = null;
 		
 		// Then handle third-party emotes (BTTV, 7TV, FFZ)
 		if (!EMOTELIST) {
-			return text;
+			return workingText;
 		}
 		
-		return text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+		return workingText.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
 			const emote = EMOTELIST[emoteMatch];
 			if (emote) {
 				if (settings.textonlymode) {
@@ -948,6 +1433,97 @@ let badges = null;
 			}
 			return match;
 		});
+	}
+
+	function fallbackParseTwitchEmotes(source) {
+		if (!source) {
+			return [];
+		}
+		if (typeof parseTwitchEmotes === 'function') {
+			return parseTwitchEmotes(source);
+		}
+		if (typeof source === 'string') {
+			return source
+				.split('/')
+				.map((part) => {
+					const [id, positions] = part.split(':');
+					if (!id || !positions) {
+						return null;
+					}
+					return {
+						id,
+						positions: positions.split(',').map((range) => {
+							const [start, end] = range.split('-');
+							return { start, end };
+						})
+					};
+				})
+				.filter(Boolean);
+		}
+		if (source && typeof source === 'object') {
+			return Object.entries(source)
+				.map(([id, positions]) => ({ id, positions }))
+				.filter(Boolean);
+		}
+		return [];
+	}
+
+	function legacyRenderNativeEmotes(text, emotesSource, textOnlyMode) {
+		const parsed = fallbackParseTwitchEmotes(emotesSource);
+		if (!parsed.length) {
+			return text;
+		}
+		const flattened = parsed
+			.flatMap(({ id, positions }) =>
+				Array.isArray(positions)
+					? positions.map((pos) => ({
+							emoteId: id,
+							start: Number.parseInt(pos.start ?? pos[0], 10),
+							end: Number.parseInt(pos.end ?? pos[1], 10)
+						}))
+					: []
+			)
+			.filter(
+				(entry) =>
+					Number.isFinite(entry.start) &&
+					Number.isFinite(entry.end) &&
+					entry.end >= entry.start
+			)
+			.sort((a, b) => b.start - a.start);
+		if (!flattened.length) {
+			return text;
+		}
+		let result = text;
+		flattened.forEach(({ emoteId, start, end }) => {
+			const emoteName = text.substring(start, end + 1);
+			if (textOnlyMode) {
+				result = result.substring(0, start) + emoteName + result.substring(end + 1);
+			} else {
+				const emoteUrl = `https://static-cdn.jtvnw.net/emoticons/v2/${emoteId}/default/dark/2.0`;
+				const emoteImg = `<img src="${emoteUrl}" alt="${escapeHtml(emoteName)}" title="${escapeHtml(emoteName)}" class="regular-emote"/>`;
+				result = result.substring(0, start) + emoteImg + result.substring(end + 1);
+			}
+		});
+		return result;
+	}
+
+	function renderNativeEmotesWithFallback(text, emoteSource, textOnlyMode) {
+		if (!text || !emoteSource) {
+			return text;
+		}
+		if (typeof renderTwitchNativeEmotes === 'function') {
+			try {
+				return renderTwitchNativeEmotes(text, emoteSource, {
+					textOnly: textOnlyMode,
+					escapeHtml,
+					imageClassName: 'regular-emote',
+					textIsSafe: true
+				});
+			} catch (error) {
+				console.warn('Falling back to legacy Twitch emote renderer', error);
+			}
+		}
+		return legacyRenderNativeEmotes(text, emoteSource, textOnlyMode);
 	}
 
 	function escapeHtml(unsafe) {
@@ -1115,8 +1691,9 @@ let badges = null;
 	async function processMessage(parsedMessage) {
 		try {
 		//console.log("Processing message:", parsedMessage);
+		const normalizedPayload = parsedMessage.__normalizedPayload || null;
 		const user = parsedMessage.prefix.split('!')[0];
-		const message = parsedMessage.trailing;
+		const message = normalizedPayload?.rawMessage ?? parsedMessage.trailing;
 		// Clean channel name from params (remove # prefix)
 		if (parsedMessage.params[0]) {
 			channel = parsedMessage.params[0].replace(/^#/, '');
@@ -1195,14 +1772,22 @@ let badges = null;
 			displayMessage = `<i><small>${escapeHtml(replyMessage)}:</small></i> ${displayMessage}`;
 		}
 		
-		span.innerHTML = `${badgeHtml}${escapeHtml((userInfo ? userInfo.display_name : user))}: ${displayMessage}`;
+		const resolvedDisplayName = normalizedPayload?.chatname || (userInfo ? userInfo.display_name : user);
+		span.innerHTML = `${badgeHtml}${escapeHtml(resolvedDisplayName)}: ${displayMessage}`;
 		document.querySelector("#textarea").appendChild(span);
 		if (document.querySelector("#textarea").childNodes.length > 10) {
 			document.querySelector("#textarea").childNodes[0].remove();
 		}
 
 		var data = {};
-		data.chatname = userInfo ? userInfo.display_name : user;
+		const normalizedEventType = normalizedPayload?.event;
+		const normalizedEventTypeLower =
+			typeof normalizedEventType === 'string' ? normalizedEventType.toLowerCase() : '';
+		// Chat messages must never set data.event; reserve it for true system events (raids, cheers, /me actions, etc.).
+		if (normalizedEventType && normalizedEventTypeLower !== 'message' && normalizedEventTypeLower !== 'chat') {
+			data.event = normalizedEventType;
+		}
+		data.chatname = resolvedDisplayName;
 		data.username = user;
 		
 		// Convert badge URLs to badge objects
@@ -1213,27 +1798,10 @@ let badges = null;
 		data.nameColor = parsedMessage.tags?.color || "";
 		
 		// Parse Twitch emotes from tags
-		let twitchEmotes = null;
-		if (parsedMessage.tags && parsedMessage.tags.emotes && typeof parsedMessage.tags.emotes === 'string' && parsedMessage.tags.emotes.trim() !== '') {
-			try {
-				twitchEmotes = {};
-				// Emotes format: "emote_id:start-end,start-end/emote_id:start-end"
-				const emoteParts = parsedMessage.tags.emotes.split('/');
-				emoteParts.forEach(part => {
-					if (!part) return;
-					const [emoteId, positions] = part.split(':');
-					if (emoteId && positions) {
-						twitchEmotes[emoteId] = positions.split(',').map(pos => {
-							const [start, end] = pos.split('-');
-							return { start, end };
-						});
-					}
-				});
-			} catch (e) {
-				console.error('Error parsing Twitch emotes:', e);
-				twitchEmotes = null;
-			}
-		}
+		const twitchEmotes =
+			parsedMessage?.tags && parsedMessage.tags.emotes
+				? parsedMessage.tags.emotes
+				: null;
 		
 		// Check if this is a bit message
 		const isBitMessage = !!(parsedMessage.tags && parsedMessage.tags.bits);
@@ -1264,9 +1832,18 @@ let badges = null;
 		data.mod = mod;
 
 		try {
-			data.chatimg = userInfo ? userInfo.profile_image_url : "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
+			if (userInfo && userInfo.profile_image_url) {
+				data.chatimg = userInfo.profile_image_url;
+			} else if (normalizedPayload?.chatimg) {
+				data.chatimg = normalizedPayload.chatimg;
+			} else {
+				data.chatimg = "https://api.socialstream.ninja/twitch/?username=" + encodeURIComponent(user);
+			}
 		} catch (e) {
-			data.chatimg = "";
+			data.chatimg = normalizedPayload?.chatimg || "";
+		}
+		if (normalizedPayload?.timestamp) {
+			data.timestamp = normalizedPayload.timestamp;
 		}
 		data.hasDonation = hasDonation;
 		if (channel) {
@@ -1693,12 +2270,14 @@ async function cleanupCurrentConnection() {
 			tokenValidationInterval = null;
 		}
 
-		// Close WebSocket connections
-		if (websocket) {
-			if (websocket.readyState === WebSocket.OPEN || websocket.readyState === WebSocket.CONNECTING) {
-				websocket.close();
+		// Close chat connection
+		if (chatClient) {
+			try {
+				chatClient.disconnect();
+			} catch (err) {
+				console.warn('Failed to disconnect Twitch chat client during cleanup', err);
 			}
-			websocket = null;
+			setWebsocketReadyState(WEBSOCKET_READY_STATE.CLOSED);
 		}
 		
 		if (eventSocket) {

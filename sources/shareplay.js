@@ -74,25 +74,19 @@ function toDataURL(url, callback) {
 	
 	function processMessage(ele){
 		
+		//console.log(ele);
+		
 		var name="";
 		try {
-			name = ele.dataset.username || "";
-			
+			name = ele.querySelector('[type="message"] p').innerText;
 		} catch(e){
 			name = "";
 		}
 		
-		if (!name){
-			try {
-				name = escapeHtml(ele.querySelector(".chat--content--heading").innerText);
-			}catch(e){
-			//	console.log(e);
-			}
-		}
 		
 		var msg = "";
 		try {
-			msg = getAllContentNodes(ele.querySelector('.chat--content'));
+			msg = getAllContentNodes(ele.querySelector('.message'));
 			
 		}catch(e){msg = "";}
 		
@@ -103,7 +97,7 @@ function toDataURL(url, callback) {
 		var contentimg = "";
 		
 		try {
-			chatimg =  ele.querySelector(".avatar--wrapper img[src]").src;
+			chatimg =  ele.querySelector("img[src][data-nuxt-img]").src;
 		} catch(e){
 			chatimg = "";
 		}
@@ -177,7 +171,7 @@ function toDataURL(url, callback) {
 				for (var i=0;i<nodes.length;i++){
 					try {
 						if (nodes[i] && nodes[i].nodeName && nodes[i].nodeName == "DIV"){
-							var chatContainers = nodes[i].querySelectorAll('.chat--replies--wrapper');
+							var chatContainers = nodes[i].querySelectorAll('[createdat]');
 							chatContainers = [...chatContainers];
 							chatContainers.forEach(ele2=>{
 								if (ele2 && ele2.nodeName && ele2.nodeName == "DIV"){
@@ -191,7 +185,7 @@ function toDataURL(url, callback) {
 			}
 		};
 		if (!target){return;}
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		var observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
@@ -200,12 +194,12 @@ function toDataURL(url, callback) {
 	console.log("social stream injected");
 
 	setInterval(function(){
-		var chatContainer = document.querySelector('div.user--chat--wrap')
+		var chatContainer = document.querySelector('[streamer-info]')
 		if (chatContainer){
 			if (!chatContainer.marked){
 				chatContainer.marked=true;
 				setTimeout(function(){
-					var chatContainers = document.querySelectorAll('div.user--chat--wrap .chat--replies--wrapper');
+					var chatContainers = document.querySelectorAll('[streamer-info] [createdat]');
 					chatContainers = [...chatContainers];
 					chatContainers.forEach(ele=>{
 						if (ele && ele.nodeName && ele.nodeName == "DIV"){
@@ -213,7 +207,7 @@ function toDataURL(url, callback) {
 							//processMessage(ele);
 						}
 					});
-					onElementInserted(chatContainer);
+					onElementInserted(document.querySelector('[streamer-info]'));
 				},3000);
 			}
 		}

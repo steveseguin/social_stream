@@ -25,7 +25,7 @@ Messages within the SSN system generally follow a JSON object structure. Key fie
 -   `timestamp`: Time the message was received or generated.
 -   `hasDonation`: String describing a donation amount/type (e.g., "$5.00", "100 bits").
 -   `membership`: Information about user membership/subscription status.
--   `event`: Indicates if the message represents a stream event (e.g., "follow", "viewer_update").
+-   `event`: Indicates if the message represents a stream event (e.g., "follow", "viewer_update"). Regular chat messages must omit this field (or leave it empty/false) so they are never treated as system events.
 -   `userid`: Platform-specific user identifier.
 -   `nameColor`: User's name color (if available/enabled).
 -   `chatbadges`: Array of badge URLs or objects representing user badges.

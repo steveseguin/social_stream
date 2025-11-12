@@ -148,10 +148,10 @@ chrome.tabs.onRemoved.addListener(async (tabId) => {
 
 function sendMessageToBackgroundPage(message, sendResponse) {
   log("sending message", message);
-  
-  // Always use runtime.sendMessage - the background page listens to chrome.runtime.onMessage
-  // regardless of whether it's a service worker background or a tab
-  chrome.runtime.sendMessage(message.data, (response) => {
+
+  const payload = message.data;
+
+  const deliverResponse = (response) => {
     log("response", response);
     if (chrome.runtime.lastError) {
       console.error("Error sending message to background:", chrome.runtime.lastError);
@@ -159,7 +159,24 @@ function sendMessageToBackgroundPage(message, sendResponse) {
     } else {
       sendResponse(response);
     }
-  });
+  };
+
+  const sendViaRuntime = () => {
+    chrome.runtime.sendMessage(payload, deliverResponse);
+  };
+
+  if (backgroundPageTabId !== null) {
+    chrome.tabs.sendMessage(backgroundPageTabId, payload, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn("Tab messaging failed, falling back to runtime:", chrome.runtime.lastError);
+        sendViaRuntime();
+      } else {
+        deliverResponse(response);
+      }
+    });
+  } else {
+    sendViaRuntime();
+  }
 }
 
 function injectCustomSource(source, tabId) {
@@ -187,6 +204,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     injectCustomSource(message.source, message.tabId);
   } else if (message.type === 'toBackground') {
     log("SERVICE WORKER: ", message);
+
+    if (message?.data?.cmd === 'spotifyAuth') {
+      // Fire-and-forget Spotify auth so the popup gets an immediate ack
+      sendResponse({ success: false, waitingForCallback: true, message: 'Starting Spotify authorization…' });
+      sendMessageToBackgroundPage(message, () => {});
+      return true;
+    }
 
     checkBackgroundPageIsOpen().then((isOpen) => {
       if (!isOpen) {

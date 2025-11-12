@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.34.13",
+  "version": "3.36.3",
   "homepage_url": "http://socialstream.ninja/",
   "icons": {
     "128": "icons/icon-128.png"
@@ -27,6 +27,21 @@
   ],
   "web_accessible_resources": [
     {
+      "resources": [
+        "providers/kick/core.js",
+        "providers/twitch/chatClient.js",
+        "providers/youtube/liveChat.js",
+        "providers/youtube/contextResolver.js",
+        "providers/youtube/messageNormalizer.js",
+        "shared/utils/scriptLoader.js",
+        "shared/utils/html.js",
+        "shared/utils/twitchEmotes.js",
+        "shared/vendor/tmi.js",
+        "shared/vendor/tmi.module.js"
+      ],
+      "matches": ["<all_urls>"]
+    },
+    {
       "resources": ["sources/inject/streamelements-ws.js"],
       "matches": ["https://streamelements.com/*"]
     }
@@ -42,10 +57,10 @@
 	"https://soulbound.tv/*",
 	"https://claude.ai/*",
 	"https://lfg.tv/*",
-	"https://www.moonbeam.stream/*",
 	"https://*.patreon.com/*",
 	"https://patreon.com/*",
 	"https://simps.com/app/*",
+	"https://velora.tv/*",
 	"https://studio.favorited.com/popout/chat",
 	"https://*/*autoreloadwithsocialstream",
 	"https://*.webinargeek.com/webinar/*",
@@ -214,7 +229,8 @@
     "https://studio.megaphonetv.com/*",
     "https://apps.megaphonetv.com/*",
     "https://app.sessions.us/*",
-    "https://www.shareplay.tv/chat/*",
+    "https://www.shareplay.tv/*",
+	"https://shareplay.tv/*",
     "https://pilled.net/*",
     "https://*.mixlr.com/events/*",
     "https://chzzk.naver.com/live/*/chat",
@@ -273,6 +289,10 @@
     {
       "js": [ "./sources/cherrytv.js" ],
       "matches": [ "https://cherry.tv/*" ]
+    },
+	{
+      "js": [ "./sources/velora.js" ],
+      "matches": [ "https://velora.tv/*" ]
     },
 	{
       "js": [ "./sources/myfreecams.js" ],
@@ -363,10 +383,6 @@
       "matches": [ "https://rutube.ru/live/chat/*/" ]
     },
 	{
-      "js": [ "./sources/moonbeam.js" ],
-      "matches": [ "https://www.moonbeam.stream/*" ]
-    },
-	{
       "js": ["./sources/fc2.js"],
       "matches": [ "https://live.fc2.com/*/" ]
     },
@@ -394,7 +410,7 @@
     },
     {
       "js": [ "./sources/shareplay.js" ],
-      "matches": [ "https://www.shareplay.tv/chat/*" ]
+      "matches": [ "https://*.shareplay.tv/*" ,"https://shareplay.tv/*"]
     },
     {
       "js": [ "./sources/jaco.js" ],
@@ -555,7 +571,17 @@
 		"https://beta.socialstream.ninja/sources/websocket/youtube*",
 		"https://socialstream.ninja/beta/sources/websocket/youtube*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/youtube.html*",
-		"http://localhost:8080/youtube.html*"
+		"http://localhost:8080/*/youtube.html*"
+      ]
+    },
+	{
+      "js": [ "./sources/websocket/youtube_streaming.js" ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/youtube_streaming*",
+		"https://beta.socialstream.ninja/sources/websocket/youtube_streaming*",
+		"https://socialstream.ninja/beta/sources/websocket/youtube_streaming*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/youtube_streaming.html*",
+		"http://localhost:8080/*/youtube_streaming.html*"
       ]
     },
     {
@@ -627,7 +653,7 @@
 		"https://socialstream.ninja/beta/sources/websocket/bilibili*",
 		"https://beta.socialstream.ninja/sources/websocket/bilibili*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/bilibili.html*",
-		"http://localhost:8080/bilibili.html*"
+		"http://localhost:8080/*/bilibili.html*"
       ]
     },
     {
@@ -662,7 +688,7 @@
 		"https://beta.socialstream.ninja/sources/websocket/twitch*",
 		"https://socialstream.ninja/beta/sources/websocket/twitch*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*",
-		"http://localhost:8080/twitch.html*"
+		"http://localhost:8080/*/twitch.html*"
       ]
     },
     {
@@ -672,7 +698,7 @@
 		"https://beta.socialstream.ninja/sources/websocket/kick*",
 		"https://socialstream.ninja/beta/sources/websocket/kick*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*",
-		"http://localhost:8080/kick.html*"
+		"http://localhost:8080/*/kick.html*"
       ]
     },
 	{
@@ -682,7 +708,7 @@
 		"https://socialstream.ninja/beta/sources/websocket/irc*",
 		"https://beta.socialstream.ninja/sources/websocket/irc*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/irc.html*",
-		"http://localhost:8080/irc.html*"
+		"http://localhost:8080/*/irc.html*"
       ]
     },
 	{
@@ -692,7 +718,7 @@
 		"https://socialstream.ninja/beta/sources/websocket/stageten*",
 		"https://beta.socialstream.ninja/sources/websocket/stageten*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/stageten.html*",
-		"http://localhost:8080/stageten.html*"
+		"http://localhost:8080/*/stageten.html*"
       ]
     },
     {
@@ -814,12 +840,8 @@
     },
     {
       "js": [ "./sources/teams.js" ],
-      "matches": [ "https://teams.microsoft.com/*", "https://teams.cloud.microsoft/*" ],
+      "matches": [ "https://teams.live.com/*", "https://teams.cloud.microsoft/*", "https://teams.microsoft.com/*"],
       "all_frames": true
-    },
-    {
-      "js": [ "./sources/teams.js" ],
-      "matches": [ "https://teams.live.com/*", "https://teams.cloud.microsoft/*" ]
     },
     {
       "js": [ "./sources/peertube.js" ],
@@ -842,7 +864,7 @@
       "matches": [
         "https://www.tiktok.com/*live*",
         "https://livecenter.tiktok.com/*",
-		"http://localhost:8080/fav.html"
+		"http://localhost:8080/*/fav.html"
       ]
     },
     {

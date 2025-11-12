@@ -656,16 +656,15 @@ var lastMessage = {};
 
 			// Process reactions in regular DOM
 			querySelectorAllIncludingShadow('[class^="animation-reactions/"]:not([data-skip])').forEach(reaction => {
-			reaction.dataset.skip = true;
-
-			var data = {};
-			data.chatname = "";
-			data.chatmessage = reaction.querySelector("svg,img")?.outerHTML;
-			if (!data.chatmessage) return;
-			data.event = "reaction";
-			data.type = "zoom";
-			data.textonlymode = false;
-			pushMessage(data);
+				reaction.dataset.skip = true;
+				var data = {};
+				data.chatname = "";
+				data.chatmessage = reaction.querySelector("svg,img")?.outerHTML;
+				if (!data.chatmessage) return;
+				data.event = "reaction";
+				data.type = "zoom";
+				data.textonlymode = false;
+				pushMessage(data);
 			});
 
 			  // Process reactions in regular DOM
@@ -775,7 +774,7 @@ var lastMessage = {};
 	
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
-		var receiveChannelCallback = function (e) {
+		var receiveChannelCallback = function (event) {
 			remoteConnection.datachannel = event.channel;
 			remoteConnection.datachannel.onmessage = function (e) {};
 			remoteConnection.datachannel.onopen = function (e) {};

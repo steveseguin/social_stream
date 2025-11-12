@@ -302,6 +302,138 @@
 	  return target;
 	}
 
+	function stripHtmlContent(html) {
+		if (!html) {
+			return "";
+		}
+		try {
+			const parser = new DOMParser();
+			const doc = parser.parseFromString(html, "text/html");
+			if (doc && doc.body) {
+				doc.body.querySelectorAll("img").forEach((img) => {
+					const altText = img.getAttribute("alt") || img.getAttribute("title") || "";
+					const textNode = doc.createTextNode(altText);
+					img.replaceWith(textNode);
+				});
+				const text = doc.body.textContent || "";
+				return text.replace(/\s+/g, " ").trim();
+			}
+		} catch (e) {}
+		try {
+			const tempDiv = document.createElement("div");
+			tempDiv.innerHTML = policy.createHTML(html);
+			const text = tempDiv.textContent || tempDiv.innerText || "";
+			return text.replace(/\s+/g, " ").trim();
+		} catch (err) {}
+		return typeof html === "string" ? html.replace(/\s+/g, " ").trim() : "";
+	}
+
+	function extractReplyDetails(ele, currentPlainMessage = "") {
+		if (!ele) {
+			return null;
+		}
+
+		const normalizedCurrent = typeof currentPlainMessage === "string"
+			? currentPlainMessage.trim().toLowerCase()
+			: "";
+
+		const selectors = [
+			'yt-live-chat-text-message-renderer #reply-message',
+			'#reply-message',
+			'yt-live-chat-text-message-reply-renderer',
+			'yt-live-chat-text-message-reply-view-model',
+			'.yt-live-chat-text-message-reply-view-model',
+			'.yt-live-chat-text-message-renderer-reply',
+			'[id*="reply-view-model"]',
+			'[id*="reply-message"]',
+			'[data-reply-message]'
+		];
+
+		for (const selector of selectors) {
+			let node = null;
+			try {
+				node = ele.querySelector(selector);
+			} catch (error) {
+				node = null;
+			}
+			if (!node) {
+				continue;
+			}
+			let html = "";
+			try {
+				html = getAllContentNodes(node);
+			} catch (e) {
+				html = node.textContent || "";
+			}
+			const text = stripHtmlContent(html);
+			const label = (text || html || "").replace(/\s+/g, " ").trim();
+			if (!label || label.toLowerCase() === "reply") {
+				continue;
+			}
+			if (normalizedCurrent && label.toLowerCase() === normalizedCurrent) {
+				continue;
+			}
+			return {
+				label,
+				text: text || label
+			};
+		}
+
+		const dataset = ele.dataset || {};
+		for (const key in dataset) {
+			if (!Object.prototype.hasOwnProperty.call(dataset, key)) {
+				continue;
+			}
+			if (!key.toLowerCase().includes("reply")) {
+				continue;
+			}
+			const rawValue = (dataset[key] || "").toString();
+			const normalizedValue = rawValue.replace(/\s+/g, " ").trim();
+			if (!normalizedValue || normalizedValue.toLowerCase() === "reply") {
+				continue;
+			}
+			if (normalizedCurrent && normalizedValue.toLowerCase() === normalizedCurrent) {
+				continue;
+			}
+			return {
+				label: normalizedValue,
+				text: normalizedValue
+			};
+		}
+
+		try {
+			const ariaLabel = ele.getAttribute("aria-label") || "";
+			const match = ariaLabel.match(/Replying to\s+([^:]+)(?::\s*(.*))?/i);
+			if (match && match[1]) {
+				const target = match[1].trim();
+				const remainder = match[2] ? match[2].trim() : "";
+				if (normalizedCurrent && remainder && remainder.toLowerCase() === normalizedCurrent) {
+					return {
+						label: `${getTranslation("replying-to", "Replying to")} ${target}`,
+						text: remainder
+					};
+				}
+				const parts = [];
+				if (target) {
+					parts.push(target);
+				}
+				if (remainder) {
+					parts.push(remainder);
+				}
+				const label = parts.join(": ").replace(/\s+/g, " ").trim();
+				if (!label || label.toLowerCase() === "reply") {
+					return null;
+				}
+				return {
+					label,
+					text: remainder ? remainder.replace(/\s+/g, " ").trim() : label
+				};
+			}
+		} catch (e) {}
+
+		return null;
+	}
+
 	var EMOTELIST = false;
 	function mergeEmotes(){ // BTTV takes priority over 7TV in this all.
 		
@@ -911,6 +1043,26 @@
 			//console.error(chatmessage);
 			chatmessage = "";
 		}
+
+		var originalMessage = "";
+		var replyLabel = "";
+		if (!settings.excludeReplyingTo && chatmessage) {
+			const baseMessagePlain = stripHtmlContent(chatmessage);
+			const replyInfo = extractReplyDetails(ele, baseMessagePlain);
+			if (replyInfo && replyInfo.label) {
+				replyLabel = replyInfo.label;
+				originalMessage = chatmessage;
+				const replyPlainText = replyInfo.text || replyLabel;
+				if (settings.textonlymode) {
+					const prefix = replyLabel ? `${replyLabel}: ` : "";
+					const combined = `${prefix}${baseMessagePlain}`.trim();
+					chatmessage = combined || baseMessagePlain || replyPlainText || replyLabel || chatmessage;
+				} else {
+					const safeReply = escapeHtml(replyLabel);
+					chatmessage = "<i><small>" + safeReply + ":&nbsp;</small></i> " + chatmessage;
+				}
+			}
+		}
 		
 		if (!chatname && chatmessage.startsWith("Subscribers-only mode.")){
 			return;
@@ -928,6 +1080,12 @@
 		data.textColor = textColor;
 		data.chatmessage = chatmessage;
 		data.chatimg = chatimg;
+		if (replyLabel) {
+			data.initial = replyLabel;
+		}
+		if (originalMessage) {
+			data.reply = originalMessage;
+		}
 		data.hasDonation = hasDonation;
 		if (donoValue){
 			data.donoValue = donoValue;
@@ -1008,8 +1166,28 @@
 		try {
 			if ("getSource" == request){sendResponse("youtube");	return;	}
 			if ("focusChat" == request) {
-				document.querySelector("div#input").focus();
-				simulateFocus(document.querySelector("div#input"));
+				const editableInput = document.querySelector('yt-live-chat-text-input-field-renderer div#input[contenteditable]');
+				if (editableInput) {
+					editableInput.focus();
+					simulateFocus(editableInput);
+					if (editableInput.textContent && editableInput.textContent.length) {
+						editableInput.textContent = "";
+						if (editableInput.innerHTML && editableInput.innerHTML.length) {
+							editableInput.innerHTML = "";
+						}
+						try {
+							const inputEvent = new InputEvent("input", { bubbles: true, cancelable: true });
+							editableInput.dispatchEvent(inputEvent);
+						} catch (e) {}
+					}
+					sendResponse(true);
+					return;
+				}
+				const fallbackInput = document.querySelector("div#input");
+				if (fallbackInput) {
+					fallbackInput.focus();
+					simulateFocus(fallbackInput);
+				}
 				sendResponse(true);
 				return;
 			}
@@ -1504,7 +1682,7 @@
 
 	///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
 	try {
-		var receiveChannelCallback = function (e) {
+		var receiveChannelCallback = function (event) {
 			remoteConnection.datachannel = event.channel;
 			remoteConnection.datachannel.onmessage = function (e) {};
 			remoteConnection.datachannel.onopen = function (e) {};

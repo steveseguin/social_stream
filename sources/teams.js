@@ -374,19 +374,34 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 	}
 	console.log("social stream injected");
 
-	setInterval(function(){
+		setInterval(function(){
 		
 		document.querySelectorAll('iframe').forEach( item =>{
-			if (item && item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]')){
-				if (!item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]').marked){
+			var frameDoc = null;
+			try {
+				if (item && item.contentWindow){
+					frameDoc = item.contentWindow.document;
+				}
+			} catch (err) {
+				// accessing cross-origin iframe throws; skip it
+				frameDoc = null;
+			}
+			
+			if (!frameDoc || !frameDoc.body){
+				return;
+			}
+			
+			var viewport = frameDoc.body.querySelector('[data-view="message-pane-list-viewport"]');
+			if (viewport){
+				if (!viewport.marked){
 					console.log("!!!!!!!!!!!!!!!!!! ACTIVATED? in iframe");
 					lastName = "";
 					lastImage = "";
-					item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]').marked=true;
+					viewport.marked=true;
 					
 					setTimeout(function(ele){
 						onElementInserted(ele, processMessage);
-					},1000, item.contentWindow.document.body.querySelector('[data-view="message-pane-list-viewport"]'));
+					},1000, viewport);
 					
 					startListener();
 				}
@@ -407,7 +422,7 @@ function toDataURL(blobUrl, callback, maxSizeKB = 10) {
 							});
 							
 							onElementInserted(ele, processMessage2);
-						},3000, document.querySelector('#chat-pane-list'));
+						},4000, document.querySelector('#chat-pane-list'));
 					
 					startListener();
 				}

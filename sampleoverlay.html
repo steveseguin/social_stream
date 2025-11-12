@@ -97,12 +97,19 @@ body, html {
     opacity: 0;
     transform: translateY(30px);
     transition: opacity 0.6s ease-out, transform 0.6s ease-out,
-                max-height 0.5s ease-in-out, margin-bottom 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, border-width 0.5s ease-in-out;
+                max-height 0.5s ease-in-out, margin-bottom 0.5s ease-in-out, padding-top 0.5s ease-in-out, padding-bottom 0.5s ease-in-out, border-width 0.5s ease-in-out, filter 0.3s ease-out;
     flex-shrink: 0;
     overflow: hidden;
     max-height: 500px; 
     box-sizing: border-box;
     position: relative;
+    --scroll-opacity: 1;
+    filter: opacity(var(--scroll-opacity));
+    will-change: transform, opacity, filter;
+}
+
+.message.proximity-fading {
+    --scroll-opacity: 0;
 }
 
 .message-with-edge {
@@ -200,6 +207,68 @@ body, html {
     const topSpacer = document.getElementById('spacer');
 	const messageTimestamps = new Map();
     const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000; 
+    const PROXIMITY_FADE_DISTANCE = (() => {
+        if (urlParams.has("fadezone")) {
+            const parsed = parseInt(urlParams.get("fadezone"), 10);
+            if (!Number.isNaN(parsed) && parsed >= 0) {
+                return parsed;
+            }
+        }
+        return 160; // Pixels before reaching top where fade begins
+    })();
+
+    // Gradually fade out each message as it approaches the top edge of the chat container.
+    function updateProximityFade() {
+        const messages = Array.from(messageListWrapper.children).filter(
+            child => child.id !== 'spacer' && child.classList.contains('message')
+        );
+
+        if (messages.length === 0) {
+            requestAnimationFrame(updateProximityFade);
+            return;
+        }
+
+        const containerRect = chatContainer.getBoundingClientRect();
+        const fadeDistance = PROXIMITY_FADE_DISTANCE;
+
+        messages.forEach(message => {
+            if (!message.isConnected) {
+                return;
+            }
+            if (fadeDistance <= 0) {
+                if (message.style.getPropertyValue('--scroll-opacity') !== '1') {
+                    message.style.removeProperty('--scroll-opacity');
+                }
+                message.classList.remove('proximity-fading');
+                delete message.dataset.proximityFadeStarted;
+                return;
+            }
+
+            const rect = message.getBoundingClientRect();
+            const distanceFromTop = rect.top - containerRect.top;
+            const fadeStarted = message.dataset.proximityFadeStarted === 'true';
+
+            if (distanceFromTop <= fadeDistance) {
+                if (!fadeStarted) {
+                    message.dataset.proximityFadeStarted = 'true';
+                    message.classList.add('proximity-fading');
+                    message.style.setProperty('--scroll-opacity', '0');
+                }
+                return;
+            }
+
+            if (!fadeStarted) {
+                if (message.classList.contains('proximity-fading')) {
+                    message.classList.remove('proximity-fading');
+                }
+                message.style.removeProperty('--scroll-opacity');
+            }
+        });
+
+        requestAnimationFrame(updateProximityFade);
+    }
+
+    requestAnimationFrame(updateProximityFade);
 
     function adjustMessageWrapperScroll() {
         requestAnimationFrame(() => {

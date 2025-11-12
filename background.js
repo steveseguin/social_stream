@@ -18,6 +18,7 @@ var messageTimeout = {};
 var lastSentMessage = "";
 var lastSentTimestamp = 0;
 var lastMessageCounter = 0;
+const fakeChatThrottleState = new Map();
 var sentimentAnalysisLoaded = false;
 
 // Spotify integration
@@ -30,6 +31,273 @@ var lastAntiSpam = 0;
 
 var connectedPeers = {};
 var isSSAPP = false;
+
+const HANDLE_DB_NAME = "ssn-file-handles";
+const HANDLE_STORE_NAME = "handles";
+let fileHandleDBPromise = null;
+const HANDLE_KEYS = {
+	chatLog: "chatLog",
+	savedNames: "savedNames",
+	ticker: "tickerFile"
+};
+
+const HANDLE_STATUS_KEYS = ["chatLog", "savedNames", "ticker"];
+const HANDLE_STATUS_FIELDS = ["name", "status", "detail", "persisted"];
+const HANDLE_STATUS_STATES = {
+	ACTIVE: "active",
+	READY: "ready",
+	MISSING: "missing",
+	NEEDS_PERMISSION: "needs-permission",
+	ERROR: "error"
+};
+
+function createDefaultHandleStatus() {
+	return {
+		name: null,
+		status: HANDLE_STATUS_STATES.MISSING,
+		detail: "",
+		persisted: false,
+		lastUpdated: 0
+	};
+}
+
+function createHandleStatusState() {
+	const state = {};
+	for (const key of HANDLE_STATUS_KEYS) {
+		state[key] = createDefaultHandleStatus();
+	}
+	return state;
+}
+
+const handleStatusState = createHandleStatusState();
+
+function cloneHandleStatusEntry(entry) {
+	return { ...entry };
+}
+
+function ensureHandleStatusCache() {
+	return handleStatusState;
+}
+
+function getHandleStatusSnapshot() {
+	const snapshot = {};
+	for (const key of HANDLE_STATUS_KEYS) {
+		snapshot[key] = cloneHandleStatusEntry(handleStatusState[key]);
+	}
+	return snapshot;
+}
+
+function getFileHandleDisplayName(handle) {
+	if (!handle) {
+		return null;
+	}
+	try {
+		if (typeof handle === "string") {
+			const normalized = handle.replace(/\\/g, "/");
+			const parts = normalized.split("/");
+			return parts.pop() || normalized;
+		}
+		if (handle.name) {
+			return handle.name;
+		}
+	} catch (error) {
+		console.warn("Could not derive handle name", error);
+	}
+	return null;
+}
+
+function broadcastHandleStatus(keys = HANDLE_STATUS_KEYS) {
+	if (!handleStatusState || !keys || !keys.length) {
+		return;
+	}
+	const payload = {};
+	keys.forEach((key) => {
+		if (handleStatusState[key]) {
+			payload[key] = cloneHandleStatusEntry(handleStatusState[key]);
+		}
+	});
+	if (Object.keys(payload).length) {
+		messagePopup({ handleStatus: payload });
+	}
+}
+
+async function updateHandleStatus(key, updates = {}, options = {}) {
+	ensureHandleStatusCache();
+	if (!HANDLE_STATUS_KEYS.includes(key)) {
+		return null;
+	}
+	const current = handleStatusState[key] || createDefaultHandleStatus();
+	const next = { ...current };
+	let changed = false;
+
+	for (const field of Object.keys(updates)) {
+		if (updates[field] === undefined) {
+			continue;
+		}
+		if (next[field] !== updates[field]) {
+			next[field] = updates[field];
+			if (HANDLE_STATUS_FIELDS.includes(field)) {
+				changed = true;
+			}
+		}
+	}
+
+	if (!changed && !options.forceUpdate) {
+		return current;
+	}
+
+	next.lastUpdated = Date.now();
+	handleStatusState[key] = next;
+	if (options.broadcast !== false) {
+		broadcastHandleStatus([key]);
+	}
+	return next;
+}
+
+async function markHandleNeedsAttention(key, detail = "") {
+	ensureHandleStatusCache();
+	const existing = handleStatusState[key] || createDefaultHandleStatus();
+	if (existing.name) {
+		return updateHandleStatus(key, {
+			status: HANDLE_STATUS_STATES.NEEDS_PERMISSION,
+			detail: detail || "Click select to re-authorize access",
+			persisted: false
+		});
+	}
+	return updateHandleStatus(key, {
+		name: null,
+		status: HANDLE_STATUS_STATES.MISSING,
+		detail: detail || "",
+		persisted: false
+	});
+}
+
+function shouldUseBrowserHandleStore() {
+	return !isSSAPP && typeof indexedDB !== "undefined";
+}
+
+function getFileHandleDB() {
+	if (!shouldUseBrowserHandleStore()) {
+		return Promise.resolve(null);
+	}
+	if (fileHandleDBPromise) {
+		return fileHandleDBPromise;
+	}
+	fileHandleDBPromise = new Promise((resolve, reject) => {
+		try {
+			const request = indexedDB.open(HANDLE_DB_NAME, 1);
+			request.onerror = () => {
+				console.warn("File handle store open failed", request.error);
+				reject(request.error);
+			};
+			request.onupgradeneeded = () => {
+				const db = request.result;
+				if (!db.objectStoreNames.contains(HANDLE_STORE_NAME)) {
+					db.createObjectStore(HANDLE_STORE_NAME, { keyPath: "key" });
+				}
+			};
+			request.onsuccess = () => resolve(request.result);
+		} catch (error) {
+			console.warn("File handle store init error", error);
+			reject(error);
+		}
+	}).catch(error => {
+		console.warn("Disabling file handle persistence", error);
+		return null;
+	});
+	return fileHandleDBPromise;
+}
+
+async function persistBrowserHandle(key, handle) {
+	if (!handle || typeof handle === "string" || !shouldUseBrowserHandleStore()) {
+		return;
+	}
+	const db = await getFileHandleDB();
+	if (!db) {
+		return;
+	}
+	try {
+		await new Promise((resolve, reject) => {
+			const tx = db.transaction(HANDLE_STORE_NAME, "readwrite");
+			tx.oncomplete = resolve;
+			tx.onerror = () => reject(tx.error);
+			tx.objectStore(HANDLE_STORE_NAME).put({ key, handle });
+		});
+	} catch (error) {
+		console.warn("Unable to persist file handle", key, error);
+	}
+}
+
+async function dropBrowserHandle(key) {
+	if (!shouldUseBrowserHandleStore()) {
+		return;
+	}
+	const db = await getFileHandleDB();
+	if (!db) {
+		return;
+	}
+	try {
+		await new Promise((resolve, reject) => {
+			const tx = db.transaction(HANDLE_STORE_NAME, "readwrite");
+			tx.oncomplete = resolve;
+			tx.onerror = () => reject(tx.error);
+			tx.objectStore(HANDLE_STORE_NAME).delete(key);
+		});
+	} catch (error) {
+		console.warn("Unable to drop file handle", key, error);
+	}
+}
+
+async function ensureHandlePermission(handle, mode = "readwrite") {
+	if (!handle || typeof handle.queryPermission !== "function" || typeof handle.requestPermission !== "function") {
+		return handle;
+	}
+	try {
+		let status = await handle.queryPermission({ mode });
+		if (status === "granted") {
+			return handle;
+		}
+		if (status !== "denied") {
+			status = await handle.requestPermission({ mode });
+			if (status === "granted") {
+				return handle;
+			}
+		}
+	} catch (error) {
+		console.warn("File handle permission check failed", error);
+	}
+	return null;
+}
+
+async function restoreBrowserHandle(key, mode = "readwrite") {
+	if (!shouldUseBrowserHandleStore()) {
+		return null;
+	}
+	const db = await getFileHandleDB();
+	if (!db) {
+		return null;
+	}
+	try {
+		const record = await new Promise((resolve, reject) => {
+			const tx = db.transaction(HANDLE_STORE_NAME, "readonly");
+			tx.onerror = () => reject(tx.error);
+			const request = tx.objectStore(HANDLE_STORE_NAME).get(key);
+			request.onsuccess = () => resolve(request.result);
+			request.onerror = () => reject(request.error);
+		});
+		if (!record || !record.handle) {
+			return null;
+		}
+		const permittedHandle = await ensureHandlePermission(record.handle, mode);
+		if (permittedHandle) {
+			return permittedHandle;
+		}
+		await dropBrowserHandle(key);
+	} catch (error) {
+		console.warn("Unable to restore file handle", key, error);
+	}
+	return null;
+}
 
 var urlParams = new URLSearchParams(window.location.search);
 var devmode = urlParams.has("devmode") || false;
@@ -385,11 +653,11 @@ function generateVariations(word) {
 
 function generateVariationsList(words) {
   // Cap input size
-  const maxWordList = 1000;
+  const maxWordList = 1500;
   const wordsTrimmed = words.slice(0, maxWordList);
   
   const variationsList = [];
-  const maxTotalVariations = 10000;
+  const maxTotalVariations = 20000;
   
   for (const word of wordsTrimmed) {
     if (variationsList.length >= maxTotalVariations) break;
@@ -1524,11 +1792,20 @@ async function overwriteFile(data = false) {
         } finally {
             await restorePreviousTabAfterPicker(restoreTarget);
         }
+        await persistBrowserHandle(HANDLE_KEYS.chatLog, newFileHandle);
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newFileHandle === "string") {
             localStorage.setItem("savedFilePath", newFileHandle);
         }
+
+        const displayName = getFileHandleDisplayName(newFileHandle);
+        await updateHandleStatus("chatLog", {
+            name: displayName,
+            status: HANDLE_STATUS_STATES.ACTIVE,
+            detail: "",
+            persisted: shouldUseBrowserHandleStore() || isSSAPP
+        });
     } else if (newFileHandle && data) {
         if (typeof newFileHandle == "string") {
             ipcRenderer.send("write-to-file", { filePath: newFileHandle, data: data });
@@ -1563,11 +1840,20 @@ async function overwriteSavedNames(data = false) {
         } finally {
             await restorePreviousTabAfterPicker(restoreTarget);
         }
+        await persistBrowserHandle(HANDLE_KEYS.savedNames, newSavedNamesFileHandle);
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newSavedNamesFileHandle === "string") {
             localStorage.setItem("savedNamesFilePath", newSavedNamesFileHandle);
         }
+
+        const displayName = getFileHandleDisplayName(newSavedNamesFileHandle);
+        await updateHandleStatus("savedNames", {
+            name: displayName,
+            status: HANDLE_STATUS_STATES.ACTIVE,
+            detail: "",
+            persisted: shouldUseBrowserHandleStore() || isSSAPP
+        });
     } else if (data == "clear") {
         uniqueNameSet = [];
     } else if (data == "stop") {
@@ -1578,6 +1864,13 @@ async function overwriteSavedNames(data = false) {
         if (isSSAPP) {
             localStorage.removeItem("savedNamesFilePath");
         }
+        await dropBrowserHandle(HANDLE_KEYS.savedNames);
+        await updateHandleStatus("savedNames", {
+            name: null,
+            status: HANDLE_STATUS_STATES.MISSING,
+            detail: "",
+            persisted: false
+        });
     } else if (newSavedNamesFileHandle && data) {
         if (uniqueNameSet.includes(data)) {
             return;
@@ -2133,6 +2426,54 @@ async function getPronounsNames(username = "") {
 var Globalbttv = false;
 var Globalseventv = false;
 var Globalffz = false;
+const youtubeSeventvChannelCache = new Map();
+const youtubeChannelByTab = new Map();
+
+function normalizeYouTubeChannelId(value) {
+	if (value === undefined || value === null) {
+		return null;
+	}
+	const normalized = String(value).trim();
+	return normalized ? normalized : null;
+}
+
+function cacheYouTubeSeventvChannelEmotes(channelId, emotes) {
+	const key = normalizeYouTubeChannelId(channelId);
+	if (!key) {
+		return;
+	}
+	if (emotes && Object.keys(emotes).length) {
+		youtubeSeventvChannelCache.set(key, emotes);
+	} else {
+		youtubeSeventvChannelCache.set(key, null);
+	}
+}
+
+function getCachedYouTubeSeventvChannelEmotes(channelId) {
+	const key = normalizeYouTubeChannelId(channelId);
+	if (!key) {
+		return null;
+	}
+	if (!youtubeSeventvChannelCache.has(key)) {
+		return undefined;
+	}
+	return youtubeSeventvChannelCache.get(key);
+}
+
+function rememberYouTubeChannel(tabId, channelId) {
+	const key = normalizeYouTubeChannelId(channelId);
+	if (!tabId || !key) {
+		return;
+	}
+	youtubeChannelByTab.set(tabId, key);
+}
+
+function forgetYouTubeChannel(tabId) {
+	if (tabId === undefined || tabId === null) {
+		return;
+	}
+	youtubeChannelByTab.delete(tabId);
+}
 
 async function getBTTVEmotes(url = false, type=null, channel=null) {
 	var bttv = {};
@@ -2376,18 +2717,45 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null, userID=fal
 		}
 
 		if (type == "youtube") {
-			var vid = false;
+			let vid = false;
 			if (url) {
 				vid = YouTubeGetID(url);
 			}
 
-			if (vid) {
-				userID = localStorage.getItem("vid2uid:" + vid);
+			let resolvedChannelId = normalizeYouTubeChannelId(channel) || normalizeYouTubeChannelId(userID);
+			if (vid && resolvedChannelId) {
+				localStorage.setItem("vid2uid:" + vid, resolvedChannelId);
+			}
 
-				if (!userID) {
-					userID = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
+			if (!resolvedChannelId && vid) {
+				resolvedChannelId = localStorage.getItem("vid2uid:" + vid);
+			}
+
+			if (!resolvedChannelId && vid) {
+				resolvedChannelId = await fetch("https://api.socialstream.ninja/youtube/user?video=" + vid)
+					.then(result => {
+						return result.text();
+					})
+					.then(result => {
+						return result;
+					})
+					.catch(err => {
+						console.error(err);
+					});
+				if (resolvedChannelId) {
+					localStorage.setItem("vid2uid:" + vid, resolvedChannelId);
+				} else {
+					return false;
+				}
+			}
+
+			userID = resolvedChannelId;
+			if (userID) {
+				seventv = getItemWithExpiry("uid2seventv.youtube:" + userID);
+				if (!seventv) {
+					seventv = await fetch("https://7tv.io/v3/users/youtube/" + userID)
 						.then(result => {
-							return result.text();
+							return result.json();
 						})
 						.then(result => {
 							return result;
@@ -2395,42 +2763,28 @@ async function getSEVENTVEmotes(url = false, type=null, channel=null, userID=fal
 						.catch(err => {
 							console.error(err);
 						});
-					if (userID) {
-						localStorage.setItem("vid2uid:" + vid, userID);
-					} else {
-						return false;
+
+					if (seventv && seventv.emote_set && seventv.emote_set.emotes) {
+						seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
+							const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
+							if ((emote.data && emote.data.flags) || emote.flags) {
+								acc[emote.name] = { url: imageUrl, zw: true };
+							} else {
+								acc[emote.name] = imageUrl;
+							}
+							return acc;
+						}, {});
+					}
+
+					if (seventv) {
+						setItemWithExpiry("uid2seventv.youtube:" + userID, seventv);
 					}
 				}
-				if (userID) {
-					seventv = getItemWithExpiry("uid2seventv.youtube:" + userID);
-					if (!seventv) {
-						seventv = await fetch("https://7tv.io/v3/users/youtube/" + userID)
-							.then(result => {
-								return result.json();
-							})
-							.then(result => {
-								return result;
-							})
-							.catch(err => {
-								console.error(err);
-							});
 
-						if (seventv) {
-							if (seventv.emote_set && seventv.emote_set.emotes) {
-								seventv.channelEmotes = seventv.emote_set.emotes.reduce((acc, emote) => {
-									const imageUrl = `https://cdn.7tv.app/emote/${emote.id}/2x.webp`;
-									if ((emote.data && emote.data.flags) || emote.flags) {
-										acc[emote.name] = { url: imageUrl, zw: true };
-									} else {
-										acc[emote.name] = imageUrl;
-									}
-									return acc;
-								}, {});
-							}
-
-							setItemWithExpiry("uid2seventv.youtube:" + userID, seventv);
-						}
-					}
+				if (seventv && seventv.channelEmotes) {
+					cacheYouTubeSeventvChannelEmotes(userID, seventv.channelEmotes);
+				} else if (userID) {
+					cacheYouTubeSeventvChannelEmotes(userID, null);
 				}
 			}
 		} else if (type == "twitch") {
@@ -2873,11 +3227,14 @@ let activeChatSources = new Map();
 try {
   if (chrome.tabs.onRemoved){
     chrome.tabs.onRemoved.addListener((tabId) => {
+      forgetYouTubeChannel(tabId);
       for (let key of activeChatSources.keys()) {
         if (key.startsWith(`${tabId}-`)) {
           activeChatSources.delete(key);
         }
       }
+      clearThrottleState(tabId);
+      delete messageTimeout[tabId];
     });
   }
   if (chrome.tabs.onUpdated){
@@ -3177,12 +3534,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "getOnOffState") {
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
 		} else if (request.cmd && request.cmd === "getSettings") {
+			ensureHandleStatusCache();
 			let responseData;
 			try { 
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG};
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, documents: documentsRAG, handleStatus: getHandleStatusSnapshot()};
 			} catch(e){
 				console.warn("Error including documentsRAG:", e);
-				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings};
+				responseData = { state: isExtensionOn, streamID: streamID, password: password, settings: settings, handleStatus: getHandleStatusSnapshot()};
 			}
 			sendResponse(responseData);
 		} else if (request.cmd && request.cmd === "saveSetting") {
@@ -3655,7 +4013,12 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (sender.tab.url || request.url) {
 				// Use request.url if provided (for specific video/channel), otherwise fall back to sender.tab.url
 				var urlToUse = request.url || sender.tab.url;
-				var SEVENTV2 = await getSEVENTVEmotes(urlToUse, request.type, request?.channel, request?.userid); // query my API to see if I can resolve the Channel avatar from the video ID
+				const channelIdentifier = request?.channel || request?.channelId;
+				const inferredType = request?.type || ((urlToUse && urlToUse.includes("youtube.com")) ? "youtube" : null);
+				if (inferredType === "youtube" && sender?.tab?.id && channelIdentifier) {
+					rememberYouTubeChannel(sender.tab.id, channelIdentifier);
+				}
+				var SEVENTV2 = await getSEVENTVEmotes(urlToUse, inferredType, channelIdentifier, request?.userid || request?.userId); // query my API to see if I can resolve the Channel avatar from the video ID
 				if (SEVENTV2) {
 					//	//console.logsender);
 					//	//console.logSEVENTV2);
@@ -3734,6 +4097,88 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "loadmidi") {
 			await loadmidi();
 			sendResponse({ settings: settings, state: isExtensionOn });
+		} else if (request.cmd === 'manageUserPoints') {
+			const username = (request.username || '').trim();
+			const action = (request.action || '').toLowerCase();
+			const allowedActions = new Set(['add', 'subtract', 'set']);
+			const rawAmount = Number(request.points);
+			const type = request.type || 'default';
+
+			if (!username || !allowedActions.has(action) || !Number.isFinite(rawAmount)) {
+				sendResponse({ success: false, error: 'Invalid manageUserPoints payload' });
+				return response;
+			}
+
+			try {
+				if (typeof window.pointsSystemReady === 'function') {
+					await window.pointsSystemReady();
+				}
+				const system = window.pointsSystem;
+				if (!system) {
+					throw new Error('Points system unavailable');
+				}
+
+				const normalizedAmount = action === 'set' ? Math.round(rawAmount) : Math.abs(Math.round(rawAmount));
+				if (action !== 'set' && normalizedAmount <= 0) {
+					throw new Error('Amount must be greater than zero');
+				}
+
+				const userData = await system.getUserPoints(username, type);
+				const availableBefore = userData.points - userData.pointsSpent;
+				let availableAfter = availableBefore;
+
+				if (action === 'add') {
+					userData.points += normalizedAmount;
+					availableAfter = availableBefore + normalizedAmount;
+				} else if (action === 'subtract') {
+					const nextAvailable = Math.max(0, availableBefore - normalizedAmount);
+					userData.points = userData.pointsSpent + nextAvailable;
+					availableAfter = nextAvailable;
+				} else if (action === 'set') {
+					const nonNegative = Math.max(0, normalizedAmount);
+					userData.points = userData.pointsSpent + nonNegative;
+					availableAfter = nonNegative;
+				}
+
+				userData.lastActive = Date.now();
+				await system.saveUserPoints(userData);
+				if (typeof window.requestPointsLeaderboardBroadcast === 'function') {
+					window.requestPointsLeaderboardBroadcast('admin', { immediate: true });
+				}
+
+				sendResponse({
+					success: true,
+					username,
+					type,
+					action,
+					points: userData.points,
+					pointsSpent: userData.pointsSpent,
+					available: availableAfter
+				});
+			} catch (error) {
+				console.error('manageUserPoints failed:', error);
+				sendResponse({ success: false, error: error?.message || 'Failed to manage user points' });
+			}
+			return response;
+		} else if (request.cmd === 'resetAllPoints') {
+			try {
+				if (typeof window.pointsSystemReady === 'function') {
+					await window.pointsSystemReady();
+				}
+				const system = window.pointsSystem;
+				if (!system) {
+					throw new Error('Points system unavailable');
+				}
+				await system.resetAllPoints();
+				if (typeof window.requestPointsLeaderboardBroadcast === 'function') {
+					window.requestPointsLeaderboardBroadcast('reset', { immediate: true });
+				}
+				sendResponse({ success: true });
+			} catch (error) {
+				console.error('resetAllPoints failed:', error);
+				sendResponse({ success: false, error: error?.message || 'Failed to reset points' });
+			}
+			return response;
 		} else if (request.cmd && request.cmd === "export") {
 			sendResponse({ state: isExtensionOn });
 			await exportSettings();
@@ -3749,6 +4194,17 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if (request.cmd && request.cmd === "singlesaveStop") {
 			sendResponse({ state: isExtensionOn });
 			newFileHandle = false;
+			if (isSSAPP) {
+				localStorage.removeItem("savedFilePath");
+			} else {
+				await dropBrowserHandle(HANDLE_KEYS.chatLog);
+			}
+			await updateHandleStatus("chatLog", {
+				name: null,
+				status: HANDLE_STATUS_STATES.MISSING,
+				detail: "",
+				persisted: false
+			});
 		} else if (request.cmd && request.cmd === "selectwinner") {
 			////console.logrequest);
 			if ("value" in request) {
@@ -3932,7 +4388,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (spotify && request.code) {
 				(async () => {
 					try {
-						const success = await spotify.handleAuthCallback(request.code, request.state);
+						const success = await spotify.handleAuthCallback(request.code, request.state, request.redirectUri);
 						sendResponse({success: success});
 					} catch (error) {
 						console.error("Spotify callback error:", error);
@@ -3968,19 +4424,41 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Process the OAuth flow asynchronously
 			console.log("Starting OAuth flow...");
 			spotify.startOAuthFlow().then(result => {
-				console.log("OAuth flow result:", result);
-				
-				// Handle the response
-				if (typeof result === 'object' && result.alreadyConnected) {
-					sendResponse({success: true, alreadyConnected: true});
-				} else if (isSSAPP && result) {
-					sendResponse({
-						success: true,
-						message: "Please complete authorization in your browser. After authorizing, copy the full URL from the callback page and use the 'Paste Callback URL' option in the settings."
-					});
-				} else {
-					sendResponse({success: !!result});
+				const normalized = (typeof result === 'object' && result !== null)
+					? result
+					: { success: !!result };
+
+				console.log("OAuth flow result:", normalized);
+
+				if (normalized.success && normalized.alreadyConnected) {
+					sendResponse({ success: true, alreadyConnected: true });
+					return;
 				}
+
+				if (normalized.success) {
+					sendResponse({ success: true, message: normalized.message });
+					return;
+				}
+
+				if (normalized.waitingForManualCallback || normalized.waitingForCallback) {
+					const manual = !!normalized.waitingForManualCallback;
+					sendResponse({
+						success: false,
+						waitingForManualCallback: manual,
+						waitingForCallback: !manual,
+						manualAuthUrl: normalized.manualAuthUrl,
+						error: normalized.error,
+						message: normalized.message || (manual
+							? "After authorizing Spotify, copy the callback URL and paste it into Social Stream Ninja to finish sign-in."
+							: "Waiting for Spotify to redirect back with authorization. Leave the popup open until the flow completes.")
+					});
+					return;
+				}
+
+				sendResponse({
+					success: false,
+					error: normalized.error || "Failed to start Spotify authorization."
+				});
 			}).catch(error => {
 				console.error("Spotify auth error:", error);
 				sendResponse({success: false, error: error.message || error.toString()});
@@ -4016,6 +4494,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					const code = url.searchParams.get('code');
 					const state = url.searchParams.get('state');
 					const error = url.searchParams.get('error');
+					const redirectUri = `${url.origin}${url.pathname}`;
 					
 					console.log("Parsed OAuth callback - code:", code ? "present" : "missing", "state:", state, "error:", error);
 					
@@ -4024,7 +4503,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					} else if (code) {
 						console.log("Processing Spotify callback with code...");
 						// Process the callback
-						const success = await spotify.handleAuthCallback(code, state);
+						const success = await spotify.handleAuthCallback(code, state, request.redirectUri || redirectUri);
 						console.log("Spotify callback completed, success:", success);
 						
 						if (success) {
@@ -7413,6 +7892,36 @@ var allowNewEntries = true;
 var waitListUsers = {};
 var waitlist = [];
 
+function escapeRegex(input = "") {
+	try {
+		return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	} catch (e) {
+		return input;
+	}
+}
+
+function extractWaitlistMessage(chatMessage = "", trigger = "") {
+	if (!chatMessage || typeof chatMessage !== "string") {
+		return "";
+	}
+	const trimmed = chatMessage.trim();
+	if (!trimmed) {
+		return "";
+	}
+	if (!trigger) {
+		const [, ...rest] = trimmed.split(/\s+/);
+		return rest.join(" ").trim();
+	}
+	try {
+		const pattern = new RegExp("^" + escapeRegex(trigger.trim()) + "\\s*", "i");
+		const result = trimmed.replace(pattern, "").trim();
+		return result;
+	} catch (e) {
+		const [, ...rest] = trimmed.split(/\s+/);
+		return rest.join(" ").trim();
+	}
+}
+
 function processWaitlist(data) {
 	try {
 		if (!allowNewEntries){
@@ -7428,6 +7937,10 @@ function processWaitlist(data) {
 		if (!data.chatmessage || !data.chatmessage.trim().toLowerCase().startsWith(trigger.toLowerCase())) {
 			return;
 		}
+
+		data.waitlistTrigger = trigger;
+		data.waitlistJoinMessage = extractWaitlistMessage(data.chatmessage, trigger);
+
 		var update = false;
 		if (waitListUsers[data.type]) {
 			if (!waitListUsers[data.type][data.chatname]) {
@@ -8709,7 +9222,7 @@ function delayedDetach(tabid) {
   }, 1000, tabid);
 }
 
-async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 3500) {
+async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
     // console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
     //     data: data,
     //     reverse: reverse,
@@ -8785,6 +9298,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             };
             const applyPlatformLimit = (message, platform) => limitMessageForPlatform(message, platform);
             published[tab.url] = true;
+            const throttleProfile = getThrottleProfileForTab(tab, data);
+            const throttleOptions = {
+                origin: messageOrigin || "relay",
+                dropProtected: messageOrigin === "host",
+                priority: messageOrigin === "host" ? 1 : 0
+            };
                 
             // Handle different site types
             if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
@@ -8794,27 +9313,27 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
                 let restxt = applyPlatformLimit(data.response, 'twitch');
                 storeMessageForTab(restxt);
-                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout);
+                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://boltplus.tv/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout);
+                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://rumble.com/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout);
+                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://kick.com/")) {
                 let restxt = applyPlatformLimit(data.response, 'kick');
                 const messageForKick = isSSAPP ? ` ${restxt}` : restxt;
                 storeMessageForTab(messageForKick);
-                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout);
+                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             } else if (tab.url.startsWith("https://app.slack.com")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout); 
+                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions); 
             } else if (tab.url.startsWith("https://app.zoom.us/")) {
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat);
+                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile, throttleOptions);
                 return;
             } else {
                 // Generic handler
@@ -8822,7 +9341,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     getYoutubeAvatarImage(tab.url, true);
                     let restxt = applyPlatformLimit(data.response, 'youtube');
                     storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
                     return;
                 }
                 
@@ -8834,12 +9353,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     }
                     let restxt = applyPlatformLimit(tiktokMessage, 'tiktok');
                     storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout);
+                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
                     return;
                 }
                 
                 storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout);
+                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
             }
         };
         
@@ -9090,7 +9609,18 @@ function handleStageTen(data, metadata) {
 }
 
 // Helper function to attach debugger and send chat
-async function attachAndChat(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout, chatFunction = generalFakeChat) {
+async function attachAndChat(
+  tabId,
+  message,
+  middle,
+  keypress,
+  backspace,
+  delayedPress,
+  overrideTimeout,
+  chatFunction = generalFakeChat,
+  throttleProfile = null,
+  throttleOptions = null
+) {
     await new Promise((resolve, reject) => {
         safeDebuggerAttach(tabId, "1.3", (error) => {
             if (error) {
@@ -9102,7 +9632,19 @@ async function attachAndChat(tabId, message, middle, keypress, backspace, delaye
         });
     });
 
-    await Promise.resolve(chatFunction(tabId, message, middle, keypress, backspace, delayedPress, overrideTimeout));
+    await Promise.resolve(
+      chatFunction(
+        tabId,
+        message,
+        middle,
+        keypress,
+        backspace,
+        delayedPress,
+        overrideTimeout,
+        throttleProfile,
+        throttleOptions
+      )
+    );
 }
  
 function zoomFakeChat(tabid, message, middle = false, keypress = true, backspace = false) {
@@ -9194,6 +9736,41 @@ const PLATFORM_MESSAGE_LIMITS = {
 	kick: 500
 };
 
+const MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT = 3;
+const FAKE_CHAT_THROTTLE_MAX_QUEUE_AGE = 10000; // Drop items older than 10s
+const FAKE_CHAT_THROTTLE_DEFAULT_INTERVAL = 200;
+const FAKE_CHAT_THROTTLE_RULES = [
+  {
+    key: "websocketSurface",
+    minInterval: 0,
+    maxQueue: 0,
+    matches(url = "", data = {}) {
+      return typeof url === "string" && /\/sources\/websocket\//i.test(url);
+    }
+  },
+  {
+    key: "youtubeSurface",
+    minInterval: 500,
+    maxQueue: 3,
+    matches(url) {
+      if (typeof url !== "string") {
+        return false;
+      }
+      const normalized = url.toLowerCase();
+      if (normalized.includes("youtube.com/live_chat") || normalized.includes("studio.youtube.com/live_chat")) {
+        return true;
+      }
+      if (normalized.includes("youtube.com/watch?") || normalized.includes("youtube.com/live/")) {
+        return true;
+      }
+      if (normalized.includes("studio.youtube.com/video/")) {
+        return true;
+      }
+      return false;
+    }
+  }
+];
+
 function limitMessageForPlatform(message, platform) {
 	if (!message || !platform) {
 		return message;
@@ -9203,6 +9780,260 @@ function limitMessageForPlatform(message, platform) {
 		return message;
 	}
 	return limitString(message, limit);
+}
+
+function getThrottleProfileForTab(tab, data) {
+  if (!tab || !tab.url) {
+    return null;
+  }
+  if (settings && settings.disableRelayThrottle) {
+    return null;
+  }
+  for (const rule of FAKE_CHAT_THROTTLE_RULES) {
+    try {
+      if (rule.matches(tab.url, data)) {
+        return {
+          key: rule.key,
+          minInterval: Number(rule.minInterval) || 0,
+          maxQueue:
+            typeof rule.maxQueue === "number"
+              ? Math.max(0, rule.maxQueue)
+              : MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
+        };
+      }
+    } catch (e) {
+      warnlog(`Throttle rule error (${rule.key}): ${e?.message || e}`);
+    }
+  }
+  return null;
+}
+
+function resolveThrottleProfile(tabId, throttleProfile, overrideTimeout) {
+  if (settings && settings.disableRelayThrottle) {
+    return null;
+  }
+
+  let profile = null;
+
+  if (throttleProfile && typeof throttleProfile === "object") {
+    profile = {
+      key: throttleProfile.key || `tab-${tabId}`,
+      minInterval: Number(throttleProfile.minInterval) || 0,
+      maxQueue: throttleProfile.maxQueue
+    };
+  } else if (typeof throttleProfile === "string") {
+    const rule = FAKE_CHAT_THROTTLE_RULES.find((item) => item.key === throttleProfile);
+    if (rule) {
+      profile = {
+        key: rule.key,
+        minInterval: Number(rule.minInterval) || 0,
+        maxQueue: rule.maxQueue
+      };
+    }
+  }
+
+  if (!profile && typeof overrideTimeout === "number" && overrideTimeout > 0) {
+    profile = {
+      key: `tab-${tabId}`,
+      minInterval: Number(overrideTimeout) || 0,
+      maxQueue: MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
+    };
+  }
+
+  if (!profile) {
+    profile = {
+      key: `tab-${tabId}`,
+      minInterval: FAKE_CHAT_THROTTLE_DEFAULT_INTERVAL,
+      maxQueue: MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT
+    };
+  }
+
+  profile.maxQueue = Number.isFinite(profile.maxQueue)
+    ? Math.max(0, profile.maxQueue)
+    : MAX_FAKE_CHAT_THROTTLE_QUEUE_DEFAULT;
+
+  if (profile.minInterval <= 0) {
+    return null;
+  }
+
+  return profile;
+}
+
+function ensureThrottleState(tabId) {
+  let state = fakeChatThrottleState.get(tabId);
+  if (!state) {
+    state = {
+      queue: [],
+      lastSent: 0,
+      processing: false,
+      timer: null
+    };
+    fakeChatThrottleState.set(tabId, state);
+  }
+  return state;
+}
+
+function clearThrottleState(tabId) {
+  const state = fakeChatThrottleState.get(tabId);
+  if (!state) {
+    return;
+  }
+  if (state.timer) {
+    clearTimeout(state.timer);
+  }
+  fakeChatThrottleState.delete(tabId);
+}
+
+function scheduleThrottledSend(tabId, profile, payload, options = {}) {
+  const state = ensureThrottleState(tabId);
+  return new Promise((resolve) => {
+    const entry = {
+      profile,
+      payload,
+      resolve,
+      queuedAt: Date.now(),
+      priority: Number.isFinite(options.priority)
+        ? options.priority
+        : options.dropProtected
+        ? 1
+        : 0,
+      dropProtected: Boolean(options.dropProtected),
+      origin: options.origin ?? null
+    };
+
+    const queueLimit = Number(profile.maxQueue);
+    if (queueLimit > 0 && state.queue.length >= queueLimit) {
+      const dropNonProtected = state.queue.findIndex((item) => !item.dropProtected);
+
+      if (dropNonProtected !== -1) {
+        const dropped = state.queue.splice(dropNonProtected, 1)[0];
+        if (dropped && typeof dropped.resolve === "function") {
+          dropped.resolve({ dropped: true, reason: "capacity" });
+        }
+        delayedDetach(tabId);
+        warnlog(
+          `Fake chat throttle queue full for tab ${tabId} (${profile.key}); dropping queued relay message.`
+        );
+      } else if (!entry.dropProtected) {
+        resolve({ dropped: true, reason: "capacity" });
+        warnlog(
+          `Fake chat throttle queue full of protected messages for tab ${tabId} (${profile.key}); dropping incoming relay message.`
+        );
+        return;
+      } else {
+        const droppedProtected = state.queue.shift();
+        if (droppedProtected && typeof droppedProtected.resolve === "function") {
+          droppedProtected.resolve({ dropped: true, reason: "capacity" });
+        }
+        delayedDetach(tabId);
+        warnlog(
+          `Fake chat throttle queue full for tab ${tabId} (${profile.key}); dropping oldest protected message to keep capacity.`
+        );
+      }
+    }
+
+    if (entry.priority > 0) {
+      const insertIndex = state.queue.findIndex((item) => item.priority < entry.priority);
+      if (insertIndex === -1) {
+        state.queue.push(entry);
+      } else {
+        state.queue.splice(insertIndex, 0, entry);
+      }
+    } else {
+      state.queue.push(entry);
+    }
+    processThrottleQueue(tabId);
+  });
+}
+
+function processThrottleQueue(tabId) {
+  const state = fakeChatThrottleState.get(tabId);
+  if (!state || state.processing) {
+    return;
+  }
+
+  let entryIndex = state.queue.findIndex((item) => item.priority > 0);
+  if (entryIndex === -1) {
+    entryIndex = 0;
+  }
+  const entry = state.queue.splice(entryIndex, 1)[0];
+  if (!entry) {
+    clearThrottleState(tabId);
+    return;
+  }
+
+  state.processing = true;
+  const finish = () => {
+    state.processing = false;
+    if (state.queue.length > 0) {
+      processThrottleQueue(tabId);
+    } else {
+      clearThrottleState(tabId);
+    }
+  };
+
+  const maxAge = Number.isFinite(entry.profile?.maxAge)
+    ? Math.max(0, entry.profile.maxAge)
+    : FAKE_CHAT_THROTTLE_MAX_QUEUE_AGE;
+
+  if (maxAge > 0 && typeof entry.queuedAt === "number") {
+    const age = Date.now() - entry.queuedAt;
+    if (!entry.dropProtected && age > maxAge) {
+      warnlog(
+        `Fake chat throttle stale message dropped for tab ${tabId} (${entry.profile?.key || "unknown"}); age ${
+          age || 0
+        }ms exceeded ${maxAge}ms.`
+      );
+      if (typeof entry.resolve === "function") {
+        entry.resolve({ dropped: true, reason: "stale" });
+      }
+      finish();
+      return;
+    }
+  }
+
+  const execute = async () => {
+    try {
+      const now = Date.now();
+      const elapsed = now - state.lastSent;
+      const wait = Math.max(0, entry.profile.minInterval - elapsed);
+
+      if (wait > 0) {
+        await new Promise((resolve) => {
+          state.timer = setTimeout(() => {
+            state.timer = null;
+            resolve();
+          }, wait);
+        });
+      }
+
+      await performGeneralFakeChatSend(tabId, entry.payload);
+    } catch (error) {
+      warnlog(
+        `Fake chat throttle send failed for tab ${tabId} (${entry.profile.key}): ${
+          error?.message || error
+        }`
+      );
+    } finally {
+      state.lastSent = Date.now();
+      if (typeof entry.resolve === "function") {
+        entry.resolve();
+      }
+      finish();
+    }
+  };
+
+  execute().catch((error) => {
+    warnlog(
+      `Fake chat throttle send crashed for tab ${tabId} (${entry.profile.key}): ${
+        error?.message || error
+      }`
+    );
+    if (typeof entry.resolve === "function") {
+      entry.resolve();
+    }
+    finish();
+  });
 }
 const KEY_EVENTS = {
   ENTER: {
@@ -9260,14 +10091,73 @@ async function getSourceType(tabId) {
   });
 }
 
-async function generalFakeChat(tabId, message, middle = true, keypress = true, backspace = false, delayedPress = false, overrideTimeout = false) {
-  try {
-    const cooldown = typeof overrideTimeout === 'number' && overrideTimeout > 0 ? overrideTimeout : 0;
-    if (cooldown > 0 && messageTimeout[tabId]) {
-      if (Date.now() - messageTimeout[tabId] < cooldown) {
-        return;
+async function generalFakeChat(
+  tabId,
+  message,
+  middle = true,
+  keypress = true,
+  backspace = false,
+  delayedPress = false,
+  overrideTimeout = false,
+  throttleProfile = null,
+  throttleOptions = null
+) {
+  const normalizedTimeout = typeof overrideTimeout === "number" ? overrideTimeout : 0;
+  const resolvedProfile = resolveThrottleProfile(tabId, throttleProfile, normalizedTimeout);
+  const queueOptions = throttleOptions
+    ? {
+        ...throttleOptions,
+        origin: throttleOptions.origin ?? null,
+        dropProtected:
+          throttleOptions.dropProtected ??
+          (throttleOptions.origin === "host"),
+        priority: Number.isFinite(throttleOptions.priority)
+          ? throttleOptions.priority
+          : (throttleOptions.dropProtected ??
+              throttleOptions.origin === "host")
+          ? 1
+          : 0
       }
-    }
+    : undefined;
+
+  if (resolvedProfile) {
+    return scheduleThrottledSend(
+      tabId,
+      resolvedProfile,
+      {
+        message,
+        middle,
+        keypress,
+        backspace,
+        delayedPress
+      },
+      queueOptions
+    );
+  }
+
+  return performGeneralFakeChatSend(tabId, {
+    message,
+    middle,
+    keypress,
+    backspace,
+    delayedPress
+  });
+}
+
+async function performGeneralFakeChatSend(
+  tabId,
+  { message, middle = true, keypress = true, backspace = false, delayedPress = false }
+) {
+  try {
+    await new Promise((resolve, reject) => {
+      safeDebuggerAttach(tabId, "1.3", (error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        resolve();
+      });
+    });
 
     const isFocused = await focusChat(tabId);
     if (!isFocused) {
@@ -9287,36 +10177,35 @@ async function generalFakeChat(tabId, message, middle = true, keypress = true, b
 
     if (backspace) {
       await sendKeyEvent(tabId, "rawKeyDown", KEY_EVENTS.BACKSPACE);
-      await new Promise(resolve => setTimeout(resolve, 30));
+      await new Promise((resolve) => setTimeout(resolve, 30));
       await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.BACKSPACE);
     }
 
     await insertText(tabId, message);
 
-	if (keypress) {
-	  await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-	  await new Promise(resolve => setTimeout(resolve, 10));
-	}
-
-	if (middle) {
-	  await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
-	}
-
-	if (keypress) {
-	  await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
-	}
-	
-	if (delayedPress) {
-        await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
-		await new Promise(resolve => setTimeout(resolve, 500));
-		if (middle){
-			await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
-		}
-        await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+    if (keypress) {
+      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+      await new Promise((resolve) => setTimeout(resolve, 10));
     }
-	
-    await delayedDetach(tabId);
 
+    if (middle) {
+      await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+    }
+
+    if (keypress) {
+      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+    }
+
+    if (delayedPress) {
+      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      if (middle) {
+        await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+      }
+      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+    }
+
+    await delayedDetach(tabId);
   } catch (e) {
     chrome.runtime.lastError;
     log(e);
@@ -9951,7 +10840,7 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		// Handle Spotify commands
-		if (spotify && settings.spotifyEnabled && data.chatmessage) {
+		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
 			const response = spotify.handleCommand(data.chatmessage);
 			if (response) {
 				const botResponse = {
@@ -9969,8 +10858,10 @@ async function applyBotActions(data, tab = false) {
 					timestamp: Date.now()
 				};
 				
-				sendToS10(botResponse);
-				sendToPost(botResponse);
+				sendToS10({ ...botResponse });
+				setTimeout(() => {
+					sendToDestinations({ ...botResponse });
+				}, 50);
 				return null; // Don't process the original command further
 			}
 		}
@@ -10019,31 +10910,6 @@ async function applyBotActions(data, tab = false) {
 			// if we send the normal messages, it will screw things up.
 			//}
 		}
-		
-		// Handle Spotify commands
-		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
-			const spotifyResponse = spotify.handleCommand(data.chatmessage);
-			if (spotifyResponse) {
-				setTimeout(() => {
-					const botMessage = {
-						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
-						chatbadges: "",
-						backgroundColor: "",
-						textColor: "",
-						chatmessage: spotifyResponse,
-						chatimg: "https://socialstream.ninja/icons/bot.png",
-						hasDonation: "",
-						membership: "",
-						isRelay: false,
-						type: "spotify",
-						bot: "spotify",
-						timestamp: Date.now()
-					};
-					sendToDestinations(botMessage);
-				}, 50);
-			}
-		}
-		
 		
 		const messageToCheck = data.textContent || data.chatmessage;
 		if (settings.relayall && data.chatmessage && !data.event && tab && messageToCheck.includes(miscTranslations.said)){
@@ -10180,9 +11046,18 @@ async function applyBotActions(data, tab = false) {
 			}
 		}
 
-		if (settings.blacklist && data.chatmessage) {
+		if ((settings.blacklist || settings.blacklistblockmessages) && data.chatmessage) {
 			try {
-				data.chatmessage = filterProfanity(data.chatmessage);
+				const filteredMessage = filterProfanity(data.chatmessage);
+				const containsProfanity = filteredMessage !== data.chatmessage;
+				
+				if (containsProfanity && settings.blacklistblockmessages) {
+					return null;
+				}
+				
+				if (settings.blacklist) {
+					data.chatmessage = filteredMessage;
+				}
 			} catch (e) {
 				console.error(e);
 			}
@@ -10962,17 +11837,13 @@ window.onload = async function () {
                             loadSettings(oldItem, false);
                             
                             // Initialize file handles after settings are loaded
-                            if (isSSAPP) {
-                                initializeFileHandles();
-                            }
+                            initializeFileHandles();
                         } else {
                             // No migration needed, just load what we have
                             loadSettings(item, false);
                             
                             // Initialize file handles after settings are loaded
-                            if (isSSAPP) {
-                                initializeFileHandles();
-                            }
+                            initializeFileHandles();
                         }
                     });
                 } else {
@@ -10980,9 +11851,7 @@ window.onload = async function () {
                     loadSettings(item, false);
                     
                     // Initialize file handles after settings are loaded
-                    if (isSSAPP) {
-                        initializeFileHandles();
-                    }
+                    initializeFileHandles();
                 }
             });
         });
@@ -11004,55 +11873,182 @@ async function selectTickerFile() {
 	const restoreTarget = await bringBackgroundPageToFrontForPicker();
 
 	try {
-		fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
+	fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
 	} finally {
 		await restorePreviousTabAfterPicker(restoreTarget);
 	}
 
 	if (!isSSAPP) {
 		fileHandleTicker = fileHandleTicker[0];
+		await persistBrowserHandle(HANDLE_KEYS.ticker, fileHandleTicker);
 	} else if (typeof fileHandleTicker === "string") {
         // Store file path when isSSAPP is true
         localStorage.setItem("tickerFilePath", fileHandleTicker);
     }
+	const tickerName = getFileHandleDisplayName(fileHandleTicker);
+	await updateHandleStatus("ticker", {
+		name: tickerName,
+		status: HANDLE_STATUS_STATES.READY,
+		detail: settings.ticker ? "" : "Enable the ticker to broadcast",
+		persisted: shouldUseBrowserHandleStore() || isSSAPP
+	});
      
     try {
         await loadFileTicker();
     } catch(e){}
 }
 async function initializeFileHandles() {
-    if (!isSSAPP) return;
-    
-    // Restore main file handle
-    const savedFilePath = localStorage.getItem("savedFilePath");
-    if (savedFilePath) {
-        newFileHandle = savedFilePath;
-    }
-    
-    // Restore saved names file handle
-    const savedNamesFilePath = localStorage.getItem("savedNamesFilePath");
-    if (savedNamesFilePath) {
-        newSavedNamesFileHandle = savedNamesFilePath;
-        try {
-            // Load the existing names
-            const data = await ipcRenderer.invoke("read-from-file", savedNamesFilePath);
-            if (data) {
-                uniqueNameSet = data.split("\r\n").filter(name => name.trim() !== "");
+    ensureHandleStatusCache();
+
+    if (isSSAPP) {
+        // Restore main file handle
+        const savedFilePath = localStorage.getItem("savedFilePath");
+        if (savedFilePath) {
+            newFileHandle = savedFilePath;
+            await updateHandleStatus("chatLog", {
+                name: getFileHandleDisplayName(savedFilePath),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await updateHandleStatus("chatLog", {
+                name: null,
+                status: HANDLE_STATUS_STATES.MISSING,
+                detail: "",
+                persisted: false
+            });
+        }
+        
+        // Restore saved names file handle
+        const savedNamesFilePath = localStorage.getItem("savedNamesFilePath");
+        if (savedNamesFilePath) {
+            newSavedNamesFileHandle = savedNamesFilePath;
+            try {
+                // Load the existing names
+                const data = await ipcRenderer.invoke("read-from-file", savedNamesFilePath);
+                if (data) {
+                    uniqueNameSet = data.split("\r\n").filter(name => name.trim() !== "");
+                }
+            } catch(e) {
+                console.warn("Could not load saved names file:", e);
             }
-        } catch(e) {
-            console.warn("Could not load saved names file:", e);
+            await updateHandleStatus("savedNames", {
+                name: getFileHandleDisplayName(savedNamesFilePath),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await updateHandleStatus("savedNames", {
+                name: null,
+                status: HANDLE_STATUS_STATES.MISSING,
+                detail: "",
+                persisted: false
+            });
         }
+        
+        // Restore ticker file handle
+        const tickerFilePath = localStorage.getItem("tickerFilePath");
+        if (tickerFilePath) {
+            fileHandleTicker = tickerFilePath;
+            await updateHandleStatus("ticker", {
+                name: getFileHandleDisplayName(tickerFilePath),
+                status: HANDLE_STATUS_STATES.READY,
+                detail: settings.ticker ? "" : "Enable the ticker to broadcast",
+                persisted: true
+            });
+            if (settings.ticker) {
+                try {
+                    await loadFileTicker();
+                } catch(e) {
+                    console.warn("Could not load ticker file:", e);
+                }
+            }
+        } else {
+            await markHandleNeedsAttention("ticker", "Select a ticker source file");
+        }
+        return;
     }
-    
-    // Restore ticker file handle
-    const tickerFilePath = localStorage.getItem("tickerFilePath");
-    if (tickerFilePath && settings.ticker) {
-        fileHandleTicker = tickerFilePath;
-        try {
-            await loadFileTicker();
-        } catch(e) {
-            console.warn("Could not load ticker file:", e);
+
+    try {
+        const restoredChatHandle = await restoreBrowserHandle(HANDLE_KEYS.chatLog, "readwrite");
+        if (restoredChatHandle) {
+            newFileHandle = restoredChatHandle;
+            await updateHandleStatus("chatLog", {
+                name: getFileHandleDisplayName(restoredChatHandle),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await markHandleNeedsAttention("chatLog", "Select a file to save the last message");
         }
+    } catch (error) {
+        console.warn("Could not restore chat log handle:", error);
+        await updateHandleStatus("chatLog", {
+            status: HANDLE_STATUS_STATES.ERROR,
+            detail: "Could not restore chat log file",
+            persisted: false
+        });
+    }
+
+    try {
+        const restoredNamesHandle = await restoreBrowserHandle(HANDLE_KEYS.savedNames, "readwrite");
+        if (restoredNamesHandle) {
+            newSavedNamesFileHandle = restoredNamesHandle;
+            try {
+                const savedNamesFile = await newSavedNamesFileHandle.getFile();
+                const text = await savedNamesFile.text();
+                uniqueNameSet = text.split(/\r?\n/).filter(name => name.trim() !== "");
+            } catch (error) {
+                console.warn("Could not read saved names content:", error);
+            }
+            await updateHandleStatus("savedNames", {
+                name: getFileHandleDisplayName(restoredNamesHandle),
+                status: HANDLE_STATUS_STATES.ACTIVE,
+                detail: "",
+                persisted: true
+            });
+        } else {
+            await markHandleNeedsAttention("savedNames", "Select a file to track viewer names");
+        }
+    } catch (error) {
+        console.warn("Could not restore saved names handle:", error);
+        await updateHandleStatus("savedNames", {
+            status: HANDLE_STATUS_STATES.ERROR,
+            detail: "Could not restore saved names file",
+            persisted: false
+        });
+    }
+
+    try {
+        const restoredTickerHandle = await restoreBrowserHandle(HANDLE_KEYS.ticker, "read");
+        if (restoredTickerHandle) {
+            fileHandleTicker = restoredTickerHandle;
+            await updateHandleStatus("ticker", {
+                name: getFileHandleDisplayName(restoredTickerHandle),
+                status: HANDLE_STATUS_STATES.READY,
+                detail: settings.ticker ? "" : "Enable the ticker to broadcast",
+                persisted: true
+            });
+            if (settings.ticker) {
+                try {
+                    await loadFileTicker();
+                } catch (error) {
+                    console.warn("Could not load ticker file:", error);
+                }
+            }
+        } else {
+            await markHandleNeedsAttention("ticker", "Select a ticker source file");
+        }
+    } catch (error) {
+        console.warn("Could not restore ticker handle:", error);
+        await updateHandleStatus("ticker", {
+            status: HANDLE_STATUS_STATES.ERROR,
+            detail: "Could not restore ticker source",
+            persisted: false
+        });
     }
 }
 
@@ -11071,24 +12067,58 @@ async function loadFileTicker(file=null) {
 			fileContentTicker = "";
 			sendTickerP2P([]);
 		}
+		if (fileHandleTicker) {
+			await updateHandleStatus("ticker", {
+				name: getFileHandleDisplayName(fileHandleTicker),
+				status: HANDLE_STATUS_STATES.READY,
+				detail: "Enable the ticker to broadcast",
+				persisted: shouldUseBrowserHandleStore() || isSSAPP
+			});
+		} else {
+			await updateHandleStatus("ticker", {
+				name: null,
+				status: HANDLE_STATUS_STATES.MISSING,
+				detail: "",
+				persisted: false
+			});
+		}
 		return;
 	}
 	if (fileHandleTicker) {
-		if (!isSSAPP){
-			if (!file){
-				file = await fileHandleTicker.getFile();
+		try {
+			if (!isSSAPP){
+				if (!file){
+					file = await fileHandleTicker.getFile();
+				}
+				fileContentTicker = await file.text();
+			} else {
+				fileContentTicker = fileHandleTicker;
 			}
-			fileContentTicker = await file.text();
-		} else {
-			fileContentTicker = fileHandleTicker;
-		}
-		sendTickerP2P([fileContentTicker]);
-		fileSizeTicker = file.size;
-		if (!isSSAPP){
-			monitorFileChanges();
+			sendTickerP2P([fileContentTicker]);
+			if (file?.size) {
+				fileSizeTicker = file.size;
+			}
+			if (!isSSAPP){
+				monitorFileChanges();
+			}
+			await updateHandleStatus("ticker", {
+				name: getFileHandleDisplayName(fileHandleTicker),
+				status: HANDLE_STATUS_STATES.ACTIVE,
+				detail: "",
+				persisted: shouldUseBrowserHandleStore() || isSSAPP
+			});
+		} catch (error) {
+			console.warn("Could not read ticker file:", error);
+			await updateHandleStatus("ticker", {
+				status: HANDLE_STATUS_STATES.ERROR,
+				detail: "Could not read the ticker file",
+				persisted: Boolean(fileHandleTicker)
+			});
 		}
 	} else {
-		selectTickerFile();
+		await markHandleNeedsAttention("ticker", "Select or re-authorize a ticker source file");
+		fileContentTicker = "";
+		sendTickerP2P([]);
 	}
 }
 

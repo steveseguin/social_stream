@@ -2882,6 +2882,7 @@
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
+			var treatTikTokFansAsMembers = urlParams.has("tiktokfans");
 			var channel = null;
 			var iframes = [];
 			var queue = [];
@@ -3750,8 +3751,14 @@
 			function updateAudioSource(newUrl) {
 				var audioElement = getById("testtone");
 				var sources = audioElement.getElementsByTagName("source");
-				var extension = newUrl.split(".").pop().toLowerCase();
-				var mimeType;
+
+				var urlWithoutParams = newUrl.split(/[?#]/)[0];
+				var lastSlash = urlWithoutParams.lastIndexOf("/");
+				var filename = lastSlash >= 0 ? urlWithoutParams.substring(lastSlash + 1) : urlWithoutParams;
+				var lastDot = filename.lastIndexOf(".");
+				var extension = lastDot >= 0 ? filename.substring(lastDot + 1).toLowerCase() : "";
+
+				var mimeType = "";
 
 				switch (extension) {
 					case "mp3":
@@ -3777,17 +3784,29 @@
 						mimeType = "audio/webm";
 						break;
 					default:
-						console.error("Unsupported file type:", extension);
-						return;
+						if (!extension) {
+							console.warn("Custom beep URL has no file extension; letting browser detect audio type.");
+						} else {
+							console.warn("Unknown beep file extension:", extension, "- letting browser detect audio type.");
+						}
+						break;
 				}
+
+				var applySourceAttributes = function (sourceEl) {
+					sourceEl.src = newUrl;
+					if (mimeType) {
+						sourceEl.type = mimeType;
+					} else {
+						sourceEl.removeAttribute("type");
+					}
+				};
+
 				if (sources.length === 1) {
-					sources[0].src = newUrl;
-					sources[0].type = mimeType;
+					applySourceAttributes(sources[0]);
 				} else {
 					audioElement.innerHTML = "";
 					var newSource = document.createElement("source");
-					newSource.src = newUrl;
-					newSource.type = mimeType;
+					applySourceAttributes(newSource);
 					audioElement.appendChild(newSource);
 				}
 				audioElement.load();
@@ -8460,7 +8479,24 @@
 					} else if (!data.question && onlyquestions) {
 						return;
 					}
-					
+				
+				if (treatTikTokFansAsMembers && data.type == "tiktok" && !data.membership && Array.isArray(data.chatbadges)) {
+					var fanBadge = data.chatbadges.find(url => /fans_badge/i.test(url));
+					if (fanBadge) {
+						data.membership = "SUPER FAN";
+					} else {
+						var gradeBadge = data.chatbadges.find(url => /grade_badge/i.test(url));
+						if (gradeBadge) {
+							var levelMatch = gradeBadge.match(/_lv(\d+)/i);
+							if (levelMatch && levelMatch[1]) {
+								data.membership = "TEAM LEVEL " + levelMatch[1];
+							} else {
+								data.membership = "TEAM LEVEL";
+							}
+						}
+					}
+				}
+				
 				if (hardFilter) {
 					var hasDonation = !!(data.donation || data.hasDonation);
 					var hasMembership = !!(data.membership || data.member || data.hasMembershp || data.hasMembership);
@@ -8516,7 +8552,6 @@
 						data.type = data.type.toString();
 						showType = data.type;
 					}
-					
 					if (stripDonationData){
 						data.hasDonation = "";
 					}

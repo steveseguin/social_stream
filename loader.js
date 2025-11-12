@@ -26,7 +26,8 @@ async function loadScriptsInOrder() {
         './background.js?v=2',
         './db.js?v=1',
         './ai.js?v=2',
-        './points.js?v=1'
+        './points.js?v=1',
+        './pointsactions.js?v=1'
 
     ];
 

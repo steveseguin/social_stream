@@ -1,7 +1,14 @@
 import { BasePlugin } from './basePlugin.js';
 import { storage } from '../utils/storage.js';
 import { randomSessionId, safeHtml, htmlToText } from '../utils/helpers.js';
-import { loadScriptSequential } from '../utils/scriptLoader.js';
+import { loadScriptSequential } from '../../shared/utils/scriptLoader.js';
+import { renderTwitchNativeEmotes } from '../../shared/utils/twitchEmotes.js';
+import {
+  createTwitchChatClient,
+  createTmiClientFactory,
+  TWITCH_CHAT_EVENTS,
+  TWITCH_CHAT_STATUS
+} from '../../providers/twitch/chatClient.js';
 
 const TOKEN_KEY = 'twitch.token';
 const CLIENT_ID_KEY = 'twitch.clientId';
@@ -18,7 +25,7 @@ const TWITCH_SCOPES = [
 ];
 
 const TMI_SOURCES = [
-  './vendor/tmi.js'
+  '../../shared/vendor/tmi.js'
 ];
 
 let tmiLoaderPromise = null;
@@ -43,6 +50,8 @@ export class TwitchPlugin extends BasePlugin {
     this.identity = null;
     this.client = null;
     this.channelUserId = null;
+    this.chatClient = null;
+    this.chatClientOffHandlers = [];
   }
 
   renderPrimary(container) {
@@ -161,18 +170,24 @@ export class TwitchPlugin extends BasePlugin {
   }
 
   disable() {
-    if (this.client) {
+    if (this.chatClientOffHandlers?.length) {
+      this.chatClientOffHandlers.forEach((off) => {
+        try {
+          off();
+        } catch (err) {
+          console.warn('Failed to remove Twitch chat listener', err);
+        }
+      });
+    }
+    this.chatClientOffHandlers = [];
+    if (this.chatClient) {
       try {
-        this.client.removeAllListeners?.();
+        this.chatClient.destroy();
       } catch (err) {
-        console.warn('Failed to remove Twitch listeners', err);
-      }
-      try {
-        this.client.disconnect();
-      } catch (err) {
-        console.warn('Twitch disconnect failed', err);
+        console.warn('Twitch chat client destroy failed', err);
       }
     }
+    this.chatClient = null;
     this.client = null;
   }
 
@@ -263,23 +278,6 @@ export class TwitchPlugin extends BasePlugin {
       const channelName = this.resolveChannel();
       storage.set(CHANNEL_KEY, channelName);
 
-      const tmi = await ensureTmiClient();
-
-      const joinChannel = `#${channelName}`;
-      this.debugLog('Creating Twitch client', {
-        joinChannel,
-        identity: this.identity?.login
-      });
-      const client = new tmi.Client({
-        options: { debug: false, skipUpdatingEmotesets: true },
-        identity: {
-          username: this.identity.login,
-          password: `oauth:${this.token.accessToken}`
-        },
-        channels: [joinChannel]
-      });
-
-      this.bindClientEvents(client, channelName);
       this.channelName = channelName;
 
       await this.resolveChannelUserId(channelName);
@@ -288,14 +286,76 @@ export class TwitchPlugin extends BasePlugin {
         await this.emotes.prepareChannel(context).catch(() => {});
       }
 
-      await client.connect();
-      this.client = client;
-      this.setState('connected');
-      this.log('Connected to Twitch chat.', { channel: channelName });
+      const chatClient = this.ensureChatClient();
+
+      this.setState('connecting');
+
+      const clientFactory = createTmiClientFactory(() => ensureTmiClient());
+      this.debugLog('Initializing Twitch chat connection', {
+        channel: channelName,
+        identity: this.identity?.login
+      });
+
+      await chatClient.connect({
+        channel: channelName,
+        credentials: {
+          token: this.token.accessToken,
+          identity: this.identity
+        },
+        clientFactory
+      });
+
+      this.client = chatClient.getClient();
     } catch (err) {
       this.debugLog('Twitch connectToChat failed', { error: err?.message || err });
       this.reportError(err);
     }
+  }
+
+  ensureChatClient() {
+    if (!this.chatClient) {
+      this.chatClient = createTwitchChatClient({
+        logger: this,
+        formatters: {
+          sanitize: safeHtml,
+          avatarUrl
+        }
+      });
+      this.chatClientOffHandlers = [];
+    }
+
+    if (!Array.isArray(this.chatClientOffHandlers)) {
+      this.chatClientOffHandlers = [];
+    }
+    if (!this.chatClientOffHandlers.length) {
+      const add = (event, handler) => {
+        const off = this.chatClient.on(event, handler);
+        this.chatClientOffHandlers.push(off);
+      };
+
+      add(TWITCH_CHAT_EVENTS.STATUS, (payload) => this.handleChatStatus(payload));
+      add(TWITCH_CHAT_EVENTS.MESSAGE, (payload) => {
+        this.handleChatMessage(payload).catch((err) => {
+          this.debugLog('Failed to handle Twitch chat message', { error: err?.message || err });
+        });
+      });
+      add(TWITCH_CHAT_EVENTS.MEMBERSHIP, (payload) => {
+        this.handleChatMembership(payload).catch((err) => {
+          this.debugLog('Failed to handle Twitch membership event', { error: err?.message || err });
+        });
+      });
+      add(TWITCH_CHAT_EVENTS.RAID, (payload) => {
+        this.handleChatRaid(payload).catch((err) => {
+          this.debugLog('Failed to handle Twitch raid/host event', { error: err?.message || err });
+        });
+      });
+      add(TWITCH_CHAT_EVENTS.NOTICE, (payload) => this.handleChatNotice(payload));
+      add(TWITCH_CHAT_EVENTS.CLEAR_CHAT, (payload) => this.handleChatClear(payload));
+      add(TWITCH_CHAT_EVENTS.WHISPER, (payload) => this.handleChatWhisper(payload));
+      add(TWITCH_CHAT_EVENTS.ERROR, (error) => this.handleChatError(error));
+    }
+
+    return this.chatClient;
   }
 
   async validateToken() {
@@ -338,217 +398,158 @@ export class TwitchPlugin extends BasePlugin {
     return resolved;
   }
 
-  bindClientEvents(client, channel) {
-    client.on('connected', () => {
-      this.log('Twitch socket connected.', { server: client.opts?.connection?.server });
-      this.debugLog('Twitch socket connected (debug)', {
-        channel,
-        server: client.opts?.connection?.server
-      });
-    });
-
-    client.on('disconnected', (reason) => {
-      this.log('Twitch socket disconnected', { reason });
-      this.client = null;
-      this.setState('idle');
-      this.debugLog('Twitch socket disconnected (debug)', { reason });
-    });
-
-    client.on('reconnect', () => {
-      this.log('Twitch socket reconnecting...');
-      this.debugLog('Twitch attempting reconnect');
-    });
-
-    const processChatEvent = (chan, tags, message, self, fallbackType = null) => {
-      this.handleChatEvent(channel, chan, tags, message, self, fallbackType).catch((err) => {
-        this.debugLog('Failed to handle Twitch chat event', { error: err?.message || err });
-      });
-    };
-
-    client.on('chat', (chan, tags, message, self) => {
-      processChatEvent(chan, tags, message, self, 'chat');
-    });
-
-    client.on('action', (chan, tags, message, self) => {
-      processChatEvent(chan, tags, message, self, 'action');
-    });
-
-    client.on('message', (chan, tags, message, self) => {
-      const type = tags?.['message-type'];
-      if (type === 'chat' || type === 'action') {
-        return;
-      }
-      processChatEvent(chan, tags, message, self, type || 'message');
-    });
-
-    client.on('subscription', (chan, username, method, message, userstate) => {
-      this.handleSubscriptionEvent({
-        channel,
-        username,
-        methods: method,
-        message,
-        userstate,
-        note: 'New Twitch subscription',
-        eventType: 'subscription'
-      }).catch((err) => this.debugLog('Failed to handle Twitch subscription', { error: err?.message || err }));
-    });
-
-    client.on('resub', (chan, username, months, message, userstate, methods) => {
-      this.handleSubscriptionEvent({
-        channel,
-        username,
-        methods,
-        message,
-        userstate,
-        note: 'Twitch resubscription',
-        eventType: 'resub'
-      }).catch((err) => this.debugLog('Failed to handle Twitch resubscription', { error: err?.message || err }));
-    });
-
-    client.on('subgift', (chan, recipient, method, userstate) => {
-      this.handleGiftEvent({
-        channel,
-        recipient,
-        userstate,
-        anonymous: false,
-        note: 'Twitch gifted sub'
-      }).catch((err) => this.debugLog('Failed to handle Twitch gifted sub', { error: err?.message || err }));
-    });
-
-    client.on('anonsubgift', (chan, recipient, method, userstate) => {
-      this.handleGiftEvent({
-        channel,
-        recipient,
-        userstate,
-        anonymous: true,
-        note: 'Anonymous gifted sub'
-      }).catch((err) => this.debugLog('Failed to handle anonymous gifted sub', { error: err?.message || err }));
-    });
-
-    client.on('raided', (chan, username, viewers) => {
-      this.handleRaidEvent({
-        channel,
-        username,
-        viewers,
-        note: 'Incoming raid'
-      }).catch((err) => this.debugLog('Failed to handle Twitch raid', { error: err?.message || err }));
-    });
-
-    client.on('cheer', (chan, userstate, message) => {
-      this.handleCheerEvent({
-        channel,
-        userstate,
-        message,
-        note: 'Twitch cheer'
-      }).catch((err) => this.debugLog('Failed to handle Twitch cheer', { error: err?.message || err }));
-    });
-
-    client.on('hosted', (chan, username, viewers) => {
-      this.handleHostEvent({
-        channel,
-        username,
-        viewers,
-        note: 'New host'
-      }).catch((err) => this.debugLog('Failed to handle Twitch host', { error: err?.message || err }));
-    });
+  handleChatStatus({ status, meta = {} }) {
+    switch (status) {
+      case TWITCH_CHAT_STATUS.CONNECTING:
+        if (this.state !== 'connecting') {
+          this.setState('connecting');
+        }
+        break;
+      case TWITCH_CHAT_STATUS.CONNECTED:
+        this.client = this.chatClient?.getClient() || null;
+        if (this.state !== 'connected') {
+          this.setState('connected');
+          this.log('Connected to Twitch chat.', { channel: this.channelName || meta.channel || '' });
+        }
+        break;
+      case TWITCH_CHAT_STATUS.DISCONNECTED:
+      case TWITCH_CHAT_STATUS.ERROR:
+      case TWITCH_CHAT_STATUS.IDLE:
+      default:
+        if (status === TWITCH_CHAT_STATUS.DISCONNECTED) {
+          this.log('Twitch socket disconnected', { reason: meta?.reason || 'unknown' });
+        }
+        if (this.state !== 'idle') {
+          this.setState('idle');
+        }
+        this.client = null;
+        break;
+    }
   }
 
-  async handleChatEvent(channel, sourceChannel, tags, message, self, fallbackType) {
-    const messageType = tags?.['message-type'] || fallbackType || null;
+  async handleChatMessage(payload) {
+    if (!payload) {
+      return;
+    }
+    const tags = payload.raw?.tags || {};
+    const channel = payload.raw?.channel || this.channelName || storage.get(CHANNEL_KEY, '');
     this.debugLog('Received Twitch chat message', {
-      sourceChannel,
-      resolvedChannel: channel,
-      messageType: messageType || (tags?.bits ? 'bits' : 'message'),
+      channel,
+      messageType: payload.event,
       tags,
-      message,
-      self
+      message: payload.rawMessage,
+      self: payload.isSelf
     });
-    const payload = this.transformChatMessage(channel, tags, message, self, messageType);
     await this.publishWithDecorations(payload, {
       channel,
       overrides: { userId: tags?.['room-id'] || tags?.roomId },
-      rawMessage: typeof message === 'string' ? message : '',
+      rawMessage: payload.rawMessage || '',
       silent: true
     });
   }
 
-  async handleSubscriptionEvent({ channel, username, methods, message, userstate, note, eventType }) {
-    this.debugLog('Received Twitch subscription', {
-      channel,
-      username,
-      methods,
-      message,
-      userstate,
-      eventType
-    });
-    const payload = this.transformSubscription(channel, username, methods, message, userstate, eventType);
-    await this.publishWithDecorations(payload, {
+  async handleChatMembership(payload) {
+    if (!payload) {
+      return;
+    }
+    const channel = payload.raw?.channel || this.channelName || storage.get(CHANNEL_KEY, '');
+    const userstate = payload.raw?.userstate || {};
+    const baseOptions = {
       channel,
       overrides: { userId: userstate?.['room-id'] || userstate?.roomId },
-      rawMessage: typeof message === 'string' ? message : '',
+      rawMessage: payload.rawMessage || '',
+      silent: false
+    };
+
+    switch (payload.event) {
+      case 'subscription':
+      case 'resub':
+        this.debugLog('Received Twitch subscription', {
+          channel,
+          event: payload.event,
+          user: payload.chatname,
+          userstate
+        });
+        await this.publishWithDecorations(payload, {
+          ...baseOptions,
+          note: payload.event === 'resub' ? 'Twitch resubscription' : 'New Twitch subscription'
+        });
+        break;
+      case 'subgift':
+        this.debugLog('Received Twitch gifted sub', {
+          channel,
+          recipient: payload.raw?.recipient,
+          userstate
+        });
+        await this.publishWithDecorations(payload, {
+          ...baseOptions,
+          note: payload.chatname === 'Anonymous' ? 'Anonymous gifted sub' : 'Twitch gifted sub'
+        });
+        break;
+      case 'cheer':
+        this.debugLog('Received Twitch cheer', {
+          channel,
+          bits: payload.bits,
+          userstate
+        });
+        await this.publishWithDecorations(payload, {
+          ...baseOptions,
+          silent: false,
+          note: 'Twitch cheer'
+        });
+        break;
+      default:
+        this.debugLog('Unhandled Twitch membership event', { event: payload.event });
+        break;
+    }
+  }
+
+  async handleChatRaid(payload) {
+    if (!payload) {
+      return;
+    }
+    const channel = payload.raw?.channel || this.channelName || storage.get(CHANNEL_KEY, '');
+    const note = payload.event === 'raid' ? 'Incoming raid' : 'New host';
+    this.debugLog('Received Twitch raid/host', {
+      channel,
+      event: payload.event,
+      viewers: payload.viewers,
+      chatname: payload.chatname
+    });
+    await this.publishWithDecorations(payload, {
+      channel,
       silent: false,
       note
     });
   }
 
-  async handleGiftEvent({ channel, recipient, userstate, anonymous, note }) {
-    this.debugLog('Received Twitch gifted sub', {
-      channel,
-      recipient,
-      anonymous,
-      userstate
-    });
-    const payload = this.transformGift(channel, recipient, userstate, anonymous);
-    await this.publishWithDecorations(payload, {
-      channel,
-      overrides: { userId: userstate?.['room-id'] || userstate?.roomId },
-      silent: false,
-      note
-    });
+  handleChatNotice(payload) {
+    if (!payload) {
+      return;
+    }
+    this.debugLog('Twitch notice event', payload);
   }
 
-  async handleRaidEvent({ channel, username, viewers, note }) {
-    this.debugLog('Received Twitch raid', {
-      channel,
-      username,
-      viewers
-    });
-    const payload = this.transformRaid(channel, username, viewers);
-    await this.publishWithDecorations(payload, {
-      channel,
-      silent: false,
-      note
-    });
+  handleChatClear(payload) {
+    if (!payload) {
+      return;
+    }
+    this.debugLog('Twitch clear chat event', payload);
   }
 
-  async handleCheerEvent({ channel, userstate, message, note }) {
-    this.debugLog('Received Twitch cheer', {
-      channel,
-      userstate,
-      message
-    });
-    const payload = this.transformCheer(channel, userstate, message);
-    await this.publishWithDecorations(payload, {
-      channel,
-      overrides: { userId: userstate?.['room-id'] || userstate?.roomId },
-      rawMessage: typeof message === 'string' ? message : '',
-      silent: false,
-      note
-    });
+  handleChatWhisper(payload) {
+    if (!payload) {
+      return;
+    }
+    this.debugLog('Twitch whisper event', payload);
   }
 
-  async handleHostEvent({ channel, username, viewers, note }) {
-    this.debugLog('Received Twitch host event', {
-      channel,
-      username,
-      viewers
-    });
-    const payload = this.transformHost(channel, username, viewers);
-    await this.publishWithDecorations(payload, {
-      channel,
-      silent: false,
-      note
-    });
+  handleChatError(error) {
+    if (!error) {
+      return;
+    }
+    this.debugLog('Twitch chat error', { error: error?.message || error });
+    this.reportError(error);
   }
 
   async publishWithDecorations(payload, { channel, overrides = {}, rawMessage = '', silent = true, note = null } = {}) {
@@ -563,7 +564,49 @@ export class TwitchPlugin extends BasePlugin {
     }
 
     const context = this.buildEmoteContext(channel, overrides);
-    if (this.emotes && payload.chatmessage && !payload.textonly) {
+    const textOnly = Boolean(payload.textonly);
+    const twitchEmotes = payload?.raw?.tags?.emotes || null;
+    const nativeEmoteSource =
+      typeof rawMessage === 'string' && rawMessage.length
+        ? rawMessage
+        : typeof payload.rawMessage === 'string' && payload.rawMessage.length
+          ? payload.rawMessage
+          : '';
+
+    let replyPrefix = '';
+    let replySeparator = '';
+    if (typeof payload.chatmessage === 'string') {
+      const replyMatch = payload.chatmessage.match(/^(<i><small>[\s\S]*?<\/small><\/i>)([\s\S]*)/i);
+      if (replyMatch) {
+        replyPrefix = replyMatch[1];
+        const remainder = replyMatch[2] || '';
+        const separatorMatch = remainder.match(/^((?:&nbsp;|\s)+)/);
+        replySeparator = separatorMatch ? separatorMatch[1] : ' ';
+      }
+    }
+
+    if (!textOnly && twitchEmotes && nativeEmoteSource && typeof renderTwitchNativeEmotes === 'function') {
+      try {
+        const renderedNativeMessage = renderTwitchNativeEmotes(nativeEmoteSource, twitchEmotes, {
+          textOnly,
+          escapeHtml: safeHtml,
+          imageClassName: 'native-emote',
+          imageAttributes: { loading: 'lazy', decoding: 'async' },
+          textIsSafe: false
+        });
+        if (replyPrefix) {
+          payload.chatmessage = `${replyPrefix}${replySeparator || ' '}${renderedNativeMessage}`;
+        } else {
+          payload.chatmessage = renderedNativeMessage;
+        }
+      } catch (err) {
+        this.debugLog('Failed to render native Twitch emotes', { error: err?.message || err });
+      }
+    } else if (!payload.chatmessage && rawMessage) {
+      payload.chatmessage = safeHtml(rawMessage);
+    }
+
+    if (this.emotes && payload.chatmessage && !textOnly) {
       try {
         payload.chatmessage = await this.emotes.render(payload.chatmessage, context);
       } catch (err) {
@@ -667,121 +710,6 @@ export class TwitchPlugin extends BasePlugin {
     return trimmed ? `${name}: ${trimmed}` : name;
   }
 
-  transformChatMessage(channel, tags, message, isSelf = false, messageType = null) {
-    const displayName = tags['display-name'] || tags.username || 'Twitch User';
-    const userId = tags['user-id'];
-    const badges = tags.badges || {};
-    const normalizedType = messageType || tags['message-type'] || null;
-    const event = tags.bits ? 'bits' : normalizedType === 'action' ? 'action' : 'message';
-    const sanitizedMessage = safeHtml(message ?? '');
-
-    return {
-      id: tags.id || `${channel}-${tags['tmi-sent-ts'] || Date.now()}`,
-      platform: 'twitch',
-      type: 'twitch',
-      chatname: displayName,
-      chatmessage: sanitizedMessage,
-      chatimg: avatarUrl(displayName),
-      timestamp: Number(tags['tmi-sent-ts'] || Date.now()),
-      badges,
-      hasDonation: Boolean(tags.bits),
-      bits: tags.bits ? parseInt(tags.bits, 10) : 0,
-      isModerator: tags.mod === true || tags.mod === '1' || 'moderator' in badges,
-      isOwner: 'broadcaster' in badges,
-      isSubscriber: 'subscriber' in badges,
-      userId,
-      event,
-      isSelf: Boolean(isSelf),
-      raw: { channel, tags }
-    };
-  }
-
-  transformCheer(channel, userstate, message) {
-    const displayName = userstate['display-name'] || userstate.username || 'Anonymous';
-    const sanitizedMessage = safeHtml(message ?? '');
-    return {
-      id: userstate.id || `${channel}-cheer-${Date.now()}`,
-      platform: 'twitch',
-      type: 'twitch',
-      chatname: displayName,
-      chatmessage: sanitizedMessage,
-      chatimg: avatarUrl(displayName),
-      timestamp: Number(userstate['tmi-sent-ts'] || Date.now()),
-      hasDonation: true,
-      bits: userstate.bits ? parseInt(userstate.bits, 10) : 0,
-      event: 'cheer',
-      raw: { channel, userstate }
-    };
-  }
-
-  transformSubscription(channel, username, method, message, userstate, eventType) {
-    const displayName = username || userstate['display-name'] || 'Subscriber';
-    const fallback = `${displayName} subscribed!`;
-    const sanitizedMessage = safeHtml(message ?? fallback);
-    const cumulative = parseInt(userstate['msg-param-cumulative-months'] || userstate['msg-param-months'] || '0', 10) || null;
-    return {
-      id: userstate.id || `${channel}-${eventType}-${Date.now()}`,
-      platform: 'twitch',
-      type: 'twitch',
-      chatname: displayName,
-      chatmessage: sanitizedMessage,
-      chatimg: avatarUrl(displayName),
-      timestamp: Number(userstate['tmi-sent-ts'] || Date.now()),
-      hasDonation: false,
-      event: eventType,
-      months: cumulative,
-      raw: { channel, userstate }
-    };
-  }
-
-  transformGift(channel, recipient, userstate, anonymous) {
-    const gifter = anonymous ? 'Anonymous' : userstate['display-name'] || userstate.username || 'Viewer';
-    const summary = `${gifter} gifted a sub to ${recipient}!`;
-    return {
-      id: userstate.id || `${channel}-gift-${Date.now()}`,
-      platform: 'twitch',
-      type: 'twitch',
-      chatname: gifter,
-      chatmessage: safeHtml(summary),
-      chatimg: avatarUrl(gifter),
-      timestamp: Number(userstate['tmi-sent-ts'] || Date.now()),
-      event: 'subgift',
-      hasDonation: true,
-      raw: { channel, userstate }
-    };
-  }
-
-  transformRaid(channel, username, viewers) {
-    const summary = `${username} is raiding with ${viewers} viewers!`;
-    return {
-      id: `${channel}-raid-${Date.now()}`,
-      platform: 'twitch',
-      type: 'twitch',
-      chatname: username,
-      chatmessage: safeHtml(summary),
-      chatimg: avatarUrl(username),
-      timestamp: Date.now(),
-      event: 'raid',
-      hasDonation: false,
-      raw: { channel, username, viewers }
-    };
-  }
-
-  transformHost(channel, username, viewers) {
-    const summary = `${username} is hosting with ${viewers} viewers!`;
-    return {
-      id: `${channel}-host-${Date.now()}`,
-      platform: 'twitch',
-      type: 'twitch',
-      chatname: username,
-      chatmessage: safeHtml(summary),
-      chatimg: avatarUrl(username),
-      timestamp: Date.now(),
-      event: 'host',
-      hasDonation: false,
-      raw: { channel, username, viewers }
-    };
-  }
 }
 
 async function ensureTmiClient() {

@@ -38,4 +38,4 @@ console.log("Spotify Auth Helper loaded!");
 console.log("To complete authentication, run:");
 console.log('completeSpotifyAuth("YOUR_CALLBACK_URL_HERE")');
 console.log("\nExample:");
-console.log('completeSpotifyAuth("https://socialstream.ninja/spotify_callback.html?code=AQD...&state=...")');
+console.log('completeSpotifyAuth("https://socialstream.ninja/spotify.html?code=AQD...&state=...")');

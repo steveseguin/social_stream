@@ -59,6 +59,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
     - [Custom Overlays from scratch](#custom-overlays-from-scratch)
     - [Custom Javascript](#custom-javascript)
     - [Auto responding / custom actions](#auto-responding--custom-actions)
+    - [Profanity filtering and blocking](#profanity-filtering-and-blocking)
   - [Queuing messages](#queuing-messages)
   - [Pinning messages](#pinning-messages)
   - [Togglable Menu Commands](#togglable-menu-commands)
@@ -232,6 +233,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - streamelements (overlay page)
 - versus.cam (test chat page at https://versus.cam/?testchat)
 - patreon
+- velora.tv (no popup; just channel watch page)
 
 There are additional sites supported, but not listed; refer to the sources folder for a more complete listing.
   
@@ -250,6 +252,7 @@ Past supported sites that have ceased to exist.
 - 🪦 twitter.com (RIP May 2024. fight me.)
 - 🪦 vimm.tv (RIP June 2024)
 - 🪦 caffeine.tv (RIP June 2024)
+- 🪦 moonbeam (RIP Nov 2025)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
@@ -515,6 +518,17 @@ For example,
 You can create your own custom auto-responding triggers or other actions by including a `custom.js` file. You don't need to host the featured or dock file for this.
 
 Included in the code is the `custom_sample.js` file, which you can rename to custom.js to get started. Included in it is the `&auto1` trigger, which  auto responds "1" to any message that is also "1".  You need to add `&auto1` to the dock's URL to activate it.
+#### Profanity filtering and blocking
+
+Social Stream Ninja ships with a shared profanity list baked directly into `libs/objects.js` (the legacy vocabulary merged with the MIT-licensed MauriceButler corpus — 743 normalized entries at the moment). Because the list now lives beside the core library again, every surface (extension, Electron, Lite embeds) gets the same data without needing to fetch `shared/data/badwords.json`.
+
+- Toggle `🤬🚫 Replace common swear words with asterixis` (`blacklist`) to redact matches inside messages.
+- Toggle `🤬🚫 Block messages that contain swear words` (`blacklistblockmessages`) when you need offending messages dropped before they are relayed anywhere else.
+- Upload `badwords.txt` (one entry per line) from `popup.html` to augment or replace the packaged list, and use the Delete button to revert to the shared defaults.
+- Usernames can be scrubbed separately via `👤🚫 Replace common bad words in user names` (`blacklistname`).
+- Run `node tests/profanity-filter.test.js` after touching the list or generator to confirm the data loads and sentinel words survive the variation cap.
+
+The profanity toggles live under **Other filters** inside the extension popup and are also exposed through `shared/config/settingsMetadata.js` for remote configuration tooling.
 
 It's fairly easy to modify the `auto1` trigger to do whatever you want. You can also customize or remove the URL-parameter trigger needed to activate it.
 

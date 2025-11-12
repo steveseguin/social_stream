@@ -1,6 +1,19 @@
 import { YoutubePlugin } from './youtubePlugin.js';
+import {
+  createYouTubeLiveChat,
+  YOUTUBE_LIVE_CHAT_EVENTS,
+  YOUTUBE_LIVE_CHAT_STATUS
+} from '../../providers/youtube/liveChat.js';
 
-const STREAM_ENDPOINT = 'https://youtube.googleapis.com/youtube/v3/liveChat/messages:stream';
+function createLogger(plugin) {
+  if (!plugin?.debug) {
+    return null;
+  }
+  return {
+    debug: (...args) => plugin.debugLog('[stream-core]', ...args),
+    log: (...args) => plugin.debugLog('[stream-core]', ...args)
+  };
+}
 
 export class YoutubeStreamingPlugin extends YoutubePlugin {
   constructor(options) {
@@ -9,20 +22,18 @@ export class YoutubeStreamingPlugin extends YoutubePlugin {
       description: 'Connect directly to YouTube live chat using the Streaming API for lower latency updates.'
     });
 
-    this.streamAbortController = null;
-    this.streamReader = null;
-    this.streamLoopPromise = null;
-    this.streamReconnectTimer = null;
+    this.streamClient = null;
+    this.streamClientDisposers = [];
   }
 
   stopListening() {
     super.stopListening();
-    this.clearStreamResources();
+    if (this.streamClient) {
+      this.streamClient.stop({ suppressStatus: true });
+    }
   }
 
   startListening() {
-    this.clearStreamResources();
-
     if (this.state !== 'connected') {
       return;
     }
@@ -37,151 +48,103 @@ export class YoutubeStreamingPlugin extends YoutubePlugin {
       return;
     }
 
-    this.streamAbortController = new AbortController();
-    const { signal } = this.streamAbortController;
-
-    this.streamLoopPromise = this.consumeStream(signal).catch((err) => {
-      if (signal.aborted || this.state !== 'connected') {
-        return;
-      }
-      this.reportError(err);
-    });
-  }
-
-  clearStreamResources() {
-    if (this.streamReconnectTimer) {
-      window.clearTimeout(this.streamReconnectTimer);
-      this.streamReconnectTimer = null;
-    }
-    if (this.streamAbortController) {
-      this.streamAbortController.abort();
-      this.streamAbortController = null;
-    }
-    if (this.streamReader) {
-      try {
-        this.streamReader.releaseLock();
-      } catch (_) {
-        // ignore release errors
-      }
-      this.streamReader = null;
-    }
-    this.streamLoopPromise = null;
-  }
-
-  async consumeStream(signal) {
-    const params = new URLSearchParams({
-      part: 'snippet,authorDetails',
-      liveChatId: this.liveChatId,
-      maxResults: '500'
-    });
-    if (this.nextPageToken) {
-      params.set('pageToken', this.nextPageToken);
-    }
-
-    const res = await fetch(`${STREAM_ENDPOINT}?${params.toString()}`, {
-      headers: {
-        Authorization: `Bearer ${this.token.accessToken}`,
-        Accept: 'application/json'
-      },
-      signal
-    });
-
-    if (res.status === 401) {
-      throw new Error('YouTube authentication expired. Please reconnect.');
-    }
-
-    if (!res.ok) {
-      const errBody = await res.json().catch(() => ({}));
-      throw this.createApiError(errBody, res.status, 'liveChat.messages:stream');
-    }
-
-    if (!res.body || typeof res.body.getReader !== 'function') {
-      throw new Error('Browser does not support streaming responses for the YouTube API.');
-    }
-
-    this.streamReader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    try {
-      while (this.state === 'connected') {
-        const { value, done } = await this.streamReader.read();
-        if (done) {
-          break;
+    const client = this.ensureStreamClient();
+    client.stop({ suppressStatus: true });
+    client
+      .start({
+        chatId: this.liveChatId,
+        token: this.token
+      })
+      .catch((error) => {
+        if (this.state !== 'connected') {
+          return;
         }
-        buffer += decoder.decode(value, { stream: true });
-        buffer = await this.processStreamBuffer(buffer);
-      }
-      buffer += decoder.decode();
-      await this.processStreamBuffer(buffer, { flush: true });
-    } finally {
-      if (this.streamReader) {
+        this.reportError(error);
+      });
+  }
+
+  ensureStreamClient() {
+    if (this.streamClient) {
+      return this.streamClient;
+    }
+
+    const client = createYouTubeLiveChat({
+      mode: 'stream',
+      logger: createLogger(this),
+      tokenProvider: async () => this.token,
+      chatIdResolver: async () => this.liveChatId,
+      fetchImplementation: (...args) => fetch(...args),
+      abortControllerFactory: () => new AbortController()
+    });
+
+    const disposers = [];
+
+    disposers.push(
+      client.on(YOUTUBE_LIVE_CHAT_EVENTS.STATUS, ({ status, meta }) => {
+        if (status === YOUTUBE_LIVE_CHAT_STATUS.RUNNING) {
+          this.debugLog('YouTube streaming connected.', meta);
+        }
+        if (status === YOUTUBE_LIVE_CHAT_STATUS.ERROR && meta?.error) {
+          this.debugLog('YouTube streaming reported an error state.', {
+            message: meta.error?.message,
+            code: meta.error?.code
+          });
+        }
+        if (status === YOUTUBE_LIVE_CHAT_STATUS.IDLE) {
+          this.debugLog('YouTube streaming idle.', meta);
+        }
+      })
+    );
+
+    disposers.push(
+      client.on(YOUTUBE_LIVE_CHAT_EVENTS.ERROR, (error) => {
+        if (this.state !== 'connected') {
+          return;
+        }
+        this.reportError(error);
+      })
+    );
+
+    disposers.push(
+      client.on(YOUTUBE_LIVE_CHAT_EVENTS.CHAT, async (chat) => {
+        if (this.state !== 'connected' || !chat?.raw) {
+          return;
+        }
         try {
-          this.streamReader.releaseLock();
-        } catch (_) {
-          // ignore release errors
+          await this.transformAndPublish(chat.raw, { transport: 'youtube_streaming_api' });
+          const streamState = client.getState();
+          this.nextPageToken = streamState?.pageToken || null;
+        } catch (error) {
+          this.debugLog('Failed to process YouTube streaming chat item', {
+            error: error?.message || error,
+            itemId: chat?.raw?.id
+          });
         }
-      }
-      this.streamReader = null;
+      })
+    );
 
-      if (this.state === 'connected' && !signal.aborted) {
-        this.streamReconnectTimer = window.setTimeout(() => {
-          this.streamReconnectTimer = null;
-          this.startListening();
-        }, 1000);
-      }
-    }
+    this.streamClient = client;
+    this.streamClientDisposers = disposers;
+    return this.streamClient;
   }
 
-  async processStreamBuffer(buffer, options = {}) {
-    const { flush = false } = options;
-    let remainder = buffer;
-    let newlineIndex;
-
-    while ((newlineIndex = remainder.indexOf('\n')) !== -1) {
-      const chunk = remainder.slice(0, newlineIndex).trim();
-      remainder = remainder.slice(newlineIndex + 1);
-      if (!chunk) {
-        continue;
-      }
-      await this.handleStreamChunk(chunk);
-    }
-
-    if (flush) {
-      const finalChunk = remainder.trim();
-      if (finalChunk) {
-        await this.handleStreamChunk(finalChunk);
-      }
-      return '';
-    }
-
-    return remainder;
-  }
-
-  async handleStreamChunk(rawChunk) {
-    if (this.state !== 'connected') {
+  clearStreamClient() {
+    if (!this.streamClient) {
       return;
     }
-
-    let payload;
     try {
-      payload = JSON.parse(rawChunk);
-    } catch (err) {
-      this.debugLog('Failed to parse YouTube streaming chunk', { error: err?.message || err, rawChunk });
-      return;
+      this.streamClient.stop({ suppressStatus: true });
+    } catch (error) {
+      this.debugLog('Failed to stop stream client during cleanup', error);
     }
-
-    this.nextPageToken = payload.nextPageToken || null;
-
-    if (Array.isArray(payload.items) && payload.items.length) {
-      await Promise.all(
-        payload.items.map((item) =>
-          this.transformAndPublish(item).catch((err) => {
-            this.debugLog('Failed to process YouTube streaming item', { error: err?.message || err, itemId: item?.id });
-            return null;
-          })
-        )
-      );
+    for (const dispose of this.streamClientDisposers) {
+      try {
+        dispose();
+      } catch (error) {
+        this.debugLog('Failed to dispose stream client listener', error);
+      }
     }
+    this.streamClientDisposers = [];
+    this.streamClient = null;
   }
 }

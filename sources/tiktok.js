@@ -1829,6 +1829,80 @@
 		} catch (e) {}
 	}, 1000 * 60 * pokeTimeout);
 	var videosMuted = false;
+
+	function findTikTokChatComposer() {
+		const selectors = [
+			"div[contenteditable='plaintext-only'][maxlength]",
+			"div[contenteditable='plaintext-only'][placeholder]",
+			"div[contenteditable][data-e2e*='chat']",
+			"[data-e2e*='chat'] div[contenteditable]",
+			"[contenteditable][placeholder]"
+		];
+		for (const selector of selectors) {
+			try {
+				const candidate = document.querySelector(selector);
+				if (candidate && typeof candidate.focus === "function") {
+					return candidate;
+				}
+			} catch (e) {}
+		}
+		try {
+			const placeholder = document.querySelector(".public-DraftEditorPlaceholder-inner");
+			if (placeholder && placeholder.parentElement) {
+				const editableSibling = placeholder.parentElement.querySelector("[contenteditable]");
+				if (editableSibling && typeof editableSibling.focus === "function") {
+					return editableSibling;
+				}
+			}
+		} catch (e) {}
+		return null;
+	}
+
+	function clearTikTokChatComposer(element) {
+		if (!element) {
+			return;
+		}
+		let mutated = false;
+		try {
+			if (typeof element.textContent === "string" && element.textContent.length) {
+				element.textContent = "";
+				mutated = true;
+			}
+		} catch (e) {}
+		try {
+			if (typeof element.innerHTML === "string" && element.innerHTML.length) {
+				element.innerHTML = "";
+				mutated = true;
+			}
+		} catch (e) {}
+		try {
+			const eventInit = { bubbles: true, cancelable: true };
+			const evt = typeof InputEvent === "function" ? new InputEvent("input", eventInit) : new Event("input", eventInit);
+			element.dispatchEvent(evt);
+		} catch (e) {
+			try {
+				element.dispatchEvent(new Event("input", { bubbles: true }));
+			} catch (err) {}
+		}
+		if (!mutated) {
+			return;
+		}
+		try {
+			const changeEvent = new Event("change", { bubbles: true });
+			element.dispatchEvent(changeEvent);
+		} catch (e) {}
+	}
+
+	function restartPokeInterval() {
+		clearInterval(pokeMe);
+		pokeMe = setInterval(function() {
+			try {
+				chrome.runtime.sendMessage(chrome.runtime.id, {
+					"pokeMe": true
+				}, function(response) {});
+			} catch (e) {}
+		}, 1000 * 60 * pokeTimeout);
+	}
 	try {
 		chrome.runtime.onMessage.addListener(
 			function(request, sender, sendResponse) {
@@ -1859,29 +1933,31 @@
 								return;
 							}
 						}
-						if (document.querySelector('.public-DraftEditorPlaceholder-inner')) {
-							document.querySelector(".public-DraftEditorPlaceholder-inner").focus();
+						const composer = findTikTokChatComposer();
+						if (composer) {
+							try {
+								composer.focus();
+							} catch (e) {}
+							clearTikTokChatComposer(composer);
 							sendResponse(true);
-							clearInterval(pokeMe);
-							pokeMe = setInterval(function() {
-								chrome.runtime.sendMessage(chrome.runtime.id, {
-									"pokeMe": true
-								}, function(response) {});
-							}, 1000 * 60 * pokeTimeout);
-						} else if (document.querySelector("[contenteditable][placeholder]")) {
-							document.querySelector("[contenteditable][placeholder]").focus();
+							restartPokeInterval();
+							return;
+						}
+						const placeholderTarget = document.querySelector(".public-DraftEditorPlaceholder-inner");
+						if (placeholderTarget) {
+							placeholderTarget.focus();
 							sendResponse(true);
-							setTimeout(function() {
-								if (document.querySelector("[contenteditable][placeholder]").textContent == "") {
-									document.querySelector("[contenteditable][placeholder]").innerHTML = "";
-								}
-							}, 300);
-							clearInterval(pokeMe);
-							pokeMe = setInterval(function() {
-								chrome.runtime.sendMessage(chrome.runtime.id, {
-									"pokeMe": true
-								}, function(response) {});
-							}, 1000 * 60 * pokeTimeout);
+							restartPokeInterval();
+							return;
+						}
+						const fallbackEditable = document.querySelector("[contenteditable][placeholder]");
+						if (fallbackEditable) {
+							try {
+								fallbackEditable.focus();
+							} catch (e) {}
+							clearTikTokChatComposer(fallbackEditable);
+							sendResponse(true);
+							restartPokeInterval();
 						} else {
 							sendResponse(false);
 						}

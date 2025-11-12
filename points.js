@@ -1,11 +1,89 @@
+const POINTS_MS_PER_MINUTE = 60 * 1000;
+const POINTS_MS_PER_HOUR = 60 * POINTS_MS_PER_MINUTE;
+const DEFAULT_POINTS_LEADERBOARD_LIMIT = 50;
+const POINTS_LEADERBOARD_BROADCAST_DELAY = 2500;
+
+function getSettingsStoreSnapshot() {
+    if (typeof window !== 'undefined' && window.settings) {
+        return window.settings;
+    }
+    if (typeof settings !== 'undefined') {
+        return settings;
+    }
+    return {};
+}
+
+function extractSettingValue(raw) {
+    if (raw === undefined || raw === null) {
+        return undefined;
+    }
+    if (typeof raw === 'object') {
+        if (raw.setting !== undefined) return raw.setting;
+        if (raw.numbersetting !== undefined) return raw.numbersetting;
+        if (raw.optionsetting !== undefined) return raw.optionsetting;
+        if (raw.textsetting !== undefined) return raw.textsetting;
+        if (raw.value !== undefined) return raw.value;
+    }
+    return raw;
+}
+
+function getBooleanSettingValue(key, defaultValue = false) {
+    const snapshot = getSettingsStoreSnapshot();
+    const value = extractSettingValue(snapshot ? snapshot[key] : undefined);
+    if (value === undefined) {
+        return defaultValue;
+    }
+    if (typeof value === 'string') {
+        const normalized = value.trim().toLowerCase();
+        if (['true', '1', 'yes', 'on'].includes(normalized)) {
+            return true;
+        }
+        if (['false', '0', 'no', 'off'].includes(normalized)) {
+            return false;
+        }
+    }
+    return Boolean(value);
+}
+
+function getNumericSettingValue(key, defaultValue) {
+    const snapshot = getSettingsStoreSnapshot();
+    const value = extractSettingValue(snapshot ? snapshot[key] : undefined);
+    const numberValue = Number(value);
+    if (Number.isFinite(numberValue)) {
+        return numberValue;
+    }
+    return defaultValue;
+}
+
+function normalizePositiveNumber(value, fallback) {
+    if (Number.isFinite(value) && value > 0) {
+        return value;
+    }
+    return fallback;
+}
+
+const pointsSettingsHelpers = {
+    getSettingsSnapshot: getSettingsStoreSnapshot,
+    getBooleanSetting: getBooleanSettingValue,
+    getNumericSetting: getNumericSettingValue
+};
+
+if (typeof window !== 'undefined') {
+    window.pointsSettingsHelpers = Object.assign(
+        {},
+        window.pointsSettingsHelpers || {},
+        pointsSettingsHelpers
+    );
+}
+
 class PointsSystem {
     constructor(options = {}) {
         this.dbName = options.dbName || 'pointsSystemDB';
         this.storeName = options.storeName || 'userPoints';
         this.pointsPerEngagement = options.pointsPerEngagement || 1;
-        this.engagementWindow = options.engagementWindow || 15 * MS_PER_MINUTE;
-        this.streakWindow = options.streakWindow || MS_PER_HOUR;
-        this.streakBreakTime = options.streakBreakTime || MS_PER_HOUR;
+        this.engagementWindow = options.engagementWindow || 15 * POINTS_MS_PER_MINUTE;
+        this.streakWindow = options.streakWindow || POINTS_MS_PER_HOUR;
+        this.streakBreakTime = options.streakBreakTime || POINTS_MS_PER_HOUR;
         this.streakMultiplierBase = options.streakMultiplierBase || 0.1;
         this.streakCap = options.streakCap || 10;
         this.messageStore = options.messageStore;
@@ -238,6 +316,23 @@ class PointsSystem {
             };
         });
     }
+
+    async resetAllPoints() {
+        const db = await this.ensureDB();
+
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readwrite');
+            const store = tx.objectStore(this.storeName);
+            const request = store.clear();
+
+            request.onsuccess = () => {
+                this.cache.clear();
+                resolve(true);
+            };
+
+            request.onerror = () => reject(request.error);
+        });
+    }
     
     // Get users with the same name across different platforms
     async getUsersWithSameName(username) {
@@ -407,46 +502,190 @@ class PointsSystem {
     }
 }
 
+const configuredPointsPerEngagement = normalizePositiveNumber(
+    getNumericSettingValue('pointsPerEngagement', NaN),
+    1
+);
+const configuredEngagementWindowMinutes = normalizePositiveNumber(
+    getNumericSettingValue('engagementWindow', NaN),
+    15
+);
+
 // Create the points system instance
 const pointsSystem = new PointsSystem({
-    pointsPerEngagement: 1,
-    engagementWindow: 15 * MS_PER_MINUTE,  // 15 minutes
-    streakWindow: MS_PER_HOUR,             // 1 hour window for streaks
-    streakBreakTime: MS_PER_HOUR,          // Break streak if no activity for 1 hour
+    pointsPerEngagement: configuredPointsPerEngagement,
+    engagementWindow: configuredEngagementWindowMinutes * POINTS_MS_PER_MINUTE,  // minutes -> ms
+    streakWindow: POINTS_MS_PER_HOUR,             // 1 hour window for streaks
+    streakBreakTime: POINTS_MS_PER_HOUR,          // Break streak if no activity for 1 hour
     streakMultiplierBase: 0.1,             // 10% bonus per streak hour, so 10 hours = 2x points
     streakCap: 10,                         // Cap multiplier at 10x (100% bonus)
     messageStore: messageStoreDB           // Link to existing message store
 });
 
-async function initializePointsSystem() {
-    try {
-        await pointsSystem.ensureDB();
-        
-        // Attempt migration if needed, but don't block initialization
-        const migrationNeeded = await pointsSystem.checkIfMigrationNeeded();
-        if (migrationNeeded) {
-            console.log('Migration needed, starting in background...');
-            setTimeout(() => pointsSystem.migrateFromMessageStore(), 3000);
-        } else {
-            console.log('No migration needed, points system ready');
-        }
-        
-        // Hook into message database to automatically record points
-        const originalAddMessage = messageStoreDB.addMessage;
-        messageStoreDB.addMessage = async function(message) {
-            const result = await originalAddMessage.call(this, message);
-            await pointsSystem.processNewMessage(message);
-            return result;
-        };
-        
-        console.log('Points system initialized');
-    } catch (error) {
-        console.error('Failed to initialize points system:', error);
+function isPointsSystemEnabled() {
+    return getBooleanSettingValue('enablePointsSystem', true);
+}
+
+function syncPointsSystemConfigFromSettings() {
+    const nextPointsPerEngagement = normalizePositiveNumber(
+        getNumericSettingValue('pointsPerEngagement', pointsSystem.pointsPerEngagement),
+        pointsSystem.pointsPerEngagement || 1
+    );
+    if (pointsSystem.pointsPerEngagement !== nextPointsPerEngagement) {
+        pointsSystem.pointsPerEngagement = nextPointsPerEngagement;
+    }
+
+    const currentWindowMinutes = pointsSystem.engagementWindow / POINTS_MS_PER_MINUTE;
+    const nextWindowMinutes = normalizePositiveNumber(
+        getNumericSettingValue('engagementWindow', currentWindowMinutes),
+        currentWindowMinutes || 15
+    );
+    const nextWindowMs = nextWindowMinutes * POINTS_MS_PER_MINUTE;
+    if (pointsSystem.engagementWindow !== nextWindowMs) {
+        pointsSystem.engagementWindow = nextWindowMs;
     }
 }
 
+let pointsMessageHookInstalled = false;
+let pointsSystemInitPromise = null;
+let pointsLeaderboardBroadcastTimeout = null;
+let pendingLeaderboardReason = 'update';
+
+async function broadcastPointsLeaderboard(reason = 'update', limit = DEFAULT_POINTS_LEADERBOARD_LIMIT) {
+    if (!isPointsSystemEnabled()) {
+        return;
+    }
+
+    try {
+        await ensurePointsSystemInitialized();
+        const leaderboardEntries = await pointsSystem.getLeaderboard(limit);
+        const snapshotId = Date.now();
+        const payload = {
+            event: 'points_leaderboard',
+            reason,
+            snapshotId,
+            timestamp: snapshotId,
+            leaderboard: leaderboardEntries.map((entry, index) => ({
+                chatname: entry.username,
+                type: entry.type || 'default',
+                points: entry.points,
+                pointsSpent: entry.pointsSpent,
+                available: entry.available,
+                currentStreak: entry.currentStreak || 0,
+                rank: index + 1
+            }))
+        };
+
+        const transport = (typeof sendDataP2P === 'function')
+            ? sendDataP2P
+            : (typeof window !== 'undefined' && typeof window.sendDataP2P === 'function'
+                ? window.sendDataP2P
+                : null);
+
+        if (transport) {
+            transport(payload);
+        } else if (typeof window !== 'undefined' && typeof window.sendToDestinations === 'function') {
+            window.sendToDestinations({ overlayNinja: payload });
+        } else {
+            console.warn('Points leaderboard payload dropped; no transport available');
+        }
+    } catch (error) {
+        console.error('Failed to broadcast points leaderboard:', error);
+    }
+}
+
+function schedulePointsLeaderboardBroadcast(reason = 'update', options = {}) {
+    if (!isPointsSystemEnabled()) {
+        return;
+    }
+
+    pendingLeaderboardReason = reason || 'update';
+
+    if (options.immediate) {
+        if (pointsLeaderboardBroadcastTimeout) {
+            clearTimeout(pointsLeaderboardBroadcastTimeout);
+            pointsLeaderboardBroadcastTimeout = null;
+        }
+
+        broadcastPointsLeaderboard(pendingLeaderboardReason).catch(error => {
+            console.error('Failed to broadcast points leaderboard immediately:', error);
+        });
+        pendingLeaderboardReason = 'update';
+        return;
+    }
+
+    if (pointsLeaderboardBroadcastTimeout) {
+        return;
+    }
+
+    pointsLeaderboardBroadcastTimeout = setTimeout(() => {
+        const reasonToSend = pendingLeaderboardReason;
+        pendingLeaderboardReason = 'update';
+        pointsLeaderboardBroadcastTimeout = null;
+        broadcastPointsLeaderboard(reasonToSend).catch(error => {
+            console.error('Failed to broadcast points leaderboard:', error);
+        });
+    }, POINTS_LEADERBOARD_BROADCAST_DELAY);
+}
+
+if (typeof window !== 'undefined') {
+    window.pointsSystem = pointsSystem;
+    window.pointsSystemReady = ensurePointsSystemInitialized;
+    window.requestPointsLeaderboardBroadcast = schedulePointsLeaderboardBroadcast;
+
+    if (window.eventFlowSystem && !window.eventFlowSystem.pointsSystem) {
+        window.eventFlowSystem.pointsSystem = pointsSystem;
+    }
+}
+
+function ensurePointsSystemInitialized() {
+    if (pointsSystemInitPromise) {
+        return pointsSystemInitPromise;
+    }
+
+    pointsSystemInitPromise = (async () => {
+        try {
+            await pointsSystem.ensureDB();
+            syncPointsSystemConfigFromSettings();
+
+            // Attempt migration if needed, but don't block initialization
+            const migrationNeeded = await pointsSystem.checkIfMigrationNeeded();
+            if (migrationNeeded) {
+                console.log('Migration needed, starting in background...');
+                setTimeout(() => pointsSystem.migrateFromMessageStore(), 3000);
+            } else {
+                console.log('No migration needed, points system ready');
+            }
+
+            if (!pointsMessageHookInstalled && messageStoreDB && typeof messageStoreDB.addMessage === 'function') {
+                const originalAddMessage = messageStoreDB.addMessage;
+                messageStoreDB.addMessage = async function(message) {
+                    const result = await originalAddMessage.call(this, message);
+                    if (isPointsSystemEnabled()) {
+                        syncPointsSystemConfigFromSettings();
+                        await pointsSystem.processNewMessage(message);
+                        schedulePointsLeaderboardBroadcast('message');
+                    }
+                    return result;
+                };
+                pointsMessageHookInstalled = true;
+            }
+
+            console.log('Points system initialized');
+            schedulePointsLeaderboardBroadcast('initialized', { immediate: true });
+            return pointsSystem;
+        } catch (error) {
+            console.error('Failed to initialize points system:', error);
+            pointsSystemInitPromise = null;
+            throw error;
+        }
+    })();
+
+    return pointsSystemInitPromise;
+}
+
 // Initialize points system after message store is ready
-setTimeout(initializePointsSystem, 2000);
+setTimeout(ensurePointsSystemInitialized, 2000);
 
 // Command handler functions
 async function handlePointsCommand(username, type = 'default') {
@@ -585,7 +824,11 @@ async function handleSearchUsersByName(username) {
 }
 
 async function handleSpendPointsCommand(username, amount, type = 'default') {
-    return await pointsSystem.spendPoints(username, type, amount);
+    const result = await pointsSystem.spendPoints(username, type, amount);
+    if (result && result.success) {
+        schedulePointsLeaderboardBroadcast('spend', { immediate: true });
+    }
+    return result;
 }
 
 async function handleLeaderboardCommand(limit = 10, type = null) {
@@ -629,6 +872,7 @@ async function manuallyAwardPoints(username, type, points) {
     userData.points += points;
     userData.lastActive = Date.now();
     await pointsSystem.saveUserPoints(userData);
+    schedulePointsLeaderboardBroadcast('manual-award', { immediate: true });
     return userData;
 }
 
@@ -663,7 +907,8 @@ async function reprocessUserHistory(username, type = null) {
             await pointsSystem.processNewMessage(message);
             processed++;
         }
-        
+        schedulePointsLeaderboardBroadcast('reprocess', { immediate: true });
+
         return {
             processed,
             messagesFound: messages.length

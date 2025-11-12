@@ -158,6 +158,82 @@ hr {
 	justify-content: center;
     align-items: center;
 }
+
+.file-handle-status {
+    margin-top: 8px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(255, 255, 255, 0.65);
+    display: inline-flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 230px;
+    font-size: 0.9em;
+    color: var(--default-text-color);
+}
+
+.file-handle-status .status-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    flex-wrap: wrap;
+}
+
+.file-handle-status .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #bdbdbd;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+
+.file-handle-status .status-detail {
+    font-size: 0.85em;
+    color: rgba(0, 0, 0, 0.65);
+}
+
+.file-handle-status .status-detail:empty {
+    display: none;
+}
+
+.file-handle-status[data-status="active"] .status-dot {
+    background: #1ed760;
+    box-shadow: 0 0 6px rgba(30, 215, 96, 0.6);
+}
+
+.file-handle-status[data-status="ready"] .status-dot {
+    background: #2d8bff;
+}
+
+.file-handle-status[data-status="needs-permission"] .status-dot {
+    background: #ffb347;
+}
+
+.file-handle-status[data-status="error"] .status-dot {
+    background: #ff4d4f;
+}
+
+.file-handle-status[data-status="missing"] .status-row {
+    opacity: 0.8;
+}
+
+.file-handle-status[data-persisted="false"][data-status="active"],
+.file-handle-status[data-persisted="false"][data-status="ready"] {
+    border-style: dashed;
+}
+
+@media (prefers-color-scheme: dark) {
+    .file-handle-status {
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--default-text-color);
+    }
+    .file-handle-status .status-detail {
+        color: rgba(255, 255, 255, 0.75);
+    }
+}
 #newUsername {
 	flex-grow: 1;
 	margin-right: 5px;
@@ -1510,21 +1586,21 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-                                <div>
+                                <div data-keywords="menu toolbar navbar hide collapse minimal clean dock navigation toggle">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="hidemenu" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="hide-menu-bar"> Hide menu bar </span>
                                 </div>
-								 <div>
+							 <div data-keywords="menu toolbar navbar force show pin always visible meld overlay">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="showmenu" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="show-menu-bar"> Force Show menu bar (using MELD?)</span>
                                 </div>
-                                <div>
+                                <div data-keywords="chat input full width single field focus dock typing only mode minimalist">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="chatonly" />
                                         <span class="slider round"></span>
@@ -1544,7 +1620,7 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
-                                <div>
+                                <div data-keywords="font size zoom scale enlarge shrink readability text bigger smaller accessibility">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="scale" />
                                         <span class="slider round"></span>
@@ -1562,7 +1638,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="force-transparent-background">⭕ Force transparent background </span>
                                 </div>
-                                <div title="This won't work in Chrome">
+                                <div title="This won't work in Chrome" data-keywords="opacity transparency fade dim ghost see-through brightness alpha slider">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="opacity" />
                                         <span class="slider round"></span>
@@ -1573,7 +1649,7 @@ input:checked + .slider:before {
                                         <span class="range-value" id="dock-opacity-display">0.30</span>
                                     </span>
                                 </div>
-                                <div title="This won't work in Chrome">
+                                <div title="This won't work in Chrome" data-keywords="chroma alpha translucency frosted glass blur background strength">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="chromaalpha" />
                                         <span class="slider round"></span>
@@ -1584,14 +1660,14 @@ input:checked + .slider:before {
                                         <span class="range-value" id="dock-chroma-display">40%</span>
                                     </span>
                                 </div>
-                                <div>
+                                <div data-keywords="green screen chroma key studio background virtual production">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="chroma" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="green-page-background">🟢 Green page background </span>
                                 </div>
-								 <div>
+								 <div data-keywords="white screen chroma key background clean mode">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="chroma=fff" />
                                         <span class="slider round"></span>
@@ -1599,28 +1675,28 @@ input:checked + .slider:before {
                                     <span data-translate="white-page-background">⚪ White page background </span>
                                 </div>
 
-                                <div title="This won't work in Chrome">
+                                <div title="This won't work in Chrome" data-keywords="light mode bright white theme daytime background invert">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="lightmode" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="light-mode--white-page-background">⚪ Light mode — White page background </span>
                                 </div>
-                                <div>
+                                <div data-keywords="dark mode night black theme high contrast">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="darkmode" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="dark-mode--black-page-background">⚫ Dark mode — Black page background </span>
                                 </div>
-								<div>
+								<div data-keywords="fade mask gradient feather top overlay soften edges vignette">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="fadedtop" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="fadedtop">🌇 Fade out the top of the overlay </span>
                                 </div>
-								<div>
+								<div data-keywords="viewer count audience numbers stats analytics tally">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="showviewercount" />
                                         <span class="slider round"></span>
@@ -1628,7 +1704,7 @@ input:checked + .slider:before {
                                     <span data-translate="show-viewer-count">🔢 Show viewer count per source; top-right</span>
                                 </div>
 
-                                <div title="Another Social Stream page MUST be added to OBS with page permissions set to 'Read access to user information' or higher.">
+                                <div title="Another Social Stream page MUST be added to OBS with page permissions set to 'Read access to user information' or higher." data-keywords="obs remote scene indicator status corner preview permissions">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="remote" />
                                         <span class="slider round"></span>
@@ -1651,15 +1727,15 @@ input:checked + .slider:before {
                     <label class="collapsible-label" for="wrapper-chat-message-mechanics-options"><span data-translate="message---mechanics">💬 Message — ⚙️ Mechanics</span></label>
                     <div class="collapsible-text">
                         <div class="options">
-                            <div class="options_group streaming_chat">
-								<div title="Console prints message payload data when enabled so developers can inspect live updates.">
+							<div class="options_group streaming_chat">
+								<div title="Console prints message payload data when enabled so developers can inspect live updates." data-keywords="developer console log inspect diagnostics troubleshoot">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="debug" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span>🐞 Debug mode (console logs on))</span>
                                 </div>
-								<div>
+								<div data-keywords="auto hide timeout duration timer expire disappear">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="showtime" />
                                         <span class="slider round"></span>
@@ -1668,7 +1744,7 @@ input:checked + .slider:before {
                                         ⏲️ Auto-hide message after <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting="showtime" />ms
                                     </span>
                                 </div>
-								<div title="This option gives you time to delete a message with another dock that doesn't have the delay; censorship-friendly then">
+								<div title="This option gives you time to delete a message with another dock that doesn't have the delay; censorship-friendly then" data-keywords="delay buffer moderation safety hold timed release">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="delaytime" />
                                         <span class="slider round"></span>
@@ -1677,63 +1753,63 @@ input:checked + .slider:before {
                                         🚫🤬️ Delay showing messages for <input type="number" style="max-width: 8ch;" max="999999" min="1" value="10000" size="6" data-numbersetting="delaytime" />ms
                                     </span>
                                 </div>
-								<div title="If deleting a message, such as if syncing with Youtube Delete, only delete the last message from that user, and not all of theirs">
+								<div title="If deleting a message, such as if syncing with Youtube Delete, only delete the last message from that user, and not all of theirs" data-keywords="delete removal last message safe cleanup moderation youtube">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="deleteonlylast" />
                                         <span class="slider round"></span>
                                     </label>
                                     <img src="./sources/images/youtube.png" class="icon" /> <span data-translate="delete-only-last">🗑️ Only delete last message if unsure which to 🗑️</span>
                                 </div>
-                                <div>
+                                <div data-keywords="bottom anchor newest first scroll position dock layout">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="alignbottom" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-start-at-bottom-rather-than-top">⏬ Messages start at bottom rather than top </span>
                                 </div>
-                                <div>
+                                <div data-keywords="drop down falling reversed stack waterfall animation">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="dropdown" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-drop-down-reversed-order">🔃 Messages drop down (reversed order) </span>
                                 </div>
-								<div>
+								<div data-keywords="reverse invert order flip history top newest">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="reverse" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-reverse-order">🔀 Reverse order (top down new messages)</span>
                                 </div>
-                                <div>
+                                <div data-keywords="shuffle scatter random layout chaos floating">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="random" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-appear-randomly-on-the-screen">🔀 Messages appear randomly on the screen </span>
                                 </div>
-                                <div>
+                                <div data-keywords="auto scroll follow latest keep bottom feed continuous">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoscroll" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-auto-scroll">🔽 Enable auto-scrolling to the bottom by default </span>
                                 </div>
-                                <div>
+                                <div data-keywords="align right flush right-justified rtl layout">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="alignright" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-align-right">👉🧱 Messages align to the right-side </span>
                                 </div>
-                                <div>
+                                <div data-keywords="right to left languages arabic hebrew rtl text direction">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="rtl" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="text-align-right">🗨️🧱 Force right-to-left text reading </span>
                                 </div>
-                                <div>
+                                <div data-keywords="dissolve fade away auto clear animation vanish">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="dissolve" />
                                         <span class="slider round"></span>
@@ -1747,7 +1823,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>
                                 </div>
-                                <div title="Lower the beep's volume">
+                                <div title="Lower the beep's volume" data-keywords="notification volume loudness gain attenuate quieter">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="beepvolume" />
                                         <span class="slider round"></span>
@@ -1763,14 +1839,14 @@ input:checked + .slider:before {
                                     <label for="custombeep"><span data-translate="custombeep">&gt; URL for custom beep audio file</span></label>
                                     <button type="button" id="uploadBeepBtn" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); padding: 5px 10px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;">Upload</button>
                                 </div>
-                                <div>
+                                <div data-keywords="refresh history backlog cache resume reconnect restore">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="reload" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="reload-the-last-50-messages-when-refreshing-the-page">🔄️ Reload last ~50-msgs when refreshing the page </span>									
                                 </div>
-								<div>
+								<div data-keywords="load previous history archive backlog database state resume">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="loadlast" />
                                         <span class="slider round"></span>
@@ -1778,14 +1854,14 @@ input:checked + .slider:before {
                                     <span data-translate="loadlast">🗄️ Load last ~30-msgs from the database on load </span>									
                                 </div>
 								
-                                <div>
+                                <div data-keywords="auto show feature highlight spotlight select queue">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshow" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="auto-select-new-messages-skipping-as-needed">🔖 Auto-select new messages (skipping as needed) </span>
                                 </div>
-								<div>
+								<div data-keywords="manual selection context menu alt control choose yourself">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="altselect" />
                                         <span class="slider round"></span>
@@ -1793,7 +1869,7 @@ input:checked + .slider:before {
                                     <span data-translate="altselect">🖱️ Must manually select via context-menu</span>
                                 </div>
 								
-                                <div>
+                                <div data-keywords="auto show duration timer exposure seconds milliseconds linger">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshowtime" />
                                         <span class="slider round"></span>
@@ -1802,21 +1878,21 @@ input:checked + .slider:before {
                                         ⌚ Custom auto-select show time <input type="number" style="max-width: 8ch;" max="999999" min="1" value="30000" size="6" data-numbersetting="autoshowtime" />ms
                                     </span>
                                 </div>
-                                <div>
+                                <div data-keywords="filter moderation blacklist blocklist safe clean exclude flagged">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="excludefiltered" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="Exclude filtered from auto-show">🥅 Exclude filtered messages from auto-selecting </span>
                                 </div>
-								<div>
+								<div data-keywords="donation scrub anonymize remove tip amount hide value private">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="stripdonations" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="strip-donation-data-from-messages">🏷️🗑️ Remove donation data from messages </span>
                                 </div>
-								 <div>
+								 <div data-keywords="skip donations ignore tips hide monetary events filter sponsors">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="skipdonations" />
                                         <span class="slider round"></span>
@@ -1830,7 +1906,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="when-auto-selecting-is-on-only-auto-select-donations">🏷️ When auto-select is on, select donations </span>
                                 </div>
-                                <div>
+                                <div data-keywords="memberships supporters subs loyalty program priority vip">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoshowmembers" />
                                         <span class="slider round"></span>
@@ -1844,7 +1920,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="autoshowcontentimages">😺 When auto-select is on, select those with a content image</span>
                                 </div>
-								<div>
+								<div data-keywords="youtube membership loyalty badge monthly support highlight">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="autoyoutubememberchat" />
                                         <span class="slider round"></span>
@@ -1879,56 +1955,56 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="auto-queue-donations">💵🔢 Auto-queue messages with donations</span>
                                 </div>
-                                <div>
+								<div data-keywords="sync link match multiple docks parity follow leader shared state">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="sync" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="multiple-docks-will-stay-in-sync-as-to-selected-messages">🔁 Multiple docks will stay in sync as to selected messages </span>
                                 </div>
-                                <div>
+                                <div data-keywords="pinned only filtered favorites highlight sticky list">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="pinnedonly" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="only-see-pinned-messages-for-use-with-sync">📌 Only see pinned messages (for use with &amp;sync) </span>
                                 </div>
-								<div title="This requests OBS browser source to have permissions set higher, plus the dock needs to be loaded in OBS">
+								<div title="This requests OBS browser source to have permissions set higher, plus the dock needs to be loaded in OBS" data-keywords="obs cycle scene switch guest command permissions remote">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="cycle" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="guests-can-cycle">🚲 Guests can use !cycle to change the scene in OBS*</span>
                                 </div>
-                                <div>
+                                <div data-keywords="view only readonly monitor display no actions safe mode">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="viewonly" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="view-only-mode-cant-chat-pin-or-feature">👁️ View-only mode. (Can't chat, pin, or feature) </span>
                                 </div>
-                                <div>
+                                <div data-keywords="chat only talk respond mute pin disable limited">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="chatmode" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="view--chat-only-mode-cant-pin-or-feature">👁️ View &amp; Chat-only mode. (Can't pin or feature) </span>
                                 </div>
-                                <div>
+                                <div data-keywords="helper moderator assistant pin queue limited permissions role">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="helpermode" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="view-pin-and-queue-cant-chat-or-feature">👁️ View, Pin, and Queue. (Can't chat or feature) </span> 
                                 </div>
-                                <div>
+                                <div data-keywords="24h clock military time timestamp format locale">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="24hr" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="use-24-hour-time-for-timestamp">⌚ Use 24-hour time for timestamp </span>
                                 </div>
-                                <div title="Only others on the same network/computer as yours can connect to this via p2p">
+                                <div title="Only others on the same network/computer as yours can connect to this via p2p" data-keywords="lan local network privacy security firewall offline">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="lanonly" />
                                         <span class="slider round"></span>
@@ -1956,7 +2032,7 @@ input:checked + .slider:before {
 							<div class="options_group streaming_chat">
 								<!-- Main TTS Toggle -->
 								<h4 data-translate="enable-tts-dock">Enable Text to Speech in the Dock</h4>
-								<div title="Tip: You can use &amp;myname=name1,name2 to list names to exclude from TTS.">
+								<div title="Tip: You can use &amp;myname=name1,name2 to list names to exclude from TTS." data-keywords="text to speech tts audio reader narration voiceover announcements">
 									<label class="switch">
 										<input type="checkbox" data-param1="speech" />
 										<span class="slider round"></span>
@@ -1970,14 +2046,14 @@ input:checked + .slider:before {
 							<!-- Global TTS Behavior Options -->
 							<div class="options_group tts-behavior-options">
 								<h4 data-translate="tts-behaviors">TTS Behaviors</h4>
-								<div>
+								<div data-keywords="simple tts phrasing wording shorten speech intro says">
 									<label class="switch">
 										<input type="checkbox" data-param1="simpletts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="do-not-say-says-or-someone-says-with-tts">🚫🗣️ Do not say "says" or "someone says" with TTS </span>
 								</div>
-								<div>
+								<div data-keywords="strip names remove someone says intro phrasing minimalist tts">
 									<label class="switch">
 										<input type="checkbox" data-param1="simpletts2" />
 										<span class="slider round"></span>
@@ -1985,7 +2061,7 @@ input:checked + .slider:before {
 									<span data-translate="do-not-read-out-chatname-and-someone-says-when-using-tts">🚫🗣️ Do not read out chatname and "someone says" when using TTS. </span>
 								</div>
 								
-								<div>
+								<div data-keywords="urls links address spelled out pronounce hyperlink">
 									<label class="switch">
 										<input type="checkbox" data-param1="readouturls" />
 										<span class="slider round"></span>
@@ -1993,7 +2069,7 @@ input:checked + .slider:before {
 									<span data-translate="read-out-urls">🗣️ Read out URLs rather than saying "link". </span>
 								</div>
 								<!-- Command Controls --> 
-								<div title="Only what is written AFTER the !say command is read out. It's read out regardless of whether tts is turned on elsewhere or not.">
+								<div title="Only what is written AFTER the !say command is read out. It's read out regardless of whether tts is turned on elsewhere or not." data-keywords="tts command trigger say keyword macro custom phrase chat control">
 									<label class="switch">
 										<input type="checkbox" data-param1="ttscommand" />
 										<span class="slider round"></span>
@@ -2009,7 +2085,7 @@ input:checked + .slider:before {
 									
 								</div>
 								
-								<div title="Only 'member' marked users will have messages read out when using the TTS chat command.">
+								<div title="Only 'member' marked users will have messages read out when using the TTS chat command." data-keywords="tts members only perk supporter restricted access vip">
 									<label class="switch">
 										<input type="checkbox" data-param1="ttscommandmembersonly" />
 										<span class="slider round"></span>
@@ -2017,7 +2093,7 @@ input:checked + .slider:before {
 									<span data-translate="membersttscommand">🤴 Only members can use the TTS command</span>
 								</div>
 								
-								<div>
+								<div data-keywords="no reflections echo avoid duplicates prevent reply playback self monitoring">
 									<label class="switch">
 										<input type="checkbox" data-param1="norelfectionstts" />
 										<span class="slider round"></span>
@@ -2033,42 +2109,42 @@ input:checked + .slider:before {
 							</div>
 							<div class="options_group tts-behavior-options">
 								<h4 data-translate="tts-read-specific">Read out only specific user/messages</h4>
-								<div title="Only 'bot' marked users will have messages read out.">
+								<div title="Only 'bot' marked users will have messages read out." data-keywords="bot only automation commands stream elements nightbot restrict">
 									<label class="switch">
 										<input type="checkbox" data-param1="bottts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="bottts">🤖 Only bot marked users can have messages read</span>
 								</div>
-								<div title="Only 'mod' marked users will have messages read out.">
+								<div title="Only 'mod' marked users will have messages read out." data-keywords="moderator trusted staff limited allowlist">
 									<label class="switch">
 										<input type="checkbox" data-param1="modtts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="modtts">👩‍🏫 Only specific mods can have messages read</span>
 								</div>
-								<div title="Only 'member' marked users will have messages read out.">
+								<div title="Only 'member' marked users will have messages read out." data-keywords="member supporter subscription loyalty club">
 									<label class="switch">
 										<input type="checkbox" data-param1="membertts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="membertts">🤴 Only members can have messages read</span>
 								</div>
-								<div title="Only 'vip' marked users will have messages read out.">
+								<div title="Only 'vip' marked users will have messages read out." data-keywords="vip priority star featured badge elite">
 									<label class="switch">
 										<input type="checkbox" data-param1="viptts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="viptts">⭐ Only VIP marked users can have messages read </span>
 								</div>
-								<div title="Only 'privilleged' marked users will have messages read out.">
+								<div title="Only 'privilleged' marked users will have messages read out." data-keywords="admin privileged producer staff host controller">
 									<label class="switch">
 										<input type="checkbox" data-param1="admintts" />
 										<span class="slider round"></span>
 									</label>
 									<span data-translate="admintts">👑 Only privilleged users can have messages read</span>
 								</div>
-								<div title="Only 'host' marked users will have messages read out.">
+								<div title="Only 'host' marked users will have messages read out." data-keywords="host cohost presenter mc master of ceremonies">
 									<label class="switch">
 										<input type="checkbox" data-param1="hosttts" />
 										<span class="slider round"></span>
@@ -2794,6 +2870,14 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="show-only-members">🤩 Show only messages from members </span>
+                                </div>
+								<div title="Treat TikTok fan and team badges as members in the dock overlay">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="tiktokfans" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <img class="icon" src="./sources/images/tiktok.png" style="display: inline-block;" />⭐
+                                    <span data-translate="tiktok-members"> Treat TikTok fans/teamer as members </span>
                                 </div>
                                 <div title="Hide non-moderator messages; combine with the VIP filter to allow either role">
                                     <label class="switch">
@@ -5495,6 +5579,14 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="highlight-high-value">✨ Highlight high-value donations</span>
 								</div>
+
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param17="hidemeta" />
+										<span class="slider round"></span>
+									</label>
+									<span>🗂️ Hide metadata details under messages</span>
+								</div>
 								
 								<div>
 									<label class="switch">
@@ -5528,6 +5620,10 @@ input:checked + .slider:before {
 								</div>
 								<div>
 									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+								</div>
+								<div>
+									<h3>Event cheat sheet:</h3>
+									<p>Review which sources emit new subs, follows, donations, and viewer counts in the <a href="https://socialstream.ninja/docs/event-reference.html" target="_blank" class="lightblue">Social Stream Event Reference</a>. It lists payload names, platform quirks, and workarounds so you can configure dashboards with confidence.</p>
 								</div>
 							</div>
 						</div>
@@ -6060,6 +6156,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="random-list-every-time">🎲 List re-randomizes on every update </span>
+                                </div>
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param5="includemessage" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    📝 <span data-translate="include-waitlist-message">Show join message next to each entry</span>
                                 </div>
 								<div>
                                     <label class="switch">
@@ -7438,6 +7541,13 @@ input:checked + .slider:before {
 											<span style="height:20px"><span data-translate="select-ticker-source-file">📄 Select the ticker source file</span></span>
 										</button>
 									</div>
+									<div class="file-handle-status" data-handle-status="ticker" data-status="missing" data-persisted="false" role="status" aria-live="polite">
+										<div class="status-row">
+											<span class="status-dot" aria-hidden="true"></span>
+											<span class="status-label">No file selected.</span>
+										</div>
+										<span class="status-detail"></span>
+									</div>
                                 </div>
                                 <h3><span data-translate="other-customization-options">Other customization options</span></h3>
                                 <div>
@@ -7482,6 +7592,81 @@ input:checked + .slider:before {
                                 </div>
 								<div>
 									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+								</div>
+
+								<div style="margin: 16px 0 8px; font-size: 0.85em; color: var(--default-text-color, #333);">
+									<strong data-translate="ticker-help-title">Need more control?</strong>
+									<span data-translate="ticker-help-copy">Use the toggles below to add URL parameters automatically or review the <a href="https://socialstream.ninja/seo.html#ticker" target="_blank" rel="noreferrer">ticker tips guide</a>.</span>
+								</div>
+
+								<div style="padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.04); margin-bottom: 15px;">
+									<h4 style="margin: 0 0 10px;" data-translate="ticker-playback-header">Playback &amp; rotation</h4>
+									<div style="margin-bottom: 8px;">
+										<span data-translate="ticker-display-mode">Display style</span>
+										<select data-optionparam6="display" style="margin-left: 6px;">
+											<option value="" data-translate="ticker-display-scroll">Scrolling marquee (default)</option>
+											<option value="rotate" data-translate="ticker-display-rotate">One-by-one rotation</option>
+										</select>
+									</div>
+									<div style="margin-bottom: 8px;">
+										<label class="switch">
+											<input type="checkbox" data-param6="rotateinterval" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-rotate-interval">
+											⏱️ Hold each line for
+											<input type="number" style="max-width: 8ch;" min="1000" max="60000" step="250" value="4000" data-numbersetting6="rotateinterval" />
+											ms (rotate mode)
+										</span>
+									</div>
+									<div style="margin-bottom: 8px;">
+										<label class="switch">
+											<input type="checkbox" data-param6="rotatepause" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-rotate-pause">
+											⏸️ Pause after a full loop for
+											<input type="number" style="max-width: 8ch;" min="0" max="60000" step="250" value="0" data-numbersetting6="rotatepause" />
+											ms
+										</span>
+									</div>
+									<div>
+										<span data-translate="ticker-rotate-order">
+											Order when rotating
+										</span>
+										<select data-optionparam6="rotateorder" style="margin-left: 6px;">
+											<option value="" data-translate="ticker-order-sequential">Sequential (A → Z)</option>
+											<option value="random" data-translate="ticker-order-random">Shuffle each loop</option>
+										</select>
+									</div>
+								</div>
+
+								<div style="padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.02);">
+									<h4 style="margin: 0 0 10px;" data-translate="ticker-spacing-header">Spacing &amp; separators</h4>
+									<div style="margin-bottom: 8px;">
+										<label class="switch">
+											<input type="checkbox" data-param6="gap" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-gap-label">
+											↔️ Extra padding per item
+											<input type="number" style="max-width: 8ch;" min="0" max="1000" step="5" value="150" data-numbersetting6="gap" />
+											px
+										</span>
+									</div>
+									<div class="textInputContainer" style="width: 95%; margin-bottom: 8px;" title="Optional separator symbol that appears between entries">
+										<input type="text" id="tickerseparator" class="textInput instant" maxlength="10" autocomplete="off" placeholder="• | —" data-textparam6="separator" />
+										<label for="tickerseparator"><span data-translate="ticker-separator-label">&gt; Separator symbol (optional)</span></label>
+									</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param6="preserveSpaces" />
+											<span class="slider round"></span>
+										</label>
+										<span data-translate="ticker-preserve-spaces">
+											🧱 Preserve spaces &amp; blank lines from the text file
+										</span>
+									</div>
 								</div>
                             </div>
                         </div>
@@ -8081,6 +8266,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="allow-certain-sites-access-to-your-session-id"> Allow certain sites access to your session ID </span>
                                 </div>
+                                <div title="Send relayed chat without per-site throttling or queueing delays.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="disableRelayThrottle" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🚀 Disable relay message throttling</span>
+                                </div>
                                 <div title="Disable the host chat option in the dock and the api. Featured chat remains enabled.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="disablehost" />
@@ -8277,24 +8469,16 @@ input:checked + .slider:before {
                                 </div>
                                 
                                 <div style="margin-top: 10px;">
-                                    <button id="spotifyAuthButton" class="glowingButton" style="width: 200px;" title="Connect to Spotify">
+                                    <button id="spotifyAuthButton" class="glowingButton"  title="Connect to Spotify">
                                         <span>🔗 Connect to Spotify</span>
                                     </button>
-                                    <button id="spotifySignOutButton" class="glowingButton" style="width: 200px; margin-left: 10px; display: none; background: #d32f2f;" title="Sign out of Spotify">
+                                    <button id="spotifySignOutButton" class="glowingButton" style="margin-left: 10px; display: none; background: #d32f2f;" title="Sign out of Spotify">
                                         <span>🚪 Sign Out</span>
                                     </button>
                                     <span id="spotifyAuthStatus" style="margin-left: 10px; color: var(--success-color); display: none;">✓ Connected</span>
                                 </div>
                                 
                                 <h4 style="margin-top: 20px;">Now Playing Features</h4>
-                                <div>
-                                    <label class="switch">
-                                        <input type="checkbox" id="spotifyNowPlaying" data-setting="spotifyNowPlaying" />
-                                        <span class="slider round"></span>
-                                    </label>
-                                    <span data-translate="spotify-now-playing">Enable now playing tracking</span>
-                                </div>
-                                
                                 <div style="margin-top: 10px;">
                                     <span data-translate="spotify-polling-interval">Polling interval (seconds):</span>
                                     <input type="number" id="spotifyPollingInterval" data-numbersetting="spotifyPollingInterval" min="3" max="60" value="5" style="width: 60px;" />
@@ -8306,7 +8490,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" id="spotifyAnnounceNewTrack" data-setting="spotifyAnnounceNewTrack" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="spotify-announce-new-track">Announce new tracks in chat</span>
+                                    <span data-translate="spotify-announce-new-track">Announce new tracks in overlays (not sent to platform chat)</span>
                                 </div>
                                 
                                 <div class="textInputContainer" style="width: 95%; margin-top: 10px;">
@@ -8750,7 +8934,7 @@ input:checked + .slider:before {
 								
 								<h3><span data-translate="swear-words">Other filters</span></h3>
 								
-                                <div title="Censor common bad words with asterixis. Create badwords.txt to make your own blocklist.">
+                                <div title="Censor common bad words with asterixis. Create badwords.txt to make your own blocklist." data-keywords="bad words swear profanity curse cuss censor filter blacklist blocklist ban">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="blacklist" />
                                         <span class="slider round"></span>
@@ -8760,7 +8944,14 @@ input:checked + .slider:before {
 									<button id="deleteBadwordsButton" class="glowingButton" style="width: 160px; margin-left: 0px;" title="Delete any uploaded bad words list; the default list will be used instead."><span>⛔ Delete</span></button>
 									
                                 </div>
-                                <div title="Censor common bad words with asterixis in usernames">
+                                <div title="Block any chat messages that contain words from the bad word list." data-keywords="block bad words profanity filter censor delete remove ban forbid">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="blacklistblockmessages" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="block-messages-that-contain-swear-words">🤬🚫 Block messages that contain swear words </span>
+                                </div>
+                                <div title="Censor common bad words with asterixis in usernames" data-keywords="bad words username handle profanity censor replace asterisk blocklist">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="blacklistname" />
                                         <span class="slider round"></span>
@@ -8782,7 +8973,7 @@ input:checked + .slider:before {
                                     <span data-translate="exclude-replying-to-with-responses">💬🚫 Exclude 'Replying to @user' from replies </span>
                                 </div>
 
-                                <div title="Allow only words in the goodwords.txt file, otherwise they will be turned into asterixis.">
+                                <div title="Allow only words in the goodwords.txt file, otherwise they will be turned into asterixis." data-keywords="good words whitelist allowlist approved vocabulary safe list censor bad words opposite of blacklist">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="goodwordslist" />
                                         <span class="slider round"></span>
@@ -9430,6 +9621,13 @@ input:checked + .slider:before {
                                         <span style="font-size: 0.8em;"><span data-translate="stop-saving-if-active">Stop saving</span></span>
                                     </button>
                                 </div>
+                                <div class="file-handle-status" data-handle-status="chatLog" data-status="missing" data-persisted="false" role="status" aria-live="polite">
+                                    <div class="status-row">
+                                        <span class="status-dot" aria-hidden="true"></span>
+                                        <span class="status-label">No file selected.</span>
+                                    </div>
+                                    <span class="status-detail"></span>
+                                </div>
 
                                 <h3>
                                     <span data-translate="save-all-messages-to">Save all messages to 📗 </span><b><span data-translate="excel">Excel</span></b><span data-translate="file"> file</span>
@@ -9458,6 +9656,13 @@ input:checked + .slider:before {
 									<button class="glowingButton"  data-action="savenamesClear">
                                         <span style="font-size: 0.8em;"><span data-translate="reset-user-list">Reset list</span></span>
                                     </button>
+                                </div>
+                                <div class="file-handle-status" data-handle-status="savedNames" data-status="missing" data-persisted="false" role="status" aria-live="polite">
+                                    <div class="status-row">
+                                        <span class="status-dot" aria-hidden="true"></span>
+                                        <span class="status-label">No file selected.</span>
+                                    </div>
+                                    <span class="status-detail"></span>
                                 </div>
 
                                 <h3><span data-translate="reset-all-settings">Reset all settings to defaults</span></h3>

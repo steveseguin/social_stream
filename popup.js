@@ -43,11 +43,130 @@ window.addEventListener('message', function(event) {
 var urlParams = new URLSearchParams(window.location.search);
 const devmode = urlParams.has("devmode");
 var sourcemode = urlParams.get("sourcemode") || false;
-ssapp = urlParams.has("ssapp") || ssapp;
+var ssapp = false;
+
+if (urlParams.has("ssapp")) {
+	ssapp = true;
+}
+
+if (typeof window !== "undefined") {
+	window.ssapp = ssapp;
+}
 
 var isExtensionOn = false;
-var ssapp = false;
 var USERNAMES = [];
+
+const HANDLE_STATUS_STATES = {
+	ACTIVE: "active",
+	READY: "ready",
+	MISSING: "missing",
+	NEEDS_PERMISSION: "needs-permission",
+	ERROR: "error"
+};
+const HANDLE_STATUS_KEYS = ["ticker", "chatLog", "savedNames"];
+const HANDLE_STATUS_LABELS = {
+	ticker: "Ticker source",
+	chatLog: "Last message file",
+	savedNames: "Names log"
+};
+const HANDLE_STATUS_HELP = {
+	ticker: "Select a ticker source file to stream text",
+	chatLog: "Choose where the last message should be saved",
+	savedNames: "Choose where unique chat names should be stored"
+};
+const popupHandleStatusState = {};
+HANDLE_STATUS_KEYS.forEach((key) => {
+	popupHandleStatusState[key] = createPopupHandleStatus();
+});
+
+function createPopupHandleStatus(overrides = {}) {
+	return Object.assign({
+		name: null,
+		status: HANDLE_STATUS_STATES.MISSING,
+		detail: "",
+		persisted: false
+	}, overrides);
+}
+
+function areHandleStatusEntriesEqual(a = {}, b = {}) {
+	const fields = ["name", "status", "detail", "persisted"];
+	return fields.every((field) => (a[field] || null) === (b[field] || null));
+}
+
+function mergeHandleStatusFromBackground(statusMap = {}) {
+	let changed = false;
+	Object.keys(statusMap || {}).forEach((key) => {
+		if (!popupHandleStatusState[key]) {
+			popupHandleStatusState[key] = createPopupHandleStatus();
+		}
+		const existing = popupHandleStatusState[key];
+		const incoming = statusMap[key] || {};
+		const merged = { ...existing, ...incoming };
+		if (!areHandleStatusEntriesEqual(existing, merged)) {
+			popupHandleStatusState[key] = merged;
+			changed = true;
+		}
+	});
+	if (changed) {
+		renderHandleStatus();
+	}
+}
+
+function getHandleStatusLabel(key, entry) {
+	const fallback = HANDLE_STATUS_LABELS[key] || "Selected file";
+	const fileName = entry.name || fallback;
+	switch (entry.status) {
+		case HANDLE_STATUS_STATES.ACTIVE:
+			return `Active: ${fileName}`;
+		case HANDLE_STATUS_STATES.READY:
+			return `Ready: ${fileName}`;
+		case HANDLE_STATUS_STATES.NEEDS_PERMISSION:
+			return entry.name ? `Needs permission: ${entry.name}` : "Needs permission";
+		case HANDLE_STATUS_STATES.ERROR:
+			return entry.name ? `Error: ${entry.name}` : "File error";
+		default:
+			return "No file selected";
+	}
+}
+
+function getHandleStatusDetail(key, entry) {
+	if (entry.detail) {
+		return entry.detail;
+	}
+	if (entry.status === HANDLE_STATUS_STATES.MISSING) {
+		return HANDLE_STATUS_HELP[key] || "";
+	}
+	if (!entry.persisted && (entry.status === HANDLE_STATUS_STATES.ACTIVE || entry.status === HANDLE_STATUS_STATES.READY)) {
+		return "Needs to be selected again after reloading.";
+	}
+	return "";
+}
+
+function renderHandleStatus() {
+	document.querySelectorAll("[data-handle-status]").forEach((node) => {
+		const key = node.dataset.handleStatus;
+		const entry = popupHandleStatusState[key] || createPopupHandleStatus();
+		const status = entry.status || HANDLE_STATUS_STATES.MISSING;
+		node.dataset.status = status;
+		node.dataset.persisted = entry.persisted ? "true" : "false";
+		const labelNode = node.querySelector(".status-label");
+		if (labelNode) {
+			labelNode.textContent = getHandleStatusLabel(key, entry);
+		}
+		const detailNode = node.querySelector(".status-detail");
+		if (detailNode) {
+			const detailText = getHandleStatusDetail(key, entry);
+			detailNode.textContent = detailText;
+			detailNode.style.display = detailText ? "" : "none";
+		}
+	});
+}
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+	renderHandleStatus();
+} else {
+	document.addEventListener("DOMContentLoaded", renderHandleStatus);
+}
 
 // Function to open Event Flow Editor
 function openEventFlowEditor() {
@@ -63,6 +182,94 @@ var webMidiScriptLoaded = false;
 function log(msg,a,b){
 	console.log(msg,a,b);
 }
+
+function handleSpotifyAuthResultFromBackground(result) {
+	const spotifyAuthButton = document.getElementById('spotifyAuthButton');
+	if (!spotifyAuthButton) {
+		return;
+	}
+
+	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');
+	const spotifySignOutButton = document.getElementById('spotifySignOutButton');
+	const callbackDiv = document.getElementById('spotifyCallbackDiv');
+	const manualLinkContainer = document.getElementById('spotifyManualLinkContainer');
+	const manualLinkField = document.getElementById('spotifyManualAuthUrl');
+	const callbackInput = document.getElementById('spotifyCallbackInput');
+
+	console.log('Spotify auth result from background:', result);
+	if (result?.waitingForManualCallback || result?.waitingForCallback) {
+		spotifyAuthButton.disabled = true;
+		if (spotifyAuthButton.querySelector('span')) {
+			spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+		}
+
+		if (callbackDiv) {
+			const waitingForManual = !!result.waitingForManualCallback;
+			callbackDiv.style.display = waitingForManual ? 'block' : 'none';
+			if (!waitingForManual && callbackInput) {
+				callbackInput.value = '';
+			}
+		}
+
+		if (manualLinkContainer) {
+			if (result?.manualAuthUrl && result.waitingForManualCallback) {
+				manualLinkContainer.style.display = 'block';
+				if (manualLinkField) {
+					manualLinkField.value = result.manualAuthUrl;
+				}
+			} else {
+				manualLinkContainer.style.display = 'none';
+				if (manualLinkField) {
+					manualLinkField.value = '';
+				}
+			}
+		}
+
+		if (result?.message) {
+			console.log(result.message);
+			if (result.waitingForManualCallback) {
+				alert(result.message);
+			}
+		}
+
+		return;
+	}
+
+	spotifyAuthButton.disabled = false;
+	if (spotifyAuthButton.querySelector('span')) {
+		spotifyAuthButton.querySelector('span').textContent = result?.success
+			? '🔄 Reconnect to Spotify'
+			: '🔗 Connect to Spotify';
+	}
+
+	if (result?.success) {
+		if (spotifyAuthStatus) {
+			spotifyAuthStatus.style.display = 'inline';
+		}
+		if (spotifySignOutButton) {
+			spotifySignOutButton.style.display = 'inline-block';
+		}
+		if (callbackDiv) {
+			callbackDiv.style.display = 'none';
+		}
+		if (callbackInput) {
+			callbackInput.value = '';
+		}
+		if (manualLinkContainer) {
+			manualLinkContainer.style.display = 'none';
+		}
+		if (manualLinkField) {
+			manualLinkField.value = '';
+		}
+		console.log('Spotify connected successfully.');
+	} else {
+		const errorMsg = result?.error || 'Unknown error';
+		console.error('Spotify auth failed (async result):', errorMsg);
+		alert('Failed to connect to Spotify. Error: ' + errorMsg);
+	}
+}
+
+window.handleSpotifyAuthResultFromBackground = handleSpotifyAuthResultFromBackground;
 
 // MIDI-related functions
 async function loadWebMidiScript(callback) {
@@ -206,6 +413,9 @@ if (typeof(chrome.runtime)=='undefined'){
 		window.shell = shell;
 		
 		ssapp = true;
+		if (typeof window !== "undefined") {
+			window.ssapp = true;
+		}
 		
 		try {
 			window.showOpenFilePicker = async function (a = null, c = null) {
@@ -1327,6 +1537,85 @@ const sourceTypes = ['relaytargets','eventsSources','ttssources'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
+function collectSourcesFromManifest(manifestData) {
+    if (!manifestData || !Array.isArray(manifestData.content_scripts)) {
+        return 0;
+    }
+
+    let added = 0;
+    try {
+        manifestData.content_scripts.forEach(script => {
+            if (!script || !Array.isArray(script.js)) {
+                return;
+            }
+            script.js.forEach(jsFile => {
+                if (typeof jsFile !== 'string') {
+                    return;
+                }
+                const normalized = jsFile.trim();
+                if (!normalized.startsWith('./sources/') || !normalized.endsWith('.js')) {
+                    return;
+                }
+                const sourceName = normalized.replace('./sources/', '').replace('.js', '');
+                if (sourceName) {
+                    const previousSize = sourcesList.size;
+                    sourcesList.add(sourceName);
+                    if (sourcesList.size > previousSize) {
+                        added++;
+                    }
+                }
+            });
+        });
+    } catch (error) {
+        console.warn('Failed to collect sources from manifest:', error);
+    }
+    return added;
+}
+
+async function ensureSourcesListLoaded(options = {}) {
+    if (sourcesList.size > 0) {
+        return true;
+    }
+
+    try {
+        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getManifest === 'function') {
+            const manifest = chrome.runtime.getManifest();
+            if (collectSourcesFromManifest(manifest)) {
+                return true;
+            }
+        }
+    } catch (error) {
+        console.warn('Unable to load sources from chrome.runtime manifest:', error);
+    }
+
+    if (window.ssappFallback && typeof window.ssappFallback.readJson === 'function') {
+        try {
+            const branch = options.branch || urlParams.get('branch') || 'main';
+            const manifestData = await window.ssappFallback.readJson('manifest.json', { branch });
+            if (collectSourcesFromManifest(manifestData)) {
+                return true;
+            }
+        } catch (error) {
+            console.warn('Unable to load sources via ssapp fallback manifest:', error);
+        }
+    }
+
+    try {
+        const manifestUrl = new URL('manifest.json', window.location.href).toString();
+        const response = await fetch(manifestUrl);
+        if (response.ok) {
+            const manifestData = await response.json();
+            if (collectSourcesFromManifest(manifestData)) {
+                return true;
+            }
+        }
+    } catch (error) {
+        console.warn('Unable to fetch manifest.json for sources list:', error);
+    }
+
+    return sourcesList.size > 0;
+}
+
 
 // Function to handle custom JS file upload
 function uploadCustomJsFile() {
@@ -2129,6 +2418,10 @@ function update(response, sync = true) {
     }
     
     if (response !== undefined) {
+        if (response.handleStatus) {
+            mergeHandleStatusFromBackground(response.handleStatus);
+        }
+
         if (response.documents) {
             updateDocumentList(response.documents);
         }
@@ -2625,20 +2918,7 @@ function processManifestData(data, manifestData) {
             document.getElementById("newVersion").innerHTML = "";
         }
         
-        if (manifestData && manifestData.content_scripts) {
-            // Extract source filenames from content_scripts
-            manifestData.content_scripts.forEach(script => {
-                if (script.js && script.js.length > 0) {
-                    script.js.forEach(jsFile => {
-                        if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-                            // Extract just the filename without path and extension
-                            const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-                            sourcesList.add(sourceName);
-                        }
-                    });
-                }
-            });
-        }
+        collectSourcesFromManifest(manifestData);
     } catch (e) {
         console.error("Error processing manifest data:", e);
         document.getElementById("newVersion").classList.add('show');
@@ -3865,15 +4145,23 @@ try {
 	chrome.runtime.onMessage.addListener(
 		function(request, sender, sendResponse) {
 			log("INCOMING MESSAGE--------------------------");
-			if (request.forPopup) {
-				log("Message received in popup:", request.forPopup);
-				if (request.forPopup.documents){
-					updateDocumentList(request.forPopup.documents);
-				}
-				
-				if (request.forPopup.alert){
-					alert(request.forPopup.alert);
-				}
+		if (request.forPopup) {
+			log("Message received in popup:", request.forPopup);
+			if (request.forPopup.documents){
+				updateDocumentList(request.forPopup.documents);
+			}
+
+			if (request.forPopup.handleStatus) {
+				mergeHandleStatusFromBackground(request.forPopup.handleStatus);
+			}
+
+			if (request.forPopup.spotifyAuthResult) {
+				handleSpotifyAuthResultFromBackground(request.forPopup.spotifyAuthResult);
+			}
+			
+			if (request.forPopup.alert){
+				alert(request.forPopup.alert);
+			}
 				// Handle the message data here
 				sendResponse({status: "Message received in popup"});
 			}
@@ -5015,6 +5303,7 @@ const PollManager = {
 
 
 document.addEventListener("DOMContentLoaded", async function(event) {
+    await ensureSourcesListLoaded();
 	// Add event listener for Event Flow Editor link
 	const eventFlowLink = document.getElementById('open-event-flow-editor-link');
 	if (eventFlowLink) {
@@ -5157,56 +5446,42 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		return false;
 	};
 	if (!ssapp) {
-		// Get reference to the select element first
 		const sourceSelector = document.getElementById('source-selector');
 		
-		// Check if the element exists
 		if (!sourceSelector) {
 		  console.error("Could not find source-selector element");
-		  return;
-		}
-		
-		const manifestData = chrome.runtime.getManifest();
-		
-		if (manifestData && manifestData.content_scripts) {
-		  // Set to store unique source files
-		  
-		  
-		  // Extract source filenames from content_scripts
-		  manifestData.content_scripts.forEach(script => {
-			if (script.js && script.js.length > 0) {
-			  script.js.forEach(jsFile => {
-				if (jsFile.startsWith('./sources/') && jsFile.endsWith('.js')) {
-				  // Extract just the filename without path and extension
-				  const sourceName = jsFile.replace('./sources/', '').replace('.js', '');
-				  sourcesList.add(sourceName);
-				}
-			  });
+		} else {
+			if (!sourcesList.size) {
+				await ensureSourcesListLoaded();
 			}
-		  });
-		  
-		  // Create and add options for each source
-		  Array.from(sourcesList).sort().forEach(source => {
-			const option = document.createElement('option');
-			option.value = source;
-			// Capitalize first letter for display
-			option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
-			sourceSelector.appendChild(option);
-		  });
+			
+			Array.from(sourcesList).sort().forEach(source => {
+				const option = document.createElement('option');
+				option.value = source;
+				option.textContent = source.charAt(0).toUpperCase() + source.slice(1);
+				sourceSelector.appendChild(option);
+			});
 		}
 		
-		document.getElementById("custominject").classList.remove("hidden");
-		document.getElementById('inject-button').addEventListener('click', function() {
-		  const source = document.getElementById('source-selector').value;
-		  
-		  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-			chrome.runtime.sendMessage({
-			  type: 'injectCustomSource', // Changed 'type' to 'action' to match service_worker listener
-			  source: source,
-			  tabId: tabs[0].id
+		const customInject = document.getElementById("custominject");
+		if (customInject) {
+			customInject.classList.remove("hidden");
+		}
+		const injectButton = document.getElementById('inject-button');
+		if (injectButton) {
+			injectButton.addEventListener('click', function() {
+			  const sourceDropdown = document.getElementById('source-selector');
+			  const source = sourceDropdown ? sourceDropdown.value : '';
+			  
+			  chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+				chrome.runtime.sendMessage({
+				  type: 'injectCustomSource',
+				  source: source,
+				  tabId: tabs[0].id
+				});
+			  });
 			});
-		  });
-		});
+		}
 	}
 	
 	document.getElementById('addCustomGifCommand').addEventListener('click', function() {
@@ -5661,17 +5936,33 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
-	const viewPointsLeaderboardBtn = document.getElementById('viewPointsLeaderboard');
-	if (viewPointsLeaderboardBtn) {
-		viewPointsLeaderboardBtn.addEventListener('click', function() {
-			// Open leaderboard in new tab
-			chrome.tabs.create({
-				url: chrome.runtime.getURL('leaderboard.html')
-			});
-		});
-	}
+		const viewPointsLeaderboardBtn = document.getElementById('viewPointsLeaderboard');
+		if (viewPointsLeaderboardBtn) {
+			viewPointsLeaderboardBtn.addEventListener('click', function() {
+				const leaderboardLink = document.getElementById('leaderboardlink');
+				const leaderboardContainer = document.getElementById('leaderboard');
+				const fallbackUrl = chrome.runtime.getURL('leaderboard.html');
+				const baseHref = leaderboardLink?.href || leaderboardContainer?.raw || fallbackUrl;
+				let resolvedUrl;
 
-	const resetPointsBtn = document.getElementById('resetPoints');
+				try {
+					resolvedUrl = new URL(baseHref, fallbackUrl);
+				} catch (error) {
+					resolvedUrl = new URL(fallbackUrl);
+				}
+
+				resolvedUrl.searchParams.set('rankby', 'loyalty');
+				if (!resolvedUrl.searchParams.has('title')) {
+					resolvedUrl.searchParams.set('title', 'Points Leaderboard');
+				}
+
+				chrome.tabs.create({
+					url: resolvedUrl.toString()
+				});
+			});
+		}
+
+		const resetPointsBtn = document.getElementById('resetPoints');
 	if (resetPointsBtn) {
 		resetPointsBtn.addEventListener('click', async function() {
 			if (confirm('Are you sure you want to reset all user points? This cannot be undone.')) {
@@ -5715,7 +6006,38 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			console.log('Spotify credentials saved');
 		}
 	}
-	
+
+	function sendSpotifyCommand(message, timeout = 20000) {
+		return new Promise((resolve) => {
+			let resolved = false;
+			const skipTimeout = message?.cmd === 'spotifyAuth';
+			let timer = null;
+			if (!skipTimeout && typeof timeout === 'number' && timeout > 0) {
+				timer = setTimeout(() => {
+					if (!resolved) {
+						resolved = true;
+						resolve({ success: false, error: 'Command timed out' });
+					}
+				}, timeout);
+			}
+
+			chrome.runtime.sendMessage({ type: 'toBackground', data: message }, (response) => {
+				if (!resolved) {
+					resolved = true;
+					if (timer) {
+						clearTimeout(timer);
+					}
+					if (chrome.runtime.lastError) {
+						console.error('Spotify command failed:', chrome.runtime.lastError);
+						resolve({ success: false, error: chrome.runtime.lastError.message });
+					} else {
+						resolve(response);
+					}
+				}
+			});
+		});
+	}
+
 	// Save on input change
 	if (spotifyClientIdInput) {
 		spotifyClientIdInput.addEventListener('change', saveSpotifyCredentials);
@@ -5737,53 +6059,88 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		chrome.storage.local.get(['settings'], function(result) {
 			if (result.settings && result.settings.spotifyAccessToken) {
 				spotifyAuthStatus.style.display = 'inline';
-				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+				spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 				if (spotifySignOutButton) {
 					spotifySignOutButton.style.display = 'inline-block';
 				}
 			}
 		});
 		
-		// Add manual callback handler for Electron app (ssapp)
-		if (window.ssapp) {
-			// Add a text input for manual callback URL
-			const callbackDiv = document.createElement('div');
-			callbackDiv.style.marginTop = '10px';
-			callbackDiv.style.display = 'none';
-			callbackDiv.id = 'spotifyCallbackDiv';
-			callbackDiv.innerHTML = `
-				<input type="text" id="spotifyCallbackInput" placeholder="Paste callback URL here" style="width: 100%; padding: 5px; margin: 5px 0;">
-				<button id="spotifyCallbackSubmit" class="button">Complete Auth</button>
-			`;
-			spotifyAuthButton.parentElement.appendChild(callbackDiv);
-			
-			// Only show callback input as a fallback if automatic auth fails
-			// Don't show it immediately anymore since we have automatic detection
-			
-			// Handle callback submission
-			document.getElementById('spotifyCallbackSubmit')?.addEventListener('click', function() {
-				const callbackUrl = document.getElementById('spotifyCallbackInput').value;
-				if (callbackUrl && callbackUrl.includes('code=')) {
-					chrome.runtime.sendMessage({
-						cmd: "spotifyManualCallback",
-						url: callbackUrl
-					}, response => {
-						console.log("Manual callback result:", response);
-						if (response && response.success) {
-							spotifyAuthStatus.style.display = 'inline';
-							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
-							if (spotifySignOutButton) {
-								spotifySignOutButton.style.display = 'inline-block';
-							}
-							callbackDiv.style.display = 'none';
-							document.getElementById('spotifyCallbackInput').value = '';
-							alert('Spotify connected successfully!');
-						} else {
-							alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
+		// Manual callback helper (SSAPP primary, extension fallback when chrome.identity is unavailable)
+		const callbackDiv = document.createElement('div');
+		callbackDiv.style.marginTop = '10px';
+		callbackDiv.style.display = 'none';
+		callbackDiv.id = 'spotifyCallbackDiv';
+		callbackDiv.innerHTML = `
+			<p class="spotify-callback-helper" style="margin:6px 0; color:#bbb; font-size:0.9em;">
+				If the authorization window doesn't close automatically, copy the entire URL you were redirected to (it contains <code>code=</code>) and paste it below.
+			</p>
+			<input type="text" id="spotifyCallbackInput" placeholder="Paste callback URL here" style="width: 100%; padding: 5px; margin: 5px 0;">
+			<button id="spotifyCallbackSubmit" class="button">Complete Auth</button>
+			<div id="spotifyManualLinkContainer" style="display:none; margin-top:10px;">
+				<p style="color:#bbb; font-size:0.85em; margin-bottom:6px;">
+					If no browser opened, copy this login link into Chrome/Edge, finish signing in, then paste the callback URL above:
+				</p>
+				<textarea id="spotifyManualAuthUrl" readonly style="width:100%; min-height:60px; resize:vertical; padding:5px; font-size:0.85em;"></textarea>
+				<button id="spotifyManualCopy" type="button" class="button" style="margin-top:6px;">Copy Login Link</button>
+			</div>
+		`;
+		spotifyAuthButton.parentElement.appendChild(callbackDiv);
+		
+		// Handle callback submission
+		document.getElementById('spotifyCallbackSubmit')?.addEventListener('click', function() {
+			const callbackUrl = document.getElementById('spotifyCallbackInput').value;
+			if (callbackUrl && callbackUrl.includes('code=')) {
+				let redirectUri = null;
+				try {
+					const parsed = new URL(callbackUrl);
+					redirectUri = `${parsed.origin}${parsed.pathname}`;
+				} catch (e) {
+					console.warn('Failed to parse redirect URI from callback', e);
+				}
+				sendSpotifyCommand({
+					cmd: "spotifyManualCallback",
+					url: callbackUrl,
+					redirectUri
+				}).then(response => {
+					console.log("Manual callback result:", response);
+					if (response && response.success) {
+						spotifyAuthStatus.style.display = 'inline';
+						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
+						if (spotifySignOutButton) {
+							spotifySignOutButton.style.display = 'inline-block';
 						}
-					});
-				} else {
-					alert('Please paste the complete callback URL');
+						callbackDiv.style.display = 'none';
+						document.getElementById('spotifyCallbackInput').value = '';
+						alert('Spotify connected successfully!');
+					} else {
+						alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
+					}
+				});
+			} else {
+				alert('Please paste the complete callback URL');
+			}
+		});
+		
+		const manualCopyButton = document.getElementById('spotifyManualCopy');
+		if (manualCopyButton) {
+			manualCopyButton.addEventListener('click', async () => {
+				const manualUrlField = document.getElementById('spotifyManualAuthUrl');
+				if (!manualUrlField || !manualUrlField.value) {
+					alert('A manual login link is not available yet. Try reconnecting first.');
+					return;
+				}
+				try {
+					if (navigator.clipboard && navigator.clipboard.writeText) {
+						await navigator.clipboard.writeText(manualUrlField.value);
+					} else {
+						manualUrlField.select();
+						document.execCommand('copy');
+					}
+					alert('Login link copied! Paste it into your regular browser to continue.');
+				} catch (err) {
+					console.error('Failed to copy Spotify login link:', err);
+					alert('Copy failed. Please select and copy the link manually.');
 				}
 			});
 		}
@@ -5801,58 +6158,38 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			
 			console.log('Attempting Spotify auth...');
 			
-			// Try to open the background page directly if needed
-			try {
-				// First, try to communicate normally
-				chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(response) {
-					// Check for Chrome runtime errors
-					if (chrome.runtime.lastError) {
-						console.error('Chrome runtime error:', chrome.runtime.lastError);
-						// If communication failed, try opening background page directly
-						chrome.tabs.create({
-							url: chrome.runtime.getURL('background.html'),
-							active: false
-						}, function(tab) {
-							// Wait a bit for background page to load, then retry
-							setTimeout(() => {
-								chrome.runtime.sendMessage({cmd: "spotifyAuth"}, function(retryResponse) {
-									handleSpotifyAuthResponse(retryResponse);
-								});
-							}, 2000);
-						});
-						return;
-					}
-					
-					handleSpotifyAuthResponse(response);
-				});
-			} catch (error) {
-				console.error('Error during Spotify auth:', error);
-				spotifyAuthButton.disabled = false;
-				spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-				alert('Failed to initiate Spotify connection. Please try again.');
-			}
+			const response = await sendSpotifyCommand({ cmd: "spotifyAuth" });
+			handleSpotifyAuthResponse(response);
 			
 			function handleSpotifyAuthResponse(response) {
 				console.log('Spotify auth response received:', response);
 				spotifyAuthButton.disabled = false;
 				const callbackDiv = document.getElementById('spotifyCallbackDiv');
+				const manualLinkContainer = document.getElementById('spotifyManualLinkContainer');
+				const manualLinkField = document.getElementById('spotifyManualAuthUrl');
 				
 				if (response && response.success) {
 					spotifyAuthStatus.style.display = 'inline';
-					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect to Spotify';
+					spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 					if (spotifySignOutButton) {
 						spotifySignOutButton.style.display = 'inline-block';
 					}
 					// Hide manual callback input on success
-					if (window.ssapp && callbackDiv) {
-						callbackDiv.style.display = 'none';
-						document.getElementById('spotifyCallbackInput').value = '';
-					}
+						if (callbackDiv) {
+							callbackDiv.style.display = 'none';
+							document.getElementById('spotifyCallbackInput').value = '';
+							if (manualLinkContainer) {
+								manualLinkContainer.style.display = 'none';
+							}
+							if (manualLinkField) {
+								manualLinkField.value = '';
+							}
+						}
 					// Show success message if already connected
-					if (response.alreadyConnected) {
-						console.log('Already connected to Spotify');
-					} else if (response.message && response.message.includes('authorization')) {
-						// For SSAPP, the OAuth window opened - wait for callback
+						if (response.alreadyConnected) {
+							console.log('Already connected to Spotify');
+						} else if (response.message && response.message.includes('authorization')) {
+							// For SSAPP, the OAuth window opened - wait for callback
 						console.log('OAuth window opened - waiting for authorization');
 						spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
 						// Show manual input as backup after 5 seconds
@@ -5865,15 +6202,66 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							}, 5000);
 						}
 					}
-				} else {
-					spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-					const errorMsg = response?.error || 'Unknown error';
-					console.error('Spotify auth failed:', errorMsg);
+				} else if (response?.waitingForManualCallback || response?.waitingForCallback) {
+					spotifyAuthButton.disabled = true;
+					const waitingForManual = !!response.waitingForManualCallback;
+					spotifyAuthButton.querySelector('span').textContent = '⏳ Waiting for authorization...';
+
+						if (callbackDiv) {
+							callbackDiv.style.display = waitingForManual ? 'block' : 'none';
+							if (!waitingForManual) {
+								const callbackInput = document.getElementById('spotifyCallbackInput');
+								if (callbackInput) {
+									callbackInput.value = '';
+								}
+							}
+						}
+
+						if (manualLinkContainer) {
+							if (response?.manualAuthUrl && waitingForManual) {
+								manualLinkContainer.style.display = 'block';
+								if (manualLinkField) {
+									manualLinkField.value = response.manualAuthUrl;
+								}
+							} else {
+								manualLinkContainer.style.display = 'none';
+								if (manualLinkField) {
+									manualLinkField.value = '';
+								}
+							}
+						}
+
+						const waitMessage = response.message || (waitingForManual
+							? 'After authorizing Spotify in the browser window, paste the callback URL into Social Stream Ninja.'
+							: 'Please finish the Spotify login in the newly opened tab.');
+
+						console.log(waitMessage);
+						if (waitingForManual) {
+							alert(waitMessage);
+						}
+					} else {
+						spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
+						const errorMsg = response?.error || 'Unknown error';
+						console.error('Spotify auth failed:', errorMsg);
 					
-					// Show manual callback input only if in Electron and auth failed
-					if (window.ssapp && callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
+					// Show manual callback input if the background specifically asked for manual completion
+					if (callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
 						callbackDiv.style.display = 'block';
 						console.log('Please paste the callback URL manually.');
+					}
+
+					if (manualLinkContainer) {
+						if (response?.manualAuthUrl) {
+							manualLinkContainer.style.display = 'block';
+							if (manualLinkField) {
+								manualLinkField.value = response.manualAuthUrl;
+							}
+						} else {
+							manualLinkContainer.style.display = 'none';
+							if (manualLinkField) {
+								manualLinkField.value = '';
+							}
+						}
 					}
 					
 					// Only show alert if not already connected
@@ -5890,13 +6278,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		spotifySignOutButton.addEventListener('click', function() {
 			if (confirm('Are you sure you want to sign out of Spotify?')) {
 				// Send message to background script to clear Spotify tokens
-				chrome.runtime.sendMessage({cmd: "spotifySignOut"}, function(response) {
-					if (chrome.runtime.lastError) {
-						console.error('Error signing out:', chrome.runtime.lastError);
-						alert('Failed to sign out. Please try again.');
-						return;
-					}
-					
+				sendSpotifyCommand({ cmd: "spotifySignOut" }).then(response => {
 					if (response && response.success) {
 						// Update UI
 						spotifyAuthStatus.style.display = 'none';

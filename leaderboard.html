@@ -1143,7 +1143,7 @@
         const autoHideDelay = parseInt(urlParams.get('hidedelay') || '10') * 1000; // seconds to ms
         
         // New parameters from popup.html
-        const rankingType = urlParams.get('rankby') || 'combined';
+        const rankingType = (urlParams.get('rankby') || 'combined').toLowerCase();
         // Default to showing rank and score (essential for leaderboard)
         const showRank = true; // Always show rank numbers
         const showScore = true; // Always show scores
@@ -1268,6 +1268,13 @@
                 // Recent activity tracking
                 this.lastGiftTime = 0;
                 this.lastDonationTime = 0;
+
+                // Loyalty points tracking
+                this.loyaltyPoints = 0;
+                this.loyaltySpent = 0;
+                this.loyaltyAvailable = 0;
+                this.loyaltyRank = null;
+                this.loyaltyUpdatedAt = 0;
             }
 
             checkTimeResets() {
@@ -1343,6 +1350,8 @@
                         return this.donations;
                     case 'messages':
                         return this.messageCount;
+                    case 'loyalty':
+                        return this.loyaltyAvailable || 0;
                     case 'combined':
                         // Combined engagement + donations score
                         const baseScore = this.messageCount * 1; // 1 point per message
@@ -1424,6 +1433,11 @@
                         weeklyGifts: user.weeklyGifts,
                         dailyGiftValue: user.dailyGiftValue,
                         weeklyGiftValue: user.weeklyGiftValue,
+                        loyaltyPoints: user.loyaltyPoints,
+                        loyaltySpent: user.loyaltySpent,
+                        loyaltyAvailable: user.loyaltyAvailable,
+                        loyaltyRank: user.loyaltyRank,
+                        loyaltyUpdatedAt: user.loyaltyUpdatedAt,
                         // Timestamps
                         firstSeen: user.firstSeen,
                         lastDailyReset: user.lastDailyReset,
@@ -1504,6 +1518,8 @@
                     return 'donated';
                 case 'messages':
                     return 'messages';
+                case 'loyalty':
+                    return 'loyalty points';
                 case 'combined':
                     return 'points';
                 default:
@@ -1527,6 +1543,49 @@
             }
         }
 
+        function resetLoyaltyData(timestamp = Date.now()) {
+            users.forEach(user => {
+                user.loyaltyPoints = 0;
+                user.loyaltySpent = 0;
+                user.loyaltyAvailable = 0;
+                user.loyaltyRank = null;
+                user.loyaltyUpdatedAt = timestamp;
+            });
+        }
+
+        function applyPointsLeaderboardSnapshot(snapshot) {
+            const entries = Array.isArray(snapshot.leaderboard) ? snapshot.leaderboard : [];
+            const snapshotTime = snapshot.timestamp || Date.now();
+
+            resetLoyaltyData(snapshotTime);
+
+            entries.forEach((entry, index) => {
+                const username = entry.chatname || entry.username;
+                if (!username) {
+                    return;
+                }
+
+                const platform = entry.type || entry.platform || 'default';
+                const user = getOrCreateUser(username, platform);
+                user.loyaltyPoints = Number(entry.points) || 0;
+                user.loyaltySpent = Number(entry.pointsSpent) || 0;
+                if (typeof entry.available === 'number' && !isNaN(entry.available)) {
+                    user.loyaltyAvailable = entry.available;
+                } else {
+                    user.loyaltyAvailable = Math.max(0, user.loyaltyPoints - user.loyaltySpent);
+                }
+                user.loyaltyRank = entry.rank || (index + 1);
+                user.loyaltyUpdatedAt = snapshotTime;
+                if (typeof entry.currentStreak === 'number') {
+                    user.currentStreak = entry.currentStreak;
+                }
+            });
+
+            updateLeaderboard();
+            handleAutoHide();
+            saveToLocalStorage();
+        }
+
         function processData(data) {
             if (data.content) {
                 data = data.content;
@@ -1534,6 +1593,11 @@
 
 			console.log(data);
             const normalizedEvent = normalizeEventType(data.event);
+
+            if ((normalizedEvent === 'points_leaderboard' || data.event === 'points_leaderboard') && Array.isArray(data.leaderboard)) {
+                applyPointsLeaderboardSnapshot(data);
+                return;
+            }
 
             if (!data.chatname || !data.type) {
                 return;

@@ -56,7 +56,7 @@
 		
 		element.childNodes.forEach(node=>{
 			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
+				resp += getAllContentNodes(node);
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
 				resp += escapeHtml(node.textContent);
 			} else if (node.nodeType === 1){
@@ -74,47 +74,55 @@
 	}
 	
 	function processMessage(ele){
-		var chatimg = "";
-		if (ele.querySelector('img.chat-history--user-avatar[src]')){
-			try {
-				chatimg = ele.querySelector('img.chat-history--user-avatar[src]').src;
-			} catch(e){
-				chatimg = "";
-			}
-		}
 		
 		var name="";
-		if (ele.querySelector('.chat-history--username')){
-		  name = ele.querySelector('.chat-history--username').innerText;
+		if (ele.querySelector('.chat-history--username, [data-js="raid_owner_name"]')){
+		  if (ele.parentNode.id !== "chat-history-list"){return;}
+		  name = ele.querySelector('.chat-history--username, [data-js="raid_owner_name"]').innerText;
 		  if (name){
 			name = name.trim();
 			name = escapeHtml(name);
 		  }
+		  
 		} else if (ele.querySelector('.chat-history--rant-username')){
 		  name = ele.querySelector('.chat-history--rant-username').innerText;
 		  if (name){
 			name = name.trim();
 			name = escapeHtml(name);
 		  }
+		} else {
+			return;
 		}
+		
 		var nameColor = "";
 		try {
 			nameColor = ele.querySelector('.chat-history--username[style], .chat-history--username [style]').style.color || "";
 		}catch(e){
 			
 		}
+		
+		var eventType = "";
+		if (ele.classList.contains("chat-history__incoming-raid-container")){
+			eventType = "raid";
+		}
+		
+		
+		var chatimg = "";
+		if (ele.querySelector('img.chat-history--user-avatar[src], img.chat-history__incoming-raid-avatar[src]')){
+			try {
+				chatimg = ele.querySelector('img.chat-history--user-avatar[src], img.chat-history__incoming-raid-avatar[src]').src;
+			} catch(e){
+				chatimg = "";
+			}
+		}
 
 		var msg = "";
 		
-		if (ele.querySelector('.chat-history--message')){
+		if (ele.querySelector('.chat-history--message, .chat-history__incoming-raid-content-message > span, .chat-history--rant-text')){
 			try {
-				msg = getAllContentNodes(ele.querySelector('.chat-history--message'));
+				msg = getAllContentNodes(ele.querySelector('.chat-history__incoming-raid-content-message > span, .chat-history--message, .chat-history--rant-text'));
 			} catch(e){}
-		} else if (ele.querySelector('.chat-history--rant-text')){
-			try {
-				msg = getAllContentNodes(ele.querySelector('.chat-history--rant-text'));
-			} catch(e){}
-		}
+		} 
 		
 		var dono = "";
 		try {
@@ -127,6 +135,12 @@
 		if (msg){
 			msg = msg.trim();
 		}
+		
+		var contentimg = "";
+		try {
+			contentimg = ele.querySelector('img.chat-history__incoming-raid-bg-img[src]').src;
+		} catch(e){}
+		
 		
 		var brandedImg = document.querySelector(".media-by-wrap .user-image") || "";
 		try {
@@ -149,6 +163,8 @@
 			});
 		} catch(e){
 		}
+		
+		
 
 		var data = {};
 		data.chatname = name;
@@ -159,8 +175,9 @@
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
 		data.hasDonation = dono;
-		data.membership = "";;
-		data.contentimg = "";
+		data.membership = "";
+		data.contentimg = contentimg;
+		data.event = eventType;
 		data.textonly = settings.textonlymode || false;
 		data.type = "rumble";
 		
@@ -210,10 +227,10 @@
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
+		if (response && "settings" in response){
 			settings = response.settings;
 		}
-		if ("state" in response) {
+		if (response && "state" in response) {
 			isExtensionOn = response.state;
 		}
 	});
@@ -330,7 +347,28 @@
 				//document.querySelectorAll(".chat-history--row").forEach(ele=>{
 				//	processMessage(ele);
 				//});
+			} 
+			if (!document.querySelector('img[src="/img/astronaut-404.png"]') && window.location.href.endsWith("/live") && document.querySelector('[data-video-id]')){
+				window.location.href = "https://rumble.com/chat/popup/"+document.querySelector('[data-video-id]').dataset.videoId;
 			}
+			
+		} else {
+			if (window.location.href.endsWith("/live") && document.querySelector('img[src="/img/astronaut-404.png"]')){
+				if (window.location.href.includes("/user/")){
+					window.location.href = window.location.href.replace("/user/","/");
+				} else if (window.location.href.includes("/c/")){
+					window.location.href = window.location.href.replace("/c/","/user/");
+				}
+				
+			} else if (!document.querySelector('img[src="/img/astronaut-404.png"]') && window.location.href.endsWith("/live") && document.querySelector('[data-video-id]')){
+				window.location.href = "https://rumble.com/chat/popup/"+document.querySelector('[data-video-id]').dataset.videoId;
+			}
+		}
+		
+		
+		if (document.querySelector('video') && !document.querySelector('video').p && document.querySelector('video').played){
+			document.querySelector('video').p = "true";
+			document.querySelector('video').pause();
 		}
 	},1000);
 

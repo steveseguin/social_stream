@@ -183,6 +183,8 @@ A typical message object might look like this (fields vary based on source and e
 
 Refer to `about.md` for more details on these fields.
 
+> **Note:** Reserve the `event` field for true system notifications (follows, raids, /me actions, etc.). Regular chat messages should leave `event` unset/false so they are never mistaken for events.
+
 ### Client-Side Filtering and Logic
 
 Your JavaScript code will be responsible for deciding what to do with each incoming message.

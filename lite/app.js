@@ -15,6 +15,14 @@ const overlayToggleDefs = [
   { key: 'reverse', id: 'session-opt-reverse', params: ['reverse'] }
 ];
 
+const isObsDockView = typeof window !== 'undefined' && Boolean(window.obsstudio);
+
+const url = new URL(window.location.href);
+const focusParam = (url.searchParams.get('focus') || '').trim().toLowerCase();
+const liteViewParam = (url.searchParams.get('view') || url.searchParams.get('liteView') || '').trim().toLowerCase();
+const hasOpener = typeof window !== 'undefined' && Boolean(window.opener);
+const isActivityPopoutView = liteViewParam === 'activity' || (!liteViewParam && focusParam === 'activity' && hasOpener);
+
 const elements = {
   sessionInput: document.getElementById('session-id'),
   sessionApply: document.getElementById('session-apply'),
@@ -38,6 +46,14 @@ const elements = {
   dockFrame: document.getElementById('dock-relay'),
   mobileNavButtons: Array.from(document.querySelectorAll('[data-mobile-nav-target]'))
 };
+
+if (isObsDockView) {
+  applyObsDockLayout();
+}
+
+if (isActivityPopoutView) {
+  applyActivityPopoutLayout();
+}
 
 const overlayToggleInputs = overlayToggleDefs.reduce((acc, def) => {
   acc[def.key] = document.getElementById(def.id);
@@ -64,7 +80,6 @@ if (storedOverlayToggleState && typeof storedOverlayToggleState === 'object' && 
 
 let youtubeStreamingEnabled = Boolean(storage.get(youtubeStreamingStorageKey, false));
 
-const url = new URL(window.location.href);
 const debugParam = url.searchParams.get('debug');
 const storedDebugPreference = storage.get(debugPreferenceKey, null);
 const debugEnabled = (() => {
@@ -1323,11 +1338,79 @@ function openActivityPopout() {
   try {
     const popupUrl = new URL(window.location.href);
     popupUrl.searchParams.set('focus', 'activity');
+    popupUrl.searchParams.set('view', 'activity');
     window.open(popupUrl.toString(), '_blank', 'width=480,height=720,resizable=yes,scrollbars=yes');
   } catch (err) {
     console.warn('Unable to open activity pop-out', err);
   }
   toggleActivityMenu(false);
+}
+
+function applyObsDockLayout() {
+  if (!document || !document.body) {
+    return;
+  }
+  document.body.classList.add('obs-dock');
+
+  const hideSelectors = ['.masthead', '.mobile-nav'];
+  hideSelectors.forEach((selector) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      node.setAttribute('aria-hidden', 'true');
+      node.hidden = true;
+    });
+  });
+
+  if (elements.sessionToggle) {
+    elements.sessionToggle.hidden = true;
+    elements.sessionToggle.setAttribute('aria-hidden', 'true');
+  }
+  if (elements.sessionAdvanced) {
+    elements.sessionAdvanced.hidden = true;
+  }
+
+  const sourcesFootnote = document.querySelector('.sources__footnote');
+  if (sourcesFootnote) {
+    sourcesFootnote.hidden = true;
+    sourcesFootnote.setAttribute('aria-hidden', 'true');
+  }
+}
+
+function applyActivityPopoutLayout() {
+  if (!document || !document.body) {
+    return;
+  }
+  document.body.classList.add('activity-popout');
+
+  ['.masthead', '#session', '#sources', '.mobile-nav'].forEach((selector) => {
+    document.querySelectorAll(selector).forEach((node) => {
+      node.setAttribute('aria-hidden', 'true');
+      node.hidden = true;
+    });
+  });
+
+  if (elements.activityPopout) {
+    elements.activityPopout.hidden = true;
+    elements.activityPopout.setAttribute('aria-hidden', 'true');
+  }
+  if (elements.activityMenuToggle) {
+    elements.activityMenuToggle.hidden = true;
+    elements.activityMenuToggle.setAttribute('aria-hidden', 'true');
+  }
+  if (elements.activityMenu) {
+    elements.activityMenu.hidden = true;
+  }
+
+  const layout = document.querySelector('main.layout');
+  if (layout) {
+    layout.setAttribute('data-view', 'activity');
+  }
+
+  const heading = document.getElementById('activity-heading');
+  if (heading) {
+    heading.textContent = 'Activity Feed';
+  }
+
+  document.title = 'Social Stream Ninja Lite - Activity Feed';
 }
 
 function pickRandom(list) {
@@ -1839,7 +1922,7 @@ function init() {
   });
   initMobileNav();
 
-  if (url.searchParams.get('focus') === 'activity' && elements.activitySection) {
+  if (!isActivityPopoutView && focusParam === 'activity' && elements.activitySection) {
     window.setTimeout(() => {
       elements.activitySection.scrollIntoView({
         behavior: prefersReducedMotion ? 'auto' : 'smooth',
