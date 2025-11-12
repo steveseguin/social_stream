@@ -1139,6 +1139,14 @@ If there is missing attribution or concerns over any media, please contact us.
 
 This project contains inspiration by my past project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
 
+## Config validation guardrails
+
+- Run `scripts/validate-configs.sh` to make sure every `settings/config*.json` file contains valid JSON before committing changes.
+- GitHub Actions now executes the same script on every push and pull request, so invalid JSON blocks deployments (including GitHub Pages).
+- You can enable the local pre-push hook to stop bad pushes immediately:
+  1. `git config core.hooksPath .githooks`
+  2. Push as usual—the hook runs `scripts/validate-configs.sh` and aborts on failure.
+
 ## Contributors to this project
 
 <a href="https://github.com/steveseguin/social_stream/graphs/contributors">
