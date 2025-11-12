@@ -61,7 +61,7 @@
 	
 	function processMessage(ele){
 		
-		//console.log(ele);
+		console.log(ele);
 		
 		let eventType = "";
 		if (ele.querySelector("[class*='joinedText']")){
@@ -210,12 +210,12 @@
 		
 		resetObserver();
 		
-		//console.log(target);
+		console.log(target);
 		
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					//console.log(mutation.addedNodes);
+					console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
@@ -233,6 +233,7 @@
 		observer = new MutationObserver(onMutationsObserved);
 		try {
 			observer.observe(target, config);
+			console.log("OBSERVING");
 			isWatching = true;
 		} catch (e) {
 			observer = null;
@@ -287,9 +288,11 @@
 			return;
 		}
 		if (!isWatching){
-			var header = document.querySelector('#entry, .pc-root, body');
+			console.log("searching");
+			var header = document.querySelector("[class*='overflow-auto']");
 			if (header){
-				onElementInserted(target);
+				console.log("loading?");
+				onElementInserted(header);
 			}
 		}
 		
