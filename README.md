@@ -95,6 +95,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - [Donations](#donations)
 - [Icons and Media](#icons-and-media)
 - [Credit](#credit)
+- [Config validation guardrails](#config-validation-guardrails)
 - [Contributors to this project](#contributors-to-this-project)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
