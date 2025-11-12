@@ -95,6 +95,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - [Donations](#donations)
 - [Icons and Media](#icons-and-media)
 - [Credit](#credit)
+- [Config validation guardrails](#config-validation-guardrails)
 - [Contributors to this project](#contributors-to-this-project)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -1138,6 +1139,14 @@ If there is missing attribution or concerns over any media, please contact us.
 ## Credit
 
 This project contains inspiration by my past project, chat.overlay.ninja, which was a derivation of another Youtube-specific chat widget, which was inspired by the stylings of other featured-chat code sample, of which that was also inspired by existing chat overlay designs. May the many new innovations of this project inspire the future foundation of other awesome projects as well.
+
+## Config validation guardrails
+
+- Run `scripts/validate-configs.sh` to ensure every `settings/config*.json` file contains well-formed JSON (duplicate keys included) before committing changes.
+- GitHub Actions now executes the same script on every push and pull request, so invalid JSON blocks deployments (including GitHub Pages).
+- You can enable the local pre-push hook to stop bad pushes immediately:
+  1. `git config core.hooksPath .githooks`
+  2. Push as usual—the hook runs `scripts/validate-configs.sh` and aborts on failure.
 
 ## Contributors to this project
 

@@ -233,6 +233,7 @@
 		observer = new MutationObserver(onMutationsObserved);
 		try {
 			observer.observe(target, config);
+			//console.log("OBSERVING");
 			isWatching = true;
 		} catch (e) {
 			observer = null;
@@ -287,10 +288,11 @@
 			return;
 		}
 		if (!isWatching){
-			var header = document.querySelector('h4');
-			var target = header?.nextSibling?.childNodes?.[0];
-			if (target){
-				onElementInserted(target);
+			//console.log("searching");
+			var header = document.querySelector("[class*='overflow-auto']");
+			if (header){
+				//console.log("loading?");
+				onElementInserted(header);
 			}
 		}
 		
