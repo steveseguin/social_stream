@@ -1141,7 +1141,7 @@ This project contains inspiration by my past project, chat.overlay.ninja, which 
 
 ## Config validation guardrails
 
-- Run `scripts/validate-configs.sh` to make sure every `settings/config*.json` file contains valid JSON before committing changes.
+- Run `scripts/validate-configs.sh` to ensure every `settings/config*.json` file contains well-formed JSON (duplicate keys included) before committing changes.
 - GitHub Actions now executes the same script on every push and pull request, so invalid JSON blocks deployments (including GitHub Pages).
 - You can enable the local pre-push hook to stop bad pushes immediately:
   1. `git config core.hooksPath .githooks`

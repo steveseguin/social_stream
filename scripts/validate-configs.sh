@@ -18,7 +18,29 @@ fi
 
 failed=0
 for file in "${files[@]}"; do
-  if python3 -m json.tool "$file" >/dev/null; then
+  if python3 - "$file" <<'PY'; then
+import json
+import sys
+
+path = sys.argv[1]
+
+
+def strict_pairs(pairs):
+    obj = {}
+    for key, value in pairs:
+        if key in obj:
+            raise ValueError(f"Duplicate key '{key}'")
+        obj[key] = value
+    return obj
+
+
+try:
+    with open(path, "r", encoding="utf-8") as fh:
+        json.load(fh, object_pairs_hook=strict_pairs)
+except Exception as exc:
+    print(f"{path}: {exc}", file=sys.stderr)
+    sys.exit(1)
+PY
     echo "Validated $file"
   else
     echo "Invalid JSON: $file" >&2
