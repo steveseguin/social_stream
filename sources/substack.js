@@ -287,9 +287,8 @@
 			return;
 		}
 		if (!isWatching){
-			var header = document.querySelector('h4');
-			var target = header?.nextSibling?.childNodes?.[0];
-			if (target){
+			var header = document.querySelector('#entry, .pc-root, body');
+			if (header){
 				onElementInserted(target);
 			}
 		}
