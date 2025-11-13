@@ -11863,6 +11863,14 @@ let fileContentTicker = "";
 let fileSizeTicker = 0;
 let monitorInterval = null;
 
+function buildTickerEntries(content) {
+	if (typeof content !== "string" || !content.length) {
+		return [];
+	}
+	const normalized = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+	return normalized.split("\n");
+}
+
 async function selectTickerFile() {
 	const pickerOptions = {
 		types: [{
@@ -12053,8 +12061,13 @@ async function initializeFileHandles() {
 }
 
 function processTicker(){ 
-	if (fileContentTicker && settings.ticker){
-		sendTickerP2P([fileContentTicker]);
+	if (!settings.ticker){
+		sendTickerP2P([]);
+		return;
+	}
+	const entries = buildTickerEntries(fileContentTicker);
+	if (entries.length){
+		sendTickerP2P(entries);
 	} else {
 		sendTickerP2P([]);
 	}
@@ -12094,7 +12107,8 @@ async function loadFileTicker(file=null) {
 			} else {
 				fileContentTicker = fileHandleTicker;
 			}
-			sendTickerP2P([fileContentTicker]);
+			const entries = buildTickerEntries(fileContentTicker);
+			sendTickerP2P(entries.length ? entries : []);
 			if (file?.size) {
 				fileSizeTicker = file.size;
 			}

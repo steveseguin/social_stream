@@ -440,8 +440,16 @@
 	let rotateIndex = 0;
 
 	function normalizeTickerEntries(list){
-		if (!Array.isArray(list)){return [];}
-		return list.map(function(entry){
+		let source = [];
+		if (Array.isArray(list)){
+			source = list;
+		} else if (typeof list === "string"){
+			const normalized = list.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+			source = normalized.split("\n");
+		} else {
+			return [];
+		}
+		return source.map(function(entry){
 			if (entry === null || entry === undefined){return "";}
 			return ""+entry;
 		});
