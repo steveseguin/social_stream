@@ -190,7 +190,6 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - truffle.vip (https://chat.truffle.vip/chat/*)
 - megaphonetv.com (In [Studio](https://studio.megaphonetv.com/), select UGC, then open Recent messages)
 - pilled (pop out the chat)
-- soulbound.tv (no pop out; open https://soulbound.tv/* streams)
 - portal.abs.xyz (no pop out; open https://portal.abs.xyz/stream/*)
 - riverside.fm (just open the chat bar. Note: you can opt-out of capture via the extension menu)
 - chzzk.naver.com (pop out the chat)
@@ -254,6 +253,7 @@ Past supported sites that have ceased to exist.
 - 🪦 vimm.tv (RIP June 2024)
 - 🪦 caffeine.tv (RIP June 2024)
 - 🪦 moonbeam (RIP Nov 2025)
+- 🪦 soulbound.tv (RIP Nov 2025)
 
   (it's the effort that counts, guys; may your code live on in our ai llm bots forever)
 
