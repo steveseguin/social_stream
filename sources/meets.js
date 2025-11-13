@@ -88,32 +88,46 @@
     var chatname = "";
     var chatmessage = "";
 
-	chatname = escapeHtml(ele.childNodes[0].childNodes[0].textContent);
+	if (!ele.dataset.messageId){
+		ele = ele.querySelector("[data-message-id]:not([data-skip])")
+	}
+	if (!ele){
+		return;
+	}
+	
     // Get the chat message
     try {
-	  var ele = ele.lastChild.lastChild;
-	  if (ele.skip){
+	  if (ele.dataset.skip){
 		  return;
 	  }
-	  ele.skip = true;
-      chatmessage = getAllContentNodes(ele);
+	  ele.dataset.skip = true;
+      chatmessage = getAllContentNodes(ele.childNodes[0].childNodes[0].childNodes[0]);
     } catch (e) {
       errorlog(e);
     }
     if (!chatmessage) {
       return;
     }
-
-	try {
-		if (chatname === "You"){
-			if (settings && settings.mynameext && settings.mynameext.textparam1){
-				chatname = settings.mynameext.textparam1.split(",")[0].trim();
-			}
-			if (settings && settings.hostnamesext && settings.hostnamesext.textsetting){
-				chatname = settings.hostnamesext.textsetting.split(",")[0].trim();
-			}
+	
+	
+	
+	if (ele.parentNode.parentNode.childNodes[0].childNodes.length==1){
+		chatname = "Host";
+		if (settings && settings.mynameext && settings.mynameext.textparam1){
+			chatname = settings.mynameext.textparam1.split(",")[0].trim();
 		}
-	} catch(e){}
+		if (settings && settings.hostnamesext && settings.hostnamesext.textsetting){
+			chatname = settings.hostnamesext.textsetting.split(",")[0].trim();
+		}
+	} else if (ele.parentNode.parentNode.childNodes[0].childNodes.length>1){
+		chatname = escapeHtml(ele.parentNode.parentNode.childNodes[0].childNodes[0].textContent);
+		
+		if (ele.parentNode.parentNode.parentNode.childNodes[0] && ele.parentNode.parentNode.parentNode.childNodes[0].src){
+			chatimg = ele.parentNode.parentNode.parentNode.childNodes[0].src;
+		}
+	} else {
+		return;
+	}
 
     var data = {};
     data.chatname = chatname;
