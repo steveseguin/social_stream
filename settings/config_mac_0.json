@@ -291,27 +291,67 @@
       "userAgent": "Chrome"
     }
   },
-  "twitch": {
-    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
-    "signin": {
-      "url": "https://twitch.tv",
-      "size": {
-        "width": 1920,
-        "height": 1080
-      },
-      "preload": "kasada",
-      "monitorAntiBot": false,
-      "useSystemBrowser": false,
-      "useTLSProxy": false,
-      "enforceSigninCSP": false
-    },
-    "wss": {
-      "size": {
-        "width": 1100,
-        "height": 865
-      }
-    }
-  },
+	"twitch": {
+		"userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+		"mockUserAgentData": {
+		  "brands": [
+			{
+			  "brand": "Not?A_Brand",
+			  "version": "99"
+			},
+			{
+			  "brand": "Google Chrome",
+			  "version": "141"
+			},
+			{
+			  "brand": "Chromium",
+			  "version": "141"
+			}
+		  ],
+		  "mobile": false,
+		  "platform": "macOS",
+		  "fullVersionList": [
+			{
+			  "brand": "Not?A_Brand",
+			  "version": "24.0.0.0"
+			},
+			{
+			  "brand": "Google Chrome",
+			  "version": "141.0.7390.123"
+			},
+			{
+			  "brand": "Chromium",
+			  "version": "141.0.7390.123"
+			}
+		  ],
+		  "architecture": "arm",
+		  "bitness": "64",
+		  "model": "",
+		  "platformVersion": "15.5.0",
+		  "uaFullVersion": "141.0.7390.123",
+		  "wow64": false,
+		  "enhancedHeaders": true
+		},
+		"signin": {
+		  "url": "https://twitch.tv/",
+		  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+		  "size": {
+			"width": 1920,
+			"height": 1080
+		  },
+		  "preload": "kasada",
+		  "preserveAntiBot": false,
+		  "monitorAntiBot": false,
+		  "useSystemBrowser": false,
+		  "useTLSProxy": true
+		},
+		"wss": {
+		  "size": {
+			"width": 1100,
+			"height": 865
+		  }
+		}
+	  },
   "telegramk": {
     "signin": {
       "url": "https://web.telegram.org/k/",

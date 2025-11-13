@@ -291,27 +291,49 @@
       "userAgent": "Chrome"
     }
   },
-  "twitch": {
-    "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36",
-    "signin": {
-      "url": "https://twitch.tv",
-      "size": {
-        "width": 1920,
-        "height": 1080
-      },
-      "preload": "kasada",
-      "monitorAntiBot": false,
-      "useSystemBrowser": false,
-      "useTLSProxy": false,
-      "enforceSigninCSP": false
-    },
-    "wss": {
-      "size": {
-        "width": 1100,
-        "height": 865
-      }
-    }
-  },
+	"twitch": {
+		"userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+		"mockUserAgentData": {
+		  "brands": [
+			{ "brand": "Google Chrome", "version": "141" },
+			{ "brand": "Chromium", "version": "141" },
+			{ "brand": "Not?A_Brand", "version": "8" }
+		  ],
+		  "mobile": false,
+		  "platform": "Linux",
+		  "fullVersionList": [
+			{ "brand": "Google Chrome", "version": "141.0.7390.123" },
+			{ "brand": "Chromium", "version": "141.0.7390.123" },
+			{ "brand": "Not?A_Brand", "version": "24.0.0.0" }
+		  ],
+		  "architecture": "x86",
+		  "bitness": "64",
+		  "model": "",
+		  "platformVersion": "5.15.0",
+		  "uaFullVersion": "141.0.7390.123",
+		  "wow64": false,
+		  "enhancedHeaders": true
+		},
+		"signin": {
+		  "url": "https://twitch.tv/",
+		  "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36",
+		  "size": {
+			"width": 1920,
+			"height": 1080
+		  },
+		  "preload": "kasada",
+		  "preserveAntiBot": false,
+		  "monitorAntiBot": false,
+		  "useSystemBrowser": false,
+		  "useTLSProxy": true
+		},
+		"wss": {
+		  "size": {
+			"width": 1100,
+			"height": 865
+		  }
+		}
+	  },
   "telegramk": {
     "signin": {
       "url": "https://web.telegram.org/k/",
