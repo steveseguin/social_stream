@@ -3013,14 +3013,22 @@ async function getFFZEmotes(url = false, type=null, channel=null) {
 							});
 
 						if (ffz && ffz.sets) {
-							ffz.channelEmotes = Object.values(ffz.sets).flatMap(set => 
-								set.emoticons.map(emote => ({
-									[emote.name]: {
-										url: emote.urls["1"], // Use 1x size as default
-										zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+							ffz.channelEmotes = Object.values(ffz.sets)
+								.flatMap(set => (set.emoticons || []).map(emote => {
+									const animatedUrl = emote.animated ? emote.animated["2"] || emote.animated["1"] : null;
+									const staticUrl = emote.urls ? emote.urls["2"] || emote.urls["1"] : null;
+									const url = animatedUrl || staticUrl;
+									if (!url || !emote.name) {
+										return null;
 									}
-								}))
-							).reduce((acc, curr) => Object.assign(acc, curr), {});
+									return {
+										[emote.name]: {
+											url,
+											zw: !!emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+										}
+									};
+								}).filter(Boolean))
+								.reduce((acc, curr) => Object.assign(acc, curr), {});
 
 							setItemWithExpiry("uid2ffz.youtube:" + userID, ffz);
 						}
@@ -3056,14 +3064,22 @@ async function getFFZEmotes(url = false, type=null, channel=null) {
 						});
 
 					if (ffz && ffz.sets) {
-						ffz.channelEmotes = Object.values(ffz.sets).flatMap(set => 
-							set.emoticons.map(emote => ({
-								[emote.name]: {
-									url: emote.urls["3"] || emote.urls["2"] || emote.urls["1"], // Use 1x size as default
-									zw: emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+						ffz.channelEmotes = Object.values(ffz.sets)
+							.flatMap(set => (set.emoticons || []).map(emote => {
+								const animatedUrl = emote.animated ? emote.animated["2"] || emote.animated["1"] : null;
+								const staticUrl = emote.urls ? emote.urls["3"] || emote.urls["2"] || emote.urls["1"] : null;
+								const url = animatedUrl || staticUrl;
+								if (!url || !emote.name) {
+									return null;
 								}
-							}))
-						).reduce((acc, curr) => Object.assign(acc, curr), {});
+								return {
+									[emote.name]: {
+										url,
+										zw: !!emote.modifier // FFZ uses 'modifier' flag for zero-width emotes
+									}
+								};
+							}).filter(Boolean))
+							.reduce((acc, curr) => Object.assign(acc, curr), {});
 
 						setItemWithExpiry("uid2ffz.twitch:" + username.toLowerCase(), ffz);
 					} else {
