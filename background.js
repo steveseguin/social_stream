@@ -1817,6 +1817,24 @@ async function overwriteFile(data = false) {
     }
 }
 
+const MAX_NATIVE_FILE_PATH_LENGTH = 4096;
+
+function sanitizeNativeFilePath(candidate) {
+    if (typeof candidate !== "string") {
+        return null;
+    }
+    if (!candidate) {
+        return null;
+    }
+    if (candidate.length > MAX_NATIVE_FILE_PATH_LENGTH) {
+        return null;
+    }
+    if (/[\r\n]/.test(candidate)) {
+        return null;
+    }
+    return candidate;
+}
+
 var newSavedNamesFileHandle = false;
 var uniqueNameSet = [];
 async function overwriteSavedNames(data = false) {
@@ -1844,7 +1862,12 @@ async function overwriteSavedNames(data = false) {
         
         // Store file path when isSSAPP is true
         if (isSSAPP && typeof newSavedNamesFileHandle === "string") {
-            localStorage.setItem("savedNamesFilePath", newSavedNamesFileHandle);
+            const sanitized = sanitizeNativeFilePath(newSavedNamesFileHandle);
+            if (sanitized) {
+                localStorage.setItem("savedNamesFilePath", sanitized);
+            } else {
+                console.warn("[SavedNames] Refusing to persist invalid file path for saved names.");
+            }
         }
 
         const displayName = getFileHandleDisplayName(newSavedNamesFileHandle);
@@ -11888,27 +11911,61 @@ function buildTickerEntries(content) {
 }
 
 async function selectTickerFile() {
-	const pickerOptions = {
-		types: [{
-			description: 'Text Files',
-			accept: {'text/plain': ['.txt']},
-		}],
-	};
-	const restoreTarget = await bringBackgroundPageToFrontForPicker();
-
-	try {
-	fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
-	} finally {
-		await restorePreviousTabAfterPicker(restoreTarget);
-	}
-
-	if (!isSSAPP) {
+	if (isSSAPP) {
+		if (!ipcRenderer || typeof ipcRenderer.invoke !== "function") {
+			console.warn("ipcRenderer unavailable; cannot select ticker file.");
+			await markHandleNeedsAttention("ticker", "File picker not available");
+			return;
+		}
+		try {
+			const result = await ipcRenderer.invoke("ssapp:choose-ticker-file", {
+				title: "Select ticker source file",
+				filters: [
+					{ name: "Text Files", extensions: ["txt", "csv", "md"] },
+					{ name: "All Files", extensions: ["*"] }
+				]
+			});
+			if (!result || result.canceled || !result.filePath) {
+				await markHandleNeedsAttention("ticker", "Select a ticker source file");
+				return;
+			}
+			const sanitized = sanitizeNativeFilePath(result.filePath);
+			if (!sanitized) {
+				console.warn("[Ticker] Invalid file path selected");
+				await markHandleNeedsAttention("ticker", "Select a valid ticker source file");
+				return;
+			}
+			fileHandleTicker = sanitized;
+			localStorage.setItem("tickerFilePath", sanitized);
+		} catch (error) {
+			console.error("Failed to select ticker file via IPC:", error);
+			await markHandleNeedsAttention("ticker", "Unable to open ticker file");
+			return;
+		}
+	} else {
+		if (typeof window.showOpenFilePicker !== "function") {
+			console.warn("File System Access API unavailable; enable it in browser settings.");
+			await markHandleNeedsAttention("ticker", "Enable browser file picker API");
+			return;
+		}
+		const pickerOptions = {
+			types: [{
+				description: 'Text Files',
+				accept: {'text/plain': ['.txt']},
+			}],
+		};
+		const restoreTarget = await bringBackgroundPageToFrontForPicker();
+	
+		try {
+			fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
+		} finally {
+			await restorePreviousTabAfterPicker(restoreTarget);
+		}
+	
 		fileHandleTicker = fileHandleTicker[0];
 		await persistBrowserHandle(HANDLE_KEYS.ticker, fileHandleTicker);
-	} else if (typeof fileHandleTicker === "string") {
-        // Store file path when isSSAPP is true
-        localStorage.setItem("tickerFilePath", fileHandleTicker);
-    }
+	}
+
 	const tickerName = getFileHandleDisplayName(fileHandleTicker);
 	await updateHandleStatus("ticker", {
 		name: tickerName,
@@ -11916,10 +11973,12 @@ async function selectTickerFile() {
 		detail: settings.ticker ? "" : "Enable the ticker to broadcast",
 		persisted: shouldUseBrowserHandleStore() || isSSAPP
 	});
-     
-    try {
-        await loadFileTicker();
-    } catch(e){}
+
+	try {
+		await loadFileTicker();
+	} catch(e){
+		console.error("Could not load ticker file after selection:", e);
+	}
 }
 async function initializeFileHandles() {
     ensureHandleStatusCache();
@@ -11945,24 +12004,41 @@ async function initializeFileHandles() {
         }
         
         // Restore saved names file handle
-        const savedNamesFilePath = localStorage.getItem("savedNamesFilePath");
+        const savedNamesFilePathRaw = localStorage.getItem("savedNamesFilePath");
+        const savedNamesFilePath = sanitizeNativeFilePath(savedNamesFilePathRaw);
+        if (savedNamesFilePathRaw && !savedNamesFilePath) {
+            console.warn("[SavedNames] Invalid saved names file path detected. Clearing remembered value.");
+            localStorage.removeItem("savedNamesFilePath");
+        }
         if (savedNamesFilePath) {
             newSavedNamesFileHandle = savedNamesFilePath;
+            let loadedSavedNames = false;
             try {
                 // Load the existing names
                 const data = await ipcRenderer.invoke("read-from-file", savedNamesFilePath);
-                if (data) {
-                    uniqueNameSet = data.split("\r\n").filter(name => name.trim() !== "");
+                if (typeof data === "string") {
+                    uniqueNameSet = data.split(/\r?\n/).filter(name => name.trim() !== "");
+                } else {
+                    uniqueNameSet = [];
                 }
+                loadedSavedNames = true;
             } catch(e) {
                 console.warn("Could not load saved names file:", e);
+                localStorage.removeItem("savedNamesFilePath");
+                newSavedNamesFileHandle = false;
+                uniqueNameSet = [];
             }
-            await updateHandleStatus("savedNames", {
-                name: getFileHandleDisplayName(savedNamesFilePath),
-                status: HANDLE_STATUS_STATES.ACTIVE,
-                detail: "",
-                persisted: true
-            });
+
+            if (loadedSavedNames) {
+                await updateHandleStatus("savedNames", {
+                    name: getFileHandleDisplayName(savedNamesFilePath),
+                    status: HANDLE_STATUS_STATES.ACTIVE,
+                    detail: "",
+                    persisted: true
+                });
+            } else {
+                await markHandleNeedsAttention("savedNames", "Select a file to track viewer names");
+            }
         } else {
             await updateHandleStatus("savedNames", {
                 name: null,
