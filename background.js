@@ -11902,6 +11902,28 @@ let fileContentTicker = "";
 let fileSizeTicker = 0;
 let monitorInterval = null;
 
+const TICKER_FILE_FILTERS = [
+	{ name: "Text Files", extensions: ["txt", "csv", "md"] },
+	{ name: "All Files", extensions: ["*"] }
+];
+
+const TICKER_BROWSER_PICKER_OPTIONS = {
+	types: [
+		{
+			description: "Ticker source files",
+			accept: {
+				"text/plain": [".txt", ".md"],
+				"text/csv": [".csv"]
+			}
+		}
+	]
+};
+
+function isTickerHandlePersisted() {
+	return (shouldUseBrowserHandleStore() && typeof fileHandleTicker !== "string") ||
+		(isSSAPP && typeof fileHandleTicker === "string");
+}
+
 function buildTickerEntries(content) {
 	if (typeof content !== "string" || !content.length) {
 		return [];
@@ -11910,73 +11932,105 @@ function buildTickerEntries(content) {
 	return normalized.split("\n");
 }
 
+async function pickTickerFileWithNativeDialog() {
+	if (!isSSAPP || !ipcRenderer || typeof ipcRenderer.invoke !== "function") {
+		return { handle: null, canceled: false, unavailable: true };
+	}
+	try {
+		const result = await ipcRenderer.invoke("ssapp:choose-ticker-file", {
+			title: "Select ticker source file",
+			filters: TICKER_FILE_FILTERS
+		});
+		if (!result || result.canceled || !result.filePath) {
+			return { handle: null, canceled: true, unavailable: false };
+		}
+		const sanitized = sanitizeNativeFilePath(result.filePath);
+		if (!sanitized) {
+			console.warn("[Ticker] Invalid file path selected");
+			return { handle: null, canceled: false, unavailable: false };
+		}
+		return { handle: sanitized, canceled: false, unavailable: false };
+	} catch (error) {
+		console.warn("Failed to select ticker file via IPC:", error);
+		return { handle: null, canceled: false, unavailable: false };
+	}
+}
+
+async function pickTickerFileWithBrowserDialog() {
+	if (typeof window.showOpenFilePicker !== "function") {
+		return { handle: null, canceled: false, unavailable: true };
+	}
+	const restoreTarget = await bringBackgroundPageToFrontForPicker();
+	try {
+		const handles = await window.showOpenFilePicker(TICKER_BROWSER_PICKER_OPTIONS);
+		if (!handles || !handles.length) {
+			return { handle: null, canceled: true, unavailable: false };
+		}
+		return { handle: handles[0], canceled: false, unavailable: false };
+	} catch (error) {
+		if (error?.name === "AbortError") {
+			return { handle: null, canceled: true, unavailable: false };
+		}
+		console.warn("Ticker file picker failed:", error);
+		return { handle: null, canceled: false, unavailable: false };
+	} finally {
+		await restorePreviousTabAfterPicker(restoreTarget);
+	}
+}
+
 async function selectTickerFile() {
+	let selectedHandle = null;
+	let pickerCanceled = false;
+	let pickerUnavailable = false;
+
 	if (isSSAPP) {
-		if (!ipcRenderer || typeof ipcRenderer.invoke !== "function") {
-			console.warn("ipcRenderer unavailable; cannot select ticker file.");
+		const nativeResult = await pickTickerFileWithNativeDialog();
+		selectedHandle = nativeResult.handle;
+		pickerCanceled = nativeResult.canceled;
+		pickerUnavailable = nativeResult.unavailable;
+	}
+
+	if (!selectedHandle) {
+		const browserResult = await pickTickerFileWithBrowserDialog();
+		if (browserResult.handle) {
+			selectedHandle = browserResult.handle;
+		}
+		pickerCanceled = pickerCanceled || browserResult.canceled;
+		pickerUnavailable = pickerUnavailable || browserResult.unavailable;
+	}
+
+	if (!selectedHandle) {
+		if (pickerCanceled) {
+			await markHandleNeedsAttention("ticker", "Select a ticker source file");
+		} else if (pickerUnavailable) {
 			await markHandleNeedsAttention("ticker", "File picker not available");
-			return;
-		}
-		try {
-			const result = await ipcRenderer.invoke("ssapp:choose-ticker-file", {
-				title: "Select ticker source file",
-				filters: [
-					{ name: "Text Files", extensions: ["txt", "csv", "md"] },
-					{ name: "All Files", extensions: ["*"] }
-				]
-			});
-			if (!result || result.canceled || !result.filePath) {
-				await markHandleNeedsAttention("ticker", "Select a ticker source file");
-				return;
-			}
-			const sanitized = sanitizeNativeFilePath(result.filePath);
-			if (!sanitized) {
-				console.warn("[Ticker] Invalid file path selected");
-				await markHandleNeedsAttention("ticker", "Select a valid ticker source file");
-				return;
-			}
-			fileHandleTicker = sanitized;
-			localStorage.setItem("tickerFilePath", sanitized);
-		} catch (error) {
-			console.error("Failed to select ticker file via IPC:", error);
+		} else {
 			await markHandleNeedsAttention("ticker", "Unable to open ticker file");
-			return;
 		}
-	} else {
-		if (typeof window.showOpenFilePicker !== "function") {
-			console.warn("File System Access API unavailable; enable it in browser settings.");
-			await markHandleNeedsAttention("ticker", "Enable browser file picker API");
-			return;
-		}
-		const pickerOptions = {
-			types: [{
-				description: 'Text Files',
-				accept: {'text/plain': ['.txt']},
-			}],
-		};
-		const restoreTarget = await bringBackgroundPageToFrontForPicker();
-	
-		try {
-			fileHandleTicker = await window.showOpenFilePicker(pickerOptions);
-		} finally {
-			await restorePreviousTabAfterPicker(restoreTarget);
-		}
-	
-		fileHandleTicker = fileHandleTicker[0];
-		await persistBrowserHandle(HANDLE_KEYS.ticker, fileHandleTicker);
+		return;
+	}
+
+	fileHandleTicker = selectedHandle;
+
+	if (isSSAPP && typeof selectedHandle === "string") {
+		localStorage.setItem("tickerFilePath", selectedHandle);
+	} else if (selectedHandle && typeof selectedHandle !== "string") {
+		await persistBrowserHandle(HANDLE_KEYS.ticker, selectedHandle);
 	}
 
 	const tickerName = getFileHandleDisplayName(fileHandleTicker);
+	const fileHandlePersisted = isTickerHandlePersisted();
+
 	await updateHandleStatus("ticker", {
 		name: tickerName,
 		status: HANDLE_STATUS_STATES.READY,
 		detail: settings.ticker ? "" : "Enable the ticker to broadcast",
-		persisted: shouldUseBrowserHandleStore() || isSSAPP
+		persisted: fileHandlePersisted
 	});
 
 	try {
 		await loadFileTicker();
-	} catch(e){
+	} catch (e) {
 		console.error("Could not load ticker file after selection:", e);
 	}
 }
@@ -12177,7 +12231,7 @@ async function loadFileTicker(file=null) {
 				name: getFileHandleDisplayName(fileHandleTicker),
 				status: HANDLE_STATUS_STATES.READY,
 				detail: "Enable the ticker to broadcast",
-				persisted: shouldUseBrowserHandleStore() || isSSAPP
+				persisted: isTickerHandlePersisted()
 			});
 		} else {
 			await updateHandleStatus("ticker", {
@@ -12225,7 +12279,7 @@ async function loadFileTicker(file=null) {
 				name: getFileHandleDisplayName(fileHandleTicker),
 				status: HANDLE_STATUS_STATES.ACTIVE,
 				detail: "",
-				persisted: shouldUseBrowserHandleStore() || isSSAPP
+				persisted: isTickerHandlePersisted()
 			});
 		} catch (error) {
 			console.warn("Could not read ticker file:", error);
