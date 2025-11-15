@@ -16,7 +16,7 @@
 			--font-size: 24px;
 			--electron-drag-fix: drag;
 			--item-gap: 50px;
-			--item-whitespace: normal;
+			--item-whitespace: nowrap;
 		}
 		
         body {
@@ -415,6 +415,8 @@
 	var preserveSpaces = getBooleanParam("preserveSpaces") || getBooleanParam("preservespace") || getBooleanParam("preserve");
 	if (preserveSpaces){
 		document.documentElement.style.setProperty("--item-whitespace", "pre-wrap");
+	} else if (getBooleanParam("wrap") || getBooleanParam("wordwrap") || getBooleanParam("allowwrap")) {
+		document.documentElement.style.setProperty("--item-whitespace", "normal");
 	}
 	
 	try {
