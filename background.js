@@ -1818,6 +1818,7 @@ async function overwriteFile(data = false) {
 }
 
 const MAX_NATIVE_FILE_PATH_LENGTH = 4096;
+const NATIVE_PATH_PATTERN = /[\\/]/;
 
 function sanitizeNativeFilePath(candidate) {
     if (typeof candidate !== "string") {
@@ -1832,7 +1833,36 @@ function sanitizeNativeFilePath(candidate) {
     if (/[\r\n]/.test(candidate)) {
         return null;
     }
+    if (!NATIVE_PATH_PATTERN.test(candidate) && !/^[a-zA-Z]:/.test(candidate)) {
+        return null;
+    }
     return candidate;
+}
+
+function createTickerTextSnapshot(text, nameHint = null) {
+	return {
+		[TICKER_SNAPSHOT_SYMBOL]: true,
+		name: nameHint || null,
+		async readText() {
+			return typeof text === "string" ? text : "";
+		}
+	};
+}
+
+function isTickerTextSnapshot(candidate) {
+	return Boolean(candidate && candidate[TICKER_SNAPSHOT_SYMBOL] && typeof candidate.readText === "function");
+}
+
+function isFileSystemHandle(candidate) {
+	return Boolean(candidate && typeof candidate === "object" && typeof candidate.getFile === "function");
+}
+
+function isBlobLikeFile(candidate) {
+	return Boolean(candidate && typeof candidate === "object" && typeof candidate.text === "function" && typeof candidate.arrayBuffer === "function");
+}
+
+function isNativeTickerPath(candidate) {
+	return typeof candidate === "string" && Boolean(sanitizeNativeFilePath(candidate));
 }
 
 var newSavedNamesFileHandle = false;
@@ -11919,9 +11949,16 @@ const TICKER_BROWSER_PICKER_OPTIONS = {
 	]
 };
 
+const TICKER_SNAPSHOT_SYMBOL = Symbol("tickerTextSnapshot");
+
 function isTickerHandlePersisted() {
-	return (shouldUseBrowserHandleStore() && typeof fileHandleTicker !== "string") ||
-		(isSSAPP && typeof fileHandleTicker === "string");
+	if (isNativeTickerPath(fileHandleTicker)) {
+		return Boolean(isSSAPP);
+	}
+	if (isFileSystemHandle(fileHandleTicker)) {
+		return shouldUseBrowserHandleStore();
+	}
+	return false;
 }
 
 function buildTickerEntries(content) {
@@ -11962,11 +11999,17 @@ async function pickTickerFileWithBrowserDialog() {
 	}
 	const restoreTarget = await bringBackgroundPageToFrontForPicker();
 	try {
-		const handles = await window.showOpenFilePicker(TICKER_BROWSER_PICKER_OPTIONS);
-		if (!handles || !handles.length) {
+		const pickerResult = await window.showOpenFilePicker(TICKER_BROWSER_PICKER_OPTIONS);
+		let primaryResult;
+		if (Array.isArray(pickerResult)) {
+			primaryResult = pickerResult[0];
+		} else {
+			primaryResult = pickerResult;
+		}
+		if (!primaryResult) {
 			return { handle: null, canceled: true, unavailable: false };
 		}
-		return { handle: handles[0], canceled: false, unavailable: false };
+		return { handle: primaryResult, canceled: false, unavailable: false };
 	} catch (error) {
 		if (error?.name === "AbortError") {
 			return { handle: null, canceled: true, unavailable: false };
@@ -12010,15 +12053,48 @@ async function selectTickerFile() {
 		return;
 	}
 
-	fileHandleTicker = selectedHandle;
+	let normalizedHandle = selectedHandle;
+	let snapshotUsed = false;
 
-	if (isSSAPP && typeof selectedHandle === "string") {
-		localStorage.setItem("tickerFilePath", selectedHandle);
-	} else if (selectedHandle && typeof selectedHandle !== "string") {
-		await persistBrowserHandle(HANDLE_KEYS.ticker, selectedHandle);
+	if (typeof selectedHandle === "string") {
+		const sanitizedPath = sanitizeNativeFilePath(selectedHandle);
+		if (sanitizedPath) {
+			normalizedHandle = sanitizedPath;
+		} else {
+			normalizedHandle = createTickerTextSnapshot(selectedHandle);
+			snapshotUsed = true;
+		}
+	} else if (isFileSystemHandle(selectedHandle)) {
+		normalizedHandle = selectedHandle;
+	} else if (isBlobLikeFile(selectedHandle)) {
+		normalizedHandle = selectedHandle;
+	} else if (selectedHandle && typeof selectedHandle === "object" && typeof selectedHandle.readText === "function") {
+		const textSnapshot = await selectedHandle.readText();
+		normalizedHandle = createTickerTextSnapshot(textSnapshot, selectedHandle.name || null);
+		snapshotUsed = true;
+	} else if (selectedHandle && typeof selectedHandle === "object" && typeof selectedHandle.text === "function") {
+		const blobText = await selectedHandle.text();
+		normalizedHandle = createTickerTextSnapshot(blobText, selectedHandle.name || null);
+		snapshotUsed = true;
+	} else if (!selectedHandle) {
+		normalizedHandle = null;
+	} else {
+		const candidateText = typeof selectedHandle === "string" ? selectedHandle : "";
+		normalizedHandle = createTickerTextSnapshot(candidateText);
+		snapshotUsed = true;
 	}
 
-	const tickerName = getFileHandleDisplayName(fileHandleTicker);
+	fileHandleTicker = normalizedHandle;
+
+	if (isSSAPP && typeof normalizedHandle === "string") {
+		localStorage.setItem("tickerFilePath", normalizedHandle);
+	} else if (isFileSystemHandle(normalizedHandle)) {
+		await persistBrowserHandle(HANDLE_KEYS.ticker, normalizedHandle);
+	}
+
+	const tickerName = snapshotUsed
+		? (normalizedHandle && normalizedHandle.name ? normalizedHandle.name : "Temporary ticker selection")
+		: getFileHandleDisplayName(fileHandleTicker);
 	const fileHandlePersisted = isTickerHandlePersisted();
 
 	await updateHandleStatus("ticker", {
@@ -12251,7 +12327,7 @@ async function loadFileTicker(file=null) {
 	if (fileHandleTicker) {
 		try {
 			let tickerText = "";
-			if (!isSSAPP){
+			if (!isSSAPP && isFileSystemHandle(fileHandleTicker)){
 				if (!file){
 					file = await fileHandleTicker.getFile();
 				}
@@ -12266,10 +12342,15 @@ async function loadFileTicker(file=null) {
 					console.warn("Could not load ticker file via IPC:", ipcError);
 					tickerText = "";
 				}
-			} else if (fileHandleTicker && typeof fileHandleTicker.getFile === "function") {
+			} else if (isFileSystemHandle(fileHandleTicker)) {
 				const handleFile = await fileHandleTicker.getFile();
 				file = handleFile;
 				tickerText = await handleFile.text();
+			} else if (isBlobLikeFile(fileHandleTicker)) {
+				tickerText = await fileHandleTicker.text();
+				file = fileHandleTicker;
+			} else if (isTickerTextSnapshot(fileHandleTicker)) {
+				tickerText = await fileHandleTicker.readText();
 			}
 			fileContentTicker = typeof tickerText === "string" ? tickerText : "";
 			const entries = buildTickerEntries(fileContentTicker);
@@ -12277,11 +12358,12 @@ async function loadFileTicker(file=null) {
 			if (file?.size) {
 				fileSizeTicker = file.size;
 			}
-			if (!isSSAPP){
+			if (!isSSAPP && isFileSystemHandle(fileHandleTicker)){
 				monitorFileChanges();
 			}
+			const displayName = getFileHandleDisplayName(fileHandleTicker) || (isTickerTextSnapshot(fileHandleTicker) ? (fileHandleTicker.name || "Temporary ticker selection") : null);
 			await updateHandleStatus("ticker", {
-				name: getFileHandleDisplayName(fileHandleTicker),
+				name: displayName,
 				status: HANDLE_STATUS_STATES.ACTIVE,
 				detail: "",
 				persisted: isTickerHandlePersisted()
@@ -12304,7 +12386,7 @@ async function loadFileTicker(file=null) {
 function monitorFileChanges() {
 	clearInterval(monitorInterval);
 	monitorInterval = setInterval(async () => {
-		if (fileHandleTicker) {
+		if (fileHandleTicker && isFileSystemHandle(fileHandleTicker)) {
 			const newFile = await fileHandleTicker.getFile();
 			if (newFile.size !== fileSizeTicker) {
 				fileSizeTicker = newFile.size;
