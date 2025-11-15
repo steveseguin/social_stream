@@ -12115,14 +12115,28 @@ async function loadFileTicker(file=null) {
 	}
 	if (fileHandleTicker) {
 		try {
+			let tickerText = "";
 			if (!isSSAPP){
 				if (!file){
 					file = await fileHandleTicker.getFile();
 				}
-				fileContentTicker = await file.text();
-			} else {
-				fileContentTicker = fileHandleTicker;
+				tickerText = await file.text();
+			} else if (typeof fileHandleTicker === "string") {
+				try {
+					if (ipcRenderer && typeof ipcRenderer.invoke === "function"){
+						const ipcData = await ipcRenderer.invoke("read-from-file", fileHandleTicker);
+						tickerText = typeof ipcData === "string" ? ipcData : "";
+					}
+				} catch (ipcError) {
+					console.warn("Could not load ticker file via IPC:", ipcError);
+					tickerText = "";
+				}
+			} else if (fileHandleTicker && typeof fileHandleTicker.getFile === "function") {
+				const handleFile = await fileHandleTicker.getFile();
+				file = handleFile;
+				tickerText = await handleFile.text();
 			}
+			fileContentTicker = typeof tickerText === "string" ? tickerText : "";
 			const entries = buildTickerEntries(fileContentTicker);
 			sendTickerP2P(entries.length ? entries : []);
 			if (file?.size) {
