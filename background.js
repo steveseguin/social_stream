@@ -1818,7 +1818,10 @@ async function overwriteFile(data = false) {
 }
 
 const MAX_NATIVE_FILE_PATH_LENGTH = 4096;
-const NATIVE_PATH_PATTERN = /[\\/]/;
+const WINDOWS_DRIVE_PATH_PATTERN = /^[a-zA-Z]:[\\/]/;
+const UNC_PATH_PATTERN = /^\\\\/;
+const POSIX_PATH_PATTERN = /^\//;
+const FILE_SCHEME_PATTERN = /^file:\/\//;
 
 function sanitizeNativeFilePath(candidate) {
     if (typeof candidate !== "string") {
@@ -1833,7 +1836,12 @@ function sanitizeNativeFilePath(candidate) {
     if (/[\r\n]/.test(candidate)) {
         return null;
     }
-    if (!NATIVE_PATH_PATTERN.test(candidate) && !/^[a-zA-Z]:/.test(candidate)) {
+    if (
+        !WINDOWS_DRIVE_PATH_PATTERN.test(candidate) &&
+        !UNC_PATH_PATTERN.test(candidate) &&
+        !POSIX_PATH_PATTERN.test(candidate) &&
+        !FILE_SCHEME_PATTERN.test(candidate)
+    ) {
         return null;
     }
     return candidate;
