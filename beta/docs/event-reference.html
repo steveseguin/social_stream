@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        // Apply dark mode immediately to prevent flash
+        (function() {
+            const savedTheme = localStorage.getItem('darkMode');
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+            if (savedTheme === 'true' || (savedTheme !== 'false' && prefersDark)) {
+                document.documentElement.classList.add('dark-mode');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Reference - Social Stream Ninja</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/events.css">
+    <link rel="icon" href="../icons/favicon.ico" type="image/x-icon">
+    <meta name="description" content="Canonical reference for Social Stream Ninja event payloads across YouTube, Twitch, TikTok, Kick, Facebook, and Rumble.">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">
+                <a href="../index.html">
+                    <img src="../media/logo.png" alt="Social Stream Ninja logo">
+                </a>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="../index.html">Home</a></li>
+                    <li><a href="../docs/features.html">Features</a></li>
+                    <li><a href="../docs/download.html">Download</a></li>
+                    <li><a href="../docs/guides.html">Guides</a></li>
+                    <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                    <li><a href="../docs/templates.html">Templates</a></li>
+                    <li><a href="../docs/support.html">Support</a></li>
+                    <li><a href="../docs/event-reference.html" class="active">Event Reference</a></li>
+                </ul>
+            </nav>
+            <div class="header-controls">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="events-container">
+            <section class="section-intro">
+                <h1>Live Event Reference</h1>
+                <p>This page documents the canonical event payloads that Social Stream Ninja emits for major platforms. Use it as a shared source of truth when wiring new sources, troubleshooting integrations, or aligning UI labels.</p>
+                <div class="alert-note">
+                    <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) only forward when users enable <em>Capture Stream Events</em> in <code>popup.html</code>. Donation-style items still pass through even if the toggle is off.
+                </div>
+            </section>
+
+            <section class="section-summary">
+                <h2>Quick Feature Availability</h2>
+                <p>Use this table to see which alert types each capture method currently delivers. Detailed payload notes follow below.</p>
+                <table class="field-table summary-table">
+                    <thead>
+                        <tr>
+                            <th>Source</th>
+                            <th>New Subs / Members</th>
+                            <th>New Followers</th>
+                            <th>Donations</th>
+                            <th>Counts &amp; Extras</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>YouTube (Data API bridge)</strong></td>
+                            <td>Membership joins, renewals, gifts</td>
+                            <td>Subscriber total updates only*</td>
+                            <td>Super Chats &amp; Super Stickers</td>
+                            <td>Viewer, subscriber, and view totals (polled)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Twitch &ndash; DOM capture</strong></td>
+                            <td>Gift bundle lines &amp; gifted-to notices</td>
+                            <td>&mdash;</td>
+                            <td>Bits flagged via <code>hasDonation</code></td>
+                            <td>Viewer count &amp; community highlight cards</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Twitch &ndash; EventSub/Websocket</strong></td>
+                            <td>Instant subs, resubs, and gifts</td>
+                            <td>Instant follows + follower total</td>
+                            <td>Cheers and channel point redemptions</td>
+                            <td>Viewer/sub/follower totals, stream status, ad notices</td>
+                        </tr>
+                        <tr>
+                            <td><strong>TikTok Live</strong></td>
+                            <td>&mdash;</td>
+                            <td>Follow cards (when TikTok shows them)</td>
+                            <td>Gifts converted to coin totals</td>
+                            <td>Viewer count, join alerts, and like storms</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kick &ndash; DOM</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count only; use the Kick bridge for alerts</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Kick &ndash; Websocket/Bridge</strong></td>
+                            <td>New subs, renewals, and gifts</td>
+                            <td>Follow alerts + follower total</td>
+                            <td>Support/tip events (amount + currency)</td>
+                            <td>Stream status and profile metadata</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Facebook Live</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count polls only</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Rumble</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count polls only</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p class="field-highlights">*YouTube does not expose instant subscriber alerts. Watch for <code>subscriber_update</code> entries (and their deltas) inside <code>events.html</code> to spot milestones.</p>
+            </section>
+
+            <section class="field-overview">
+                <h2>Field Overview</h2>
+                <table class="field-table">
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Shape</th>
+                            <th>Usage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>data.event</code></td>
+                            <td>string | boolean</td>
+                            <td>Identifier for system activity (for example <code>viewer_update</code>, <code>subscription_gift</code>, <code>giftpurchase</code>). Regular chat should leave this empty/false so overlays can distinguish system notices from conversational text.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.membership</code></td>
+                            <td>string</td>
+                            <td>Readable membership state such as <code>MEMBERSHIP</code>, <code>new_sponsor</code>, <code>gift_recipient</code>. Surfaces use it for badges, filters, and announcements.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.subtitle</code></td>
+                            <td>string</td>
+                            <td>Supplemental descriptor (membership tenure, tier upgrades, gifted by...). Keep it short and text-only so overlays can slot it under the display name.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.hasDonation</code></td>
+                            <td>string</td>
+                            <td>Monetary or virtual gift amount (<code>$5.00</code>, <code>5 Gifted</code>, <code>300 coins</code>). Populate even when <code>data.event</code> is blank so donation overlays can detect it.</td>
+                        </tr>
+                        <tr>
+                            <td><code>data.meta</code></td>
+                            <td>number | object</td>
+                            <td>Structured payload for downstream automations. Use plain integers for single counters (viewer, follower, subscriber) and objects for richer context (raid viewers, channel point redemption details, donation currency).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section class="meta-guidance">
+                <h2>Meta Conventions</h2>
+                <p>To keep dashboards and automations aligned, follow these conventions when extending <code>data.meta</code>:</p>
+                <ul>
+                    <li><code>viewer_update</code>, <code>follower_update</code>, and <code>subscriber_update</code> use a plain integer <code>meta</code> value. The background script aggregates them into <code>viewer_updates</code> with an object keyed by <code>data.type</code>.</li>
+                    <li>Donation-style events include a descriptive object: for example <code>{ amount, currency, supporter }</code> for Kick, <code>{ bits }</code> for Twitch cheers, <code>{ supporter, eventType }</code> for YouTube memberships.</li>
+                    <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
+                    <li>Channel point redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
+                    <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
+                </ul>
+            </section>
+
+            <section class="platforms">
+                <h2>Platform Coverage</h2>
+
+                <article class="platform-card" id="youtube-dom">
+                    <h3>YouTube – Standard DOM Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/youtube.js</code></p>
+                    <ul class="requirements">
+                        <li>Needs the live chat tab open in a signed-in browser session. Membership and gift cards only render for the channel owner or authorized moderators.</li>
+                        <li><strong>Capture Stream Events</strong> must stay enabled for membership, gift, and milestone notices. Super Chats/Super Stickers arrive regardless.</li>
+                        <li>Viewer counts require <em>Show viewer count</em> or <em>Hype Mode</em> to be enabled in settings.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="membership-event"><code>sponsorship</code></td>
+                                <td>Membership welcome header without explicit chat text (new members, gifted bundles landing).</td>
+                                <td><code>membership</code> populated with translated “MEMBERSHIP”; <code>subtitle</code> contains streak/tier when detected.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>giftpurchase</code></td>
+                                <td>Gift bundle purchase banner (<code>ytd-sponsorships-live-chat-gift-purchase</code>).</td>
+                                <td><code>hasDonation</code> set to “N Gifted”; <code>donoValue</code> approximates USD (5 × quantity); <code>membership</code> becomes “SPONSORSHIP”.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>giftredemption</code></td>
+                                <td>Gift redemption announcement for recipients.</td>
+                                <td><code>membership</code> becomes “MEMBERSHIP”; <code>subtitle</code> includes “Gifted by …”.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>new-membership</code></td>
+                                <td>Structured welcome cards or localized “Welcome to …” text.</td>
+                                <td><code>membership</code> “MEMBERSHIP”; <code>subtitle</code> carries tier/title; <code>nameColor</code> uses membership green when allowed.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>upgraded-membership</code></td>
+                                <td>Upgrade banners that include “upgraded to …”.</td>
+                                <td><code>subtitle</code> captures new tier label; <code>membership</code> remains “MEMBERSHIP”.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>jeweldonation</code></td>
+                                <td>Gift-card style promos (eg. YouTube “Jewels”).</td>
+                                <td>Parses jewel count into <code>hasDonation</code> (“500 Jewels”) and numeric <code>donoValue</code> for USD estimation.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Super Chats, Super Stickers, donation announcement cards.</td>
+                                <td><code>hasDonation</code> carries site-formatted amount; when no message is present the text fallback triggers <code>thankyou</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>thankyou</code></td>
+                                <td>Fallback message when a donation amount exists but no chat text was supplied.</td>
+                                <td>Keeps <code>hasDonation</code> and auto-injects “Thank you for your donation!” for overlays.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>30s poll of Social Stream’s viewer endpoint (fallback to page scrape on quota errors).</td>
+                                <td><code>meta</code> is the live viewer integer; contributes to aggregated <code>viewer_updates</code> in the background script.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">Membership blocks also set <code>membership</code> for moderator/member chat, while <code>subtitle</code> carries either month counts or tier names. <code>sourceName</code>/<code>sourceImg</code> populate once <code>getChannelInfo</code> succeeds.</p>
+                </article>
+
+                <article class="platform-card" id="youtube-ws">
+                    <h3>YouTube – Websocket/Data API Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/youtube.html</code>, shared helpers under <code>shared/</code></p>
+                    <ul class="requirements">
+                        <li>Requires OAuth with scopes <code>youtube.readonly</code>, <code>youtube</code>, <code>youtube.force-ssl</code>, and <code>youtube.channel-memberships.creator</code>. Tokens live in <code>localStorage</code>.</li>
+                        <li>Non-donation events respect <strong>Capture Stream Events</strong>; channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewcount</code>).</li>
+                        <li>The API cannot deliver custom badge imagery; badge fallbacks use emoji icons noted below.</li>
+                        <li>The Data API does not expose real-time subscriber/follower notifications. Social Stream polls <code>statistics.subscriberCount</code> every 30 minutes and emits a <code>subscriber_update</code>; individual “new subscriber” alerts are unavailable, but the <code>events.html</code> dashboard highlights the count changes so you can still react live.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>donation</code></td>
+                                <td>Super Chat entries from the Data API backlog or stream polling.</td>
+                                <td><code>hasDonation</code> preserves site amount (currency + value); badges/avatars come from API metadata.</td>
+                            </tr>
+                            <tr>
+                                <td><code>supersticker</code></td>
+                                <td>Super Stickers (message text fallback only, no image from API).</td>
+                                <td><code>hasDonation</code> holds the amount; <code>chatmessage</code> contains decoded description text.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>sponsorship</code></td>
+                                <td><code>membershipEventType</code> of new sponsor.</td>
+                                <td><code>membership</code> becomes <code>new_sponsor</code>; <code>meta</code> includes <code>originalEventType</code>, durations, and level info.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>giftpurchase</code></td>
+                                <td>Gift bundles purchased via the API.</td>
+                                <td><code>membership</code> set to <code>gift_giver</code>; <code>subtitle</code> lists count/tier; <code>meta</code> mirrors membership mapping.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>giftredemption</code></td>
+                                <td>Gift redemption notifications.</td>
+                                <td><code>membership</code> <code>gift_recipient</code>; badges default to 🎁; <code>subtitle</code> indicates gifted tier.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>membermilestone</code></td>
+                                <td>Milestone chats (<code>memberMonth</code> or <code>displayMessage</code> present).</td>
+                                <td><code>membership</code> <code>member_milestone</code>; <code>subtitle</code> summarises months + tier; <code>meta</code> captures the raw milestone mapping.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Streaming stats (concurrent viewers) when viewer reporting is enabled.</td>
+                                <td><code>meta</code> is integer count; mirrors DOM scripting so downstream consumers can merge both flows.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>subscriber_update</code></td>
+                                <td>Channel stats poll (subscribers) when <code>showsubscount</code> not explicitly disabled.</td>
+                                <td><code>meta</code> is total subscriber count; UI updates dashboard counters.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>view_update</code></td>
+                                <td>Channel stats poll (lifetime views) when <code>showviewcount</code> or hype mode active.</td>
+                                <td><code>meta</code> is view count integer.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>live_chat_ended</code></td>
+                                <td>Live chat becomes unavailable for the bound broadcast.</td>
+                                <td><code>meta.streamTitle</code> populated when stream metadata was cached.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">Chat relays from the API reuse <code>meta.plainText</code> for sanitized content so future adapters can render emote-free summaries. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture. Watch <code>subscriber_update</code> entries inside <code>events.html</code> to keep an eye on count bumps even though instant alerts are unavailable.</p>
+                </article>
+
+                <article class="platform-card" id="twitch-dom">
+                    <h3>Twitch – Standard DOM Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/twitch.js</code></p>
+                    <ul class="requirements">
+                        <li>Requires Twitch chat open with the user logged in. Membership/user notice elements only render for broadcaster accounts or moderators.</li>
+                        <li>Non-donation user notice handling (gift subs, channel point rewards) respects <strong>Capture Stream Events</strong>.</li>
+                        <li>Viewer count requests hit <code>https://api.socialstream.ninja/twitch/viewers</code> every 30 seconds.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="membership-event"><code>reward</code></td>
+                                <td>Channel point redemption cards (including 7TV reward container).</td>
+                                <td><code>chatmessage</code> contains redemption text; <code>membership</code> unchanged.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>giftpurchase</code></td>
+                                <td>System lines such as “User gifting X Subs in the channel”.</td>
+                                <td><code>chatmessage</code> is the system line, enabling overlays to highlight gifter campaigns.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>sponsorship</code></td>
+                                <td>Gifted subscription notices (“User gifted a Sub to …”).</td>
+                                <td>Marks the event for highlight filters; <code>membership</code> remains the recipient badge label.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>30s fetch to Social Stream viewer proxy (fallback 0 on error).</td>
+                                <td><code>meta</code> integer viewer count.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>community_highlight</code></td>
+                                <td>Elements inside Twitch’s “Community Highlight” widget.</td>
+                                <td><code>meta</code> is the extracted highlight text for automation hooks.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">Bits/Cheers populate <code>hasDonation</code> (for example “500 bits”) even though <code>data.event</code> remains empty; rely on that field when rendering donation widgets. Subscriber streak information appears in <code>subtitle</code> when badges expose months.</p>
+                </article>
+
+                <article class="platform-card" id="twitch-ws">
+                    <h3>Twitch – EventSub/Websocket</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/twitch.js</code> with shared core <code>providers/twitch/chatClient.js</code></p>
+                    <ul class="requirements">
+                        <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
+                        <li>Events delivered by the Kick-style EventSub bridge, plus Helix polling for viewer/follower/subscriber totals. <strong>Capture Stream Events</strong> must remain on.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="donation-event"><code>cheer</code></td>
+                                <td>EventSub <code>channel.cheer</code> notifications.</td>
+                                <td><code>hasDonation</code> “N bits”; <code>meta.bits</code> numeric; <code>chatmessage</code> preserves raw message.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>new_subscriber</code></td>
+                                <td><code>channel.subscribe</code> or USERNOTICE with <code>msg-id=sub</code>.</td>
+                                <td><code>meta</code> includes <code>{ userId, tier, isGift }</code>; viewer/subscriber totals increment automatically.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>resub</code></td>
+                                <td><code>channel.subscription.message</code> or USERNOTICE <code>msg-id=resub</code>.</td>
+                                <td><code>meta</code> carries streak and cumulative months; <code>chatmessage</code> includes the resub text.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>subscription_gift</code></td>
+                                <td><code>channel.subscription.gift</code> or USERNOTICE <code>msg-id=subgift</code>.</td>
+                                <td><code>meta</code> exposes gifted total and tier; <code>chatmessage</code> summarises the action.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>channel_points</code></td>
+                                <td><code>channel.channel_points_custom_reward_redemption.add</code>.</td>
+                                <td><code>meta</code> includes reward id, cost, alias; <code>reward</code> object mirrors redemption body.</td>
+                            </tr>
+                            <tr>
+                                <td><code>raid</code></td>
+                                <td>EventSub <code>channel.raid</code> or USERNOTICE <code>msg-id=raid</code>.</td>
+                                <td><code>meta</code> = { fromId, fromLogin, viewers }.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td><code>channel.follow</code> EventSub notifications.</td>
+                                <td>Auto-increments <code>follower_update</code>; <code>meta</code> records <code>{ userId, followedAt }</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Helix <code>streams</code> poll every 30 seconds.</td>
+                                <td><code>meta</code> integer viewer count; suppressed unless viewer stats enabled in settings.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>follower_update</code></td>
+                                <td>Helix follower total, triggered after follow events or periodic poll.</td>
+                                <td><code>meta</code> integer follower count.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>subscriber_update</code></td>
+                                <td>Helix subscriber total (requires broadcaster token with subscription scope).</td>
+                                <td><code>meta</code> integer subscriber count.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
+                                <td>EventSub <code>stream.online</code>/<code>stream.offline</code>.</td>
+                                <td><code>meta.startedAt</code> present for online events; offline uses empty object.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>ad_break</code> / <code>ad_request</code> / <code>ad_schedule</code></td>
+                                <td>Ad manager API responses (<code>channel.ad_break.begin</code>, manual <code>POST channels/ads</code>, <code>GET channels/ads</code>).</td>
+                                <td><code>meta</code> details duration, requester, and schedule payload for dashboards.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honour <code>data.id</code>.</p>
+                </article>
+
+                <article class="platform-card" id="tiktok">
+                    <h3>TikTok Live</h3>
+                    <p class="source-note">Implementation: <code>sources/tiktok.js</code></p>
+                    <ul class="requirements">
+                        <li>Works on the broadcaster’s live page. Gift/like/follow banners only populate when the session is authenticated.</li>
+                        <li><strong>Capture Stream Events</strong> gate social/system cards; gift donations still pass.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="donation-event"><code>gift</code></td>
+                                <td>Gift banner rows or <code>DivGiftMessage</code> entries.</td>
+                                <td><code>hasDonation</code> converts to “N coins” (with gift lookup fallback); <code>membership</code> uses badge text when available.</td>
+                            </tr>
+                            <tr>
+                                <td><code>joined</code></td>
+                                <td>Join notifications (requires <em>Capture Stream Events</em> and optional join toggle).</td>
+                                <td>Skips share notifications; <code>chatname</code> might be empty for some system strings.</td>
+                            </tr>
+                            <tr>
+                                <td><code>followed</code></td>
+                                <td>Follow messages parsed from social cards.</td>
+                                <td>Ensures <code>chatname</code> exists before emitting.</td>
+                            </tr>
+                            <tr>
+                                <td><code>liked</code></td>
+                                <td>Like storm summaries triggered by TikTok social cards.</td>
+                                <td>Requires identifiable user; otherwise suppressed.</td>
+                            </tr>
+                            <tr>
+                                <td><code>true</code> (boolean)</td>
+                                <td>Generic social/system broadcasts where TikTok provides no subtype.</td>
+                                <td>Use <code>chatmessage</code> content to decide presentation; boolean <code>true</code> indicates “system event – type unknown”.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>.</p>
+                </article>
+
+                <article class="platform-card" id="kick-dom">
+                    <h3>Kick – Standard DOM Capture</h3>
+                    <p class="source-note">Implementation: <code>sources/kick.js</code></p>
+                    <ul class="requirements">
+                        <li>Needs an authenticated session to resolve profile images and subscriber badges.</li>
+                        <li>No dedicated event detection; relies on chat text and badges only (viewer counts still work when the toggle is enabled).</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polls Kick&rsquo;s channel API every 30 seconds (only when viewer stats are enabled).</td>
+                                <td><code>meta</code> integer viewer count; for subs, follows, or tips use the Kick bridge below.</td>
+                            </tr>
+                            <tr>
+                                <td>&mdash;</td>
+                                <td colspan="2">Only standard chat messages are forwarded; Kick&rsquo;s public DOM does not expose membership, follower, or donation alerts.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="kick-ws">
+                    <h3>Kick – Websocket/Bridge</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/kick.js</code> with shared helpers under <code>providers/kick/core.js</code></p>
+                    <ul class="requirements">
+                        <li>OAuth via the Social Stream Kick bridge. Scopes: <code>user:read</code>, <code>channel:read</code>, <code>chat:write</code>, <code>events:subscribe</code>. Tokens are refreshed automatically.</li>
+                        <li>Kick webhook provisioning may take several minutes; the UI lists active subscriptions per channel.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>Bridge chat payload.</td>
+                                <td><code>meta.plainText</code> contains emoji-free content; badges merge platform + profile cache.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>new_subscriber</code></td>
+                                <td><code>channel.subscription.new</code>.</td>
+                                <td><code>membership</code> assigned to subscriber role; <code>meta</code> includes { subscriber, plan }.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>resub</code></td>
+                                <td><code>channel.subscription.renewal</code>.</td>
+                                <td><code>meta.duration</code> (months) and <code>meta.plan</code> available; <code>subtitle</code> summarises streak.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>subscription_gift</code></td>
+                                <td><code>channel.subscription.gifts</code>.</td>
+                                <td><code>meta.totalGifted</code>, <code>meta.gifter</code>; badges fallback to 💝 icon.</td>
+                            </tr>
+                            <tr>
+                                <td><code>donation</code></td>
+                                <td>Support/tip events detected via event type heuristics.</td>
+                                <td><code>meta</code> contains { amount, currency, supporter, message }; <code>hasDonation</code> is intentionally left blank to avoid double rendering until a common format is agreed.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td><code>channel.followed</code>.</td>
+                                <td>Follower icons derive from profile cache; <code>follower_update</code> fires when Kick provides running totals.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>follower_update</code></td>
+                                <td>Bridge supplies follower counts in webhook payloads.</td>
+                                <td><code>meta</code> integer total; used by dashboards for follower goals.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
+                                <td><code>livestream.status.updated</code>.</td>
+                                <td><code>meta</code> contains the raw status body from Kick (is_live, title, etc.).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick’s badge assets with cached SVG when available. When Kick reports donations in “kicks”, the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to “KICK”.</p>
+                </article>
+
+                <article class="platform-card" id="facebook">
+                    <h3>Facebook Live</h3>
+                    <p class="source-note">Implementation: <code>sources/facebook.js</code></p>
+                    <ul class="requirements">
+                        <li>Relies on DOM scraping; viewer counts only refresh when <strong>Show viewer count</strong> or hype mode is enabled.</li>
+                        <li>No membership or donation metadata is surfaced via the public chat DOM.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polls the live viewer badge (every ~8s when enabled).</td>
+                                <td><code>meta</code> integer viewer count; sends 0 when parsing fails to clear stale entries.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+                <article class="platform-card" id="rumble">
+                    <h3>Rumble</h3>
+                    <p class="source-note">Implementation: <code>sources/rumble.js</code></p>
+                    <ul class="requirements">
+                        <li>Requires authenticated session cookies so the <code>service.php</code> viewer API responds.</li>
+                        <li>No membership or donation details are exposed via public endpoints.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Calls Rumble’s <code>video.watching-now</code> service every 30s.</td>
+                                <td><code>meta</code> integer viewer count; uses <code>credentials: 'include'</code> to reuse session cookies.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+            </section>
+
+            <section class="usage-notes">
+                <h2>Using This Reference</h2>
+                <ul>
+                    <li>When adding a new event, reuse existing vocabulary (<code>subscription_gift</code>, <code>viewer_update</code>, etc.) whenever possible. If a deviation is unavoidable, document it here along with the rationale.</li>
+                    <li>Keep <code>data.meta</code> predictable: prefer flat keys, never overload strings with mixed data, and always include units (<code>currency</code>, <code>bits</code>, <code>duration</code>).</li>
+                    <li>Update <code>AGENTS.md</code> and this page in the same pull request so future contributors know which surface produces the event.</li>
+                    <li>Downstream overlays rely on the opt-in behaviour described above; do not bypass the <em>Capture Stream Events</em> toggle unless an event is intrinsically a donation or payment proof.</li>
+                </ul>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-columns">
+                <div class="footer-column">
+                    <h3>Social Stream Ninja</h3>
+                    <p>Consolidates your live social messaging streams and alerts so you can focus on the show. Free and open source.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="../index.html">Home</a></li>
+                        <li><a href="../docs/features.html">Features</a></li>
+                        <li><a href="../docs/download.html">Download</a></li>
+                        <li><a href="../docs/guides.html">Guides</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="../docs/templates.html">Templates</a></li>
+                        <li><a href="../docs/support.html">Support</a></li>
+                        <li><a href="../docs/supported-sites.html">Supported Sites</a></li>
+                        <li><a href="../docs/commands.html">Commands &amp; API</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Community</h3>
+                    <ul>
+                        <li><a href="https://discord.socialstream.ninja" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="https://github.com/steveseguin/social_stream" target="_blank" rel="noopener">GitHub</a></li>
+                        <li><a href="../docs/support.html#contribute">Contribute</a></li>
+                        <li><a href="https://github.com/sponsors/steveseguin" target="_blank" rel="noopener">Donate</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; <span id="current-year">2025</span> Social Stream Ninja. GPLv3.0 License. Created by <a href="https://github.com/steveseguin" target="_blank" rel="noopener">Steve Seguin</a> with contributions from the community.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+    <script>
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>

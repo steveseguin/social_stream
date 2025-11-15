@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>Social Stream - Twitch</title>
+    <style>
+        .hidden { display: none!important; }
+        body {
+            background-color: #ddd;
+            font-size: 14px;
+            margin: 0;
+            padding: 20px;
+        }
+        .auth-button, .sign-out-button, .connect-button {
+            background-color: #9146FF;
+            color: white;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .auth-button:hover, .connect-button:hover {
+            background-color: #7D3CD0;
+        }
+        .sign-out-button {
+            background-color: #f44336;
+        }
+        .sign-out-button:hover {
+            background-color: #d32f2f;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+		.chat-badge {
+			margin-right: 2px;
+			vertical-align: middle;
+			height: 18px;
+			width: auto;
+		}
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .moderation-input-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+            align-items: center;
+        }
+        .moderation-button-group,
+        .moderation-ad-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .moderation-button-group .connect-button,
+        .moderation-ad-buttons .connect-button {
+            flex: 1 1 calc(50% - 6px);
+            min-width: 0;
+            max-width: 100%;
+        }
+        .moderation-ad-buttons {
+            margin-top: 10px;
+        }
+        .moderation-ad-buttons .connect-button:nth-child(3) {
+            flex-basis: 100%;
+        }
+        .text-center { text-align: center; }
+        
+        /* Header styles */
+        .channel-header {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+        }
+        .header-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-item span:first-child {
+            font-weight: bold;
+            color: #9146FF;
+        }
+        
+        /* Channel input */
+        .channel-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .channel-input {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 150px;
+        }
+        
+        /* Stats grid */
+        .stats-container {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stats-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 8px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #9146FF;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 2px;
+        }
+        
+        /* Chat container */
+        .chat-container {
+            background: white;
+            border-radius: 4px;
+            padding: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-container h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+        }
+        #textarea {
+            flex-grow: 1;
+            min-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+        .chat-input {
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        /* Sidebar components */
+        .permissions-container,
+        .recent-events {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+		#permissions-info:empty {
+			display: none!important;
+		}
+        .permissions-header {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #9146FF;
+        }
+        .permission-item {
+            padding: 4px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        .recent-events h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+        }
+        .event-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+		#textarea div {
+			padding-bottom: 4px;
+		}
+		.regular-emote {
+			display: inline-block;
+			vertical-align: middle;
+			height: 28px;
+			width: auto;
+			margin: 0 2px;
+		}
+		.zero-width-emote-centered {
+			display: inline-block;
+			vertical-align: middle;
+			height: 28px;
+			width: auto;
+			margin: -14px -14px;
+			position: relative;
+			z-index: 1;
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="auth text-center">
+                <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+            </div>
+            
+            <div class="hidden socket">
+                <!-- Header with channel input -->
+                <div class="channel-header">
+                    <div class="header-info">
+                        <div class="header-item">
+                            <span>User:</span>
+                            <span id="current-user">Not signed in</span>
+                            <span id="auth-status" style="margin-left: 8px;"></span>
+                        </div>
+                        <div class="header-item">
+                            <span>Channel:</span>
+                            <span id="current-channel">No channel</span>
+                        </div>
+                        <div class="channel-input-container">
+                            <input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
+                            <button id="connect-button" class="connect-button">Connect</button>
+                        </div>
+                    </div>
+                    <button id="sign-out-button" class="sign-out-button">Sign Out</button>
+                </div>
+
+                <!-- Stats section -->
+                <div class="stats-container">
+                    <h3>Channel Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="follower-count">-</div>
+                            <div class="stat-label">Followers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="viewer-count">-</div>
+                            <div class="stat-label">Viewers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="subscriber-count">-</div>
+                            <div class="stat-label">Subscribers</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat section -->
+                <div class="chat-container">
+                    <h3>Chat Messages</h3>
+                    <div id="textarea" class="ws-output"></div>
+                    <div class="chat-input">
+                        <input type="text" id="input-text" placeholder="Send Message">
+                        <button id="sendmessage" class="auth-button">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar hidden socket">
+            <div class="permissions-container" id="permissions-info"></div>
+            <div class="recent-events">
+                <h4>Recent Events</h4>
+            <div id="events-list"></div>
+        </div>
+        <div class="moderation-controls" style="background:#fff; padding:12px; border-radius:4px; box-shadow:0 1px 3px rgba(0,0,0,.1);">
+            <h4 style="margin:0 0 8px 0;">Moderation & Ads</h4>
+            <div class="moderation-input-grid">
+                <input type="text" id="mod-username" class="channel-input" placeholder="Username">
+                <input type="number" id="mod-seconds" class="channel-input" placeholder="Timeout (s)">
+                <input type="text" id="mod-reason" class="channel-input" placeholder="Reason (optional)">
+                <div class="moderation-button-group">
+                    <button id="btn-ban" class="connect-button" style="background:#b23;">Ban</button>
+                    <button id="btn-timeout" class="connect-button" style="background:#c62;">Timeout</button>
+                    <button id="btn-unban" class="connect-button" style="background:#2b6;">Unban</button>
+                </div>
+            </div>
+            <div class="moderation-ad-buttons">
+                <button id="btn-ad-60" class="connect-button">Start 60s Ad</button>
+                <button id="btn-ad-90" class="connect-button">Start 90s Ad</button>
+                <button id="btn-ad-schedule" class="connect-button" style="background:#555;">Fetch Ad Schedule</button>
+            </div>
+        </div>
+        </div>
+    </div>
+    <script>
+        //console.log(".");
+
+		function signOut() {
+			localStorage.removeItem('twitchOAuthToken');
+			localStorage.removeItem('twitchChannel');
+			localStorage.removeItem('twitchUserAlias');
+			sessionStorage.removeItem('twitchOAuthState');
+			sessionStorage.removeItem('twitchOAuthToken');
+
+			updateHeaderInfo(null, null);
+			document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'))
+			document.querySelector('.auth').classList.remove('hidden');
+			document.querySelector('#textarea').innerHTML = '';
+
+			console.log('Signed out successfully');
+		}
+		
+		function updateHeaderInfo(username, channelName) {
+			const currentUserElement = document.getElementById('current-user');
+			const currentChannelElement = document.getElementById('current-channel');
+			
+			if (currentUserElement) {
+				currentUserElement.textContent = username || 'Not signed in';
+			}
+			if (currentChannelElement) {
+				currentChannelElement.textContent = channelName || 'No channel';
+			}
+		}
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const signOutButton = document.getElementById('sign-out-button');
+            if (signOutButton) {
+                signOutButton.addEventListener('click', signOut);
+            }
+
+            const authLink = document.getElementById('auth-link');
+            if (authLink) {
+                authLink.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Call your authentication function here
+                    // For example: initiateAuth();
+                    console.log('Initiating Twitch authentication');
+                });
+            }
+
+            const savedAlias = localStorage.getItem('twitchUserAlias');
+            const aliasInput = document.getElementById('alias-input');
+            if (savedAlias && aliasInput) {
+                aliasInput.value = savedAlias;
+            }
+
+            if (aliasInput) {
+                aliasInput.addEventListener('change', function() {
+                    localStorage.setItem('twitchUserAlias', this.value);
+                });
+            }
+
+            // Hook moderation & ads buttons (forward to content script via window.postMessage)
+            function post(action, payload) {
+                window.postMessage({ source: 'twitch-ws-ui', action, payload }, '*');
+            }
+            const g = id => document.getElementById(id);
+            g('btn-ban')?.addEventListener('click', () => post('ban', { login: g('mod-username')?.value, seconds: 0, reason: g('mod-reason')?.value }));
+            g('btn-timeout')?.addEventListener('click', () => post('ban', { login: g('mod-username')?.value, seconds: parseInt(g('mod-seconds')?.value||'600'), reason: g('mod-reason')?.value }));
+            g('btn-unban')?.addEventListener('click', () => post('unban', { login: g('mod-username')?.value }));
+            g('btn-ad-60')?.addEventListener('click', () => post('ad', { length: 60 }));
+            g('btn-ad-90')?.addEventListener('click', () => post('ad', { length: 90 }));
+            g('btn-ad-schedule')?.addEventListener('click', () => post('ad_schedule', {}));
+        });
+
+        // The rest of your existing JavaScript code goes here
+    </script>
+</body>
+</html>
