@@ -12103,7 +12103,12 @@ async function initializeFileHandles() {
         }
         
         // Restore ticker file handle
-        const tickerFilePath = localStorage.getItem("tickerFilePath");
+        const tickerFilePathRaw = localStorage.getItem("tickerFilePath");
+        const tickerFilePath = sanitizeNativeFilePath(tickerFilePathRaw);
+        if (tickerFilePathRaw && !tickerFilePath) {
+            console.warn("[Ticker] Invalid ticker file path detected. Clearing remembered value.");
+            localStorage.removeItem("tickerFilePath");
+        }
         if (tickerFilePath) {
             fileHandleTicker = tickerFilePath;
             await updateHandleStatus("ticker", {
