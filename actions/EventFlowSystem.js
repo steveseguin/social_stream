@@ -2095,11 +2095,12 @@ class EventFlowSystem {
                 let processedTemplate = config.template || 'Hello from {source}!';
                 
                 // Replace all occurrences of template variables
-                const _src = (message && message.type) || '';
+                const _srcRaw = (message && message.type) || '';
+                const _src = _srcRaw ? _srcRaw.charAt(0).toUpperCase() + _srcRaw.slice(1) : '';
                 const _uname = (message && message.chatname) || '';
                 const _msg = (message && message.chatmessage) || '';
                 processedTemplate = processedTemplate.replace(/\{source\}/g, _src);
-                processedTemplate = processedTemplate.replace(/\{type\}/g, _src);
+                processedTemplate = processedTemplate.replace(/\{type\}/g, _srcRaw);
                 processedTemplate = processedTemplate.replace(/\{username\}/g, _uname);
                 processedTemplate = processedTemplate.replace(/\{chatname\}/g, _uname);
                 processedTemplate = processedTemplate.replace(/\{message\}/g, _msg);
@@ -2200,8 +2201,10 @@ class EventFlowSystem {
                 let relayTemplate = config.template || '[{source}] {username}: {message}';
                 
                 // Replace all occurrences of template variables
-                relayTemplate = relayTemplate.replace(/\{source\}/g, message.type || '');
-                relayTemplate = relayTemplate.replace(/\{type\}/g, message.type || '');
+                const relaySourceRaw = message.type || '';
+                const relaySource = relaySourceRaw ? relaySourceRaw.charAt(0).toUpperCase() + relaySourceRaw.slice(1) : '';
+                relayTemplate = relayTemplate.replace(/\{source\}/g, relaySource);
+                relayTemplate = relayTemplate.replace(/\{type\}/g, relaySourceRaw);
                 relayTemplate = relayTemplate.replace(/\{username\}/g, message.chatname || '');
                 relayTemplate = relayTemplate.replace(/\{chatname\}/g, message.chatname || '');
                 relayTemplate = relayTemplate.replace(/\{message\}/g, message.chatmessage || '');
