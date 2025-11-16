@@ -2,7 +2,7 @@ const pointsActionsSettingsHelpers = (typeof window !== 'undefined' && window.po
     ? window.pointsSettingsHelpers
     : null;
 
-const readBooleanSetting = (key, defaultValue = true) => {
+const readBooleanSetting = (key, defaultValue = false) => {
     if (pointsActionsSettingsHelpers && typeof pointsActionsSettingsHelpers.getBooleanSetting === 'function') {
         return pointsActionsSettingsHelpers.getBooleanSetting(key, defaultValue);
     }
@@ -26,7 +26,7 @@ function isCommandToggleEnabled(commandName, isDefaultCommand) {
     if (!toggleKey) {
         return true;
     }
-    return readBooleanSetting(toggleKey, true);
+    return readBooleanSetting(toggleKey, false);
 }
 
 function triggerPointsLeaderboardRefresh(reason = 'command') {

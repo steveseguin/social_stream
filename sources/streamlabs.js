@@ -3,10 +3,39 @@
   const IFRAME_ID = 'sl_frame';
   let lastSignature = null;
   let activeObserver = null;
+  let streamlabsExclusiveOnly = false;
+  let settingsLoaded = !window?.chrome?.runtime?.id;
+  let settings = { textonlymode: false };
 
-  function sanitizeText(value) {
+  // If we're on the outer alert-box page that just embeds the real widget iframe,
+  // let the iframe context handle the capture to avoid double sends.
+  if (window.self === window.top) {
+    const embedded = document.getElementById(IFRAME_ID) || document.querySelector('iframe[src*="alertbox"]');
+    if (embedded) {
+      return;
+    }
+  }
+
+  function applySettings(incoming) {
+    try {
+      streamlabsExclusiveOnly = !!incoming?.streamlabsExclusive?.setting;
+      const nextSettings = Object.assign({ textonlymode: false }, incoming || {});
+      nextSettings.textonlymode =
+        !!incoming?.textonlymode?.setting || !!incoming?.textonlymode || false;
+      settings = nextSettings;
+      settingsLoaded = true;
+    } catch (error) {
+      streamlabsExclusiveOnly = false;
+      settings = { textonlymode: false };
+      settingsLoaded = true;
+    }
+  }
+
+  function sanitizeText(value, stripHtml = false) {
     if (value === null || value === undefined) return '';
-    return String(value).trim();
+    const text = String(value).trim();
+    if (!stripHtml) return text;
+    return text.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
   }
 
   function sendToApp(message) {
@@ -75,7 +104,11 @@
     const { messageTemplate, userMessage, imageSrc, tokens, messageText } = snapshot || {};
     if (!messageTemplate && !userMessage && !imageSrc && !messageText) return null;
 
-    const chatmessage = sanitizeText(userMessage || messageTemplate || messageText || 'Alert');
+    const textOnlyActive = settings.textonlymode || !settingsLoaded;
+    const chatmessage = sanitizeText(
+      userMessage || messageText || messageTemplate || 'Alert',
+      textOnlyActive
+    );
     const eventType = detectEventType(messageText || messageTemplate || '', tokens);
     const nameToken = sanitizeText(tokens?.name || tokens?.gifter || '');
     const { hasDonation, donoValue } = deriveDonation(tokens, messageTemplate || messageText, eventType);
@@ -98,8 +131,11 @@
       chatname: nameToken || 'Streamlabs Alert',
       chatmessage,
       contentimg: imageSrc || '',
-      meta
+      textonly: textOnlyActive
     };
+    if (Object.keys(meta).length) {
+      payload.meta = meta;
+    }
     if (hasDonation) {
       payload.hasDonation = hasDonation;
       if (donoValue !== null) {
@@ -111,6 +147,7 @@
 
   function snapshotFromDocument(doc) {
     if (!doc) return null;
+    const textOnlyActive = settings.textonlymode || !settingsLoaded;
     const messageEl = doc.querySelector('#alert-message');
     const userMessageEl = doc.querySelector('#alert-user-message');
     const imageEl =
@@ -118,9 +155,14 @@
       doc.querySelector('#alert-image-wrap img') ||
       doc.querySelector('#alert-image');
 
-    const messageTemplate = messageEl ? sanitizeText(messageEl.textContent) : '';
-    const userMessage = userMessageEl ? sanitizeText(userMessageEl.textContent) : '';
-    const messageText = sanitizeText(messageEl ? messageEl.innerText || messageEl.textContent : '');
+    const messageContentHtml = messageEl ? (messageEl.innerHTML || '').trim() : '';
+    const messageContentText = messageEl ? sanitizeText(messageEl.textContent || '') : '';
+    const userMessageContentHtml = userMessageEl ? (userMessageEl.innerHTML || '').trim() : '';
+    const userMessageContentText = userMessageEl ? sanitizeText(userMessageEl.textContent || '') : '';
+
+    const messageTemplate = textOnlyActive ? messageContentText : messageContentHtml || messageContentText;
+    const userMessage = textOnlyActive ? userMessageContentText : userMessageContentHtml || userMessageContentText;
+    const messageText = textOnlyActive ? messageContentText : messageContentHtml || messageContentText;
     const tokens = {};
     doc.querySelectorAll('[data-token]').forEach((node) => {
       const key = sanitizeText(node.getAttribute('data-token'));
@@ -136,17 +178,45 @@
     return { messageTemplate, userMessage, imageSrc, tokens, messageText };
   }
 
+  function isTemplateOnlySnapshot(snapshot) {
+    if (!snapshot) return true;
+    const messageText = sanitizeText(snapshot.messageText || '');
+    const userMessage = sanitizeText(snapshot.userMessage || '');
+    const hasBraces = /\{[^}]+\}/.test(messageText);
+    const hasUserContent = userMessage.trim().length > 0 || (!hasBraces && messageText.trim().length > 0);
+    const tokenHasValue = Object.values(snapshot.tokens || {}).some((value) => sanitizeText(value).length);
+    return !hasUserContent && !tokenHasValue;
+  }
+
+  function isTemplatePayload(payload) {
+    if (!payload) return true;
+    const hasTemplateMarkers =
+      /\{[^}]+\}/.test(payload.chatmessage || '') ||
+      /\{[^}]+\}/.test(payload.contentimg || '') ||
+      /\{[^}]+\}/.test(payload.meta?.messageTemplate || '') ||
+      /\{[^}]+\}/.test(payload.meta?.userMessage || '');
+    if (hasTemplateMarkers) return true;
+    return false;
+  }
+
   function handleSnapshot(doc) {
     const snapshot = snapshotFromDocument(doc);
     const payload = buildPayload(snapshot);
     if (!payload) return;
+    if (isTemplatePayload(payload)) return;
+    if (isTemplateOnlySnapshot(snapshot)) return;
+    if (streamlabsExclusiveOnly) {
+      const allowed = ['redeem', 'merch', 'donation'];
+      if (!allowed.includes(payload.event)) {
+        return;
+      }
+    }
     const signature = JSON.stringify([
       payload.chatmessage,
+      payload.chatname,
       payload.contentimg,
-      snapshot.messageTemplate,
-      snapshot.userMessage,
       payload.event,
-      payload.hasDonation
+      payload.hasDonation || ''
     ]);
     if (signature === lastSignature) return;
     lastSignature = signature;
@@ -196,8 +266,50 @@
   }
 
   if (window.self !== window.top) {
+    requestInitialSettings();
+    if (window.chrome?.runtime?.onMessage?.addListener) {
+      chrome.runtime.onMessage.addListener(handleSettingsMessage);
+    }
     initInsideFrame();
   } else {
+    requestInitialSettings();
+    if (window.chrome?.runtime?.onMessage?.addListener) {
+      chrome.runtime.onMessage.addListener(handleSettingsMessage);
+    }
     initFromTop();
   }
+  function handleSettingsMessage(message) {
+    if (message?.settings) {
+      applySettings(message.settings);
+    }
+  }
+
+  function requestInitialSettings() {
+    if (!window.chrome?.runtime?.id) {
+      settingsLoaded = true;
+      return;
+    }
+    const markLoadedFallback = () => {
+      if (!settingsLoaded) {
+        settingsLoaded = true;
+      }
+    };
+    setTimeout(markLoadedFallback, 1500);
+    try {
+      chrome.runtime.sendMessage({ getSettings: true }, (response) => {
+        if (chrome.runtime.lastError) {
+          markLoadedFallback();
+          return;
+        }
+        if (response?.settings) {
+          applySettings(response.settings);
+        } else {
+          markLoadedFallback();
+        }
+      });
+    } catch (error) {
+      markLoadedFallback();
+    }
+  }
+
 })();

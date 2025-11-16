@@ -3759,6 +3759,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "notiktokdonations") {
 				pushSettingChange();
 			}
+			if (request.setting == "streamlabsExclusive") {
+				pushSettingChange();
+			}
 			if (request.setting == "twichadmute") { 
 				pushSettingChange();
 			} 
