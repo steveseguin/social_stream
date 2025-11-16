@@ -165,7 +165,6 @@ class EventFlowEditor {
                     <div class="flow-editor-header">
 						<input type="text" id="flow-name" placeholder="Flow Name">
 						<div class="flow-controls">
-                            <button class="btn btn-ghost" data-guide-link="event-flow-about" title="Learn what the Event Flow system does">❔ What is this?</button>
 							<button id="save-flow-btn" class="btn btn-primary">Save Flow</button>
 							<button id="duplicate-flow-btn" class="btn">Duplicate</button>
 							<label class="flow-active-toggle">

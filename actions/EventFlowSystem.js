@@ -5,14 +5,15 @@ class EventFlowSystem {
         this.dbName = options.dbName || 'eventFlowDB';
         this.storeName = options.storeName || 'flowSettings';
         this.pointsSystem = options.pointsSystem || null;
-        this.sendMessageToTabs = options.sendMessageToTabs || null;
-        this.sendToDestinations = options.sendToDestinations || null;
-        this.fetchWithTimeout = options.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
-        this.sanitizeRelay = options.sanitizeRelay || null;
-		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || null;
-		this.sendTargetP2P = options.sendTargetP2P || null;
-		this.messageStore = options.messageStore || {}; // Share message store from background.js
-		this.handleMessageStore = options.handleMessageStore || null; // Function to handle message storage
+        // Prefer helpers from background.js when available so both surfaces share behavior
+        this.sendMessageToTabs = options.sendMessageToTabs || window.sendMessageToTabs || null;
+        this.sendToDestinations = options.sendToDestinations || window.sendToDestinations || null;
+        this.fetchWithTimeout = options.fetchWithTimeout || window.fetchWithTimeout || window.fetch; // Fallback to window.fetch if not provided
+        this.sanitizeRelay = options.sanitizeRelay || window.sanitizeRelay || null;
+		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || window.checkExactDuplicateAlreadyRelayed || null;
+		this.sendTargetP2P = options.sendTargetP2P || window.sendTargetP2P || null;
+		this.messageStore = options.messageStore || window.messageStore || {}; // Share message store from background.js
+		this.handleMessageStore = options.handleMessageStore || window.handleMessageStore || null; // Function to handle message storage
 		
 		// MIDI properties
 		this.midiEnabled = false;
@@ -1833,49 +1834,70 @@ class EventFlowSystem {
 			return alt || text;
 		}
 
-		// Extract all emojis from image alt attributes before stripping HTML
+		// Prefer the shared relay sanitizer (from background.js) so editor + background behave identically
+		if (typeof this.sanitizeRelay === 'function') {
+			try {
+				const cleaned = this.sanitizeRelay(text, textonly, alt);
+				if (cleaned || !alt) {
+					return cleaned;
+				}
+				// fall through to return alt if provided and cleaned is empty
+			} catch (e) {
+				console.warn('[EventFlowSystem] sanitizeRelay failed, falling back to local sanitizer:', e);
+			}
+		}
+
+		// Fallback: minimal sanitizer that mirrors the background behavior (including emoji alt preservation)
 		const emojiMap = new Map();
 		if (!textonly) {
 			const tempDiv = document.createElement('div');
 			tempDiv.innerHTML = text;
 
-			// Collect all image elements with alt text that appears to be an emoji
+			const localIsEmoji = (char) => {
+				if (!char) return false;
+				const trimmed = char.trim();
+				const asciiEmoticonRegex = /^[:;=8BxX][-^\'"]?[)(DPOop3/\\|]+$/;
+				if (asciiEmoticonRegex.test(trimmed) || /^<3+$/.test(trimmed)) {
+					return true;
+				}
+				try {
+					const emojiRegex = /(\p{Emoji_Presentation}|\p{Extended_Pictographic})/u;
+					return emojiRegex.test(trimmed);
+				} catch (err) {
+					return false;
+				}
+			};
+
 			const imgElements = tempDiv.querySelectorAll('img');
 			imgElements.forEach((img, index) => {
 				const altText = img.getAttribute('alt');
-				if (altText && isEmoji(altText)) {
+				if (altText && localIsEmoji(altText)) {
 					const placeholder = `__EMOJI_PLACEHOLDER_${index}__`;
 					emojiMap.set(placeholder, altText);
 					img.outerHTML = placeholder;
 				}
 			});
 
-			// Get the potentially modified HTML
 			text = tempDiv.innerHTML;
 
-			// Convert to text from HTML
 			const textArea = document.createElement('textarea');
 			textArea.innerHTML = text;
 			text = textArea.value;
 		}
 
-		// Strip HTML and other unwanted characters
 		text = text.replace(/(<([^>]+)>)/gi, "");
 		text = text.replace(/[!#@]/g, "");
 		text = text.replace(/cheer\d+/gi, " ");
 
-		// Replace periods unless surrounded by non-space characters
-		// (so URLs like example.com are preserved)
 		text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
 			const prev = offset > 0 ? str[offset - 1] : "";
 			const next = str[offset + 1] || "";
 			if (/\S/.test(prev) && /\S/.test(next)) {
-				return "."; // keep the period (inside URL/word)
+				return ".";
 			}
-			return " "; // replace with space otherwise
+			return " ";
 		});
 
-		// Replace all emoji placeholders with their actual emojis
 		emojiMap.forEach((emoji, placeholder) => {
 			text = text.replace(placeholder, emoji);
 		});
@@ -1938,10 +1960,11 @@ class EventFlowSystem {
                 try {
                     // Use sanitized text basis for matching
                     if (message.chatmessage) {
-                        if (typeof this.sanitizeSendMessage === 'function') {
-                            basis = this.sanitizeSendMessage(message.chatmessage, true) || '';
-                        } else if (typeof this.sanitizeRelay === 'function') {
-                            basis = this.sanitizeRelay(message.chatmessage, true) || '';
+                        if (typeof this.sanitizeRelay === 'function') {
+                            // Use the shared sanitizer so emote images collapse to text consistently
+                            basis = this.sanitizeRelay(message.chatmessage, false) || '';
+                        } else if (typeof this.sanitizeSendMessage === 'function') {
+                            basis = this.sanitizeSendMessage(message.chatmessage, false) || '';
                         } else {
                             basis = (message.chatmessage || '').toString();
                         }
@@ -2107,7 +2130,7 @@ class EventFlowSystem {
                 processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, _msg);
                 
                 // Sanitize the message
-                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, true).trim();
+                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, false).trim();
                 
                 // Check if sanitized message is empty
                 if (!sanitizedSendMessage) {
