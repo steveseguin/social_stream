@@ -523,7 +523,7 @@ const pointsSystem = new PointsSystem({
 });
 
 function isPointsSystemEnabled() {
-    return getBooleanSettingValue('enablePointsSystem', true);
+    return getBooleanSettingValue('enablePointsSystem', false);
 }
 
 function syncPointsSystemConfigFromSettings() {

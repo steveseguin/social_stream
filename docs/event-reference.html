@@ -115,6 +115,13 @@
                             <td>Viewer count, join alerts, and like storms</td>
                         </tr>
                         <tr>
+                            <td><strong>Streamlabs Alert Box</strong></td>
+                            <td>Subs, gifts, sponsors, follows</td>
+                            <td>Cheer/bits, donations (with currency)</td>
+                            <td>Cheer/bits, donations (hasDonation)</td>
+                            <td>While an alert box is open; also available via <code>sources/websocket/streamlabs.html</code> socket token</td>
+                        </tr>
+                        <tr>
                             <td><strong>Kick &ndash; DOM</strong></td>
                             <td>&mdash;</td>
                             <td>&mdash;</td>
@@ -471,7 +478,81 @@
                 </article>
 
                 <article class="platform-card" id="tiktok">
-                    <h3>TikTok Live</h3>
+                    
+                <article class="platform-card" id="streamlabs-alertbox">
+                    <h3>Streamlabs Alert Box</h3>
+                    <p class="source-note">Implementation: <code>sources/streamlabs.js</code> (alert-box DOM); optional socket bridge at <code>sources/websocket/streamlabs.html</code></p>
+                    <ul class="requirements">
+                        <li>Keep your Streamlabs alert box open in a tab or browser source so alerts render; the content script reads the alert DOM for message/image/tokens.</li>
+                        <li>Donation-style alerts set <code>hasDonation</code> (e.g., “$10 USD” or “100 bits”) and <code>donoValue</code> when numeric.</li>
+                        <li>Event types inferred: <code>follow</code>, <code>subscription</code>, <code>gift</code>, <code>cheer</code>, <code>donation</code>, <code>superchat</code>, <code>raid</code>, <code>redeem</code>, <code>merch</code>, <code>sponsor</code>.</li>
+                        <li>For the socket bridge, paste your Streamlabs Socket API token and connect; alerts relay without the alert-box page.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="donation-event"><code>donation</code></td>
+                                <td>Tips, charity, JustGiving, or generic “donated” alerts.</td>
+                                <td><code>hasDonation</code> preserves the currency text (e.g., “$36” or “$10 CAD”); <code>donoValue</code> numeric when parsable.</td>
+                            </tr>
+                            <tr>
+                                <td class="donation-event"><code>cheer</code></td>
+                                <td>Twitch bit/cheer alerts.</td>
+                                <td><code>hasDonation</code> becomes “100 bits” and <code>donoValue</code> captures the bit count.</td>
+                            </tr>
+                            <tr>
+                                <td><code>subscription</code></td>
+                                <td>Subscription alerts.</td>
+                                <td>Standard fields set; <code>chatmessage</code> is the alert line; <code>meta.tokens</code> carries tokenized values (name, amount, levelName, etc.).</td>
+                            </tr>
+                            <tr>
+                                <td><code>gift</code></td>
+                                <td>Gifted memberships/subs.</td>
+                                <td><code>meta.tokens.amount</code> may show gift count; <code>meta.tokens.levelName</code> can hold tier.</td>
+                            </tr>
+                            <tr>
+                                <td><code>follow</code></td>
+                                <td>Follower alerts.</td>
+                                <td>No donation fields; <code>chatname</code> reflects the alert name token.</td>
+                            </tr>
+                            <tr>
+                                <td><code>raid</code></td>
+                                <td>Raid alerts.</td>
+                                <td><code>meta.tokens.count</code> holds the raider count when present.</td>
+                            </tr>
+                            <tr>
+                                <td><code>redeem</code></td>
+                                <td>Cloudbot redemption alerts.</td>
+                                <td><code>meta.tokens.product</code> captures the redemption item.</td>
+                            </tr>
+                            <tr>
+                                <td><code>merch</code></td>
+                                <td>Merch purchase alerts.</td>
+                                <td><code>meta.tokens.product</code> contains the purchased item name.</td>
+                            </tr>
+                            <tr>
+                                <td><code>superchat</code></td>
+                                <td>Super Chat style alerts emitted by Streamlabs.</td>
+                                <td>Donation fields populated similarly to <code>donation</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>sponsor</code></td>
+                                <td>Sponsor/member style alerts surfaced by Streamlabs.</td>
+                                <td>Standard fields; no donation unless the text includes an amount.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
+
+<h3>TikTok Live</h3>
                     <p class="source-note">Implementation: <code>sources/tiktok.js</code></p>
                     <ul class="requirements">
                         <li>Works on the broadcaster’s live page. Gift/like/follow banners only populate when the session is authenticated.</li>

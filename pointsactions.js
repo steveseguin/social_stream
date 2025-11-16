@@ -2,7 +2,7 @@ const pointsActionsSettingsHelpers = (typeof window !== 'undefined' && window.po
     ? window.pointsSettingsHelpers
     : null;
 
-const readBooleanSetting = (key, defaultValue = true) => {
+const readBooleanSetting = (key, defaultValue = false) => {
     if (pointsActionsSettingsHelpers && typeof pointsActionsSettingsHelpers.getBooleanSetting === 'function') {
         return pointsActionsSettingsHelpers.getBooleanSetting(key, defaultValue);
     }
@@ -18,10 +18,6 @@ const COMMAND_TOGGLE_MAP = {
 
 let pointsActionsHookInstalled = false;
 
-function isPointsSystemToggleEnabled() {
-    return readBooleanSetting('enablePointsSystem', true);
-}
-
 function isCommandToggleEnabled(commandName, isDefaultCommand) {
     if (!isDefaultCommand) {
         return true;
@@ -30,7 +26,7 @@ function isCommandToggleEnabled(commandName, isDefaultCommand) {
     if (!toggleKey) {
         return true;
     }
-    return readBooleanSetting(toggleKey, true);
+    return readBooleanSetting(toggleKey, false);
 }
 
 function triggerPointsLeaderboardRefresh(reason = 'command') {
@@ -246,10 +242,6 @@ class PointsActions {
         const command = this.customCommands.get(commandName);
         if (!command) {
             return null; // Not a command
-        }
-
-        if (!isPointsSystemToggleEnabled()) {
-            return null;
         }
 
         if (!isCommandToggleEnabled(commandName, !!command.isDefault)) {
@@ -599,7 +591,7 @@ async function initializePointsActions() {
             const result = await originalAddMessage.call(this, message);
             
             // Process any points commands
-            if (message && message.chatmessage && message.chatmessage.startsWith('!') && isPointsSystemToggleEnabled()) {
+            if (message && message.chatmessage && message.chatmessage.startsWith('!')) {
                 const commandResult = await pointsActions.processCommand(message);
                 
                 // Handle command response if needed

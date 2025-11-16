@@ -46,11 +46,13 @@
       "matches": ["https://streamelements.com/*"]
     }
   ],
-  "host_permissions": [
+ "host_permissions": [
 	"http://localhost:8080/*",
     "http://localhost:11434/api/generate",
     "http://127.0.0.1:11434/api/generate",
 	"https://xeenon.xyz/*",
+    "https://streamlabs.com/*",
+    "https://sockets.streamlabs.com/*",
 	"https://whop.com/*",
     "https://zap.stream/*",
     "https://www.bigo.tv/*",
@@ -913,13 +915,21 @@
       "js": [ "./sources/vklive.js" ],
       "matches": [ "https://vk.com/*" ]
     },
-	{
+    {
       "js": [ "./sources/vkvideo.js" ],
       "matches": [
-	    "https://live.vkplay.ru/*/only-chat?*",
+        "https://live.vkplay.ru/*/only-chat?*",
         "https://vkplay.live/*/only-chat?*",
         "https://live.vkvideo.ru/*/only-chat"
       ]
+    },
+    {
+      "js": [ "./sources/streamlabs.js" ],
+      "matches": [
+        "https://streamlabs.com/alert-box/*",
+        "https://streamlabs.com/widgets/frame/alertbox/*"
+      ],
+      "all_frames": true
     },
     {
       "js": [ "./sources/streamelements.js" ],
