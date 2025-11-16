@@ -3,356 +3,417 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>State Nodes Guide - Event Flow System</title>
+    <title>State Nodes Playbook - Social Stream Ninja</title>
     <style>
+        :root {
+            color-scheme: light dark;
+        }
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: radial-gradient(circle at top, #4338ca 0%, #0f172a 55%, #020617 100%);
+            color: #0f172a;
             min-height: 100vh;
-            padding: 20px;
+            padding: 25px;
         }
-        
-        .container {
-            max-width: 1200px;
+        .shell {
+            max-width: 1150px;
             margin: 0 auto;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            background: #fdfdfd;
+            border-radius: 20px;
             overflow: hidden;
+            box-shadow: 0 35px 80px rgba(3, 7, 18, 0.55);
         }
-        
         header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            text-align: center;
+            background: linear-gradient(135deg, #4c1d95, #312e81, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
         }
-        
         header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.7rem;
+            margin-bottom: 12px;
         }
-        
         header p {
-            font-size: 1.2em;
-            opacity: 0.9;
+            font-size: 1.15rem;
+            max-width: 680px;
+            opacity: 0.92;
         }
-        
-        .content {
-            padding: 40px;
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 11px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 18px;
         }
-        
-        .section {
-            margin-bottom: 50px;
-        }
-        
-        h2 {
-            color: #667eea;
-            font-size: 2em;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 10px;
-        }
-        
-        h3 {
-            color: #764ba2;
-            font-size: 1.5em;
-            margin: 25px 0 15px 0;
-        }
-        
-        .node-card {
-            background: #f8f9fa;
-            border-left: 4px solid #667eea;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 8px;
-        }
-        
-        .node-card h4 {
-            font-size: 1.3em;
-            margin-bottom: 10px;
-            color: #333;
-        }
-        
-        .works-with {
-            background: #e8f4fd;
-            border: 1px solid #b3d9f2;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 15px 0;
-        }
-        
-        .works-with h5 {
-            color: #0066cc;
-            margin-bottom: 10px;
-        }
-        
-        .example {
-            background: #f0f8ff;
-            padding: 20px;
-            border-radius: 8px;
-            margin: 20px 0;
-            border: 1px solid #d0e8ff;
-        }
-        
-        .flow-diagram {
-            background: #fff;
-            border: 2px dashed #ddd;
-            padding: 20px;
-            margin: 20px 0;
-            text-align: center;
-            font-family: 'Courier New', monospace;
-            font-size: 14px;
-            border-radius: 8px;
-        }
-        
-        .tip {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
-        }
-        
-        .tip::before {
-            content: "💡 TIP: ";
-            font-weight: bold;
-            color: #ff9800;
-        }
-        
-        .warning {
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
-        }
-        
-        .warning::before {
-            content: "⚠️ IMPORTANT: ";
-            font-weight: bold;
-            color: #dc3545;
-        }
-        
-        code {
-            background: #f4f4f4;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .button-group {
+        nav {
             display: flex;
+            flex-wrap: wrap;
             gap: 10px;
+            margin-top: 25px;
+        }
+        nav a {
+            color: #f8fafc;
+            text-decoration: none;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 999px;
+            padding: 6px 16px;
+            transition: background 0.2s;
+        }
+        nav a:hover {
+            background: rgba(15,23,42,0.25);
+        }
+        .content {
+            padding: 50px 55px 70px;
+        }
+        section {
+            margin-bottom: 70px;
+        }
+        h2 {
+            font-size: 2rem;
+            color: #312e81;
+            margin-bottom: 18px;
+        }
+        h3 {
+            font-size: 1.35rem;
+            color: #4338ca;
+            margin: 20px 0 10px;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 24px;
+            margin: 12px 0;
+        }
+        li {
+            margin: 6px 0;
+        }
+        .panel {
+            border-radius: 16px;
+            padding: 22px;
+            margin: 18px 0;
+        }
+        .panel.info {
+            background: #eef2ff;
+            border: 1px solid rgba(67,56,202,0.2);
+        }
+        .panel.warn {
+            background: #fff7ed;
+            border: 1px solid rgba(234,88,12,0.25);
+        }
+        .panel.success {
+            background: #ecfdf5;
+            border: 1px solid rgba(5,150,105,0.2);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 18px;
             margin: 20px 0;
         }
-        
-        .btn {
-            padding: 10px 20px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            display: inline-block;
-            transition: background 0.3s;
+        .card {
+            border-radius: 18px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+            padding: 20px 22px;
+            background: #fff;
         }
-        
-        .btn:hover {
-            background: #5a67d8;
+        .card h4 {
+            margin-bottom: 10px;
+            color: #4c1d95;
         }
-        
-        ul {
-            margin-left: 30px;
-            margin-top: 10px;
+        .diagram {
+            font-family: 'JetBrains Mono','Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            border-radius: 14px;
+            padding: 18px;
+            margin: 16px 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
         }
-        
-        li {
-            margin: 8px 0;
+        .recipe {
+            border-left: 4px solid #312e81;
+            padding-left: 18px;
+            margin: 18px 0;
+        }
+        .recipe h4 {
+            margin-bottom: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        table th, table td {
+            border: 1px solid #e5e7eb;
+            padding: 12px;
+            text-align: left;
+        }
+        table th {
+            background: #f1f5f9;
+            color: #312e81;
+        }
+        code {
+            background: rgba(15,23,42,0.06);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono','Courier New', monospace;
+        }
+        @media (max-width: 720px) {
+            header, .content {
+                padding: 35px 20px;
+            }
+            nav {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="shell">
         <header>
-            <h1>🎮 State Nodes Guide</h1>
-            <p>Understanding Variables and State in Your Event Flows</p>
+            <div class="badge">Event Flow System</div>
+            <h1>State Nodes Playbook</h1>
+            <p>State nodes give Social Stream Ninja memory. Use them to build cooldowns, toggles, counters, and throttles that keep automations predictable. This guide breaks the topic into focused mini-guides with examples and troubleshooting tips.</p>
+            <nav>
+                <a href="#overview">Overview</a>
+                <a href="#switch">On/Off Switch</a>
+                <a href="#counter">Counter</a>
+                <a href="#throttle">Rate Limiter</a>
+                <a href="#recipes">Problem Kits</a>
+                <a href="#troubleshooting">Troubleshooting</a>
+            </nav>
         </header>
-        
         <div class="content">
-            <section class="section">
-                <h2>🤔 What Are State Nodes?</h2>
-                <p>State nodes are like <strong>variables</strong> or <strong>memory</strong> in your event flows. They remember things between messages and can control how your flow behaves.</p>
-                
-                <div class="tip">
-                    Think of state nodes as switches, counters, and timers that you can control with actions!
-                </div>
-            </section>
-            
-            <section class="section">
-                <h2>📦 Available State Nodes</h2>
-                
-                <div class="node-card">
-                    <h4>🚦 ON/OFF Switch (Gate)</h4>
-                    <p><strong>What it does:</strong> Acts like a light switch - when ON, messages pass through. When OFF, messages stop.</p>
-                    <p><strong>Use cases:</strong></p>
-                    <ul>
-                        <li>Cooldowns (turn OFF after command, wait, turn ON)</li>
-                        <li>Enable/disable features temporarily</li>
-                        <li>Prevent spam by blocking messages</li>
-                    </ul>
-                    
-                    <div class="works-with">
-                        <h5>Works with these actions:</h5>
+            <section id="overview">
+                <h2>01 · Quick Orientation</h2>
+                <p>Every State node has two halves:</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>State Node</h4>
                         <ul>
-                            <li><strong>🚦 Set Gate State</strong> - Flip the switch ON or OFF</li>
-                            <li><strong>🔄 Reset State Node</strong> - Reset to default state</li>
+                            <li>Lives on the canvas.</li>
+                            <li>Holds the value (ON/OFF, count, timestamps).</li>
+                            <li>Runs for every message that enters the node.</li>
                         </ul>
                     </div>
-                    
-                    <div class="example">
-                        <strong>Example: 10-second cooldown</strong>
-                        <div class="flow-diagram">
-                            !hello → [Switch ON?] → Send Reply → Turn Switch OFF → Wait 10s → Turn Switch ON
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="node-card">
-                    <h4>🔢 Counter</h4>
-                    <p><strong>What it does:</strong> Counts messages and triggers actions when reaching a target number.</p>
-                    <p><strong>Use cases:</strong></p>
-                    <ul>
-                        <li>Every Nth viewer gets special treatment</li>
-                        <li>Track points or scores</li>
-                        <li>Count attempts before triggering</li>
-                    </ul>
-                    
-                    <div class="works-with">
-                        <h5>Works with these actions:</h5>
+                    <div class="card">
+                        <h4>State Action</h4>
                         <ul>
-                            <li><strong>🔢 Set Counter Value</strong> - Set to any number (like resetting to 0)</li>
-                            <li><strong>➕ Increment Counter</strong> - Add or subtract any amount</li>
-                            <li><strong>🔄 Reset State Node</strong> - Reset to initial value</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="example">
-                        <strong>Example: Every 5th viewer celebration</strong>
-                        <div class="flow-diagram">
-                            !join → [Counter +1] → [At 5?] → Special Welcome → Auto-reset to 0
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="node-card">
-                    <h4>⏲️ Rate Limiter (Throttle)</h4>
-                    <p><strong>What it does:</strong> Limits how many messages can pass per second.</p>
-                    <p><strong>Use cases:</strong></p>
-                    <ul>
-                        <li>Prevent command spam</li>
-                        <li>Limit API calls</li>
-                        <li>Control message flow rate</li>
-                    </ul>
-                    
-                    <div class="works-with">
-                        <h5>Works with these actions:</h5>
-                        <ul>
-                            <li><strong>🔄 Reset State Node</strong> - Clear rate limit history</li>
+                            <li>Placed downstream.</li>
+                            <li>Changes the stored value (set ON, add +1, reset, etc.).</li>
+                            <li>Can live anywhere in the flow—just pick the matching node name.</li>
                         </ul>
                     </div>
                 </div>
-            </section>
-            
-            <section class="section">
-                <h2>🔗 How State Nodes Work Together</h2>
-                
-                <h3>The Two-Part System</h3>
-                <p>State nodes work in two parts:</p>
-                <ol>
-                    <li><strong>State Nodes</strong> - Hold the actual state (ON/OFF, count, etc.)</li>
-                    <li><strong>Action Nodes</strong> - Control and modify the state</li>
-                </ol>
-                
-                <div class="warning">
-                    You must add a state node FIRST before you can control it with actions!
-                </div>
-                
-                <h3>Step-by-Step Example</h3>
-                <ol>
-                    <li>Add a <strong>🚦 ON/OFF Switch</strong> node to your flow</li>
-                    <li>Give it a name like "Cooldown Switch"</li>
-                    <li>Connect your trigger through this switch</li>
-                    <li>Add a <strong>🚦 Set Gate State</strong> action after your main action</li>
-                    <li>Configure it to turn the "Cooldown Switch" OFF</li>
-                    <li>Add a delay</li>
-                    <li>Add another <strong>🚦 Set Gate State</strong> to turn it back ON</li>
-                </ol>
-            </section>
-            
-            <section class="section">
-                <h2>💡 Pro Tips</h2>
-                
-                <div class="tip">
-                    <strong>Name your state nodes clearly!</strong> Use names like "Hello Cooldown", "Viewer Counter", "Points Total" instead of generic names.
-                </div>
-                
-                <div class="tip">
-                    <strong>State persists between messages.</strong> A switch stays OFF until you turn it ON. A counter keeps counting until you reset it.
-                </div>
-                
-                <div class="tip">
-                    <strong>Counters auto-increment.</strong> When messages pass through a Counter node, it automatically adds 1. Use "Increment Counter" action to add different amounts.
-                </div>
-                
-                <div class="tip">
-                    <strong>Test with low numbers first.</strong> Set counters to trigger at 2 or 3 while testing, then increase for production.
+                <div class="panel info">
+                    <strong>Remember:</strong> Add the State node first, give it a unique name, then wire the matching action node. Without the base node, Set/Increment/Reset actions have nothing to talk to.
                 </div>
             </section>
-            
-            <section class="section">
-                <h2>📚 Common Patterns</h2>
-                
-                <h3>Cooldown Pattern</h3>
-                <div class="flow-diagram">
-                    Trigger → Switch (ON) → Action → Turn OFF → Delay → Turn ON
+
+            <section id="switch">
+                <h2>02 · On/Off Switch (Gate)</h2>
+                <p>The switch is a boolean guard. When ON, messages pass through; when OFF, the flow halts at this node.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Best for</h4>
+                        <ul>
+                            <li>Cooldowns for chat commands.</li>
+                            <li>Manual toggles (enable/disable overlays).</li>
+                            <li>Maintenance windows (pause features during BRB scenes).</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Key Actions</h4>
+                        <ul>
+                            <li><code>Set Gate State</code> — flip ON or OFF.</li>
+                            <li><code>Reset State Node</code> — revert to default (usually ON).</li>
+                        </ul>
+                    </div>
                 </div>
-                
-                <h3>Every Nth Pattern</h3>
-                <div class="flow-diagram">
-                    Trigger → Counter → [At Target?] → Special Action → Reset Counter
+                <h3>Example: 15s Cooldown</h3>
+                <div class="diagram">
+!hello ──▶ Switch (ON?) ─▶ Send Reply ─▶ Set Gate: OFF ─▶ Delay 15s ─▶ Set Gate: ON
                 </div>
-                
-                <h3>Points System Pattern</h3>
-                <div class="flow-diagram">
-                    Add Points Action → Increment Counter by 10 → [At 100?] → Milestone Reward
-                </div>
-                
-                <h3>Toggle Feature Pattern</h3>
-                <div class="flow-diagram">
-                    !enable → Turn Switch ON
-                    !disable → Turn Switch OFF
-                    Messages → Switch → [If ON] → Feature Active
+                <div class="recipe">
+                    <h4>Build Steps</h4>
+                    <ol>
+                        <li>Drop the switch node, name it “helloCooldown”, default ON.</li>
+                        <li>Connect your trigger → switch → actions.</li>
+                        <li>After your action, add <em>Set Gate State</em> (OFF) referencing “helloCooldown”.</li>
+                        <li>Add a <em>Delay</em> node (15 seconds).</li>
+                        <li>Add another <em>Set Gate State</em> (ON) for “helloCooldown”.</li>
+                    </ol>
                 </div>
             </section>
-            
-            <section class="section">
-                <h2>🚀 Quick Start</h2>
-                <ol>
-                    <li>Import one of the example workflows (simple-cooldown-example.json)</li>
-                    <li>See how the nodes connect</li>
-                    <li>Modify the values to suit your needs</li>
-                    <li>Test with a few messages</li>
-                    <li>Adjust and refine!</li>
-                </ol>
-                
+
+            <section id="counter">
+                <h2>03 · Counter</h2>
+                <p>Counters track numbers across messages. They increment automatically when a message flows through, and you can adjust values manually with actions.</p>
+                <div class="panel success">
+                    <strong>Auto increment:</strong> Every time a payload passes through the Counter node it adds 1 (unless you pause it with the “Only count when gate is true” option).
+                </div>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Use Cases</h4>
+                        <ul>
+                            <li>Every Nth chatter triggers a prize.</li>
+                            <li>Track progress to a community goal.</li>
+                            <li>Store points redeemed via commands.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Actions</h4>
+                        <ul>
+                            <li><code>Increment Counter</code> — add or subtract custom amounts.</li>
+                            <li><code>Set Counter Value</code> — jump to a specific number.</li>
+                            <li><code>Reset State Node</code> — revert to the default start value.</li>
+                        </ul>
+                    </div>
+                </div>
+                <h3>Example: Celebrate Every 5 Messages</h3>
+                <div class="diagram">
+Any Message ─▶ Counter (name: hype5) ─▶ Condition (value % 5 === 0?) ─▶ Play Celebration
+                </div>
+                <p>Inside the Condition node, compare <code>state.hype5.value</code> or simply use the built-in “Trigger when value matches Target” option from the Counter node’s properties.</p>
+            </section>
+
+            <section id="throttle">
+                <h2>04 · Rate Limiter (Throttle)</h2>
+                <p>The throttle remembers timestamps and refuses new events until the rate you specify is respected.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Great When You Need</h4>
+                        <ul>
+                            <li>“Only five raffle entries per minute.”</li>
+                            <li>“One API call per 10 seconds.”</li>
+                            <li>“Drop alerts if the overlay is already busy.”</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Configuration</h4>
+                        <ul>
+                            <li>Set the maximum events allowed.</li>
+                            <li>Choose the time window (seconds).</li>
+                            <li>Decide whether to queue or discard overflow.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="panel warn">
+                    <strong>Heads up:</strong> Throttles do not auto-reset when you edit the flow. Use <code>Reset State Node</code> if you need a clean slate during testing.
+                </div>
+            </section>
+
+            <section id="recipes">
+                <h2>05 · Problem Kits</h2>
+                <p>Pick a scenario and follow the steps.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Command Cooldown</h4>
+                        <ol>
+                            <li>Switch node named “commandCooldown”.</li>
+                            <li>Trigger → switch → reply.</li>
+                            <li>Set Gate OFF → Delay → Set Gate ON.</li>
+                            <li>Add a chat message “Cooldown active” on the false output if desired.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Limited Freebies</h4>
+                        <ol>
+                            <li>Counter default 0, target 3.</li>
+                            <li>Increment after each redemption.</li>
+                            <li>When value ≥ 3, branch to “Sorry, all gone”.</li>
+                            <li>Use Reset action at the end of stream.</li>
+                        </ol>
+                    </div>
+                    <div class="card">
+                        <h4>Viewer Toggle</h4>
+                        <ol>
+                            <li>Switch named “overlayToggle”.</li>
+                            <li><code>!overlay on</code> command → Set Gate ON.</li>
+                            <li><code>!overlay off</code> command → Set Gate OFF.</li>
+                            <li>All overlay triggers pass through the switch.</li>
+                        </ol>
+                    </div>
+                </div>
+
+                <h3>Example Flow Charts</h3>
+                <div class="diagram">
+Trigger ─▶ Switch (overlayToggle) ─▶ If ON → Show Overlay
+           └─false─▶ Notify moderator “Overlay disabled”
+                </div>
+                <div class="diagram">
+Redeem Reward ─▶ Counter ticketsSold
+                      ├─value < 50 ─▶ Approve Redemption
+                      └─value ≥ 50 ─▶ Deny + Refund points
+                </div>
+            </section>
+
+            <section id="troubleshooting">
+                <h2>06 · Troubleshooting & FAQ</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Symptom</th>
+                            <th>Likely Cause</th>
+                            <th>Fix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Set Gate State action won’t save.</td>
+                            <td>No matching switch node exists (or the names differ).</td>
+                            <td>Add the switch node first and confirm the dropdown references it.</td>
+                        </tr>
+                        <tr>
+                            <td>Counter never increments.</td>
+                            <td>The flow bypasses the counter node or the gate is false.</td>
+                            <td>Make sure the trigger wire passes through the counter and the gate output is true.</td>
+                        </tr>
+                        <tr>
+                            <td>Throttle blocks everything forever.</td>
+                            <td>Window too strict or leftover state from testing.</td>
+                            <td>Relax the limit and drop a Reset State Node action before retesting.</td>
+                        </tr>
+                        <tr>
+                            <td>Guide buttons don’t open.</td>
+                            <td>Running inside the extension without web_accessible resources updated.</td>
+                            <td>Ensure <code>actions/state-nodes-guide.html</code> ships via manifest and reload the extension.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <h3>Testing Checklist</h3>
+                <ul>
+                    <li>Use the Event Flow “Send Test Event” tool to simulate commands.</li>
+                    <li>Temporarily shorten cooldowns (2 seconds) or lower counter targets while verifying.</li>
+                    <li>Reset state nodes between tests so you are not reading stale data.</li>
+                    <li>Label branches (e.g., “false → cooldown active”) so you can follow the path visually.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>07 · Next Steps</h2>
+                <p>Combine state nodes with the rest of the Event Flow toolkit:</p>
+                <ul>
+                    <li>Use logic gates (AND/OR/NOT) before a switch to decide who can toggle it.</li>
+                    <li>Store state-driven metadata under <code>meta</code> so overlays know why a branch fired.</li>
+                    <li>Export working patterns as templates so your team can re-import them later.</li>
+                </ul>
+                <div class="panel info">
+                    Keep experimenting! The new <a href="event-flow-guide.html">Event Flow Guide</a> pairs with this playbook so you can master both logic and state layers.
+                </div>
             </section>
         </div>
     </div>

@@ -192,6 +192,18 @@ a:hover {
     border-color: var(--secondary-dark);
 }
 
+.btn-ghost {
+    background-color: transparent;
+    border-color: rgba(255, 255, 255, 0.15);
+    color: var(--text-primary);
+    box-shadow: none;
+}
+
+.btn-ghost:hover {
+    background-color: var(--background-hover);
+    border-color: var(--primary-light);
+}
+
 input[type="text"],
 input[type="number"],
 input[type="url"],
@@ -370,6 +382,26 @@ label {
     margin-bottom: 10px;
 }
 
+.flow-list-empty {
+    border: 1px dashed var(--border-interactive);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.4;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.flow-list-empty-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.flow-list-empty-copy {
+    margin-top: 6px;
+}
+
 .flow-item {
     padding: 8px 12px;
     margin-bottom: 6px;
@@ -522,6 +554,53 @@ label {
     align-items: center;
     border-bottom: 1px solid var(--border-color);
     background-color: var(--background-surface);
+}
+
+.flow-help-banner {
+    display: none;
+    margin: 16px 20px 0;
+    padding: 14px 18px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(102, 126, 234, 0.4);
+    background: rgba(99, 102, 241, 0.12);
+    color: var(--text-primary);
+    gap: 12px;
+    align-items: center;
+    position: relative;
+    flex-wrap: wrap;
+}
+
+.flow-help-banner.visible {
+    display: flex;
+}
+
+.flow-help-banner-text {
+    flex: 1;
+    min-width: 220px;
+    font-size: 0.95rem;
+    line-height: 1.4;
+}
+
+.flow-help-banner-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.flow-help-dismiss {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0 6px;
+}
+
+.flow-help-dismiss:hover {
+    color: var(--text-primary);
 }
 
 #flow-name {
@@ -802,6 +881,32 @@ input:checked + .slider:before {
     font-size: 1rem;
     color: var(--primary-light);
     margin-bottom: 15px;
+}
+
+.node-help-links {
+    margin-top: 24px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border-color);
+}
+
+.node-help-question {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+}
+
+.node-help-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.node-help-buttons .btn {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 0.9rem;
 }
 
 .property-group {
