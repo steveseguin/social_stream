@@ -2364,46 +2364,56 @@ class EventFlowSystem {
 				break;
                 
             case 'addPoints':
-				if (this.pointsSystem && config.amount > 0) {
-					const addResult = await this.pointsSystem.addPoints(
-						message.chatname,
-						message.type,
-						config.amount
-					);
-					
-					if (addResult.success) {
-						//console.log(`[ExecuteAction - addPoints] Added ${config.amount} points to ${message.chatname}. New total: ${addResult.points}`);
-						// You might want to add the new points total to the message for other actions to use
-						result.message = { ...message, pointsTotal: addResult.points };
-						result.modified = true;
-					} else {
-						//console.log(`[ExecuteAction - addPoints] Failed to add points for ${message.chatname}. Reason: ${addResult.message || 'Unknown error'}`);
+				try {
+					if (!this.pointsSystem && typeof window !== 'undefined' && typeof window.pointsSystemReady === 'function') {
+						await window.pointsSystemReady();
+						this.pointsSystem = window.pointsSystem || this.pointsSystem;
 					}
+					const system = this.pointsSystem;
+					if (system && config.amount > 0) {
+						const addResult = await system.addPoints(
+							message.chatname,
+							message.type,
+							config.amount
+						);
+						
+						if (addResult.success) {
+							result.message = { ...message, pointsTotal: addResult.points };
+							result.modified = true;
+							if (typeof window !== 'undefined' && typeof window.requestPointsLeaderboardBroadcast === 'function') {
+								window.requestPointsLeaderboardBroadcast('action-add', { immediate: true });
+							}
+						}
+					}
+				} catch (e) {
+					console.warn('[ExecuteAction - addPoints] failed', e);
 				}
 				break;
                 
             case 'spendPoints':
-				if (this.pointsSystem && config.amount > 0) {
-					const spendResult = await this.pointsSystem.spendPoints( // Capture the result
-						message.chatname,
-						message.type,
-						config.amount
-					);
-
-					if (!spendResult.success) {
-						// If spending points failed (e.g., insufficient points)
-						//console.log(`[ExecuteAction - spendPoints] Failed for ${message.chatname}. Reason: ${spendResult.message}`);
-						result.blocked = true; // This will stop subsequent actions in this flow path.
-						// You might also want to include the error message in the result if needed for debugging or other logic
-						result.message = { ...message, pointsSpendError: spendResult.message };
-						result.modified = true;
-					} else {
-						// Points were successfully spent
-						//console.log(`[ExecuteAction - spendPoints] Success for ${message.chatname}. Spent ${config.amount}. Remaining: ${spendResult.remaining}`);
-						// Optionally, you can add information about the successful transaction to the message
-						// result.message = { ...message, pointsSpentSuccessfully: true, pointsRemaining: spendResult.remaining };
-						// result.modified = true;
+				try {
+					if (!this.pointsSystem && typeof window !== 'undefined' && typeof window.pointsSystemReady === 'function') {
+						await window.pointsSystemReady();
+						this.pointsSystem = window.pointsSystem || this.pointsSystem;
 					}
+					const system = this.pointsSystem;
+					if (system && config.amount > 0) {
+						const spendResult = await system.spendPoints( // Capture the result
+							message.chatname,
+							message.type,
+							config.amount
+						);
+
+						if (!spendResult.success) {
+							result.blocked = true; // This will stop subsequent actions in this flow path.
+							result.message = { ...message, pointsSpendError: spendResult.message };
+							result.modified = true;
+						} else if (typeof window !== 'undefined' && typeof window.requestPointsLeaderboardBroadcast === 'function') {
+							window.requestPointsLeaderboardBroadcast('action-spend', { immediate: true });
+						}
+					}
+				} catch (e) {
+					console.warn('[ExecuteAction - spendPoints] failed', e);
 				}
 				break;
                 

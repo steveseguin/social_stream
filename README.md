@@ -138,6 +138,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
 - Picarto.tv (pop-out chat; ie: https://picarto.tv/chatpopout/CHANNELNAMEHERE/public)
 - Mobcrush (this page: https://studio.mobcrush.com/chatpopup.html)
 - odysee.com (via the pop out chat I think)
+- Streamlabs alert box (https://streamlabs.com/alert-box/...; extension hook) and Streamlabs socket relay (`sources/websocket/streamlabs.html` with your Socket API token)
 - minnit.chat support (https://minnit.chat/xxxxxxxxxxx?mobile&popout)
 - livepush.io (chat overlay link provided; no input field support?)
 - piczel.tv (pop out chat @ https://piczel.tv/chat/xxxxxxxxx)

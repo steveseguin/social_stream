@@ -5919,20 +5919,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				return;
 			}
 			
-			if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username}?`)) {
-				chrome.runtime.sendMessage({
-					cmd: "manageUserPoints",
-					username: username,
-					action: action.toLowerCase(),
-					points: points
-				}, function(response) {
-					if (response && response.success) {
-						alert(`Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username}. New balance: ${response.newBalance}`);
-					} else {
-						alert(response.error || 'Failed to manage points. Please try again.');
-					}
-				});
-			}
+				if (confirm(`Are you sure you want to ${action} ${points} points ${action === 'subtract' ? 'from' : 'to'} ${username}?`)) {
+					chrome.runtime.sendMessage({
+						cmd: "manageUserPoints",
+						username: username,
+						action: action.toLowerCase(),
+						points: points
+					}, function(response) {
+						if (response && response.success) {
+							const available = Number.isFinite(response?.available) ? response.available : undefined;
+							const total = Number.isFinite(response?.points) ? response.points : undefined;
+							let summary = `Successfully ${action === 'set' ? 'set' : action + 'ed'} ${points} points ${action === 'subtract' ? 'from' : 'for'} ${username}.`;
+							if (available !== undefined) summary += ` Available: ${available}`;
+							if (total !== undefined) summary += ` | Total: ${total}`;
+							alert(summary);
+						} else {
+							alert(response.error || 'Failed to manage points. Please try again.');
+						}
+					});
+				}
 		});
 	}
 
