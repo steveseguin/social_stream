@@ -16,6 +16,12 @@ class EventFlowEditor {
         this.draggedConnection = null;
         this.dragOffset = { x: 0, y: 0 };
         this.unsavedChanges = false;
+        try {
+            this.noFlowHelpDismissed = window.localStorage.getItem('ssn-eventflow-help-dismissed') === '1';
+        } catch (error) {
+            console.debug('Unable to read Event Flow help dismissal state', error);
+            this.noFlowHelpDismissed = false;
+        }
 		
         // Initialize all node type definitions here
         this.triggerTypes = [
@@ -153,11 +159,6 @@ class EventFlowEditor {
                                 </div>
                             `).join('')}
                         </div>
-						<div style="margin-top: 10px;">
-                            <button id="help-btn" class="btn" style="width: 100%; padding: 8px 12px; font-size: 14px; background: #667eea;">
-                                ❓ State Nodes Guide
-                            </button>
-                        </div>
                     </div>
                 </div>
                 <div class="flow-editor">
@@ -173,6 +174,16 @@ class EventFlowEditor {
 							</label>
 						</div>
 					</div>
+                    <div class="flow-help-banner" id="flow-help-banner">
+                        <div class="flow-help-banner-text">
+                            <strong>New to Event Flow?</strong> Start by reviewing the quick guide or create your first automation.
+                        </div>
+                        <div class="flow-help-banner-actions">
+                            <button class="btn btn-primary" data-guide-link="event-flow">Open Guide</button>
+                            <button class="btn btn-ghost" id="flow-help-create-btn">Create Flow</button>
+                        </div>
+                        <button class="flow-help-dismiss" id="flow-help-dismiss" aria-label="Dismiss help banner">×</button>
+                    </div>
                     <div class="flow-canvas-container">
                         <div class="flow-canvas" id="flow-canvas"></div>
                     </div>
@@ -189,6 +200,7 @@ class EventFlowEditor {
 		if (saveButton) {
 			saveButton.classList.add('disabled'); // Start with disabled state
 		}
+        this.renderNodePropertiesPlaceholder();
     }
 
     initEventListeners() {
@@ -197,9 +209,22 @@ class EventFlowEditor {
         document.getElementById('duplicate-flow-btn').addEventListener('click', () => this.duplicateCurrentFlow());
         document.getElementById('import-flow-btn').addEventListener('click', () => this.importFlows());
         document.getElementById('export-all-btn').addEventListener('click', () => this.exportAllFlows());
-        document.getElementById('help-btn').addEventListener('click', () => {
-            window.open('actions/state-nodes-guide.html', '_blank');
+        this.container.addEventListener('click', (e) => {
+            const guideButton = e.target.closest('[data-guide-link]');
+            if (guideButton) {
+                e.preventDefault();
+                this.openGuide(guideButton.dataset.guideLink);
+                return;
+            }
         });
+        const helpBannerDismiss = document.getElementById('flow-help-dismiss');
+        if (helpBannerDismiss) {
+            helpBannerDismiss.addEventListener('click', () => this.dismissFlowHelpBanner());
+        }
+        const helpCreateBtn = document.getElementById('flow-help-create-btn');
+        if (helpCreateBtn) {
+            helpCreateBtn.addEventListener('click', () => this.createNewFlow());
+        }
 
         document.getElementById('flow-active').addEventListener('change', (e) => {
             if (this.currentFlow) {
@@ -259,6 +284,59 @@ class EventFlowEditor {
                 }
             });
         });
+    }
+    
+    renderNodePropertiesPlaceholder() {
+        const propsContainer = document.getElementById('node-properties-content');
+        if (!propsContainer) return;
+        propsContainer.innerHTML = `
+            <p>Select a node to view its properties.</p>
+            <div class="node-help-links">
+                <p class="node-help-question">Need some help?</p>
+                <div class="node-help-buttons">
+                    <button class="btn btn-ghost" data-guide-link="event-flow">📘 Event Flow Guide</button>
+                    <button class="btn btn-ghost" data-guide-link="state-nodes">🎮 State Nodes Guide</button>
+                </div>
+            </div>
+        `;
+    }
+
+    openGuide(guideKey) {
+        const guideMap = {
+            'event-flow': 'actions/event-flow-guide.html',
+            'state-nodes': 'actions/state-nodes-guide.html',
+            'event-flow-about': 'actions/event-flow-guide.html#what-is-event-flow'
+        };
+        let target = guideMap[guideKey];
+        if (!target) return;
+        if (typeof chrome !== 'undefined' && chrome.runtime && typeof chrome.runtime.getURL === 'function') {
+            target = chrome.runtime.getURL(target);
+        }
+        try {
+            window.open(target, '_blank');
+        } catch (error) {
+            console.error('Failed to open guide', error);
+        }
+    }
+
+    toggleFlowHelpBanner(showBanner) {
+        const banner = document.getElementById('flow-help-banner');
+        if (!banner) return;
+        if (showBanner && !this.noFlowHelpDismissed) {
+            banner.classList.add('visible');
+        } else {
+            banner.classList.remove('visible');
+        }
+    }
+
+    dismissFlowHelpBanner() {
+        this.noFlowHelpDismissed = true;
+        try {
+            window.localStorage.setItem('ssn-eventflow-help-dismissed', '1');
+        } catch (error) {
+            console.debug('Unable to persist Event Flow help dismissal', error);
+        }
+        this.toggleFlowHelpBanner(false);
     }
     
 	markUnsavedChanges(hasChanges) {
@@ -323,6 +401,17 @@ class EventFlowEditor {
             item.addEventListener('drop', this.handleFlowDrop.bind(this));
             item.addEventListener('dragend', this.handleFlowDragEnd.bind(this));
         });
+
+        if (flows.length === 0) {
+            const emptyState = document.createElement('div');
+            emptyState.className = 'flow-list-empty';
+            emptyState.innerHTML = `
+                <div class="flow-list-empty-title">No flows yet</div>
+                <div class="flow-list-empty-copy">Create your first automation or open the Event Flow Guide for inspiration.</div>
+            `;
+            flowListEl.appendChild(emptyState);
+        }
+        this.toggleFlowHelpBanner(flows.length === 0);
 
         flowListEl.querySelectorAll('.flow-item-delete').forEach(button => {
             button.addEventListener('click', (e) => {
@@ -482,6 +571,7 @@ class EventFlowEditor {
         
         this.renderFlow();
         this.selectNode(null);
+        this.toggleFlowHelpBanner(false);
     }
 
     async generateFlowName() {
@@ -1830,7 +1920,7 @@ class EventFlowEditor {
         if (previouslySelected) previouslySelected.classList.remove('selected');
         this.selectedNode = nodeId; // Store ID
         if (!nodeId) {
-            document.getElementById('node-properties-content').innerHTML = '<p>Select a node to view its properties.</p>';
+            this.renderNodePropertiesPlaceholder();
             return;
         }
         const nodeEl = document.querySelector(`.node[data-id="${nodeId}"]`);
