@@ -23,6 +23,7 @@ var sentimentAnalysisLoaded = false;
 
 // Spotify integration
 var spotify = null;
+var latestSpotifyOverlay = null;
 console.log("Background.js: SpotifyIntegration available?", typeof SpotifyIntegration !== 'undefined');
 
 var messageCounterBase = Math.floor(Math.random() * 90000);
@@ -6676,6 +6677,13 @@ function initializeSpotify() {
 					
 					sendToDestinations(data);
 				}
+			},
+			onTrackUpdate: (payload) => {
+				try {
+					sendSpotifyOverlay(payload);
+				} catch (err) {
+					console.warn("Failed to send Spotify overlay update:", err);
+				}
 			}
 		};
 		
@@ -6687,6 +6695,14 @@ function initializeSpotify() {
 		// Clean up if disabled
 		spotify.cleanup();
 		spotify = null;
+		sendSpotifyOverlay({
+			status: 'stopped',
+			isPlaying: false,
+			progressMs: 0,
+			durationMs: 0,
+			track: null,
+			receivedAt: Date.now()
+		});
 	}
 }
 
@@ -7907,6 +7923,47 @@ function sendHypeP2P(data, uid = null) {
   }
 }
 //////
+function sendSpotifyOverlay(payload, uid = null) {
+	if (!payload) {
+		return;
+	}
+
+	// Remember last payload for newly connected overlays
+	payload.receivedAt = payload.receivedAt || Date.now();
+	latestSpotifyOverlay = payload;
+
+	if (ninjaBridge && ninjaBridge.isReady()) {
+		try {
+			if (!uid) {
+				ninjaBridge.sendToLabel({ spotify: payload }, 'spotify');
+			} else {
+				ninjaBridge.send({ spotify: payload }, uid);
+			}
+			return;
+		} catch (e) { console.warn('SDK sendSpotifyOverlay failed', e); }
+	}
+
+	if (iframe) {
+		if (!uid) {
+			var keys = Object.keys(connectedPeers);
+			for (var i = 0; i < keys.length; i++) {
+				try {
+					var UUID = keys[i];
+					var label = connectedPeers[UUID];
+					if (label === "spotify") {
+						iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: UUID }, "*");
+					}
+				} catch (e) {}
+			}
+		} else {
+			var label = connectedPeers[uid];
+			if (label === "spotify") {
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: { spotify: payload } }, type: "pcs", UUID: uid }, "*");
+			}
+		}
+	}
+}
+//////
 function sendTargetP2P(data, target) {
     // function to send data to the DOCk via the VDO.Ninja API
     if (ninjaBridge && ninjaBridge.isReady()) {
@@ -9002,6 +9059,15 @@ eventer(messageEvent, async function (e) {
 						initializeWaitlist();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
+					} else if (connectedPeers[e.data.UUID] == "spotify") {
+						sendSpotifyOverlay(latestSpotifyOverlay || {
+							status: 'idle',
+							isPlaying: false,
+							progressMs: 0,
+							durationMs: 0,
+							track: null,
+							receivedAt: Date.now()
+						}, e.data.UUID);
 					}
 				}
 			} else if (e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
@@ -9016,6 +9082,15 @@ eventer(messageEvent, async function (e) {
 						initializeWaitlist();
 					} else if (connectedPeers[e.data.UUID] == "poll") {
 						initializePoll();
+					} else if (connectedPeers[e.data.UUID] == "spotify") {
+						sendSpotifyOverlay(latestSpotifyOverlay || {
+							status: 'idle',
+							isPlaying: false,
+							progressMs: 0,
+							durationMs: 0,
+							track: null,
+							receivedAt: Date.now()
+						}, e.data.UUID);
 					}
 				}
 			} else if (e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {
