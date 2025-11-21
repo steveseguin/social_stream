@@ -474,6 +474,16 @@ class SpotifyIntegration {
 
             if (response.status === 204) {
                 this.currentTrack = null;
+                if (this.callbacks.onTrackUpdate) {
+                    this.callbacks.onTrackUpdate({
+                        track: null,
+                        status: 'stopped',
+                        isPlaying: false,
+                        progressMs: 0,
+                        durationMs: 0,
+                        receivedAt: Date.now()
+                    });
+                }
                 return null;
             }
 
@@ -496,6 +506,22 @@ class SpotifyIntegration {
                     uri: data.item.uri,
                     id: data.item.id
                 };
+                
+                const overlayPayload = {
+                    track: newTrack,
+                    status: data.is_playing ? 'playing' : 'paused',
+                    isPlaying: !!data.is_playing,
+                    progressMs: data.progress_ms || 0,
+                    durationMs: newTrack.duration,
+                    receivedAt: Date.now(),
+                    device: data.device ? {
+                        name: data.device.name,
+                        type: data.device.type,
+                        volume: data.device.volume_percent,
+                        isActive: data.device.is_active
+                    } : undefined,
+                    contextUri: data.context?.uri || undefined
+                };
 
                 // Check if this is a new track
                 if (!this.currentTrack || this.currentTrack.id !== newTrack.id) {
@@ -505,6 +531,12 @@ class SpotifyIntegration {
                     if (this.callbacks.onNewTrack && this.settings.spotifyAnnounceNewTrack) {
                         this.callbacks.onNewTrack(newTrack);
                     }
+                } else {
+                    this.currentTrack = newTrack;
+                }
+
+                if (this.callbacks.onTrackUpdate) {
+                    this.callbacks.onTrackUpdate(overlayPayload);
                 }
 
                 return newTrack;

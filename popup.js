@@ -1849,6 +1849,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "eventsdashboard", path: "events.html" },
 	{ id: "flowactions", path: "actions.html" },
 	{ id: "custom-gif-commands", path: "gif.html" },
+	{ id: "spotify", path: "spotify-overlay.html" },
 	{ id: "scoreboard", path: "scoreboard.html"}
 	
   ];
@@ -2522,6 +2523,7 @@ function update(response, sync = true) {
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
+					'spotifylink',
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -3010,7 +3012,8 @@ function getTargetMap() {
 		'poll': 16,
 		'eventsdashboard': 17,
 		'flowactions': 18,
-		'scoreboard': 21
+		'scoreboard': 21,
+		'spotify': 22
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -4026,7 +4029,8 @@ function refreshLinks(){
       'privatechatbotlink': 'privatechatbot',
       'eventsdashboardlink': 'eventsdashboard',
       'custom-gif-commandslink': 'custom-gif-commands',
-	  'scoreboardlink': 'scoreboard'
+	  'scoreboardlink': 'scoreboard',
+	  'spotifylink': 'spotify'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
