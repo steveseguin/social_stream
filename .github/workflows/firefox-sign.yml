@@ -66,7 +66,10 @@ jobs:
 
           mkdir -p "${ARTIFACTS_DIR}"
 
-          web-ext sign \
+          attempt=1
+          max_attempts=3
+          backoff=20
+          until web-ext sign \
             --api-key "$AMO_JWT_ISSUER" \
             --api-secret "$AMO_JWT_SECRET" \
             --channel "$WEB_EXT_CHANNEL" \
@@ -75,7 +78,16 @@ jobs:
             --ignore-files '.github/**' \
             --ignore-files 'node_modules/**' \
             --ignore-files "${ARTIFACTS_DIR}/**" \
-            "${id_args[@]}"
+            "${id_args[@]}"; do
+            if (( attempt >= max_attempts )); then
+              echo "web-ext sign failed after ${attempt} attempt(s)" >&2
+              exit 1
+            fi
+            echo "web-ext sign failed (attempt ${attempt}/${max_attempts}). Retrying in ${backoff}s..." >&2
+            sleep "$backoff"
+            attempt=$((attempt + 1))
+            backoff=$((backoff * 2))
+          done
 
       - name: Upload signed XPI
         uses: actions/upload-artifact@v4
