@@ -15,6 +15,10 @@ on:
         description: Optional add-on ID (if manifest lacks browser_specific_settings.gecko.id)
         type: string
         required: false
+      use_submission_api:
+        description: Use AMO submission API (recommended, more reliable than legacy sign-addon)
+        type: boolean
+        default: true
 permissions:
   contents: write
 
@@ -26,6 +30,7 @@ jobs:
       WEB_EXT_CHANNEL: ${{ github.event.inputs.channel || 'unlisted' }}
       WEB_EXT_SOURCE_DIR: ${{ github.event.inputs.source_dir || '.' }}
       WEB_EXT_ID: ${{ github.event.inputs.addon_id }}
+      WEB_EXT_USE_SUBMISSION_API: ${{ github.event.inputs.use_submission_api || true }}
       ARTIFACTS_DIR: web-ext-artifacts
       FIREFOX_BRANCH: firefox
       FIREFOX_FILE_NAME: social-stream-ninja.xpi
@@ -67,8 +72,13 @@ jobs:
           mkdir -p "${ARTIFACTS_DIR}"
 
           attempt=1
-          max_attempts=3
+          max_attempts=5
           backoff=20
+          submission_args=()
+          if [[ "${WEB_EXT_USE_SUBMISSION_API}" == "true" ]]; then
+            submission_args+=(--use-submission-api)
+          fi
+
           until web-ext sign \
             --api-key "$AMO_JWT_ISSUER" \
             --api-secret "$AMO_JWT_SECRET" \
@@ -78,6 +88,7 @@ jobs:
             --ignore-files '.github/**' \
             --ignore-files 'node_modules/**' \
             --ignore-files "${ARTIFACTS_DIR}/**" \
+            "${submission_args[@]}" \
             "${id_args[@]}"; do
             if (( attempt >= max_attempts )); then
               echo "web-ext sign failed after ${attempt} attempt(s)" >&2
