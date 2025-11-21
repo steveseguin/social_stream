@@ -19,6 +19,14 @@ on:
         description: Use AMO submission API (recommended, more reliable than legacy sign-addon)
         type: boolean
         default: true
+      fallback_to_legacy:
+        description: If submission API fails, retry with legacy sign-addon API
+        type: boolean
+        default: true
+      web_ext_version:
+        description: web-ext version to install (use 8 for submission API by default)
+        type: string
+        default: "8"
 permissions:
   contents: write
 
@@ -31,6 +39,8 @@ jobs:
       WEB_EXT_SOURCE_DIR: ${{ github.event.inputs.source_dir || '.' }}
       WEB_EXT_ID: ${{ github.event.inputs.addon_id }}
       WEB_EXT_USE_SUBMISSION_API: ${{ github.event.inputs.use_submission_api || true }}
+      WEB_EXT_FALLBACK_TO_LEGACY: ${{ github.event.inputs.fallback_to_legacy || true }}
+      WEB_EXT_VERSION: ${{ github.event.inputs.web_ext_version || '8' }}
       ARTIFACTS_DIR: web-ext-artifacts
       FIREFOX_BRANCH: firefox
       FIREFOX_FILE_NAME: social-stream-ninja.xpi
@@ -51,7 +61,7 @@ jobs:
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Install web-ext CLI
-        run: npm install --global web-ext@7
+        run: npm install --global "web-ext@${WEB_EXT_VERSION}"
 
       - name: Sign add-on on AMO
         env:
@@ -70,35 +80,65 @@ jobs:
           fi
 
           mkdir -p "${ARTIFACTS_DIR}"
+          rm -f "${ARTIFACTS_DIR}"/*.xpi || true
 
-          attempt=1
-          max_attempts=5
-          backoff=20
-          submission_args=()
-          if [[ "${WEB_EXT_USE_SUBMISSION_API}" == "true" ]]; then
-            submission_args+=(--use-submission-api)
-          fi
+          SUBMISSION_API_URL="https://addons.mozilla.org/api/v5"
+          LEGACY_API_URL="https://addons.mozilla.org/api/v4"
 
-          until web-ext sign \
-            --api-key "$AMO_JWT_ISSUER" \
-            --api-secret "$AMO_JWT_SECRET" \
-            --channel "$WEB_EXT_CHANNEL" \
-            --source-dir "$WEB_EXT_SOURCE_DIR" \
-            --artifacts-dir "$ARTIFACTS_DIR" \
-            --ignore-files '.github/**' \
-            --ignore-files 'node_modules/**' \
-            --ignore-files "${ARTIFACTS_DIR}/**" \
-            "${submission_args[@]}" \
-            "${id_args[@]}"; do
-            if (( attempt >= max_attempts )); then
-              echo "web-ext sign failed after ${attempt} attempt(s)" >&2
-              exit 1
+          signed=false
+
+          for mode in submission legacy; do
+            if [[ "$mode" == "legacy" && "${WEB_EXT_FALLBACK_TO_LEGACY}" != "true" ]]; then
+              continue
             fi
-            echo "web-ext sign failed (attempt ${attempt}/${max_attempts}). Retrying in ${backoff}s..." >&2
-            sleep "$backoff"
-            attempt=$((attempt + 1))
-            backoff=$((backoff * 2))
+            if [[ "$mode" == "submission" && "${WEB_EXT_USE_SUBMISSION_API}" != "true" ]]; then
+              continue
+            fi
+
+            args=()
+            if [[ "$mode" == "submission" ]]; then
+              args+=(--use-submission-api)
+              args+=(--api-url-prefix "${SUBMISSION_API_URL}")
+              echo "Signing via submission API..."
+            else
+              args+=(--api-url-prefix "${LEGACY_API_URL}")
+              echo "Signing via legacy sign-addon API..."
+            fi
+
+            attempt=1
+            max_attempts=4
+            backoff=20
+            until web-ext sign \
+              --api-key "$AMO_JWT_ISSUER" \
+              --api-secret "$AMO_JWT_SECRET" \
+              --channel "$WEB_EXT_CHANNEL" \
+              --source-dir "$WEB_EXT_SOURCE_DIR" \
+              --artifacts-dir "$ARTIFACTS_DIR" \
+              --ignore-files '.github/**' \
+              --ignore-files 'node_modules/**' \
+              --ignore-files "${ARTIFACTS_DIR}/**" \
+              "${args[@]}" \
+              "${id_args[@]}"; do
+              if (( attempt >= max_attempts )); then
+                echo "web-ext sign failed after ${attempt} attempt(s) using mode '${mode}'" >&2
+                break
+              fi
+              echo "web-ext sign failed (attempt ${attempt}/${max_attempts}) using mode '${mode}'. Retrying in ${backoff}s..." >&2
+              sleep "$backoff"
+              attempt=$((attempt + 1))
+              backoff=$((backoff * 2))
+            done
+
+            if ls "${ARTIFACTS_DIR}"/*.xpi >/dev/null 2>&1; then
+              signed=true
+              break
+            fi
           done
+
+          if [[ "${signed}" != "true" ]]; then
+            echo "Signing failed with all configured modes." >&2
+            exit 1
+          fi
 
       - name: Upload signed XPI
         uses: actions/upload-artifact@v4
