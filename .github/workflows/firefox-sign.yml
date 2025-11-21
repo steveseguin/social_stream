@@ -1,0 +1,121 @@
+name: Sign Firefox Add-on
+on:
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: Select AMO channel (listed shows in store, unlisted for self-hosting)
+        type: choice
+        options: [listed, unlisted]
+        default: unlisted
+      source_dir:
+        description: Source directory containing manifest.json
+        type: string
+        default: .
+      addon_id:
+        description: Optional add-on ID (if manifest lacks browser_specific_settings.gecko.id)
+        type: string
+        required: false
+permissions:
+  contents: write
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      WEB_EXT_CHANNEL: ${{ github.event.inputs.channel || 'unlisted' }}
+      WEB_EXT_SOURCE_DIR: ${{ github.event.inputs.source_dir || '.' }}
+      WEB_EXT_ID: ${{ github.event.inputs.addon_id }}
+      ARTIFACTS_DIR: web-ext-artifacts
+      FIREFOX_BRANCH: firefox
+      FIREFOX_FILE_NAME: social-stream-ninja.xpi
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Read manifest version
+        id: manifest
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r '.version' "${WEB_EXT_SOURCE_DIR}/manifest.json")
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Install web-ext CLI
+        run: npm install --global web-ext@7
+
+      - name: Sign add-on on AMO
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${AMO_JWT_ISSUER:-}" || -z "${AMO_JWT_SECRET:-}" ]]; then
+            echo "AMO credentials missing. Set AMO_JWT_ISSUER and AMO_JWT_SECRET secrets." >&2
+            exit 1
+          fi
+
+          id_args=()
+          if [[ -n "${WEB_EXT_ID:-}" ]]; then
+            id_args+=(--id "${WEB_EXT_ID}")
+          fi
+
+          mkdir -p "${ARTIFACTS_DIR}"
+
+          web-ext sign \
+            --api-key "$AMO_JWT_ISSUER" \
+            --api-secret "$AMO_JWT_SECRET" \
+            --channel "$WEB_EXT_CHANNEL" \
+            --source-dir "$WEB_EXT_SOURCE_DIR" \
+            --artifacts-dir "$ARTIFACTS_DIR" \
+            --ignore-files '.github/**' \
+            --ignore-files 'node_modules/**' \
+            --ignore-files "${ARTIFACTS_DIR}/**" \
+            "${id_args[@]}"
+
+      - name: Upload signed XPI
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-signed-${{ steps.manifest.outputs.version }}-${{ env.WEB_EXT_CHANNEL }}
+          path: ${{ env.ARTIFACTS_DIR }}/*.xpi
+          if-no-files-found: error
+
+      - name: Publish signed XPI to dedicated branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          BRANCH="${FIREFOX_BRANCH:-firefox}"
+          FILE_NAME="${FIREFOX_FILE_NAME:-social-stream-ninja.xpi}"
+          XPI_PATH=$(ls "$GITHUB_WORKSPACE/${ARTIFACTS_DIR}"/*.xpi | head -n 1)
+          if [[ -z "${XPI_PATH:-}" ]]; then
+            echo "Signed XPI not found in ${ARTIFACTS_DIR}" >&2
+            exit 1
+          fi
+
+          TMP_DIR=$(mktemp -d)
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$TMP_DIR"
+
+          cd "$TMP_DIR"
+          git checkout --orphan "$BRANCH"
+          find . -mindepth 1 -not -path './.git' -not -path './.git/*' -exec rm -rf {} +
+          cp "$XPI_PATH" "$FILE_NAME"
+          git add "$FILE_NAME"
+          git commit -m "Update Firefox XPI (${WEB_EXT_CHANNEL})"
+          git push -f origin "$BRANCH"
+          echo "Published to branch '$BRANCH' as '$FILE_NAME'"
+          echo "Raw permalink: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${BRANCH}/${FILE_NAME}"
+
+      - name: Upload AMO submission log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-signing-logs-${{ github.run_id }}
+          path: ${{ env.ARTIFACTS_DIR }}/*.log
+          if-no-files-found: ignore
