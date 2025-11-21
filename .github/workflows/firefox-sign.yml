@@ -16,7 +16,7 @@ on:
         type: string
         required: false
       use_submission_api:
-        description: Use AMO submission API (recommended, more reliable than legacy sign-addon)
+        description: Use AMO submission API (recommended, default in web-ext v8)
         type: boolean
         default: true
       fallback_to_legacy:
@@ -82,9 +82,6 @@ jobs:
           mkdir -p "${ARTIFACTS_DIR}"
           rm -f "${ARTIFACTS_DIR}"/*.xpi || true
 
-          SUBMISSION_API_URL="https://addons.mozilla.org/api/v5"
-          LEGACY_API_URL="https://addons.mozilla.org/api/v4"
-
           signed=false
 
           for mode in submission legacy; do
@@ -94,15 +91,11 @@ jobs:
             if [[ "$mode" == "submission" && "${WEB_EXT_USE_SUBMISSION_API}" != "true" ]]; then
               continue
             fi
-
-            args=()
             if [[ "$mode" == "submission" ]]; then
-              args+=(--use-submission-api)
-              args+=(--api-url-prefix "${SUBMISSION_API_URL}")
-              echo "Signing via submission API..."
+              echo "Signing via submission API (web-ext v${WEB_EXT_VERSION})..."
             else
-              args+=(--api-url-prefix "${LEGACY_API_URL}")
-              echo "Signing via legacy sign-addon API..."
+              echo "Signing via legacy sign-addon API (web-ext v7)..."
+              npm install --global "web-ext@7"
             fi
 
             attempt=1
@@ -117,7 +110,6 @@ jobs:
               --ignore-files '.github/**' \
               --ignore-files 'node_modules/**' \
               --ignore-files "${ARTIFACTS_DIR}/**" \
-              "${args[@]}" \
               "${id_args[@]}"; do
               if (( attempt >= max_attempts )); then
                 echo "web-ext sign failed after ${attempt} attempt(s) using mode '${mode}'" >&2
