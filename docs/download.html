@@ -136,8 +136,8 @@
                             <img src="../icons/firefox.svg" alt="Firefox">
                         </div>
                         <h3>Firefox (Limited Support)</h3>
-                        <p>Temporary installation only, settings will not persist between browser sessions.</p>
-                        <p class="note">Not officially supported, but may work with limitations.</p>
+                        <p>Use the Firefox MV2 manifest for temporary installs.</p>
+                        <p class="note">Not officially supported; temporary install only, settings may not persist.</p>
                         <a href="#firefox-install" class="view-installation-instructions btn btn-text">View Installation Instructions</a>
                         <a href="https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip" class="btn btn-primary">Download for Firefox</a>
                     </div>
@@ -282,23 +282,31 @@
                 <div class="step">
                     <div class="step-number">2</div>
                     <div class="step-content">
+                        <h3>Swap in the Firefox Manifest</h3>
+                        <p>In the root of the extracted folder, back up the existing <code>manifest.json</code>, then rename <code>manifest-firefox.json</code> to <code>manifest.json</code>.</p>
+                        <p class="note">Only rename for Firefox; keep the MV3 manifest for Chrome/Edge installs.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
                         <h3>Open Firefox Debugging Page</h3>
                         <p>Navigate to Firefox's debugging page:</p>
                         <code>about:debugging#/runtime/this-firefox</code>
                     </div>
                 </div>
                 <div class="step">
-                    <div class="step-number">3</div>
+                    <div class="step-number">4</div>
                     <div class="step-content">
                         <h3>Load Temporary Add-on</h3>
-                        <p>Click "Load Temporary Add-on" and select any file inside the extracted Social Stream Ninja folder.</p>
+                        <p>Click "Load Temporary Add-on" and select the renamed <code>manifest.json</code> in the extracted Social Stream Ninja folder.</p>
                     </div>
                 </div>
                 <div class="step">
-                    <div class="step-number">4</div>
+                    <div class="step-number">5</div>
                     <div class="step-content">
                         <h3>Important Limitations</h3>
-                        <p>Note that this is a temporary installation. Your settings will not persist between browser sessions, and you'll need to reinstall each time you restart Firefox.</p>
+                        <p>Temporary install only: you may need to reload after closing Firefox, and settings persistence can be limited.</p>
                     </div>
                 </div>
             </div>
