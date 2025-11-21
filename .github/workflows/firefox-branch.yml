@@ -58,10 +58,9 @@ jobs:
             // MV2 manifest flag
             manifest.manifest_version = 2;
 
-            // Background: swap service worker for classic script
-            const worker = manifest.background && manifest.background.service_worker;
+            // Background: use persistent background page for MV2
             manifest.background = {
-              scripts: [worker || 'service_worker.js'],
+              page: 'background.html',
               persistent: true
             };
 
@@ -106,6 +105,12 @@ jobs:
             manifest.browser_specific_settings.gecko = manifest.browser_specific_settings.gecko || {};
             manifest.browser_specific_settings.gecko.id =
               manifest.browser_specific_settings.gecko.id || geckoId;
+            // Also support older "applications" field for MV2 Firefox
+            manifest.applications = manifest.applications || {};
+            manifest.applications.gecko = manifest.applications.gecko || {};
+            if (!manifest.applications.gecko.id) {
+              manifest.applications.gecko.id = geckoId;
+            }
 
             fs.writeFileSync(path, JSON.stringify(manifest, null, 2));
           NODE
