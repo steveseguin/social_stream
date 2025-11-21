@@ -1,0 +1,117 @@
+name: Build Firefox MV2 branch
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      base_branch:
+        description: Base branch to start from
+        default: main
+        required: false
+        type: string
+      target_branch:
+        description: Target branch name to publish the MV2 manifest
+        default: firefox
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-firefox-branch:
+    if: >
+      github.event_name != 'push' ||
+      (
+        github.ref == 'refs/heads/main' &&
+        github.actor != 'github-actions[bot]' &&
+        (!github.event.head_commit || !contains(github.event.head_commit.message, '[skip firefox]'))
+      )
+    runs-on: ubuntu-latest
+    env:
+      BASE_BRANCH: ${{ github.event_name == 'push' && github.ref_name || github.event.inputs.base_branch || github.event.repository.default_branch }}
+      TARGET_BRANCH: ${{ github.event.inputs.target_branch || 'firefox' }}
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BASE_BRANCH }}
+          fetch-depth: 0
+
+      - name: Create MV2 manifest for Firefox
+        run: |
+          set -euo pipefail
+          git switch -C "$TARGET_BRANCH" "$BASE_BRANCH"
+
+          node <<'NODE'
+            const fs = require('fs');
+            const path = 'manifest.json';
+            const manifest = JSON.parse(fs.readFileSync(path, 'utf8'));
+
+            // MV2 manifest flag
+            manifest.manifest_version = 2;
+
+            // Background: swap service worker for classic script
+            const worker = manifest.background && manifest.background.service_worker;
+            manifest.background = {
+              scripts: [worker || 'service_worker.js'],
+              persistent: true
+            };
+
+            // Move host_permissions into permissions and drop MV3-only "scripting"
+            const basePerms = Array.isArray(manifest.permissions) ? manifest.permissions : [];
+            const hostPerms = Array.isArray(manifest.host_permissions) ? manifest.host_permissions : [];
+            manifest.permissions = Array.from(new Set([...basePerms.filter(p => p !== 'scripting'), ...hostPerms]));
+            delete manifest.host_permissions;
+
+            // action -> browser_action for MV2 button
+            if (manifest.action && !manifest.browser_action) {
+              manifest.browser_action = { ...manifest.action };
+            }
+            delete manifest.action;
+
+            // MV2 CSP expects a string
+            if (typeof manifest.content_security_policy === 'object' && manifest.content_security_policy !== null) {
+              manifest.content_security_policy =
+                manifest.content_security_policy.extension_pages ||
+                manifest.content_security_policy.extension_service_worker ||
+                "script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline'; object-src 'self'";
+            } else if (typeof manifest.content_security_policy !== 'string') {
+              manifest.content_security_policy = "script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline'; object-src 'self'";
+            }
+
+            // Flatten MV3-style web_accessible_resources objects to MV2 array form
+            if (Array.isArray(manifest.web_accessible_resources)) {
+              const flattened = [];
+              for (const entry of manifest.web_accessible_resources) {
+                if (typeof entry === 'string') {
+                  flattened.push(entry);
+                } else if (entry && Array.isArray(entry.resources)) {
+                  flattened.push(...entry.resources);
+                }
+              }
+              manifest.web_accessible_resources = Array.from(new Set(flattened));
+            }
+
+            // Add a stable Gecko ID so Firefox skips temporary IDs
+            const geckoId = 'socialstreamninja@socialstream.ninja';
+            manifest.browser_specific_settings = manifest.browser_specific_settings || {};
+            manifest.browser_specific_settings.gecko = manifest.browser_specific_settings.gecko || {};
+            manifest.browser_specific_settings.gecko.id =
+              manifest.browser_specific_settings.gecko.id || geckoId;
+
+            fs.writeFileSync(path, JSON.stringify(manifest, null, 2));
+          NODE
+
+      - name: Commit and push branch
+        run: |
+          set -euo pipefail
+          if ! git status --short manifest.json | grep -q .; then
+            echo "No manifest changes; pushing branch anyway."
+          else
+            git add manifest.json
+            git commit -m "Build Firefox MV2 manifest from ${BASE_BRANCH}"
+          fi
+          git push --force --set-upstream origin "$TARGET_BRANCH"
