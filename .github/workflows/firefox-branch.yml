@@ -40,6 +40,11 @@ jobs:
           ref: ${{ env.BASE_BRANCH }}
           fetch-depth: 0
 
+      - name: Configure Git identity
+        run: |
+          git config --global user.name "${GITHUB_ACTOR:-github-actions}"
+          git config --global user.email "${GITHUB_ACTOR:-github-actions}@users.noreply.github.com"
+
       - name: Create MV2 manifest for Firefox
         run: |
           set -euo pipefail
