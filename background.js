@@ -334,6 +334,48 @@ function errorlog(msg) {
 }
 var priorityTabs = new Set();
 
+function getPersistedSession() {
+	let storedId = null;
+	let storedState = null;
+	try {
+		storedId = localStorage.getItem("ssninja_stream_id") || localStorage.getItem("streamID");
+	} catch (e) {}
+	try {
+		const rawState = localStorage.getItem("ssninja_state");
+		if (rawState !== null) {
+			storedState = rawState === "true";
+		}
+	} catch (e) {}
+	return { storedId, storedState };
+}
+
+function persistSession({ streamId = null, state = null } = {}) {
+	try {
+		if (streamId) {
+			localStorage.setItem("ssninja_stream_id", streamId);
+			localStorage.setItem("streamID", streamId);
+		}
+	} catch (e) {}
+	try {
+		if (typeof state === "boolean") {
+			localStorage.setItem("ssninja_state", state ? "true" : "false");
+		}
+	} catch (e) {}
+	if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
+		const payload = {};
+		if (streamId) {
+			payload.streamID = streamId;
+		}
+		if (typeof state === "boolean") {
+			payload.state = state;
+		}
+		if (Object.keys(payload).length) {
+			chrome.storage.sync.set(payload);
+			chrome.runtime.lastError;
+		}
+	}
+}
+
 function generateStreamID() {
 	var text = "";
 	var possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
@@ -1149,10 +1191,12 @@ var loadedFirst = false;
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
+	const { storedId, storedState } = getPersistedSession();
+	const incomingStreamId = (item && item.streamID) ? item.streamID : storedId;
 
-	if (item && item.streamID) {
-		if (streamID != item.streamID) {
-			streamID = item.streamID;
+	if (incomingStreamId) {
+		if (streamID != incomingStreamId) {
+			streamID = incomingStreamId;
 			streamID = validateRoomId(streamID);
 			if (!streamID){
 				try {
@@ -1169,8 +1213,7 @@ function loadSettings(item, resave = false) {
 				}
 			}
 			reloadNeeded = true;
-			chrome.storage.sync.set({ streamID});
-			chrome.runtime.lastError;
+			persistSession({ streamId: streamID });
 		}
 	} else if (!streamID) {
 		
@@ -1203,8 +1246,7 @@ function loadSettings(item, resave = false) {
 		}
 		
 		reloadNeeded = true;
-		chrome.storage.sync.set({ streamID});
-		chrome.runtime.lastError;
+		persistSession({ streamId: streamID });
 	}
 
 	if (item && "password" in item) {
@@ -1225,12 +1267,14 @@ function loadSettings(item, resave = false) {
 		})
 	}
 
-	if (item && "state" in item) {
-		if (isExtensionOn != item.state) {
-			isExtensionOn = item.state;
+	const incomingState = (item && "state" in item) ? item.state : storedState;
+	if (typeof incomingState === "boolean") {
+		if (isExtensionOn != incomingState) {
+			isExtensionOn = incomingState;
 			reloadNeeded = true;
 			// we're saving below instead
 		}
+		persistSession({ state: isExtensionOn });
 	}
     // Recompute effective SDK usage on settings load
     try {
@@ -3606,6 +3650,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		if (request.cmd && request.cmd === "setOnOffState") {
 			// toggle the IFRAME (stream to the remote dock) on or off
 			isExtensionOn = request.data.value;
+			persistSession({ state: isExtensionOn });
 
 			updateExtensionState();
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings });
@@ -4410,6 +4455,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if ("state" in request) {
 				isExtensionOn = request.state;
 			}
+			persistSession({ streamId: streamID, state: isExtensionOn });
 			if (iframe) {
 				if (iframe.src) {
 					iframe.src = null;
