@@ -1192,6 +1192,7 @@ function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
 	const { storedId, storedState } = getPersistedSession();
+	const isFirstRun = !storedId && !(item && item.streamID) && storedState === null && !(item && "state" in item);
 	const incomingStreamId = (item && item.streamID) ? item.streamID : storedId;
 
 	if (incomingStreamId) {
@@ -1274,6 +1275,11 @@ function loadSettings(item, resave = false) {
 			reloadNeeded = true;
 			// we're saving below instead
 		}
+		persistSession({ state: isExtensionOn });
+	} else if (isFirstRun && !isExtensionOn) {
+		// Default to on for first-run setups with no prior state
+		isExtensionOn = true;
+		reloadNeeded = true;
 		persistSession({ state: isExtensionOn });
 	}
     // Recompute effective SDK usage on settings load
