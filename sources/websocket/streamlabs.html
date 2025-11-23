@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Social Stream – Streamlabs</title>
+  <link rel="stylesheet" href="youtube.css">
+  <style>
+    :root {
+      --accent: #00ff9d;
+      --bg: #0c0f12;
+      --panel: #13171c;
+      --border: #1e252d;
+      --text: #e6f0ff;
+      --muted: #94a3b8;
+      --danger: #ff5f7a;
+      --warning: #ffd37a;
+    }
+    * { box-sizing: border-box; }
+    .hidden { display: none !important; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+    }
+    a { color: var(--accent); }
+    .page {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 28px 16px 54px;
+    }
+    .content {
+      width: min(1100px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 22px 48px rgba(0, 0, 0, 0.35);
+    }
+    .hero {
+      display: grid;
+      gap: 16px;
+      background: linear-gradient(120deg, rgba(0, 255, 157, 0.16), rgba(0, 255, 157, 0.04));
+      border-color: rgba(0, 255, 157, 0.28);
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 3vw, 2.2rem);
+      letter-spacing: -0.02em;
+    }
+    .hero p { margin: 6px 0 0; color: rgba(230, 240, 255, 0.78); }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .status-chip.connected { color: var(--bg); background: var(--accent); border-color: rgba(0, 0, 0, 0.25); }
+    .status-chip.connecting { color: var(--warning); border-color: rgba(255, 211, 122, 0.4); }
+    .status-chip.error { color: var(--danger); border-color: rgba(255, 95, 122, 0.4); }
+    h2 { margin: 0 0 10px; font-size: 1.2rem; letter-spacing: -0.01em; }
+    label { display: flex; gap: 8px; align-items: center; font-weight: 600; margin-bottom: 6px; }
+    .hint { color: var(--muted); font-size: 0.95rem; margin: 4px 0 12px; }
+    input[type="text"],
+    input[type="url"] {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: #0b1016;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border 0.18s ease, box-shadow 0.18s ease;
+    }
+    input:focus {
+      outline: none;
+      border-color: rgba(0, 255, 157, 0.45);
+      box-shadow: 0 8px 24px rgba(0, 255, 157, 0.12);
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--accent);
+      color: #0b0f16;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+    }
+    button:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(0, 255, 157, 0.28); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .button-secondary { background: transparent; color: var(--text); }
+    .field-row {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      align-items: center;
+    }
+    .toggles { display: flex; gap: 14px; flex-wrap: wrap; }
+    .log {
+      background: #0b0f16;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      min-height: 220px;
+      max-height: 360px;
+      overflow: auto;
+      padding: 12px;
+      font-family: 'JetBrains Mono', Consolas, monospace;
+      font-size: 0.92rem;
+      color: #dbeafe;
+    }
+    .log-entry { margin: 0 0 6px; white-space: pre-wrap; word-break: break-word; }
+    .log-entry span { color: var(--muted); }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+    }
+    .pill strong { color: var(--accent); }
+    .pill-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="content">
+      <section class="panel hero">
+        <div>
+          <h1>Streamlabs Socket Bridge</h1>
+          <p>Connect with your Streamlabs Socket API token to relay donations, follows, and other alert events into Social Stream. Works in the Chrome extension or the Electron app.</p>
+        </div>
+        <div class="hero-actions">
+          <button id="connect-btn">Connect</button>
+          <button id="disconnect-btn" class="button-secondary" disabled>Disconnect</button>
+          <span class="status-chip" id="connection-chip">Disconnected</span>
+          <span id="status-detail" class="hint">Waiting for a token.</span>
+        </div>
+      </section>
+
+      <section class="panel" id="instructions-block">
+        <h2>Getting started</h2>
+        <div class="hint">These tips hide once you’ve added a token or connected.</div>
+        <ul>
+          <li>In Streamlabs Dashboard go to <strong>Settings → API Settings → API Tokens</strong> and copy the <strong>Socket API Token</strong>.</li>
+          <li>Paste the token below, or launch this page with <code>?token=YOUR_TOKEN&amp;autoconnect=1</code> so it connects automatically.</li>
+          <li>Optionally set a webhook URL if you want the page to POST every event to your own endpoint while the page is open.</li>
+          <li>Keep this page open (in the extension or Electron) so alerts stream live. Use Streamlabs “Send Test” to verify.</li>
+        </ul>
+      </section>
+
+      <section class="panel">
+        <h2>Socket setup</h2>
+        <label for="socket-token">Socket API token</label>
+        <input id="socket-token" type="text" autocomplete="off" spellcheck="false" placeholder="sl-XXXXXXXXXXXXXXXXXXXXXXXXXXXX">
+        <div class="hint">Find this under Streamlabs Dashboard → Settings → API Settings → API Tokens → Socket API Token.</div>
+
+        <div class="toggles">
+          <label><input type="checkbox" id="auto-connect"> Auto-connect on load</label>
+          <label><input type="checkbox" id="enable-webhook"> Forward events to webhook</label>
+        </div>
+
+        <div id="webhook-block" class="hidden">
+          <label for="webhook-url">Webhook URL</label>
+          <input id="webhook-url" type="url" placeholder="https://example.com/streamlabs-hook">
+          <div class="hint">If set, Social Stream will POST each normalized event as JSON ({ message, platform, meta }). Leave empty to skip forwarding.</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Status</h2>
+        <div class="pill-grid">
+          <div class="pill">Last event: <strong id="last-event">—</strong></div>
+          <div class="pill">Forwarded: <strong id="forward-count">0</strong></div>
+          <div class="pill">Webhook posts: <strong id="webhook-count">0</strong></div>
+          <div class="pill">Errors: <strong id="error-count">0</strong></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Event log</h2>
+        <div class="log" id="event-log" aria-live="polite"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="../lite/vendor/socket.io.min.js"></script>
+  <script src="streamlabs.js"></script>
+</body>
+</html>

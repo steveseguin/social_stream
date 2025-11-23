@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Message Browser</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #search-container {
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+        #search-input {
+            width: 100%;
+            padding: 5px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        #filter-options {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 10px;
+            row-gap: 15px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            min-width: 120px;
+            gap: 4px;
+        }
+        .filter-checkboxes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+        }
+        .filter-checkboxes label {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: normal;
+        }
+        #messages-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .message {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .message:hover {
+            background-color: #f9f9f9;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            min-height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        .message-content {
+            flex-grow: 1;
+        }
+        .user-name {
+            font-weight: bold;
+        }
+        .message-text {
+            margin-top: 5px;
+        }
+        .content-image {
+            max-height: 100px;
+            margin-top: 5px;
+        }
+        .donation {
+            color: green;
+            font-weight: bold;
+        }
+        .membership {
+            color: #0d47a1;
+            font-weight: bold;
+        }
+        img, svg, video {
+            max-width: 20px;
+            max-height: 20px;
+        }
+        .avatar {
+            max-width: 40px;
+            max-height: 40px;
+            width: 40px;
+        }
+        .export-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        #export-button {
+            padding: 5px 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        select, input[type="date"], input[type="text"] {
+            padding: 4px;
+        }
+        #date-filter-container {
+            display: none;
+            margin-left: 5px;
+        }
+        .filter-label {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Search by name, id, message, or type...">
+        <div id="filter-options">
+            <div class="filter-group">
+                <span class="filter-label">Source:</span>
+                <select id="type-filter">
+                    <option value="">All Sources</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Username:</span>
+                <input type="text" id="username-filter" placeholder="eg: streamer123">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Keyword:</span>
+                <input type="text" id="keyword-filter" placeholder="Search message text">
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Date Range:</span>
+                <div>
+                    <input type="date" id="message-date-from">
+                    <span>to</span>
+                    <input type="date" id="message-date-to">
+                </div>
+            </div>
+            <div class="filter-group">
+                <span class="filter-label">Highlights:</span>
+                <div class="filter-checkboxes">
+                    <label><input type="checkbox" id="donation-filter">Donations</label>
+                    <label><input type="checkbox" id="membership-filter">Memberships</label>
+                </div>
+            </div>
+            <div class="filter-group" style="min-width: auto;">
+                <span class="filter-label">&nbsp;</span>
+                <button id="clear-filters" type="button">Reset Filters</button>
+            </div>
+            <div class="export-container">
+                <span class="filter-label">Format:</span>
+                <select id="export-format">
+                    <option value="json">JSON</option>
+                    <option value="tsv">TSV</option>
+                    <option value="html">HTML</option>
+                </select>
+                
+                <span class="filter-label">Time Range:</span>
+                <select id="export-timeframe">
+                    <option value="all">All Time</option>
+                    <option value="day">Last 24 Hours</option>
+                    <option value="week">Last Week</option>
+                    <option value="month">Last Month</option>
+                    <option value="custom">Custom Range</option>
+                </select>
+                
+                <div id="date-filter-container">
+                    <span class="filter-label">From:</span>
+                    <input type="date" id="date-filter-from">
+                    <span class="filter-label">To:</span>
+                    <input type="date" id="date-filter-to">
+                </div>
+                
+                <button id="export-button">Download</button>
+            </div>
+        </div>
+    </div>
+    <div id="messages-container"></div>
+    <script type="text/javascript" src="./chathistory.js?v=1"></script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Flow Guide - Social Stream Ninja</title>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1f2937 40%, #312e81 100%);
+            color: #0f172a;
+            min-height: 100vh;
+            padding: 25px;
+        }
+        .guide-shell {
+            max-width: 1150px;
+            margin: 0 auto;
+            background: #fdfdfd;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(4, 12, 38, 0.5);
+        }
+        header {
+            background: radial-gradient(circle at top left, rgba(109,40,217,0.15), transparent),
+                        linear-gradient(135deg, #4c1d95, #1d4ed8);
+            color: #fff;
+            padding: 60px 55px;
+        }
+        header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+        }
+        header p {
+            font-size: 1.2rem;
+            max-width: 640px;
+            opacity: 0.92;
+        }
+        .content {
+            padding: 45px 55px 65px;
+        }
+        section {
+            margin-bottom: 60px;
+        }
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 18px;
+            color: #312e81;
+        }
+        h3 {
+            font-size: 1.4rem;
+            margin: 25px 0 10px;
+            color: #4338ca;
+        }
+        p {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        ul {
+            padding-left: 25px;
+            margin: 15px 0;
+        }
+        li {
+            margin: 8px 0;
+        }
+        .panel {
+            background: #f7f7fb;
+            border: 1px solid rgba(67,56,202,0.12);
+            border-radius: 12px;
+            padding: 22px 25px;
+            margin: 22px 0;
+        }
+        .panel strong {
+            color: #312e81;
+        }
+        .diagram {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            background: #0f172a;
+            color: #e0e7ff;
+            padding: 22px;
+            border-radius: 14px;
+            margin: 25px 0;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+        }
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid rgba(15,23,42,0.08);
+            box-shadow: 0 10px 30px rgba(15,23,42,0.08);
+        }
+        .card h4 {
+            margin-bottom: 12px;
+            color: #4c1d95;
+        }
+        code {
+            background: rgba(226,232,240,0.7);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        .callout {
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin: 24px 0;
+            border-left: 4px solid;
+        }
+        .callout.tip { background: #eef2ff; border-color: #4338ca; }
+        .callout.warn { background: #fef3c7; border-color: #d97706; }
+        .callout.danger { background: #fee2e2; border-color: #b91c1c; }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: rgba(49,46,129,0.12);
+            color: #312e81;
+            padding: 4px 10px;
+            border-radius: 999px;
+        }
+        @media (max-width: 700px) {
+            header, .content { padding: 35px 20px; }
+            h1 { font-size: 2rem; }
+            .diagram { font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="guide-shell">
+        <header>
+            <p class="badge">Event Flow System</p>
+            <h1>Event Flow Editor Guide</h1>
+            <p>Build reliable automations for Social Stream Ninja. This guide walks through the basics, logic nodes, signal flow, and the practical tricks that creators ask about most (like avoiding chat echoes and knowing when to stack AND/NOT blocks).</p>
+        </header>
+        <div class="content">
+            <section>
+                <h2>0. Quick Orientation</h2>
+                <div class="panel">
+                    <strong>Event Flow</strong> is a node-based editor. Each line carries a message payload plus a boolean state (<em>true</em> = continue, <em>false</em> = stop). Use <strong>sources</strong> to inject events, <strong>logic nodes</strong> to filter decisions, and <strong>actions</strong> to make things happen (send chat, control overlays, relay messages, etc.).
+                </div>
+                <h3 id="what-is-event-flow">What is this editor?</h3>
+                <p>The Event Flow editor is the “advanced automation” layer for Social Stream Ninja. It sits above the simple popup switches and lets you script your own routing logic. Use it when you need to:</p>
+                <ul>
+                    <li>Relay chat between services with filters (e.g., mirror Twitch to Discord but block commands).</li>
+                    <li>Build loyalty-based commands, keyword games, or raffle gating with AND/OR/NOT logic.</li>
+                    <li>Trigger custom overlays, audio, OBS scenes, or webhooks based on data you enrich in the flow.</li>
+                    <li>Mix multiple platforms inside a single automation (Kick + Twitch + YouTube routed through one flow).</li>
+                </ul>
+                <p>Think of the popup as “quick presets” and Event Flow as the toolkit for bespoke workflows.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Launch + Basics</h4>
+                        <ul>
+                            <li>Open the Event Flow editor from the main dashboard's menu (desktop or extension).</li>
+                            <li>Every project is saved locally until exported. Use <code>Export</code> to back up or share.</li>
+                            <li>Work inside canvases called <em>flows</em>. Each flow can subscribe to multiple platforms at once.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Nodes at a Glance</h4>
+                        <ul>
+                            <li><strong>Inputs</strong> (left ports) expect the message context.</li>
+                            <li><strong>Outputs</strong> (right ports) emit the same context plus any edits.</li>
+                            <li>Logic nodes may emit both the <code>true</code> channel and an optional <code>false</code> channel.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>Payload Structure</h4>
+                        <p>Every message carries a JSON object. Mandatory keys follow <a href="../docs/event-reference.html" target="_blank" rel="noopener">docs/event-reference.html</a> (platform, type, chatname, chatmessage, etc.). Attach custom data under <code>meta</code>.</p>
+                    </div>
+                </div>
+            </section>
+            <section id="flow-actions-overlay">
+                <h2>Flow Actions Overlay (Action Output)</h2>
+                <p>Nodes such as <em>Play Audio Clip</em>, <em>Display Media Overlay</em>, and the OBS controls need a rendering surface. That surface is the Flow Actions overlay page served from <a href="../actions.html" target="_blank" rel="noopener">actions.html</a>. Keep it running in your broadcasting software (OBS/Streamer.bot browser docks/etc.) so Event Flow actions have somewhere to appear.</p>
+                <div class="panel">
+                    <strong>How to open it (from the popup/dash):</strong>
+                    <ol>
+                        <li>Open the main Social Stream Ninja popup (the window loaded from <a href="../popup.html" target="_blank" rel="noopener">popup.html</a> or the extension icon).</li>
+                        <li>Scroll to the “Flow Actions” card. Use the <em>[copy link]</em> button or click the URL inside the card.</li>
+                        <li>The link looks like <code>https://socialstream.ninja/actions.html?session=YOURSESSION</code>. Paste it into an OBS Browser Source (1920×1080 suggested) or open it in any overlay browser.</li>
+                    </ol>
+                </div>
+                <p>Once loaded, that overlay can:</p>
+                <ul>
+                    <li>Show Tenor/GIPHY media, text, and confetti triggered by your flows.</li>
+                    <li>Play sounds (TTS, audio clips) locally so viewers hear them.</li>
+                    <li>Talk to OBS via the WebSocket settings that live under the Flow Actions section in the popup (scene switching, source toggles, replay buffer, etc.).</li>
+                </ul>
+                <div class="panel warn">
+                    <strong>Keep the overlay open.</strong> Closing the Flow Actions page pauses every overlay/audio/OBS action in Event Flow. Hide it or put it on a separate monitor instead of closing it outright.
+                </div>
+            </section>
+
+            <section>
+                <h2>1. What Moves Through a Node?</h2>
+                <p>The Event Flow runtime passes two things through every wire:</p>
+                <ol>
+                    <li><strong>Payload</strong> – the event or message data object.</li>
+                    <li><strong>Gate signal</strong> – a <em>true</em>/<em>false</em> bit telling the next node whether to run.</li>
+                </ol>
+                <div class="panel">
+                    <strong>If a node outputs false:</strong> downstream nodes stop executing unless they receive input on a separate branch (for example, the <code>false</code> socket on a Condition node). That makes it easy to build fallback logic without duplicating whole flows.
+                </div>
+                <h3>Input Expectations</h3>
+                <ul>
+                    <li><strong>Event Sources</strong> (Twitch Message, Timers, Manual Trigger, etc.) ignore upstream input—they generate their own payload and always emit <code>true</code> unless the node itself errors.</li>
+                    <li><strong>Transform &amp; Logic Nodes</strong> read the payload and may rewrite fields, set state, or flip the gate signal to <code>false</code>.</li>
+                    <li><strong>Action Nodes</strong> fire only when the gate remains <code>true</code>. They can still output an updated payload if you want to keep chaining actions.</li>
+                </ul>
+                <h3>Output Patterns</h3>
+                <div class="grid">
+                    <div class="card">
+                        <h4>Single Output</h4>
+                        <p>Most nodes expose one output. Whatever enters (payload + gate) exits unchanged unless the node edits it.</p>
+                    </div>
+                    <div class="card">
+                        <h4>True/False Outputs</h4>
+                        <p>Condition, Compare, Regex, and Logic nodes emit two ports. <em>True</em> continues through the green port; <em>false</em> becomes available on the gray/red port.</p>
+                    </div>
+                    <div class="card">
+                        <h4>Pass-Through vs. Override</h4>
+                        <p>Some nodes (Set Variable, Math, Text Replace) mutate the payload but still forward the <em>true</em>/<em>false</em> state from their input. Others (NOT, AND, OR) recalculate the boolean themselves.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section>
+                <h2>2. Logic Node Cheatsheet</h2>
+                <p>These blocks answer the most common "What does true/false mean?" questions.</p>
+                <div class="grid">
+                    <div class="card">
+                        <h4>NOT</h4>
+                        <ul>
+                            <li>Inputs: 1 boolean (true/false) derived from the previous node.</li>
+                            <li>Outputs: the inverted boolean plus the untouched payload.</li>
+                            <li><strong>Default behavior:</strong> If nothing is connected to the NOT input it evaluates to <code>false</code>, so the output is <code>true</code>.</li>
+                        </ul>
+                        <div class="panel">
+                            <strong>Example:</strong> Place NOT after "Contains Keyword" to trigger an alert when a viewer does <em>not</em> use the keyword.
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h4>AND</h4>
+                        <ul>
+                            <li>Inputs: two or more boolean signals (A, B, ...). You can leave extra ports empty.</li>
+                            <li>Outputs: <code>true</code> only if all connected inputs equal <code>true</code>.</li>
+                            <li>Use AND when multiple conditions must be satisfied simultaneously ("is subscriber" <em>and</em> "chat message contains !raffle").</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>OR</h4>
+                        <ul>
+                            <li>Outputs <code>true</code> if <strong>any</strong> connected input is true.</li>
+                            <li>Great for multi-platform triggers: feed Twitch + YouTube message nodes into a single OR, then unify the downstream action.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="callout.tip">
+                    <strong>Do I always need an AND node?</strong><br>
+                    No. Many nodes already provide all-in-one filters (for example "Filter User Level" + "Contains Text"). Use AND only when the built-in options do not cover your combination, or when you want a reusable logic junction that other branches can share.
+                </div>
+                <div class="callout.warn">
+                    <strong>NOT &amp; empty inputs:</strong> A floating NOT node will still output <code>true</code>. Keep it wired to something meaningful or disable the node so it does not accidentally unblock a flow.
+                </div>
+            </section>
+
+            <section>
+                <h2>3. Example Micro-Flows</h2>
+                <h3>A. Auto-reply Unless the Message Is a Command</h3>
+                <div class="diagram">
+Twitch Message ──▶ Regex Match "^!" ─┐
+                                   │
+                                   ├─false──▶ Auto Reply ("Thanks for chatting!")
+                                   │
+                                   └─true──▶ Do nothing
+                </div>
+                <p>Here the Regex node emits <code>true</code> when the line <strong>is</strong> a command. We route the <code>false</code> socket to our reply, so regular chatters get an acknowledgement while commands simply pass through.</p>
+                <h3>B. Require Multiple Checks with AND</h3>
+                <div class="diagram">
+YouTube Message ──▶ Contains "!queue" ─▶ AND ─▶ Relay to Discord
+Gifted Membership ─▶ User Role = Member ──▲
+                </div>
+                <p>The AND node ensures only members using the right keyword relay to Discord. Both branches send their boolean result to the AND node; the payload from the <em>first</em> branch continues downstream.</p>
+                <h3>C. NOT Node to Block Repeat Alerts</h3>
+                <div class="diagram">
+Event Payload ─▶ State Check (isAlertMuted)
+                 └─false─▶ NOT ─▶ Play Celebration
+                </div>
+                <p><code>State Check</code> outputs <code>true</code> when the alert is muted. By inverting that result, the NOT node makes sure we only play the celebration when the flag is <code>false</code>.</p>
+            </section>
+
+            <section>
+                <h2>4. Preventing Echoes, Loops, and Relay Feedback</h2>
+                <p>Relaying chat between surfaces is powerful but can echo infinitely if you listen to your own output. Follow these safeguards:</p>
+                <div class="callout.danger">
+                    <strong>Turn on "No Reflections" in Relay Chat.</strong><br>
+                    When you use the Relay Chat action node, enable the <em>No Reflections</em> (sometimes labeled <em>No Echo</em>) filter. That flag marks outgoing messages so the relay ignores anything it previously injected. Without it, each relayed line re-enters the flow and triggers new relays.
+                </div>
+                <ul>
+                    <li><strong>Tag relayed messages.</strong> Set <code>meta.source = "relay"</code> before sending, then add a "Skip if meta.source = relay" gate near your entry nodes.</li>
+                    <li><strong>Use Debounce or Cooldown nodes</strong> for alerts that should only fire once every X seconds.</li>
+                    <li><strong>Break cycles intentionally.</strong> If two branches feed each other, add a logic node that checks a state variable ("currentlyRelaying") so the flow exits early when the flag is set.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>5. Inputs, Outputs, and Practical Questions</h2>
+                <div class="grid">
+                    <div class="card">
+                        <h4>What comes <em>into</em> a node?</h4>
+                        <ul>
+                            <li>The full message payload.</li>
+                            <li>The gate bit (<code>true</code>/<code>false</code>).</li>
+                            <li>Optional context (state variables, timers) that the node asks for explicitly.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>What leaves a node?</h4>
+                        <ul>
+                            <li>The same payload unless the node edits it.</li>
+                            <li>A recalculated gate bit (logic nodes) or passthrough bit (actions).</li>
+                            <li>Side effects (sending chat, awarding points) happen simultaneously but do not alter the payload.</li>
+                        </ul>
+                    </div>
+                    <div class="card">
+                        <h4>When to branch?</h4>
+                        <p>Whenever you want to react differently to <code>true</code> vs <code>false</code>. Drag a wire from the colored output you need (green = true, gray/red = false) to the next node.</p>
+                    </div>
+                </div>
+                <div class="panel">
+                    <strong>Remember:</strong> If you do nothing with a <code>false</code> output, the flow simply ends there. That is perfect for filters ("block everything that fails the check") but do not forget to connect the <code>false</code> path if you need fallbacks.
+                </div>
+                <h3>Common Q &amp; A</h3>
+                <ul>
+                    <li><strong>Do I have to use AND for every pair of filters?</strong> No. Many nodes include multiple checks (for example, the basic Message Filter supports keyword + role). Use AND only for advanced combinations or when merging signals from different nodes.</li>
+                    <li><strong>How do true/false values reach the NOT node?</strong> Any node with a green output emits <code>true</code> by default. When a condition fails, it emits <code>false</code>. Connect that wire into NOT to invert the result.</li>
+                    <li><strong>Can a node emit a payload even if it returns false?</strong> Yes. The payload still travels through the false output; it is up to you to decide where that branch should go.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>6. Best Practices Checklist</h2>
+                <ul>
+                    <li><strong>Name &amp; color</strong> your nodes so future-you knows which branch is which.</li>
+                    <li><strong>Test with the built-in simulator</strong> (Send Test Event) before pushing a flow live.</li>
+                    <li><strong>Group logic near the source.</strong> Filter as early as possible to avoid extra processing down the line.</li>
+                    <li><strong>Store repeats in State nodes.</strong> Use counters, toggles, and timestamps to avoid double alerts.</li>
+                    <li><strong>Document meta fields.</strong> When you add custom <code>meta</code> keys, note them so overlays and remote clients stay consistent.</li>
+                </ul>
+                <div class="callout.tip">
+                    <strong>Save versions.</strong> Export your flow whenever you reach a milestone. Imports are the easiest rollback if an experiment goes sideways.
+                </div>
+            </section>
+
+            <section>
+                <h2>7. Further Exploration</h2>
+                <p>Ready for more depth?</p>
+                <ul>
+                    <li>Use <strong>State Nodes</strong> (counters, toggles, timers) to track context between events.</li>
+                    <li>Combine <strong>Variables + Logic</strong> to build queue systems, raffles, or scoring engines.</li>
+                    <li>Hook into the <strong>Points &amp; Rewards</strong> system so viewers can intentionally trigger flows.</li>
+                </ul>
+                <p>This guide is intentionally standalone—copy it locally, adapt it for your team, and keep experimenting inside the editor.</p>
+            </section>
+        </div>
+    </div>
+</body>
+</html>
