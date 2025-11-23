@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Map Overlay - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <script src="./thirdparty/d3.min.js"></script>
+    <script src="./thirdparty/topojson-client.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
+
+        :root {
+            --bg: rgba(6, 10, 16, 0.35);
+            --grid: rgba(255, 255, 255, 0.08);
+            --text: #e8edf6;
+            --muted: #9fb4cf;
+            --accent: #6ef7c8;
+            --accent-2: #f4b556;
+            --panel: rgba(14, 20, 32, 0.65);
+            --stroke: rgba(255, 255, 255, 0.14);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Space Grotesk', 'Sora', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(120% 90% at 15% 15%, rgba(110, 247, 200, 0.12), transparent),
+                radial-gradient(80% 70% at 80% 20%, rgba(244, 181, 86, 0.14), transparent),
+                var(--bg);
+        }
+
+        .map-surface {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0,
+                transparent 32px,
+                var(--grid) 32px,
+                var(--grid) 33px
+            ), repeating-linear-gradient(
+                90deg,
+                transparent 0,
+                transparent 32px,
+                var(--grid) 32px,
+                var(--grid) 33px
+            );
+            pointer-events: none;
+            mix-blend-mode: lighten;
+            opacity: 0.45;
+        }
+
+        svg#world-map {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .country {
+            fill: rgba(255, 255, 255, 0.06);
+            stroke: var(--stroke);
+            stroke-width: 0.6;
+            transition: fill 0.4s ease, stroke 0.4s ease, opacity 0.4s ease;
+        }
+
+        .country.has-data {
+            stroke: rgba(255, 255, 255, 0.45);
+        }
+
+        .country-label {
+            fill: var(--text);
+            font-size: 12px;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+        }
+
+        .marker {
+            pointer-events: none;
+            filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.35));
+        }
+
+        .marker circle {
+            fill: var(--accent);
+            opacity: 0.35;
+        }
+
+        .marker text {
+            fill: #0b141f;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .pulse {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2px;
+            opacity: 0.85;
+        }
+
+        #hud {
+            position: absolute;
+            left: 24px;
+            bottom: 24px;
+            min-width: 280px;
+            max-width: 520px;
+            padding: 16px 18px;
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        #title {
+            margin: 0 0 8px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .stat-pill .value {
+            color: var(--text);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .top-list {
+            margin: 6px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .top-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+            font-size: 13px;
+            letter-spacing: 0.2px;
+        }
+
+        .top-list li:last-child {
+            border-bottom: none;
+        }
+
+        .pill {
+            padding: 4px 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-weight: 700;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        #status {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            color: var(--text);
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            pointer-events: none;
+        }
+
+        .hidden { display: none; }
+
+        @media (max-width: 768px) {
+            #hud {
+                bottom: 14px;
+                left: 14px;
+                right: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="status">Loading map...</div>
+    <svg id="world-map"></svg>
+    <div class="map-surface"></div>
+    <div id="hud">
+        <p id="title">Where is everyone watching from?</p>
+        <div class="stats">
+            <span class="stat-pill"><span class="value" id="total-people">0</span> participants</span>
+            <span class="stat-pill"><span class="value" id="countries-count">0</span> countries</span>
+        </div>
+        <ol class="top-list" id="top-list"></ol>
+    </div>
+
+    <script>
+    (() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const TRUE_STRINGS = new Set(['1', 'true', 'yes', 'on']);
+        const FALSE_STRINGS = new Set(['0', 'false', 'no', 'off']);
+
+        function normalizeBoolean(value, fallback) {
+            if (value === undefined || value === null) return fallback;
+            if (typeof value === 'boolean') return value;
+            const normalized = value.toString().trim().toLowerCase();
+            if (TRUE_STRINGS.has(normalized)) return true;
+            if (FALSE_STRINGS.has(normalized)) return false;
+            return fallback;
+        }
+
+        const debugMode = normalizeBoolean(urlParams.get('debug'), false);
+        const settings = {
+            title: urlParams.get('title') || 'Where is everyone watching from?',
+            showList: normalizeBoolean(urlParams.get('showList'), true),
+            showTotals: normalizeBoolean(urlParams.get('showTotals'), true),
+            allowChanges: normalizeBoolean(urlParams.get('allowChanges'), false),
+            accent: urlParams.get('accent') || null,
+            accentAlt: urlParams.get('accentAlt') || null
+        };
+
+        if (settings.accent) document.documentElement.style.setProperty('--accent', settings.accent);
+        if (settings.accentAlt) document.documentElement.style.setProperty('--accent-2', settings.accentAlt);
+
+        const statusEl = document.getElementById('status');
+        const titleEl = document.getElementById('title');
+        const totalPeopleEl = document.getElementById('total-people');
+        const countryCountEl = document.getElementById('countries-count');
+        const topListEl = document.getElementById('top-list');
+        const hudEl = document.getElementById('hud');
+        const svg = d3.select('#world-map');
+        const mapLayer = svg.append('g');
+        const markerLayer = svg.append('g');
+        const pulseLayer = svg.append('g');
+
+        let projection;
+        let pathGenerator;
+        let atlasFeatures = [];
+        let isoLookup = new Map();
+        let isoByNumeric = new Map();
+        let featureByIso = new Map();
+        let featureNameLookup = new Map();
+        let ready = false;
+
+        const voters = new Map(); // voterKey -> countryKey
+        const countryTally = new Map(); // countryKey -> { key, code, name, count, feature }
+
+        const aliasToIso = new Map();
+        const cityHints = new Map();
+
+        function debugLog(msg, payload) {
+            if (!debugMode) return;
+            if (payload !== undefined) {
+                console.log('[map debug]', msg, payload);
+            } else {
+                console.log('[map debug]', msg);
+            }
+        }
+
+        function normalizeForMatch(input) {
+            if (!input && input !== 0) return '';
+            return input.toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function buildVoterKey(name, source, userId) {
+            const normalizedSource = source ? source.toString().trim().toLowerCase() : 'unknown';
+            const idPart = userId ? `id:${userId}` : name ? `name:${name.toString().trim().toLowerCase()}` : 'anon';
+            return `${idPart}:${normalizedSource}`;
+        }
+
+        function setStatus(text) {
+            if (!text) {
+                statusEl.classList.add('hidden');
+                return;
+            }
+            statusEl.textContent = text;
+            statusEl.classList.remove('hidden');
+        }
+
+        function addAlias(alias, iso) {
+            const key = normalizeForMatch(alias);
+            if (key) {
+                aliasToIso.set(key, iso);
+            }
+        }
+
+        function addCityHint(city, iso) {
+            const key = normalizeForMatch(city);
+            if (key) cityHints.set(key, iso);
+        }
+
+        function registerManualAliases() {
+            const bundles = {
+                US: ['usa', 'u.s.a', 'u.s', 'united states', 'united states of america', 'america', 'merica', 'murica', 'states', 'nyc', 'new york', 'california', 'texas', 'chicago', 'los angeles', 'la', 'vegas', 'washington dc', 'dc'],
+                GB: ['uk', 'u.k', 'great britain', 'britain', 'england', 'scotland', 'wales', 'london', 'manchester', 'united kingdom'],
+                IE: ['ireland', 'eire', 'dublin'],
+                CA: ['canada', 'cdn', 'toronto', 'montreal', 'vancouver', 'calgary', 'edmonton'],
+                AU: ['australia', 'oz', 'sydney', 'melbourne', 'brisbane', 'perth', 'adelaide'],
+                NZ: ['new zealand', 'nz', 'aotearoa', 'auckland', 'wellington'],
+                DE: ['germany', 'deutschland', 'berlin', 'munich', 'hamburg', 'frankfurt'],
+                FR: ['france', 'paris', 'marseille', 'lyon', 'nice'],
+                ES: ['spain', 'espana', 'madrid', 'barcelona', 'valencia', 'sevilla'],
+                IT: ['italy', 'italia', 'rome', 'milano', 'milan', 'napoli', 'naples', 'florence', 'torino'],
+                BR: ['brazil', 'brasil', 'rio', 'rio de janeiro', 'sao paulo'],
+                MX: ['mexico', 'cdmx', 'mexico city', 'guadalajara', 'monterrey'],
+                AR: ['argentina', 'buenos aires'],
+                CL: ['chile', 'santiago'],
+                CO: ['colombia', 'bogota', 'medellin'],
+                PE: ['peru', 'lima'],
+                VE: ['venezuela', 'caracas'],
+                NL: ['netherlands', 'holland', 'amsterdam', 'rotterdam'],
+                BE: ['belgium', 'brussels', 'bruges', 'antwerp'],
+                CH: ['switzerland', 'swiss', 'zurich', 'geneva', 'bern'],
+                AT: ['austria', 'wien', 'vienna', 'salzburg'],
+                PT: ['portugal', 'lisbon', 'porto'],
+                GR: ['greece', 'ellada', 'athens', 'thessaloniki'],
+                RU: ['russia', 'rossiya', 'moscow', 'moskva', 'st petersburg', 'saint petersburg'],
+                UA: ['ukraine', 'kyiv', 'kiev', 'odesa', 'odessa', 'lviv'],
+                PL: ['poland', 'polska', 'warsaw', 'wroclaw', 'krakow'],
+                CZ: ['czech republic', 'czechia', 'praha', 'prague', 'brno'],
+                SK: ['slovakia', 'slovensko', 'bratislava'],
+                HU: ['hungary', 'budapest'],
+                RO: ['romania', 'bucharest', 'cluj', 'brasov'],
+                SE: ['sweden', 'stockholm', 'gothenburg', 'malmo'],
+                NO: ['norway', 'oslo', 'bergen'],
+                FI: ['finland', 'suomi', 'helsinki', 'turku'],
+                DK: ['denmark', 'danmark', 'copenhagen', 'kobenhavn', 'aarhus'],
+                IS: ['iceland', 'reykjavik'],
+                JP: ['japan', 'nippon', 'nihon', 'tokyo', 'osaka', 'kyoto', 'sapporo'],
+                KR: ['south korea', 'korea', 'republic of korea', 'skorea', 'seoul', 'busan'],
+                CN: ['china', 'prc', 'beijing', 'shanghai', 'guangzhou', 'shenzhen'],
+                TW: ['taiwan', 'taipei', 'roc'],
+                HK: ['hong kong', 'hongkong', 'hk'],
+                SG: ['singapore', 'sg'],
+                IN: ['india', 'delhi', 'new delhi', 'mumbai', 'kolkata', 'bangalore', 'bengaluru', 'chennai'],
+                PK: ['pakistan', 'karachi', 'lahore', 'islamabad'],
+                BD: ['bangladesh', 'dhaka'],
+                LK: ['sri lanka', 'srilanka', 'colombo'],
+                NP: ['nepal', 'kathmandu'],
+                TH: ['thailand', 'bangkok', 'phuket', 'chiang mai', 'chiangmai'],
+                VN: ['vietnam', 'viet nam', 'hanoi', 'saigon', 'ho chi minh'],
+                KH: ['cambodia', 'kampuchea', 'phnom penh', 'siem reap'],
+                MY: ['malaysia', 'kuala lumpur', 'penang'],
+                ID: ['indonesia', 'jakarta', 'bali', 'bandung'],
+                PH: ['philippines', 'ph', 'manila', 'cebu', 'davao'],
+                IL: ['israel', 'tel aviv', 'jerusalem', 'haifa'],
+                AE: ['uae', 'u.a.e', 'dubai', 'abu dhabi'],
+                SA: ['saudi arabia', 'ksa', 'riyadh', 'jeddah'],
+                QA: ['qatar', 'doha'],
+                KW: ['kuwait'],
+                BH: ['bahrain'],
+                TR: ['turkey', 'turkiye', 'istanbul', 'ankara', 'izmir'],
+                EG: ['egypt', 'cairo', 'giza', 'alexandria'],
+                ZA: ['south africa', 'sa', 'cape town', 'johannesburg', 'joburg', 'jhb', 'durban'],
+                NG: ['nigeria', 'lagos', 'abuja'],
+                KE: ['kenya', 'nairobi', 'mombasa'],
+                GH: ['ghana', 'accra'],
+                MA: ['morocco', 'morroco', 'marrakesh', 'casablanca'],
+                DZ: ['algeria', 'algier', 'algerie'],
+                TN: ['tunisia', 'tunis'],
+                ET: ['ethiopia', 'addis ababa'],
+                TZ: ['tanzania', 'dar es salaam'],
+                SN: ['senegal', 'dakar'],
+                CO: ['colombia', 'bogota'],
+                CH: ['swiss', 'schweiz', 'suisse', 'svizzera'],
+                BE: ['belgique', 'belgie'],
+                AT: ['osterreich', 'austria'],
+                HR: ['croatia', 'hrvatska', 'zagreb', 'split'],
+                RS: ['serbia', 'beograd', 'belgrade'],
+                BA: ['bosnia', 'bosnia and herzegovina', 'sarajevo'],
+                BG: ['bulgaria', 'sofia'],
+                SI: ['slovenia', 'ljubljana'],
+                GE: ['georgia', 'tbilisi'],
+                AM: ['armenia', 'yerevan'],
+                IR: ['iran', 'tehran'],
+                IQ: ['iraq', 'baghdad'],
+                SY: ['syria', 'damascus'],
+                JO: ['jordan', 'amman'],
+                LB: ['lebanon', 'beirut'],
+                CI: ['ivory coast', "cote d'ivoire", 'cote divoire'],
+                CD: ['congo', 'dr congo', 'democratic republic of congo', 'kinshasa'],
+                CG: ['congo republic', 'republic of congo', 'brazzaville'],
+                SD: ['sudan', 'khartoum'],
+                UG: ['uganda', 'kampala'],
+                ZM: ['zambia', 'lusaka'],
+                ZW: ['zimbabwe', 'harare'],
+                BO: ['bolivia', 'la paz', 'santa cruz', 'sucre'],
+                PY: ['paraguay', 'asuncion'],
+                UY: ['uruguay', 'montevideo'],
+                CR: ['costa rica', 'san jose'],
+                DO: ['dominican republic', 'santo domingo'],
+                CU: ['cuba', 'havana'],
+                HT: ['haiti', 'port au prince', 'port-au-prince'],
+                JM: ['jamaica', 'kingston'],
+                TT: ['trinidad', 'trinidad and tobago', 'tobago'],
+                GT: ['guatemala', 'guate', 'guatemala city'],
+                HN: ['honduras', 'tegucigalpa'],
+                NI: ['nicaragua', 'managua'],
+                PA: ['panama', 'panama city'],
+                SV: ['el salvador', 'elsalvador', 'san salvador'],
+                PR: ['puerto rico', 'puertorico', 'san juan'],
+                GU: ['guam'],
+                VI: ['usvi', 'us virgin islands', 'st thomas'],
+                MP: ['northern mariana islands'],
+                FO: ['faroe islands', 'faroe', 'torshavn', 'torshavn'],
+                GL: ['greenland', 'kalaallit nunaat']
+            };
+
+            for (const [iso, aliases] of Object.entries(bundles)) {
+                aliases.forEach(alias => addAlias(alias, iso));
+            }
+
+            ['nyc', 'new york city', 'brooklyn', 'bronx', 'queens', 'manhattan', 'seattle', 'san francisco', 'boston', 'philadelphia', 'atlanta', 'miami'].forEach(city => addCityHint(city, 'US'));
+            ['ottawa', 'edmonton', 'winnipeg', 'ottawa', 'hamilton', 'halifax'].forEach(city => addCityHint(city, 'CA'));
+            ['madrid', 'barcelona', 'sevilla', 'valencia', 'granada'].forEach(city => addCityHint(city, 'ES'));
+            ['zurich', 'bern', 'geneva', 'lausanne'].forEach(city => addCityHint(city, 'CH'));
+            ['abu dhabi', 'dubai', 'sharjah'].forEach(city => addCityHint(city, 'AE'));
+            ['riyadh', 'jeddah', 'mecca', 'medina', 'dammam'].forEach(city => addCityHint(city, 'SA'));
+            ['doha'].forEach(city => addCityHint(city, 'QA'));
+            ['luxembourg'].forEach(city => addCityHint(city, 'LU'));
+            ['bratislava'].forEach(city => addCityHint(city, 'SK'));
+        }
+
+        function extractFlagCode(text) {
+            if (!text) return null;
+            const flags = [];
+            const codePoints = Array.from(text);
+            for (let i = 0; i < codePoints.length - 1; i += 1) {
+                const a = codePoints[i].codePointAt(0);
+                const b = codePoints[i + 1].codePointAt(0);
+                if (a >= 0x1f1e6 && a <= 0x1f1ff && b >= 0x1f1e6 && b <= 0x1f1ff) {
+                    const iso = String.fromCharCode(a - 0x1f1e6 + 65) + String.fromCharCode(b - 0x1f1e6 + 65);
+                    flags.push(iso);
+                }
+            }
+            if (flags.length) return flags[0];
+            return null;
+        }
+
+        function resolveCountry(input) {
+            if (!input && input !== 0) return null;
+            const rawString = input.toString();
+            const flagIso = extractFlagCode(rawString);
+            if (flagIso && isoLookup.has(flagIso)) {
+                return buildCountry(flagIso, 'flag');
+            }
+
+            const normalized = normalizeForMatch(rawString);
+            if (!normalized) return null;
+
+            // Direct alias for the entire string
+            if (aliasToIso.has(normalized)) {
+                return buildCountry(aliasToIso.get(normalized), 'alias');
+            }
+
+            // Look for city / state hints
+            for (const [cityKey, iso] of cityHints.entries()) {
+                if (normalized.includes(cityKey)) {
+                    return buildCountry(iso, 'city');
+                }
+            }
+
+            const tokens = normalized.split(' ').filter(Boolean);
+
+            // Check 3-gram, 2-gram, and single word aliases
+            for (let size = 3; size >= 1; size -= 1) {
+                for (let i = 0; i <= tokens.length - size; i += 1) {
+                    const phrase = tokens.slice(i, i + size).join(' ');
+                    if (aliasToIso.has(phrase)) {
+                        return buildCountry(aliasToIso.get(phrase), 'alias');
+                    }
+                    if (cityHints.has(phrase)) {
+                        return buildCountry(cityHints.get(phrase), 'city');
+                    }
+                }
+            }
+
+            // ISO tokens (alpha-2 / alpha-3)
+            for (const token of tokens) {
+                if (token.length === 2 || token.length === 3) {
+                    const tokenUpper = token.toUpperCase();
+                    if (isoLookup.has(tokenUpper)) {
+                        return buildCountry(tokenUpper, 'iso-token');
+                    }
+                }
+            }
+
+            // Try matching against atlas country names
+            for (const [normalizedName, feature] of featureNameLookup.entries()) {
+                if (normalized.includes(normalizedName)) {
+                    const iso = feature.properties.iso_a2 || null;
+                    return buildCountry(iso || feature.properties.name, 'name-match');
+                }
+            }
+
+            return null;
+        }
+
+        function buildCountry(codeOrName, reason) {
+            let code = isoLookup.has(codeOrName) ? codeOrName : null;
+            let displayName = code ? (isoLookup.get(code)?.name || code) : codeOrName;
+
+            if (!code) {
+                const normalized = normalizeForMatch(codeOrName);
+                for (const [key, feature] of featureNameLookup.entries()) {
+                    if (key === normalized) {
+                        displayName = feature.properties.name;
+                        code = feature.properties.iso_a2 || null;
+                        break;
+                    }
+                }
+            }
+
+            const feature = code ? featureByIso.get(code) : null;
+            const key = code || normalizeForMatch(displayName);
+            return {
+                key,
+                code,
+                name: displayName || code || 'Unknown',
+                feature,
+                reason
+            };
+        }
+
+        function registerVote(country, voterKey, rawInput) {
+            if (!country || !country.key) {
+                debugLog('vote ignored: unresolved country', { rawInput });
+                return;
+            }
+
+            const existing = voters.get(voterKey);
+            if (existing && !settings.allowChanges) {
+                debugLog('duplicate voter ignored', { voterKey, country: country.name });
+                return;
+            }
+
+            if (existing && settings.allowChanges && existing !== country.key) {
+                const prev = countryTally.get(existing);
+                if (prev) {
+                    prev.count = Math.max(prev.count - 1, 0);
+                    if (prev.count === 0) countryTally.delete(existing);
+                }
+            }
+
+            voters.set(voterKey, country.key);
+            if (!countryTally.has(country.key)) {
+                countryTally.set(country.key, {
+                    key: country.key,
+                    code: country.code || null,
+                    name: country.name,
+                    feature: country.feature || null,
+                    count: 0
+                });
+            }
+            const entry = countryTally.get(country.key);
+            entry.count += 1;
+
+            debugLog('vote registered', {
+                voterKey,
+                country: country.name,
+                code: country.code,
+                reason: country.reason,
+                total: entry.count
+            });
+
+            updateVisuals(country);
+        }
+
+        function updateStats() {
+            totalPeopleEl.textContent = voters.size;
+            countryCountEl.textContent = countryTally.size;
+            const statsBlock = document.querySelector('.stats');
+            if (statsBlock) {
+                statsBlock.classList.toggle('hidden', !settings.showTotals);
+            }
+            hudEl.classList.toggle('hidden', !settings.showList && !settings.showTotals);
+        }
+
+        function updateTopList() {
+            if (!settings.showList) {
+                topListEl.innerHTML = '';
+                topListEl.classList.add('hidden');
+                return;
+            }
+
+            topListEl.classList.remove('hidden');
+            const top = Array.from(countryTally.values())
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 7);
+
+            topListEl.innerHTML = '';
+            top.forEach(entry => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${entry.name}</span><span class="pill">${entry.count}</span>`;
+                topListEl.appendChild(li);
+            });
+        }
+
+        function colorScaleForCount(count, maxCount) {
+            if (!maxCount) return 'rgba(255,255,255,0.06)';
+            const t = Math.max(0.12, Math.min(count / maxCount, 1));
+            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#6ef7c8';
+            const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#f4b556';
+            const blend = d3.interpolateRgb(accent, accent2)(Math.min(t * 1.2, 1));
+            return d3.color(blend).formatRgb();
+        }
+
+        function updateMapFill() {
+            const maxCount = Math.max(...Array.from(countryTally.values()).map(c => c.count), 0);
+            mapLayer.selectAll('path').each(function(d) {
+                const iso = d.properties.iso_a2 || normalizeForMatch(d.properties.name);
+                const entry = countryTally.get(iso) || countryTally.get(normalizeForMatch(d.properties.name));
+                const hasData = entry && entry.count > 0;
+                const fill = hasData ? colorScaleForCount(entry.count, maxCount) : 'rgba(255,255,255,0.06)';
+                d3.select(this)
+                    .classed('has-data', !!hasData)
+                    .style('fill', fill)
+                    .style('opacity', hasData ? 0.95 : 0.55);
+            });
+        }
+
+        function updateMarkers() {
+            const maxCount = Math.max(...Array.from(countryTally.values()).map(c => c.count), 0);
+            const entries = Array.from(countryTally.values()).filter(entry => entry.count > 0 && entry.feature);
+
+            const markers = markerLayer.selectAll('.marker').data(entries, d => d.key);
+
+            markers.exit().remove();
+
+            const enter = markers.enter().append('g')
+                .attr('class', 'marker')
+                .attr('transform', d => {
+                    const centroid = pathGenerator.centroid(d.feature);
+                    return `translate(${centroid[0]}, ${centroid[1]})`;
+                });
+
+            enter.append('circle')
+                .attr('r', 0)
+                .transition().duration(500)
+                .attr('r', d => 8 + Math.log(d.count + 1) * 6);
+
+            enter.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('y', 4)
+                .text(d => d.count);
+
+            markers.merge(enter)
+                .attr('transform', d => {
+                    const centroid = pathGenerator.centroid(d.feature);
+                    return `translate(${centroid[0]}, ${centroid[1]})`;
+                })
+                .select('circle')
+                .transition().duration(400)
+                .attr('r', d => 8 + Math.log(d.count + 1) * 6)
+                .style('opacity', d => 0.4 + 0.6 * (d.count / (maxCount || 1)));
+
+            markers.merge(enter)
+                .select('text')
+                .text(d => d.count);
+        }
+
+        function triggerPulse(feature) {
+            if (!feature) return;
+            const [x, y] = pathGenerator.centroid(feature);
+            const ring = pulseLayer.append('circle')
+                .attr('class', 'pulse')
+                .attr('cx', x)
+                .attr('cy', y)
+                .attr('r', 0);
+
+            ring.transition()
+                .duration(1200)
+                .attr('r', 70)
+                .style('opacity', 0)
+                .remove();
+        }
+
+        function updateVisuals(country) {
+            updateStats();
+            updateTopList();
+            updateMapFill();
+            updateMarkers();
+            triggerPulse(country.feature);
+        }
+
+        function applySettingsFromPayload(payload) {
+            if (!payload) return;
+            if (payload.mapTitle && payload.mapTitle.textsetting) {
+                settings.title = payload.mapTitle.textsetting;
+                titleEl.textContent = settings.title;
+            }
+            if (payload.mapShowList && Object.prototype.hasOwnProperty.call(payload.mapShowList, 'setting')) {
+                settings.showList = normalizeBoolean(payload.mapShowList.setting, settings.showList);
+            }
+            if (payload.mapShowTotals && Object.prototype.hasOwnProperty.call(payload.mapShowTotals, 'setting')) {
+                settings.showTotals = normalizeBoolean(payload.mapShowTotals.setting, settings.showTotals);
+            }
+            if (payload.mapAllowChanges && Object.prototype.hasOwnProperty.call(payload.mapAllowChanges, 'setting')) {
+                settings.allowChanges = normalizeBoolean(payload.mapAllowChanges.setting, settings.allowChanges);
+            }
+            hudEl.classList.toggle('hidden', !settings.showList && !settings.showTotals);
+        }
+
+        function processInput(data) {
+            if (!data) return;
+
+            if (data.settings) {
+                applySettingsFromPayload(data.settings);
+                updateStats();
+                updateTopList();
+                return;
+            }
+
+            if (data.cmd === 'resetmap' || data.cmd === 'resetpoll') {
+                resetMap();
+                return;
+            }
+
+            if (data.chatmessage) {
+                const voterKey = buildVoterKey(data.chatname, data.type, data.userid || data.userId || data.uid);
+                const country = resolveCountry(data.chatmessage);
+                if (!country) {
+                    debugLog('no country match', { chatmessage: data.chatmessage, chatname: data.chatname });
+                    return;
+                }
+                registerVote(country, voterKey, data.chatmessage);
+            }
+        }
+
+        function resetMap() {
+            voters.clear();
+            countryTally.clear();
+            updateVisuals({});
+            debugLog('map reset');
+        }
+
+        function hydrateIsoLookups(isoData) {
+            isoLookup = new Map();
+            isoByNumeric = new Map();
+
+            isoData.forEach(entry => {
+                const iso2 = entry['alpha-2'];
+                isoLookup.set(iso2, { name: entry.name, numeric: entry['country-code'] });
+                isoByNumeric.set(String(parseInt(entry['country-code'], 10)), iso2);
+                addAlias(entry.name, iso2);
+                addAlias(iso2, iso2);
+                addAlias(entry['alpha-3'], iso2);
+            });
+        }
+
+        function attachIsoToFeatures() {
+            atlasFeatures.forEach(feature => {
+                const iso = isoByNumeric.get(String(parseInt(feature.id, 10)));
+                if (iso) {
+                    feature.properties.iso_a2 = iso;
+                    featureByIso.set(iso, feature);
+                }
+                const normalizedName = normalizeForMatch(feature.properties.name);
+                featureNameLookup.set(normalizedName, feature);
+            });
+        }
+
+        function resizeMap() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            svg.attr('width', width).attr('height', height);
+            projection.fitSize([width, height], { type: 'Sphere' });
+            pathGenerator = d3.geoPath(projection);
+
+            mapLayer.selectAll('path').attr('d', pathGenerator);
+            updateMarkers();
+        }
+
+        function drawMap() {
+            projection = d3.geoMercator().precision(0.1);
+            resizeMap();
+
+            mapLayer.selectAll('path')
+                .data(atlasFeatures)
+                .enter()
+                .append('path')
+                .attr('class', 'country')
+                .attr('d', pathGenerator);
+
+            window.addEventListener('resize', resizeMap);
+        }
+
+        function loadData() {
+            return Promise.all([
+                fetch('./thirdparty/iso-3166.json').then(r => r.json()),
+                fetch('./thirdparty/world-110m.json').then(r => r.json())
+            ]);
+        }
+
+        function setupConnections() {
+            const sessionRaw = urlParams.get('session');
+            if (!sessionRaw) {
+                debugLog('session missing; listening only for direct postMessage payloads');
+                return;
+            }
+            const session = sessionRaw.split(',')[0];
+            const password = urlParams.get('password') || 'false';
+
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(session)}&novideo&noaudio&label=map&cleanoutput&room=${encodeURIComponent(session)}`;
+            iframe.style.cssText = 'width:0;height:0;border:0;position:absolute;left:-1000px;top:-1000px;';
+            document.body.appendChild(iframe);
+
+            window.addEventListener('message', (event) => {
+                if (event.source !== iframe.contentWindow) return;
+                if (event.data?.dataReceived?.overlayNinja) {
+                    processInput(event.data.dataReceived.overlayNinja);
+                }
+            });
+
+            const ConnectionManager = {
+                setupMainSocket() {
+                    if (urlParams.has('server')) {
+                        this.setupSocket(
+                            urlParams.get('server') || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api'),
+                            session,
+                            2,
+                            1,
+                            (data) => processInput(data)
+                        );
+                    }
+                },
+                setupExtensionSocket() {
+                    if (urlParams.has('server2') || urlParams.has('server3')) {
+                        const serverURL = urlParams.has('server2')
+                            ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension')
+                            : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+
+                        this.setupSocket(
+                            serverURL,
+                            session,
+                            3,
+                            4,
+                            (data) => {
+                                if (urlParams.has('server2') || urlParams.has('server3')) {
+                                    processInput(data);
+                                }
+                            }
+                        );
+                    }
+                },
+                setupSocket(serverURL, room, outChannel, inChannel, messageHandler) {
+                    let socket = null;
+                    let attempts = 1;
+                    let reconnectTimer = null;
+
+                    const connect = () => {
+                        if (reconnectTimer) {
+                            clearTimeout(reconnectTimer);
+                            reconnectTimer = null;
+                        }
+                        if (socket) {
+                            socket.onclose = null;
+                            socket.close();
+                        }
+
+                        socket = new WebSocket(serverURL);
+
+                        socket.onclose = () => {
+                            reconnectTimer = setTimeout(() => {
+                                attempts += 1;
+                                connect();
+                            }, 100 * attempts);
+                        };
+
+                        socket.onopen = () => {
+                            attempts = 1;
+                            socket.send(JSON.stringify({ join: room, out: outChannel, in: inChannel }));
+                        };
+
+                        socket.onerror = () => socket.close();
+
+                        socket.addEventListener('message', (event) => {
+                            if (!event.data) return;
+                            try {
+                                const data = JSON.parse(event.data);
+                                const resp = messageHandler(data);
+                                if (resp !== null && data.get) {
+                                    const ret = { callback: { get: data.get, result: resp } };
+                                    socket.send(JSON.stringify(ret));
+                                }
+                            } catch (err) {
+                                debugLog('socket message parse error', err);
+                            }
+                        });
+                    };
+
+                    connect();
+                }
+            };
+
+            ConnectionManager.setupMainSocket();
+            ConnectionManager.setupExtensionSocket();
+        }
+
+        function init() {
+            titleEl.textContent = settings.title;
+            if (!settings.showTotals) {
+                document.querySelector('.stats').classList.add('hidden');
+            }
+            if (!settings.showList) {
+                topListEl.classList.add('hidden');
+            }
+
+            registerManualAliases();
+
+            loadData().then(([isoData, worldData]) => {
+                hydrateIsoLookups(isoData);
+                atlasFeatures = topojson.feature(worldData, worldData.objects.countries).features;
+                attachIsoToFeatures();
+                drawMap();
+                updateStats();
+                updateTopList();
+                setStatus('');
+                ready = true;
+                setupConnections();
+            }).catch((error) => {
+                console.error('Failed to load map data', error);
+                setStatus('Map failed to load');
+            });
+        }
+
+        init();
+    })();
+    </script>
+</body>
+</html>
