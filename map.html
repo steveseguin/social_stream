@@ -269,6 +269,7 @@
         let featureByIso = new Map();
         let featureNameLookup = new Map();
         let ready = false;
+        const pendingMessages = [];
 
         const voters = new Map(); // voterKey -> countryKey
         const countryTally = new Map(); // countryKey -> { key, code, name, count, feature }
@@ -751,14 +752,23 @@
             }
 
             if (data.chatmessage) {
-                const voterKey = buildVoterKey(data.chatname, data.type, data.userid || data.userId || data.uid);
-                const country = resolveCountry(data.chatmessage);
-                if (!country) {
-                    debugLog('no country match', { chatmessage: data.chatmessage, chatname: data.chatname });
+                if (!ready) {
+                    pendingMessages.push(data);
+                    debugLog('queued chat until map ready', { chatmessage: data.chatmessage });
                     return;
                 }
-                registerVote(country, voterKey, data.chatmessage);
+                handleChatMessage(data);
             }
+        }
+
+        function handleChatMessage(data) {
+            const voterKey = buildVoterKey(data.chatname, data.type, data.userid || data.userId || data.uid);
+            const country = resolveCountry(data.chatmessage);
+            if (!country) {
+                debugLog('no country match', { chatmessage: data.chatmessage, chatname: data.chatname });
+                return;
+            }
+            registerVote(country, voterKey, data.chatmessage);
         }
 
         function resetMap() {
@@ -819,10 +829,29 @@
             window.addEventListener('resize', resizeMap);
         }
 
+        function loadJsonWithFallback(primary, fallback) {
+            return fetch(primary).then(resp => {
+                if (!resp.ok) throw new Error(`primary fetch failed ${resp.status}`);
+                return resp.json();
+            }).catch(() => {
+                if (!fallback) throw new Error('no fallback provided');
+                return fetch(fallback).then(r => {
+                    if (!r.ok) throw new Error(`fallback fetch failed ${r.status}`);
+                    return r.json();
+                });
+            });
+        }
+
         function loadData() {
             return Promise.all([
-                fetch('./thirdparty/iso-3166.json').then(r => r.json()),
-                fetch('./thirdparty/world-110m.json').then(r => r.json())
+                loadJsonWithFallback(
+                    './thirdparty/iso-3166.json',
+                    'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.json'
+                ),
+                loadJsonWithFallback(
+                    './thirdparty/world-110m.json',
+                    'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+                )
             ]);
         }
 
@@ -835,8 +864,9 @@
             const session = sessionRaw.split(',')[0];
             const password = urlParams.get('password') || 'false';
 
+            const label = urlParams.get('label') || 'dock';
             const iframe = document.createElement('iframe');
-            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(session)}&novideo&noaudio&label=map&cleanoutput&room=${encodeURIComponent(session)}`;
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(session)}&novideo&noaudio&label=${encodeURIComponent(label)}&cleanoutput&room=${encodeURIComponent(session)}`;
             iframe.style.cssText = 'width:0;height:0;border:0;position:absolute;left:-1000px;top:-1000px;';
             document.body.appendChild(iframe);
 
@@ -849,15 +879,14 @@
 
             const ConnectionManager = {
                 setupMainSocket() {
-                    if (urlParams.has('server')) {
-                        this.setupSocket(
-                            urlParams.get('server') || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api'),
-                            session,
-                            2,
-                            1,
-                            (data) => processInput(data)
-                        );
-                    }
+                    const target = urlParams.get('server') || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api');
+                    this.setupSocket(
+                        target,
+                        session,
+                        2,
+                        1,
+                        (data) => processInput(data)
+                    );
                 },
                 setupExtensionSocket() {
                     if (urlParams.has('server2') || urlParams.has('server3')) {
@@ -950,12 +979,15 @@
                 drawMap();
                 updateStats();
                 updateTopList();
+                if (pendingMessages.length) {
+                    pendingMessages.splice(0).forEach(msg => handleChatMessage(msg));
+                }
                 setStatus('');
                 ready = true;
                 setupConnections();
             }).catch((error) => {
                 console.error('Failed to load map data', error);
-                setStatus('Map failed to load');
+                setStatus('Map failed to load (data missing)');
             });
         }
 

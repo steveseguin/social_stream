@@ -3835,6 +3835,10 @@
 				playtone();
 			}
 			
+			var beepFirstTime = false;
+			if (urlParams.has("beepfirsttime")) {
+				beepFirstTime = true;
+			}
 			
 			var nobeepbot = false;
 			if (urlParams.has("nobeepbot")) {
@@ -9439,7 +9443,8 @@
 						};
 					}
 					
-					if (beep) { 
+					const shouldBeep = beep || (beepFirstTime && data.firsttime);
+					if (shouldBeep) { 
 						if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
 							playtone();
 						}
