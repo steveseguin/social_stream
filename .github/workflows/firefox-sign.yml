@@ -18,13 +18,17 @@ on:
       use_submission_api:
         description: Use AMO submission API (recommended, default in web-ext v8)
         type: boolean
-        default: true
+        default: false
       fallback_to_legacy:
         description: If submission API fails, retry with legacy sign-addon API
         type: boolean
         default: true
       web_ext_version:
-        description: web-ext version to install (use 8 for submission API by default)
+        description: web-ext version to install for legacy mode (default 7)
+        type: string
+        default: "7"
+      submission_web_ext_version:
+        description: web-ext version to install for submission API mode (default 8)
         type: string
         default: "8"
 permissions:
@@ -38,9 +42,10 @@ jobs:
       WEB_EXT_CHANNEL: ${{ github.event.inputs.channel || 'unlisted' }}
       WEB_EXT_SOURCE_DIR: ${{ github.event.inputs.source_dir || '.' }}
       WEB_EXT_ID: ${{ github.event.inputs.addon_id }}
-      WEB_EXT_USE_SUBMISSION_API: ${{ github.event.inputs.use_submission_api || true }}
+      WEB_EXT_USE_SUBMISSION_API: ${{ github.event.inputs.use_submission_api || false }}
       WEB_EXT_FALLBACK_TO_LEGACY: ${{ github.event.inputs.fallback_to_legacy || true }}
-      WEB_EXT_VERSION: ${{ github.event.inputs.web_ext_version || '8' }}
+      WEB_EXT_VERSION: ${{ github.event.inputs.web_ext_version || '7' }}
+      WEB_EXT_SUBMISSION_VERSION: ${{ github.event.inputs.submission_web_ext_version || '8' }}
       ARTIFACTS_DIR: web-ext-artifacts
       FIREFOX_BRANCH: firefox
       FIREFOX_FILE_NAME: social-stream-ninja.xpi
@@ -84,18 +89,22 @@ jobs:
 
           signed=false
 
-          for mode in submission legacy; do
-            if [[ "$mode" == "legacy" && "${WEB_EXT_FALLBACK_TO_LEGACY}" != "true" ]]; then
-              continue
-            fi
-            if [[ "$mode" == "submission" && "${WEB_EXT_USE_SUBMISSION_API}" != "true" ]]; then
-              continue
-            fi
+          modes=()
+          if [[ "${WEB_EXT_USE_SUBMISSION_API}" == "true" && "${WEB_EXT_FALLBACK_TO_LEGACY}" == "true" ]]; then
+            modes+=(legacy submission)
+          elif [[ "${WEB_EXT_USE_SUBMISSION_API}" == "true" ]]; then
+            modes+=(submission)
+          else
+            modes+=(legacy)
+          fi
+
+          for mode in "${modes[@]}"; do
             if [[ "$mode" == "submission" ]]; then
-              echo "Signing via submission API (web-ext v${WEB_EXT_VERSION})..."
+              echo "Signing via submission API (web-ext v${WEB_EXT_SUBMISSION_VERSION})..."
+              npm install --global "web-ext@${WEB_EXT_SUBMISSION_VERSION}"
             else
-              echo "Signing via legacy sign-addon API (web-ext v7)..."
-              npm install --global "web-ext@7"
+              echo "Signing via legacy sign-addon API (web-ext v${WEB_EXT_VERSION})..."
+              npm install --global "web-ext@${WEB_EXT_VERSION}"
             fi
 
             attempt=1
