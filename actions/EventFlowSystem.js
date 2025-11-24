@@ -1091,7 +1091,9 @@ class EventFlowSystem {
 
         // --- Pass 3: Execute actions ---
       //console.log(`[EvaluateFlow "${flow.name}"] Pass 3: Executing Actions. Current node states:`, JSON.stringify(nodeActivationStates));
-        let overallResult = { modified: false, message: { ...message }, blocked: false }; 
+        // Ensure we always have a mutable message object even when running on scheduler ticks (message can be null)
+        const baseMessage = message ? { ...message } : {};
+        let overallResult = { modified: false, message: baseMessage, blocked: false }; 
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
         const executedActions = new Set(); // Track which actions have been executed
 
