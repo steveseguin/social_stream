@@ -5008,7 +5008,7 @@ async function sendToDestinations(message) {
 	sendToH2R(message);
 	sendToPost(message);
 	sendToDiscord(message);  // donos only
-	sendToStreamerBot(message); sendToTikTok(message);
+	sendToStreamerBot(message);
 	if (message.chatmessage || message.hasDonation || message.chatname){
 		message.idx = await addMessageDB(message);
 	}
@@ -12713,21 +12713,3 @@ window.addEventListener('unload', async function() {
   document.title = "Close me - Social Stream Ninja";
 });
 
-
-function sendToTikTok(message) {
-    if (message && message.chatmessage) {
-        try {
-            var payload = {
-                overlayNinja: {
-                    response: message.chatmessage,
-                    tid: (message.tid && message.tid !== false) ? message.tid : null
-                }
-            };
-            if (typeof ipcRenderer !== 'undefined') {
-                ipcRenderer.send('postMessage', payload);
-            }
-        } catch (e) {
-            console.error('Failed to send to TikTok via IPC', e);
-        }
-    }
-}
