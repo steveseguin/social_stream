@@ -10917,7 +10917,7 @@ async function applyBotActions(data, tab = false) {
 			data.chatmessage = normalizeText(data.chatmessage, data.textonly || false)
 		}
 		
-		if (settings.firsttimers && data.chatname && data.type){
+		if (settings.firsttimers && data.chatname && data.chatmessage && data.type){
 			try {
 				const checkResult = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
 				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
