@@ -153,6 +153,12 @@ TTS.openAISettings = {
     speed: 1.0
 };
 
+TTS.geminiSettings = {
+    model: "gemini-2.5-flash-preview-tts",
+    voice: "Kore",
+    sampleRate: 24000
+};
+
 TTS.kokoroDownloadInProgress = null;
 TTS.kokoroTtsInstance = null;
 TTS.kokoroSettings = {
@@ -181,6 +187,7 @@ TTS.GoogleAPIKey = false;
 TTS.ElevenLabsKey = false;
 TTS.SpeechifyAPIKey = false;
 TTS.OpenAIAPIKey = false;
+TTS.GeminiAPIKey = false;
 TTS.useKokoroTTS = false;
 TTS.usePiper = false;
 TTS.useEspeak = false;
@@ -517,6 +524,7 @@ TTS.configure = function(urlParams) {
     TTS.ElevenLabsKey = urlParams.get("elevenlabskey") || false;
     TTS.SpeechifyAPIKey = urlParams.get("speechifykey") || false;
     TTS.OpenAIAPIKey = urlParams.get("openaikey") || false;
+    TTS.GeminiAPIKey = urlParams.get("geminikey") || urlParams.get("geminiapikey") || urlParams.get("geminiApiKey") || false;
     TTS.useKokoroTTS = urlParams.has("kokorotts") || urlParams.has("kokoro") || false;
     TTS.usePiper = urlParams.has("piper") || urlParams.has("pipertts") || false;
     TTS.useEspeak = urlParams.has("espeak") || urlParams.has("espeaktts") || false;
@@ -541,6 +549,9 @@ TTS.configure = function(urlParams) {
         } else if (TTS.TTSProvider === "google" && !TTS.GoogleAPIKey) {
             console.warn("Google Cloud selected but no API key provided. Falling back to system TTS.");
             TTS.TTSProvider = "system";
+        } else if (TTS.TTSProvider === "gemini" && !TTS.GeminiAPIKey) {
+            console.warn("Gemini selected but no API key provided. Falling back to system TTS.");
+            TTS.TTSProvider = "system";
         } else if (TTS.TTSProvider === "speechify" && !TTS.SpeechifyAPIKey) {
             console.warn("Speechify selected but no API key provided. Falling back to system TTS.");
             TTS.TTSProvider = "system";
@@ -558,6 +569,8 @@ TTS.configure = function(urlParams) {
             TTS.TTSProvider = "piper";
         } else if (TTS.useKokoroTTS) {
             TTS.TTSProvider = "kokoro";
+        } else if (TTS.GeminiAPIKey) {
+            TTS.TTSProvider = "gemini";
         } else if (TTS.GoogleAPIKey) {
             TTS.TTSProvider = "google";
         } else if (TTS.ElevenLabsKey) {
@@ -608,6 +621,11 @@ TTS.configure = function(urlParams) {
     TTS.googleSettings.audioProfile = urlParams.get("googleaudioprofile") || false;
     TTS.googleSettings.voiceName = urlParams.get("voicegoogle") || false;
 	TTS.googleSettings.lang = urlParams.get("googlelang") || false;
+
+    // Gemini TTS settings
+    TTS.geminiSettings.apiKey = TTS.GeminiAPIKey;
+    TTS.geminiSettings.model = urlParams.get("geminimodel") || TTS.geminiSettings.model;
+    TTS.geminiSettings.voice = urlParams.get("voicegemini") || TTS.geminiSettings.voice;
 
     // ElevenLabs settings
     TTS.elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : TTS.voiceLatency;
@@ -995,21 +1013,31 @@ TTS.speak = function(text, allow = false) {
 				TTS.premiumQueueTTS.push(text);
 			}
 			return;
-		case "google":
-			if (TTS.GoogleAPIKey) {
-				if (!TTS.premiumQueueActive) {
-					TTS.googleTTS(text);
-				} else {
-					TTS.premiumQueueTTS.push(text);
-				}
-				return;
-			}
-			return; // Change from break to return
-		case "elevenlabs":
-			if (TTS.ElevenLabsKey) {
-				if (!TTS.premiumQueueActive) {
-					TTS.ElevenLabsTTS(text);
-				} else {
+        case "google":
+            if (TTS.GoogleAPIKey) {
+                if (!TTS.premiumQueueActive) {
+                    TTS.googleTTS(text);
+                } else {
+                    TTS.premiumQueueTTS.push(text);
+                }
+                return;
+            }
+            return; // Change from break to return
+        case "gemini":
+            if (TTS.GeminiAPIKey) {
+                if (!TTS.premiumQueueActive) {
+                    TTS.geminiTTS(text);
+                } else {
+                    TTS.premiumQueueTTS.push(text);
+                }
+                return;
+            }
+            return;
+        case "elevenlabs":
+            if (TTS.ElevenLabsKey) {
+                if (!TTS.premiumQueueActive) {
+                    TTS.ElevenLabsTTS(text);
+                } else {
 					TTS.premiumQueueTTS.push(text);
 				}
 				return;
@@ -1617,6 +1645,37 @@ TTS.ElevenLabsTTS = function(tts) {
     }
 };
 
+TTS.pcm16ToWav = function(pcmBytes, sampleRate = 24000, numChannels = 1) {
+    const bytesPerSample = 2;
+    const blockAlign = numChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataLength = pcmBytes.length;
+    const buffer = new ArrayBuffer(44);
+    const view = new DataView(buffer);
+    
+    const writeString = (offset, str) => {
+        for (let i = 0; i < str.length; i++) {
+            view.setUint8(offset + i, str.charCodeAt(i));
+        }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataLength, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true); // PCM chunk size
+    view.setUint16(20, 1, true); // Audio format PCM
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, byteRate, true);
+    view.setUint16(32, blockAlign, true);
+    view.setUint16(34, bytesPerSample * 8, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataLength, true);
+    
+    return new Blob([view.buffer, pcmBytes], { type: "audio/wav" });
+};
+
 /**
  * Google Cloud TTS implementation
  * @param {string} tts - Text to speak
@@ -1722,6 +1781,82 @@ TTS.googleTTS = function(tts) {
             });
     } catch (e) {
         TTS.finishedAudio();
+    }
+};
+
+/**
+ * Gemini TTS implementation (Generative Language API)
+ * @param {string} tts - Text to speak
+ */
+TTS.geminiTTS = async function(tts) {
+    TTS.premiumQueueActive = true;
+    const model = TTS.geminiSettings.model || "gemini-2.5-flash-preview-tts";
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+    const payload = {
+        model,
+        contents: [{ parts: [{ text: tts }]}],
+        generationConfig: {
+            responseModalities: ["AUDIO"],
+            speechConfig: {
+                voiceConfig: {
+                    prebuiltVoiceConfig: {
+                        voiceName: TTS.geminiSettings.voice || "Kore"
+                    }
+                }
+            }
+        }
+    };
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json; charset=UTF-8",
+                "x-goog-api-key": TTS.GeminiAPIKey
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            throw new Error(`Gemini TTS HTTP ${response.status} ${response.statusText}`);
+        }
+
+        const json = await response.json();
+        const inlinePart = json?.candidates?.[0]?.content?.parts?.find(p => p.inlineData && p.inlineData.data);
+        const base64Audio = inlinePart?.inlineData?.data;
+        const mimeType = inlinePart?.inlineData?.mimeType || "";
+        if (!base64Audio) {
+            throw new Error("No audio content returned from Gemini");
+        }
+
+        const pcmBytes = Uint8Array.from(atob(base64Audio), c => c.charCodeAt(0));
+        const wavBlob = mimeType && mimeType.includes("wav")
+            ? new Blob([pcmBytes], { type: mimeType })
+            : TTS.pcm16ToWav(pcmBytes, TTS.geminiSettings.sampleRate || 24000, 1);
+
+        if (!TTS.audio) {
+            TTS.audio = document.createElement("audio");
+            TTS.audio.onended = TTS.finishedAudio;
+        }
+
+        TTS.audio.src = URL.createObjectURL(wavBlob);
+        if (TTS.volume) {
+            TTS.audio.volume = TTS.volume;
+        }
+
+        try {
+            if (TTS.audioContext && TTS.audioContext.state === 'suspended') {
+                await TTS.audioContext.resume();
+            }
+            await TTS.audio.play();
+        } catch (e) {
+            TTS.finishedAudio();
+            console.error("REMEMBER TO CLICK THE PAGE FIRST - audio won't play until you do");
+        }
+    } catch (error) {
+        TTS.finishedAudio();
+        console.error("Gemini TTS error:", error);
     }
 };
 

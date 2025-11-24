@@ -1795,14 +1795,15 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     // List of parameters to ignore (TTS-related and standard ones)
     const ignoreParams = ['session', 'password', 'localserver'];
-    const ttsRelatedParams = [
-      'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
-      'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
-      'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
-      'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
-      'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
-      'kokorokey', 'voicekokoro', 'kokorospeed'
-    ];
+  const ttsRelatedParams = [
+    'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
+    'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
+    'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
+    'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
+    'geminikey', 'geminimodel', 'voicegemini',
+    'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
+    'kokorokey', 'voicekokoro', 'kokorospeed'
+  ];
     
     // Combine all params to ignore
     const allIgnoreParams = [...ignoreParams, ...ttsRelatedParams];
@@ -1981,15 +1982,16 @@ function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
   
   // Map of all provider-specific parameters
-  const providerParams = {
-    system: ['lang', 'voice', 'rate', 'pitch'],
-    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
-    google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
-    speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
-    kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
-    kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
-    openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
-  };
+    const providerParams = {
+        system: ['lang', 'voice', 'rate', 'pitch'],
+        elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
+        google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
+        gemini: ['geminikey', 'geminimodel', 'voicegemini'],
+        speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
+        kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
+        kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
+        openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
+    };
   
   if (selectedProvider === null) {
     try {
@@ -2025,7 +2027,8 @@ function setupTtsProviders(response) {
     // Handle main TTS provider
     if (!response.settings?.ttsProvider?.optionsetting) {
         let ttsService = "system";
-        if (response.settings?.ttskey?.textparam1) ttsService = "google";
+        if (response.settings?.geminikey?.textparam1) ttsService = "gemini";
+        else if (response.settings?.ttskey?.textparam1) ttsService = "google";
         else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
@@ -2040,7 +2043,8 @@ function setupTtsProviders(response) {
     // Handle featured TTS provider (for param2)
     if (!response.settings?.ttsProvider?.optionsetting2) {
         let ttsService = "system";
-        if (response.settings?.ttskey?.textparam2) ttsService = "google";
+        if (response.settings?.geminikey?.textparam2) ttsService = "gemini";
+        else if (response.settings?.ttskey?.textparam2) ttsService = "google";
         else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
@@ -2055,7 +2059,8 @@ function setupTtsProviders(response) {
     // Handle secondary TTS provider (for param10)
     if (!response.settings?.ttsProvider?.optionsetting10) {
         let ttsService = "system";
-        if (response.settings?.ttskey?.textparam10) ttsService = "google";
+        if (response.settings?.geminikey?.textparam10) ttsService = "gemini";
+        else if (response.settings?.ttskey?.textparam10) ttsService = "google";
         else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
@@ -2691,7 +2696,7 @@ function handleAIProviderVisibility(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2702,6 +2707,8 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("elevenlabsTTS").classList.remove("hidden");
     } else if (provider == "google") {
         document.getElementById("googleTTS").classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiTTS").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -2716,7 +2723,7 @@ function handleTTSProviderVisibility(provider) {
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2727,6 +2734,8 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("elevenlabsTTS10").classList.remove("hidden");
     } else if (provider == "google") {
         document.getElementById("googleTTS10").classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiTTS10").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -2741,7 +2750,7 @@ function handleTTSProvider10Visibility(provider) {
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2752,6 +2761,8 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("elevenlabsTTS2").classList.remove("hidden");
     } else if (provider == "google") {
         document.getElementById("googleTTS2").classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiTTS2").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS2").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -3621,7 +3632,7 @@ function handleOptionSetting(ele, sync) {
 		
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
         const ttsProviderElements = [
-            `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, 
+            `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
             `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
