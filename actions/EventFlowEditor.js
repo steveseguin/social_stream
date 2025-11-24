@@ -2178,6 +2178,7 @@ class EventFlowEditor {
 					{ value: 'admin', label: 'Is Admin', group: 'Status' },
 					{ value: 'bot', label: 'Is Bot', group: 'Status' },
 					{ value: 'verified', label: 'Is Verified', group: 'Status' },
+					{ value: 'firsttime', label: 'First-time chatter', group: 'Status', tooltip: 'Requires First timers enabled in global settings' },
 					// Event Properties
 					{ value: 'hasDonation', label: 'Has Donation', group: 'Events' },
 					{ value: 'membership', label: 'Membership Event', group: 'Events' },
@@ -2187,8 +2188,8 @@ class EventFlowEditor {
 					// Interaction Properties
 					{ value: 'question', label: 'Is Question', group: 'Interaction' },
 					{ value: 'private', label: 'Is Private', group: 'Interaction' },
-					{ value: 'highKarma', label: 'High Karma (≥0.7)', group: 'Interaction' },
-					{ value: 'lowKarma', label: 'Low Karma (<0.3)', group: 'Interaction' },
+					{ value: 'highKarma', label: 'High Karma (≥0.7)', group: 'Interaction', tooltip: 'Requires Add karma enabled in global settings' },
+					{ value: 'lowKarma', label: 'Low Karma (<0.3)', group: 'Interaction', tooltip: 'Requires Add karma enabled in global settings' },
 					// Metadata
 					{ value: 'userid', label: 'User ID', group: 'Metadata' },
 					{ value: 'textonly', label: 'Text Only', group: 'Metadata' },
@@ -2222,9 +2223,11 @@ class EventFlowEditor {
 					html += `<div style="margin-bottom: 10px;"><strong style="color: #888;">${group}:</strong><br>`;
 					props.forEach(prop => {
 						const isChecked = currentRequired.includes(prop.value);
+						const tooltip = prop.tooltip ? ` title="${prop.tooltip}"` : '';
+						const infoIcon = prop.tooltip ? ` <span style="opacity:0.7; cursor: help;" title="${prop.tooltip}">ℹ️</span>` : '';
 						html += `<label style="display: block; margin: 2px 0;">
 							<input type="checkbox" class="prop-required" value="${prop.value}" ${isChecked ? 'checked' : ''}> 
-							${prop.label}
+							<span${tooltip}>${prop.label}</span>${infoIcon}
 						</label>`;
 					});
 					html += `</div>`;
@@ -2239,9 +2242,11 @@ class EventFlowEditor {
 					html += `<div style="margin-bottom: 10px;"><strong style="color: #888;">${group}:</strong><br>`;
 					props.forEach(prop => {
 						const isChecked = currentForbidden.includes(prop.value);
+						const tooltip = prop.tooltip ? ` title="${prop.tooltip}"` : '';
+						const infoIcon = prop.tooltip ? ` <span style="opacity:0.7; cursor: help;" title="${prop.tooltip}">ℹ️</span>` : '';
 						html += `<label style="display: block; margin: 2px 0;">
 							<input type="checkbox" class="prop-forbidden" value="${prop.value}" ${isChecked ? 'checked' : ''}> 
-							${prop.label}
+							<span${tooltip}>${prop.label}</span>${infoIcon}
 						</label>`;
 					});
 					html += `</div>`;
