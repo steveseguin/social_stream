@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recover Settings from dock.html</title>
+    <style>
+        :root {
+            --bg: #0f1720;
+            --panel: #152330;
+            --text: #e5ecf3;
+            --muted: #9fb4c7;
+            --accent: #3ac2ff;
+            --accent-strong: #2aa0d8;
+            --error: #ff7b7b;
+            --border: #203445;
+            --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+            --radius: 12px;
+            --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            --sans: "Segoe UI", Tahoma, "Sora", Arial, sans-serif;
+        }
+        * { box-sizing: border-box; }
+        html, body {
+            min-height: 100%;
+        }
+        body {
+            margin: 0;
+            padding: 32px 16px 64px;
+            background: radial-gradient(circle at 20% 20%, rgba(58, 194, 255, 0.1), transparent 25%),
+                        radial-gradient(circle at 80% 10%, rgba(68, 255, 171, 0.08), transparent 30%),
+                        radial-gradient(circle at 50% 80%, rgba(255, 219, 112, 0.08), transparent 30%),
+                        var(--bg);
+            background-repeat: no-repeat;
+            background-size: 140% 140%, 160% 160%, 180% 180%, cover;
+            background-attachment: fixed;
+            color: var(--text);
+            font-family: var(--sans);
+            line-height: 1.55;
+        }
+        h1 {
+            margin: 0 0 6px;
+            font-size: 24px;
+            letter-spacing: 0.2px;
+        }
+        p { margin: 0 0 12px; color: var(--muted); }
+        .card {
+            max-width: 880px;
+            margin: 0 auto;
+            background: linear-gradient(135deg, rgba(21, 35, 48, 0.9), rgba(25, 44, 61, 0.92));
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 20px 20px 28px;
+        }
+        label { display: block; margin: 12px 0 6px; font-weight: 600; }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: #0e1a24;
+            color: var(--text);
+            font-size: 14px;
+            font-family: var(--sans);
+            outline: none;
+            transition: border-color 120ms ease, box-shadow 120ms ease;
+        }
+        input[type="text"]:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(58, 194, 255, 0.25);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 180px;
+            font-family: var(--mono);
+            line-height: 1.4;
+        }
+        .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        button {
+            background: var(--accent);
+            color: #06111c;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(58, 194, 255, 0.25);
+            transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+        }
+        button:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(58, 194, 255, 0.35); background: var(--accent-strong); }
+        button:active { transform: translateY(0); }
+        button[disabled] { opacity: 0.45; cursor: not-allowed; box-shadow: none; }
+        .pill {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(58, 194, 255, 0.12);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 8px 12px;
+            margin: 6px 6px 0 0;
+            color: var(--text);
+            font-size: 13px;
+            min-width: 0;
+            max-width: 100%;
+            overflow: hidden;
+        }
+        .pill strong { color: var(--accent); font-weight: 700; white-space: nowrap; }
+        .pill .pill-value {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+            display: block;
+        }
+        .error { color: var(--error); margin-top: 6px; }
+        .small { color: var(--muted); font-size: 13px; }
+        .grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); margin: 10px 0; }
+        .panel {
+            background: #0e1a24;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 14px;
+        }
+    </style>
+</head>
+<body>
+    <main class="card">
+        <h1>Recover extension settings from dock.html</h1>
+        <p>Paste a dock.html link to rebuild a settings file you can import in the extension (same format as the built‑in export: stream ID, password, and a <code>settings</code> dump derived from your URL params).</p>
+
+        <label for="dockUrl">Dock URL</label>
+        <input id="dockUrl" type="text" placeholder="https://socialstream.ninja/dock.html?session=xxxx&password=yyyy&bubble&compact" />
+        <div class="row" style="margin-top: 8px;">
+            <button id="generateBtn">Generate settings JSON</button>
+            <button id="downloadBtn" disabled>Download .data file</button>
+            <button id="copyBtn" disabled>Copy JSON</button>
+        </div>
+        <div id="error" class="error" role="alert" aria-live="polite"></div>
+
+        <div class="panel" style="margin-top: 16px;">
+            <div class="grid" id="summary" aria-live="polite"></div>
+            <p class="small">Everything below is ready to import via the popup menu (Export/Import settings). URL params are converted to <code>settings</code> entries; no additional metadata is added.</p>
+            <label for="output">Generated JSON</label>
+            <textarea id="output" readonly spellcheck="false" placeholder="JSON will appear here after you generate it."></textarea>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            const dockInput = document.getElementById("dockUrl");
+            const output = document.getElementById("output");
+            const summary = document.getElementById("summary");
+            const errorBox = document.getElementById("error");
+            const downloadBtn = document.getElementById("downloadBtn");
+            const copyBtn = document.getElementById("copyBtn");
+
+            const SKIP_KEYS = ["session", "password", "pass", "pw", "v"];
+            const NUMBER_KEYS = new Set([
+                "scale","opacity","chromaalpha","showtime","delaytime","beepvolume","autoshowtime","volume","rate","pitch",
+                "kokorospeed","kittenspeed","elevenrate","elevenlatency","elevenstability","elevensimilarity","elevenstyle",
+                "elevenspeakerboost","googlerate","googlepitch","speechifyspeed","openaispeed","limit","hideshortmessages",
+                "padding","trimname","elevenrate","elevenlatency","elevenstability","elevensimilarity","elevenstyle","elevenspeakerboost",
+                "latency","queuetime","chartime","trim"
+            ]);
+            const EQUALS_PARAMS = new Set([
+                "chroma=fff","skipmessages=3","exclude=kick","exclude=kofi","exclude=youtube","limitbadges=2","chartime=100","trim=200"
+            ]);
+
+            function normalizeUrl(raw) {
+                if (!raw) return null;
+                const trimmed = raw.trim();
+                if (!trimmed) return null;
+
+                // Allow users to paste just the query portion
+                if (trimmed.startsWith("session=") || trimmed.startsWith("?session=")) {
+                    return new URL("https://socialstream.ninja/dock.html" + (trimmed.startsWith("?") ? trimmed : "?" + trimmed));
+                }
+
+                try {
+                    return new URL(trimmed);
+                } catch (e) {
+                    // If no protocol was provided, try https by default
+                    try {
+                        return new URL("https://" + trimmed);
+                    } catch (err) {
+                        return null;
+                    }
+                }
+            }
+
+            function deriveStreamId(params) {
+                return params.get("session") || params.get("room") || params.get("push") || params.get("view") || params.get("label") || "";
+            }
+
+            function derivePassword(params) {
+                return params.get("password") || params.get("pass") || params.get("pw") || "";
+            }
+
+            function buildSettingsFromUrl(urlObj) {
+                const params = urlObj.searchParams;
+                const streamID = deriveStreamId(params);
+                const password = derivePassword(params);
+
+                const extras = new URLSearchParams();
+                let extrasString = "";
+                const settings = {};
+
+                params.forEach((value, key) => {
+                    const lowerKey = key.toLowerCase();
+                    if (SKIP_KEYS.includes(lowerKey)) return;
+                    extras.append(key, value);
+                    extrasString = extras.toString();
+
+                    const combined = value ? `${key}=${value}` : key;
+                    const entryKey = EQUALS_PARAMS.has(combined) ? combined : key;
+                    const entry = settings[entryKey] || {};
+
+                    entry.param1 = true;
+
+                    if (value !== null && value !== "") {
+                        const isNumberKey = NUMBER_KEYS.has(lowerKey);
+                        const numeric = !isNaN(parseFloat(value));
+                        if (isNumberKey || numeric) {
+                            entry.numbersetting = String(value);
+                        } else if (value === "true" || value === "false") {
+                            entry.setting = value === "true";
+                        } else {
+                            entry.textparam1 = value;
+                        }
+                    }
+
+                    settings[entryKey] = entry;
+                });
+
+                const urlParamsString = extrasString ? "?" + extrasString : "";
+
+                return {
+                    streamID,
+                    password,
+                    settings,
+                    extrasString: urlParamsString,
+                    rawDockUrl: urlObj.href
+                };
+            }
+
+            function renderSummary(payload) {
+                summary.innerHTML = "";
+                const parts = [
+                    { label: "Stream ID", value: payload.streamID || "Not found" },
+                    { label: "Password", value: payload.password ? "••••••" : "None" },
+                    { label: "Extra params", value: payload.extrasString || "None" },
+                    { label: "Settings entries", value: Object.keys(payload.settings).length }
+                ];
+                parts.forEach(part => {
+                    const pill = document.createElement("div");
+                    pill.className = "pill";
+                    const strong = document.createElement("strong");
+                    strong.textContent = part.label + ":";
+                    const valueSpan = document.createElement("span");
+                    valueSpan.className = "pill-value";
+                    valueSpan.textContent = " " + part.value;
+                    pill.appendChild(strong);
+                    pill.appendChild(valueSpan);
+                    summary.appendChild(pill);
+                });
+            }
+
+            function setError(msg) {
+                errorBox.textContent = msg || "";
+                if (msg) {
+                    output.value = "";
+                    summary.innerHTML = "";
+                    downloadBtn.disabled = true;
+                    copyBtn.disabled = true;
+                }
+            }
+
+            function generate() {
+                setError("");
+                const urlObj = normalizeUrl(dockInput.value);
+                if (!urlObj) {
+                    setError("Please enter a valid dock.html URL (or query string).");
+                    return;
+                }
+
+                const payload = buildSettingsFromUrl(urlObj);
+                if (!payload.streamID) {
+                    setError("No session/stream ID found in that URL.");
+                    return;
+                }
+
+                const exportObj = {
+                    streamID: payload.streamID,
+                    state: true,
+                    settings: payload.settings
+                };
+                if (payload.password) {
+                    exportObj.password = payload.password;
+                }
+
+                const json = JSON.stringify(exportObj, null, 2);
+                output.value = json;
+                renderSummary(payload);
+                downloadBtn.disabled = false;
+                copyBtn.disabled = false;
+            }
+
+            function downloadFile() {
+                if (!output.value) return;
+                const blob = new Blob([output.value], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "socialstream-settings.data";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            async function copyJson() {
+                if (!output.value) return;
+                try {
+                    await navigator.clipboard.writeText(output.value);
+                    copyBtn.textContent = "Copied";
+                    setTimeout(() => { copyBtn.textContent = "Copy JSON"; }, 900);
+                } catch (e) {
+                    setError("Could not copy to clipboard. Copy manually from the text area.");
+                }
+            }
+
+            document.getElementById("generateBtn").addEventListener("click", generate);
+            dockInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                    generate();
+                }
+            });
+            downloadBtn.addEventListener("click", downloadFile);
+            copyBtn.addEventListener("click", copyJson);
+        })();
+    </script>
+</body>
+</html>

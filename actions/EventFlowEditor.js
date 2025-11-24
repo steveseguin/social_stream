@@ -1223,10 +1223,21 @@ class EventFlowEditor {
                     const req = node.config.requiredProperties?.length || 0;
                     const forb = node.config.forbiddenProperties?.length || 0;
                     const mode = node.config.requireAll ? 'ALL' : 'ANY';
-                    if (req && forb) return `${mode}: ${req} required, ${forb} forbidden`;
-                    if (req) return `${mode}: ${req} required`;
-                    if (forb) return `${forb} forbidden`;
-                    return 'No filters set';
+                    const parts = [];
+                    if (req && forb) parts.push(`${mode}: ${req} required, ${forb} forbidden`);
+                    else if (req) parts.push(`${mode}: ${req} required`);
+                    else if (forb) parts.push(`${forb} forbidden`);
+                    else parts.push('No property filters');
+
+                    if (node.config.lastActivityFilter?.enabled) {
+                        const lastCfg = node.config.lastActivityFilter;
+                        const amount = lastCfg.amount ?? 0;
+                        const unit = lastCfg.unit || 'minutes';
+                        const modeLabel = lastCfg.mode === 'older' ? 'older than' : 'within';
+                        parts.push(`Last activity ${modeLabel} ${amount} ${unit}`);
+                    }
+
+                    return parts.join('; ');
                 }
                 default: return `${this.getNodeTitle(node)}`;
             }
@@ -1631,7 +1642,7 @@ class EventFlowEditor {
                 case 'midiNoteOn': node.config = { deviceId: '', note: '', channel: 1 }; break;
                 case 'midiNoteOff': node.config = { deviceId: '', note: '', channel: 1 }; break;
                 case 'midiCC': node.config = { deviceId: '', controller: '', channel: 1 }; break;
-                case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true }; break;
+                case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true, lastActivityFilter: { enabled: false, mode: 'within', amount: 10, unit: 'minutes' } }; break;
             }
         } else if (type === 'action') {
             node.actionType = subtype;
@@ -2199,6 +2210,11 @@ class EventFlowEditor {
 				const currentRequired = node.config.requiredProperties || [];
 				const currentForbidden = node.config.forbiddenProperties || [];
 				const requireAll = node.config.requireAll !== false;
+				const lastActivityConfig = node.config.lastActivityFilter || {};
+				const lastActivityEnabled = !!lastActivityConfig.enabled;
+				const lastActivityMode = lastActivityConfig.mode === 'older' ? 'older' : 'within';
+				const lastActivityAmount = lastActivityConfig.amount ?? 10;
+				const lastActivityUnit = lastActivityConfig.unit || 'minutes';
 				
 				// Group properties by category
 				const groupedProps = {};
@@ -2253,6 +2269,32 @@ class EventFlowEditor {
 				});
 				
 				html += `</div></div>
+					<div class="property-group">
+						<label class="property-label">Last Activity (optional)</label>
+						<label style="display: block; margin-bottom: 6px;">
+							<input type="checkbox" id="prop-lastActivity-enabled" ${lastActivityEnabled ? 'checked' : ''}> Require last activity window
+						</label>
+						<div id="last-activity-controls" style="display: flex; flex-direction: column; gap: 8px; ${lastActivityEnabled ? '' : 'opacity: 0.6; pointer-events: none;'}">
+							<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+								<label><input type="radio" name="prop-lastActivity-mode" value="within" ${lastActivityMode === 'within' ? 'checked' : ''}> Within</label>
+								<label><input type="radio" name="prop-lastActivity-mode" value="older" ${lastActivityMode === 'older' ? 'checked' : ''}> Older than</label>
+								<input type="number" class="property-input" id="prop-lastActivity-value" value="${lastActivityAmount}" min="0" step="1" style="width: 90px;">
+								<select class="property-input" id="prop-lastActivity-unit" style="width: 120px;">
+									<option value="minutes" ${lastActivityUnit === 'minutes' ? 'selected' : ''}>Minutes</option>
+									<option value="hours" ${lastActivityUnit === 'hours' ? 'selected' : ''}>Hours</option>
+									<option value="days" ${lastActivityUnit === 'days' ? 'selected' : ''}>Days</option>
+								</select>
+							</div>
+							<div style="display: flex; flex-wrap: wrap; gap: 6px;">
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="10" data-unit="minutes">10 min</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="30" data-unit="minutes">30 min</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="3" data-unit="hours">3 hours</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="12" data-unit="hours">12 hours</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="1" data-unit="days">1 day</button>
+							</div>
+							<div class="property-help">Filter by how recently a user last chatted (uses stored lastActivity timestamps; requires “First timers” enabled in global settings).</div>
+						</div>
+					</div>
 					<div class="property-help">Filter messages based on presence/absence of properties. Required properties must exist and be truthy. Forbidden properties must not exist or be falsy.</div>`;
 				break;
 			case 'counter': // Counter trigger
@@ -3589,6 +3631,86 @@ class EventFlowEditor {
                     this.renderNodeOnCanvas(nodeData.id);
                 });
             });
+
+            const ensureLastActivityConfig = () => {
+                if (!nodeData.config.lastActivityFilter) {
+                    nodeData.config.lastActivityFilter = { enabled: false, mode: 'within', amount: 10, unit: 'minutes' };
+                }
+            };
+
+            const lastToggle = document.getElementById('prop-lastActivity-enabled');
+            const lastControls = document.getElementById('last-activity-controls');
+            const lastValue = document.getElementById('prop-lastActivity-value');
+            const lastUnit = document.getElementById('prop-lastActivity-unit');
+            const lastModeRadios = document.querySelectorAll('input[name="prop-lastActivity-mode"]');
+            const quickButtons = document.querySelectorAll('.quick-last-activity');
+
+            if (lastToggle) {
+                lastToggle.addEventListener('change', (e) => {
+                    ensureLastActivityConfig();
+                    nodeData.config.lastActivityFilter.enabled = e.target.checked;
+                    if (lastControls) {
+                        lastControls.style.opacity = e.target.checked ? '' : '0.6';
+                        lastControls.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+                    }
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+
+            if (lastValue) {
+                lastValue.addEventListener('input', (e) => {
+                    ensureLastActivityConfig();
+                    const amount = Math.max(0, parseFloat(e.target.value) || 0);
+                    nodeData.config.lastActivityFilter.amount = amount;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+
+            if (lastUnit) {
+                lastUnit.addEventListener('change', (e) => {
+                    ensureLastActivityConfig();
+                    nodeData.config.lastActivityFilter.unit = e.target.value;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+
+            if (lastModeRadios.length) {
+                lastModeRadios.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        if (!e.target.checked) return;
+                        ensureLastActivityConfig();
+                        nodeData.config.lastActivityFilter.mode = e.target.value;
+                        this.markUnsavedChanges(true);
+                        this.renderNodeOnCanvas(nodeData.id);
+                    });
+                });
+            }
+
+            if (quickButtons.length) {
+                quickButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        ensureLastActivityConfig();
+                        const amount = parseFloat(btn.dataset.amount) || 0;
+                        const unit = btn.dataset.unit || 'minutes';
+                        nodeData.config.lastActivityFilter.amount = amount;
+                        nodeData.config.lastActivityFilter.unit = unit;
+                        nodeData.config.lastActivityFilter.enabled = true;
+                        if (lastValue) lastValue.value = amount;
+                        if (lastUnit) lastUnit.value = unit;
+                        if (lastToggle) lastToggle.checked = true;
+                        if (lastControls) {
+                            lastControls.style.opacity = '';
+                            lastControls.style.pointerEvents = 'auto';
+                        }
+                        this.markUnsavedChanges(true);
+                        this.renderNodeOnCanvas(nodeData.id);
+                    });
+                });
+            }
         }
 
         // Special handling for counter trigger

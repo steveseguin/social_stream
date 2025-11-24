@@ -1732,7 +1732,7 @@ class EventFlowSystem {
             }
                 
             case 'messageProperties': {
-                const { requiredProperties = [], forbiddenProperties = [], requireAll = true } = config;
+                const { requiredProperties = [], forbiddenProperties = [], requireAll = true, lastActivityFilter = {} } = config;
                 
                 // Check forbidden properties first (immediate fail)
                 for (const prop of forbiddenProperties) {
@@ -1747,29 +1747,59 @@ class EventFlowSystem {
                 }
                 
                 // If no required properties, pass
-                if (requiredProperties.length === 0) return true;
-                
-                // Check required properties
-                const checkProperty = (prop) => {
-                    // Special handling for karma thresholds
-                    if (prop === 'highKarma') {
-                        return message.karma !== undefined && message.karma >= 0.7;
+                let requiredPass = true;
+                if (requiredProperties.length > 0) {
+                    // Check required properties
+                    const checkProperty = (prop) => {
+                        // Special handling for karma thresholds
+                        if (prop === 'highKarma') {
+                            return message.karma !== undefined && message.karma >= 0.7;
+                        }
+                        // Special handling for arrays
+                        if (prop === 'chatbadges') {
+                            return Array.isArray(message.chatbadges) && message.chatbadges.length > 0;
+                        }
+                        // Check if property exists and is truthy
+                        return message[prop] && message[prop] !== false;
+                    };
+                    
+                    if (requireAll) {
+                        // ALL required properties must exist
+                        requiredPass = requiredProperties.every(checkProperty);
+                    } else {
+                        // ANY required property must exist
+                        requiredPass = requiredProperties.some(checkProperty);
                     }
-                    // Special handling for arrays
-                    if (prop === 'chatbadges') {
-                        return Array.isArray(message.chatbadges) && message.chatbadges.length > 0;
-                    }
-                    // Check if property exists and is truthy
-                    return message[prop] && message[prop] !== false;
-                };
-                
-                if (requireAll) {
-                    // ALL required properties must exist
-                    return requiredProperties.every(checkProperty);
-                } else {
-                    // ANY required property must exist
-                    return requiredProperties.some(checkProperty);
                 }
+                
+                if (!requiredPass) return false;
+                
+                if (lastActivityFilter.enabled) {
+                    const amount = parseFloat(lastActivityFilter.amount) || 0;
+                    const unit = lastActivityFilter.unit || 'minutes';
+                    const mode = lastActivityFilter.mode === 'older' ? 'older' : 'within';
+                    const unitMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000 };
+                    const windowMs = Math.max(0, amount) * (unitMap[unit] || unitMap.minutes);
+                    const lastActivityTs = message.lastactivity || message.lastActivity || null;
+
+                    // Require a valid last activity timestamp when filter is enabled
+                    if (!lastActivityTs || windowMs === 0) {
+                        return false;
+                    }
+
+                    const age = Date.now() - lastActivityTs;
+                    if (age < 0) {
+                        return false; // Future timestamps are treated as invalid
+                    }
+
+                    if (mode === 'older') {
+                        if (age < windowMs) return false;
+                    } else {
+                        if (age > windowMs) return false;
+                    }
+                }
+
+                return true;
             }
                 
             default:

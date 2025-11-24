@@ -10919,9 +10919,18 @@ async function applyBotActions(data, tab = false) {
 		
 		if (settings.firsttimers && data.chatname && data.type){
 			try {
-				let exists = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
+				const checkResult = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
+				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
+				const lastActivity = typeof checkResult === "object" ? checkResult.lastActivity : null;
+
 				if (!exists){
 					data.firsttime = true;
+				}
+				if (lastActivity){
+					data.lastactivity = lastActivity;
+				} else if (data.firsttime && data.timestamp) {
+					// Seed last activity for first-time chatters so time-window filters can pass
+					data.lastactivity = data.timestamp;
 				}
 			} catch (e) {
 				console.error("Error checking first timer:", e);

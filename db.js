@@ -29,6 +29,21 @@ class MessageStoreDB {
         this.initPromise = this.initDatabase();
     }
 
+    setExistenceCache(cacheKey, { exists, lastActivity = null, cachedAt = Date.now() }) {
+        this.existenceCache.entries.set(cacheKey, {
+            exists,
+            lastActivity,
+            timestamp: cachedAt
+        });
+
+        if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
+            const oldestKey = this.existenceCache.entries.keys().next().value;
+            if (oldestKey) {
+                this.existenceCache.entries.delete(oldestKey);
+            }
+        }
+    }
+
     async initDatabase() {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open(this.dbName, 4);
@@ -111,17 +126,10 @@ class MessageStoreDB {
                 const userIdentifier = messageData.userid || messageData.chatname;
                 if (userIdentifier && messageData.type) {
                     const cacheKey = `${userIdentifier}:${messageData.type}`;
-                    const now = Date.now();
-                    this.existenceCache.entries.set(cacheKey, {
+                    this.setExistenceCache(cacheKey, {
                         exists: true,
-                        timestamp: now
+                        lastActivity: messageData.timestamp
                     });
-                    
-                    // Trim cache if needed
-                    if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
-                        const oldestKey = Array.from(this.existenceCache.entries.keys())[0];
-                        this.existenceCache.entries.delete(oldestKey);
-                    }
                     console.log("Cached user as existing:", cacheKey);
                 }
                 
@@ -204,35 +212,33 @@ class MessageStoreDB {
 		const now = Date.now();
 		
 		// Check cache first
-		if (this.existenceCache.entries.has(cacheKey)) {
-			const entry = this.existenceCache.entries.get(cacheKey);
-			if (now - entry.timestamp < this.existenceCache.ttl) {
-				return entry.exists;
-			}
-			// Expired entry, remove from cache
-			this.existenceCache.entries.delete(cacheKey);
-		}
-		
-		// If database is disabled, update cache as not existing and return false
-		if (settings?.disableDB) {
-			// Update cache to indicate this user doesn't exist (since we can't check)
-			this.existenceCache.entries.set(cacheKey, {
-				exists: false,
-				timestamp: now
-			});
-			
-			// Trim cache if needed
-			if (this.existenceCache.entries.size > this.existenceCache.maxSize) {
-				const oldestKey = Array.from(this.existenceCache.entries.keys())[0];
-				this.existenceCache.entries.delete(oldestKey);
-			}
-			
-			return false;
-		}
-		
-		// Not in cache and database enabled, check database
-		const db = await this.ensureDB();
-		
+        if (this.existenceCache.entries.has(cacheKey)) {
+            const entry = this.existenceCache.entries.get(cacheKey);
+            if (now - entry.timestamp < this.existenceCache.ttl) {
+                return {
+                    exists: entry.exists,
+                    lastActivity: entry.lastActivity ?? null
+                };
+            }
+            // Expired entry, remove from cache
+            this.existenceCache.entries.delete(cacheKey);
+        }
+        
+        // If database is disabled, update cache as not existing and return false
+        if (settings?.disableDB) {
+            // Update cache to indicate this user doesn't exist (since we can't check)
+            this.setExistenceCache(cacheKey, {
+                exists: false,
+                lastActivity: null,
+                cachedAt: now
+            });
+            
+            return { exists: false, lastActivity: null };
+        }
+        
+        // Not in cache and database enabled, check database
+        const db = await this.ensureDB();
+        
 		return new Promise((resolve) => {
 			const tx = db.transaction(this.storeName, 'readonly');
 			const store = tx.objectStore(this.storeName);
@@ -253,31 +259,40 @@ class MessageStoreDB {
 				console.log("Using userid index for:", chatname, type);
 				index = store.index('user_id_type_timestamp');
 				range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
-			} else {
-				// Use chatname index
-				console.log("Using chatname index for:", chatname, type);
-				index = store.index('user_type_timestamp');
-				range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
-			}
-			
-			const countRequest = index.count(range);
-			
-			countRequest.onsuccess = () => {
-				const exists = countRequest.result > 0;
-				console.log("Count result:", countRequest.result, "exists:", exists);
-				
-				// Don't cache the result here - we'll cache after storing the message
-				// This prevents caching "false" results that become stale immediately
-				
-				resolve(exists);
-			};
-			
-			countRequest.onerror = () => {
-				console.error('Error counting user type records:', countRequest.error);
-				resolve(false);
-			};
-		});
-	}
+            } else {
+                // Use chatname index
+                console.log("Using chatname index for:", chatname, type);
+                index = store.index('user_type_timestamp');
+                range = IDBKeyRange.bound([chatname, type, 0], [chatname, type, now]);
+            }
+            
+            const cursorRequest = index.openCursor(range, 'prev');
+            
+            cursorRequest.onsuccess = (event) => {
+                const cursor = event.target.result;
+                const exists = Boolean(cursor);
+                const lastActivity = cursor?.value?.timestamp ?? null;
+
+                if (exists) {
+                    this.setExistenceCache(cacheKey, {
+                        exists: true,
+                        lastActivity,
+                        cachedAt: now
+                    });
+                }
+                
+                resolve({
+                    exists,
+                    lastActivity
+                });
+            };
+            
+            cursorRequest.onerror = () => {
+                console.error('Error checking user type records:', cursorRequest.error);
+                resolve({ exists: false, lastActivity: null });
+            };
+        });
+    }
     clearExistenceCache() {
         this.existenceCache.entries.clear();
     }
