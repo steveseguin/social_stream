@@ -19,6 +19,29 @@
             --accent-2: #f4b556;
             --panel: rgba(14, 20, 32, 0.65);
             --stroke: rgba(255, 255, 255, 0.14);
+            --country-fill: rgba(255, 255, 255, 0.06);
+            --country-highlight: rgba(255, 255, 255, 0.45);
+            --stroke-width: 0.6;
+            --country-opacity: 1;
+            --surface-opacity: 0.45;
+            --surface-blend: lighten;
+            --surface-rotate: 0deg;
+            --surface-shift-x: 0px;
+            --surface-shift-y: 0px;
+            --surface-scale: 1;
+            --surface-filter: none;
+            --map-zoom: 1;
+            --map-pan-x: 0px;
+            --map-pan-y: 0px;
+            --map-rotate: 0deg;
+            --map-tilt: 0deg;
+            --map-perspective: none;
+            --map-filter: none;
+            --panel-border: 1px solid rgba(255, 255, 255, 0.1);
+            --hud-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+            --hud-blur: 10px;
+            --status-bg: rgba(0, 0, 0, 0.4);
+            --status-color: var(--text);
         }
 
         * { box-sizing: border-box; }
@@ -30,6 +53,7 @@
             overflow: hidden;
             font-family: 'Space Grotesk', 'Sora', 'Segoe UI', system-ui, -apple-system, sans-serif;
             color: var(--text);
+            perspective: var(--map-perspective, none);
             background:
                 radial-gradient(120% 90% at 15% 15%, rgba(110, 247, 200, 0.12), transparent),
                 radial-gradient(80% 70% at 80% 20%, rgba(244, 181, 86, 0.14), transparent),
@@ -53,8 +77,12 @@
                 var(--grid) 33px
             );
             pointer-events: none;
-            mix-blend-mode: lighten;
-            opacity: 0.45;
+            mix-blend-mode: var(--surface-blend, lighten);
+            opacity: var(--surface-opacity, 0.45);
+            transform: translate(var(--surface-shift-x, 0px), var(--surface-shift-y, 0px)) scale(var(--surface-scale, 1)) rotate(var(--surface-rotate, 0deg));
+            transform-origin: center;
+            transition: opacity 0.8s ease, transform 1s ease;
+            filter: var(--surface-filter, none);
         }
 
         svg#world-map {
@@ -62,17 +90,23 @@
             inset: 0;
             width: 100%;
             height: 100%;
+            transform: translate(var(--map-pan-x, 0px), var(--map-pan-y, 0px)) scale(var(--map-zoom, 1)) rotate(var(--map-rotate, 0deg)) rotateX(var(--map-tilt, 0deg));
+            transform-origin: center;
+            transform-style: preserve-3d;
+            transition: transform 1.2s ease, filter 1s ease, opacity 0.6s ease;
+            filter: var(--map-filter, none);
         }
 
         .country {
-            fill: rgba(255, 255, 255, 0.06);
+            fill: var(--country-fill, rgba(255, 255, 255, 0.06));
             stroke: var(--stroke);
-            stroke-width: 0.6;
+            stroke-width: var(--stroke-width, 0.6);
+            opacity: var(--country-opacity, 1);
             transition: fill 0.4s ease, stroke 0.4s ease, opacity 0.4s ease;
         }
 
         .country.has-data {
-            stroke: rgba(255, 255, 255, 0.45);
+            stroke: var(--country-highlight, rgba(255, 255, 255, 0.45));
         }
 
         .country-label {
@@ -114,10 +148,10 @@
             max-width: 520px;
             padding: 16px 18px;
             background: var(--panel);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: var(--panel-border, 1px solid rgba(255, 255, 255, 0.1));
             border-radius: 16px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(var(--hud-blur, 10px));
+            box-shadow: var(--hud-shadow, 0 18px 60px rgba(0, 0, 0, 0.35));
         }
 
         #title {
@@ -197,8 +231,8 @@
             left: 18px;
             padding: 10px 14px;
             border-radius: 12px;
-            background: rgba(0, 0, 0, 0.4);
-            color: var(--text);
+            background: var(--status-bg, rgba(0, 0, 0, 0.4));
+            color: var(--status-color, var(--text));
             font-weight: 600;
             letter-spacing: 0.2px;
             pointer-events: none;
@@ -494,7 +528,30 @@
                 '--accent': '#6ef7c8',
                 '--accent-2': '#f4b556',
                 '--panel': 'rgba(14, 20, 32, 0.65)',
-                '--stroke': 'rgba(255, 255, 255, 0.14)'
+                '--stroke': 'rgba(255, 255, 255, 0.14)',
+                '--country-fill': 'rgba(255, 255, 255, 0.06)',
+                '--country-highlight': 'rgba(255, 255, 255, 0.45)',
+                '--stroke-width': '0.6',
+                '--country-opacity': '1',
+                '--surface-opacity': '0.45',
+                '--surface-blend': 'lighten',
+                '--surface-rotate': '0deg',
+                '--surface-shift-x': '0px',
+                '--surface-shift-y': '0px',
+                '--surface-scale': '1',
+                '--surface-filter': 'none',
+                '--map-zoom': '1',
+                '--map-pan-x': '0px',
+                '--map-pan-y': '0px',
+                '--map-rotate': '0deg',
+                '--map-tilt': '0deg',
+                '--map-perspective': 'none',
+                '--map-filter': 'none',
+                '--panel-border': '1px solid rgba(255, 255, 255, 0.1)',
+                '--hud-shadow': '0 18px 60px rgba(0, 0, 0, 0.35)',
+                '--hud-blur': '10px',
+                '--status-bg': 'rgba(0, 0, 0, 0.4)',
+                '--status-color': '#e8edf6'
             },
             aurora: {
                 '--bg': 'radial-gradient(120% 90% at 10% 10%, rgba(114, 210, 255, 0.12), transparent), radial-gradient(90% 80% at 80% 20%, rgba(141, 255, 196, 0.14), transparent), rgba(4, 10, 18, 0.55)',
@@ -504,7 +561,22 @@
                 '--accent': '#7fffd4',
                 '--accent-2': '#6bb7ff',
                 '--panel': 'rgba(10, 18, 32, 0.72)',
-                '--stroke': 'rgba(255, 255, 255, 0.16)'
+                '--stroke': 'rgba(255, 255, 255, 0.16)',
+                '--country-fill': 'rgba(255, 255, 255, 0.08)',
+                '--country-highlight': '#bce5ff',
+                '--stroke-width': '0.8',
+                '--surface-opacity': '0.52',
+                '--surface-blend': 'screen',
+                '--surface-scale': '1.05',
+                '--surface-rotate': '-2deg',
+                '--surface-shift-y': '-4px',
+                '--map-zoom': '1.05',
+                '--map-pan-y': '-6px',
+                '--map-tilt': '2deg',
+                '--map-perspective': '1000px',
+                '--map-filter': 'drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5))',
+                '--panel-border': '1px solid rgba(123, 207, 255, 0.22)',
+                '--hud-blur': '14px'
             },
             ember: {
                 '--bg': 'radial-gradient(90% 60% at 20% 20%, rgba(255, 171, 92, 0.22), transparent), radial-gradient(80% 80% at 80% 10%, rgba(255, 94, 98, 0.18), transparent), rgba(16, 8, 6, 0.68)',
@@ -514,7 +586,18 @@
                 '--accent': '#ff9f6f',
                 '--accent-2': '#ff5f6d',
                 '--panel': 'rgba(24, 12, 8, 0.75)',
-                '--stroke': 'rgba(255, 255, 255, 0.12)'
+                '--stroke': 'rgba(255, 255, 255, 0.12)',
+                '--country-fill': 'rgba(255, 225, 210, 0.1)',
+                '--country-highlight': '#ffb48a',
+                '--stroke-width': '0.9',
+                '--surface-opacity': '0.38',
+                '--surface-blend': 'soft-light',
+                '--surface-rotate': '1deg',
+                '--map-zoom': '1.03',
+                '--map-rotate': '1deg',
+                '--map-filter': 'sepia(0.25) drop-shadow(0 12px 32px rgba(0, 0, 0, 0.5))',
+                '--panel-border': '1px solid rgba(255, 159, 111, 0.22)',
+                '--hud-shadow': '0 18px 55px rgba(0, 0, 0, 0.45)'
             },
             neon: {
                 '--bg': 'radial-gradient(100% 70% at 15% 15%, rgba(133, 255, 205, 0.14), transparent), radial-gradient(80% 80% at 80% 20%, rgba(97, 164, 255, 0.16), transparent), #04060a',
@@ -524,15 +607,144 @@
                 '--accent': '#6ef7c8',
                 '--accent-2': '#8bd4ff',
                 '--panel': 'rgba(8, 12, 20, 0.75)',
-                '--stroke': 'rgba(110, 247, 200, 0.2)'
+                '--stroke': 'rgba(110, 247, 200, 0.2)',
+                '--country-fill': 'rgba(255, 255, 255, 0.09)',
+                '--country-highlight': '#c2e9ff',
+                '--stroke-width': '0.8',
+                '--surface-opacity': '0.58',
+                '--surface-scale': '1.05',
+                '--surface-blend': 'screen',
+                '--surface-shift-x': '8px',
+                '--map-zoom': '1.08',
+                '--map-pan-x': '6px',
+                '--map-tilt': '4deg',
+                '--map-perspective': '1100px',
+                '--map-filter': 'drop-shadow(0 16px 38px rgba(0, 0, 0, 0.55)) saturate(1.1)',
+                '--panel-border': '1px solid rgba(110, 247, 200, 0.26)',
+                '--hud-blur': '14px'
+            },
+            blueprint: {
+                '--bg': 'radial-gradient(120% 90% at 15% 10%, rgba(48, 154, 255, 0.18), transparent), #051428',
+                '--grid': 'rgba(126, 196, 255, 0.25)',
+                '--text': '#d6e9ff',
+                '--muted': '#7fb4f0',
+                '--accent': '#8bd4ff',
+                '--accent-2': '#63b3ff',
+                '--panel': 'rgba(5, 22, 45, 0.82)',
+                '--stroke': 'rgba(139, 212, 255, 0.7)',
+                '--country-fill': 'rgba(255, 255, 255, 0.08)',
+                '--country-highlight': '#b7e5ff',
+                '--stroke-width': '1.05',
+                '--surface-opacity': '0.58',
+                '--surface-blend': 'screen',
+                '--surface-rotate': '-6deg',
+                '--surface-scale': '1.08',
+                '--surface-shift-x': '-12px',
+                '--surface-shift-y': '-8px',
+                '--surface-filter': 'drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5))',
+                '--map-zoom': '1.1',
+                '--map-pan-y': '-10px',
+                '--map-rotate': '-1.8deg',
+                '--map-tilt': '6deg',
+                '--map-perspective': '1200px',
+                '--map-filter': 'drop-shadow(0 14px 34px rgba(0, 0, 0, 0.55))',
+                '--panel-border': '1px solid rgba(139, 212, 255, 0.28)',
+                '--hud-shadow': '0 20px 50px rgba(0, 0, 0, 0.48)',
+                '--hud-blur': '16px'
+            },
+            minimal: {
+                '--bg': 'radial-gradient(120% 80% at 12% 10%, rgba(91, 121, 182, 0.08), transparent), #f6f8fc',
+                '--grid': 'rgba(12, 26, 47, 0.06)',
+                '--text': '#0f1b2e',
+                '--muted': '#48607d',
+                '--accent': '#2d7dd2',
+                '--accent-2': '#8ecae6',
+                '--panel': 'rgba(255, 255, 255, 0.8)',
+                '--stroke': 'rgba(12, 26, 47, 0.16)',
+                '--country-fill': 'rgba(12, 26, 47, 0.08)',
+                '--country-highlight': 'rgba(12, 26, 47, 0.6)',
+                '--stroke-width': '0.8',
+                '--surface-opacity': '0.08',
+                '--surface-blend': 'multiply',
+                '--surface-rotate': '0deg',
+                '--surface-shift-y': '-6px',
+                '--map-zoom': '1.04',
+                '--map-pan-y': '-10px',
+                '--map-tilt': '3deg',
+                '--map-perspective': '900px',
+                '--map-filter': 'drop-shadow(0 8px 18px rgba(12, 26, 47, 0.18))',
+                '--panel-border': '1px solid rgba(12, 26, 47, 0.12)',
+                '--hud-shadow': '0 14px 38px rgba(12, 26, 47, 0.15)',
+                '--hud-blur': '12px',
+                '--status-bg': 'rgba(255, 255, 255, 0.82)',
+                '--status-color': '#0f1b2e'
+            },
+            retro: {
+                '--bg': 'radial-gradient(140% 100% at 20% 15%, rgba(255, 196, 130, 0.16), transparent), #1d1208',
+                '--grid': 'rgba(255, 186, 120, 0.14)',
+                '--text': '#f8e8d1',
+                '--muted': '#d0b89a',
+                '--accent': '#f2a65a',
+                '--accent-2': '#d7263d',
+                '--panel': 'rgba(28, 14, 6, 0.8)',
+                '--stroke': 'rgba(255, 230, 200, 0.18)',
+                '--country-fill': 'rgba(255, 230, 200, 0.1)',
+                '--country-highlight': '#f2a65a',
+                '--stroke-width': '0.9',
+                '--surface-opacity': '0.35',
+                '--surface-blend': 'soft-light',
+                '--surface-rotate': '3deg',
+                '--surface-scale': '1.04',
+                '--surface-filter': 'sepia(0.35)',
+                '--map-zoom': '1.02',
+                '--map-rotate': '1.5deg',
+                '--map-pan-x': '-6px',
+                '--map-pan-y': '8px',
+                '--map-filter': 'sepia(0.28) contrast(1.05) drop-shadow(0 12px 28px rgba(0, 0, 0, 0.45))',
+                '--panel-border': '1px solid rgba(242, 166, 90, 0.22)',
+                '--hud-shadow': '0 18px 48px rgba(0, 0, 0, 0.45)',
+                '--hud-blur': '10px'
+            },
+            radar: {
+                '--bg': 'radial-gradient(120% 90% at 50% 50%, rgba(16, 96, 80, 0.28), #03100c)',
+                '--grid': 'rgba(110, 247, 200, 0.18)',
+                '--text': '#dff7ed',
+                '--muted': '#96c7ad',
+                '--accent': '#7fffd4',
+                '--accent-2': '#00ffc3',
+                '--panel': 'rgba(4, 18, 14, 0.78)',
+                '--stroke': 'rgba(127, 255, 212, 0.22)',
+                '--country-fill': 'rgba(0, 255, 195, 0.08)',
+                '--country-highlight': '#a0ffe0',
+                '--stroke-width': '0.75',
+                '--surface-opacity': '0.62',
+                '--surface-blend': 'lighten',
+                '--surface-scale': '1.02',
+                '--surface-shift-x': '16px',
+                '--surface-shift-y': '-6px',
+                '--map-zoom': '1.12',
+                '--map-pan-x': '6px',
+                '--map-perspective': '1100px',
+                '--map-tilt': '5deg',
+                '--map-filter': 'saturate(1.2) contrast(1.15) drop-shadow(0 16px 40px rgba(0, 0, 0, 0.55))',
+                '--panel-border': '1px solid rgba(127, 255, 212, 0.18)',
+                '--hud-shadow': '0 16px 44px rgba(0, 0, 0, 0.52)',
+                '--hud-blur': '14px'
             }
         };
 
         function applyStylePreset(presetName) {
-            const preset = STYLE_PRESETS[presetName] || STYLE_PRESETS.default;
-            Object.entries(preset).forEach(([key, value]) => {
+            const base = STYLE_PRESETS.default;
+            const preset = STYLE_PRESETS[presetName] || base;
+            Object.entries(base).forEach(([key, value]) => {
                 document.documentElement.style.setProperty(key, value);
             });
+            if (preset !== base) {
+                Object.entries(preset).forEach(([key, value]) => {
+                    document.documentElement.style.setProperty(key, value);
+                });
+            }
+            document.body.dataset.mapStyle = presetName in STYLE_PRESETS ? presetName : 'default';
         }
 
         function applyMotionPreference(enabled) {
