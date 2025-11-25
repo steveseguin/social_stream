@@ -4981,6 +4981,14 @@ async function sendToDestinations(message) {
 	} catch (e) {
 		console.error(e);
 	}
+
+	try {
+		if (settings.mapEnabled){
+			sendTargetP2P(message, "map");
+		}
+	} catch (e) {
+		console.error(e);
+	}
 	
 	try {
 		if (settings.wordcloud){
@@ -7006,6 +7014,15 @@ socketserver.addEventListener("message", async function (event) {
 				resp = true;
 			} else if (data.action && data.action === "closepoll") {
 				sendTargetP2P({cmd:"closepoll"},"poll");
+				resp = true;
+			} else if (data.action && data.action === "startmap") {
+				sendTargetP2P({cmd:"startmap"},"map");
+				resp = true;
+			} else if (data.action && data.action === "pausemap") {
+				sendTargetP2P({cmd:"pausemap"},"map");
+				resp = true;
+			} else if (data.action && data.action === "resetmap") {
+				sendTargetP2P({cmd:"resetmap"},"map");
 				resp = true;
 			} else if (data.action && data.action === "loadpoll") {
 				// Load a saved poll preset by ID

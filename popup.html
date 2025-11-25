@@ -41,6 +41,7 @@
 	--gif-color: #9a3f7bdd;
 	--wordcloud-color: #6a6bffdd;
 	--poll-color: #61b700dd;
+	--poll-color: #D16700dd;
 	--credits-color: #02a0aa;
 	--leaderboard-color: #9b59b6;
 	--scoreboard-color: #e74c3c;
@@ -8394,6 +8395,88 @@ input:checked + .slider:before {
 								</div>
 								
 								
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			
+			<div class="link" title="Mapping system">
+                <h2 class="map_mode_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🗺️</span><span data-translate="mapmeter">User Map </span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#map" title="Jump to the map link options."><span data-translate="options">[options]</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-map">
+                       A graphical map. Users can enter their location to mark on it.
+                    </span>
+                </h3>
+				<div id="map" data-raw="" class="streaming_chat"><a href="" id="maplink"></a></div>
+            </div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-map-options" />
+					<label class="collapsible-label" for="wrapper-map-options"><span>🗺️ Map Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group map">
+								<h3 data-translate="map-settings">Map Settings</h3>
+								<p>Enable and customize the map:</p>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="map" data-setting="mapEnabled" />
+										<span class="slider round"></span>
+									</label>
+									<span>🚦 Enable Map</span>
+								</div>
+								<br>
+								<div>
+									<label>📊 Map Type:</label>
+									<select data-optionparam23="maptype" data-target="map" id="mapType">
+										<option value="country">Country</option>
+										<option value="state">State</option>
+										<option value="city">City</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label>🌎 Region filter:</label>
+									<select data-optionparam23="region" data-target="map" id="mapRegion">
+										<option value="global">Global</option>
+										<option value="northamerica">North America</option>
+										<option value="europe">Europe</option>
+										<option value="southamerica">South America</option>
+										<option value="asia">Asia</option>
+										<option value="africa">Africa</option>
+										<option value="oceania">Oceania</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="map" data-param23="mapspam" />
+										<span class="slider round"></span>
+									</label>
+									<span>🗳️ Allow multiple votes per user</span>
+								</div>
+								<br>
+								<div style="display:flex; gap:8px; flex-wrap:wrap">
+									<button class="glowingButton" style="flex:1" data-action="startmap" data-target="map"><span>Start</span></button>
+									<button class="glowingButton" style="flex:1" data-action="pausemap" data-target="map"><span>Pause</span></button>
+									<button class="glowingButton" style="flex:1" data-action="resetmap" data-target="map"><span>Reset</span></button>
+								</div>
+								<br>
+								<div>
+									<label>🎨 Map Style/Theme:</label>
+									<select data-optionparam23="mapstyle" data-target="map" id="mapStyle">
+										<option value="default">Default</option>
+										<option value="aurora">Aurora</option>
+										<option value="ember">Ember</option>
+										<option value="neon">Neon</option>
+									</select>
+								</div>
 							</div>
 						</div>
 					</div>

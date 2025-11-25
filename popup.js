@@ -1851,7 +1851,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "flowactions", path: "actions.html" },
 	{ id: "custom-gif-commands", path: "gif.html" },
 	{ id: "spotify", path: "spotify-overlay.html" },
-	{ id: "scoreboard", path: "scoreboard.html"}
+	{ id: "scoreboard", path: "scoreboard.html"},
+	{ id: "map", path: "map.html" },
 	
   ];
   
@@ -2119,7 +2120,11 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
         // Process option parameters
         const optionParamKey = `optionparam${paramNum}`;
         if (optionParamKey in settingObj) {
-            const ele = document.querySelector(`[data-${optionParamKey}='${key}']`);
+            let ele = document.querySelector(`[data-${optionParamKey}='${key}']`);
+            if (!ele && typeof key === 'string') {
+                const lowerKey = key.toLowerCase();
+                ele = document.querySelector(`[data-${optionParamKey}='${lowerKey}']`);
+            }
             if (ele) {
                 let storedValue = settingObj[optionParamKey];
                 const isSelect = ele.tagName === 'SELECT';
@@ -2528,7 +2533,7 @@ function update(response, sync = true) {
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
-					'spotifylink',
+					'spotifylink','maplink'
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -2587,7 +2592,7 @@ function update(response, sync = true) {
 
 function processParam(key, paramNum, settingObj, sync) {
     let paramKey = `param${paramNum}`;
-    let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
+    let ele = document.querySelector(`input[data-${paramKey}='${key}'], select[data-${paramKey}='${key}']`);
 
     if (!ele && paramNum === 1 && key.startsWith('chroma=')) {
         const rawValue = key.split('=')[1] || '';
@@ -2622,7 +2627,13 @@ function processParam(key, paramNum, settingObj, sync) {
 
     if (!ele) return;
 
-    ele.checked = settingObj[paramKey]; // Set the checked state based on loaded setting.
+    if (ele.tagName && ele.tagName.toLowerCase() === 'select') {
+        if (settingObj[paramKey] !== undefined) {
+            ele.value = settingObj[paramKey];
+        }
+    } else {
+        ele.checked = !!settingObj[paramKey]; // Set the checked state based on loaded setting.
+    }
 
     // Call updateSettings with the element. handleElementParam will figure out the value.
     updateSettings(ele, sync);
@@ -3024,7 +3035,8 @@ function getTargetMap() {
 		'eventsdashboard': 17,
 		'flowactions': 18,
 		'scoreboard': 21,
-		'spotify': 22
+		'spotify': 22,
+		'map': 23,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -3318,7 +3330,14 @@ function handleOptionParam(ele, targetId, paramType, sync) {
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
     
+    const isMapTarget = targetId === 'map';
+    const paramKey = isMapTarget ? paramValue.toLowerCase() : paramValue;
+
+    // Remove both the original and normalized keys to avoid duplicates
     targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+    if (paramKey !== paramValue) {
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramKey);
+    }
     
     // Check if this option should be active based on its related checkbox
     // Extract the number from paramType (e.g., "10" from "optionparam10")
@@ -3365,19 +3384,19 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                 } else if (paramValue.endsWith('lang')) {
                     // Generic handling for other *lang parameters
                     const prefix = paramValue.slice(0, -4);
-                    targetElement.raw = updateURL(`${paramValue}=${langValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`${paramKey}=${langValue}`, targetElement.raw);
                     targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
                 } else {
                     // Not a language parameter, use standard value
-                    targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+                    targetElement.raw = updateURL(`${paramKey}=${ele.value}`, targetElement.raw);
                 }
             } else {
                 // Standard select without language/voice data
-                targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+                targetElement.raw = updateURL(`${paramKey}=${ele.value}`, targetElement.raw);
             }
         } else {
             // Not a select element, use standard value
-            targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+            targetElement.raw = updateURL(`${paramKey}=${ele.value}`, targetElement.raw);
         }
     }
     
@@ -3858,7 +3877,7 @@ function updateSettings(ele, sync = true, value = null) {
 	
     // Handle poll settings
     if (handlePollSettings(ele, sync)) return;
-    
+	
     // Handle delete parameters
     if (handleDelParam(ele, sync)) {
         // Continue with other settings
@@ -4041,7 +4060,8 @@ function refreshLinks(){
       'eventsdashboardlink': 'eventsdashboard',
       'custom-gif-commandslink': 'custom-gif-commands',
 	  'scoreboardlink': 'scoreboard',
-	  'spotifylink': 'spotify'
+	  'spotifylink': 'spotify',
+	  'maplink': 'map'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
@@ -5315,7 +5335,6 @@ const PollManager = {
         });
     }
 };
-
 
 document.addEventListener("DOMContentLoaded", async function(event) {
     await ensureSourcesListLoaded();
