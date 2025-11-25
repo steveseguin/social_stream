@@ -103,6 +103,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `smooth` | boolean | Enables smooth scrolling |
 | `animatein` | string | Sets specific entrance animation (see animate.css) |
 | `animateout` | string | Sets specific exit animation (see animate.css) |
+| `typewriter` | boolean or number | Types chat text letter-by-letter with a blinking cursor; optional numeric value sets the per-character delay (ms) while messages wait for the current typing to finish |
 
 ### Message Display Parameters
 

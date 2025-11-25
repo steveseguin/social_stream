@@ -474,6 +474,29 @@
 				margin: 4px 1px;
 			}
 
+			.typewriter-active {
+				position: relative;
+			}
+
+			.typewriter-caret {
+				display: inline-block;
+				width: 0.65ch;
+				margin-left: 1px;
+				background: currentColor;
+				animation: typewriter-caret-blink 0.9s steps(1) infinite;
+				vertical-align: baseline;
+				opacity: 0.85;
+			}
+
+			@keyframes typewriter-caret-blink {
+				0%, 49% {
+					opacity: 1;
+				}
+				50%, 100% {
+					opacity: 0;
+				}
+			}
+
 			/* example of how to remotely load a font */
 			@font-face {
 				font-family: "opendyslexic";
@@ -3029,6 +3052,18 @@
 			if (urlParams.has("chartime")) {
 				timePerCharacter = parseInt(urlParams.get("chartime")) || 60;
 			}
+
+			var typewriterEnabled = urlParams.has("typewriter");
+			var typewriterSpeed = 5;
+			if (typewriterEnabled) {
+				var typewriterParam = urlParams.get("typewriter") || urlParams.get("typewriterspeed");
+				var parsedTypewriterSpeed = parseInt(typewriterParam, 10);
+				if (!isNaN(parsedTypewriterSpeed) && parsedTypewriterSpeed > 0) {
+					typewriterSpeed = Math.max(5, parsedTypewriterSpeed);
+				}
+			}
+			var typewriterQueue = [];
+			var typewriterActive = false;
 
 			var badkarma = -1; // no filtering
 			if (urlParams.has("badkarma")) {
@@ -7044,6 +7079,191 @@
 				}
 			}
 
+			function buildTypewriterSegments(nodes) {
+				var segments = [];
+				nodes.forEach(function (node) {
+					if (node.nodeType === Node.TEXT_NODE) {
+						segments.push({ type: "text", node: node, originalText: node.textContent || "" });
+					} else if (node.nodeType === Node.ELEMENT_NODE) {
+						segments.push({
+							type: "element",
+							node: node,
+							children: buildTypewriterSegments(Array.from(node.childNodes))
+						});
+					}
+				});
+				return segments;
+			}
+
+			function restoreTypewriterSegments(parent, segments) {
+				segments.forEach(function (segment) {
+					if (segment.type === "text") {
+						segment.node.textContent = segment.originalText;
+						parent.appendChild(segment.node);
+					} else if (segment.type === "element") {
+						parent.appendChild(segment.node);
+						restoreTypewriterSegments(segment.node, segment.children);
+					}
+				});
+			}
+
+			function prepareTypewriterSegments(segments) {
+				var totalLength = 0;
+				segments.forEach(function (segment) {
+					if (segment.type === "text") {
+						totalLength += segment.originalText.length;
+						segment.node.textContent = "";
+					} else if (segment.type === "element") {
+						totalLength += prepareTypewriterSegments(segment.children);
+						while (segment.node.firstChild) {
+							segment.node.removeChild(segment.node.firstChild);
+						}
+					}
+				});
+				return totalLength;
+			}
+
+			function typewriterRun(parent, segments, cursor, onDone) {
+				if (!parent || !parent.isConnected) {
+					if (onDone) {
+						onDone();
+					}
+					return;
+				}
+
+				var index = 0;
+
+				function moveCursor(target) {
+					if (!cursor) {
+						return;
+					}
+					try {
+						target.appendChild(cursor);
+					} catch (e) {}
+				}
+
+				function processNext(currentParent) {
+					if (!currentParent || !currentParent.isConnected) {
+						if (onDone) {
+							onDone();
+						}
+						return;
+					}
+					if (index >= segments.length) {
+						if (onDone) {
+							onDone();
+						}
+						return;
+					}
+
+					var segment = segments[index++];
+
+					if (segment.type === "text") {
+						if (!segment.node.isConnected) {
+							currentParent.appendChild(segment.node);
+						}
+						var text = segment.originalText || "";
+						var charIndex = 0;
+
+						function typeChar() {
+							if (!currentParent.isConnected) {
+								if (onDone) {
+									onDone();
+								}
+								return;
+							}
+							if (charIndex < text.length) {
+								segment.node.textContent += text.charAt(charIndex++);
+								moveCursor(currentParent);
+								setTimeout(typeChar, typewriterSpeed);
+							} else {
+								processNext(currentParent);
+							}
+						}
+
+						if (text.length) {
+							moveCursor(currentParent);
+							typeChar();
+						} else {
+							processNext(currentParent);
+						}
+					} else if (segment.type === "element") {
+						currentParent.appendChild(segment.node);
+						moveCursor(segment.node);
+						if (segment.children && segment.children.length) {
+							typewriterRun(segment.node, segment.children, cursor, function () {
+								processNext(currentParent);
+							});
+						} else {
+							processNext(currentParent);
+						}
+					} else {
+						processNext(currentParent);
+					}
+				}
+
+				processNext(parent);
+			}
+
+			function enqueueTypewriter(contentElement, node) {
+				if (!typewriterEnabled) {
+					return;
+				}
+				if (!contentElement || !contentElement.textContent || !contentElement.textContent.trim().length) {
+					return;
+				}
+				if (node && node.classList.contains("hide")) {
+					return;
+				}
+
+				var segments = buildTypewriterSegments(Array.from(contentElement.childNodes));
+				var totalLength = prepareTypewriterSegments(segments);
+
+				while (contentElement.firstChild) {
+					contentElement.removeChild(contentElement.firstChild);
+				}
+
+				if (!segments.length || !totalLength) {
+					restoreTypewriterSegments(contentElement, segments);
+					return;
+				}
+
+				typewriterQueue.push({ contentElement: contentElement, segments: segments });
+				if (!typewriterActive) {
+					processTypewriterQueue();
+				}
+			}
+
+			function processTypewriterQueue() {
+				if (!typewriterQueue.length) {
+					typewriterActive = false;
+					return;
+				}
+
+				typewriterActive = true;
+				var current = typewriterQueue.shift();
+				var contentElement = current.contentElement;
+
+				if (!contentElement || !contentElement.isConnected) {
+					typewriterActive = false;
+					processTypewriterQueue();
+					return;
+				}
+
+				var cursor = document.createElement("span");
+				cursor.className = "typewriter-caret";
+				contentElement.classList.add("typewriter-active");
+
+				typewriterRun(contentElement, current.segments, cursor, function () {
+					if (cursor.parentNode) {
+						cursor.parentNode.removeChild(cursor);
+					}
+					contentElement.classList.remove("typewriter-active");
+					typewriterActive = false;
+					processTypewriterQueue();
+				});
+			}
+
 			function filterMessage(ele) {
 				if (filterAddNameAndTime) {
 					if (!filtering) {
@@ -9177,13 +9397,16 @@
 					}
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
-
-						var textContentLength =  node.querySelector("#content_" + data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
-						node.dataset.contentLength = textContentLength;
-						if (!textContentLength) {
-							node.classList.add("noText");
-						}
-						// textContentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0; // must come after noText set, if we want to include images as a character
+					var contentElement = node.querySelector("#content_" + data.id);
+					var textContentLength = 0;
+					if (contentElement) {
+						textContentLength = contentElement.innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
+					}
+					node.dataset.contentLength = textContentLength;
+					if (!textContentLength) {
+						node.classList.add("noText");
+					}
+					// textContentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0; // must come after noText set, if we want to include images as a character
 					node.contentLength = textContentLength;
 
 					transitionType.forEach(classtype => {
@@ -9441,6 +9664,10 @@
 								this.outerHTML = this.alt;
 							}
 						};
+					}
+					
+					if (typewriterEnabled) {
+						enqueueTypewriter(contentElement, node);
 					}
 					
 					const shouldBeep = beep || (beepFirstTime && data.firsttime);
