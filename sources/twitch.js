@@ -136,6 +136,16 @@
 
 		return clonedSvg;
 	}
+
+	function isEmbeddedPopout() {
+		try {
+			// Twitch sets referrer to the popout URL even for standalone tabs now.
+			// Use frame context to detect actual embedding and avoid double-processing only when framed.
+			return window.self !== window.top || !!window.frameElement;
+		} catch (e) {
+			return true;
+		}
+	}
 	
 	const SELECTORS = {
 		displayName: ".chat-author__display-name, .chatter-name, .seventv-chat-user-username,  [data-test-selector='extension-message-name'], .seventv-chat-user-username",
@@ -986,7 +996,7 @@
 				}
 				if ("focusChat" == request) {
 					// console.log("FOCUS");
-					if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
+					if (!isExtensionOn || isEmbeddedPopout()) {
 						return;
 					}
 						
@@ -1282,7 +1292,7 @@
 					
 	function onElementInsertedTwitch(target) {
 		var onMutationsObserved = function(mutations) {
-			if (!isExtensionOn || document.referrer.includes("twitch.tv/popout/")) {
+			if (!isExtensionOn || isEmbeddedPopout()) {
 				return;
 			}
 			
