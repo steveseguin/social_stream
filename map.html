@@ -960,8 +960,8 @@
             };
         }
 
-        function getMarkerBoundsCollection() {
-            const tally = activeTally();
+        function getMarkerBoundsCollection(tallyOverride = null) {
+            const tally = tallyOverride || activeTally();
             const entries = Array.from(tally.values()).filter(entry => entry.count > 0);
             if (!entries.length) return null;
 
@@ -2034,7 +2034,9 @@
             if (!featureCollection.features || !featureCollection.features.length) return;
 
             const preferMarkerFit = options.preferMarkerFit ?? false;
-            const markerBounds = preferMarkerFit ? getMarkerBoundsCollection() : null;
+            const markerBounds = preferMarkerFit
+                ? (getMarkerBoundsCollection() || getMarkerBoundsCollection(countryTally))
+                : null;
             const regionBounds = getRegionBoundsCollection();
 
             const padding = (settings.region === 'northamerica' || settings.region === 'europe') ? 28 : 20;
@@ -2047,14 +2049,31 @@
             const regionTarget = regionBounds || featureCollection;
             const regionProjection = buildProjection(regionTarget);
             let chosenProjection = regionProjection;
+            let fitMode = regionBounds ? 'region' : 'features';
+            let markerScale = null;
 
             if (markerBounds) {
                 const markerProjection = buildProjection(markerBounds);
-                // Prefer marker fit only when it zooms in (larger scale) instead of zooming out
-                if (markerProjection.scale() >= regionProjection.scale() * 0.98) {
+                markerScale = markerProjection.scale();
+                // When preferMarkerFit is requested, always fit to markers (zoom in or out as needed)
+                // This ensures the view adjusts to show all markers as they're added
+                if (preferMarkerFit) {
                     chosenProjection = markerProjection;
+                    fitMode = 'markers';
+                } else if (markerProjection.scale() >= regionProjection.scale()) {
+                    // Without explicit preference, only zoom in (tighter view), don't zoom out
+                    chosenProjection = markerProjection;
+                    fitMode = 'markers';
                 }
             }
+            debugLog('render projection', {
+                preferMarkerFit,
+                fitMode,
+                markerBounds: !!markerBounds,
+                regionBounds: !!regionBounds,
+                markerScale,
+                regionScale: regionProjection.scale()
+            });
 
             projection = chosenProjection;
             pathGenerator = d3.geoPath(projection);
