@@ -124,7 +124,10 @@
 
         .marker circle {
             fill: var(--accent);
-            opacity: 0.35;
+            opacity: 0.22;
+            stroke: var(--accent);
+            stroke-width: 1.4;
+            stroke-opacity: 0.65;
         }
 
         .marker text {
@@ -350,7 +353,8 @@
                 return false;
             })(),
             motion: normalizeBoolean(getParam('motion') ?? getParam('mapmotion') ?? getParam('mapMotion'), false),
-            autoStart: normalizeBoolean(getParam('autostart') ?? getParam('autoStart'), true)
+            autoStart: normalizeBoolean(getParam('autostart') ?? getParam('autoStart'), true),
+            autoFitMarkers: normalizeBoolean(getParam('autofit') ?? getParam('autoFit') ?? getParam('autofitmarkers') ?? getParam('autoFitMarkers') ?? getParam('mapautofit') ?? getParam('mapAutoFit'), false)
         };
 
         const VALID_MAP_TYPES = new Set(['country', 'state', 'city']);
@@ -463,6 +467,16 @@
             'yucatan': 'YUC',
             'yucatán': 'YUC',
             'zacatecas': 'ZAC'
+        };
+
+        const COUNTRY_COORD_OVERRIDES = {
+            FR: { lat: 46.2276, lon: 2.2137, label: 'France' }, // avoid overseas centroid drift
+            PT: { lat: 39.3999, lon: -8.2245, label: 'Portugal' }, // avoid Azores/Madeira skew
+            ES: { lat: 40.4637, lon: -3.7492, label: 'Spain' }, // avoid Canary Islands skew
+            NO: { lat: 60.472, lon: 8.4689, label: 'Norway' }, // avoid Svalbard skew
+            DK: { lat: 55.6761, lon: 12.5683, label: 'Denmark' }, // avoid Greenland skew
+            NL: { lat: 52.1326, lon: 5.2913, label: 'Netherlands' }, // avoid Aruba/Caribbean skew
+            DE: { lat: 51.1657, lon: 10.4515, label: 'Germany' } // mainland reference
         };
 
         function debugLog(msg, payload) {
@@ -769,10 +783,15 @@
         };
         const VALID_REGION_KEYS = new Set(Object.keys(REGION_PRESETS));
         const REGION_EXCLUDES = {
-            northamerica: new Set(['GL', 'NU', 'NT', 'YT']) // avoid Greenland and far north territories dominating the viewport
+            northamerica: new Set(['GL', 'NU', 'NT', 'YT']), // avoid Greenland and far north territories dominating the viewport
+            europe: new Set(['RU', 'SJ']) // trim Russia + Svalbard from Europe framing
         };
         const REGION_LONGITUDE_CENTERS = {
             northamerica: -100
+        };
+        const REGION_VIEWBOXES = {
+            northamerica: { west: -170, east: -50, south: 5, north: 75 },
+            europe: { west: -25, east: 45, south: 30, north: 72 }
         };
         const normalizedFeatureCache = new WeakMap();
 
@@ -904,6 +923,114 @@
                     features: featureCollection.features.map(f => featureForProjection(f)).filter(Boolean)
                 };
             }
+
+        function boundsToFeatureCollection(bounds) {
+            if (!bounds) return null;
+            const { west, east, south, north } = bounds;
+            if (![west, east, south, north].every(Number.isFinite)) return null;
+            return {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        // Use clockwise ring order so d3 treats the rectangle as the interior rather than the inverted globe
+                        coordinates: [[[west, south], [west, north], [east, north], [east, south], [west, south]]]
+                    },
+                    properties: { kind: 'viewport-bounds' }
+                }]
+            };
+        }
+
+        function getRegionBoundsCollection() {
+            const bounds = REGION_VIEWBOXES[settings.region];
+            if (!bounds) return null;
+            return boundsToFeatureCollection(bounds);
+        }
+
+        function clampBoundsToRegion(bounds) {
+            if (!bounds) return null;
+            const regionBox = REGION_VIEWBOXES[settings.region];
+            if (!regionBox) return bounds;
+            return {
+                west: Math.max(bounds.west, regionBox.west),
+                east: Math.min(bounds.east, regionBox.east),
+                south: Math.max(bounds.south, regionBox.south),
+                north: Math.min(bounds.north, regionBox.north)
+            };
+        }
+
+        function getMarkerBoundsCollection() {
+            const tally = activeTally();
+            const entries = Array.from(tally.values()).filter(entry => entry.count > 0);
+            if (!entries.length) return null;
+
+            let west = Infinity;
+            let east = -Infinity;
+            let south = Infinity;
+            let north = -Infinity;
+
+            const pushBounds = (w, e, s, n) => {
+                if (!Number.isFinite(w) || !Number.isFinite(e) || !Number.isFinite(s) || !Number.isFinite(n)) return;
+                west = Math.min(west, w);
+                east = Math.max(east, e);
+                south = Math.min(south, s);
+                north = Math.max(north, n);
+            };
+
+            entries.forEach(entry => {
+                if (entry.coord) {
+                    pushBounds(entry.coord.lon, entry.coord.lon, entry.coord.lat, entry.coord.lat);
+                    return;
+                }
+                const countryCoord = entry.code ? getCountryCoord(entry.code) : null;
+                if (countryCoord) {
+                    pushBounds(countryCoord.lon, countryCoord.lon, countryCoord.lat, countryCoord.lat);
+                    return;
+                }
+                if (entry.feature) {
+                    try {
+                        const bounds = d3.geoBounds(featureForProjection(entry.feature));
+                        if (bounds && bounds.length === 2) {
+                            pushBounds(bounds[0][0], bounds[1][0], bounds[0][1], bounds[1][1]);
+                        }
+                    } catch (err) {
+                        debugLog('marker bounds failed', err);
+                    }
+                }
+            });
+
+            if (![west, east, south, north].every(Number.isFinite)) return null;
+
+            const lonSpan = Math.abs(east - west);
+            const latSpan = Math.abs(north - south);
+            const lonPad = Math.max(2, lonSpan * 0.2);
+            const latPad = Math.max(1, latSpan * 0.2);
+            let padded = {
+                west: west - lonPad,
+                east: east + lonPad,
+                south: south - latPad,
+                north: north + latPad
+            };
+
+            const minLonSpan = 6;
+            const minLatSpan = 4;
+            if (padded.east - padded.west < minLonSpan) {
+                const mid = (padded.east + padded.west) / 2;
+                padded.west = mid - minLonSpan / 2;
+                padded.east = mid + minLonSpan / 2;
+            }
+            if (padded.north - padded.south < minLatSpan) {
+                const mid = (padded.north + padded.south) / 2;
+                padded.south = mid - minLatSpan / 2;
+                padded.north = mid + minLatSpan / 2;
+            }
+
+            padded = clampBoundsToRegion(padded) || padded;
+            if (padded.east <= padded.west || padded.north <= padded.south) return null;
+
+            return boundsToFeatureCollection(padded);
+        }
 
         function addAlias(alias, iso) {
             const key = normalizeForMatch(alias);
@@ -1051,10 +1178,12 @@
         }
 
         function registerPlaceCoord(labels, lat, lon, iso) {
+            if (!Array.isArray(labels) || !labels.length) return;
+            const canonical = labels[0];
             labels.forEach(label => {
                 const key = normalizeForMatch(label);
                 if (key) {
-                    placeCoords.set(key, { lat, lon, label, iso });
+                    placeCoords.set(key, { lat, lon, label: canonical || label, iso });
                     addAlias(key, iso);
                     placeFeatureLookup.set(`${key}|${iso}`, null); // placeholder for later feature linking
                 }
@@ -1162,6 +1291,24 @@
             registerPlaceCoord(['veracruz', 'ver'], 19.1738, -96.1342, 'MX');
             registerPlaceCoord(['yucatan', 'yucatán', 'yuc'], 20.7099, -89.0943, 'MX');
             registerPlaceCoord(['zacatecas', 'zac'], 22.7709, -102.5833, 'MX');
+        }
+
+        function registerCityDataset(cityList) {
+            if (!Array.isArray(cityList)) return;
+            cityList.forEach(city => {
+                if (!city || !city.name || !city.iso) return;
+                const labels = [city.name];
+                if (Array.isArray(city.aliases)) {
+                    city.aliases.forEach(alias => {
+                        if (alias) labels.push(alias);
+                    });
+                }
+                const lat = Number(city.lat);
+                const lon = Number(city.lon);
+                const iso = city.iso.toString().toUpperCase();
+                if (!labels.length || !Number.isFinite(lat) || !Number.isFinite(lon) || !iso) return;
+                registerPlaceCoord(labels, lat, lon, iso);
+            });
         }
 
         function extractFlagCode(text) {
@@ -1291,11 +1438,13 @@
 
         function ensureCountryEntry(country) {
             if (!countryTally.has(country.key)) {
+                const coord = getCountryCoord(country.code);
                 countryTally.set(country.key, {
                     key: country.key,
                     code: country.code || null,
                     name: country.name,
                     feature: country.feature || null,
+                    coord,
                     count: 0
                 });
             }
@@ -1316,8 +1465,24 @@
         function getPlaceCoord(placeKey, placeName, country) {
             const normalized = normalizeForMatch(placeKey || placeName);
             if (normalized && placeCoords.has(normalized)) return placeCoords.get(normalized);
-            const countryCode = country?.code || null;
-            if (countryCode && placeCoords.has(countryCode.toLowerCase())) return placeCoords.get(countryCode.toLowerCase());
+            return null;
+        }
+
+        function getCountryCoord(iso) {
+            if (!iso) return null;
+            if (COUNTRY_COORD_OVERRIDES[iso]) return COUNTRY_COORD_OVERRIDES[iso];
+            const feature = featureByIso.get(iso);
+            if (feature && typeof d3?.geoCentroid === 'function') {
+                try {
+                    const [lon, lat] = d3.geoCentroid(featureForProjection(feature));
+                    if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                        const label = isoLookup.get(iso)?.name || iso;
+                        return { lat, lon, label };
+                    }
+                } catch (e) {
+                    // ignore centroid failures
+                }
+            }
             return null;
         }
 
@@ -1338,9 +1503,10 @@
 
         function ensurePlaceEntry(placeKey, placeName, country) {
             if (!placeTally.has(placeKey)) {
-                const feature = getPlaceFeature(placeKey, placeName, country) || country?.feature || null;
-                const coord = getPlaceCoord(placeKey, placeName, country);
-                const displayName = feature?.properties?.name || feature?.properties?.abbr || placeName;
+                const isCityMode = settings.mapType === 'city';
+                const feature = getPlaceFeature(placeKey, placeName, country) || (!isCityMode ? country?.feature : null);
+                const coord = getPlaceCoord(placeKey, placeName, country) || getCountryCoord(country?.code);
+                const displayName = feature?.properties?.name || feature?.properties?.abbr || coord?.label || placeName;
                 placeTally.set(placeKey, {
                     key: placeKey,
                     code: country?.code || null,
@@ -1507,7 +1673,7 @@
             resetMap();
             updateStats();
             updateTopList();
-            renderMap();
+            renderMap({ preferMarkerFit: settings.autoFitMarkers });
         }
 
         function setRegion(value) {
@@ -1516,7 +1682,7 @@
             settings.region = normalized;
             if (!atlasFeatures.length) return;
             resetMap();
-            renderMap();
+            renderMap({ preferMarkerFit: settings.autoFitMarkers });
             updateVisuals({});
         }
 
@@ -1561,6 +1727,9 @@
                 const normalizedName = normalizeForMatch(d.properties.name);
                 const abbr = d.properties.abbr ? normalizeForMatch(d.properties.abbr) : null;
                 let entry = tally.get(iso) || tally.get(normalizedName) || (abbr ? tally.get(abbr) : null);
+                if (!entry && COUNTRY_COORD_OVERRIDES[iso]) {
+                    entry = tally.get(iso) || tally.get(normalizedName);
+                }
                 const hasData = entry && entry.count > 0;
                 const fill = hasData ? colorScaleForCount(entry.count, maxCount) : 'rgba(255,255,255,0.06)';
                 d3.select(this)
@@ -1574,11 +1743,12 @@
             if (!pathGenerator) return;
             function positionForEntry(entry) {
                 if (settings.mapType === 'country') {
+                    if (entry.coord) return projection([entry.coord.lon, entry.coord.lat]);
                     if (entry.feature) return pathGenerator.centroid(featureForProjection(entry.feature));
                     if (entry.code && featureByIso.has(entry.code)) return pathGenerator.centroid(featureForProjection(featureByIso.get(entry.code)));
                 } else {
-                    if (entry.feature) return pathGenerator.centroid(featureForProjection(entry.feature));
                     if (entry.coord) return projection([entry.coord.lon, entry.coord.lat]);
+                    if (entry.feature) return pathGenerator.centroid(featureForProjection(entry.feature));
                 }
                 return null;
             }
@@ -1650,12 +1820,17 @@
         function updateVisuals(country, placeEntry) {
             updateStats();
             updateTopList();
-            updateMapFill();
-            updateMarkers();
+            const shouldAutoFit = settings.autoFitMarkers && settings.mapType !== 'country';
+            if (settings.mapType === 'country' || !shouldAutoFit) {
+                updateMapFill();
+                updateMarkers();
+            } else {
+                renderMap({ preferMarkerFit: true });
+            }
             if (settings.mapType === 'country') {
                 triggerPulse(country.feature);
             } else if (projection && (placeEntry?.feature || placeEntry?.coord)) {
-                const point = placeEntry.feature ? pathGenerator.centroid(featureForProjection(placeEntry.feature)) : projection([placeEntry.coord.lon, placeEntry.coord.lat]);
+                const point = placeEntry.coord ? projection([placeEntry.coord.lon, placeEntry.coord.lat]) : pathGenerator.centroid(featureForProjection(placeEntry.feature));
                 if (point && Number.isFinite(point[0]) && Number.isFinite(point[1])) {
                     const ring = pulseLayer.append('circle')
                         .attr('class', 'pulse')
@@ -1754,6 +1929,17 @@
             if (payload.mapMotion && Object.prototype.hasOwnProperty.call(payload.mapMotion, 'setting')) {
                 setMotion(normalizeBoolean(payload.mapMotion.setting, settings.motion));
             }
+            if (payload.mapAutoFit && Object.prototype.hasOwnProperty.call(payload.mapAutoFit, 'setting')) {
+                const nextAutoFit = normalizeBoolean(payload.mapAutoFit.setting, settings.autoFitMarkers);
+                if (nextAutoFit !== settings.autoFitMarkers) {
+                    settings.autoFitMarkers = nextAutoFit;
+                    if (ready) {
+                        renderMap({ preferMarkerFit: settings.autoFitMarkers });
+                        updateMapFill();
+                        updateMarkers();
+                    }
+                }
+            }
             hudEl.classList.toggle('hidden', !settings.showList && !settings.showTotals);
             updateStatusBanner();
         }
@@ -1836,20 +2022,41 @@
             });
         }
 
-        function renderMap() {
-            if (!projection) {
-                projection = d3.geoMercator().precision(0.1);
-            }
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+        function renderMap(options = {}) {
+            const width = window.innerWidth || 1;
+            const height = window.innerHeight || 1;
             svg.attr('width', width).attr('height', height);
 
             const features = getActiveFeatures();
             const fallback = settings.mapType === 'state' ? getVisibleFeatures() : atlasFeatures;
             let featureCollection = { type: 'FeatureCollection', features: features.length ? features : fallback };
             featureCollection = normalizeCollectionForRegion(featureCollection);
-            const padding = settings.region === 'northamerica' ? 40 : 20;
-            projection.fitExtent([[padding, padding], [width - padding, height - padding]], featureCollection);
+            if (!featureCollection.features || !featureCollection.features.length) return;
+
+            const preferMarkerFit = options.preferMarkerFit ?? false;
+            const markerBounds = preferMarkerFit ? getMarkerBoundsCollection() : null;
+            const regionBounds = getRegionBoundsCollection();
+
+            const padding = (settings.region === 'northamerica' || settings.region === 'europe') ? 28 : 20;
+            const buildProjection = (target) => {
+                const proj = d3.geoMercator().precision(0.1);
+                proj.fitExtent([[padding, padding], [width - padding, height - padding]], target);
+                return proj;
+            };
+
+            const regionTarget = regionBounds || featureCollection;
+            const regionProjection = buildProjection(regionTarget);
+            let chosenProjection = regionProjection;
+
+            if (markerBounds) {
+                const markerProjection = buildProjection(markerBounds);
+                // Prefer marker fit only when it zooms in (larger scale) instead of zooming out
+                if (markerProjection.scale() >= regionProjection.scale() * 0.98) {
+                    chosenProjection = markerProjection;
+                }
+            }
+
+            projection = chosenProjection;
             pathGenerator = d3.geoPath(projection);
 
             const paths = mapLayer.selectAll('path').data(featureCollection.features, d => (d.properties.iso_a2 || d.properties.abbr || d.id || d.properties.name));
@@ -1899,7 +2106,8 @@
                 loadJsonWithFallback(
                     './thirdparty/map/mexico-states.geojson',
                     'https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/mexico.geojson'
-                )
+                ),
+                fetch('./thirdparty/map/major-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => [])
             ]);
         }
 
@@ -2022,7 +2230,7 @@
             registerPlaceCoords();
             settings.region = normalizeRegionKey(settings.region);
 
-            loadData().then(([isoData, worldData, usStatesData, caGeo, mxGeo]) => {
+            loadData().then(([isoData, worldData, usStatesData, caGeo, mxGeo, cityData]) => {
                 hydrateIsoLookups(isoData);
                 atlasFeatures = topojson.feature(worldData, worldData.objects.countries).features;
                 attachIsoToFeatures();
@@ -2098,12 +2306,13 @@
                     console.warn('MX state features failed', e);
                 }
                 stateFeatures = collected;
-                renderMap();
+                registerCityDataset(cityData);
+                renderMap({ preferMarkerFit: settings.autoFitMarkers });
                 updateStats();
                 updateTopList();
                 ready = true;
                 updateStatusBanner();
-                window.addEventListener('resize', renderMap);
+                window.addEventListener('resize', () => renderMap({ preferMarkerFit: settings.autoFitMarkers }));
                 if (pendingMessages.length) {
                     pendingMessages.splice(0).forEach(msg => handleChatMessage(msg));
                 }
