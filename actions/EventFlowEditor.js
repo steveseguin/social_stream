@@ -1680,7 +1680,7 @@ class EventFlowEditor {
 					node.config = { sceneName: 'Your Scene Name' };
 					break;
 				case 'playAudioClip':
-					node.config = { audioUrl: 'https://example.com/path/to/sound.mp3', volume: 1.0 };
+					node.config = { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 };
 					break;
 				case 'delay':
 					node.config = { delayMs: 1000 };

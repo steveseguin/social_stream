@@ -970,6 +970,12 @@ class EventFlowSystem {
     async getFlowById(flowId) {
         return this.flows.find(flow => flow.id === flowId) || null;
     }
+	
+	isMetaOnlyPayload(message) {
+		if (!message || typeof message !== 'object') return false;
+		if (!message.meta || typeof message.meta !== 'object') return false;
+		return !(message.chatname || message.chatmessage || message.hasDonation);
+	}
     
     async processMessage(message) {
         
@@ -978,6 +984,11 @@ class EventFlowSystem {
             return message;
         }
         
+		// Ignore meta-only payloads (e.g., viewer/follower count updates) so they never trigger flows
+		if (this.isMetaOnlyPayload(message)) {
+			return message;
+		}
+		
         let processed = { ...message };
         let blocked = false;
         
@@ -1210,8 +1221,8 @@ class EventFlowSystem {
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
-		// If message is null/undefined (scheduler tick), avoid property access
-		if (message && message.event && ("meta" in message) && !message.chatname && !message.chatmessage){
+		// Skip meta-only payloads so metric updates can't trigger flows
+		if (this.isMetaOnlyPayload(message)){
 			return false;
 		}
 		
