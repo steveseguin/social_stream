@@ -78,6 +78,7 @@
 				--text-stroke-width: 0px;
 				--text-stroke-color: #000;
 				--text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
+				--text-glow: 0 0 #0000;
 				
 			}
 			.closeBtn {
@@ -573,7 +574,7 @@
 				margin: 0 0;
 				background-color: var(--background-color);
 				
-				text-shadow: var(--text-shadow);
+				text-shadow: var(--text-shadow), var(--text-glow);
 				-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				overflow-x: hidden;
@@ -609,7 +610,7 @@
 
 			body.lightmode {
 				font-weight: 500;
-				text-shadow: -2px -2px #fff, -2px -1px #fff, -2px 0px #fff, -2px 1px #fff, -2px 2px #fff, -1px -2px #fff, -1px -1px #fff, -1px 0px #fff, -1px 1px #fff, -1px 2px #fff, 0px -2px #fff, 0px -1px #fff, 0px 0px #fff, 0px 1px #fff, 0px 2px #fff, 1px -2px #fff, 1px -1px #fff, 1px 0px #fff, 1px 1px #fff, 1px 2px #fff, 2px -2px #fff, 2px -1px #fff, 2px 0px #fff, 2px 1px #fff, 2px 2px #fff;
+				--text-shadow: -2px -2px #fff, -2px -1px #fff, -2px 0px #fff, -2px 1px #fff, -2px 2px #fff, -1px -2px #fff, -1px -1px #fff, -1px 0px #fff, -1px 1px #fff, -1px 2px #fff, 0px -2px #fff, 0px -1px #fff, 0px 0px #fff, 0px 1px #fff, 0px 2px #fff, 1px -2px #fff, 1px -1px #fff, 1px 0px #fff, 1px 1px #fff, 1px 2px #fff, 2px -2px #fff, 2px -1px #fff, 2px 0px #fff, 2px 1px #fff, 2px 2px #fff;
 			}
 
 			.fade-in-image {
@@ -2879,6 +2880,9 @@
 				return parts.join(", ");
 			}
 
+			var defaultTextGlowColor = "#000000cc";
+			var defaultTextGlowWidth = 10;
+
 			function applyTextStroke(widthValue, colorValue) {
 				if (hasValue(colorValue)) {
 					document.documentElement.style.setProperty("--text-stroke-color", colorValue);
@@ -2899,7 +2903,40 @@
 				var color = colorValue || "#000000";
 				var shadow = buildOutlineShadow(width === null ? 2 : width, color);
 				document.documentElement.style.setProperty("--text-shadow", shadow);
-				document.body.style.textShadow = shadow;
+			}
+
+			function resolveGlowColor(colorValue) {
+				if (hasValue(colorValue)) {
+					return colorValue;
+				}
+				if (hasValue(fontColorParam)) {
+					return fontColorParam;
+				}
+				var cssFontColor = getComputedStyle(document.documentElement).getPropertyValue("--font-color");
+				if (hasValue(cssFontColor)) {
+					return cssFontColor.trim();
+				}
+				return defaultTextGlowColor;
+			}
+
+			function buildGlowShadow(radius, color) {
+				var glowWidth = parseNumericValue(radius);
+				if (glowWidth === null) {
+					glowWidth = defaultTextGlowWidth;
+				}
+				if (!glowWidth || glowWidth <= 0) {
+					return "0 0 #0000";
+				}
+				var glowColor = resolveGlowColor(color);
+				var blurNear = toCssLength(glowWidth * 0.5, "px");
+				var blurMid = toCssLength(glowWidth, "px");
+				var blurFar = toCssLength(glowWidth * 1.5, "px");
+				return "0 0 " + blurNear + " " + glowColor + ", 0 0 " + blurMid + " " + glowColor + ", 0 0 " + blurFar + " " + glowColor;
+			}
+
+			function applyTextGlow(widthValue, colorValue) {
+				var glowShadow = buildGlowShadow(widthValue, colorValue);
+				document.documentElement.style.setProperty("--text-glow", glowShadow);
 			}
 
 			var tainted = false;
@@ -2951,6 +2988,9 @@
 			var customOutlineWidthParam = null;
 			var customOutlineColorParam = null;
 			var hasCustomOutline = false;
+			var textGlowEnabled = urlParams.has("textglow");
+			var textGlowWidthParam = null;
+			var textGlowColorParam = null;
 
 			var fontColorParam = urlParams.get("fontcolor");
 			if (hasValue(fontColorParam)) {
@@ -2996,6 +3036,16 @@
 				customOutlineColorParam = customStrokeColorParam;
 			}
 			hasCustomOutline = customOutlineWidthParam !== null || customOutlineColorParam !== null;
+
+			var glowWidthParam = urlParams.get("glowwidth");
+			var glowColorParam = urlParams.get("glowcolor");
+			if (hasValue(glowWidthParam)) {
+				textGlowWidthParam = glowWidthParam;
+			}
+			if (hasValue(glowColorParam)) {
+				textGlowColorParam = glowColorParam;
+			}
+			var hasTextGlow = textGlowEnabled || textGlowWidthParam !== null || textGlowColorParam !== null;
 			
 
 			try {
@@ -3054,7 +3104,7 @@
 			}
 
 			var typewriterEnabled = urlParams.has("typewriter");
-			var typewriterSpeed = 35;
+			var typewriterSpeed = 30;
 			if (typewriterEnabled) {
 				var typewriterParam = urlParams.get("typewriter") || urlParams.get("typewriterspeed");
 				var parsedTypewriterSpeed = parseInt(typewriterParam, 10);
@@ -4773,7 +4823,6 @@
 
 			if (urlParams.has("nooutline")) {
 				document.documentElement.style.setProperty("--text-shadow", "0 0 #0000");
-				document.body.style.textShadow = "0 0 black";
 				if (!darkmode){
 					document.getElementById("topbar").style.color = "white";
 					document.getElementById("topbar").style.fontWeight = "700";
@@ -4783,11 +4832,15 @@
 			} else if (urlParams.has("bolder")) {
 				var bolderShadow = "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000";
 				document.documentElement.style.setProperty("--text-shadow", bolderShadow);
-				document.body.style.textShadow = bolderShadow;
 			} else if (urlParams.has("thinner")) {
 				var thinnerShadow = "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000";
 				document.documentElement.style.setProperty("--text-shadow", thinnerShadow);
-				document.body.style.textShadow = thinnerShadow;
+			}
+
+			if (hasTextGlow) {
+				applyTextGlow(textGlowWidthParam, textGlowColorParam);
+			} else {
+				document.documentElement.style.setProperty("--text-glow", "0 0 #0000");
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
