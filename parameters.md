@@ -61,7 +61,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `outlinewidth` | number | Width (px) of the outer outline highlight |
 | `outlinecolor` | hex color | Color applied to the outer outline highlight |
 | `strokewidth` or `stroke` | number | Width (px) for the text stroke effect |
-| `strokecolor` or `strokeColor` | hex color | Color applied to the text stroke effect |
+| `strokecolor` or `strokeColor` | hex color (alpha supported) | Color applied to the text stroke effect (accepts 8-digit hex/rgba for transparency) |
 | `border` | hex color | Adds a profile image border using the provided color (without `#`) |
 | `pressedcolor` | hex color or empty | Custom highlight color for pinned/featured states |
 | `hideshadow` | boolean | Removes alternating card drop shadows |

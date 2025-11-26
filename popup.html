@@ -1085,6 +1085,7 @@ input:checked + .slider:before {
     width: 200px;
     margin-top: 10px;
     margin-bottom: 4px;
+	display: inline-block;
 }
 
 .textInput {
@@ -3111,20 +3112,24 @@ input:checked + .slider:before {
 								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
 									<div class="textInputContainer" style="flex:1; margin-right:5px;">
 										<input type="text" id="dock_outline_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000" data-textparam1="outlinecolor" data-palette="dock_outline_color_palette" />
-										<label for="dock_outline_color">&gt; Outline color</label>
+										<label for="dock_outline_color">&gt; Custom Outline color</label>
 									</div>
 									<input type="color" data-color="dock_outline_color" id="dock_outline_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="number" step="0.25" min="0" id="dock_outline_width" class="textInput instant" autocomplete="off" placeholder="e.g. 2" data-textparam1="outlinewidth" />
-									<label for="dock_outline_width">&gt; Outline size (px)</label>
+									<label for="dock_outline_width">&gt; Custom Outline size (px)</label>
 								</div>
 								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
 									<div class="textInputContainer" style="flex:1; margin-right:5px;">
-										<input type="text" id="dock_stroke_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000" data-textparam1="strokecolor" data-palette="dock_stroke_color_palette" />
+										<input type="text" id="dock_stroke_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000CC" data-textparam1="strokecolor" data-palette="dock_stroke_color_palette" />
 										<label for="dock_stroke_color">&gt; Stroke color</label>
 									</div>
 									<input type="color" data-color="dock_stroke_color" id="dock_stroke_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<div class="alphaInput" style="display:flex; align-items:center; gap:6px; min-width: 120px;">
+										<input type="range" id="dock_stroke_alpha" min="0" max="100" step="1" value="100" data-alpha-target="dock_stroke_color" data-range-display="dock_stroke_alpha_display" data-range-suffix="%" style="width: 90px;" aria-label="Stroke opacity" />
+										<span id="dock_stroke_alpha_display">100%</span>
+									</div>
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="number" step="0.25" min="0" id="dock_stroke_width" class="textInput instant" autocomplete="off" placeholder="e.g. 0.5" data-textparam1="strokewidth" />

@@ -333,8 +333,8 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
               "strokecolor",
               "strokeColor"
             ],
-            "values": "hex color",
-            "description": "Color applied to the text stroke effect"
+            "values": "hex color (supports 8-digit or rgba)",
+            "description": "Color applied to the text stroke effect; alpha transparency supported"
           },
           {
             "key": "border",

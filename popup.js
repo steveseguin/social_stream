@@ -3817,21 +3817,140 @@ function handleNumberSetting(ele, sync) {
     return false;
 }
 
+function clampAlphaPercent(alphaValue, fallback = 100) {
+    const numeric = parseFloat(alphaValue);
+    if (Number.isNaN(numeric)) {
+        return fallback;
+    }
+    return Math.max(0, Math.min(100, numeric));
+}
+
+function toHexComponent(value) {
+    const clamped = Math.max(0, Math.min(255, Math.round(value)));
+    return clamped.toString(16).padStart(2, '0');
+}
+
+function parseColorValue(colorValue) {
+    if (!colorValue) {
+        return null;
+    }
+    const normalized = String(colorValue).trim();
+    const hexMatch = normalized.match(/^#?([a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8})$/);
+    if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3 || hex.length === 4) {
+            hex = hex.split('').map((ch) => ch + ch).join('');
+        }
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        const a = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+        return { r, g, b, a };
+    }
+
+    const rgbaMatch = normalized.match(/^rgba?\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]*\.?[0-9]+))?\s*\)$/i);
+    if (rgbaMatch) {
+        const r = Math.max(0, Math.min(255, parseInt(rgbaMatch[1], 10)));
+        const g = Math.max(0, Math.min(255, parseInt(rgbaMatch[2], 10)));
+        const b = Math.max(0, Math.min(255, parseInt(rgbaMatch[3], 10)));
+        const a = rgbaMatch[4] !== undefined ? Math.max(0, Math.min(1, parseFloat(rgbaMatch[4]))) : 1;
+        return { r, g, b, a };
+    }
+
+    return null;
+}
+
+function formatHexColor(rgbColor) {
+    if (!rgbColor) {
+        return null;
+    }
+    return `#${toHexComponent(rgbColor.r)}${toHexComponent(rgbColor.g)}${toHexComponent(rgbColor.b)}`;
+}
+
+function mergeColorWithAlpha(baseColor, alphaPercent) {
+    const parsedBase = parseColorValue(baseColor);
+    if (!parsedBase) {
+        return null;
+    }
+    const alphaByte = Math.round((clampAlphaPercent(alphaPercent) / 100) * 255);
+    const baseHex = formatHexColor(parsedBase);
+    if (!baseHex) {
+        return null;
+    }
+    return alphaByte >= 255 ? baseHex : `${baseHex}${toHexComponent(alphaByte)}`;
+}
+
+function getAlphaSliderForInput(inputEle) {
+    if (!inputEle?.id) {
+        return null;
+    }
+    return document.querySelector(`input[type='range'][data-alpha-target='${inputEle.id}']`);
+}
+
+function getLinkedPaletteElement(inputEle) {
+    if (!inputEle?.dataset?.palette) {
+        return null;
+    }
+    return document.getElementById(inputEle.dataset.palette);
+}
+
+function resolveBaseColor(inputEle, paletteEle) {
+    const parsed = parseColorValue(inputEle?.value);
+    if (parsed) {
+        return formatHexColor(parsed);
+    }
+    if (paletteEle && paletteEle.value) {
+        return paletteEle.value;
+    }
+    return '#000000';
+}
+
+function syncColorHelpers(inputEle, parsedColor = null) {
+    if (!inputEle) {
+        return;
+    }
+    const paletteEle = getLinkedPaletteElement(inputEle);
+    const sliderEle = getAlphaSliderForInput(inputEle);
+    const colorInfo = parsedColor || parseColorValue(inputEle.value);
+    if (paletteEle && colorInfo) {
+        paletteEle.value = formatHexColor(colorInfo);
+    }
+    if (sliderEle && colorInfo) {
+        const alphaPercent = clampAlphaPercent(Math.round(colorInfo.a * 100));
+        sliderEle.value = alphaPercent;
+        sliderEle.dataset.rangePrevValue = alphaPercent;
+        updateRangeDisplay(sliderEle);
+    }
+}
+
 function handleColorAndPalette(ele) {
+    if (ele.dataset.alphaTarget) {
+        const targetInput = document.getElementById(ele.dataset.alphaTarget);
+        if (targetInput) {
+            const paletteEle = getLinkedPaletteElement(targetInput);
+            const mergedColor = mergeColorWithAlpha(resolveBaseColor(targetInput, paletteEle), ele.value);
+            if (mergedColor) {
+                targetInput.value = mergedColor;
+            }
+            syncColorHelpers(targetInput);
+            updateSettings(targetInput, true);
+            return true;
+        }
+    }
     if (ele.dataset.color) {
         const colorEle = document.getElementById(ele.dataset.color);
         if (colorEle) {
-            colorEle.value = ele.value;
+            const sliderEle = getAlphaSliderForInput(colorEle);
+            const alphaValue = sliderEle ? sliderEle.value : 100;
+            const mergedColor = mergeColorWithAlpha(ele.value, alphaValue);
+            colorEle.value = mergedColor || ele.value;
+            syncColorHelpers(colorEle);
             updateSettings(colorEle, true);
             return true;
         }
     } else if (ele.dataset.palette) {
-        const paletteEle = document.getElementById(ele.dataset.palette);
-        if (paletteEle) {
-            paletteEle.value = ele.value;
-            // updateSettings(paletteEle, true); // the palette is just the picker, not the value holder
-            return true;
-        }
+        syncColorHelpers(ele);
+        return true;
     }
     
     return false;

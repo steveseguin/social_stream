@@ -401,6 +401,8 @@
         const cityHints = new Map();
         const placeCoords = new Map(); // normalized key -> { lat, lon, label, iso }
         const placeFeatureLookup = new Map(); // normalized key (optionally with iso) -> feature
+        let regionalCityData = [];
+        const boostedCityRegions = new Set();
 
         const US_STATE_ABBR = {
             '01': 'AL', '02': 'AK', '04': 'AZ', '05': 'AR', '06': 'CA', '08': 'CO', '09': 'CT',
@@ -833,12 +835,17 @@
             return 'global';
         }
 
-        function isIsoAllowed(iso) {
+        function isIsoAllowedForRegion(iso, regionKey = settings.region) {
             if (!iso) return true;
-            const regionKey = settings.region || 'global';
-            const set = regionSets.get(regionKey);
+            const isoUpper = iso.toString().toUpperCase();
+            const key = regionKey || 'global';
+            const set = regionSets.get(key);
             if (!set || !set.size) return true;
-            return set.has(iso);
+            return set.has(isoUpper);
+        }
+
+        function isIsoAllowed(iso) {
+            return isIsoAllowedForRegion(iso, settings.region);
         }
 
         function getVisibleFeatures() {
@@ -1311,6 +1318,24 @@
             });
         }
 
+        function registerRegionalCities(regionKey) {
+            if (!regionalCityData.length) return;
+            if (settings.mapType !== 'city') return;
+            if (!regionSets || !regionSets.size) return;
+            const normalized = normalizeRegionKey(regionKey);
+            if (normalized === 'global') return;
+            if (boostedCityRegions.has(normalized)) return;
+            const allowedSet = regionSets.get(normalized);
+            const subset = (allowedSet && allowedSet.size)
+                ? regionalCityData.filter(city => city?.iso && allowedSet.has(city.iso.toString().toUpperCase()))
+                : regionalCityData;
+            if (subset.length) {
+                registerCityDataset(subset);
+                boostedCityRegions.add(normalized);
+                debugLog('regional city dataset registered', { region: normalized, count: subset.length });
+            }
+        }
+
         function extractFlagCode(text) {
             if (!text) return null;
             const flags = [];
@@ -1670,6 +1695,9 @@
             const next = VALID_MAP_TYPES.has(normalized) ? normalized : 'country';
             if (next === settings.mapType) return;
             settings.mapType = next;
+            if (settings.mapType === 'city') {
+                registerRegionalCities(settings.region);
+            }
             resetMap();
             updateStats();
             updateTopList();
@@ -1680,6 +1708,7 @@
             const normalized = normalizeRegionKey(value);
             if (normalized === settings.region) return;
             settings.region = normalized;
+            registerRegionalCities(settings.region);
             if (!atlasFeatures.length) return;
             resetMap();
             renderMap({ preferMarkerFit: settings.autoFitMarkers });
@@ -2126,7 +2155,8 @@
                     './thirdparty/map/mexico-states.geojson',
                     'https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/mexico.geojson'
                 ),
-                fetch('./thirdparty/map/major-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => [])
+                fetch('./thirdparty/map/major-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => []),
+                fetch('./thirdparty/map/regional-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => [])
             ]);
         }
 
@@ -2249,7 +2279,7 @@
             registerPlaceCoords();
             settings.region = normalizeRegionKey(settings.region);
 
-            loadData().then(([isoData, worldData, usStatesData, caGeo, mxGeo, cityData]) => {
+            loadData().then(([isoData, worldData, usStatesData, caGeo, mxGeo, cityData, regionalCityDataRaw]) => {
                 hydrateIsoLookups(isoData);
                 atlasFeatures = topojson.feature(worldData, worldData.objects.countries).features;
                 attachIsoToFeatures();
@@ -2325,7 +2355,9 @@
                     console.warn('MX state features failed', e);
                 }
                 stateFeatures = collected;
+                regionalCityData = Array.isArray(regionalCityDataRaw) ? regionalCityDataRaw : [];
                 registerCityDataset(cityData);
+                registerRegionalCities(settings.region);
                 renderMap({ preferMarkerFit: settings.autoFitMarkers });
                 updateStats();
                 updateTopList();
