@@ -3260,6 +3260,103 @@ function replaceEmotesWithImages(message, emotesMap, zw = false) {
 	return match;
   });
 }
+
+const emojiCharacterRegex = /[\u{1F300}-\u{1FAFF}\u{1F1E6}-\u{1F1FF}\u{2600}-\u{27BF}\u{1F3FB}-\u{1F3FF}]/gu;
+
+async function buildEmoteOnlyMessage(rawMessage, textOnly = false) {
+	if (!rawMessage || typeof rawMessage !== "string") {
+		return "";
+	}
+
+	let workingMessage = rawMessage;
+
+	try {
+		if (settings.bttv) {
+			if (!Globalbttv) {
+				await getBTTVEmotes();
+			}
+			if (Globalbttv) {
+				workingMessage = replaceEmotesWithImages(workingMessage, Globalbttv);
+			}
+		}
+		if (settings.seventv) {
+			if (!Globalseventv) {
+				await getSEVENTVEmotes();
+			}
+			if (Globalseventv) {
+				workingMessage = replaceEmotesWithImages(workingMessage, Globalseventv, true);
+			}
+		}
+		if (settings.ffz) {
+			if (!Globalffz) {
+				await getFFZEmotes();
+			}
+			if (Globalffz) {
+				workingMessage = replaceEmotesWithImages(workingMessage, Globalffz, true);
+			}
+		}
+	} catch (e) {
+		console.warn("Emote-only filter prep failed", e);
+	}
+
+	if (typeof document === "undefined") {
+		return workingMessage;
+	}
+
+	const wrapper = document.createElement("div");
+	wrapper.innerHTML = workingMessage;
+	const kept = [];
+
+	const collectEmotes = (node) => {
+		if (!node) {
+			return;
+		}
+		if (node.nodeType === 1) {
+			const el = node;
+			const tagName = (el.tagName || "").toLowerCase();
+			if (tagName === "img") {
+				const alt = el.getAttribute("alt") || "";
+				kept.push({ html: el.outerHTML, text: alt });
+				return;
+			}
+			if (el.classList && el.classList.contains("zero-width-span")) {
+				const img = el.querySelector("img");
+				if (img) {
+					const alt = img.getAttribute("alt") || "";
+					kept.push({ html: el.outerHTML, text: alt });
+					return;
+				}
+			}
+			el.childNodes.forEach(collectEmotes);
+		} else if (node.nodeType === 3) {
+			const matches = (node.textContent || "").match(emojiCharacterRegex);
+			if (matches && matches.length) {
+				const emojiText = matches.join(" ");
+				kept.push({ html: emojiText, text: emojiText });
+			}
+		}
+	};
+
+	wrapper.childNodes.forEach(collectEmotes);
+
+	if (!kept.length) {
+		return "";
+	}
+
+	if (textOnly) {
+		return kept
+			.map(entry => (entry.text || "").trim())
+			.filter(Boolean)
+			.join(" ")
+			.trim();
+	}
+
+	return kept
+		.map(entry => entry.html || entry.text || "")
+		.filter(Boolean)
+		.join(" ")
+		.trim();
+}
 	
 
 class CheckDuplicateSources { // doesn't need to be text-only, as from the same source / site, so expected the same formating
@@ -7068,6 +7165,33 @@ socketserver.addEventListener("message", async function (event) {
 				} else {
 					resp = selectRandomWaitlist();
 				}
+			} else if (data.action && data.action === "emoteonly") {
+				const currentState = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
+				let enable;
+
+				if (typeof data.value === "string") {
+					const normalized = data.value.toLowerCase();
+					if (normalized === "toggle") {
+						enable = !currentState;
+					} else if (["true", "1", "on", "yes", "enable", "enabled"].includes(normalized)) {
+						enable = true;
+					} else if (["false", "0", "off", "no", "disable", "disabled"].includes(normalized)) {
+						enable = false;
+					}
+				} else if (typeof data.value === "boolean") {
+					enable = data.value;
+				} else if (data.value == null) {
+					enable = !currentState;
+				} else {
+					enable = Boolean(data.value);
+				}
+				if (enable === undefined) {
+					enable = currentState;
+				}
+
+				settings.emoteonlymode = { setting: enable };
+				chrome.storage.local.set({ settings: settings });
+				resp = { emoteonlymode: enable };
 			} else if (data.action){
 				try {
 					if (data.target && (data.target.toLowerCase!=="null")){
@@ -10681,6 +10805,7 @@ async function applyBotActions(data, tab = false) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
+	const hadOriginalChatMessage = typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
 
 	// Normalize to seconds for last activity comparisons (accept sec/ms/micro inputs)
 	const normalizeTimestampToSeconds = (value) => {
@@ -11803,6 +11928,18 @@ async function applyBotActions(data, tab = false) {
 		
 		if (settings.customJsEnabled){
 			data = customUserFunction(data);
+		}
+		
+		const emoteOnlyModeEnabled = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
+		if (emoteOnlyModeEnabled && hadOriginalChatMessage) {
+			const emoteOnlyMessage = await buildEmoteOnlyMessage(data.chatmessage || "", Boolean(data.textonly || settings.textonlymode));
+			data.chatmessage = emoteOnlyMessage;
+			if (!data.chatmessage) {
+				data.textContent = "";
+			}
+			if (!data.chatmessage && !data.hasDonation && !data.contentimg) {
+				return null;
+			}
 		}
 		
 	} catch (e) {
