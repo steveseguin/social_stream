@@ -1782,7 +1782,17 @@ class EventFlowSystem {
                     const mode = lastActivityFilter.mode === 'older' ? 'older' : 'within';
                     const unitMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000 };
                     const windowMs = Math.max(0, amount) * (unitMap[unit] || unitMap.minutes);
-                    const lastActivityTs = message.lastactivity || message.lastActivity || null;
+                    const lastActivityRaw = message.lastactivity || message.lastActivity || null;
+
+                    const normalizeLastActivityMs = (value) => {
+                        const num = Number(value);
+                        if (!Number.isFinite(num) || num <= 0) return null;
+                        if (num < 1e10) return Math.round(num * 1000); // likely seconds
+                        if (num > 1e15) return Math.round(num / 1000); // likely microseconds
+                        return Math.round(num); // assume milliseconds
+                    };
+
+                    const lastActivityTs = normalizeLastActivityMs(lastActivityRaw);
 
                     // Require a valid last activity timestamp when filter is enabled
                     if (!lastActivityTs || windowMs === 0) {

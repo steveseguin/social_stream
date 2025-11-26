@@ -10682,6 +10682,15 @@ async function applyBotActions(data, tab = false) {
 		data.id = messageCounter;
 	}
 
+	// Normalize to seconds for last activity comparisons (accept sec/ms/micro inputs)
+	const normalizeTimestampToSeconds = (value) => {
+		const num = Number(value);
+		if (!Number.isFinite(num) || num <= 0) return null;
+		if (num > 1e15) return Math.round(num / 1000 / 1000); // likely microseconds
+		if (num > 1e12) return Math.round(num / 1000); // likely milliseconds
+		return Math.round(num); // assume seconds
+	};
+
 	try {
 		
 		if (settings.memberchatonly && !(data.membership || data.hasMembership)) {
@@ -10938,16 +10947,16 @@ async function applyBotActions(data, tab = false) {
 			try {
 				const checkResult = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);
 				const exists = typeof checkResult === "object" ? checkResult.exists : !!checkResult;
-				const lastActivity = typeof checkResult === "object" ? checkResult.lastActivity : null;
+				const lastActivityRaw = typeof checkResult === "object" ? checkResult.lastActivity : null;
+				const normalizedLastActivitySeconds = normalizeTimestampToSeconds(lastActivityRaw);
 
 				if (!exists){
 					data.firsttime = true;
 				}
-				if (lastActivity){
-					data.lastactivity = lastActivity;
-				} else if (data.firsttime && data.timestamp) {
-					// Seed last activity for first-time chatters so time-window filters can pass
-					data.lastactivity = data.timestamp;
+				if (normalizedLastActivitySeconds){
+					data.lastactivity = normalizedLastActivitySeconds;
+				} else {
+					delete data.lastactivity; // no prior history; keep absent/null
 				}
 			} catch (e) {
 				console.error("Error checking first timer:", e);

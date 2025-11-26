@@ -2211,10 +2211,19 @@ class EventFlowEditor {
 				const currentForbidden = node.config.forbiddenProperties || [];
 				const requireAll = node.config.requireAll !== false;
 				const lastActivityConfig = node.config.lastActivityFilter || {};
-				const lastActivityEnabled = !!lastActivityConfig.enabled;
+				let lastActivityEnabled = !!lastActivityConfig.enabled;
 				const lastActivityMode = lastActivityConfig.mode === 'older' ? 'older' : 'within';
 				const lastActivityAmount = lastActivityConfig.amount ?? 10;
 				const lastActivityUnit = lastActivityConfig.unit || 'minutes';
+				const firstTimeChecked = currentRequired.includes('firsttime');
+
+				// If first-time chatter is required, disable last-activity filter to keep mutual exclusivity
+				if (firstTimeChecked && lastActivityEnabled) {
+					lastActivityEnabled = false;
+					if (node.config && node.config.lastActivityFilter) {
+						node.config.lastActivityFilter.enabled = false;
+					}
+				}
 				
 				// Group properties by category
 				const groupedProps = {};
@@ -2292,8 +2301,15 @@ class EventFlowEditor {
 								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="12" data-unit="hours">12 hours</button>
 								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="1" data-unit="days">1 day</button>
 							</div>
-							<div class="property-help">Filter by how recently a user last chatted (uses stored lastActivity timestamps; requires “First timers” enabled in global settings).</div>
+							<div class="property-help">Filter by how recently a user last chatted (uses stored lastActivity timestamps; requires “First timers” enabled in global settings). First-time chatters fail this requirement because they have no prior activity timestamp.</div>
 						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">First-time chatter</label>
+						<label style="display: block; margin-bottom: 6px;">
+							<input type="checkbox" id="prop-firsttime-only" ${firstTimeChecked ? 'checked' : ''} ${lastActivityEnabled ? 'disabled' : ''}> Require first-time chatter
+						</label>
+						<div class="property-help">Mutually exclusive with “Require last activity window”. Enabling one disables the other.</div>
 					</div>
 					<div class="property-help">Filter messages based on presence/absence of properties. Required properties must exist and be truthy. Forbidden properties must not exist or be falsy.</div>`;
 				break;
@@ -3608,6 +3624,21 @@ class EventFlowEditor {
                     } else {
                         nodeData.config.requiredProperties = nodeData.config.requiredProperties.filter(p => p !== e.target.value);
                     }
+
+                    // Keep first-time chatter toggle and last-activity mutual exclusion in sync
+                    if (e.target.value === 'firsttime') {
+                        if (e.target.checked) {
+                            if (firstTimeToggle) firstTimeToggle.checked = true;
+                            if (lastToggle) {
+                                lastToggle.checked = false;
+                                ensureLastActivityConfig();
+                                nodeData.config.lastActivityFilter.enabled = false;
+                            }
+                        } else {
+                            if (firstTimeToggle) firstTimeToggle.checked = false;
+                        }
+                        updateMutualExclusion();
+                    }
                     
                     this.markUnsavedChanges(true);
                     this.renderNodeOnCanvas(nodeData.id);
@@ -3644,17 +3675,52 @@ class EventFlowEditor {
             const lastUnit = document.getElementById('prop-lastActivity-unit');
             const lastModeRadios = document.querySelectorAll('input[name="prop-lastActivity-mode"]');
             const quickButtons = document.querySelectorAll('.quick-last-activity');
+            const firstTimeToggle = document.getElementById('prop-firsttime-only');
+
+            const addRequiredProperty = (prop) => {
+                if (!nodeData.config.requiredProperties) nodeData.config.requiredProperties = [];
+                if (!nodeData.config.requiredProperties.includes(prop)) {
+                    nodeData.config.requiredProperties.push(prop);
+                }
+            };
+
+            const removeRequiredProperty = (prop) => {
+                if (!nodeData.config.requiredProperties) nodeData.config.requiredProperties = [];
+                nodeData.config.requiredProperties = nodeData.config.requiredProperties.filter(p => p !== prop);
+            };
+
+            const updateMutualExclusion = () => {
+                const firstTimeActive = firstTimeToggle && firstTimeToggle.checked;
+                const lastActiveEnabled = lastToggle && lastToggle.checked;
+
+                if (firstTimeToggle) {
+                    firstTimeToggle.disabled = Boolean(lastActiveEnabled);
+                }
+                if (lastToggle) {
+                    lastToggle.disabled = Boolean(firstTimeActive);
+                }
+                if (lastControls) {
+                    const disabled = firstTimeActive || !lastActiveEnabled;
+                    lastControls.style.opacity = disabled ? '0.6' : '';
+                    lastControls.style.pointerEvents = disabled ? 'none' : 'auto';
+                }
+            };
 
             if (lastToggle) {
                 lastToggle.addEventListener('change', (e) => {
                     ensureLastActivityConfig();
                     nodeData.config.lastActivityFilter.enabled = e.target.checked;
+                    if (e.target.checked && firstTimeToggle) {
+                        firstTimeToggle.checked = false;
+                        removeRequiredProperty('firsttime');
+                    }
                     if (lastControls) {
                         lastControls.style.opacity = e.target.checked ? '' : '0.6';
                         lastControls.style.pointerEvents = e.target.checked ? 'auto' : 'none';
                     }
                     this.markUnsavedChanges(true);
                     this.renderNodeOnCanvas(nodeData.id);
+                    updateMutualExclusion();
                 });
             }
 
@@ -3674,6 +3740,7 @@ class EventFlowEditor {
                     nodeData.config.lastActivityFilter.unit = e.target.value;
                     this.markUnsavedChanges(true);
                     this.renderNodeOnCanvas(nodeData.id);
+                    updateMutualExclusion();
                 });
             }
 
@@ -3699,6 +3766,10 @@ class EventFlowEditor {
                         nodeData.config.lastActivityFilter.amount = amount;
                         nodeData.config.lastActivityFilter.unit = unit;
                         nodeData.config.lastActivityFilter.enabled = true;
+                        if (firstTimeToggle) {
+                            firstTimeToggle.checked = false;
+                            removeRequiredProperty('firsttime');
+                        }
                         if (lastValue) lastValue.value = amount;
                         if (lastUnit) lastUnit.value = unit;
                         if (lastToggle) lastToggle.checked = true;
@@ -3708,9 +3779,31 @@ class EventFlowEditor {
                         }
                         this.markUnsavedChanges(true);
                         this.renderNodeOnCanvas(nodeData.id);
+                        updateMutualExclusion();
                     });
                 });
             }
+
+            if (firstTimeToggle) {
+                firstTimeToggle.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        addRequiredProperty('firsttime');
+                        if (lastToggle) {
+                            lastToggle.checked = false;
+                            ensureLastActivityConfig();
+                            nodeData.config.lastActivityFilter.enabled = false;
+                        }
+                    } else {
+                        removeRequiredProperty('firsttime');
+                    }
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    updateMutualExclusion();
+                });
+            }
+
+            // Initialize mutual exclusion state on load
+            updateMutualExclusion();
         }
 
         // Special handling for counter trigger
