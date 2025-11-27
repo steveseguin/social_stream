@@ -29,6 +29,8 @@ console.log("Background.js: SpotifyIntegration available?", typeof SpotifyIntegr
 var messageCounterBase = Math.floor(Math.random() * 90000);
 var messageCounter = messageCounterBase;
 var lastAntiSpam = 0;
+var tabMessageActivityCounter = {};
+var lastAutoMessagePerTab = {};
 
 var connectedPeers = {};
 var isSSAPP = false;
@@ -3681,6 +3683,10 @@ async function processIncomingMessage(message, sender=null){
 		if (!message.id) {
 			messageCounter += 1;
 			message.id = messageCounter; 
+		}
+		const tabIdForActivity = sender?.tab?.id || (Number.isInteger(message?.tid) ? message.tid : null);
+		if (tabIdForActivity) {
+			noteTabActivity(tabIdForActivity, message);
 		}
 		
 		try {
@@ -9570,6 +9576,35 @@ function delayedDetach(tabid) {
   }, 1000, tabid);
 }
 
+function noteTabActivity(tabId, message = null) {
+	try {
+		if (!tabId || !message) {
+			return;
+		}
+		if (!(message.chatmessage || message.hasDonation || message.membership || message.event)) {
+			return;
+		}
+		if (!tabMessageActivityCounter[tabId]) {
+			tabMessageActivityCounter[tabId] = 0;
+		}
+		tabMessageActivityCounter[tabId] += 1;
+	} catch (e) {}
+}
+function shouldSkipAutoMessageForTab(tabId) {
+	if (!tabId) {
+		return false;
+	}
+	const activityCount = tabMessageActivityCounter[tabId] || 0;
+	const lastSentCount = lastAutoMessagePerTab[tabId] || 0;
+	return lastSentCount + 10 > activityCount;
+}
+function markAutoMessageForTab(tabId) {
+	if (!tabId) {
+		return;
+	}
+	lastAutoMessagePerTab[tabId] = tabMessageActivityCounter[tabId] || 0;
+}
+
 async function sendMessageToTabs(data, reverse = false, metadata = null, relayMode = false, antispam = false, overrideTimeout = 0) {
     // console.log('[RELAY DEBUG - sendMessageToTabs] Called with:', {
     //     data: data,
@@ -9600,14 +9635,15 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             return;
         }
     }
-    const now = Date.now();
-
-    const messageOrigin = data.outgoingOrigin || (data.bot ? 'chatbot' : (data.host ? 'host' : 'relay'));
-
-    if (!reverse && !overrideTimeout && data.tid) { // we do this early to avoid the blue bar if not needed
-        if (data.tid in messageTimeout) {
-            if (now - messageTimeout[data.tid] < overrideTimeout) {
-                return;
+	    const now = Date.now();
+	
+	    const messageOrigin = data.outgoingOrigin || (data.bot ? 'chatbot' : (data.host ? 'host' : 'relay'));
+	    const shouldCheckDynamicPerTab = antispam && settings["dynamictiming"];
+	
+	    if (!reverse && !overrideTimeout && data.tid) { // we do this early to avoid the blue bar if not needed
+	        if (data.tid in messageTimeout) {
+	            if (now - messageTimeout[data.tid] < overrideTimeout) {
+	                return;
             }
         }
     }
@@ -9627,15 +9663,18 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         var published = {};
         let processedAnyTab = false;  // Track if we processed any tabs with destination filter
         
-        // Helper function to process a tab
-        const processTab = async (tab) => {
-            // console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
-            processedAnyTab = true;  // Mark that we found at least one valid tab
-            const storeMessageForTab = (text) => {
-                if (text === undefined || text === null) {
-                    return;
-                }
-                const value = String(text);
+	        // Helper function to process a tab
+	        const processTab = async (tab) => {
+	            // console.log(`[RELAY DEBUG - sendMessageToTabs] Processing valid tab ${tab.id}: ${tab.url?.substring(0, 50)}...`);
+	            processedAnyTab = true;  // Mark that we found at least one valid tab
+	            if (shouldCheckDynamicPerTab && tab.id && shouldSkipAutoMessageForTab(tab.id)) {
+	                return;
+	            }
+	            const storeMessageForTab = (text) => {
+	                if (text === undefined || text === null) {
+	                    return;
+	                }
+	                const value = String(text);
                 if (!value.length) {
                     return;
                 }
@@ -9648,67 +9687,83 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
             published[tab.url] = true;
             const throttleProfile = getThrottleProfileForTab(tab, data);
             const throttleOptions = {
-                origin: messageOrigin || "relay",
-                dropProtected: messageOrigin === "host",
-                priority: messageOrigin === "host" ? 1 : 0
-            };
-                
-            // Handle different site types
-            if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
-                storeMessageForTab(data.response);
-                // we will handle this on its own.
-                return;
-            } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
-                let restxt = applyPlatformLimit(data.response, 'twitch');
-                storeMessageForTab(restxt);
-                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-            } else if (tab.url.startsWith("https://boltplus.tv/")) {
-                storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile, throttleOptions);
-            } else if (tab.url.startsWith("https://rumble.com/")) {
-                storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-            } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
-                storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-            } else if (tab.url.startsWith("https://kick.com/")) {
-                let restxt = applyPlatformLimit(data.response, 'kick');
-                const messageForKick = isSSAPP ? ` ${restxt}` : restxt;
-                storeMessageForTab(messageForKick);
-                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-            } else if (tab.url.startsWith("https://app.slack.com")) {
-                storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions); 
-            } else if (tab.url.startsWith("https://app.zoom.us/")) {
-                storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile, throttleOptions);
-                return;
-            } else {
-                // Generic handler
-                if (tab.url.includes("youtube.com/live_chat")) {
-                    getYoutubeAvatarImage(tab.url, true);
-                    let restxt = applyPlatformLimit(data.response, 'youtube');
-                    storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-                    return;
-                }
-                
-                if (tab.url.includes("tiktok.com")) {
-                    let tiktokMessage = data.response;
+	                origin: messageOrigin || "relay",
+	                dropProtected: messageOrigin === "host",
+	                priority: messageOrigin === "host" ? 1 : 0
+	            };
+	            const markAutoForTabIfNeeded = () => {
+	                if (shouldCheckDynamicPerTab && tab.id) {
+	                    markAutoMessageForTab(tab.id);
+	                }
+	            };
+	                
+	            // Handle different site types
+	            if (tab.url.includes(".stageten.tv") && settings.s10apikey && settings.s10) {
+	                storeMessageForTab(data.response);
+	                // we will handle this on its own.
+	                markAutoForTabIfNeeded();
+	                return;
+	            } else if (tab.url.startsWith("https://www.twitch.tv/popout/")) {
+	                let restxt = applyPlatformLimit(data.response, 'twitch');
+	                storeMessageForTab(restxt);
+	                await attachAndChat(tab.id, restxt, false, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                markAutoForTabIfNeeded();
+	            } else if (tab.url.startsWith("https://boltplus.tv/")) {
+	                storeMessageForTab(data.response);
+	                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                markAutoForTabIfNeeded();
+	            } else if (tab.url.startsWith("https://rumble.com/")) {
+	                storeMessageForTab(data.response);
+	                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                markAutoForTabIfNeeded();
+	            } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
+	                storeMessageForTab(data.response);
+	                await attachAndChat(tab.id, data.response, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                markAutoForTabIfNeeded();
+	            } else if (tab.url.startsWith("https://kick.com/")) {
+	                let restxt = applyPlatformLimit(data.response, 'kick');
+	                const messageForKick = isSSAPP ? ` ${restxt}` : restxt;
+	                storeMessageForTab(messageForKick);
+	                await attachAndChat(tab.id, messageForKick, false, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                markAutoForTabIfNeeded();
+	            } else if (tab.url.startsWith("https://app.slack.com")) {
+	                storeMessageForTab(data.response);
+	                await attachAndChat(tab.id, data.response, true, true, true, false, overrideTimeout, undefined, throttleProfile, throttleOptions); 
+	                markAutoForTabIfNeeded();
+	            } else if (tab.url.startsWith("https://app.zoom.us/")) {
+	                storeMessageForTab(data.response);
+	                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile, throttleOptions);
+	                markAutoForTabIfNeeded();
+	                return;
+	            } else {
+	                // Generic handler
+	                if (tab.url.includes("youtube.com/live_chat")) {
+	                    getYoutubeAvatarImage(tab.url, true);
+	                    let restxt = applyPlatformLimit(data.response, 'youtube');
+	                    storeMessageForTab(restxt);
+	                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                    markAutoForTabIfNeeded();
+	                    return;
+	                }
+	                
+	                if (tab.url.includes("tiktok.com")) {
+	                    let tiktokMessage = data.response;
                     
-                    if (settings.notiktoklinks){
-                        tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
-                    }
-                    let restxt = applyPlatformLimit(tiktokMessage, 'tiktok');
-                    storeMessageForTab(restxt);
-                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-                    return;
-                }
-                
-                storeMessageForTab(data.response);
-                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
-            }
-        };
+	                    if (settings.notiktoklinks){
+	                        tiktokMessage = replaceURLsWithSubstring(tiktokMessage, "");
+	                    }
+	                    let restxt = applyPlatformLimit(tiktokMessage, 'tiktok');
+	                    storeMessageForTab(restxt);
+	                    await attachAndChat(tab.id, restxt, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                    markAutoForTabIfNeeded();
+	                    return;
+	                }
+	                
+	                storeMessageForTab(data.response);
+	                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                markAutoForTabIfNeeded();
+	            }
+	        };
         
         // First pass: try with source type matching
         for (const tab of tabs) {
