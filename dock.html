@@ -3458,29 +3458,47 @@
 				splitMode = " splitMode";
 			}
 			
-			function loadGoogleFont(fontParam) {
-				const link = document.createElement("link");
+			function loadGoogleFonts(fontParam) {
+				if (!fontParam) {
+					return;
+				}
 				
-				// Parse font family and variants
-				let [fontName, ...variants] = fontParam.split(':');
-				fontName = decodeURIComponent(fontName);
-				
-				// Build font family CSS value, stripping any weight/style specifications
-				const cssFont = fontName.split(/\s+/)
-					.filter(part => !part.match(/^(Light|Medium|Bold|Regular|Thin|Black|Italic|\d+)$/i))
-					.join(' ');
-					
-				// Build Google Fonts URL
-				link.href = `https://fonts.googleapis.com/css2?family=${fontParam}`;
-				link.rel = "stylesheet";
-				document.head.appendChild(link);
-				
-				var currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
-				document.documentElement.style.setProperty("--font-family", `'${cssFont}', ${currentFont}`);
+				const fontEntries = fontParam.split(",").map(f => f.trim()).filter(Boolean);
+				if (!fontEntries.length) {
+					return;
+				}
+
+				const currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
+				const cssFonts = [];
+
+				fontEntries.forEach(entry => {
+					const [rawName, ...variantParts] = entry.split(":");
+					const decodedName = decodeURIComponent(rawName.replace(/\+/g, " "));
+					const cssFont = decodedName.split(/\s+/)
+						.filter(part => !part.match(/^(Light|Medium|Bold|Regular|Thin|Black|Italic|\d+)$/i))
+						.join(" ")
+						.trim();
+
+					if (cssFont) {
+						cssFonts.push(`'${cssFont}'`);
+					}
+
+					const variantSuffix = variantParts.length ? `:${variantParts.join(":")}` : "";
+					const familyParam = `${rawName.replace(/\s+/g, "+")}${variantSuffix}`;
+					const link = document.createElement("link");
+					link.href = `https://fonts.googleapis.com/css2?family=${familyParam}&display=swap`;
+					link.rel = "stylesheet";
+					document.head.appendChild(link);
+				});
+
+				if (cssFonts.length) {
+					const uniqueFonts = [...new Set(cssFonts)];
+					document.documentElement.style.setProperty("--font-family", `${uniqueFonts.join(", ")}, ${currentFont}`);
+				}
 			}
 			
 			if (urlParams.get("googlefont")) {
-				loadGoogleFont(urlParams.get("googlefont"));
+				loadGoogleFonts(urlParams.get("googlefont"));
 			}
 			
 			if (urlParams.get('font')) {

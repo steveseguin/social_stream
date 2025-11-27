@@ -313,7 +313,11 @@ class EventFlowEditor {
             target = chrome.runtime.getURL(target);
         }
         try {
-            window.open(target, '_blank');
+			if (window.location.href.includes("/actions/")){
+				window.open(target.replace("actions/",""), '_blank');
+			} else {
+				window.open(target, '_blank');
+			}
         } catch (error) {
             console.error('Failed to open guide', error);
         }
@@ -1467,7 +1471,7 @@ class EventFlowEditor {
 						message: result ? 'Message was processed successfully' : 'Message was blocked', 
 						result: result 
 					};
-					this.displayTestResults(testResult);
+					this.displayTestResults(testResult, testMessage);
 				});
 		} else {
 			// Just test the flow using the real eventFlowSystem with temporarily modified flows
@@ -1490,7 +1494,7 @@ class EventFlowEditor {
 								 'Flow triggered but no actions affected the message',
 						result: result 
 					};
-					this.displayTestResults(testResult);
+					this.displayTestResults(testResult, testMessage);
 				})
 				.catch(error => {
 					// Restore the original flows even on error
@@ -1501,7 +1505,7 @@ class EventFlowEditor {
 						message: 'Error testing flow: ' + error.message,
 						error: error
 					};
-					this.displayTestResults(testResult);
+					this.displayTestResults(testResult, testMessage);
 				});
 		}
 		
@@ -1516,11 +1520,25 @@ class EventFlowEditor {
 		const runTestBtn = document.getElementById('run-test-btn');
 		const donationCheckbox = document.getElementById('test-donation');
 		const donationAmountField = document.getElementById('donation-amount');
+		const firstTimeCheckbox = document.getElementById('test-firsttime');
+		const lastActivityToggle = document.getElementById('test-lastactivity');
+		const lastActivityControls = document.getElementById('lastactivity-controls');
+		const lastActivityValue = document.getElementById('test-lastactivity-value');
+		const lastActivityUnit = document.getElementById('test-lastactivity-unit');
 
 		// Show/hide donation amount field based on checkbox
 		donationCheckbox.addEventListener('change', function() {
 			donationAmountField.style.display = this.checked ? 'block' : 'none';
 		});
+
+		// Toggle last-activity inputs
+		if (lastActivityToggle) {
+			lastActivityToggle.addEventListener('change', function() {
+				if (lastActivityControls) {
+					lastActivityControls.style.display = this.checked ? 'block' : 'none';
+				}
+			});
+		}
 
 		// Open test panel
 		openTestBtn.addEventListener('click', function() {
@@ -1559,6 +1577,22 @@ class EventFlowEditor {
 				// Add other required properties
 				timestamp: Date.now(),
 			};
+
+			// Apply first-time chatter flag
+			if (firstTimeCheckbox?.checked) {
+				testMessage.firsttime = true;
+			}
+
+			// Apply last-activity timestamp if requested
+			if (lastActivityToggle?.checked) {
+				const amount = Math.max(0, parseFloat(lastActivityValue?.value) || 0);
+				const unit = lastActivityUnit?.value || 'minutes';
+				const unitMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000 };
+				const windowMs = unitMap[unit] || unitMap.minutes;
+				const ts = Math.max(0, Date.now() - (amount * windowMs));
+				testMessage.lastactivity = ts;
+				testMessage.lastActivity = ts; // support either casing
+			}
 			
 			// Add donation amount if donation checkbox is checked
 			if (testMessage.hasDonation) {
@@ -1570,7 +1604,7 @@ class EventFlowEditor {
 		});
 	}
 
-	displayTestResults(testResult) {
+	displayTestResults(testResult, originalMessage = {}) {
 		const resultsEl = document.getElementById('test-results');
 		if (!resultsEl) return;
 		
@@ -1594,9 +1628,9 @@ class EventFlowEditor {
 				`;
 				
 				// Show any properties that were modified
-				const originalKeys = Object.keys(testMessage);
-				const modifiedKeys = Object.keys(result.message).filter(key => 
-					!originalKeys.includes(key) || result.message[key] !== testMessage[key]
+				const originalKeys = Object.keys(originalMessage || {});
+				const modifiedKeys = Object.keys(result.message || {}).filter(key => 
+					!originalKeys.includes(key) || result.message[key] !== originalMessage[key]
 				);
 				
 				if (modifiedKeys.length > 0) {

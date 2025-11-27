@@ -1478,16 +1478,43 @@
 				}
 			}
 
-			function loadGoogleFont(fontName) {
-				const formattedFontName = fontName.replace(/\s/g, "+");
+			function loadGoogleFonts(fontParam) {
+				if (!fontParam) {
+					return;
+				}
 
-				const link = document.createElement("link");
-				link.href = `https://fonts.googleapis.com/css2?family=${formattedFontName}&display=swap`;
-				link.rel = "stylesheet";
+				const fontEntries = fontParam.split(",").map(f => f.trim()).filter(Boolean);
+				if (!fontEntries.length) {
+					return;
+				}
 
-				document.head.appendChild(link);
-				var currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
-				document.documentElement.style.setProperty("--font-family", "'" + fontName.replaceAll("+", " ") + "', " + currentFont);
+				const currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
+				const cssFonts = [];
+
+				fontEntries.forEach(entry => {
+					const [rawName, ...variantParts] = entry.split(":");
+					const decodedName = decodeURIComponent(rawName.replace(/\+/g, " "));
+					const cssFont = decodedName.split(/\s+/)
+						.filter(part => !part.match(/^(Light|Medium|Bold|Regular|Thin|Black|Italic|\d+)$/i))
+						.join(" ")
+						.trim();
+
+					if (cssFont) {
+						cssFonts.push(`'${cssFont}'`);
+					}
+
+					const variantSuffix = variantParts.length ? `:${variantParts.join(":")}` : "";
+					const familyParam = `${rawName.replace(/\s+/g, "+")}${variantSuffix}`;
+					const link = document.createElement("link");
+					link.href = `https://fonts.googleapis.com/css2?family=${familyParam}&display=swap`;
+					link.rel = "stylesheet";
+					document.head.appendChild(link);
+				});
+
+				if (cssFonts.length) {
+					const uniqueFonts = [...new Set(cssFonts)];
+					document.documentElement.style.setProperty("--font-family", `${uniqueFonts.join(", ")}, ${currentFont}`);
+				}
 			}
 			
 			if (urlParams.get('font')) {
@@ -1498,7 +1525,7 @@
 			}
 
 			if (urlParams.get("googlefont")) {
-				loadGoogleFont(urlParams.get("googlefont"));
+				loadGoogleFonts(urlParams.get("googlefont"));
 			}
 
 			var timeoutDelay = 0;
