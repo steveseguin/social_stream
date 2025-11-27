@@ -2902,7 +2902,7 @@
 				var width = parseNumericValue(widthValue);
 				var color = colorValue || "#000000";
 				var shadow = buildOutlineShadow(width === null ? 2 : width, color);
-				document.documentElement.style.setProperty("--text-shadow", shadow);
+				setTextShadow(shadow);
 			}
 
 			function resolveGlowColor(colorValue) {
@@ -2937,6 +2937,11 @@
 			function applyTextGlow(widthValue, colorValue) {
 				var glowShadow = buildGlowShadow(widthValue, colorValue);
 				document.documentElement.style.setProperty("--text-glow", glowShadow);
+			}
+
+			function setTextShadow(shadowValue) {
+				document.documentElement.style.setProperty("--text-shadow", shadowValue);
+				document.body.style.setProperty("--text-shadow", shadowValue);
 			}
 
 			var tainted = false;
@@ -4840,7 +4845,7 @@
 			}
 
 			if (urlParams.has("nooutline")) {
-				document.documentElement.style.setProperty("--text-shadow", "0 0 #0000");
+				setTextShadow("0 0 #0000");
 				if (!darkmode){
 					document.getElementById("topbar").style.color = "white";
 					document.getElementById("topbar").style.fontWeight = "700";
@@ -4849,10 +4854,10 @@
 				applyTextOutline(customOutlineWidthParam, customOutlineColorParam || customStrokeColorParam);
 			} else if (urlParams.has("bolder")) {
 				var bolderShadow = "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000";
-				document.documentElement.style.setProperty("--text-shadow", bolderShadow);
+				setTextShadow(bolderShadow);
 			} else if (urlParams.has("thinner")) {
 				var thinnerShadow = "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000";
-				document.documentElement.style.setProperty("--text-shadow", thinnerShadow);
+				setTextShadow(thinnerShadow);
 			}
 
 			if (hasTextGlow) {
