@@ -78,6 +78,7 @@
 				--text-stroke-width: 0px;
 				--text-stroke-color: #000;
 				--text-shadow: -2px -2px #000000, -2px -1px #000000, -2px 0px #000000, -2px 1px #000000, -2px 2px #000000, -1px -2px #000000, -1px -1px #000000, -1px 0px #000000, -1px 1px #000000, -1px 2px #000000, 0px -2px #000000, 0px -1px #000000, 0px 0px #000000, 0px 1px #000000, 0px 2px #000000, 1px -2px #000000, 1px -1px #000000, 1px 0px #000000, 1px 1px #000000, 1px 2px #000000, 2px -2px #000000, 2px -1px #000000, 2px 0px #000000, 2px 1px #000000, 2px 2px #000000;
+				--text-glow: 0 0 #0000;
 				
 			}
 			.closeBtn {
@@ -474,6 +475,29 @@
 				margin: 4px 1px;
 			}
 
+			.typewriter-active {
+				position: relative;
+			}
+
+			.typewriter-caret {
+				display: inline-block;
+				width: 0.65ch;
+				margin-left: 1px;
+				background: currentColor;
+				animation: typewriter-caret-blink 0.9s steps(1) infinite;
+				vertical-align: baseline;
+				opacity: 0.85;
+			}
+
+			@keyframes typewriter-caret-blink {
+				0%, 49% {
+					opacity: 1;
+				}
+				50%, 100% {
+					opacity: 0;
+				}
+			}
+
 			/* example of how to remotely load a font */
 			@font-face {
 				font-family: "opendyslexic";
@@ -550,7 +574,7 @@
 				margin: 0 0;
 				background-color: var(--background-color);
 				
-				text-shadow: var(--text-shadow);
+				text-shadow: var(--text-shadow), var(--text-glow);
 				-webkit-text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				text-stroke: var(--text-stroke-width) var(--text-stroke-color);
 				overflow-x: hidden;
@@ -586,7 +610,7 @@
 
 			body.lightmode {
 				font-weight: 500;
-				text-shadow: -2px -2px #fff, -2px -1px #fff, -2px 0px #fff, -2px 1px #fff, -2px 2px #fff, -1px -2px #fff, -1px -1px #fff, -1px 0px #fff, -1px 1px #fff, -1px 2px #fff, 0px -2px #fff, 0px -1px #fff, 0px 0px #fff, 0px 1px #fff, 0px 2px #fff, 1px -2px #fff, 1px -1px #fff, 1px 0px #fff, 1px 1px #fff, 1px 2px #fff, 2px -2px #fff, 2px -1px #fff, 2px 0px #fff, 2px 1px #fff, 2px 2px #fff;
+				--text-shadow: -2px -2px #fff, -2px -1px #fff, -2px 0px #fff, -2px 1px #fff, -2px 2px #fff, -1px -2px #fff, -1px -1px #fff, -1px 0px #fff, -1px 1px #fff, -1px 2px #fff, 0px -2px #fff, 0px -1px #fff, 0px 0px #fff, 0px 1px #fff, 0px 2px #fff, 1px -2px #fff, 1px -1px #fff, 1px 0px #fff, 1px 1px #fff, 1px 2px #fff, 2px -2px #fff, 2px -1px #fff, 2px 0px #fff, 2px 1px #fff, 2px 2px #fff;
 			}
 
 			.fade-in-image {
@@ -2856,6 +2880,9 @@
 				return parts.join(", ");
 			}
 
+			var defaultTextGlowColor = "#000000cc";
+			var defaultTextGlowWidth = 10;
+
 			function applyTextStroke(widthValue, colorValue) {
 				if (hasValue(colorValue)) {
 					document.documentElement.style.setProperty("--text-stroke-color", colorValue);
@@ -2876,7 +2903,40 @@
 				var color = colorValue || "#000000";
 				var shadow = buildOutlineShadow(width === null ? 2 : width, color);
 				document.documentElement.style.setProperty("--text-shadow", shadow);
-				document.body.style.textShadow = shadow;
+			}
+
+			function resolveGlowColor(colorValue) {
+				if (hasValue(colorValue)) {
+					return colorValue;
+				}
+				if (hasValue(fontColorParam)) {
+					return fontColorParam;
+				}
+				var cssFontColor = getComputedStyle(document.documentElement).getPropertyValue("--font-color");
+				if (hasValue(cssFontColor)) {
+					return cssFontColor.trim();
+				}
+				return defaultTextGlowColor;
+			}
+
+			function buildGlowShadow(radius, color) {
+				var glowWidth = parseNumericValue(radius);
+				if (glowWidth === null) {
+					glowWidth = defaultTextGlowWidth;
+				}
+				if (!glowWidth || glowWidth <= 0) {
+					return "0 0 #0000";
+				}
+				var glowColor = resolveGlowColor(color);
+				var blurNear = toCssLength(glowWidth * 0.5, "px");
+				var blurMid = toCssLength(glowWidth, "px");
+				var blurFar = toCssLength(glowWidth * 1.5, "px");
+				return "0 0 " + blurNear + " " + glowColor + ", 0 0 " + blurMid + " " + glowColor + ", 0 0 " + blurFar + " " + glowColor;
+			}
+
+			function applyTextGlow(widthValue, colorValue) {
+				var glowShadow = buildGlowShadow(widthValue, colorValue);
+				document.documentElement.style.setProperty("--text-glow", glowShadow);
 			}
 
 			var tainted = false;
@@ -2928,6 +2988,9 @@
 			var customOutlineWidthParam = null;
 			var customOutlineColorParam = null;
 			var hasCustomOutline = false;
+			var textGlowEnabled = urlParams.has("textglow");
+			var textGlowWidthParam = null;
+			var textGlowColorParam = null;
 
 			var fontColorParam = urlParams.get("fontcolor");
 			if (hasValue(fontColorParam)) {
@@ -2973,6 +3036,16 @@
 				customOutlineColorParam = customStrokeColorParam;
 			}
 			hasCustomOutline = customOutlineWidthParam !== null || customOutlineColorParam !== null;
+
+			var glowWidthParam = urlParams.get("glowwidth");
+			var glowColorParam = urlParams.get("glowcolor");
+			if (hasValue(glowWidthParam)) {
+				textGlowWidthParam = glowWidthParam;
+			}
+			if (hasValue(glowColorParam)) {
+				textGlowColorParam = glowColorParam;
+			}
+			var hasTextGlow = textGlowEnabled || textGlowWidthParam !== null || textGlowColorParam !== null;
 			
 
 			try {
@@ -3029,6 +3102,18 @@
 			if (urlParams.has("chartime")) {
 				timePerCharacter = parseInt(urlParams.get("chartime")) || 60;
 			}
+
+			var typewriterEnabled = urlParams.has("typewriter");
+			var typewriterSpeed = 30;
+			if (typewriterEnabled) {
+				var typewriterParam = urlParams.get("typewriter") || urlParams.get("typewriterspeed");
+				var parsedTypewriterSpeed = parseInt(typewriterParam, 10);
+				if (!isNaN(parsedTypewriterSpeed) && parsedTypewriterSpeed > 0) {
+					typewriterSpeed = Math.max(5, parsedTypewriterSpeed);
+				}
+			}
+			var typewriterQueue = [];
+			var typewriterActive = false;
 
 			var badkarma = -1; // no filtering
 			if (urlParams.has("badkarma")) {
@@ -3373,29 +3458,47 @@
 				splitMode = " splitMode";
 			}
 			
-			function loadGoogleFont(fontParam) {
-				const link = document.createElement("link");
+			function loadGoogleFonts(fontParam) {
+				if (!fontParam) {
+					return;
+				}
 				
-				// Parse font family and variants
-				let [fontName, ...variants] = fontParam.split(':');
-				fontName = decodeURIComponent(fontName);
-				
-				// Build font family CSS value, stripping any weight/style specifications
-				const cssFont = fontName.split(/\s+/)
-					.filter(part => !part.match(/^(Light|Medium|Bold|Regular|Thin|Black|Italic|\d+)$/i))
-					.join(' ');
-					
-				// Build Google Fonts URL
-				link.href = `https://fonts.googleapis.com/css2?family=${fontParam}`;
-				link.rel = "stylesheet";
-				document.head.appendChild(link);
-				
-				var currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
-				document.documentElement.style.setProperty("--font-family", `'${cssFont}', ${currentFont}`);
+				const fontEntries = fontParam.split(",").map(f => f.trim()).filter(Boolean);
+				if (!fontEntries.length) {
+					return;
+				}
+
+				const currentFont = getComputedStyle(document.documentElement).getPropertyValue("--font-family").trim();
+				const cssFonts = [];
+
+				fontEntries.forEach(entry => {
+					const [rawName, ...variantParts] = entry.split(":");
+					const decodedName = decodeURIComponent(rawName.replace(/\+/g, " "));
+					const cssFont = decodedName.split(/\s+/)
+						.filter(part => !part.match(/^(Light|Medium|Bold|Regular|Thin|Black|Italic|\d+)$/i))
+						.join(" ")
+						.trim();
+
+					if (cssFont) {
+						cssFonts.push(`'${cssFont}'`);
+					}
+
+					const variantSuffix = variantParts.length ? `:${variantParts.join(":")}` : "";
+					const familyParam = `${rawName.replace(/\s+/g, "+")}${variantSuffix}`;
+					const link = document.createElement("link");
+					link.href = `https://fonts.googleapis.com/css2?family=${familyParam}&display=swap`;
+					link.rel = "stylesheet";
+					document.head.appendChild(link);
+				});
+
+				if (cssFonts.length) {
+					const uniqueFonts = [...new Set(cssFonts)];
+					document.documentElement.style.setProperty("--font-family", `${uniqueFonts.join(", ")}, ${currentFont}`);
+				}
 			}
 			
 			if (urlParams.get("googlefont")) {
-				loadGoogleFont(urlParams.get("googlefont"));
+				loadGoogleFonts(urlParams.get("googlefont"));
 			}
 			
 			if (urlParams.get('font')) {
@@ -3835,6 +3938,10 @@
 				playtone();
 			}
 			
+			var beepFirstTime = false;
+			if (urlParams.has("beepfirsttime")) {
+				beepFirstTime = true;
+			}
 			
 			var nobeepbot = false;
 			if (urlParams.has("nobeepbot")) {
@@ -4734,7 +4841,6 @@
 
 			if (urlParams.has("nooutline")) {
 				document.documentElement.style.setProperty("--text-shadow", "0 0 #0000");
-				document.body.style.textShadow = "0 0 black";
 				if (!darkmode){
 					document.getElementById("topbar").style.color = "white";
 					document.getElementById("topbar").style.fontWeight = "700";
@@ -4744,11 +4850,15 @@
 			} else if (urlParams.has("bolder")) {
 				var bolderShadow = "-3px -3px #000000, -3px -1.5px #000000, -3px 0px #000000, -3px 1.5px #000000, -3px 3px #000000, -1.5px -3px #000000, -1.5px -1.5px #000000, -1.5px 0px #000000, -1.5px 1.5px #000000, -1.5px 3px #000000, 0px -3px #000000, 0px -1.5px #000000, 0px 0px #000000, 0px 1.5px #000000, 0px 3px #000000, 1.5px -3px #000000, 1.5px -1.5px #000000, 1.5px 0px #000000, 1.5px 1.5px #000000, 1.5px 3px #000000, 3px -3px #000000, 3px -1.5px #000000, 3px 0px #000000, 3px 1.5px #000000, 3px 3px #000000";
 				document.documentElement.style.setProperty("--text-shadow", bolderShadow);
-				document.body.style.textShadow = bolderShadow;
 			} else if (urlParams.has("thinner")) {
 				var thinnerShadow = "-1.5px -1.5px #000000, -1.5px -0.75px #000000, -1.5px 0px #000000, -1.5px 0.75px #000000, -1.5px 1.5px #000000, -0.75px -1.5px #000000, -0.75px -0.75px #000000, -0.75px 0px #000000, -0.75px 0.75px #000000, -0.75px 1.5px #000000, 0px -1.5px #000000, 0px -0.75px #000000, 0px 0px #000000, 0px 0.75px #000000, 0px 1.5px #000000, 0.75px -1.5px #000000, 0.75px -0.75px #000000, 0.75px 0px #000000, 0.75px 0.75px #000000, 0.75px 1.5px #000000, 1.5px -1.5px #000000, 1.5px -0.75px #000000, 1.5px 0px #000000, 1.5px 0.75px #000000, 1.5px 1.5px #000000";
 				document.documentElement.style.setProperty("--text-shadow", thinnerShadow);
-				document.body.style.textShadow = thinnerShadow;
+			}
+
+			if (hasTextGlow) {
+				applyTextGlow(textGlowWidthParam, textGlowColorParam);
+			} else {
+				document.documentElement.style.setProperty("--text-glow", "0 0 #0000");
 			}
 
 			if (urlParams.has("transparent") || urlParams.has("transparency")) {
@@ -7040,6 +7150,191 @@
 				}
 			}
 
+			function buildTypewriterSegments(nodes) {
+				var segments = [];
+				nodes.forEach(function (node) {
+					if (node.nodeType === Node.TEXT_NODE) {
+						segments.push({ type: "text", node: node, originalText: node.textContent || "" });
+					} else if (node.nodeType === Node.ELEMENT_NODE) {
+						segments.push({
+							type: "element",
+							node: node,
+							children: buildTypewriterSegments(Array.from(node.childNodes))
+						});
+					}
+				});
+				return segments;
+			}
+
+			function restoreTypewriterSegments(parent, segments) {
+				segments.forEach(function (segment) {
+					if (segment.type === "text") {
+						segment.node.textContent = segment.originalText;
+						parent.appendChild(segment.node);
+					} else if (segment.type === "element") {
+						parent.appendChild(segment.node);
+						restoreTypewriterSegments(segment.node, segment.children);
+					}
+				});
+			}
+
+			function prepareTypewriterSegments(segments) {
+				var totalLength = 0;
+				segments.forEach(function (segment) {
+					if (segment.type === "text") {
+						totalLength += segment.originalText.length;
+						segment.node.textContent = "";
+					} else if (segment.type === "element") {
+						totalLength += prepareTypewriterSegments(segment.children);
+						while (segment.node.firstChild) {
+							segment.node.removeChild(segment.node.firstChild);
+						}
+					}
+				});
+				return totalLength;
+			}
+
+			function typewriterRun(parent, segments, cursor, onDone) {
+				if (!parent || !parent.isConnected) {
+					if (onDone) {
+						onDone();
+					}
+					return;
+				}
+
+				var index = 0;
+
+				function moveCursor(target) {
+					if (!cursor) {
+						return;
+					}
+					try {
+						target.appendChild(cursor);
+					} catch (e) {}
+				}
+
+				function processNext(currentParent) {
+					if (!currentParent || !currentParent.isConnected) {
+						if (onDone) {
+							onDone();
+						}
+						return;
+					}
+					if (index >= segments.length) {
+						if (onDone) {
+							onDone();
+						}
+						return;
+					}
+
+					var segment = segments[index++];
+
+					if (segment.type === "text") {
+						if (!segment.node.isConnected) {
+							currentParent.appendChild(segment.node);
+						}
+						var text = segment.originalText || "";
+						var charIndex = 0;
+
+						function typeChar() {
+							if (!currentParent.isConnected) {
+								if (onDone) {
+									onDone();
+								}
+								return;
+							}
+							if (charIndex < text.length) {
+								segment.node.textContent += text.charAt(charIndex++);
+								moveCursor(currentParent);
+								setTimeout(typeChar, typewriterSpeed);
+							} else {
+								processNext(currentParent);
+							}
+						}
+
+						if (text.length) {
+							moveCursor(currentParent);
+							typeChar();
+						} else {
+							processNext(currentParent);
+						}
+					} else if (segment.type === "element") {
+						currentParent.appendChild(segment.node);
+						moveCursor(segment.node);
+						if (segment.children && segment.children.length) {
+							typewriterRun(segment.node, segment.children, cursor, function () {
+								processNext(currentParent);
+							});
+						} else {
+							processNext(currentParent);
+						}
+					} else {
+						processNext(currentParent);
+					}
+				}
+
+				processNext(parent);
+			}
+
+			function enqueueTypewriter(contentElement, node) {
+				if (!typewriterEnabled) {
+					return;
+				}
+				if (!contentElement || !contentElement.textContent || !contentElement.textContent.trim().length) {
+					return;
+				}
+				if (node && node.classList.contains("hide")) {
+					return;
+				}
+
+				var segments = buildTypewriterSegments(Array.from(contentElement.childNodes));
+				var totalLength = prepareTypewriterSegments(segments);
+
+				while (contentElement.firstChild) {
+					contentElement.removeChild(contentElement.firstChild);
+				}
+
+				if (!segments.length || !totalLength) {
+					restoreTypewriterSegments(contentElement, segments);
+					return;
+				}
+
+				typewriterQueue.push({ contentElement: contentElement, segments: segments });
+				if (!typewriterActive) {
+					processTypewriterQueue();
+				}
+			}
+
+			function processTypewriterQueue() {
+				if (!typewriterQueue.length) {
+					typewriterActive = false;
+					return;
+				}
+
+				typewriterActive = true;
+				var current = typewriterQueue.shift();
+				var contentElement = current.contentElement;
+
+				if (!contentElement || !contentElement.isConnected) {
+					typewriterActive = false;
+					processTypewriterQueue();
+					return;
+				}
+
+				var cursor = document.createElement("span");
+				cursor.className = "typewriter-caret";
+				contentElement.classList.add("typewriter-active");
+
+				typewriterRun(contentElement, current.segments, cursor, function () {
+					if (cursor.parentNode) {
+						cursor.parentNode.removeChild(cursor);
+					}
+					contentElement.classList.remove("typewriter-active");
+					typewriterActive = false;
+					processTypewriterQueue();
+				});
+			}
+
 			function filterMessage(ele) {
 				if (filterAddNameAndTime) {
 					if (!filtering) {
@@ -9173,13 +9468,16 @@
 					}
 					// this part is used to filter out emojis, but also calculate the character-length of a message, to know how long to show it for
 					// emojis and images are counted with char-length zero-value
-
-						var textContentLength =  node.querySelector("#content_" + data.id).innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
-						node.dataset.contentLength = textContentLength;
-						if (!textContentLength) {
-							node.classList.add("noText");
-						}
-						// textContentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0; // must come after noText set, if we want to include images as a character
+					var contentElement = node.querySelector("#content_" + data.id);
+					var textContentLength = 0;
+					if (contentElement) {
+						textContentLength = contentElement.innerText.trim().replace(/([\u2580-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/gi, "").length || 0;
+					}
+					node.dataset.contentLength = textContentLength;
+					if (!textContentLength) {
+						node.classList.add("noText");
+					}
+					// textContentLength += node.querySelectorAll("#content_"+data.id+" img").length || 0; // must come after noText set, if we want to include images as a character
 					node.contentLength = textContentLength;
 
 					transitionType.forEach(classtype => {
@@ -9439,7 +9737,12 @@
 						};
 					}
 					
-					if (beep) { 
+					if (typewriterEnabled) {
+						enqueueTypewriter(contentElement, node);
+					}
+					
+					const shouldBeep = beep || (beepFirstTime && data.firsttime);
+					if (shouldBeep) { 
 						if (!(data.command && doNotTTSBeep) && !(nobeepevent && data.event) && !(nobeepmod && mod) && !(nobeephost && host) && !(nobeepbot && bot)){
 							playtone();
 						}
