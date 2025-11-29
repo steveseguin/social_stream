@@ -3580,7 +3580,7 @@ const checkDuplicateSources = new CheckDuplicateSources();
 async function processIncomingMessage(message, sender=null){
 	
 	try {
-		if (sender?.tab){
+		if (sender?.tab && (message.tid === undefined || message.tid === null)){
 			message.tid = sender.tab.id; // including the source (tab id) of the social media site the data was pulled from
 		}
 	} catch (e) {}

@@ -1503,7 +1503,6 @@ body.light-mode .meta-value.badge {
 
 		window.addEventListener("message", function (e) {
 			if (e.source != iframe.contentWindow) return;
-			log(e.data);
             // Logic to populate iframe.connectedPeers, similar to dock.html
             if ("action" in e.data && e.data.UUID && "value" in e.data) {
                 const peerUUID = e.data.UUID;
@@ -1530,6 +1529,7 @@ body.light-mode .meta-value.badge {
             }
 
 			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+				log(e.data.dataReceived.overlayNinja);
 				addMessageToOverlay(e.data.dataReceived.overlayNinja);
 			}
 		});
