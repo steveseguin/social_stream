@@ -169,6 +169,33 @@ body, html {
     font-style: italic;
 }
 
+.viewerIcons {
+    background-position: left;
+    background-repeat: no-repeat;
+    background-size: contain;
+    padding: 5px;
+    margin: 0 5px 0 0;
+    cursor: help;
+    padding-left: 34px;
+    border-radius: 25%;
+}
+
+#topbar {
+    display: flex;
+    margin: 0 auto;
+    text-align: center;
+    position: fixed;
+    right: 0;
+    z-index: 999;
+    background-color: #0009;
+    border-radius: 0 0 0 13px;
+    padding-left: 3px;
+}
+
+#topbar:empty {
+    display: none;
+}
+
 body.obsstudio-mode {
     --bg-color: #13141A;
     background-color: #13141A;
@@ -424,11 +451,30 @@ body.light-mode .meta-section-title {
 body.light-mode .meta-value.badge {
     background: rgba(0, 0, 0, 0.08);
 }
+
+@media only screen and (max-width: 1200px) { 
+	#header h1.large {
+		display:none;
+	}
+}
+@media only screen and (min-width: 1200px) { 
+	#header h1.small {
+		display:none;
+	}
+}
+@media only screen and (max-width: 700px) { 
+	#header h1.small {
+		display:none;
+	}
+}
+
 </style>
 </head>
 <body>
+<div id="topbar"></div>
 <div id="header">
-    <h1>Stream Events & Donations Dashboard</h1>
+    <h1 class="large">Stream Events & Donations Dashboard</h1>
+	<h1 class="small">Events Dashboard</h1>
 </div>
 <div id="chat-container">
     <div class="no-events">Waiting for stream events and donations...</div>
@@ -447,12 +493,13 @@ body.light-mode .meta-value.badge {
 			console.log(msg);
 		}
 	}
-	
+
     var password = "false";
     var featuredMode = false;
     
     const chatContainer = document.getElementById('chat-container');
     let noEventsMessage = document.querySelector('.no-events');
+    const topBarElement = document.getElementById('topbar');
 
 	var sources = false; // Default sources
 	if (urlParams.get("sources")) {
@@ -470,6 +517,7 @@ body.light-mode .meta-value.badge {
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
+	const showViewerCount = urlParams.has("showviewercount");
 
 	// Apply theme immediately
 	if (lightMode) {
@@ -581,6 +629,8 @@ body.light-mode .meta-value.badge {
 
 	const DEDUPLICATED_STATUS_EVENTS = new Set(['follower_update', 'subscriber_update']);
 	const statusLastValues = Object.create(null);
+	const viewerCounts = Object.create(null);
+	const VIEWER_ICON_TTL = 130000;
 
 	function getStatusCacheKey(normalizedEvent, data) {
 		const type = data && typeof data.type === 'string' ? data.type.toLowerCase() : 'unknown';
@@ -759,6 +809,56 @@ body.light-mode .meta-value.badge {
 		const b = parseInt(normalized.slice(5, 7), 16);
 		const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
 		return luminance > 160 ? '#111111' : '#f5f5f5';
+	}
+
+	function upsertViewerIcon(type, count) {
+		if (!topBarElement) return;
+		let ele = topBarElement.querySelector("[data-type='" + type + "']");
+		if (!ele) {
+			ele = document.createElement("div");
+			ele.dataset.type = type;
+			ele.classList.add("viewerIcons");
+			ele.title = "Viewer count for " + type;
+			ele.style.backgroundImage = "url(./sources/images/" + type + ".png)";
+			topBarElement.prepend(ele);
+		}
+		ele.innerText = Number.isFinite(count) ? count.toLocaleString() : String(count || 0);
+		clearTimeout(ele.timeout);
+		ele.timeout = setTimeout(function(node) {
+			if (node) {
+				delete viewerCounts[node.dataset.type];
+				node.remove();
+			}
+		}, VIEWER_ICON_TTL, ele);
+	}
+
+	function updateViewerTopBar(data) {
+		if (!showViewerCount || !data || !data.event || !topBarElement) {
+			return;
+		}
+		const normalizedEvent = normalizeEventKey(data.event);
+		if (normalizedEvent === 'viewer_update' && data.type) {
+			const count = resolveMetricNumber(data);
+			if (count === null) return;
+			viewerCounts[data.type] = count;
+			upsertViewerIcon(data.type, count);
+		} else if (normalizedEvent === 'viewer_updates' && data.meta && typeof data.meta === 'object') {
+			const incomingTypes = Object.keys(data.meta);
+			const allowedTypes = new Set(incomingTypes);
+			topBarElement.querySelectorAll(".viewerIcons").forEach(ele => {
+				if (!allowedTypes.has(ele.dataset.type)) {
+					clearTimeout(ele.timeout);
+					ele.remove();
+					delete viewerCounts[ele.dataset.type];
+				}
+			});
+			incomingTypes.forEach(type => {
+				const numericCount = extractNumeric(data.meta[type]);
+				if (numericCount === null) return;
+				viewerCounts[type] = numericCount;
+				upsertViewerIcon(type, numericCount);
+			});
+		}
 	}
 
 	function isMetaOnlyPayload(data) {
@@ -1255,6 +1355,7 @@ body.light-mode .meta-value.badge {
 	}
 
     function addMessageToOverlay(data) {
+		updateViewerTopBar(data);
 		if (isMetaOnlyPayload(data)) {
 			return;
 		}
