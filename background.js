@@ -9650,10 +9650,11 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         }
     }
 	    const now = Date.now();
+	    const RUMBLE_COOLDOWN_MS = 1000;
 	
 	    const messageOrigin = data.outgoingOrigin || (data.bot ? 'chatbot' : (data.host ? 'host' : 'relay'));
 	    const shouldCheckDynamicPerTab = antispam && settings["dynamictiming"];
-	
+
 	    if (!reverse && !overrideTimeout && data.tid) { // we do this early to avoid the blue bar if not needed
 	        if (data.tid in messageTimeout) {
 	            if (now - messageTimeout[data.tid] < overrideTimeout) {
@@ -9727,8 +9728,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 	                await attachAndChat(tab.id, data.response, false, true, true, true, overrideTimeout, undefined, throttleProfile, throttleOptions);
 	                markAutoForTabIfNeeded();
 	            } else if (tab.url.startsWith("https://rumble.com/")) {
+	                if (tab.id in messageTimeout && now - messageTimeout[tab.id] < RUMBLE_COOLDOWN_MS) {
+	                    markAutoForTabIfNeeded();
+	                    return;
+	                }
 	                storeMessageForTab(data.response);
-	                await attachAndChat(tab.id, data.response, true, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions);
+	                await attachAndChat(tab.id, data.response, true, true, true, false, RUMBLE_COOLDOWN_MS, undefined, throttleProfile, throttleOptions);
 	                markAutoForTabIfNeeded();
 	            } else if (tab.url.startsWith("https://app.chime.aws/meetings/")) {
 	                storeMessageForTab(data.response);
@@ -10185,6 +10190,18 @@ const FAKE_CHAT_THROTTLE_RULES = [
       }
       return false;
     }
+  },
+  {
+    key: "rumbleSurface",
+    minInterval: 900,
+    maxQueue: 5,
+    matches(url = "") {
+      if (typeof url !== "string") {
+        return false;
+      }
+      const normalized = url.toLowerCase();
+      return normalized.startsWith("https://rumble.com/");
+    }
   }
 ];
 
@@ -10576,7 +10593,11 @@ async function performGeneralFakeChatSend(
       });
     });
 
-    const isFocused = await focusChat(tabId);
+    let isFocused = await focusChat(tabId);
+    if (!isFocused) {
+      await new Promise((resolve) => setTimeout(resolve, 150));
+      isFocused = await focusChat(tabId);
+    }
     if (!isFocused) {
       await delayedDetach(tabId);
       return;
@@ -10593,6 +10614,25 @@ async function performGeneralFakeChatSend(
     }
 
     if (backspace) {
+      try {
+        await sendKeyEvent(tabId, "keyDown", {
+          key: "a",
+          code: "KeyA",
+          nativeVirtualKeyCode: 65,
+          windowsVirtualKeyCode: 65,
+          modifiers: 2
+        });
+        await sendKeyEvent(tabId, "keyUp", {
+          key: "a",
+          code: "KeyA",
+          nativeVirtualKeyCode: 65,
+          windowsVirtualKeyCode: 65,
+          modifiers: 2
+        });
+        await new Promise((resolve) => setTimeout(resolve, 30));
+      } catch (e) {
+        warnlog(`Select-all before backspace failed for tab ${tabId}: ${e?.message || e}`);
+      }
       await sendKeyEvent(tabId, "rawKeyDown", KEY_EVENTS.BACKSPACE);
       await new Promise((resolve) => setTimeout(resolve, 30));
       await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.BACKSPACE);
