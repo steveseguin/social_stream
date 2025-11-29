@@ -30,6 +30,7 @@
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
 		if ("settings" in response){
 			settings = response.settings;
+			applyAudioPickerSetting();
 		}
 		if ("state" in response){
 			isExtensionOn = response.state;
@@ -63,7 +64,7 @@
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
-						
+						applyAudioPickerSetting();
 					}
 					if ("state" in request){
 						isExtensionOn = request.state;
@@ -75,6 +76,7 @@
 								document.getElementById("startupbutton").style.display = "none";
 							}
 						}
+						applyAudioPickerSetting();
 					}
 					sendResponse(true);
 					return;
@@ -231,9 +233,266 @@
 		}, 2000);
 	}
 
+	const AUDIO_OUTPUT_BUTTON_ID = "ssn-audio-output-picker";
+	const AUDIO_OUTPUT_PANEL_ID = "ssn-audio-output-panel";
+	const AUDIO_OUTPUT_SELECT_ID = "ssn-audio-output-select";
+	const AUDIO_OUTPUT_STATUS_ID = "ssn-audio-output-status";
+	let isPickingAudioOutput = false;
+	let hasVisibilityListeners = false;
+
+	function removeAudioOutputButton() {
+		const existing = document.getElementById(AUDIO_OUTPUT_BUTTON_ID);
+		if (existing) {
+			existing.remove();
+		}
+
+		const panel = document.getElementById(AUDIO_OUTPUT_PANEL_ID);
+		if (panel) {
+			panel.remove();
+		}
+	}
+
+	function getActiveVideo() {
+		return document.querySelector(".html5-main-video") || document.querySelector("video");
+	}
+
+	function renderAudioOutputPanel(outputs, selectedId) {
+		let panel = document.getElementById(AUDIO_OUTPUT_PANEL_ID);
+		if (!panel) {
+			panel = document.createElement("div");
+			panel.id = AUDIO_OUTPUT_PANEL_ID;
+			panel.style = "position: fixed; right: 18px; bottom: 70px; z-index: 2147483647; background: #0f0f0f; color: #fff; border: 1px solid #3ea6ff; border-radius: 10px; padding: 10px; box-shadow: 0 6px 14px rgba(0,0,0,0.35); font-size: 13px; font-family: inherit; min-width: 240px;";
+
+			const header = document.createElement("div");
+			header.style = "display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 6px;";
+			const title = document.createElement("span");
+			title.textContent = "Audio output";
+			const close = document.createElement("button");
+			close.type = "button";
+			close.textContent = "✕";
+			close.style = "background: transparent; border: none; color: #fff; cursor: pointer; font-size: 14px; padding: 0 4px;";
+			close.addEventListener("click", () => panel.remove());
+			header.appendChild(title);
+			header.appendChild(close);
+			panel.appendChild(header);
+
+			const select = document.createElement("select");
+			select.id = AUDIO_OUTPUT_SELECT_ID;
+			select.style = "width: 100%; margin-bottom: 6px; background: #121212; color: #fff; border: 1px solid #3ea6ff; border-radius: 6px; padding: 6px;";
+			panel.appendChild(select);
+
+			const status = document.createElement("div");
+			status.id = AUDIO_OUTPUT_STATUS_ID;
+			status.style = "opacity: 0.85;";
+			panel.appendChild(status);
+
+			(document.body || document.documentElement).appendChild(panel);
+		}
+
+		const selectEl = panel.querySelector("#" + AUDIO_OUTPUT_SELECT_ID);
+		const statusEl = panel.querySelector("#" + AUDIO_OUTPUT_STATUS_ID);
+
+		selectEl.innerHTML = "";
+		const defaultOpt = document.createElement("option");
+		defaultOpt.value = "default";
+		defaultOpt.textContent = "System default";
+		selectEl.appendChild(defaultOpt);
+
+		outputs.forEach((device, idx) => {
+			const opt = document.createElement("option");
+			opt.value = device.deviceId;
+			opt.textContent = device.label || `Audio output ${idx + 1}`;
+			selectEl.appendChild(opt);
+		});
+
+		if (selectedId && selectEl.querySelector(`option[value="${selectedId}"]`)) {
+			selectEl.value = selectedId;
+		} else {
+			selectEl.value = "default";
+		}
+
+		statusEl.textContent = selectEl.value === "default" ? "Using system default" : `Using ${selectEl.options[selectEl.selectedIndex].textContent}`;
+
+		selectEl.onchange = () => {
+			const chosenId = selectEl.value;
+			statusEl.textContent = "Switching...";
+			applyAudioOutput(chosenId, outputs).then(() => {
+				const label = selectEl.options[selectEl.selectedIndex].textContent;
+				statusEl.textContent = chosenId === "default" ? "Using system default" : `Using ${label}`;
+			}).catch((err) => {
+				console.warn("Failed to switch audio output", err);
+				statusEl.textContent = err && err.message ? err.message : "Failed to switch output";
+			});
+		};
+
+		return { panel, selectEl, statusEl };
+	}
+
+	async function applyAudioOutput(deviceId, outputs) {
+		const video = getActiveVideo();
+		if (!video) {
+			throw new Error("No video element found on this page.");
+		}
+		if (typeof video.setSinkId !== "function") {
+			throw new Error("Audio output selection is not supported in this browser.");
+		}
+		await video.setSinkId(deviceId || "default");
+	}
+
+	async function listAudioOutputsWithPermission() {
+		if (!navigator.mediaDevices) {
+			throw new Error("Media devices API is unavailable.");
+		}
+
+		let devices = [];
+		try {
+			devices = await navigator.mediaDevices.enumerateDevices();
+		} catch (err) {
+			console.warn("enumerateDevices failed before permission", err);
+		}
+
+		const hasAudioOutputs = devices.some((d) => d.kind === "audiooutput" && d.deviceId);
+		if (!hasAudioOutputs) {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			stream.getTracks().forEach((track) => track.stop());
+			devices = await navigator.mediaDevices.enumerateDevices();
+		}
+
+		return devices.filter((d) => d.kind === "audiooutput" && d.deviceId);
+	}
+
+	function isFullPlayerMode() {
+		if (document.fullscreenElement) {
+			return true;
+		}
+		const player = document.querySelector(".html5-video-player");
+		return !!(player && (player.classList.contains("ytp-fullscreen") || player.classList.contains("ytp-big-mode")));
+	}
+
+	function syncAudioPickerVisibility() {
+		const hide = isFullPlayerMode();
+		const button = document.getElementById(AUDIO_OUTPUT_BUTTON_ID);
+		const panel = document.getElementById(AUDIO_OUTPUT_PANEL_ID);
+		if (button) {
+			button.style.display = hide ? "none" : "block";
+		}
+		if (panel) {
+			panel.style.display = hide ? "none" : "";
+		}
+	}
+
+	function applyAudioPickerSetting() {
+		const onWatchPage = window.location.href.startsWith("https://www.youtube.com/watch");
+		if (!isExtensionOn || !settings.youtubeAudioPicker || !onWatchPage) {
+			removeAudioOutputButton();
+			return;
+		}
+		ensureAudioOutputButton();
+	}
+
+	async function pickAudioOutputForCurrentVideo(buttonEl) {
+		if (isPickingAudioOutput) {
+			return;
+		}
+
+		const video = getActiveVideo();
+		if (!video) {
+			throw new Error("No video element found on this page.");
+		}
+		if (typeof video.setSinkId !== "function") {
+			throw new Error("Audio output selection is not supported in this browser.");
+		}
+		if (!navigator.mediaDevices) {
+			throw new Error("Media devices API is unavailable.");
+		}
+
+		isPickingAudioOutput = true;
+		const defaultLabel = "Pick audio output";
+		buttonEl.disabled = true;
+		buttonEl.textContent = "Requesting...";
+
+		try {
+			let selectedDeviceId = null;
+			if (navigator.mediaDevices.selectAudioOutput) {
+				try {
+					const selection = await navigator.mediaDevices.selectAudioOutput();
+					selectedDeviceId = selection && selection.deviceId;
+				} catch (err) {
+					console.warn("selectAudioOutput failed or was dismissed", err);
+				}
+			}
+
+			const outputs = await listAudioOutputsWithPermission();
+
+			if (selectedDeviceId) {
+				await applyAudioOutput(selectedDeviceId, outputs);
+				buttonEl.textContent = selectedDeviceId === "default" ? "Using system default" : "Audio output set";
+				renderAudioOutputPanel(outputs, selectedDeviceId);
+				return;
+			}
+
+			if (!outputs.length) {
+				throw new Error("No audio outputs exposed by the browser.");
+			}
+
+			const panel = renderAudioOutputPanel(outputs);
+			// Immediately apply the current selection (default) to refresh status.
+			await applyAudioOutput(panel.selectEl.value, outputs);
+			panel.statusEl.textContent = panel.selectEl.value === "default" ? "Using system default" : `Using ${panel.selectEl.options[panel.selectEl.selectedIndex].textContent}`;
+			buttonEl.textContent = "Picker ready";
+		} finally {
+			isPickingAudioOutput = false;
+			buttonEl.disabled = false;
+			setTimeout(() => {
+				if (buttonEl && buttonEl.isConnected) {
+					buttonEl.textContent = defaultLabel;
+				}
+			}, 2000);
+		}
+	}
+
+	function ensureAudioOutputButton() {
+		if (document.getElementById(AUDIO_OUTPUT_BUTTON_ID)) {
+			syncAudioPickerVisibility();
+			return;
+		}
+
+		const button = document.createElement("button");
+		button.id = AUDIO_OUTPUT_BUTTON_ID;
+		button.type = "button";
+		button.textContent = "Pick audio output";
+		button.title = "Select where this tab's audio should play";
+		button.style = "position: fixed; right: 18px; bottom: 18px; z-index: 2147483647; background: #0f0f0f; color: #fff; border: 1px solid #3ea6ff; border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 14px rgba(0,0,0,0.35); cursor: pointer; font-size: 13px; font-family: inherit;";
+		button.addEventListener("click", function (event) {
+			event.preventDefault();
+			pickAudioOutputForCurrentVideo(button).catch((err) => {
+				console.warn("Audio output selection failed", err);
+				button.textContent = err && err.message ? err.message : "Selection failed";
+				setTimeout(() => {
+					if (button && button.isConnected) {
+						button.textContent = "Pick audio output";
+					}
+				}, 2500);
+			});
+		});
+
+		(document.body || document.documentElement).appendChild(button);
+		syncAudioPickerVisibility();
+
+		if (!hasVisibilityListeners) {
+			hasVisibilityListeners = true;
+			document.addEventListener("fullscreenchange", syncAudioPickerVisibility, false);
+			window.addEventListener("resize", syncAudioPickerVisibility, false);
+		}
+	}
+
 	function preStartup(){
 		
-		if (!isExtensionOn){return;}
+		applyAudioPickerSetting();
+		
+		if (!isExtensionOn){
+			return;
+		}
 		
 		if (!window.location.href.startsWith("https://www.youtube.com/watch")){
 			return;
@@ -326,15 +585,6 @@
 	var preStartupInteval = setInterval(function(){preStartup();},5000);
 
 })();
-
-
-
-
-
-
-
-
-
 
 
 
