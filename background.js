@@ -31,6 +31,10 @@ var messageCounter = messageCounterBase;
 var lastAntiSpam = 0;
 var tabMessageActivityCounter = {};
 var lastAutoMessagePerTab = {};
+let returningBeepAudio = null;
+let returningBeepLastPlay = 0;
+const RETURNING_BEEP_COOLDOWN_MS = 400;
+let returningBeepHintShown = false;
 
 var connectedPeers = {};
 var isSSAPP = false;
@@ -3818,6 +3822,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch(e) { console.warn(e); }
 
 			sendResponse({ state: isExtensionOn });
+
+			if (request.setting === "beepreturning" && request.value && !isSSAPP && !returningBeepHintShown) {
+				messagePopup({
+					alert: "If you don't hear the notification, click the pinned Background tab once to allow audio playback."
+				});
+				returningBeepHintShown = true;
+			}
 			
 			if (request.target){
 				sendTargetP2P(request, request.target);
@@ -10811,6 +10822,43 @@ class HostMessageFilter {
 // Create an instance
 const hostMessageFilter = new HostMessageFilter();
 
+function getReturningBeepPlayer() {
+	if (typeof Audio === "undefined") {
+		return null;
+	}
+	if (!returningBeepAudio) {
+		try {
+			returningBeepAudio = new Audio("./audio/join.wav");
+			returningBeepAudio.preload = "auto";
+			returningBeepAudio.volume = 0.5;
+		} catch (e) {
+			console.warn("Unable to initialize returning chatter beep audio", e);
+			return null;
+		}
+	}
+	return returningBeepAudio;
+}
+
+async function playReturningBeep() {
+	const player = getReturningBeepPlayer();
+	if (!player) {
+		return;
+	}
+
+	const now = Date.now();
+	if (now - returningBeepLastPlay < RETURNING_BEEP_COOLDOWN_MS) {
+		return;
+	}
+	returningBeepLastPlay = now;
+
+	try {
+		player.currentTime = 0;
+		await player.play();
+	} catch (err) {
+		console.warn("Returning chatter beep failed to play", err?.message || err);
+	}
+}
+
 
 const patterns = {
 	botReply: {
@@ -11140,6 +11188,20 @@ async function applyBotActions(data, tab = false) {
 				}
 			} catch (e) {
 				console.error("Error checking first timer:", e);
+			}
+		}
+
+		const returningBeepEnabled = !!(settings.beepreturning?.setting ?? settings.beepreturning);
+		const hasChatFields = typeof data.chatname === "string" && data.chatname.trim() !== "" && typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
+		const skipReturningBeep = data.reflection || data.replay || data.history || data.reload || data.bot || data.host;
+
+		if (returningBeepEnabled && hasChatFields && !skipReturningBeep) {
+			const nowSeconds = normalizeTimestampToSeconds(data.timestamp) || Math.round(Date.now() / 1000);
+			const lastActivitySeconds = normalizeTimestampToSeconds(data.lastactivity);
+			const inactiveForEightHours = Number.isFinite(lastActivitySeconds) && nowSeconds && (nowSeconds - lastActivitySeconds >= 8 * 60 * 60);
+
+			if (data.firsttime || inactiveForEightHours) {
+				playReturningBeep();
 			}
 		}
 		
