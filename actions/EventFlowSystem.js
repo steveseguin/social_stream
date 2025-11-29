@@ -973,8 +973,9 @@ class EventFlowSystem {
 	
 	isMetaOnlyPayload(message) {
 		if (!message || typeof message !== 'object') return false;
-		if (!message.meta || typeof message.meta !== 'object') return false;
-		return !(message.chatname || message.chatmessage || message.hasDonation);
+		if (!message.meta) return false; // Any truthy meta (object/string/number) counts
+		const hasChatFields = !!(message.chatname || message.chatmessage || message.hasDonation || message.contentimg);
+		return !hasChatFields;
 	}
     
     async processMessage(message) {

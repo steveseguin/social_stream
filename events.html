@@ -442,6 +442,12 @@ body.light-mode .meta-value.badge {
         roomID = urlParams.get("session");
     }
 	
+	function log(msg) {
+		if (urlParams.has("debug")) {
+			console.log(msg);
+		}
+	}
+	
     var password = "false";
     var featuredMode = false;
     
@@ -753,6 +759,13 @@ body.light-mode .meta-value.badge {
 		const b = parseInt(normalized.slice(5, 7), 16);
 		const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
 		return luminance > 160 ? '#111111' : '#f5f5f5';
+	}
+
+	function isMetaOnlyPayload(data) {
+		if (!data || typeof data !== 'object') return false;
+		if (!data.meta) return false; // Treat any truthy meta (object/string/number) as meta-only
+		const hasChatFields = !!(data.chatname || data.chatmessage || data.hasDonation || data.contentimg);
+		return !hasChatFields;
 	}
 
 	function shouldSkipEventMetaField(key, value, normalizedEvent) {
@@ -1242,6 +1255,9 @@ body.light-mode .meta-value.badge {
 	}
 
     function addMessageToOverlay(data) {
+		if (isMetaOnlyPayload(data)) {
+			return;
+		}
 		// Only display events from enabled sources
 		
 		if (sources && !sources.includes(data.type)) {
@@ -1446,7 +1462,7 @@ body.light-mode .meta-value.badge {
                 }
             }
             if (sentViaIframe) {
-                 console.log("Featured message sent via iframe.");
+                 log("Featured message sent via iframe.");
             } else {
                 console.warn('No suitable "overlay" peer found to send featured message to via iframe. Attempting WebSocket.');
                 // Fallback to WebSocket if no iframe peer was found or if sending failed
@@ -1462,10 +1478,10 @@ body.light-mode .meta-value.badge {
         if (socketserver && socketserver.readyState === WebSocket.OPEN) {
             if (messageToSend === false) {
                 socketserver.send(JSON.stringify({ overlayNinja: false }));
-                console.log("Clear message sent via WebSocket as fallback.");
+                log("Clear message sent via WebSocket as fallback.");
             } else {
                 socketserver.send(JSON.stringify({ content: messageToSend }));
-                console.log("Featured message sent via WebSocket as fallback.");
+                log("Featured message sent via WebSocket as fallback.");
             }
         } else {
             console.error('Neither iframe nor WebSocket available to send message.');
@@ -1487,7 +1503,7 @@ body.light-mode .meta-value.badge {
 
 		window.addEventListener("message", function (e) {
 			if (e.source != iframe.contentWindow) return;
-			
+			log(e.data);
             // Logic to populate iframe.connectedPeers, similar to dock.html
             if ("action" in e.data && e.data.UUID && "value" in e.data) {
                 const peerUUID = e.data.UUID;
@@ -1496,19 +1512,19 @@ body.light-mode .meta-value.badge {
                 if (e.data.action === "push-connection-info" || e.data.action === "view-connection-info") {
                     if (peerValue && "label" in peerValue) {
                         iframe.connectedPeers[peerUUID] = peerValue.label;
-                         console.log("Peer connected/info: ", peerUUID, peerValue.label);
+                         log("Peer connected/info: ", peerUUID, peerValue.label);
                     } else if (peerValue === false) { 
                          delete iframe.connectedPeers[peerUUID];
-                         console.log("Peer disconnected (info explicit false): ", peerUUID);
+                         log("Peer disconnected (info explicit false): ", peerUUID);
                     }
                 } else if (e.data.action === "push-connection" || e.data.action === "view-connection") {
                     if (peerValue === false) { // Peer disconnected
                         delete iframe.connectedPeers[peerUUID];
-                        console.log("Peer disconnected: ", peerUUID);
+                        log("Peer disconnected: ", peerUUID);
                     } else if (typeof peerValue === 'object' && peerValue && "label" in peerValue) {
                         // This handles cases where a new connection directly sends its info
                         iframe.connectedPeers[peerUUID] = peerValue.label;
-                        console.log("Peer connected (direct info): ", peerUUID, peerValue.label);
+                        log("Peer connected (direct info): ", peerUUID, peerValue.label);
                     }
                 }
             }
