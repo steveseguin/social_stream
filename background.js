@@ -5073,13 +5073,18 @@ async function sendToDestinations(message) {
 					var viewerCounts = {};
 					for (const [tid, tabData] of metaDataStore) {
 						if (tabData.viewer_update && tabData.viewer_update.type){
+							// Skip viewer counts from sites that are not opted-in
+							if (!checkIfAllowed(tabData.viewer_update.type)) {
+								continue;
+							}
+
 							let count = parseInt(tabData.viewer_update.meta) || 0;
-							
+
 							// Pump the numbers if enabled
 							if (settings.pumpTheNumbers) {
 								count = Math.round(count * 1.75);
 							}
-							
+
 							viewerCounts[tabData.viewer_update.type] = (viewerCounts[tabData.viewer_update.type] || 0) + count;
 						}
 					}
@@ -8009,18 +8014,26 @@ function updateViewerCount(data) {
         viewerCounts = {};
         lastUpdated = {};
         activeViewerSources = {};
-        
+
         // Process each platform's viewer count
         Object.keys(data.meta).forEach(type => {
+            // Skip viewer counts from sites that are not opted-in
+            if (!checkIfAllowed(type)) {
+                return;
+            }
             viewerCounts[type] = parseInt(data.meta[type]) || 0;
             lastUpdated[type] = Date.now();
             if (viewerCounts[type] > 0) {
                 activeViewerSources[type] = true;
             }
         });
-    } 
+    }
     // Handle legacy single viewer_update format
     else if (data.type && ("meta" in data)) {
+        // Skip viewer counts from sites that are not opted-in
+        if (!checkIfAllowed(data.type)) {
+            return;
+        }
         const sourceKey = data.tid ? `${data.type}-${data.tid}` : data.type;
         viewerCounts[sourceKey] = parseInt(data.meta) || 0;
         lastUpdated[sourceKey] = Date.now();
@@ -8086,15 +8099,22 @@ function processHype2() {
 
 function combineHypeData() {
     const result = { chatters: {}, viewers: {}, combined: {} };
-    
-    // Copy active chatters data
+
+    // Copy active chatters data (only from opted-in sources)
     for (const sourceType in hype) {
+        if (!checkIfAllowed(sourceType)) {
+            continue;
+        }
         result.chatters[sourceType] = hype[sourceType];
         if (!result.combined[sourceType]) result.combined[sourceType] = { chatters: 0, viewers: 0 };
         result.combined[sourceType].chatters = hype[sourceType];
     }
-    
+
 	for (const sourceType in viewerCounts) {
+		// Skip sources that are not opted-in
+		if (!checkIfAllowed(sourceType)) {
+			continue;
+		}
 		// Include all sources that have viewer data, even if 0
 		result.viewers[sourceType] = viewerCounts[sourceType];
 		if (!result.combined[sourceType]) {
