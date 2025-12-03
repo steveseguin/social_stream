@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.36.26",
+  "version": "3.37.0",
   "homepage_url": "http://socialstream.ninja/",
   "browser_specific_settings": {
     "gecko": {
@@ -67,6 +67,7 @@
 	"https://patreon.com/*",
 	"https://simps.com/app/*",
 	"https://velora.tv/*",
+	"https://studio.kwai.com/live/detail/*",
 	"https://studio.favorited.com/popout/chat",
 	"https://*/*autoreloadwithsocialstream",
 	"https://*.webinargeek.com/webinar/*",
@@ -291,6 +292,10 @@
 	{
       "js": [ "./sources/fansly.js" ],
       "matches": [ "https://fansly.com/chatroom/*" ]
+    },
+	{
+      "js": [ "./sources/kwai.js" ],
+      "matches": ["https://studio.kwai.com/live/detail/*" ]
     },
     {
       "js": [ "./sources/cherrytv.js" ],
