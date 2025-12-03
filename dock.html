@@ -3160,7 +3160,12 @@
 			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
 				hideFrom = (urlParams.get("hidefrom") || urlParams.get("exclude")).toLowerCase().trim().split(",");
 			}
-			
+
+			var blockedWords = [];
+			if (urlParams.get("blockedwords")) {
+				blockedWords = urlParams.get("blockedwords").toLowerCase().split(",").map(w => w.trim()).filter(w => w);
+			}
+
 			var trivialevents = false;
 			if (urlParams.has("trivialevents")) {
 				trivialevents = true;
@@ -8715,6 +8720,22 @@
 					
 					if (DoNotShowInitialReply && data.reply){ // I'll need to invert this in the future.
 						data.chatmessage = data.reply;
+					}
+
+					// Block messages containing specific words/phrases
+					if (blockedWords.length) {
+						const messageText = (data.chatmessage || '').toLowerCase();
+						const nameText = (data.chatname || '').toLowerCase();
+						for (const word of blockedWords) {
+							if (messageText.includes(word) || nameText.includes(word)) {
+								if (blurred) {
+									makeBlurred = true;
+								} else {
+									return;
+								}
+								break;
+							}
+						}
 					}
 
 					if (data.chatmessage && data.chatmessage.startsWith("!")) {

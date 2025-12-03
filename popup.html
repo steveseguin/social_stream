@@ -1895,6 +1895,21 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="Exclude filtered from auto-show">🥅 Exclude filtered messages from auto-selecting </span>
                                 </div>
+								<div data-keywords="filter block hide words phrases text content moderation blacklist blocklist censor mute suppress NOALBS">
+									<label class="switch">
+										<input type="checkbox" data-param1="blockedwords" />
+										<span class="slider round"></span>
+									</label>
+									<span>🚫 Block messages containing specific words/phrases</span>
+									<div class="isolate" style="margin-left: 50px; margin-top: 5px;">
+										<div class="blockedwords-list-container source-list-container" id="blockedwordsList"></div>
+										<div class="add-blockedword-container">
+											<input type="text" id="newBlockedWord" placeholder="Word or phrase to block" style="width: 180px;" />
+											<button id="addBlockedWord">Add</button>
+										</div>
+										<input type="text" id="blockedwordsInput" class="textInput hidden" data-textparam1="blockedwords" style="display: none;" />
+									</div>
+								</div>
 								<div data-keywords="donation scrub anonymize remove tip amount hide value private">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="stripdonations" />

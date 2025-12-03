@@ -1020,6 +1020,99 @@ function updateSourceTypeList(type) {
     `).join('');
 }
 
+// Blocked words tag system functions
+function updateBlockedWordsList() {
+    const input = document.getElementById('blockedwordsInput');
+    const list = document.getElementById('blockedwordsList');
+    if (!input || !list) return;
+
+    const words = input.value.split(',')
+        .map(w => w.trim())
+        .filter(w => w);
+
+    list.innerHTML = words.map(word => `
+        <div class="username-tag">
+            <span>${escapeHtml(word)}</span>
+            <button class="remove-blockedword" data-word="${escapeHtml(word)}">×</button>
+        </div>
+    `).join('');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function addBlockedWord(word) {
+    const input = document.getElementById('blockedwordsInput');
+    if (!input || !word) return;
+
+    const words = input.value.split(',').map(w => w.trim()).filter(w => w);
+    const trimmedWord = word.trim();
+
+    if (trimmedWord && !words.some(w => w.toLowerCase() === trimmedWord.toLowerCase())) {
+        words.push(trimmedWord);
+        input.value = words.join(', ');
+        updateBlockedWordsList();
+        updateSettings(input);
+    }
+}
+
+function removeBlockedWord(word) {
+    const input = document.getElementById('blockedwordsInput');
+    if (!input) return;
+
+    const words = input.value.split(',').map(w => w.trim()).filter(w => w);
+    const index = words.findIndex(w => w.toLowerCase() === word.toLowerCase());
+
+    if (index > -1) {
+        words.splice(index, 1);
+        input.value = words.join(', ');
+        updateBlockedWordsList();
+        updateSettings(input);
+    }
+}
+
+function setupBlockedWordsInput() {
+    const list = document.getElementById('blockedwordsList');
+    const addBtn = document.getElementById('addBlockedWord');
+    const newWordInput = document.getElementById('newBlockedWord');
+
+    if (!list || !addBtn || !newWordInput) return;
+
+    // Handle clicking remove button on tags
+    list.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-blockedword')) {
+            removeBlockedWord(e.target.dataset.word);
+        }
+    });
+
+    // Handle add button click
+    addBtn.addEventListener('click', () => {
+        const word = newWordInput.value.trim();
+        if (word) {
+            addBlockedWord(word);
+            newWordInput.value = '';
+        }
+    });
+
+    // Handle Enter key in input
+    newWordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const word = newWordInput.value.trim();
+            if (word) {
+                addBlockedWord(word);
+                newWordInput.value = '';
+            }
+        }
+    });
+
+    // Initialize the list from any existing value
+    updateBlockedWordsList();
+}
+
 // Function to setup source selection for a given input
 function setupSourceSelection(inputId, isSettingBased = false) {
     const input = isSettingBased ? 
@@ -2113,6 +2206,11 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 const paramEle = document.querySelector(`input[data-param${paramNum}='${key}']`);
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, settingObj[textParamKey]);
+                }
+
+                // Refresh blocked words tag list if this is the blockedwords input
+                if (key === 'blockedwords') {
+                    updateBlockedWordsList();
                 }
             }
         }
@@ -5469,7 +5567,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	// Initialize ProfileManager after DOM is ready
 	ProfileManager.init();
-	
+
+	// Initialize blocked words tag input
+	setupBlockedWordsInput();
+
 	// Add event listener for save profile button
 	const saveProfileBtn = document.querySelector('button[data-action="saveProfile"]');
 	if (saveProfileBtn) {
