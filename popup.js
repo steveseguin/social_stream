@@ -780,7 +780,18 @@ function isFontAvailable(fontName) {
 }
 
 async function populateFontDropdown() {
-    const fonts = ["Roboto", "Tahoma",  "Arial", "Verdana", "Helvetica", "Serif", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
+    const fonts = [
+        // Windows core UI/text
+        'Segoe UI', 'Segoe UI Variable', 'Segoe UI Emoji', 'Segoe UI Historic', 'Segoe UI Symbol', 'Bahnschrift', 'Ebrima', 'Gadugi', 'Javanese Text', 'Leelawadee UI', 'Lucida Sans Unicode', 'Malgun Gothic', 'Meiryo', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Sans Serif', 'Microsoft Tai Le', 'Microsoft Uighur', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU-ExtB', 'Mongolian Baiti', 'MS Gothic', 'MS PGothic', 'MS UI Gothic', 'NSimSun', 'PMingLiU-ExtB', 'SimSun', 'SimSun-ExtB', 'Yu Gothic', 'Yu Gothic UI',
+        // Windows Latin staples
+        'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Gabriola', 'Georgia', 'Impact', 'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Symbol', 'Webdings', 'Wingdings', 'Wingdings 2', 'Wingdings 3', 'Sitka Banner', 'Sitka Display', 'Sitka Heading', 'Sitka Small', 'Sitka Subheading', 'Sitka Text', 'Lucida Console',
+        // Developer favorites / code
+        'Cascadia Code', 'Cascadia Mono', 'Fira Code', 'Fira Mono', 'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Ubuntu Mono', 'Inconsolata', 'Monaspace Neon', 'Monaspace Argon',
+        // Popular sans/serif families
+        'Inter', 'Roboto', 'Open Sans', 'Noto Sans', 'Noto Serif', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Serif JP', 'Noto Naskh Arabic', 'Lato', 'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito', 'Merriweather', 'Playfair Display', 'PT Sans', 'PT Serif', 'Source Sans 3', 'Source Serif 4', 'Source Sans Pro', 'Source Serif Pro', 'IBM Plex Sans', 'IBM Plex Serif', 'Ubuntu', 'Work Sans', 'Sora', 'Avenir', 'Avenir Next', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Helvetica', 'Gill Sans',
+        // Other common
+        'Book Antiqua', 'Century Gothic', 'Garamond', 'Didot', 'Bodoni MT', 'Perpetua', 'Rockwell', 'Goudy Old Style', 'Copperplate', 'Brush Script MT'
+    ];
 	
     var select = document.querySelector("[data-optionparam1='font']");
     fonts.forEach(font => {
