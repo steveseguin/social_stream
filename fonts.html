@@ -298,13 +298,17 @@
       // Respect the provided code for applying a font from URL params
       const urlParams = new URLSearchParams(window.location.search);
       if (urlParams.get("font")) {
-        const rawFont = urlParams.get("font").trim();
-        // Strip any surrounding quotes from the param and quote the family in CSS
-        const cleanFont = rawFont.replace(/^['"]|['"]$/g, "");
-        document.documentElement.style.setProperty(
-          "--font-family",
-          `"${cleanFont}", Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`
-        );
+        const fontParam = urlParams.get("font").trim();
+        const fonts = fontParam.split(',').map(f => {
+          const clean = f.trim().replace(/^['"]|['"]$/g, "");
+          return clean ? `"${clean}"` : '';
+        }).filter(Boolean);
+        if (fonts.length) {
+          document.documentElement.style.setProperty(
+            "--font-family",
+            `${fonts.join(', ')}, Avenir Next, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`
+          );
+        }
       }
 
       const resultsEl = document.getElementById('results');

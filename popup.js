@@ -3497,15 +3497,15 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                     targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
                 } else {
                     // Not a language parameter, use standard value
-                    targetElement.raw = updateURL(`${paramKey}=${ele.value}`, targetElement.raw);
+                    targetElement.raw = updateURL(`${paramKey}=${encodeURIComponent(ele.value)}`, targetElement.raw);
                 }
             } else {
                 // Standard select without language/voice data
-                targetElement.raw = updateURL(`${paramKey}=${ele.value}`, targetElement.raw);
+                targetElement.raw = updateURL(`${paramKey}=${encodeURIComponent(ele.value)}`, targetElement.raw);
             }
         } else {
             // Not a select element, use standard value
-            targetElement.raw = updateURL(`${paramKey}=${ele.value}`, targetElement.raw);
+            targetElement.raw = updateURL(`${paramKey}=${encodeURIComponent(ele.value)}`, targetElement.raw);
         }
     }
     

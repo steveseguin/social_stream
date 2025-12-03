@@ -831,7 +831,7 @@
 
 
 	// Apply custom font if specified
-	const fontFamily = urlParams.get('font') || "Nunito Sans";
+	const fontParam = urlParams.get('font');
 	const googlefont = urlParams.get('googlefont');
 
 	if (googlefont) {
@@ -840,24 +840,39 @@
 		link.rel = 'stylesheet';
 		link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(googlefont)}&display=swap`;
 		document.head.appendChild(link);
-		
+
 		// Apply the font to body, app element, and footer
 		document.body.style.fontFamily = `'${googlefont}', sans-serif`;
 		appElement.style.fontFamily = `'${googlefont}', sans-serif`;
 		footerText.style.fontFamily = `'${googlefont}', sans-serif`;
-	} else if (fontFamily) {
-		// Apply predefined font to body, app element, and footer
-		document.body.style.fontFamily = `'${fontFamily}', sans-serif`;
-		appElement.style.fontFamily = `'${fontFamily}', sans-serif`;
-		footerText.style.fontFamily = `'${fontFamily}', sans-serif`;
-		
-		// Load the OpenDyslexic font if specified
-		if (fontFamily === 'opendyslexic') {
-			const link = document.createElement('link');
-			link.rel = 'stylesheet';
-			link.href = 'https://fonts.cdnfonts.com/css/opendyslexic';
-			document.head.appendChild(link);
+	} else if (fontParam) {
+		// Parse comma-separated font list
+		const fonts = fontParam.split(',').map(f => {
+			const clean = f.trim().replace(/^['"]|['"]$/g, '');
+			return clean ? `'${clean}'` : '';
+		}).filter(Boolean);
+
+		if (fonts.length) {
+			const fontFamilyValue = `${fonts.join(', ')}, sans-serif`;
+			// Apply predefined font to body, app element, and footer
+			document.body.style.fontFamily = fontFamilyValue;
+			appElement.style.fontFamily = fontFamilyValue;
+			footerText.style.fontFamily = fontFamilyValue;
+
+			// Load the OpenDyslexic font if specified
+			if (fontParam.toLowerCase().includes('opendyslexic')) {
+				const link = document.createElement('link');
+				link.rel = 'stylesheet';
+				link.href = 'https://fonts.cdnfonts.com/css/opendyslexic';
+				document.head.appendChild(link);
+			}
 		}
+	} else {
+		// Default font
+		const defaultFont = "'Nunito Sans', sans-serif";
+		document.body.style.fontFamily = defaultFont;
+		appElement.style.fontFamily = defaultFont;
+		footerText.style.fontFamily = defaultFont;
 	}
 
     // Handle message events
