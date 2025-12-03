@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Actions Overlay - Social Stream Ninja</title>
     <script src="thirdparty/obs-websocket.min.js"></script>
+    <script type="text/javascript" src="tts.js"></script>
     <style>
 		body, html {
 			margin: 0;
@@ -400,6 +401,12 @@
             document.body.appendChild(iframe);
             
             console.log("Actions page initialized with session ID:", roomID);
+
+            // Configure TTS with URL parameters
+            if (typeof TTS !== 'undefined' && typeof TTS.configure === 'function') {
+                TTS.configure(urlParams);
+                console.log("TTS configured for actions page");
+            }
         }
 
         // WebSocket connection setup
@@ -715,7 +722,68 @@
                         console.warn("[OBS] API not available");
                     }
                     break;
-                    
+
+                // TTS Actions
+                case 'tts':
+                case 'speak':
+                    if (typeof TTS !== 'undefined' && payload.text) {
+                        // Force speak regardless of TTS.speech state unless allow is explicitly false
+                        // Normalize allow flag to handle boolean, numeric, and string forms
+                        let allowForce = true;
+                        if (payload.allow === false || payload.allow === 'false' || payload.allow === 'off' || payload.allow === 0 || payload.allow === '0') {
+                            allowForce = false;
+                        }
+                        TTS.speak(payload.text, allowForce);
+                        console.log("[TTS] Speaking:", payload.text, "(force:", allowForce + ")");
+                    } else if (!payload.text) {
+                        console.warn("[TTS] No text provided for TTS action");
+                    } else {
+                        console.warn("[TTS] TTS module not available");
+                    }
+                    break;
+
+                case 'toggleTTS':
+                    if (typeof TTS !== 'undefined') {
+                        if (payload.enabled === undefined || payload.enabled === 'toggle') {
+                            TTS.speech = !TTS.speech;
+                        } else if (payload.enabled === true || payload.enabled === 'true' || payload.enabled === 'on' || payload.enabled === 1) {
+                            TTS.speech = true;
+                        } else if (payload.enabled === false || payload.enabled === 'false' || payload.enabled === 'off' || payload.enabled === 0) {
+                            TTS.speech = false;
+                        }
+                        console.log("[TTS] TTS toggled:", TTS.speech ? "enabled" : "disabled");
+                    } else {
+                        console.warn("[TTS] TTS module not available");
+                    }
+                    break;
+
+                case 'skipTTS':
+                    if (typeof TTS !== 'undefined' && typeof TTS.skipCurrent === 'function') {
+                        TTS.skipCurrent();
+                        console.log("[TTS] Skipped current TTS message");
+                    } else {
+                        console.warn("[TTS] TTS module not available or skipCurrent not supported");
+                    }
+                    break;
+
+                case 'clearTTS':
+                    if (typeof TTS !== 'undefined' && typeof TTS.clearQueue === 'function') {
+                        TTS.clearQueue();
+                        console.log("[TTS] TTS queue cleared");
+                    } else {
+                        console.warn("[TTS] TTS module not available or clearQueue not supported");
+                    }
+                    break;
+
+                case 'setTTSVolume':
+                    if (typeof TTS !== 'undefined' && payload.volume !== undefined) {
+                        TTS.volume = Math.max(0, Math.min(1, parseFloat(payload.volume)));
+                        console.log("[TTS] Volume set to:", TTS.volume);
+                    } else {
+                        console.warn("[TTS] TTS module not available or volume not specified");
+                    }
+                    break;
+
                 default:
                     console.warn("Unknown action type received:", payload.actionType);
             }
