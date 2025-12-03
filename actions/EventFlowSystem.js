@@ -1011,16 +1011,22 @@ class EventFlowSystem {
                 if (result.blocked) {
                   //console.log(`[ProcessMessage] Flow "${flow.name}" BLOCKED the message. No further flows will be processed.`);
                     blocked = true;
-                    break; 
+                    break;
                 }
-                
+
                 if (result.modified) {
                   //console.log(`[ProcessMessage] Flow "${flow.name}" MODIFIED the message.`);
                     processed = result.message;
                 }
+
+                // Return immediately if returnNow is set - skip remaining flows
+                if (result.returnNow) {
+                  //console.log(`[ProcessMessage] Flow "${flow.name}" requested IMMEDIATE RETURN. Skipping remaining flows.`);
+                    break;
+                }
             }
         }
-        
+
       //console.log(`[ProcessMessage] Final result: ${blocked ? 'BLOCKED (returning null)' : 'NOT BLOCKED (returning message)'}`);
         return blocked ? null : processed;
     }
@@ -1129,20 +1135,88 @@ class EventFlowSystem {
             executedActions.add(actionId);
             const actionResult = await this.executeAction(node, overallResult.message);
             
-            if (actionResult) { 
+            if (actionResult) {
+                // Handle returnNow - mark message for immediate return
+                if (actionResult.returnNow) {
+                    overallResult.returnNow = true;
+                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} RETURN NOW - message will be returned immediately.`);
+                }
+
                 if (actionResult.blocked) {
                     overallResult.blocked = true;
                   //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
-                    return; 
                 }
+
                 if (actionResult.modified && actionResult.message) {
-                    overallResult.message = { ...actionResult.message }; 
+                    overallResult.message = { ...actionResult.message };
                     overallResult.modified = true;
                   //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
                 }
+
+                // Handle async continuation - schedule downstream and return immediately
+                if (actionResult.continueAsync) {
+                    let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
+                    if (downstreamConnections.length > 0) {
+                        // Capture current state for async execution
+                        let asyncMessage = { ...overallResult.message };
+
+                        // Schedule downstream actions to run asynchronously
+                        setTimeout(async () => {
+                            // Create a separate execution context for async chain
+                            const asyncExecutedActions = new Set(executedActions);
+                            let asyncBlocked = false;
+
+                            const executeAsyncChain = async (asyncActionId) => {
+                                if (asyncExecutedActions.has(asyncActionId)) return;
+                                if (asyncBlocked) return; // Stop if blocked
+
+                                const asyncNode = nodeMap.get(asyncActionId);
+                                if (!asyncNode || asyncNode.type !== 'action') return;
+
+                                asyncExecutedActions.add(asyncActionId);
+                                const asyncResult = await this.executeAction(asyncNode, asyncMessage);
+
+                                // Handle action results - mirror synchronous behavior
+                                if (asyncResult) {
+                                    if (asyncResult.blocked) {
+                                        asyncBlocked = true;
+                                        return; // Stop processing this branch
+                                    }
+                                    if (asyncResult.modified && asyncResult.message) {
+                                        asyncMessage = { ...asyncResult.message };
+                                    }
+                                    // If this action also wants to continue async, it will spawn its own setTimeout
+                                    if (asyncResult.continueAsync) {
+                                        // Already running async, so just continue normally
+                                        // but could implement nested async here if needed
+                                    }
+                                }
+
+                                // Continue to downstream actions
+                                const asyncDownstream = flow.connections.filter(conn => conn.from === asyncActionId);
+                                for (const conn of asyncDownstream) {
+                                    if (asyncBlocked) return;
+                                    const downNode = nodeMap.get(conn.to);
+                                    if (downNode && downNode.type === 'action') {
+                                        await executeAsyncChain(conn.to);
+                                    }
+                                }
+                            };
+
+                            for (const conn of downstreamConnections) {
+                                if (asyncBlocked) break;
+                                const downstreamNode = nodeMap.get(conn.to);
+                                if (downstreamNode && downstreamNode.type === 'action') {
+                                    await executeAsyncChain(conn.to);
+                                }
+                            }
+                        }, 0);
+                    }
+                    return; // Return immediately, downstream runs async
+                }
             }
-            
-            // Find and execute downstream actions
+
+            // Find and execute downstream actions (synchronous path)
             let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
             // Prioritize lightweight/control actions before heavy ones (e.g., delay)
             const priorityOf = (node) => {
@@ -1970,7 +2044,17 @@ class EventFlowSystem {
         switch (actionType) {
             case 'blockMessage':
                 result.blocked = true;
+                result.continueAsync = true; // Continue processing downstream actions asynchronously
               //console.log(`[ExecuteAction - blockMessage] Set result.blocked to true.`);
+                break;
+
+            case 'returnMessage':
+                result.returnNow = true; // Signal to return message immediately
+                result.continueAsync = true; // Continue processing downstream actions asynchronously
+                break;
+
+            case 'continueAsync':
+                result.continueAsync = true; // Fork: continue this flow async, let other flows proceed
                 break;
 
             case 'reflectionFilter': {

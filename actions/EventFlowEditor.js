@@ -52,6 +52,7 @@ class EventFlowEditor {
         this.actionTypes = [
             { id: 'blockMessage', name: '🚫 Block Message' },
             { id: 'returnMessage', name: '✅ Return Message' },
+            { id: 'continueAsync', name: '⚡ Continue Async' },
             { id: 'modifyMessage', name: '✏️ Modify Message' },
             { id: 'addPrefix', name: '⬅️ Add Prefix' },
             { id: 'addSuffix', name: '➡️ Add Suffix' },
@@ -1056,12 +1057,11 @@ class EventFlowEditor {
 			}
 		} else if (node.type === 'action') {
 			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
-			// Actions that can't return the original message get async output
-			// Only blockMessage truly blocks, and returnMessage is special (async return)
-			const nonReturningActions = [
-				'returnMessage', 'blockMessage'
+			// Actions that continue asynchronously - downstream runs in background
+			const asyncActions = [
+				'returnMessage', 'blockMessage', 'continueAsync'
 			];
-			if (nonReturningActions.includes(node.actionType)) {
+			if (asyncActions.includes(node.actionType)) {
 				outputPointsHTML = '<div class="connection-point output async-output" data-point-type="output"></div>';
 			} else {
 				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>'; // Actions can lead to other nodes
@@ -1247,8 +1247,9 @@ class EventFlowEditor {
             }
         } else if (node.type === 'action') {
              switch (node.actionType) {
-                case 'blockMessage': return 'Block this message';
-                case 'returnMessage': return 'Return message for display';
+                case 'blockMessage': return 'Block message (async continue)';
+                case 'returnMessage': return 'Return message (async continue)';
+                case 'continueAsync': return 'Fork to background';
                 case 'modifyMessage': return `New: "${(node.config.newMessage || '').substring(0,15)}${(node.config.newMessage || '').length > 15 ? '...' : ''}"`;
                 case 'addPrefix': return `Prefix: "${(node.config.prefix || '').substring(0,15)}${(node.config.prefix || '').length > 15 ? '...' : ''}"`;
                 case 'addSuffix': return `Suffix: "${(node.config.suffix || '').substring(0,15)}${(node.config.suffix || '').length > 15 ? '...' : ''}"`;
@@ -1684,6 +1685,8 @@ class EventFlowEditor {
                 case 'blockMessage':
 					node.config = {}; break;
                 case 'returnMessage':
+					node.config = {}; break;
+                case 'continueAsync':
 					node.config = {}; break;
                 case 'modifyMessage':
 					node.config = { newMessage: 'modified text' }; break;
@@ -2598,10 +2601,13 @@ class EventFlowEditor {
 
 			// --- Action Cases ---
 			case 'blockMessage':
-				html += `<p class="property-help">Blocks the current message from further processing or display. Actions after this will work with a cloned message that cannot be returned.</p>`;
+				html += `<p class="property-help">Blocks the message immediately and continues processing downstream actions asynchronously in the background. The message will not be displayed.</p>`;
 				break;
 			case 'returnMessage':
-				html += `<p class="property-help">Explicitly returns the message for display. Use this after processing to ensure the message is shown. Cannot be used after terminal actions like Block Message.</p>`;
+				html += `<p class="property-help">Returns the message immediately for display, then continues processing downstream actions asynchronously in the background. Use this when you want the message to appear right away while other actions (like delays, OBS toggles) continue running.</p>`;
+				break;
+			case 'continueAsync':
+				html += `<p class="property-help">Forks execution: the rest of this flow continues asynchronously in the background while other flows can proceed. Does not return or block the message - use this when you want parallel processing without affecting message display.</p>`;
 				break;
 			case 'modifyMessage':
 				html += `<div class="property-group"><label class="property-label">New Message Content</label><textarea class="property-input" id="prop-newMessage" rows="3">${node.config.newMessage || ''}</textarea><div class="property-help">Placeholders like {username}, {message}, etc. can be used.</div></div>`;
