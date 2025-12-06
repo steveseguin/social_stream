@@ -402,7 +402,9 @@ function normalizeOptionsList(value) {
         return value.map(option => option.trim()).filter(option => option.length);
     }
     if (typeof value === 'string') {
-        return value.split(',').map(option => option.trim()).filter(option => option.length);
+        // Support both comma-separated and newline-separated options
+        const delimiter = value.includes('\n') ? /[\n\r]+/ : ',';
+        return value.split(delimiter).map(option => option.trim()).filter(option => option.length);
     }
     return [];
 }
@@ -839,32 +841,44 @@ function processData(data) {
             }
         };
         
-        if (data.settings.pollEnabled && Object.prototype.hasOwnProperty.call(data.settings.pollEnabled, 'setting')) {
-            const incoming = normalizeBoolean(data.settings.pollEnabled.setting);
+        if (data.settings.pollEnabled !== undefined) {
+            const rawEnabled = Object.prototype.hasOwnProperty.call(data.settings.pollEnabled || {}, 'setting')
+                ? data.settings.pollEnabled.setting
+                : data.settings.pollEnabled;
+            const incoming = normalizeBoolean(rawEnabled);
             if (typeof incoming === 'boolean') {
                 updateCoreSetting('pollEnabled', incoming);
             }
         }
         if (data.settings.pollType) {
-            const nextType = data.settings.pollType.optionsetting || 'multiple';
+            const nextType = typeof data.settings.pollType === 'string'
+                ? data.settings.pollType
+                : (data.settings.pollType.optionsetting || 'multiple');
             updateCoreSetting('pollType', nextType);
         }
         if (data.settings.pollQuestion) {
-            const incomingQuestion = typeof data.settings.pollQuestion.textsetting === 'string'
-                ? data.settings.pollQuestion.textsetting
-                : '';
+            const incomingQuestion = typeof data.settings.pollQuestion === 'string'
+                ? data.settings.pollQuestion
+                : (typeof data.settings.pollQuestion.textsetting === 'string'
+                    ? data.settings.pollQuestion.textsetting
+                    : '');
             const normalizedQuestion = incomingQuestion || 'Loading poll...';
             updateCoreSetting('pollQuestion', normalizedQuestion);
         }
-        if (data.settings.pollTally && Object.prototype.hasOwnProperty.call(data.settings.pollTally, 'setting')) {
-            const incomingTally = normalizeBoolean(data.settings.pollTally.setting);
+        if (data.settings.pollTally !== undefined) {
+            const rawTally = Object.prototype.hasOwnProperty.call(data.settings.pollTally || {}, 'setting')
+                ? data.settings.pollTally.setting
+                : data.settings.pollTally;
+            const incomingTally = normalizeBoolean(rawTally);
             if (typeof incomingTally === 'boolean') {
                 updateUiSetting('pollTally', incomingTally);
             }
         }
-        if (data.settings.pollStyle && data.settings.pollStyle.optionsetting) {
-            const nextStyle = data.settings.pollStyle.optionsetting;
-            if (settings.styleType !== nextStyle) {
+        if (data.settings.pollStyle) {
+            const nextStyle = typeof data.settings.pollStyle === 'string'
+                ? data.settings.pollStyle
+                : data.settings.pollStyle.optionsetting;
+            if (nextStyle && settings.styleType !== nextStyle) {
                 settings.styleType = nextStyle;
                 const pollContainer = document.getElementById('poll-container');
                 if (pollContainer) {
@@ -874,18 +888,33 @@ function processData(data) {
                 uiChanges.push({ key: 'styleType', value: nextStyle });
             }
         }
-        if (data.settings.pollSpam && Object.prototype.hasOwnProperty.call(data.settings.pollSpam, 'setting')) {
-            const incomingSpam = normalizeBoolean(data.settings.pollSpam.setting);
+        if (data.settings.pollSpam !== undefined) {
+            const rawSpam = Object.prototype.hasOwnProperty.call(data.settings.pollSpam || {}, 'setting')
+                ? data.settings.pollSpam.setting
+                : data.settings.pollSpam;
+            const incomingSpam = normalizeBoolean(rawSpam);
             if (typeof incomingSpam === 'boolean') {
                 updateUiSetting('pollSpam', incomingSpam);
             }
         }
-        if (data.settings.multipleChoiceOptions && typeof data.settings.multipleChoiceOptions.textsetting === 'string') {
-            const normalizedOptions = normalizeOptionsList(data.settings.multipleChoiceOptions.textsetting);
-            updateCoreSetting('pollOptions', normalizedOptions);
+        if (data.settings.multipleChoiceOptions) {
+            const rawOptions = typeof data.settings.multipleChoiceOptions === 'string'
+                ? data.settings.multipleChoiceOptions
+                : (typeof data.settings.multipleChoiceOptions.textsetting === 'string'
+                    ? data.settings.multipleChoiceOptions.textsetting
+                    : '');
+            if (rawOptions) {
+                const normalizedOptions = normalizeOptionsList(rawOptions);
+                updateCoreSetting('pollOptions', normalizedOptions);
+            }
         }
-        if (data.settings.pollTimer && (data.settings.pollTimer.numbersetting !== undefined || data.settings.pollTimer.setting !== undefined)) {
-            const rawTimer = data.settings.pollTimer.numbersetting ?? data.settings.pollTimer.setting;
+        if (data.settings.pollTimer !== undefined) {
+            let rawTimer;
+            if (typeof data.settings.pollTimer === 'string' || typeof data.settings.pollTimer === 'number') {
+                rawTimer = data.settings.pollTimer;
+            } else {
+                rawTimer = data.settings.pollTimer.numbersetting ?? data.settings.pollTimer.setting;
+            }
             const normalizedTimer = normalizeNumber(rawTimer, null);
             if (normalizedTimer !== null) {
                 updateCoreSetting('pollTimer', normalizedTimer);

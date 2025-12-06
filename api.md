@@ -188,7 +188,14 @@ When a message is sent, it goes to the specified output channel. Those who have 
 14. **Draw Mode**
     - `{"action": "drawmode", "value": true}`
 
-15. **Poll Operations**
+15. **Emote-only Filter**
+    - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
+    - Examples:
+      - `{"action": "emoteonly", "value": "toggle"}`
+      - `{"action": "emoteonly", "value": true}`
+      - `{"action": "emoteonly", "value": false}`
+
+16. **Poll Operations**
     - Reset: `{"action": "resetpoll"}`
     - Close: `{"action": "closepoll"}`
     - Load Preset: `{"action": "loadpoll", "value": {"pollId": "poll-123456"}}`

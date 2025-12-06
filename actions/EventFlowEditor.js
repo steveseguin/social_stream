@@ -52,6 +52,7 @@ class EventFlowEditor {
         this.actionTypes = [
             { id: 'blockMessage', name: '🚫 Block Message' },
             { id: 'returnMessage', name: '✅ Return Message' },
+            { id: 'continueAsync', name: '⚡ Continue Async' },
             { id: 'modifyMessage', name: '✏️ Modify Message' },
             { id: 'addPrefix', name: '⬅️ Add Prefix' },
             { id: 'addSuffix', name: '➡️ Add Suffix' },
@@ -313,7 +314,11 @@ class EventFlowEditor {
             target = chrome.runtime.getURL(target);
         }
         try {
-            window.open(target, '_blank');
+			if (window.location.href.includes("/actions/")){
+				window.open(target.replace("actions/",""), '_blank');
+			} else {
+				window.open(target, '_blank');
+			}
         } catch (error) {
             console.error('Failed to open guide', error);
         }
@@ -1052,12 +1057,11 @@ class EventFlowEditor {
 			}
 		} else if (node.type === 'action') {
 			inputPointsHTML = '<div class="connection-point input" data-point-type="input"></div>';
-			// Actions that can't return the original message get async output
-			// Only blockMessage truly blocks, and returnMessage is special (async return)
-			const nonReturningActions = [
-				'returnMessage', 'blockMessage'
+			// Actions that continue asynchronously - downstream runs in background
+			const asyncActions = [
+				'returnMessage', 'blockMessage', 'continueAsync'
 			];
-			if (nonReturningActions.includes(node.actionType)) {
+			if (asyncActions.includes(node.actionType)) {
 				outputPointsHTML = '<div class="connection-point output async-output" data-point-type="output"></div>';
 			} else {
 				outputPointsHTML = '<div class="connection-point output" data-point-type="output"></div>'; // Actions can lead to other nodes
@@ -1223,17 +1227,29 @@ class EventFlowEditor {
                     const req = node.config.requiredProperties?.length || 0;
                     const forb = node.config.forbiddenProperties?.length || 0;
                     const mode = node.config.requireAll ? 'ALL' : 'ANY';
-                    if (req && forb) return `${mode}: ${req} required, ${forb} forbidden`;
-                    if (req) return `${mode}: ${req} required`;
-                    if (forb) return `${forb} forbidden`;
-                    return 'No filters set';
+                    const parts = [];
+                    if (req && forb) parts.push(`${mode}: ${req} required, ${forb} forbidden`);
+                    else if (req) parts.push(`${mode}: ${req} required`);
+                    else if (forb) parts.push(`${forb} forbidden`);
+                    else parts.push('No property filters');
+
+                    if (node.config.lastActivityFilter?.enabled) {
+                        const lastCfg = node.config.lastActivityFilter;
+                        const amount = lastCfg.amount ?? 0;
+                        const unit = lastCfg.unit || 'minutes';
+                        const modeLabel = lastCfg.mode === 'older' ? 'older than' : 'within';
+                        parts.push(`Last activity ${modeLabel} ${amount} ${unit}`);
+                    }
+
+                    return parts.join('; ');
                 }
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
              switch (node.actionType) {
-                case 'blockMessage': return 'Block this message';
-                case 'returnMessage': return 'Return message for display';
+                case 'blockMessage': return 'Block message (async continue)';
+                case 'returnMessage': return 'Return message (async continue)';
+                case 'continueAsync': return 'Fork to background';
                 case 'modifyMessage': return `New: "${(node.config.newMessage || '').substring(0,15)}${(node.config.newMessage || '').length > 15 ? '...' : ''}"`;
                 case 'addPrefix': return `Prefix: "${(node.config.prefix || '').substring(0,15)}${(node.config.prefix || '').length > 15 ? '...' : ''}"`;
                 case 'addSuffix': return `Suffix: "${(node.config.suffix || '').substring(0,15)}${(node.config.suffix || '').length > 15 ? '...' : ''}"`;
@@ -1456,7 +1472,7 @@ class EventFlowEditor {
 						message: result ? 'Message was processed successfully' : 'Message was blocked', 
 						result: result 
 					};
-					this.displayTestResults(testResult);
+					this.displayTestResults(testResult, testMessage);
 				});
 		} else {
 			// Just test the flow using the real eventFlowSystem with temporarily modified flows
@@ -1479,7 +1495,7 @@ class EventFlowEditor {
 								 'Flow triggered but no actions affected the message',
 						result: result 
 					};
-					this.displayTestResults(testResult);
+					this.displayTestResults(testResult, testMessage);
 				})
 				.catch(error => {
 					// Restore the original flows even on error
@@ -1490,7 +1506,7 @@ class EventFlowEditor {
 						message: 'Error testing flow: ' + error.message,
 						error: error
 					};
-					this.displayTestResults(testResult);
+					this.displayTestResults(testResult, testMessage);
 				});
 		}
 		
@@ -1505,11 +1521,25 @@ class EventFlowEditor {
 		const runTestBtn = document.getElementById('run-test-btn');
 		const donationCheckbox = document.getElementById('test-donation');
 		const donationAmountField = document.getElementById('donation-amount');
+		const firstTimeCheckbox = document.getElementById('test-firsttime');
+		const lastActivityToggle = document.getElementById('test-lastactivity');
+		const lastActivityControls = document.getElementById('lastactivity-controls');
+		const lastActivityValue = document.getElementById('test-lastactivity-value');
+		const lastActivityUnit = document.getElementById('test-lastactivity-unit');
 
 		// Show/hide donation amount field based on checkbox
 		donationCheckbox.addEventListener('change', function() {
 			donationAmountField.style.display = this.checked ? 'block' : 'none';
 		});
+
+		// Toggle last-activity inputs
+		if (lastActivityToggle) {
+			lastActivityToggle.addEventListener('change', function() {
+				if (lastActivityControls) {
+					lastActivityControls.style.display = this.checked ? 'block' : 'none';
+				}
+			});
+		}
 
 		// Open test panel
 		openTestBtn.addEventListener('click', function() {
@@ -1548,6 +1578,22 @@ class EventFlowEditor {
 				// Add other required properties
 				timestamp: Date.now(),
 			};
+
+			// Apply first-time chatter flag
+			if (firstTimeCheckbox?.checked) {
+				testMessage.firsttime = true;
+			}
+
+			// Apply last-activity timestamp if requested
+			if (lastActivityToggle?.checked) {
+				const amount = Math.max(0, parseFloat(lastActivityValue?.value) || 0);
+				const unit = lastActivityUnit?.value || 'minutes';
+				const unitMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000 };
+				const windowMs = unitMap[unit] || unitMap.minutes;
+				const ts = Math.max(0, Date.now() - (amount * windowMs));
+				testMessage.lastactivity = ts;
+				testMessage.lastActivity = ts; // support either casing
+			}
 			
 			// Add donation amount if donation checkbox is checked
 			if (testMessage.hasDonation) {
@@ -1559,7 +1605,7 @@ class EventFlowEditor {
 		});
 	}
 
-	displayTestResults(testResult) {
+	displayTestResults(testResult, originalMessage = {}) {
 		const resultsEl = document.getElementById('test-results');
 		if (!resultsEl) return;
 		
@@ -1583,9 +1629,9 @@ class EventFlowEditor {
 				`;
 				
 				// Show any properties that were modified
-				const originalKeys = Object.keys(testMessage);
-				const modifiedKeys = Object.keys(result.message).filter(key => 
-					!originalKeys.includes(key) || result.message[key] !== testMessage[key]
+				const originalKeys = Object.keys(originalMessage || {});
+				const modifiedKeys = Object.keys(result.message || {}).filter(key => 
+					!originalKeys.includes(key) || result.message[key] !== originalMessage[key]
 				);
 				
 				if (modifiedKeys.length > 0) {
@@ -1631,7 +1677,7 @@ class EventFlowEditor {
                 case 'midiNoteOn': node.config = { deviceId: '', note: '', channel: 1 }; break;
                 case 'midiNoteOff': node.config = { deviceId: '', note: '', channel: 1 }; break;
                 case 'midiCC': node.config = { deviceId: '', controller: '', channel: 1 }; break;
-                case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true }; break;
+                case 'messageProperties': node.config = { requiredProperties: [], forbiddenProperties: [], requireAll: true, lastActivityFilter: { enabled: false, mode: 'within', amount: 10, unit: 'minutes' } }; break;
             }
         } else if (type === 'action') {
             node.actionType = subtype;
@@ -1639,6 +1685,8 @@ class EventFlowEditor {
                 case 'blockMessage':
 					node.config = {}; break;
                 case 'returnMessage':
+					node.config = {}; break;
+                case 'continueAsync':
 					node.config = {}; break;
                 case 'modifyMessage':
 					node.config = { newMessage: 'modified text' }; break;
@@ -1669,7 +1717,7 @@ class EventFlowEditor {
 					node.config = { sceneName: 'Your Scene Name' };
 					break;
 				case 'playAudioClip':
-					node.config = { audioUrl: 'https://example.com/path/to/sound.mp3', volume: 1.0 };
+					node.config = { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 };
 					break;
 				case 'delay':
 					node.config = { delayMs: 1000 };
@@ -2178,6 +2226,7 @@ class EventFlowEditor {
 					{ value: 'admin', label: 'Is Admin', group: 'Status' },
 					{ value: 'bot', label: 'Is Bot', group: 'Status' },
 					{ value: 'verified', label: 'Is Verified', group: 'Status' },
+					{ value: 'firsttime', label: 'First-time chatter', group: 'Status', tooltip: 'Requires First timers enabled in global settings' },
 					// Event Properties
 					{ value: 'hasDonation', label: 'Has Donation', group: 'Events' },
 					{ value: 'membership', label: 'Membership Event', group: 'Events' },
@@ -2187,8 +2236,8 @@ class EventFlowEditor {
 					// Interaction Properties
 					{ value: 'question', label: 'Is Question', group: 'Interaction' },
 					{ value: 'private', label: 'Is Private', group: 'Interaction' },
-					{ value: 'highKarma', label: 'High Karma (≥0.7)', group: 'Interaction' },
-					{ value: 'lowKarma', label: 'Low Karma (<0.3)', group: 'Interaction' },
+					{ value: 'highKarma', label: 'High Karma (≥0.7)', group: 'Interaction', tooltip: 'Requires Add karma enabled in global settings' },
+					{ value: 'lowKarma', label: 'Low Karma (<0.3)', group: 'Interaction', tooltip: 'Requires Add karma enabled in global settings' },
 					// Metadata
 					{ value: 'userid', label: 'User ID', group: 'Metadata' },
 					{ value: 'textonly', label: 'Text Only', group: 'Metadata' },
@@ -2198,6 +2247,20 @@ class EventFlowEditor {
 				const currentRequired = node.config.requiredProperties || [];
 				const currentForbidden = node.config.forbiddenProperties || [];
 				const requireAll = node.config.requireAll !== false;
+				const lastActivityConfig = node.config.lastActivityFilter || {};
+				let lastActivityEnabled = !!lastActivityConfig.enabled;
+				const lastActivityMode = lastActivityConfig.mode === 'older' ? 'older' : 'within';
+				const lastActivityAmount = lastActivityConfig.amount ?? 10;
+				const lastActivityUnit = lastActivityConfig.unit || 'minutes';
+				const firstTimeChecked = currentRequired.includes('firsttime');
+
+				// If first-time chatter is required, disable last-activity filter to keep mutual exclusivity
+				if (firstTimeChecked && lastActivityEnabled) {
+					lastActivityEnabled = false;
+					if (node.config && node.config.lastActivityFilter) {
+						node.config.lastActivityFilter.enabled = false;
+					}
+				}
 				
 				// Group properties by category
 				const groupedProps = {};
@@ -2222,9 +2285,11 @@ class EventFlowEditor {
 					html += `<div style="margin-bottom: 10px;"><strong style="color: #888;">${group}:</strong><br>`;
 					props.forEach(prop => {
 						const isChecked = currentRequired.includes(prop.value);
+						const tooltip = prop.tooltip ? ` title="${prop.tooltip}"` : '';
+						const infoIcon = prop.tooltip ? ` <span style="opacity:0.7; cursor: help;" title="${prop.tooltip}">ℹ️</span>` : '';
 						html += `<label style="display: block; margin: 2px 0;">
 							<input type="checkbox" class="prop-required" value="${prop.value}" ${isChecked ? 'checked' : ''}> 
-							${prop.label}
+							<span${tooltip}>${prop.label}</span>${infoIcon}
 						</label>`;
 					});
 					html += `</div>`;
@@ -2239,15 +2304,50 @@ class EventFlowEditor {
 					html += `<div style="margin-bottom: 10px;"><strong style="color: #888;">${group}:</strong><br>`;
 					props.forEach(prop => {
 						const isChecked = currentForbidden.includes(prop.value);
+						const tooltip = prop.tooltip ? ` title="${prop.tooltip}"` : '';
+						const infoIcon = prop.tooltip ? ` <span style="opacity:0.7; cursor: help;" title="${prop.tooltip}">ℹ️</span>` : '';
 						html += `<label style="display: block; margin: 2px 0;">
 							<input type="checkbox" class="prop-forbidden" value="${prop.value}" ${isChecked ? 'checked' : ''}> 
-							${prop.label}
+							<span${tooltip}>${prop.label}</span>${infoIcon}
 						</label>`;
 					});
 					html += `</div>`;
 				});
 				
 				html += `</div></div>
+					<div class="property-group">
+						<label class="property-label">Last Activity (optional)</label>
+						<label style="display: block; margin-bottom: 6px;">
+							<input type="checkbox" id="prop-lastActivity-enabled" ${lastActivityEnabled ? 'checked' : ''}> Require last activity window
+						</label>
+						<div id="last-activity-controls" style="display: flex; flex-direction: column; gap: 8px; ${lastActivityEnabled ? '' : 'opacity: 0.6; pointer-events: none;'}">
+							<div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+								<label><input type="radio" name="prop-lastActivity-mode" value="within" ${lastActivityMode === 'within' ? 'checked' : ''}> Within</label>
+								<label><input type="radio" name="prop-lastActivity-mode" value="older" ${lastActivityMode === 'older' ? 'checked' : ''}> Older than</label>
+								<input type="number" class="property-input" id="prop-lastActivity-value" value="${lastActivityAmount}" min="0" step="1" style="width: 90px;">
+								<select class="property-input" id="prop-lastActivity-unit" style="width: 120px;">
+									<option value="minutes" ${lastActivityUnit === 'minutes' ? 'selected' : ''}>Minutes</option>
+									<option value="hours" ${lastActivityUnit === 'hours' ? 'selected' : ''}>Hours</option>
+									<option value="days" ${lastActivityUnit === 'days' ? 'selected' : ''}>Days</option>
+								</select>
+							</div>
+							<div style="display: flex; flex-wrap: wrap; gap: 6px;">
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="10" data-unit="minutes">10 min</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="30" data-unit="minutes">30 min</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="3" data-unit="hours">3 hours</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="12" data-unit="hours">12 hours</button>
+								<button type="button" class="btn btn-ghost btn-small quick-last-activity" data-amount="1" data-unit="days">1 day</button>
+							</div>
+							<div class="property-help">Filter by how recently a user last chatted (uses stored lastActivity timestamps; requires “First timers” enabled in global settings). First-time chatters fail this requirement because they have no prior activity timestamp.</div>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">First-time chatter</label>
+						<label style="display: block; margin-bottom: 6px;">
+							<input type="checkbox" id="prop-firsttime-only" ${firstTimeChecked ? 'checked' : ''} ${lastActivityEnabled ? 'disabled' : ''}> Require first-time chatter
+						</label>
+						<div class="property-help">Mutually exclusive with “Require last activity window”. Enabling one disables the other.</div>
+					</div>
 					<div class="property-help">Filter messages based on presence/absence of properties. Required properties must exist and be truthy. Forbidden properties must not exist or be falsy.</div>`;
 				break;
 			case 'counter': // Counter trigger
@@ -2501,10 +2601,13 @@ class EventFlowEditor {
 
 			// --- Action Cases ---
 			case 'blockMessage':
-				html += `<p class="property-help">Blocks the current message from further processing or display. Actions after this will work with a cloned message that cannot be returned.</p>`;
+				html += `<p class="property-help">Blocks the message immediately and continues processing downstream actions asynchronously in the background. The message will not be displayed.</p>`;
 				break;
 			case 'returnMessage':
-				html += `<p class="property-help">Explicitly returns the message for display. Use this after processing to ensure the message is shown. Cannot be used after terminal actions like Block Message.</p>`;
+				html += `<p class="property-help">Returns the message immediately for display, then continues processing downstream actions asynchronously in the background. Use this when you want the message to appear right away while other actions (like delays, OBS toggles) continue running.</p>`;
+				break;
+			case 'continueAsync':
+				html += `<p class="property-help">Forks execution: the rest of this flow continues asynchronously in the background while other flows can proceed. Does not return or block the message - use this when you want parallel processing without affecting message display.</p>`;
 				break;
 			case 'modifyMessage':
 				html += `<div class="property-group"><label class="property-label">New Message Content</label><textarea class="property-input" id="prop-newMessage" rows="3">${node.config.newMessage || ''}</textarea><div class="property-help">Placeholders like {username}, {message}, etc. can be used.</div></div>`;
@@ -3561,6 +3664,21 @@ class EventFlowEditor {
                     } else {
                         nodeData.config.requiredProperties = nodeData.config.requiredProperties.filter(p => p !== e.target.value);
                     }
+
+                    // Keep first-time chatter toggle and last-activity mutual exclusion in sync
+                    if (e.target.value === 'firsttime') {
+                        if (e.target.checked) {
+                            if (firstTimeToggle) firstTimeToggle.checked = true;
+                            if (lastToggle) {
+                                lastToggle.checked = false;
+                                ensureLastActivityConfig();
+                                nodeData.config.lastActivityFilter.enabled = false;
+                            }
+                        } else {
+                            if (firstTimeToggle) firstTimeToggle.checked = false;
+                        }
+                        updateMutualExclusion();
+                    }
                     
                     this.markUnsavedChanges(true);
                     this.renderNodeOnCanvas(nodeData.id);
@@ -3584,6 +3702,148 @@ class EventFlowEditor {
                     this.renderNodeOnCanvas(nodeData.id);
                 });
             });
+
+            const ensureLastActivityConfig = () => {
+                if (!nodeData.config.lastActivityFilter) {
+                    nodeData.config.lastActivityFilter = { enabled: false, mode: 'within', amount: 10, unit: 'minutes' };
+                }
+            };
+
+            const lastToggle = document.getElementById('prop-lastActivity-enabled');
+            const lastControls = document.getElementById('last-activity-controls');
+            const lastValue = document.getElementById('prop-lastActivity-value');
+            const lastUnit = document.getElementById('prop-lastActivity-unit');
+            const lastModeRadios = document.querySelectorAll('input[name="prop-lastActivity-mode"]');
+            const quickButtons = document.querySelectorAll('.quick-last-activity');
+            const firstTimeToggle = document.getElementById('prop-firsttime-only');
+
+            const addRequiredProperty = (prop) => {
+                if (!nodeData.config.requiredProperties) nodeData.config.requiredProperties = [];
+                if (!nodeData.config.requiredProperties.includes(prop)) {
+                    nodeData.config.requiredProperties.push(prop);
+                }
+            };
+
+            const removeRequiredProperty = (prop) => {
+                if (!nodeData.config.requiredProperties) nodeData.config.requiredProperties = [];
+                nodeData.config.requiredProperties = nodeData.config.requiredProperties.filter(p => p !== prop);
+            };
+
+            const updateMutualExclusion = () => {
+                const firstTimeActive = firstTimeToggle && firstTimeToggle.checked;
+                const lastActiveEnabled = lastToggle && lastToggle.checked;
+
+                if (firstTimeToggle) {
+                    firstTimeToggle.disabled = Boolean(lastActiveEnabled);
+                }
+                if (lastToggle) {
+                    lastToggle.disabled = Boolean(firstTimeActive);
+                }
+                if (lastControls) {
+                    const disabled = firstTimeActive || !lastActiveEnabled;
+                    lastControls.style.opacity = disabled ? '0.6' : '';
+                    lastControls.style.pointerEvents = disabled ? 'none' : 'auto';
+                }
+            };
+
+            if (lastToggle) {
+                lastToggle.addEventListener('change', (e) => {
+                    ensureLastActivityConfig();
+                    nodeData.config.lastActivityFilter.enabled = e.target.checked;
+                    if (e.target.checked && firstTimeToggle) {
+                        firstTimeToggle.checked = false;
+                        removeRequiredProperty('firsttime');
+                    }
+                    if (lastControls) {
+                        lastControls.style.opacity = e.target.checked ? '' : '0.6';
+                        lastControls.style.pointerEvents = e.target.checked ? 'auto' : 'none';
+                    }
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    updateMutualExclusion();
+                });
+            }
+
+            if (lastValue) {
+                lastValue.addEventListener('input', (e) => {
+                    ensureLastActivityConfig();
+                    const amount = Math.max(0, parseFloat(e.target.value) || 0);
+                    nodeData.config.lastActivityFilter.amount = amount;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
+            }
+
+            if (lastUnit) {
+                lastUnit.addEventListener('change', (e) => {
+                    ensureLastActivityConfig();
+                    nodeData.config.lastActivityFilter.unit = e.target.value;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    updateMutualExclusion();
+                });
+            }
+
+            if (lastModeRadios.length) {
+                lastModeRadios.forEach(radio => {
+                    radio.addEventListener('change', (e) => {
+                        if (!e.target.checked) return;
+                        ensureLastActivityConfig();
+                        nodeData.config.lastActivityFilter.mode = e.target.value;
+                        this.markUnsavedChanges(true);
+                        this.renderNodeOnCanvas(nodeData.id);
+                    });
+                });
+            }
+
+            if (quickButtons.length) {
+                quickButtons.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        ensureLastActivityConfig();
+                        const amount = parseFloat(btn.dataset.amount) || 0;
+                        const unit = btn.dataset.unit || 'minutes';
+                        nodeData.config.lastActivityFilter.amount = amount;
+                        nodeData.config.lastActivityFilter.unit = unit;
+                        nodeData.config.lastActivityFilter.enabled = true;
+                        if (firstTimeToggle) {
+                            firstTimeToggle.checked = false;
+                            removeRequiredProperty('firsttime');
+                        }
+                        if (lastValue) lastValue.value = amount;
+                        if (lastUnit) lastUnit.value = unit;
+                        if (lastToggle) lastToggle.checked = true;
+                        if (lastControls) {
+                            lastControls.style.opacity = '';
+                            lastControls.style.pointerEvents = 'auto';
+                        }
+                        this.markUnsavedChanges(true);
+                        this.renderNodeOnCanvas(nodeData.id);
+                        updateMutualExclusion();
+                    });
+                });
+            }
+
+            if (firstTimeToggle) {
+                firstTimeToggle.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        addRequiredProperty('firsttime');
+                        if (lastToggle) {
+                            lastToggle.checked = false;
+                            ensureLastActivityConfig();
+                            nodeData.config.lastActivityFilter.enabled = false;
+                        }
+                    } else {
+                        removeRequiredProperty('firsttime');
+                    }
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                    updateMutualExclusion();
+                });
+            }
+
+            // Initialize mutual exclusion state on load
+            updateMutualExclusion();
         }
 
         // Special handling for counter trigger

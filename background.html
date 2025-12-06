@@ -775,11 +775,11 @@
 				<textarea id="test-message" rows="3">Hello, world!</textarea>
 			</div>
 			
-			<div class="test-options">
-				<label class="test-checkbox">
-					<input type="checkbox" id="test-mod">
-					Moderator
-				</label>
+		<div class="test-options">
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-mod">
+				Moderator
+			</label>
 				
 				<label class="test-checkbox">
 					<input type="checkbox" id="test-vip">
@@ -791,22 +791,47 @@
 					Admin
 				</label>
 				
-				<label class="test-checkbox">
-					<input type="checkbox" id="test-donation">
-					Has Donation
-				</label>
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-donation">
+				Has Donation
+			</label>
+		</div>
+		
+		<div id="donation-amount" class="test-group" style="display: none;">
+			<label for="test-donation-amount">Donation Amount:</label>
+			<input type="text" id="test-donation-amount" value="$5.00">
+		</div>
+
+		<div class="test-options">
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-firsttime">
+				First-time chatter
+			</label>
+
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-lastactivity">
+				Set last activity
+			</label>
+		</div>
+
+		<div id="lastactivity-controls" class="test-group" style="display: none;">
+			<label for="test-lastactivity-value">Last activity</label>
+			<div style="display: flex; gap: 8px; align-items: center;">
+				<input type="number" id="test-lastactivity-value" value="60" min="0" style="width: 110px;">
+				<select id="test-lastactivity-unit">
+					<option value="minutes" selected>Minutes ago</option>
+					<option value="hours">Hours ago</option>
+					<option value="days">Days ago</option>
+				</select>
 			</div>
-			
-			<div id="donation-amount" class="test-group" style="display: none;">
-				<label for="test-donation-amount">Donation Amount:</label>
-				<input type="text" id="test-donation-amount" value="$5.00">
-			</div>
-			
-			<div class="test-options">
-				<label class="test-checkbox">
-					<input type="checkbox" id="test-all-active-flows">
-					Test against all active flows (not just current flow)
-				</label>
+			<p class="test-help" style="color: #a0a0a0; font-size: 13px; margin: 6px 0 0 0;">Applies to message-properties “last activity” filters using the current time as reference.</p>
+		</div>
+		
+		<div class="test-options">
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-all-active-flows">
+				Test against all active flows (not just current flow)
+			</label>
 			</div>
 
 			<div class="test-warning" id="unsaved-flow-warning" style="display: none; color: #e76f51; margin: 10px 0;">

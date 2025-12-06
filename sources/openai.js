@@ -134,7 +134,10 @@ function toDataURL(url, callback) {
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
-		if ("settings" in response){
+		if (chrome.runtime.lastError || !response) {
+			return;
+		}
+		if (response && "settings" in response){
 			settings = response.settings;
 		}
 	});
@@ -148,7 +151,7 @@ function toDataURL(url, callback) {
 					sendResponse(true);
 					return;
 				}
-				if (typeof request === "object"){
+				if (request && typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);

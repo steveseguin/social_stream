@@ -410,6 +410,8 @@ For managing multiple URLs and their parameters, for the main dock (streaming ov
 
 To customize the color, font-size and styling, you can edit the CSS, in either the OBS browser source style-sheet section, or by editing the and using the featured.html file. See below:
 
+If you want a step-by-step walkthrough for self-hosting fonts and applying them to `dock.html` or `featured.html` (with CSS examples for OBS and URL parameters), see [docs/custom-fonts.html](docs/custom-fonts.html).
+
 #### More advanced styling customizations
 
 To further customize the appearance of the overlay or dock, you can make CSS style changes via OBS browser source, without any coding.  

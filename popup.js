@@ -780,7 +780,18 @@ function isFontAvailable(fontName) {
 }
 
 async function populateFontDropdown() {
-    const fonts = ["Roboto", "Tahoma",  "Arial", "Verdana", "Helvetica", "Serif", "Trebuchet MS", "Times New Roman", "Georgia", "Garamond", "Courier New", "Brush Script MT"];
+    const fonts = [
+        // Windows core UI/text
+        'Segoe UI', 'Segoe UI Variable', 'Segoe UI Emoji', 'Segoe UI Historic', 'Segoe UI Symbol', 'Bahnschrift', 'Ebrima', 'Gadugi', 'Javanese Text', 'Leelawadee UI', 'Lucida Sans Unicode', 'Malgun Gothic', 'Meiryo', 'Microsoft Himalaya', 'Microsoft JhengHei', 'Microsoft New Tai Lue', 'Microsoft PhagsPa', 'Microsoft Sans Serif', 'Microsoft Tai Le', 'Microsoft Uighur', 'Microsoft YaHei', 'Microsoft Yi Baiti', 'MingLiU-ExtB', 'Mongolian Baiti', 'MS Gothic', 'MS PGothic', 'MS UI Gothic', 'NSimSun', 'PMingLiU-ExtB', 'SimSun', 'SimSun-ExtB', 'Yu Gothic', 'Yu Gothic UI',
+        // Windows Latin staples
+        'Arial', 'Arial Black', 'Calibri', 'Cambria', 'Candara', 'Comic Sans MS', 'Consolas', 'Constantia', 'Corbel', 'Courier New', 'Franklin Gothic Medium', 'Gabriola', 'Georgia', 'Impact', 'Palatino Linotype', 'Tahoma', 'Times New Roman', 'Trebuchet MS', 'Verdana', 'Symbol', 'Webdings', 'Wingdings', 'Wingdings 2', 'Wingdings 3', 'Sitka Banner', 'Sitka Display', 'Sitka Heading', 'Sitka Small', 'Sitka Subheading', 'Sitka Text', 'Lucida Console',
+        // Developer favorites / code
+        'Cascadia Code', 'Cascadia Mono', 'Fira Code', 'Fira Mono', 'JetBrains Mono', 'Source Code Pro', 'IBM Plex Mono', 'Ubuntu Mono', 'Inconsolata', 'Monaspace Neon', 'Monaspace Argon',
+        // Popular sans/serif families
+        'Inter', 'Roboto', 'Open Sans', 'Noto Sans', 'Noto Serif', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans SC', 'Noto Serif JP', 'Noto Naskh Arabic', 'Lato', 'Montserrat', 'Poppins', 'Oswald', 'Raleway', 'Nunito', 'Merriweather', 'Playfair Display', 'PT Sans', 'PT Serif', 'Source Sans 3', 'Source Serif 4', 'Source Sans Pro', 'Source Serif Pro', 'IBM Plex Sans', 'IBM Plex Serif', 'Ubuntu', 'Work Sans', 'Sora', 'Avenir', 'Avenir Next', 'SF Pro Text', 'SF Pro Display', 'Helvetica Neue', 'Helvetica', 'Gill Sans',
+        // Other common
+        'Book Antiqua', 'Century Gothic', 'Garamond', 'Didot', 'Bodoni MT', 'Perpetua', 'Rockwell', 'Goudy Old Style', 'Copperplate', 'Brush Script MT'
+    ];
 	
     var select = document.querySelector("[data-optionparam1='font']");
     fonts.forEach(font => {
@@ -1018,6 +1029,99 @@ function updateSourceTypeList(type) {
             <button class="remove-source" data-source-type="${source}">×</button>
         </div>
     `).join('');
+}
+
+// Blocked words tag system functions
+function updateBlockedWordsList() {
+    const input = document.getElementById('blockedwordsInput');
+    const list = document.getElementById('blockedwordsList');
+    if (!input || !list) return;
+
+    const words = input.value.split(',')
+        .map(w => w.trim())
+        .filter(w => w);
+
+    list.innerHTML = words.map(word => `
+        <div class="username-tag">
+            <span>${escapeHtml(word)}</span>
+            <button class="remove-blockedword" data-word="${escapeHtml(word)}">×</button>
+        </div>
+    `).join('');
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function addBlockedWord(word) {
+    const input = document.getElementById('blockedwordsInput');
+    if (!input || !word) return;
+
+    const words = input.value.split(',').map(w => w.trim()).filter(w => w);
+    const trimmedWord = word.trim();
+
+    if (trimmedWord && !words.some(w => w.toLowerCase() === trimmedWord.toLowerCase())) {
+        words.push(trimmedWord);
+        input.value = words.join(', ');
+        updateBlockedWordsList();
+        updateSettings(input);
+    }
+}
+
+function removeBlockedWord(word) {
+    const input = document.getElementById('blockedwordsInput');
+    if (!input) return;
+
+    const words = input.value.split(',').map(w => w.trim()).filter(w => w);
+    const index = words.findIndex(w => w.toLowerCase() === word.toLowerCase());
+
+    if (index > -1) {
+        words.splice(index, 1);
+        input.value = words.join(', ');
+        updateBlockedWordsList();
+        updateSettings(input);
+    }
+}
+
+function setupBlockedWordsInput() {
+    const list = document.getElementById('blockedwordsList');
+    const addBtn = document.getElementById('addBlockedWord');
+    const newWordInput = document.getElementById('newBlockedWord');
+
+    if (!list || !addBtn || !newWordInput) return;
+
+    // Handle clicking remove button on tags
+    list.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-blockedword')) {
+            removeBlockedWord(e.target.dataset.word);
+        }
+    });
+
+    // Handle add button click
+    addBtn.addEventListener('click', () => {
+        const word = newWordInput.value.trim();
+        if (word) {
+            addBlockedWord(word);
+            newWordInput.value = '';
+        }
+    });
+
+    // Handle Enter key in input
+    newWordInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const word = newWordInput.value.trim();
+            if (word) {
+                addBlockedWord(word);
+                newWordInput.value = '';
+            }
+        }
+    });
+
+    // Initialize the list from any existing value
+    updateBlockedWordsList();
 }
 
 // Function to setup source selection for a given input
@@ -1795,14 +1899,15 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     
     // List of parameters to ignore (TTS-related and standard ones)
     const ignoreParams = ['session', 'password', 'localserver'];
-    const ttsRelatedParams = [
-      'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
-      'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
-      'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
-      'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
-      'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
-      'kokorokey', 'voicekokoro', 'kokorospeed'
-    ];
+  const ttsRelatedParams = [
+    'ttsprovider', 'lang', 'voice', 'rate', 'pitch',
+    'elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency', 'elevenstability', 
+    'elevensimilarity', 'elevenstyle', 'elevenspeakerboost', 'elevenrate',
+    'googleapikey', 'googlevoice', 'googleaudioprofile', 'googlerate', 'googlelang',
+    'geminikey', 'geminimodel', 'voicegemini',
+    'speechifykey', 'speechifyvoice', 'voicespeechify', 'speechifymodel', 'speechifylang', 'speechifyspeed',
+    'kokorokey', 'voicekokoro', 'kokorospeed'
+  ];
     
     // Combine all params to ignore
     const allIgnoreParams = [...ignoreParams, ...ttsRelatedParams];
@@ -1850,7 +1955,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
 	{ id: "flowactions", path: "actions.html" },
 	{ id: "custom-gif-commands", path: "gif.html" },
 	{ id: "spotify", path: "spotify-overlay.html" },
-	{ id: "scoreboard", path: "scoreboard.html"}
+	{ id: "scoreboard", path: "scoreboard.html"},
+	{ id: "map", path: "map.html" },
 	
   ];
   
@@ -1981,15 +2087,16 @@ function removeTTSProviderParams(url, selectedProvider=null) {
   if (!url) return url;
   
   // Map of all provider-specific parameters
-  const providerParams = {
-    system: ['lang', 'voice', 'rate', 'pitch'],
-    elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
-    google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
-    speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
-    kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
-    kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
-    openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
-  };
+    const providerParams = {
+        system: ['lang', 'voice', 'rate', 'pitch'],
+        elevenlabs: ['elevenlabskey', 'elevenlabsmodel', 'elevenlabsvoice', 'elevenlatency','elevenstability','elevensimilarity','elevenstyle','elevenspeakerboost','elevenrate','voice11'],
+        google: ['googleapikey', 'googlevoice','googleaudioprofile','googlerate','googlelang'],
+        gemini: ['geminikey', 'geminimodel', 'voicegemini'],
+        speechify: ['speechifykey', 'speechifyvoice','voicespeechify' ,'speechifymodel','speechifylang','speechifyspeed'],
+        kokoro: ['kokorokey', 'voicekokoro', 'kokorospeed'],
+        kitten: ['kittenvoice', 'kittenspeed', 'kittensamplerate'],
+        openai: ['openaikey', 'openaiendpoint', 'voiceopenai', 'openaimodel', 'openaispeed', 'openaiformat', 'openaicustomvoice', 'openaicustommodelx']
+    };
   
   if (selectedProvider === null) {
     try {
@@ -2025,7 +2132,8 @@ function setupTtsProviders(response) {
     // Handle main TTS provider
     if (!response.settings?.ttsProvider?.optionsetting) {
         let ttsService = "system";
-        if (response.settings?.ttskey?.textparam1) ttsService = "google";
+        if (response.settings?.geminikey?.textparam1) ttsService = "gemini";
+        else if (response.settings?.ttskey?.textparam1) ttsService = "google";
         else if (response.settings?.googleAPIKey?.textparam1) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam1) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam1) ttsService = "speechify";
@@ -2040,7 +2148,8 @@ function setupTtsProviders(response) {
     // Handle featured TTS provider (for param2)
     if (!response.settings?.ttsProvider?.optionsetting2) {
         let ttsService = "system";
-        if (response.settings?.ttskey?.textparam2) ttsService = "google";
+        if (response.settings?.geminikey?.textparam2) ttsService = "gemini";
+        else if (response.settings?.ttskey?.textparam2) ttsService = "google";
         else if (response.settings?.googleAPIKey?.textparam2) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam2) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam2) ttsService = "speechify";
@@ -2055,7 +2164,8 @@ function setupTtsProviders(response) {
     // Handle secondary TTS provider (for param10)
     if (!response.settings?.ttsProvider?.optionsetting10) {
         let ttsService = "system";
-        if (response.settings?.ttskey?.textparam10) ttsService = "google";
+        if (response.settings?.geminikey?.textparam10) ttsService = "gemini";
+        else if (response.settings?.ttskey?.textparam10) ttsService = "google";
         else if (response.settings?.googleAPIKey?.textparam10) ttsService = "google";
         else if (response.settings?.elevenlabskey?.textparam10) ttsService = "elevenlabs";
         else if (response.settings?.speechifykey?.textparam10) ttsService = "speechify";
@@ -2108,13 +2218,22 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 if (paramEle && paramEle.checked) {
                     updateSettings(paramEle, false, settingObj[textParamKey]);
                 }
+
+                // Refresh blocked words tag list if this is the blockedwords input
+                if (key === 'blockedwords') {
+                    updateBlockedWordsList();
+                }
             }
         }
 
         // Process option parameters
         const optionParamKey = `optionparam${paramNum}`;
         if (optionParamKey in settingObj) {
-            const ele = document.querySelector(`[data-${optionParamKey}='${key}']`);
+            let ele = document.querySelector(`[data-${optionParamKey}='${key}']`);
+            if (!ele && typeof key === 'string') {
+                const lowerKey = key.toLowerCase();
+                ele = document.querySelector(`[data-${optionParamKey}='${lowerKey}']`);
+            }
             if (ele) {
                 let storedValue = settingObj[optionParamKey];
                 const isSelect = ele.tagName === 'SELECT';
@@ -2523,7 +2642,7 @@ function update(response, sync = true) {
                     'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
-					'spotifylink',
+					'spotifylink','maplink'
                     // Add other link IDs that are generated and need cleaning
                 ];
 
@@ -2582,7 +2701,7 @@ function update(response, sync = true) {
 
 function processParam(key, paramNum, settingObj, sync) {
     let paramKey = `param${paramNum}`;
-    let ele = document.querySelector(`input[data-${paramKey}='${key}']`);
+    let ele = document.querySelector(`input[data-${paramKey}='${key}'], select[data-${paramKey}='${key}']`);
 
     if (!ele && paramNum === 1 && key.startsWith('chroma=')) {
         const rawValue = key.split('=')[1] || '';
@@ -2617,7 +2736,13 @@ function processParam(key, paramNum, settingObj, sync) {
 
     if (!ele) return;
 
-    ele.checked = settingObj[paramKey]; // Set the checked state based on loaded setting.
+    if (ele.tagName && ele.tagName.toLowerCase() === 'select') {
+        if (settingObj[paramKey] !== undefined) {
+            ele.value = settingObj[paramKey];
+        }
+    } else {
+        ele.checked = !!settingObj[paramKey]; // Set the checked state based on loaded setting.
+    }
 
     // Call updateSettings with the element. handleElementParam will figure out the value.
     updateSettings(ele, sync);
@@ -2691,7 +2816,7 @@ function handleAIProviderVisibility(provider) {
 // Handle TTS provider visibility
 function handleTTSProviderVisibility(provider) {
     // Hide all TTS elements
-    ["systemTTS", "elevenlabsTTS", "googleTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
+    ["systemTTS", "elevenlabsTTS", "googleTTS", "geminiTTS", "speechifyTTS", "kokoroTTS", "kittenTTS", "openaiTTS"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2702,6 +2827,8 @@ function handleTTSProviderVisibility(provider) {
         document.getElementById("elevenlabsTTS").classList.remove("hidden");
     } else if (provider == "google") {
         document.getElementById("googleTTS").classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiTTS").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -2716,7 +2843,7 @@ function handleTTSProviderVisibility(provider) {
 // Handle secondary TTS provider visibility
 function handleTTSProvider10Visibility(provider) {
     // Hide all TTS10 elements
-    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
+    ["systemTTS10", "elevenlabsTTS10", "googleTTS10", "geminiTTS10", "speechifyTTS10", "kokoroTTS10", "kittenTTS10", "openaiTTS10"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2727,6 +2854,8 @@ function handleTTSProvider10Visibility(provider) {
         document.getElementById("elevenlabsTTS10").classList.remove("hidden");
     } else if (provider == "google") {
         document.getElementById("googleTTS10").classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiTTS10").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS10").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -2741,7 +2870,7 @@ function handleTTSProvider10Visibility(provider) {
 // Handle featured TTS provider visibility (param2)
 function handleTTSProvider2Visibility(provider) {
     // Hide all TTS2 elements
-    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
+    ["systemTTS2", "elevenlabsTTS2", "googleTTS2", "geminiTTS2", "speechifyTTS2", "kokoroTTS2", "kittenTTS2", "openaiTTS2", "piperTTS2", "espeakTTS2"].forEach(id => {
         document.getElementById(id)?.classList.add("hidden");
     });
     
@@ -2752,6 +2881,8 @@ function handleTTSProvider2Visibility(provider) {
         document.getElementById("elevenlabsTTS2").classList.remove("hidden");
     } else if (provider == "google") {
         document.getElementById("googleTTS2").classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiTTS2").classList.remove("hidden");
     } else if (provider == "speechify") {
         document.getElementById("speechifyTTS2").classList.remove("hidden");
     } else if (provider == "kokoro") {
@@ -3013,7 +3144,8 @@ function getTargetMap() {
 		'eventsdashboard': 17,
 		'flowactions': 18,
 		'scoreboard': 21,
-		'spotify': 22
+		'spotify': 22,
+		'map': 23,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -3307,7 +3439,14 @@ function handleOptionParam(ele, targetId, paramType, sync) {
     const paramValue = ele.dataset[paramType];
     if (!paramValue) return false;
     
+    const isMapTarget = targetId === 'map';
+    const paramKey = isMapTarget ? paramValue.toLowerCase() : paramValue;
+
+    // Remove both the original and normalized keys to avoid duplicates
     targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramValue);
+    if (paramKey !== paramValue) {
+        targetElement.raw = removeQueryParamWithValue(targetElement.raw, paramKey);
+    }
     
     // Check if this option should be active based on its related checkbox
     // Extract the number from paramType (e.g., "10" from "optionparam10")
@@ -3354,19 +3493,19 @@ function handleOptionParam(ele, targetId, paramType, sync) {
                 } else if (paramValue.endsWith('lang')) {
                     // Generic handling for other *lang parameters
                     const prefix = paramValue.slice(0, -4);
-                    targetElement.raw = updateURL(`${paramValue}=${langValue}`, targetElement.raw);
+                    targetElement.raw = updateURL(`${paramKey}=${langValue}`, targetElement.raw);
                     targetElement.raw = updateURL(`voice${prefix}=${voiceValue}`, targetElement.raw);
                 } else {
                     // Not a language parameter, use standard value
-                    targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+                    targetElement.raw = updateURL(`${paramKey}=${encodeURIComponent(ele.value)}`, targetElement.raw);
                 }
             } else {
                 // Standard select without language/voice data
-                targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+                targetElement.raw = updateURL(`${paramKey}=${encodeURIComponent(ele.value)}`, targetElement.raw);
             }
         } else {
             // Not a select element, use standard value
-            targetElement.raw = updateURL(`${paramValue}=${ele.value}`, targetElement.raw);
+            targetElement.raw = updateURL(`${paramKey}=${encodeURIComponent(ele.value)}`, targetElement.raw);
         }
     }
     
@@ -3621,7 +3760,7 @@ function handleOptionSetting(ele, sync) {
 		
         const suffix = settingType === 'optionsetting2' ? '2' : (settingType === 'optionsetting10' ? '10' : '');
         const ttsProviderElements = [
-            `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, 
+            `systemTTS${suffix}`, `elevenlabsTTS${suffix}`, `googleTTS${suffix}`, `geminiTTS${suffix}`,
             `speechifyTTS${suffix}`, `kokoroTTS${suffix}`, `kittenTTS${suffix}`, `openaiTTS${suffix}`, `piperTTS${suffix}`, `espeakTTS${suffix}`
         ];
         
@@ -3787,21 +3926,140 @@ function handleNumberSetting(ele, sync) {
     return false;
 }
 
+function clampAlphaPercent(alphaValue, fallback = 100) {
+    const numeric = parseFloat(alphaValue);
+    if (Number.isNaN(numeric)) {
+        return fallback;
+    }
+    return Math.max(0, Math.min(100, numeric));
+}
+
+function toHexComponent(value) {
+    const clamped = Math.max(0, Math.min(255, Math.round(value)));
+    return clamped.toString(16).padStart(2, '0');
+}
+
+function parseColorValue(colorValue) {
+    if (!colorValue) {
+        return null;
+    }
+    const normalized = String(colorValue).trim();
+    const hexMatch = normalized.match(/^#?([a-fA-F0-9]{3,4}|[a-fA-F0-9]{6}|[a-fA-F0-9]{8})$/);
+    if (hexMatch) {
+        let hex = hexMatch[1];
+        if (hex.length === 3 || hex.length === 4) {
+            hex = hex.split('').map((ch) => ch + ch).join('');
+        }
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        const a = hex.length === 8 ? parseInt(hex.slice(6, 8), 16) / 255 : 1;
+        return { r, g, b, a };
+    }
+
+    const rgbaMatch = normalized.match(/^rgba?\(\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})\s*,\s*([0-9]{1,3})(?:\s*,\s*([0-9]*\.?[0-9]+))?\s*\)$/i);
+    if (rgbaMatch) {
+        const r = Math.max(0, Math.min(255, parseInt(rgbaMatch[1], 10)));
+        const g = Math.max(0, Math.min(255, parseInt(rgbaMatch[2], 10)));
+        const b = Math.max(0, Math.min(255, parseInt(rgbaMatch[3], 10)));
+        const a = rgbaMatch[4] !== undefined ? Math.max(0, Math.min(1, parseFloat(rgbaMatch[4]))) : 1;
+        return { r, g, b, a };
+    }
+
+    return null;
+}
+
+function formatHexColor(rgbColor) {
+    if (!rgbColor) {
+        return null;
+    }
+    return `#${toHexComponent(rgbColor.r)}${toHexComponent(rgbColor.g)}${toHexComponent(rgbColor.b)}`;
+}
+
+function mergeColorWithAlpha(baseColor, alphaPercent) {
+    const parsedBase = parseColorValue(baseColor);
+    if (!parsedBase) {
+        return null;
+    }
+    const alphaByte = Math.round((clampAlphaPercent(alphaPercent) / 100) * 255);
+    const baseHex = formatHexColor(parsedBase);
+    if (!baseHex) {
+        return null;
+    }
+    return alphaByte >= 255 ? baseHex : `${baseHex}${toHexComponent(alphaByte)}`;
+}
+
+function getAlphaSliderForInput(inputEle) {
+    if (!inputEle?.id) {
+        return null;
+    }
+    return document.querySelector(`input[type='range'][data-alpha-target='${inputEle.id}']`);
+}
+
+function getLinkedPaletteElement(inputEle) {
+    if (!inputEle?.dataset?.palette) {
+        return null;
+    }
+    return document.getElementById(inputEle.dataset.palette);
+}
+
+function resolveBaseColor(inputEle, paletteEle) {
+    const parsed = parseColorValue(inputEle?.value);
+    if (parsed) {
+        return formatHexColor(parsed);
+    }
+    if (paletteEle && paletteEle.value) {
+        return paletteEle.value;
+    }
+    return '#000000';
+}
+
+function syncColorHelpers(inputEle, parsedColor = null) {
+    if (!inputEle) {
+        return;
+    }
+    const paletteEle = getLinkedPaletteElement(inputEle);
+    const sliderEle = getAlphaSliderForInput(inputEle);
+    const colorInfo = parsedColor || parseColorValue(inputEle.value);
+    if (paletteEle && colorInfo) {
+        paletteEle.value = formatHexColor(colorInfo);
+    }
+    if (sliderEle && colorInfo) {
+        const alphaPercent = clampAlphaPercent(Math.round(colorInfo.a * 100));
+        sliderEle.value = alphaPercent;
+        sliderEle.dataset.rangePrevValue = alphaPercent;
+        updateRangeDisplay(sliderEle);
+    }
+}
+
 function handleColorAndPalette(ele) {
+    if (ele.dataset.alphaTarget) {
+        const targetInput = document.getElementById(ele.dataset.alphaTarget);
+        if (targetInput) {
+            const paletteEle = getLinkedPaletteElement(targetInput);
+            const mergedColor = mergeColorWithAlpha(resolveBaseColor(targetInput, paletteEle), ele.value);
+            if (mergedColor) {
+                targetInput.value = mergedColor;
+            }
+            syncColorHelpers(targetInput);
+            updateSettings(targetInput, true);
+            return true;
+        }
+    }
     if (ele.dataset.color) {
         const colorEle = document.getElementById(ele.dataset.color);
         if (colorEle) {
-            colorEle.value = ele.value;
+            const sliderEle = getAlphaSliderForInput(colorEle);
+            const alphaValue = sliderEle ? sliderEle.value : 100;
+            const mergedColor = mergeColorWithAlpha(ele.value, alphaValue);
+            colorEle.value = mergedColor || ele.value;
+            syncColorHelpers(colorEle);
             updateSettings(colorEle, true);
             return true;
         }
     } else if (ele.dataset.palette) {
-        const paletteEle = document.getElementById(ele.dataset.palette);
-        if (paletteEle) {
-            paletteEle.value = ele.value;
-            // updateSettings(paletteEle, true); // the palette is just the picker, not the value holder
-            return true;
-        }
+        syncColorHelpers(ele);
+        return true;
     }
     
     return false;
@@ -3847,7 +4105,7 @@ function updateSettings(ele, sync = true, value = null) {
 	
     // Handle poll settings
     if (handlePollSettings(ele, sync)) return;
-    
+	
     // Handle delete parameters
     if (handleDelParam(ele, sync)) {
         // Continue with other settings
@@ -4030,7 +4288,8 @@ function refreshLinks(){
       'eventsdashboardlink': 'eventsdashboard',
       'custom-gif-commandslink': 'custom-gif-commands',
 	  'scoreboardlink': 'scoreboard',
-	  'spotifylink': 'spotify'
+	  'spotifylink': 'spotify',
+	  'maplink': 'map'
     };
     const linkIdsToClean = Object.keys(linkIdToDivIdMap);
 
@@ -5305,7 +5564,6 @@ const PollManager = {
     }
 };
 
-
 document.addEventListener("DOMContentLoaded", async function(event) {
     await ensureSourcesListLoaded();
 	// Add event listener for Event Flow Editor link
@@ -5320,7 +5578,10 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	// Initialize ProfileManager after DOM is ready
 	ProfileManager.init();
-	
+
+	// Initialize blocked words tag input
+	setupBlockedWordsInput();
+
 	// Add event listener for save profile button
 	const saveProfileBtn = document.querySelector('button[data-action="saveProfile"]');
 	if (saveProfileBtn) {

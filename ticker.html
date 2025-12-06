@@ -301,10 +301,15 @@
 	
 			
 	if (urlParams.get('font')) {
-		const raw = urlParams.get('font').trim();
-		const clean = raw.replace(/^['"]|['"]$/g, '');
-		const escaped = clean.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-		document.documentElement.style.setProperty('--font-family', `"${escaped}", Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`);
+		const fontParam = urlParams.get('font').trim();
+		const fonts = fontParam.split(',').map(f => {
+			const clean = f.trim().replace(/^['"]|['"]$/g, '');
+			const escaped = clean.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+			return escaped ? `"${escaped}"` : '';
+		}).filter(Boolean);
+		if (fonts.length) {
+			document.documentElement.style.setProperty('--font-family', `${fonts.join(', ')}, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`);
+		}
 	}
 	
 	if (urlParams.get("fontsize")){

@@ -41,6 +41,7 @@
 	--gif-color: #9a3f7bdd;
 	--wordcloud-color: #6a6bffdd;
 	--poll-color: #61b700dd;
+	--poll-color: #D16700dd;
 	--credits-color: #02a0aa;
 	--leaderboard-color: #9b59b6;
 	--scoreboard-color: #e74c3c;
@@ -1084,6 +1085,7 @@ input:checked + .slider:before {
     width: 200px;
     margin-top: 10px;
     margin-bottom: 4px;
+	display: inline-block;
 }
 
 .textInput {
@@ -1681,14 +1683,14 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param1="lightmode" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="light-mode--white-page-background">⚪ Light mode — White page background </span>
+                                    <span data-translate="light-mode--white-page-background">⚪ Light mode - White page background </span>
                                 </div>
                                 <div data-keywords="dark mode night black theme high contrast">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="darkmode" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="dark-mode--black-page-background">⚫ Dark mode — Black page background </span>
+                                    <span data-translate="dark-mode--black-page-background">⚫ Dark mode - Black page background </span>
                                 </div>
 								<div data-keywords="fade mask gradient feather top overlay soften edges vignette">
                                     <label class="switch">
@@ -1725,7 +1727,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-mechanics-options" />
-                    <label class="collapsible-label" for="wrapper-chat-message-mechanics-options"><span data-translate="message---mechanics">💬 Message — ⚙️ Mechanics</span></label>
+                    <label class="collapsible-label" for="wrapper-chat-message-mechanics-options"><span data-translate="message---mechanics">💬 Message - ⚙️ Mechanics</span></label>
                     <div class="collapsible-text">
                         <div class="options">
 							<div class="options_group streaming_chat">
@@ -1824,6 +1826,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="beep-when-there-is-a-new-message">🔔 Beep when there is a new message </span>
                                 </div>
+                                <div title="Beep only when a message is marked as a first-time chatter (enable First timers in settings)" data-keywords="beep sound first timer chatter new viewer notification">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="beepfirsttime" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔔🆕 Beep for first-time chatters</span>
+                                </div>
                                 <div title="Lower the beep's volume" data-keywords="notification volume loudness gain attenuate quieter">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="beepvolume" />
@@ -1886,6 +1895,21 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="Exclude filtered from auto-show">🥅 Exclude filtered messages from auto-selecting </span>
                                 </div>
+								<div data-keywords="filter block hide words phrases text content moderation blacklist blocklist censor mute suppress NOALBS">
+									<label class="switch">
+										<input type="checkbox" data-param1="blockedwords" />
+										<span class="slider round"></span>
+									</label>
+									<span>🚫 Block messages containing specific words/phrases</span>
+									<div class="isolate" style="margin-left: 50px; margin-top: 5px;">
+										<div class="blockedwords-list-container source-list-container" id="blockedwordsList"></div>
+										<div class="add-blockedword-container">
+											<input type="text" id="newBlockedWord" placeholder="Word or phrase to block" style="width: 180px;" />
+											<button id="addBlockedWord">Add</button>
+										</div>
+										<input type="text" id="blockedwordsInput" class="textInput hidden" data-textparam1="blockedwords" style="display: none;" />
+									</div>
+								</div>
 								<div data-keywords="donation scrub anonymize remove tip amount hide value private">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="stripdonations" />
@@ -2026,7 +2050,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chat-message-tts-options" />
 					<label class="collapsible-label" for="wrapper-chat-message-tts-options">
-						<span data-translate="message---tts">💬 Message — 🗣️ Text to Speech</span>
+						<span data-translate="message---tts">💬 Message - 🗣️ Text to Speech</span>
 					</label> 
 					<div class="collapsible-text">
 						<div class="options">
@@ -2243,9 +2267,10 @@ input:checked + .slider:before {
 								<option selected value="system">System TTS</option>
 								<option value="kokoro">Kokoro (webGPU/CPU)</option>
 								<option value="kitten">Kitten TTS (browser-based)</option>
-								<option value="elevenlabs">ElevenLabs</option>
-								<option value="google">Google Cloud</option>
-								<option value="speechify">Speechify</option>
+									<option value="elevenlabs">ElevenLabs</option>
+									<option value="google">Google Cloud</option>
+									<option value="gemini">Gemini (Preview TTS)</option>
+									<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
 								<option value="piper">Piper TTS</option>
 								<option value="espeak">eSpeak TTS</option>
@@ -2554,6 +2579,56 @@ input:checked + .slider:before {
 							</div>
 							
 						</div>
+						<!-- Gemini TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="geminiTTS">
+							<h4>Gemini TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="geminiAPIKey" class="textInput instant" autocomplete="off" placeholder="Your Gemini API Key" data-textparam1="geminikey" />
+								<label for="geminiAPIKey">Gemini API Key</label>
+							</div>
+							<div>
+								<label for="geminiModelSelect">Model</label>
+								<select id="geminiModelSelect" data-optionparam1="geminimodel">
+									<option value="gemini-2.5-flash-preview-tts" selected>Gemini 2.5 Flash Preview TTS</option>
+									<option value="gemini-2.5-pro-preview-tts">Gemini 2.5 Pro Preview TTS</option>
+								</select>
+							</div>
+							<div>
+								<label for="geminiVoiceSelect">Voice</label>
+								<select id="geminiVoiceSelect" data-optionparam1="voicegemini">
+									<option value="Zephyr">Zephyr - Bright</option>
+									<option value="Puck">Puck - Upbeat</option>
+									<option value="Charon">Charon - Informative</option>
+									<option value="Kore" selected>Kore - Firm</option>
+									<option value="Fenrir">Fenrir - Excitable</option>
+									<option value="Leda">Leda - Youthful</option>
+									<option value="Orus">Orus - Firm</option>
+									<option value="Aoede">Aoede - Breezy</option>
+									<option value="Callirrhoe">Callirrhoe - Easy-going</option>
+									<option value="Autonoe">Autonoe - Bright</option>
+									<option value="Enceladus">Enceladus - Breathy</option>
+									<option value="Iapetus">Iapetus - Clear</option>
+									<option value="Umbriel">Umbriel - Easy-going</option>
+									<option value="Algieba">Algieba - Smooth</option>
+									<option value="Despina">Despina - Smooth</option>
+									<option value="Erinome">Erinome - Clear</option>
+									<option value="Algenib">Algenib - Gravelly</option>
+									<option value="Rasalgethi">Rasalgethi - Informative</option>
+									<option value="Laomedeia">Laomedeia - Upbeat</option>
+									<option value="Achernar">Achernar - Soft</option>
+									<option value="Alnilam">Alnilam - Firm</option>
+									<option value="Schedar">Schedar - Even</option>
+									<option value="Gacrux">Gacrux - Mature</option>
+									<option value="Pulcherrima">Pulcherrima - Forward</option>
+									<option value="Achird">Achird - Friendly</option>
+									<option value="Zubenelgenubi">Zubenelgenubi - Casual</option>
+									<option value="Vindemiatrix">Vindemiatrix - Gentle</option>
+									<option value="Sadachbia">Sadachbia - Lively</option>
+									<option value="Sadaltager">Sadaltager - Knowledgeable</option>
+									<option value="Sulafat">Sulafat - Warm</option>
+								</select>
+							</div>
+						</div>
 						<!-- Speechify TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="speechifyTTS">
 							<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
@@ -2683,7 +2758,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-visibility-options" />
-                    <label class="collapsible-label" for="wrapper-chat-message-visibility-options"><span data-translate="message---visibility">💬 Message — 👁️ Visibility</span></label>
+                    <label class="collapsible-label" for="wrapper-chat-message-visibility-options"><span data-translate="message---visibility">💬 Message - 👁️ Visibility</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
@@ -2990,7 +3065,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-styling-options" />
-                    <label class="collapsible-label" for="wrapper-chat-message-styling-options"><span data-translate="message---styling">💬 Message — 🎨 Styling</span></label>
+                    <label class="collapsible-label" for="wrapper-chat-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
@@ -3052,24 +3127,51 @@ input:checked + .slider:before {
 								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
 									<div class="textInputContainer" style="flex:1; margin-right:5px;">
 										<input type="text" id="dock_outline_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000" data-textparam1="outlinecolor" data-palette="dock_outline_color_palette" />
-										<label for="dock_outline_color">&gt; Outline color</label>
+										<label for="dock_outline_color">&gt; Custom Outline color</label>
 									</div>
 									<input type="color" data-color="dock_outline_color" id="dock_outline_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="number" step="0.25" min="0" id="dock_outline_width" class="textInput instant" autocomplete="off" placeholder="e.g. 2" data-textparam1="outlinewidth" />
-									<label for="dock_outline_width">&gt; Outline size (px)</label>
+									<label for="dock_outline_width">&gt; Custom Outline size (px)</label>
 								</div>
 								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
 									<div class="textInputContainer" style="flex:1; margin-right:5px;">
-										<input type="text" id="dock_stroke_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000" data-textparam1="strokecolor" data-palette="dock_stroke_color_palette" />
+										<input type="text" id="dock_stroke_color" class="textInput instant" autocomplete="off" placeholder="e.g. #000000CC" data-textparam1="strokecolor" data-palette="dock_stroke_color_palette" />
 										<label for="dock_stroke_color">&gt; Stroke color</label>
 									</div>
 									<input type="color" data-color="dock_stroke_color" id="dock_stroke_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<div class="alphaInput" style="display:flex; align-items:center; gap:6px; min-width: 120px;" title="Alpha channel; lower is more transparent">
+										<input type="range" id="dock_stroke_alpha" min="0" max="100" step="1" value="100" data-alpha-target="dock_stroke_color" data-range-display="dock_stroke_alpha_display" data-range-suffix="%" style="width: 90px;" aria-label="Stroke opacity" />
+										<span id="dock_stroke_alpha_display">100%</span>
+									</div>
 								</div>
 								<div class="textInputContainer" style="width: 95%;">
 									<input type="number" step="0.25" min="0" id="dock_stroke_width" class="textInput instant" autocomplete="off" placeholder="e.g. 0.5" data-textparam1="strokewidth" />
 									<label for="dock_stroke_width">&gt; Stroke size (px)</label>
+								</div>
+								<h3>Text Glow</h3>
+								<div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="textglow" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    ✨ Enable text glow halo (pair with "No text outlining" to use glow only)
+                                </div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="flex:1; margin-right:5px;">
+										<input type="text" id="dock_glow_color" class="textInput instant" autocomplete="off" placeholder="e.g. #00aaffcc" data-textparam1="glowcolor" data-palette="dock_glow_color_palette" />
+										<label for="dock_glow_color">&gt; Glow color</label>
+									</div>
+									<input type="color" data-color="dock_glow_color" id="dock_glow_color_palette" class="colorPicker" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+									<div class="alphaInput" style="display:flex; align-items:center; gap:6px; min-width: 120px;" title="Alpha channel; lower is softer">
+										<input type="range" id="dock_glow_alpha" min="0" max="100" step="1" value="80" data-alpha-target="dock_glow_color" data-range-display="dock_glow_alpha_display" data-range-suffix="%" style="width: 90px;" aria-label="Glow opacity" />
+										<span id="dock_glow_alpha_display">80%</span>
+									</div>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="number" step="0.5" min="0" id="dock_glow_width" class="textInput instant" autocomplete="off" placeholder="e.g. 12" data-textparam1="glowwidth" />
+									<label for="dock_glow_width">&gt; Glow size / softness (px, default 10)</label>
 								</div>
 								<h3 data-translate="background-shading">Background Shading for Messages</h3>
                                 <div>
@@ -3263,7 +3365,7 @@ input:checked + .slider:before {
                                     <label for="googlefont"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
                             </div>
                         </div>
@@ -3274,7 +3376,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-effects-options" />
-                    <label class="collapsible-label" for="wrapper-chat-message-effects-options"><span data-translate="message---effects">💬 Message — ✨ Effects</span></label>
+                    <label class="collapsible-label" for="wrapper-chat-message-effects-options"><span data-translate="message---effects">💬 Message - ✨ Effects</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
@@ -3305,6 +3407,13 @@ input:checked + .slider:before {
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="messages-smoothly-scroll-in"> Messages smoothly scroll in </span>
+                                </div>
+								 <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="typewriter=30" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="messages-typewriter"> Messages get typed in char-by-char </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -3454,7 +3563,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-chat-message-export-options" />
-                    <label class="collapsible-label" for="wrapper-chat-message-export-options"><span data-translate="message---export">💬 Message — 📄 Export</span></label>
+                    <label class="collapsible-label" for="wrapper-chat-message-export-options"><span data-translate="message---export">💬 Message - 📄 Export</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group streaming_chat">
@@ -3826,7 +3935,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-featured-tts-options" />
 					<label class="collapsible-label" for="wrapper-featured-tts-options">
-						<span data-translate="message---tts">💬 Message — 🗣️ Text to Speech</span>
+						<span data-translate="message---tts">💬 Message - 🗣️ Text to Speech</span>
 					</label>
                     <div class="collapsible-text">
                         <div class="options">
@@ -4050,22 +4159,124 @@ input:checked + .slider:before {
                             </div>
                         </div>
                         
-                        <!-- Google Cloud TTS Options -->
-                        <div class="tts-provider-options options_group hidden" id="googleTTS2">
-                            <h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
-                            <div class="textInputContainer" style="width: 95%;">
-                                <input type="password" id="googleAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam2="ttskey" />
-                                <label for="googleAPIKey2"><span data-translate="google-api-key">Google API Key</span></label>
-                            </div>
-                            <div class="textInputContainer" style="width: 95%;">
-                                <input type="text" id="googleVoiceName2" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam2="voicegoogle" />
-                                <label for="googleVoiceName2"><span data-translate="google-voice-name">Google Voice Name</span></label>
-                            </div>
-                        </div>
-                        
-                        <!-- Speechify TTS Options -->
-                        <div class="tts-provider-options options_group hidden" id="speechifyTTS2">
-                            <h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
+						<!-- Google Cloud TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="googleTTS2">
+							<h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="googleAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam2="ttskey" />
+								<label for="googleAPIKey2"><span data-translate="google-api-key">Google API Key</span></label>
+							</div>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="text" id="googleVoiceName2" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam2="voicegoogle" />
+								<label for="googleVoiceName2"><span data-translate="google-voice-name">Google Voice Name</span></label>
+							</div>
+						</div>
+						
+						<!-- Gemini TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="geminiTTS2">
+							<h4>Gemini TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="geminiAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Gemini API Key" data-textparam2="geminikey" />
+								<label for="geminiAPIKey2">Gemini API Key</label>
+							</div>
+							<div>
+								<label for="geminiModelSelect2">Model</label>
+								<select id="geminiModelSelect2" data-optionparam2="geminimodel">
+									<option value="gemini-2.5-flash-preview-tts" selected>Gemini 2.5 Flash Preview TTS</option>
+									<option value="gemini-2.5-pro-preview-tts">Gemini 2.5 Pro Preview TTS</option>
+								</select>
+							</div>
+							<div>
+								<label for="geminiVoiceSelect2">Voice</label>
+								<select id="geminiVoiceSelect2" data-optionparam2="voicegemini">
+									<option value="Zephyr">Zephyr - Bright</option>
+									<option value="Puck">Puck - Upbeat</option>
+									<option value="Charon">Charon - Informative</option>
+									<option value="Kore" selected>Kore - Firm</option>
+									<option value="Fenrir">Fenrir - Excitable</option>
+									<option value="Leda">Leda - Youthful</option>
+									<option value="Orus">Orus - Firm</option>
+									<option value="Aoede">Aoede - Breezy</option>
+									<option value="Callirrhoe">Callirrhoe - Easy-going</option>
+									<option value="Autonoe">Autonoe - Bright</option>
+									<option value="Enceladus">Enceladus - Breathy</option>
+									<option value="Iapetus">Iapetus - Clear</option>
+									<option value="Umbriel">Umbriel - Easy-going</option>
+									<option value="Algieba">Algieba - Smooth</option>
+									<option value="Despina">Despina - Smooth</option>
+									<option value="Erinome">Erinome - Clear</option>
+									<option value="Algenib">Algenib - Gravelly</option>
+									<option value="Rasalgethi">Rasalgethi - Informative</option>
+									<option value="Laomedeia">Laomedeia - Upbeat</option>
+									<option value="Achernar">Achernar - Soft</option>
+									<option value="Alnilam">Alnilam - Firm</option>
+									<option value="Schedar">Schedar - Even</option>
+									<option value="Gacrux">Gacrux - Mature</option>
+									<option value="Pulcherrima">Pulcherrima - Forward</option>
+									<option value="Achird">Achird - Friendly</option>
+									<option value="Zubenelgenubi">Zubenelgenubi - Casual</option>
+									<option value="Vindemiatrix">Vindemiatrix - Gentle</option>
+									<option value="Sadachbia">Sadachbia - Lively</option>
+									<option value="Sadaltager">Sadaltager - Knowledgeable</option>
+									<option value="Sulafat">Sulafat - Warm</option>
+								</select>
+							</div>
+						</div>
+						
+						<!-- Gemini TTS Options -->
+						<div class="tts-provider-options options_group hidden"  id="geminiTTS10">
+							<h4>Gemini TTS Options</h4>
+							<div class="textInputContainer" style="width: 95%;">
+								<input type="password" id="geminiAPIKey10" class="textInput instant" autocomplete="off" placeholder="Your Gemini API Key" data-textparam10="geminikey" />
+								<label for="geminiAPIKey10">Gemini API Key</label>
+							</div>
+							<div>
+								<label for="geminiModelSelect10">Model</label>
+								<select id="geminiModelSelect10" data-optionparam10="geminimodel">
+									<option value="gemini-2.5-flash-preview-tts" selected>Gemini 2.5 Flash Preview TTS</option>
+									<option value="gemini-2.5-pro-preview-tts">Gemini 2.5 Pro Preview TTS</option>
+								</select>
+							</div>
+							<div>
+								<label for="geminiVoiceSelect10">Voice</label>
+								<select id="geminiVoiceSelect10" data-optionparam10="voicegemini">
+									<option value="Zephyr">Zephyr - Bright</option>
+									<option value="Puck">Puck - Upbeat</option>
+									<option value="Charon">Charon - Informative</option>
+									<option value="Kore" selected>Kore - Firm</option>
+									<option value="Fenrir">Fenrir - Excitable</option>
+									<option value="Leda">Leda - Youthful</option>
+									<option value="Orus">Orus - Firm</option>
+									<option value="Aoede">Aoede - Breezy</option>
+									<option value="Callirrhoe">Callirrhoe - Easy-going</option>
+									<option value="Autonoe">Autonoe - Bright</option>
+									<option value="Enceladus">Enceladus - Breathy</option>
+									<option value="Iapetus">Iapetus - Clear</option>
+									<option value="Umbriel">Umbriel - Easy-going</option>
+									<option value="Algieba">Algieba - Smooth</option>
+									<option value="Despina">Despina - Smooth</option>
+									<option value="Erinome">Erinome - Clear</option>
+									<option value="Algenib">Algenib - Gravelly</option>
+									<option value="Rasalgethi">Rasalgethi - Informative</option>
+									<option value="Laomedeia">Laomedeia - Upbeat</option>
+									<option value="Achernar">Achernar - Soft</option>
+									<option value="Alnilam">Alnilam - Firm</option>
+									<option value="Schedar">Schedar - Even</option>
+									<option value="Gacrux">Gacrux - Mature</option>
+									<option value="Pulcherrima">Pulcherrima - Forward</option>
+									<option value="Achird">Achird - Friendly</option>
+									<option value="Zubenelgenubi">Zubenelgenubi - Casual</option>
+									<option value="Vindemiatrix">Vindemiatrix - Gentle</option>
+									<option value="Sadachbia">Sadachbia - Lively</option>
+									<option value="Sadaltager">Sadaltager - Knowledgeable</option>
+									<option value="Sulafat">Sulafat - Warm</option>
+								</select>
+							</div>
+						</div>
+						
+						<!-- Speechify TTS Options -->
+						<div class="tts-provider-options options_group hidden" id="speechifyTTS2">
+							<h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
                             <div class="textInputContainer" style="width: 95%;">
                                 <input type="password" id="speechifyAPIKey2" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam2="speechifykey" />
                                 <label for="speechifyAPIKey2"><span data-translate="speechify-api-key">Speechify API Key</span></label>
@@ -4799,6 +5010,14 @@ input:checked + .slider:before {
                                     </label>
                                     <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" /> <span data-translate="flip-youtube-layout">Flip the Youtube watch page layout</span>
                                 </div>
+                                
+                                <div title="Show an in-page audio output picker on YouTube watch pages. The picker only runs when enabled.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="youtubeAudioPicker" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <img class="icon" src="./sources/images/youtube.png" style="display: inline-block;" />🔊 <span>Enable YouTube audio output picker (in-page)</span>
+                                </div>
 								
 								 <div title="Hide "Paid Promotion" banners in Youtube">
                                     <label class="switch">
@@ -4851,7 +5070,14 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="firsttimers" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="first-time-chatters"> 🌿 Use the DB to mark new-ish chatters</span>
+                                    <span data-translate="first-time-chatters"> 🌿 Use the DB to mark new-ish chatters and to include last chat-activity. Required for some triggers.</span>
+                                </div>
+                                <div title="Beep when a brand new chatter or someone inactive for 8+ hours speaks (requires first-timer tracking)">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="beepreturning" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🔔👋 Beep for new or returning chatters (8h+ quiet)</span>
                                 </div>
 								<div title="Override's the database 30-day storage limits">
                                     <label class="switch">
@@ -5529,7 +5755,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-visibility-options" />
-                    <label class="collapsible-label" for="wrapper-global-message-visibility-options"><span data-translate="message---visibility">💬 Message — 👁️ Visibility</span></label>
+                    <label class="collapsible-label" for="wrapper-global-message-visibility-options"><span data-translate="message---visibility">💬 Message - 👁️ Visibility</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
@@ -5664,6 +5890,14 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="strip-html-from-messages-and-donations">📤 Strip HTML/images from messages and donations </span>
                                 </div>
+
+                                <div title="Keep only emotes/emoji; drop messages that become empty after filtering.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-setting="emoteonlymode" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>😀🚫 Keep only emotes; discard empty results</span>
+                                </div>
 								
 								
                             </div>
@@ -5675,7 +5909,7 @@ input:checked + .slider:before {
             <div class="wrapper">
                 <div class="collapsible">
                     <input type="checkbox" class="collapsible-input" id="wrapper-global-message-styling-options" />
-                    <label class="collapsible-label" for="wrapper-global-message-styling-options"><span data-translate="message---styling">💬 Message — 🎨 Styling</span></label>
+                    <label class="collapsible-label" for="wrapper-global-message-styling-options"><span data-translate="message---styling">💬 Message - 🎨 Styling</span></label>
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
@@ -6338,6 +6572,11 @@ input:checked + .slider:before {
                                         <span style="font-size: 0.8em;"><span data-translate="import-settings">Import settings</span></span>
                                     </button>
                                 </div>
+                                <div style="margin-top: 8px; font-size: 0.95em;">
+                                    <a href="recover.html" target="_blank" style="color: var(--link-color); text-decoration: underline;">
+                                        Convert an existing dock link into a settings file (recovery helper)
+                                    </a>
+                                </div>
                                 <br />
                                 <br />
                                 If using Brave, enable the File System API first to allow saving:<br />
@@ -6557,7 +6796,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-public-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-public-options">
-						<span data-translate="public-chatbot">🤖 Chat Bot — Primary</span>
+						<span data-translate="public-chatbot">🤖 Chat Bot - Primary</span>
 					</label> 
 					<div class="collapsible-text">
 						<div class="options">
@@ -6734,7 +6973,7 @@ input:checked + .slider:before {
 					<div class="collapsible-text">
 						<div class="options">
 							<div class="options_group streaming_chat">
-								<h3><span data-translate="public-chatbot">🤖 Chat Bot — Primary</span></h3>
+								<h3><span data-translate="public-chatbot">🤖 Chat Bot - Primary</span></h3>
 							
 								<div class="link" style="margin:0;" title="This link will only show selected messages, one at a time. Requires the dock to select messages.">
 									<div id="chatbot" data-raw="" class="single_message">
@@ -6837,6 +7076,7 @@ input:checked + .slider:before {
 								<option value="kitten">Kitten TTS (browser-based)</option>
 								<option value="elevenlabs">ElevenLabs</option>
 								<option value="google">Google Cloud</option>
+								<option value="gemini">Gemini (Preview TTS)</option>
 								<option value="speechify">Speechify</option>
 								<option value="openai">OpenAI</option>
 								<option value="piper">Piper TTS</option>
@@ -7271,7 +7511,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-Censor-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-Censor-options">
-						<span data-translate="Censor-chatbot">🤬 Global — Censor Bot</span>
+						<span data-translate="Censor-chatbot">🤬 Global - Censor Bot</span>
 					</label> 
 					<div class="collapsible-text">
 						<div class="options">
@@ -7308,7 +7548,7 @@ input:checked + .slider:before {
 				<div class="collapsible">
 					<input type="checkbox" class="collapsible-input" id="wrapper-chatbot-private-options" />
 					<label class="collapsible-label" for="wrapper-chatbot-private-options">
-						<span data-translate="private-chatbot">🐕‍🦺 Chat Bot — Private Interface</span>
+						<span data-translate="private-chatbot">🐕‍🦺 Chat Bot - Private Interface</span>
 					</label> 
 					<div class="collapsible-text">
 						<div class="options">
@@ -7443,6 +7683,14 @@ input:checked + .slider:before {
 
 								<div>
 									<label class="switch">
+										<input type="checkbox" data-param17="showviewercount" />
+										<span class="slider round"></span>
+									</label>
+									<span>👀 Show viewer count bar in the top-right</span>
+								</div>
+
+								<div>
+									<label class="switch">
 										<input type="checkbox" data-param17="hidemeta" />
 										<span class="slider round"></span>
 									</label>
@@ -7480,7 +7728,7 @@ input:checked + .slider:before {
 									<label for="googlefont17"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
 								</div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 								<div>
 									<h3>Event cheat sheet:</h3>
@@ -7710,7 +7958,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param4="lightmode" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="light-mode--black-text-white-outline">⚪ Light mode — Black text, white outline </span>
+                                    <span data-translate="light-mode--black-text-white-outline">⚪ Light mode - Black text, white outline </span>
                                 </div>
                                 <div>
                                     <span data-translate="font-family">
@@ -7726,7 +7974,7 @@ input:checked + .slider:before {
                                     <label for="googlefont4"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 								<h3><span data-translate="source-combination-options">Source Combination Options</span></h3>
 								<div>
@@ -8009,7 +8257,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-param5="lightmode" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="light-mode--black-text-white-outline">⚪ Light mode — Black text, white outline </span>
+                                    <span data-translate="light-mode--black-text-white-outline">⚪ Light mode - Black text, white outline </span>
                                 </div>
                                 <div>
                                     <label class="switch">
@@ -8057,7 +8305,7 @@ input:checked + .slider:before {
                                     <label for="googlefont5"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 								
                             </div>
@@ -8234,6 +8482,127 @@ input:checked + .slider:before {
 				</div>
 			</div>
 			
+			<div class="link" title="Mapping system">
+                <h2 class="map_mode_title">
+                    <span class="title-group"><span class="emoji" aria-hidden="true">🗺️</span><span data-translate="mapmeter">User Map </span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#map" title="Jump to the map link options."><span data-translate="options">[options]</span></a>
+                </h2>
+                <h3>
+                    <span data-translate="when-enabled-a-map">
+                       A graphical map. Users can enter their location to mark on it.
+                    </span>
+                </h3>
+				<div id="map" data-raw="" class="streaming_chat"><a href="" id="maplink"></a></div>
+            </div>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-map-options" />
+					<label class="collapsible-label" for="wrapper-map-options"><span>🗺️ Map Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group map">
+								<h3 data-translate="map-settings">Map Settings</h3>
+								<p>Enable and customize the map:</p>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="map" data-setting="mapEnabled" />
+										<span class="slider round"></span>
+									</label>
+									<span>🚦 Enable Map</span>
+								</div>
+								<br>
+								<div>
+									<label>📊 Map Type:</label>
+									<select data-optionparam23="maptype" data-target="map" id="mapType">
+										<option value="country">Country</option>
+										<option value="state">State</option>
+										<option value="city">City</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label>🌎 Region filter:</label>
+									<select data-optionparam23="region" data-target="map" id="mapRegion">
+										<option value="global">Global</option>
+										<option value="northamerica">North America</option>
+										<option value="europe">Europe</option>
+										<option value="southamerica">South America</option>
+										<option value="asia">Asia</option>
+										<option value="africa">Africa</option>
+										<option value="oceania">Oceania</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="map" data-param23="mapautofit" data-setting="mapAutoFit" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔍 Auto-fit map to votes (zoom when markers appear)</span>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="map" data-param23="mapspam" />
+										<span class="slider round"></span>
+									</label>
+									<span>🗳️ Allow multiple votes per user</span>
+								</div>
+								<br>
+								<div style="display:flex; gap:8px; flex-wrap:wrap">
+									<button class="glowingButton" style="flex:1" data-action="startmap" data-target="map"><span>Start</span></button>
+									<button class="glowingButton" style="flex:1" data-action="pausemap" data-target="map"><span>Pause</span></button>
+									<button class="glowingButton" style="flex:1" data-action="resetmap" data-target="map"><span>Reset</span></button>
+								</div>
+								<br>
+								<div>
+									<label>🎨 Map Style/Theme:</label>
+									<select data-optionparam23="mapstyle" data-target="map" id="mapStyle">
+										<option value="default">Default</option>
+										<option value="aurora">Aurora</option>
+										<option value="ember">Ember</option>
+										<option value="neon">Neon</option>
+										<option value="blueprint">Blueprint Grid</option>
+										<option value="minimal">Minimal Clean</option>
+										<option value="retro">Retro Print</option>
+										<option value="radar">Radar Sweep</option>
+									</select>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="map" data-param23="maphidenumbers" data-setting="mapHideNumbers" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔢 Hide vote count numbers (show dots only)</span>
+								</div>
+								<br>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="map" data-param23="mapcolorintensity" data-setting="mapColorIntensity" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔴 Red color intensity (more votes = darker red)</span>
+								</div>
+								<br>
+								<div>
+									<label>📐 HUD Scale:</label>
+									<select data-optionparam23="mapscale" data-target="map" id="mapScale">
+										<option value="50">50% (Small)</option>
+										<option value="75">75% (Medium)</option>
+										<option value="100" selected>100% (Default)</option>
+										<option value="125">125% (Large)</option>
+										<option value="150">150% (Extra Large)</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 			<div class="link" title="End credits roll">
                 <h2 class="credits_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎬</span><span data-translate="creditsmeter">Credits roll</span></span>
@@ -8327,7 +8696,7 @@ input:checked + .slider:before {
 									<label for="googlefont13"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
 								</div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 								<br>
 								<div>
@@ -8737,7 +9106,7 @@ input:checked + .slider:before {
 									<label for="googlefont20"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
 								</div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 								<br>
 								
@@ -9452,7 +9821,7 @@ input:checked + .slider:before {
                                     <label for="googlefont6"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 
 								<div style="padding: 12px; border-radius: 8px; background: rgba(0,0,0,0.04); margin-bottom: 15px;">
@@ -9511,7 +9880,7 @@ input:checked + .slider:before {
 										</span>
 									</div>
 									<div class="textInputContainer" style="width: 95%; margin-bottom: 8px;" title="Optional separator symbol that appears between entries">
-										<input type="text" id="tickerseparator" class="textInput instant" maxlength="10" autocomplete="off" placeholder="• | —" data-textparam6="separator" />
+										<input type="text" id="tickerseparator" class="textInput instant" maxlength="10" autocomplete="off" placeholder="• | -" data-textparam6="separator" />
 										<label for="tickerseparator"><span data-translate="ticker-separator-label">&gt; Separator symbol (optional)</span></label>
 									</div>
 									<div>
@@ -9575,7 +9944,7 @@ input:checked + .slider:before {
                                     <label for="googlefont7"><span data-translate="googlefont">&gt; Specify a Google Font name</span></label>
                                 </div>
 								<div>
-									<i>note: You can find more fonts <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">here</a></i>
+									<i>note: Install custom fonts on your system (Windows: right-click .ttf/.otf &rarr; Install, then restart browser). <a href="https://socialstream.ninja/fonts.html" target="_blank" class="lightblue">Font detector &amp; help</a></i>
 								</div>
 								<br>
 								<div>

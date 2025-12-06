@@ -970,6 +970,13 @@ class EventFlowSystem {
     async getFlowById(flowId) {
         return this.flows.find(flow => flow.id === flowId) || null;
     }
+	
+	isMetaOnlyPayload(message) {
+		if (!message || typeof message !== 'object') return false;
+		if (!message.meta) return false; // Any truthy meta (object/string/number) counts
+		const hasChatFields = !!(message.chatname || message.chatmessage || message.hasDonation || message.contentimg);
+		return !hasChatFields;
+	}
     
     async processMessage(message) {
         
@@ -978,6 +985,11 @@ class EventFlowSystem {
             return message;
         }
         
+		// Ignore meta-only payloads (e.g., viewer/follower count updates) so they never trigger flows
+		if (this.isMetaOnlyPayload(message)) {
+			return message;
+		}
+		
         let processed = { ...message };
         let blocked = false;
         
@@ -999,16 +1011,22 @@ class EventFlowSystem {
                 if (result.blocked) {
                   //console.log(`[ProcessMessage] Flow "${flow.name}" BLOCKED the message. No further flows will be processed.`);
                     blocked = true;
-                    break; 
+                    break;
                 }
-                
+
                 if (result.modified) {
                   //console.log(`[ProcessMessage] Flow "${flow.name}" MODIFIED the message.`);
                     processed = result.message;
                 }
+
+                // Return immediately if returnNow is set - skip remaining flows
+                if (result.returnNow) {
+                  //console.log(`[ProcessMessage] Flow "${flow.name}" requested IMMEDIATE RETURN. Skipping remaining flows.`);
+                    break;
+                }
             }
         }
-        
+
       //console.log(`[ProcessMessage] Final result: ${blocked ? 'BLOCKED (returning null)' : 'NOT BLOCKED (returning message)'}`);
         return blocked ? null : processed;
     }
@@ -1091,7 +1109,9 @@ class EventFlowSystem {
 
         // --- Pass 3: Execute actions ---
       //console.log(`[EvaluateFlow "${flow.name}"] Pass 3: Executing Actions. Current node states:`, JSON.stringify(nodeActivationStates));
-        let overallResult = { modified: false, message: { ...message }, blocked: false }; 
+        // Ensure we always have a mutable message object even when running on scheduler ticks (message can be null)
+        const baseMessage = message ? { ...message } : {};
+        let overallResult = { modified: false, message: baseMessage, blocked: false }; 
         const nodeMap = new Map(flow.nodes.map(node => [node.id, node]));
         const executedActions = new Set(); // Track which actions have been executed
 
@@ -1115,20 +1135,88 @@ class EventFlowSystem {
             executedActions.add(actionId);
             const actionResult = await this.executeAction(node, overallResult.message);
             
-            if (actionResult) { 
+            if (actionResult) {
+                // Handle returnNow - mark message for immediate return
+                if (actionResult.returnNow) {
+                    overallResult.returnNow = true;
+                  //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} RETURN NOW - message will be returned immediately.`);
+                }
+
                 if (actionResult.blocked) {
                     overallResult.blocked = true;
                   //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} BLOCKED the message.`);
-                    return; 
                 }
+
                 if (actionResult.modified && actionResult.message) {
-                    overallResult.message = { ...actionResult.message }; 
+                    overallResult.message = { ...actionResult.message };
                     overallResult.modified = true;
                   //console.log(`[EvaluateFlow "${flow.name}"] Action Node ID: ${node.id} MODIFIED the message.`);
                 }
+
+                // Handle async continuation - schedule downstream and return immediately
+                if (actionResult.continueAsync) {
+                    let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
+                    if (downstreamConnections.length > 0) {
+                        // Capture current state for async execution
+                        let asyncMessage = { ...overallResult.message };
+
+                        // Schedule downstream actions to run asynchronously
+                        setTimeout(async () => {
+                            // Create a separate execution context for async chain
+                            const asyncExecutedActions = new Set(executedActions);
+                            let asyncBlocked = false;
+
+                            const executeAsyncChain = async (asyncActionId) => {
+                                if (asyncExecutedActions.has(asyncActionId)) return;
+                                if (asyncBlocked) return; // Stop if blocked
+
+                                const asyncNode = nodeMap.get(asyncActionId);
+                                if (!asyncNode || asyncNode.type !== 'action') return;
+
+                                asyncExecutedActions.add(asyncActionId);
+                                const asyncResult = await this.executeAction(asyncNode, asyncMessage);
+
+                                // Handle action results - mirror synchronous behavior
+                                if (asyncResult) {
+                                    if (asyncResult.blocked) {
+                                        asyncBlocked = true;
+                                        return; // Stop processing this branch
+                                    }
+                                    if (asyncResult.modified && asyncResult.message) {
+                                        asyncMessage = { ...asyncResult.message };
+                                    }
+                                    // If this action also wants to continue async, it will spawn its own setTimeout
+                                    if (asyncResult.continueAsync) {
+                                        // Already running async, so just continue normally
+                                        // but could implement nested async here if needed
+                                    }
+                                }
+
+                                // Continue to downstream actions
+                                const asyncDownstream = flow.connections.filter(conn => conn.from === asyncActionId);
+                                for (const conn of asyncDownstream) {
+                                    if (asyncBlocked) return;
+                                    const downNode = nodeMap.get(conn.to);
+                                    if (downNode && downNode.type === 'action') {
+                                        await executeAsyncChain(conn.to);
+                                    }
+                                }
+                            };
+
+                            for (const conn of downstreamConnections) {
+                                if (asyncBlocked) break;
+                                const downstreamNode = nodeMap.get(conn.to);
+                                if (downstreamNode && downstreamNode.type === 'action') {
+                                    await executeAsyncChain(conn.to);
+                                }
+                            }
+                        }, 0);
+                    }
+                    return; // Return immediately, downstream runs async
+                }
             }
-            
-            // Find and execute downstream actions
+
+            // Find and execute downstream actions (synchronous path)
             let downstreamConnections = flow.connections.filter(conn => conn.from === actionId);
             // Prioritize lightweight/control actions before heavy ones (e.g., delay)
             const priorityOf = (node) => {
@@ -1208,8 +1296,8 @@ class EventFlowSystem {
         // console.log(`[EvaluateTrigger] Node: ${triggerNode.id}, Type: ${triggerType}, Config: ${JSON.stringify(config)}, Message: ${message.chatmessage}`);
         let match = false;
 		
-		// If message is null/undefined (scheduler tick), avoid property access
-		if (message && message.event && ("meta" in message) && !message.chatname && !message.chatmessage){
+		// Skip meta-only payloads so metric updates can't trigger flows
+		if (this.isMetaOnlyPayload(message)){
 			return false;
 		}
 		
@@ -1732,7 +1820,7 @@ class EventFlowSystem {
             }
                 
             case 'messageProperties': {
-                const { requiredProperties = [], forbiddenProperties = [], requireAll = true } = config;
+                const { requiredProperties = [], forbiddenProperties = [], requireAll = true, lastActivityFilter = {} } = config;
                 
                 // Check forbidden properties first (immediate fail)
                 for (const prop of forbiddenProperties) {
@@ -1747,29 +1835,69 @@ class EventFlowSystem {
                 }
                 
                 // If no required properties, pass
-                if (requiredProperties.length === 0) return true;
-                
-                // Check required properties
-                const checkProperty = (prop) => {
-                    // Special handling for karma thresholds
-                    if (prop === 'highKarma') {
-                        return message.karma !== undefined && message.karma >= 0.7;
+                let requiredPass = true;
+                if (requiredProperties.length > 0) {
+                    // Check required properties
+                    const checkProperty = (prop) => {
+                        // Special handling for karma thresholds
+                        if (prop === 'highKarma') {
+                            return message.karma !== undefined && message.karma >= 0.7;
+                        }
+                        // Special handling for arrays
+                        if (prop === 'chatbadges') {
+                            return Array.isArray(message.chatbadges) && message.chatbadges.length > 0;
+                        }
+                        // Check if property exists and is truthy
+                        return message[prop] && message[prop] !== false;
+                    };
+                    
+                    if (requireAll) {
+                        // ALL required properties must exist
+                        requiredPass = requiredProperties.every(checkProperty);
+                    } else {
+                        // ANY required property must exist
+                        requiredPass = requiredProperties.some(checkProperty);
                     }
-                    // Special handling for arrays
-                    if (prop === 'chatbadges') {
-                        return Array.isArray(message.chatbadges) && message.chatbadges.length > 0;
-                    }
-                    // Check if property exists and is truthy
-                    return message[prop] && message[prop] !== false;
-                };
-                
-                if (requireAll) {
-                    // ALL required properties must exist
-                    return requiredProperties.every(checkProperty);
-                } else {
-                    // ANY required property must exist
-                    return requiredProperties.some(checkProperty);
                 }
+                
+                if (!requiredPass) return false;
+                
+                if (lastActivityFilter.enabled) {
+                    const amount = parseFloat(lastActivityFilter.amount) || 0;
+                    const unit = lastActivityFilter.unit || 'minutes';
+                    const mode = lastActivityFilter.mode === 'older' ? 'older' : 'within';
+                    const unitMap = { minutes: 60 * 1000, hours: 60 * 60 * 1000, days: 24 * 60 * 60 * 1000 };
+                    const windowMs = Math.max(0, amount) * (unitMap[unit] || unitMap.minutes);
+                    const lastActivityRaw = message.lastactivity || message.lastActivity || null;
+
+                    const normalizeLastActivityMs = (value) => {
+                        const num = Number(value);
+                        if (!Number.isFinite(num) || num <= 0) return null;
+                        if (num < 1e10) return Math.round(num * 1000); // likely seconds
+                        if (num > 1e15) return Math.round(num / 1000); // likely microseconds
+                        return Math.round(num); // assume milliseconds
+                    };
+
+                    const lastActivityTs = normalizeLastActivityMs(lastActivityRaw);
+
+                    // Require a valid last activity timestamp when filter is enabled
+                    if (!lastActivityTs || windowMs === 0) {
+                        return false;
+                    }
+
+                    const age = Date.now() - lastActivityTs;
+                    if (age < 0) {
+                        return false; // Future timestamps are treated as invalid
+                    }
+
+                    if (mode === 'older') {
+                        if (age < windowMs) return false;
+                    } else {
+                        if (age > windowMs) return false;
+                    }
+                }
+
+                return true;
             }
                 
             default:
@@ -1916,7 +2044,17 @@ class EventFlowSystem {
         switch (actionType) {
             case 'blockMessage':
                 result.blocked = true;
+                result.continueAsync = true; // Continue processing downstream actions asynchronously
               //console.log(`[ExecuteAction - blockMessage] Set result.blocked to true.`);
+                break;
+
+            case 'returnMessage':
+                result.returnNow = true; // Signal to return message immediately
+                result.continueAsync = true; // Continue processing downstream actions asynchronously
+                break;
+
+            case 'continueAsync':
+                result.continueAsync = true; // Fork: continue this flow async, let other flows proceed
                 break;
 
             case 'reflectionFilter': {

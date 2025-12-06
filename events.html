@@ -100,13 +100,16 @@ body, html {
     display: inline-block;
     padding: 3px 8px;
     border-radius: 4px;
-    margin-right: 10px;
-    font-size: 0.8em;
+    margin-right: 8px;
+    font-size: 0.78em;
     text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background-color: rgba(255, 255, 255, 0.12);
+    color: #cdd4e0;
 }
 
 .event-donation {
-    background-color: #4cd137;
+    background-color: #2f9a37;
     color: #fff;
 }
 
@@ -166,6 +169,33 @@ body, html {
     font-style: italic;
 }
 
+.viewerIcons {
+    background-position: left;
+    background-repeat: no-repeat;
+    background-size: contain;
+    padding: 5px;
+    margin: 0 5px 0 0;
+    cursor: help;
+    padding-left: 34px;
+    border-radius: 25%;
+}
+
+#topbar {
+    display: flex;
+    margin: 0 auto;
+    text-align: center;
+    position: fixed;
+    right: 0;
+    z-index: 999;
+    background-color: #0009;
+    border-radius: 0 0 0 13px;
+    padding-left: 3px;
+}
+
+#topbar:empty {
+    display: none;
+}
+
 body.obsstudio-mode {
     --bg-color: #13141A;
     background-color: #13141A;
@@ -205,12 +235,29 @@ body.obsstudio-mode #chat-container {
 
 .event-specific {
     display: inline-block;
-    padding: 2px 6px;
-    margin-left: 5px;
-    background-color: rgba(255, 255, 255, 0.1);
+    padding: 4px 9px;
+    margin-right: 10px;
+    background-color: #3498db;
     border-radius: 4px;
-    font-size: 0.75em;
-    color: #ddd;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+
+.event-specific.event-donation {
+    background-color: #2f9a37;
+    color: #fff;
+}
+
+.event-specific.event-status {
+    background-color: #5f6f7f;
+    color: #f0f3f5;
+}
+
+.event-specific.event-other {
+    background-color: #3498db;
+    color: #fff;
 }
 
 /* Custom classes for different platforms */
@@ -280,7 +327,8 @@ body.light-mode .timestamp {
 }
 
 body.light-mode .event-type {
-    color: #fff;
+    background-color: rgba(0, 0, 0, 0.08);
+    color: #4a5a73;
 }
 
 body.light-mode .no-events {
@@ -403,11 +451,30 @@ body.light-mode .meta-section-title {
 body.light-mode .meta-value.badge {
     background: rgba(0, 0, 0, 0.08);
 }
+
+@media only screen and (max-width: 1200px) { 
+	#header h1.large {
+		display:none;
+	}
+}
+@media only screen and (min-width: 1200px) { 
+	#header h1.small {
+		display:none;
+	}
+}
+@media only screen and (max-width: 700px) { 
+	#header h1.small {
+		display:none;
+	}
+}
+
 </style>
 </head>
 <body>
+<div id="topbar"></div>
 <div id="header">
-    <h1>Stream Events & Donations Dashboard</h1>
+    <h1 class="large">Stream Events & Donations Dashboard</h1>
+	<h1 class="small">Events Dashboard</h1>
 </div>
 <div id="chat-container">
     <div class="no-events">Waiting for stream events and donations...</div>
@@ -421,11 +488,18 @@ body.light-mode .meta-value.badge {
         roomID = urlParams.get("session");
     }
 	
+	function log(msg) {
+		if (urlParams.has("debug")) {
+			console.log(msg);
+		}
+	}
+
     var password = "false";
     var featuredMode = false;
     
     const chatContainer = document.getElementById('chat-container');
     let noEventsMessage = document.querySelector('.no-events');
+    const topBarElement = document.getElementById('topbar');
 
 	var sources = false; // Default sources
 	if (urlParams.get("sources")) {
@@ -443,6 +517,7 @@ body.light-mode .meta-value.badge {
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
+	const showViewerCount = urlParams.has("showviewercount");
 
 	// Apply theme immediately
 	if (lightMode) {
@@ -504,6 +579,7 @@ body.light-mode .meta-value.badge {
 		'gifted_memberships',
 		'membership_gift'
 	]);
+	const NO_META_EVENT_TYPES = new Set(['follow', 'new_follower', 'shared', 'share', 'share_live']);
 
 	function normalizeEventKey(event) {
 		if (typeof event !== 'string') return '';
@@ -553,6 +629,8 @@ body.light-mode .meta-value.badge {
 
 	const DEDUPLICATED_STATUS_EVENTS = new Set(['follower_update', 'subscriber_update']);
 	const statusLastValues = Object.create(null);
+	const viewerCounts = Object.create(null);
+	const VIEWER_ICON_TTL = 130000;
 
 	function getStatusCacheKey(normalizedEvent, data) {
 		const type = data && typeof data.type === 'string' ? data.type.toLowerCase() : 'unknown';
@@ -733,9 +811,81 @@ body.light-mode .meta-value.badge {
 		return luminance > 160 ? '#111111' : '#f5f5f5';
 	}
 
+	function upsertViewerIcon(type, count) {
+		if (!topBarElement) return;
+		let ele = topBarElement.querySelector("[data-type='" + type + "']");
+		if (!ele) {
+			ele = document.createElement("div");
+			ele.dataset.type = type;
+			ele.classList.add("viewerIcons");
+			ele.title = "Viewer count for " + type;
+			ele.style.backgroundImage = "url(./sources/images/" + type + ".png)";
+			topBarElement.prepend(ele);
+		}
+		ele.innerText = Number.isFinite(count) ? count.toLocaleString() : String(count || 0);
+		clearTimeout(ele.timeout);
+		ele.timeout = setTimeout(function(node) {
+			if (node) {
+				delete viewerCounts[node.dataset.type];
+				node.remove();
+			}
+		}, VIEWER_ICON_TTL, ele);
+	}
+
+	function updateViewerTopBar(data) {
+		if (!showViewerCount || !data || !data.event || !topBarElement) {
+			return;
+		}
+		const normalizedEvent = normalizeEventKey(data.event);
+		if (normalizedEvent === 'viewer_update' && data.type) {
+			const count = resolveMetricNumber(data);
+			if (count === null) return;
+			viewerCounts[data.type] = count;
+			upsertViewerIcon(data.type, count);
+		} else if (normalizedEvent === 'viewer_updates' && data.meta && typeof data.meta === 'object') {
+			const incomingTypes = Object.keys(data.meta);
+			const allowedTypes = new Set(incomingTypes);
+			topBarElement.querySelectorAll(".viewerIcons").forEach(ele => {
+				if (!allowedTypes.has(ele.dataset.type)) {
+					clearTimeout(ele.timeout);
+					ele.remove();
+					delete viewerCounts[ele.dataset.type];
+				}
+			});
+			incomingTypes.forEach(type => {
+				const numericCount = extractNumeric(data.meta[type]);
+				if (numericCount === null) return;
+				viewerCounts[type] = numericCount;
+				upsertViewerIcon(type, numericCount);
+			});
+		}
+	}
+
+	function isMetaOnlyPayload(data) {
+		if (!data || typeof data !== 'object') return false;
+		if (!data.meta) return false; // Treat any truthy meta (object/string/number) as meta-only
+		const hasChatFields = !!(data.chatname || data.chatmessage || data.hasDonation || data.contentimg);
+		return !hasChatFields;
+	}
+
+	function shouldSkipEventMetaField(key, value, normalizedEvent) {
+		if (!key) return false;
+		const loweredKey = String(key).toLowerCase();
+		if (loweredKey === 'event' || loweredKey === 'eventtype' || loweredKey === 'event_type') {
+			return true;
+		}
+		if (loweredKey === 'type' && typeof value === 'string') {
+			return normalizeEventKey(value) === normalizedEvent;
+		}
+		return false;
+	}
+
 	function buildMetaSections(data) {
 		const sections = [];
 		const normalizedEvent = normalizeEventKey(data.event);
+		if (NO_META_EVENT_TYPES.has(normalizedEvent)) {
+			return sections; // Skip redundant meta for simple follow/share events
+		}
 		const meta = data && isPlainObject(data.meta) ? data.meta : null;
 		const consumedMetaKeys = new Set();
 
@@ -820,6 +970,152 @@ body.light-mode .meta-value.badge {
 			addSection('Reward Metadata', metaFields);
 		}
 
+		// TikTok: question events
+		if (normalizedEvent === 'question_new' && meta) {
+			const questionFields = [];
+			if (meta.text) {
+				questionFields.push({ label: 'Question', value: meta.text });
+				consumedMetaKeys.add('text');
+			}
+			if (meta.user) {
+				questionFields.push({ label: 'User', value: meta.user });
+				consumedMetaKeys.add('user');
+			}
+			if (meta.questionId) {
+				questionFields.push({ label: 'Question ID', value: meta.questionId });
+				consumedMetaKeys.add('questionId');
+			}
+			if (questionFields.length) {
+				addSection('Question', questionFields);
+			}
+		}
+
+		// TikTok: link mic battle
+		if (normalizedEvent === 'link_mic_battle' && meta) {
+			const battleFields = [];
+			if (meta.battleId) {
+				battleFields.push({ label: 'Battle ID', value: meta.battleId });
+				consumedMetaKeys.add('battleId');
+			}
+			if (Number.isFinite(meta.homeScore)) {
+				battleFields.push({ label: 'Home Score', value: meta.homeScore });
+				consumedMetaKeys.add('homeScore');
+			}
+			if (Number.isFinite(meta.awayScore)) {
+				battleFields.push({ label: 'Away Score', value: meta.awayScore });
+				consumedMetaKeys.add('awayScore');
+			}
+			if (meta.host) {
+				battleFields.push({ label: 'Host', value: meta.host });
+				consumedMetaKeys.add('host');
+			}
+			if (battleFields.length) {
+				addSection('Battle', battleFields);
+			}
+		}
+
+		// TikTok: link mic armies
+		if (normalizedEvent === 'link_mic_armies' && meta) {
+			const armyFields = [];
+			if (meta.battleId) {
+				armyFields.push({ label: 'Battle ID', value: meta.battleId });
+				consumedMetaKeys.add('battleId');
+			}
+			if (Array.isArray(meta.armies) && meta.armies.length) {
+				const names = meta.armies.slice(0, 4).join(', ') + (meta.armies.length > 4 ? '…' : '');
+				armyFields.push({ label: 'Armies', value: names });
+				consumedMetaKeys.add('armies');
+			}
+			if (Array.isArray(meta.scores) && meta.scores.length) {
+				const scores = meta.scores.slice(0, 4).join(', ') + (meta.scores.length > 4 ? '…' : '');
+				armyFields.push({ label: 'Scores', value: scores });
+				consumedMetaKeys.add('scores');
+			}
+			if (armyFields.length) {
+				addSection('Armies', armyFields);
+			}
+		}
+
+		// TikTok: live intro
+		if (normalizedEvent === 'live_intro' && meta) {
+			const introFields = [];
+			if (meta.title) {
+				introFields.push({ label: 'Title', value: meta.title });
+				consumedMetaKeys.add('title');
+			}
+			if (meta.host) {
+				introFields.push({ label: 'Host', value: meta.host });
+				consumedMetaKeys.add('host');
+			}
+			if (Number.isFinite(meta.duration)) {
+				introFields.push({ label: 'Duration', value: `${meta.duration}s` });
+				consumedMetaKeys.add('duration');
+			}
+			if (meta.introType) {
+				introFields.push({ label: 'Type', value: meta.introType });
+				consumedMetaKeys.add('introType');
+			}
+			if (introFields.length) {
+				addSection('Intro', introFields);
+			}
+		}
+
+		// TikTok: envelope (red packet)
+		if (normalizedEvent === 'envelope' && meta) {
+			const envelopeFields = [];
+			if (meta.sender) {
+				envelopeFields.push({ label: 'Sender', value: meta.sender });
+				consumedMetaKeys.add('sender');
+			}
+			if (Number.isFinite(meta.coins)) {
+				envelopeFields.push({ label: 'Coins', value: meta.coins });
+				consumedMetaKeys.add('coins');
+			}
+			if (meta.envelopeId) {
+				envelopeFields.push({ label: 'Envelope ID', value: meta.envelopeId });
+				consumedMetaKeys.add('envelopeId');
+			}
+			if (envelopeFields.length) {
+				addSection('Envelope', envelopeFields);
+			}
+		}
+
+		// TikTok: emotes (collapse to count/preview)
+		if (normalizedEvent === 'emote' && meta) {
+			const labels = Array.isArray(meta.emoteLabels) ? meta.emoteLabels.filter(Boolean) : [];
+			const ids = Array.isArray(meta.emoteIds) ? meta.emoteIds.filter(Boolean) : [];
+			const urls = Array.isArray(meta.emoteUrls) ? meta.emoteUrls.filter(Boolean) : [];
+			const count = labels.length || ids.length || urls.length;
+			if (count) {
+				const preview = labels.slice(0, 3).join(', ') + (labels.length > 3 ? '…' : '');
+				addSection('Emotes', [{ label: 'Emotes', value: preview || `${count} emote${count === 1 ? '' : 's'}` }]);
+				consumedMetaKeys.add('emoteLabels');
+				consumedMetaKeys.add('emoteIds');
+				consumedMetaKeys.add('emoteUrls');
+			}
+		}
+
+		// TikTok: subscribe metadata
+		if (normalizedEvent === 'subscribe' && meta) {
+			const subFields = [];
+			if (Number.isFinite(meta.tenureMonths)) {
+				const months = meta.tenureMonths;
+				subFields.push({ label: 'Tenure', value: `${months} month${months === 1 ? '' : 's'}` });
+				consumedMetaKeys.add('tenureMonths');
+			}
+			if (meta.tier) {
+				subFields.push({ label: 'Tier', value: meta.tier });
+				consumedMetaKeys.add('tier');
+			}
+			if (meta.subtitle) {
+				subFields.push({ label: 'Subtitle', value: meta.subtitle });
+				consumedMetaKeys.add('subtitle');
+			}
+			if (subFields.length) {
+				addSection('Subscription', subFields);
+			}
+		}
+
 		const type = typeof data.type === 'string' ? data.type.toLowerCase() : '';
 		if (type === 'kick' && meta) {
 			const supportFields = [];
@@ -884,7 +1180,17 @@ body.light-mode .meta-value.badge {
 			for (const key in meta) {
 				if (!Object.prototype.hasOwnProperty.call(meta, key)) continue;
 				if (consumedMetaKeys.has(key)) continue;
-				additionalFields.push({ label: formatMetaLabel(key), value: meta[key] });
+				if (shouldSkipEventMetaField(key, meta[key], normalizedEvent)) continue;
+				const value = meta[key];
+				if (Array.isArray(value)) {
+					if (value.length === 0) continue;
+					const preview = value.slice(0, 3).join(', ');
+					additionalFields.push({ label: formatMetaLabel(key), value: value.length > 3 ? `${preview}…` : preview });
+				} else if (value && typeof value === 'object') {
+					continue;
+				} else {
+					additionalFields.push({ label: formatMetaLabel(key), value: value });
+				}
 			}
 			addSection('Additional Metadata', additionalFields);
 		}
@@ -1049,11 +1355,11 @@ body.light-mode .meta-value.badge {
 	}
 
     function addMessageToOverlay(data) {
-		// Only display events from enabled sources
-		
-		if (data.meta){
-			console.log(data);
+		updateViewerTopBar(data);
+		if (isMetaOnlyPayload(data)) {
+			return;
 		}
+		// Only display events from enabled sources
 		
 		if (sources && !sources.includes(data.type)) {
 			return;
@@ -1146,8 +1452,8 @@ body.light-mode .meta-value.badge {
 		messageDiv.innerHTML = `
 			<div class="message-header">
 				<div class="message-meta">
-					${eventTypeText ? `<div class="event-type ${eventTypeClass}">${eventTypeText}</div>` : ''}
-					${eventSpecificText ? `<div class="event-specific">${eventSpecificText}</div>` : ''}
+					${eventSpecificText ? `<div class="event-specific ${eventTypeClass || ''}">${eventSpecificText}</div>` : ''}
+					${eventTypeText ? `<div class="event-type">${eventTypeText}</div>` : ''}
 					<div class="name" ${data.nameColor ? `style="text-shadow: 0 0 3px ${data.nameColor}"` : ''}>${displayName}</div>
 					${data.sourceicon ? `<img src="${data.sourceicon}" alt="${data.type}" class="source-icon">` : ''}
 				</div>
@@ -1257,7 +1563,7 @@ body.light-mode .meta-value.badge {
                 }
             }
             if (sentViaIframe) {
-                 console.log("Featured message sent via iframe.");
+                 log("Featured message sent via iframe.");
             } else {
                 console.warn('No suitable "overlay" peer found to send featured message to via iframe. Attempting WebSocket.');
                 // Fallback to WebSocket if no iframe peer was found or if sending failed
@@ -1273,10 +1579,10 @@ body.light-mode .meta-value.badge {
         if (socketserver && socketserver.readyState === WebSocket.OPEN) {
             if (messageToSend === false) {
                 socketserver.send(JSON.stringify({ overlayNinja: false }));
-                console.log("Clear message sent via WebSocket as fallback.");
+                log("Clear message sent via WebSocket as fallback.");
             } else {
                 socketserver.send(JSON.stringify({ content: messageToSend }));
-                console.log("Featured message sent via WebSocket as fallback.");
+                log("Featured message sent via WebSocket as fallback.");
             }
         } else {
             console.error('Neither iframe nor WebSocket available to send message.');
@@ -1298,7 +1604,6 @@ body.light-mode .meta-value.badge {
 
 		window.addEventListener("message", function (e) {
 			if (e.source != iframe.contentWindow) return;
-			
             // Logic to populate iframe.connectedPeers, similar to dock.html
             if ("action" in e.data && e.data.UUID && "value" in e.data) {
                 const peerUUID = e.data.UUID;
@@ -1307,24 +1612,25 @@ body.light-mode .meta-value.badge {
                 if (e.data.action === "push-connection-info" || e.data.action === "view-connection-info") {
                     if (peerValue && "label" in peerValue) {
                         iframe.connectedPeers[peerUUID] = peerValue.label;
-                         console.log("Peer connected/info: ", peerUUID, peerValue.label);
+                         log("Peer connected/info: ", peerUUID, peerValue.label);
                     } else if (peerValue === false) { 
                          delete iframe.connectedPeers[peerUUID];
-                         console.log("Peer disconnected (info explicit false): ", peerUUID);
+                         log("Peer disconnected (info explicit false): ", peerUUID);
                     }
                 } else if (e.data.action === "push-connection" || e.data.action === "view-connection") {
                     if (peerValue === false) { // Peer disconnected
                         delete iframe.connectedPeers[peerUUID];
-                        console.log("Peer disconnected: ", peerUUID);
+                        log("Peer disconnected: ", peerUUID);
                     } else if (typeof peerValue === 'object' && peerValue && "label" in peerValue) {
                         // This handles cases where a new connection directly sends its info
                         iframe.connectedPeers[peerUUID] = peerValue.label;
-                        console.log("Peer connected (direct info): ", peerUUID, peerValue.label);
+                        log("Peer connected (direct info): ", peerUUID, peerValue.label);
                     }
                 }
             }
 
 			if (e.data.dataReceived && e.data.dataReceived.overlayNinja) {
+				log(e.data.dataReceived.overlayNinja);
 				addMessageToOverlay(e.data.dataReceived.overlayNinja);
 			}
 		});

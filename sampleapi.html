@@ -382,6 +382,16 @@
             <button class="btn btn-primary" onclick="sendChannelMessage()">Send Channel Message</button>
             <p class="note">Send messages to specific channels of the API server for more granular control of API messaging.</p>
         </div>
+
+        <div class="section">
+            <h2>Message Filters</h2>
+            <div class="btn-group" role="group">
+                <button class="btn btn-info" onclick="sendCommand('emoteonly', 'toggle')">Toggle Emote-only</button>
+                <button class="btn btn-success" onclick="sendCommand('emoteonly', true)">Enable Emote-only</button>
+                <button class="btn btn-danger" onclick="sendCommand('emoteonly', false)">Disable Emote-only</button>
+            </div>
+            <p class="note">Emote-only mode keeps only emotes/emoji from chat messages and drops messages that become empty after filtering.</p>
+        </div>
 		
         <div class="section">
             <h2>Waitlist Commands</h2>

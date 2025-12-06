@@ -498,6 +498,29 @@
 				}
 			}
 
+			.typewriter-active {
+				position: relative;
+			}
+
+			.typewriter-caret {
+				display: inline-block;
+				width: 0.65ch;
+				margin-left: 1px;
+				background: currentColor;
+				animation: typewriter-caret-blink 0.9s steps(1) infinite;
+				vertical-align: baseline;
+				opacity: 0.85;
+			}
+
+			@keyframes typewriter-caret-blink {
+				0%, 49% {
+					opacity: 1;
+				}
+				50%, 100% {
+					opacity: 0;
+				}
+			}
+
 			/* example of how to remotely load a font */
 			@font-face {
 				font-family: "opendyslexic";
@@ -3160,7 +3183,12 @@
 			if (urlParams.get("hidefrom") || urlParams.get("exclude")) {
 				hideFrom = (urlParams.get("hidefrom") || urlParams.get("exclude")).toLowerCase().trim().split(",");
 			}
-			
+
+			var blockedWords = [];
+			if (urlParams.get("blockedwords")) {
+				blockedWords = urlParams.get("blockedwords").toLowerCase().split(",").map(w => w.trim()).filter(w => w);
+			}
+
 			var trivialevents = false;
 			if (urlParams.has("trivialevents")) {
 				trivialevents = true;
@@ -3507,10 +3535,15 @@
 			}
 			
 			if (urlParams.get('font')) {
-				const raw = urlParams.get('font').trim();
-				const clean = raw.replace(/^['"]|['"]$/g, '');
-				const escaped = clean.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-				document.documentElement.style.setProperty('--font-family', `"${escaped}", Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`);
+				const fontParam = urlParams.get('font').trim();
+				const fonts = fontParam.split(',').map(f => {
+					const clean = f.trim().replace(/^['"]|['"]$/g, '');
+					const escaped = clean.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+					return escaped ? `"${escaped}"` : '';
+				}).filter(Boolean);
+				if (fonts.length) {
+					document.documentElement.style.setProperty('--font-family', `${fonts.join(', ')}, Sora, Roboto, Helvetica, Geneva, Verdana, Arial, sans-serif`);
+				}
 			}
 
 			var scrolltype = "instant";
@@ -8717,6 +8750,22 @@
 						data.chatmessage = data.reply;
 					}
 
+					// Block messages containing specific words/phrases
+					if (blockedWords.length) {
+						const messageText = (data.chatmessage || '').toLowerCase();
+						const nameText = (data.chatname || '').toLowerCase();
+						for (const word of blockedWords) {
+							if (messageText.includes(word) || nameText.includes(word)) {
+								if (blurred) {
+									makeBlurred = true;
+								} else {
+									return;
+								}
+								break;
+							}
+						}
+					}
+
 					if (data.chatmessage && data.chatmessage.startsWith("!")) {
 						if (filtercommands){
 							return;
@@ -10066,6 +10115,7 @@
 				msg.overlayNinja.tid = tid; // specific or array
 				msg.overlayNinja.response = data;
 
+				console.log('[DOCK MSG] Sending at:', Date.now(), 'to tid:', tid);
 				send2Extension(msg.overlayNinja);
 			}
 			
