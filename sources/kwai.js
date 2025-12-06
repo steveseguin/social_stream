@@ -190,33 +190,25 @@
 	);
 
 	var lastURL = window.location.href;
-	var observer = null;
-	var isWatching = false;
-	
-	function resetObserver() {
-		if (observer) {
-			try {
-				observer.disconnect();
-			} catch (e) {}
-			observer = null;
-		}
-		isWatching = false;
-	}
-	
-	
+	var chatObserver = null;
+	var feedObserver = null;
+
 	function onElementInserted(target, events=false) {
 		if (!target) {
 			return;
 		}
-		
-		resetObserver();
-		
-		//console.log(target);
-		
+
+		// Determine which observer to use based on events flag
+		var existingObserver = events ? feedObserver : chatObserver;
+
+		// If already observing this target, skip
+		if (existingObserver) {
+			return;
+		}
+
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
 				if (mutation.addedNodes.length) {
-					//console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							if (mutation.addedNodes[i].skip){continue;}
@@ -227,18 +219,19 @@
 				}
 			});
 		};
-		
+
 		var config = { childList: true, subtree: false };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
-		
-		observer = new MutationObserver(onMutationsObserved);
+
+		var newObserver = new MutationObserver(onMutationsObserved);
 		try {
-			observer.observe(target, config);
-			//console.log("OBSERVING");
-			isWatching = true;
+			newObserver.observe(target, config);
+			if (events) {
+				feedObserver = newObserver;
+			} else {
+				chatObserver = newObserver;
+			}
 		} catch (e) {
-			observer = null;
-			isWatching = false;
 		}
 	}
 	
@@ -281,25 +274,25 @@
 
 	setInterval(function(){
 		try {
-		if (!isWatching){
-			//console.log("searching");
-			var header = document.querySelector("[class='info-chat-comment']");
-			if (header){
-				//console.log("loading?");
-				onElementInserted(header, false);
+			// Set up chat observer if not already watching
+			if (!chatObserver){
+				var chatContainer = document.querySelector("[class='info-chat-comment']");
+				if (chatContainer){
+					onElementInserted(chatContainer, false);
+				}
 			}
-			header = document.querySelector("[class='info-feed-list']");
-			if (header){
-				//console.log("loading?");
-				onElementInserted(header, true);
+			// Set up feed/events observer if not already watching
+			if (!feedObserver){
+				var feedContainer = document.querySelector("[class='info-feed-list']");
+				if (feedContainer){
+					onElementInserted(feedContainer, true);
+				}
 			}
-		}
-		
-		if (isWatching){
-			checkViewers();
-		}} catch(e){}
-		
-		
+
+			if (chatObserver || feedObserver){
+				checkViewers();
+			}
+		} catch(e){}
 	},2000);
 
 })();
