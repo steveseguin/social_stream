@@ -129,12 +129,23 @@ body, html {
 
 .message.hidden {
     opacity: 0;
-    transform: translateY(-30px);	
+    transform: translateY(-30px);
     max-height: 0px !important;
     padding-top: 0px !important;
     padding-bottom: 0px !important;
 	margin-bottom: 0px !important; /* This is important for accurate height calculation if we were animating out */
 	border-width: 0px !important;
+}
+
+/* Reverse mode: messages slide down instead of up */
+.reverse-mode .message {
+    transform: translateY(-30px);
+}
+.reverse-mode .message.visible {
+    transform: translateY(0);
+}
+.reverse-mode .message.hidden {
+    transform: translateY(30px);
 }
 .avatar-wrapper {
     width: 50px;
@@ -200,11 +211,20 @@ body, html {
     }
     var password = "false";
     var featuredMode = false;
+    var reversed = urlParams.has("reverse");
 
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = urlParams.has("limit") ? parseInt(urlParams.get("limit")) : 20; // Adjust as needed
     const topSpacer = document.getElementById('spacer');
+
+    // In reverse mode, hide the spacer and position container at top
+    if (reversed) {
+        topSpacer.style.display = 'none';
+        chatContainer.style.bottom = 'auto';
+        chatContainer.style.top = '0';
+        chatContainer.classList.add('reverse-mode');
+    }
 	const messageTimestamps = new Map();
     const MAX_SPACER_HEIGHT_BEFORE_RESET = 18000000; 
     const PROXIMITY_FADE_DISTANCE = (() => {
@@ -217,7 +237,8 @@ body, html {
         return 160; // Pixels before reaching top where fade begins
     })();
 
-    // Gradually fade out each message as it approaches the top edge of the chat container.
+    // Gradually fade out each message as it approaches the edge of the chat container.
+    // In normal mode, fades at top edge. In reverse mode, fades at bottom edge.
     function updateProximityFade() {
         const messages = Array.from(messageListWrapper.children).filter(
             child => child.id !== 'spacer' && child.classList.contains('message')
@@ -245,10 +266,13 @@ body, html {
             }
 
             const rect = message.getBoundingClientRect();
-            const distanceFromTop = rect.top - containerRect.top;
+            // In reverse mode, measure distance from bottom edge; otherwise from top
+            const distanceFromEdge = reversed
+                ? (containerRect.bottom - rect.bottom)
+                : (rect.top - containerRect.top);
             const fadeStarted = message.dataset.proximityFadeStarted === 'true';
 
-            if (distanceFromTop <= fadeDistance) {
+            if (distanceFromEdge <= fadeDistance) {
                 if (!fadeStarted) {
                     message.dataset.proximityFadeStarted = 'true';
                     message.classList.add('proximity-fading');
@@ -271,10 +295,11 @@ body, html {
     requestAnimationFrame(updateProximityFade);
 
     function adjustMessageWrapperScroll() {
+        if (reversed) return; // No transform needed in reverse mode
         requestAnimationFrame(() => {
             const wrapperScrollHeight = messageListWrapper.scrollHeight;
             const containerClientHeight = chatContainer.clientHeight;
-            
+
             let translateY = 0;
             if (wrapperScrollHeight > containerClientHeight) {
                 translateY = -(wrapperScrollHeight - containerClientHeight);
@@ -382,7 +407,17 @@ body, html {
 			${contentImgHtml}
 		`;
 
-		messageListWrapper.appendChild(messageDiv);
+		if (reversed) {
+			// In reverse mode, insert new messages at the top (after spacer if present)
+			const firstMessage = messageListWrapper.querySelector('.message');
+			if (firstMessage) {
+				messageListWrapper.insertBefore(messageDiv, firstMessage);
+			} else {
+				messageListWrapper.appendChild(messageDiv);
+			}
+		} else {
+			messageListWrapper.appendChild(messageDiv);
+		}
 		void messageDiv.offsetWidth; 
 		messageDiv.classList.add('visible');
 		
@@ -391,22 +426,25 @@ body, html {
 		);
 		
 		if (messages.length > MAX_MESSAGES) {
-			const oldestMessage = messages[0]; 
-			
-			if (oldestMessage) {
-				const messageStyle = getComputedStyle(oldestMessage);
-				const marginBottom = parseFloat(messageStyle.marginBottom) || 0;
-				const spaceOccupiedByOldestMessage = oldestMessage.offsetHeight + marginBottom;
-				
-				const currentSpacerHeight = parseFloat(topSpacer.style.height) || 0;
-				let newPotentialSpacerHeight = currentSpacerHeight + spaceOccupiedByOldestMessage;
+			// In reverse mode, oldest messages are at the bottom (end of array)
+			const oldestMessage = reversed ? messages[messages.length - 1] : messages[0];
 
-				if (newPotentialSpacerHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) {
-					console.log(`Spacer height (${newPotentialSpacerHeight}px) exceeded threshold (${MAX_SPACER_HEIGHT_BEFORE_RESET}px). Resetting to 0px.`);
-					newPotentialSpacerHeight = 0; // Reset the height
+			if (oldestMessage) {
+				if (!reversed) {
+					const messageStyle = getComputedStyle(oldestMessage);
+					const marginBottom = parseFloat(messageStyle.marginBottom) || 0;
+					const spaceOccupiedByOldestMessage = oldestMessage.offsetHeight + marginBottom;
+
+					const currentSpacerHeight = parseFloat(topSpacer.style.height) || 0;
+					let newPotentialSpacerHeight = currentSpacerHeight + spaceOccupiedByOldestMessage;
+
+					if (newPotentialSpacerHeight > MAX_SPACER_HEIGHT_BEFORE_RESET) {
+						console.log(`Spacer height (${newPotentialSpacerHeight}px) exceeded threshold (${MAX_SPACER_HEIGHT_BEFORE_RESET}px). Resetting to 0px.`);
+						newPotentialSpacerHeight = 0; // Reset the height
+					}
+
+					topSpacer.style.height = newPotentialSpacerHeight + 'px';
 				}
-				
-				topSpacer.style.height = newPotentialSpacerHeight + 'px';
 
 				messageTimestamps.delete(oldestMessage.id);
 				messageListWrapper.removeChild(oldestMessage);

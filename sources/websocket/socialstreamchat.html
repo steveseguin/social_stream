@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>Social Stream - Social Stream Chat</title>
+    <style>
+        .hidden { display: none!important; }
+        body {
+            background-color: #0b1220;
+            color: #e2e8f0;
+            font-size: 14px;
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .text-center { text-align: center; }
+
+        /* Header styles */
+        .channel-header {
+            background: #111827;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            border: 1px solid #1f2937;
+        }
+        .header-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-grow: 1;
+        }
+        .header-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .header-item span:first-child {
+            font-weight: bold;
+            color: #38bdf8;
+        }
+
+        /* Room input */
+        .room-input-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .room-input {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #1f2937;
+            border-radius: 4px;
+            background: #0f172a;
+            color: #e2e8f0;
+            width: 280px;
+        }
+        .room-input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        /* Buttons */
+        .auth-button, .connect-button {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: #0b1220;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            transition: transform 0.08s ease, box-shadow 0.12s ease;
+            display: inline-block;
+        }
+        .auth-button:hover, .connect-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+        }
+        .disconnect-button {
+            background: linear-gradient(135deg, #ef4444, #f97316);
+            color: #0b1220;
+        }
+
+        /* Stats grid */
+        .stats-container {
+            background: #111827;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 1px solid #1f2937;
+        }
+        .stats-container h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            color: #38bdf8;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .stat-box {
+            background: #0f172a;
+            padding: 12px 8px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid #1f2937;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #38bdf8;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+
+        /* Chat container */
+        .chat-container {
+            background: #111827;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #1f2937;
+        }
+        .chat-container h3 {
+            margin: 0 0 12px 0;
+            font-size: 16px;
+            color: #38bdf8;
+        }
+        #textarea {
+            flex-grow: 1;
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            background: #0b1220;
+            border: 1px solid #1f2937;
+            border-radius: 4px;
+            padding: 10px;
+        }
+        #textarea div {
+            padding: 4px 0;
+            border-bottom: 1px solid #1f2937;
+            word-wrap: break-word;
+        }
+        #textarea div:last-child {
+            border-bottom: none;
+        }
+        .chat-input {
+            display: flex;
+            gap: 8px;
+        }
+        .chat-input input {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid #1f2937;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        .chat-input input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+
+        /* Sidebar components */
+        .connection-status {
+            background: #111827;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 1px solid #1f2937;
+        }
+        .status-header {
+            font-weight: bold;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #38bdf8;
+        }
+        .status-item {
+            padding: 4px 0;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .status-connected {
+            color: #4ade80;
+        }
+        .status-disconnected {
+            color: #f87171;
+        }
+
+        .recent-events {
+            background: #111827;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 1px solid #1f2937;
+        }
+        .recent-events h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            color: #38bdf8;
+        }
+        .event-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #1f2937;
+            font-size: 13px;
+            color: #94a3b8;
+        }
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Landing page */
+        .landing-container {
+            background: #111827;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 1px solid #1f2937;
+        }
+        .landing-title {
+            font-size: 32px;
+            margin: 0 0 10px 0;
+            color: #38bdf8;
+        }
+        .landing-subtitle {
+            font-size: 18px;
+            color: #94a3b8;
+            margin: 0 0 30px 0;
+        }
+        .landing-description {
+            margin-top: 30px;
+            color: #94a3b8;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .token-input {
+            margin-top: 10px;
+        }
+        .token-input input {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #1f2937;
+            border-radius: 4px;
+            background: #0f172a;
+            color: #e2e8f0;
+            width: 280px;
+        }
+        .token-input input:focus {
+            outline: none;
+            border-color: #38bdf8;
+        }
+        .token-input label {
+            display: block;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+        a {
+            color: #38bdf8;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="main-content">
+            <div class="auth">
+                <div class="landing-container">
+                    <h1 class="landing-title">Social Stream Chat</h1>
+                    <p class="landing-subtitle">Connect to chat.socialstream.ninja</p>
+
+                    <div class="room-input-container" style="justify-content: center; margin-bottom: 10px;">
+                        <input type="text" id="initial-room-input" class="room-input" placeholder="Enter Room ID (from Dashboard)">
+                    </div>
+
+                    <div class="token-input">
+                        <label for="initial-token-input">Token (optional - leave blank for guest access)</label>
+                        <input type="text" id="initial-token-input" class="room-input" placeholder="JWT Token (optional)">
+                    </div>
+
+                    <button id="initial-connect-button" class="auth-button" style="margin-top: 20px;">Connect to Chat</button>
+
+                    <div class="landing-description">
+                        <p>Enter your Social Stream Chat room ID to connect to the live chat.</p>
+                        <p>Get your Room ID from the <a href="https://chat.socialstream.ninja/dashboard.html" target="_blank">Dashboard</a>.</p>
+                        <p style="margin-top: 15px;"><strong>Note:</strong> If the room allows guest access, you can connect without a token. Otherwise, you'll need to obtain a token from the room owner.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hidden socket">
+                <div class="channel-header">
+                    <div class="header-info">
+                        <div class="header-item">
+                            <span>Room:</span>
+                            <span id="current-room">Not connected</span>
+                        </div>
+                        <div class="room-input-container">
+                            <input type="text" id="room-input" class="room-input" placeholder="Enter room ID">
+                            <button id="connect-button" class="connect-button">Connect</button>
+                        </div>
+                    </div>
+                    <button id="disconnect-button" class="disconnect-button">Disconnect</button>
+                </div>
+
+                <div class="stats-container">
+                    <h3>Connection Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="message-count">0</div>
+                            <div class="stat-label">Messages</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="uptime">0:00</div>
+                            <div class="stat-label">Connected</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <h3>Chat Messages</h3>
+                    <div id="textarea"></div>
+                    <div class="chat-input">
+                        <input type="text" id="input-text" placeholder="Send Message">
+                        <button id="sendmessage" class="auth-button">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar hidden socket">
+            <div class="connection-status">
+                <div class="status-header">Connection Status</div>
+                <div class="status-item">
+                    <span>WebSocket: </span>
+                    <span id="ws-status" class="status-disconnected">Disconnected</span>
+                </div>
+                <div class="status-item">
+                    <span>Room: </span>
+                    <span id="room-status" class="status-disconnected">Not connected</span>
+                </div>
+            </div>
+
+            <div class="recent-events">
+                <h4>Recent Events</h4>
+                <div id="events-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="socialstreamchat.js"></script>
+</body>
+</html>
