@@ -354,7 +354,10 @@
             })(),
             motion: normalizeBoolean(getParam('motion') ?? getParam('mapmotion') ?? getParam('mapMotion'), false),
             autoStart: normalizeBoolean(getParam('autostart') ?? getParam('autoStart'), true),
-            autoFitMarkers: normalizeBoolean(getParam('autofit') ?? getParam('autoFit') ?? getParam('autofitmarkers') ?? getParam('autoFitMarkers') ?? getParam('mapautofit') ?? getParam('mapAutoFit'), false)
+            autoFitMarkers: normalizeBoolean(getParam('autofit') ?? getParam('autoFit') ?? getParam('autofitmarkers') ?? getParam('autoFitMarkers') ?? getParam('mapautofit') ?? getParam('mapAutoFit'), false),
+            hideNumbers: normalizeBoolean(getParam('hidenumbers') ?? getParam('hideNumbers') ?? getParam('maphidenumbers') ?? getParam('mapHideNumbers'), false),
+            colorIntensity: normalizeBoolean(getParam('colorintensity') ?? getParam('colorIntensity') ?? getParam('mapcolorintensity') ?? getParam('mapColorIntensity'), false),
+            mapScale: parseFloat(getParam('mapscale') ?? getParam('mapScale') ?? '100') / 100 || 1
         };
 
         const VALID_MAP_TYPES = new Set(['country', 'state', 'city']);
@@ -369,6 +372,11 @@
         const locationLabelEl = document.getElementById('location-label');
         const topListEl = document.getElementById('top-list');
         const hudEl = document.getElementById('hud');
+        // Apply initial map scale after hudEl is defined
+        if (settings.mapScale !== 1) {
+            hudEl.style.transform = `scale(${settings.mapScale})`;
+            hudEl.style.transformOrigin = 'bottom right';
+        }
         const svg = d3.select('#world-map');
         const mapLayer = svg.append('g');
         const markerLayer = svg.append('g');
@@ -768,6 +776,8 @@
         }
         applyStylePreset(settings.mapStyle);
         applyMotionPreference(settings.motion);
+        // Apply map scale is called after hudEl is defined
+
         if (settings.accent) document.documentElement.style.setProperty('--accent', settings.accent);
         if (settings.accentAlt) document.documentElement.style.setProperty('--accent-2', settings.accentAlt);
 
@@ -1729,6 +1739,15 @@
             applyMotionPreference(settings.motion);
         }
 
+        function applyMapScale() {
+            // Apply scale to the HUD element
+            if (hudEl) {
+                const scale = settings.mapScale || 1;
+                hudEl.style.transform = scale !== 1 ? `scale(${scale})` : '';
+                hudEl.style.transformOrigin = 'bottom right';
+            }
+        }
+
         function setMultiVote(value) {
             const next = !!value;
             if (settings.multiVote === next) return;
@@ -1805,7 +1824,22 @@
             enter.append('text')
                 .attr('text-anchor', 'middle')
                 .attr('y', 4)
-                .text(d => d.count);
+                .text(d => settings.hideNumbers ? '' : d.count)
+                .style('display', settings.hideNumbers ? 'none' : null);
+
+            // Calculate color based on settings
+            function getMarkerColor(count, maxCount) {
+                if (settings.colorIntensity) {
+                    // Red gradient: light pink (few votes) to intense red (many votes)
+                    const ratio = maxCount > 0 ? count / maxCount : 0;
+                    const minLightness = 35;  // intense red
+                    const maxLightness = 85;  // light pink
+                    const lightness = maxLightness - (ratio * (maxLightness - minLightness));
+                    const saturation = 70 + (ratio * 30); // 70-100% saturation
+                    return `hsl(0, ${saturation}%, ${lightness}%)`;
+                }
+                return null; // use default CSS accent color
+            }
 
             markers.merge(enter)
                 .attr('transform', d => {
@@ -1815,11 +1849,14 @@
                 .select('circle')
                 .transition().duration(400)
                 .attr('r', d => 8 + Math.log(d.count + 1) * 6)
-                .style('opacity', d => 0.4 + 0.6 * (d.count / (maxCount || 1)));
+                .style('opacity', d => settings.colorIntensity ? 0.85 : (0.4 + 0.6 * (d.count / (maxCount || 1))))
+                .style('fill', d => getMarkerColor(d.count, maxCount))
+                .style('stroke', d => getMarkerColor(d.count, maxCount));
 
             markers.merge(enter)
                 .select('text')
-                .text(d => d.count);
+                .text(d => settings.hideNumbers ? '' : d.count)
+                .style('display', settings.hideNumbers ? 'none' : null);
         }
 
         function triggerPulse(feature) {
@@ -1969,6 +2006,41 @@
                     }
                 }
             }
+            // Handle hide numbers setting
+            if (payload.mapHideNumbers && Object.prototype.hasOwnProperty.call(payload.mapHideNumbers, 'setting')) {
+                settings.hideNumbers = normalizeBoolean(payload.mapHideNumbers.setting, settings.hideNumbers);
+                if (ready) updateMarkers();
+            }
+            if (payload.maphidenumbers && Object.prototype.hasOwnProperty.call(payload.maphidenumbers, 'setting')) {
+                settings.hideNumbers = normalizeBoolean(payload.maphidenumbers.setting, settings.hideNumbers);
+                if (ready) updateMarkers();
+            }
+            // Handle color intensity setting
+            if (payload.mapColorIntensity && Object.prototype.hasOwnProperty.call(payload.mapColorIntensity, 'setting')) {
+                settings.colorIntensity = normalizeBoolean(payload.mapColorIntensity.setting, settings.colorIntensity);
+                if (ready) updateMarkers();
+            }
+            if (payload.mapcolorintensity && Object.prototype.hasOwnProperty.call(payload.mapcolorintensity, 'setting')) {
+                settings.colorIntensity = normalizeBoolean(payload.mapcolorintensity.setting, settings.colorIntensity);
+                if (ready) updateMarkers();
+            }
+            // Handle map scale setting
+            if (payload.mapScale && (payload.mapScale.setting !== undefined || payload.mapScale.numbersetting !== undefined)) {
+                const rawScale = payload.mapScale.numbersetting ?? payload.mapScale.setting;
+                const newScale = parseFloat(rawScale) / 100 || 1;
+                if (newScale !== settings.mapScale) {
+                    settings.mapScale = newScale;
+                    applyMapScale();
+                }
+            }
+            if (payload.mapscale && (payload.mapscale.setting !== undefined || payload.mapscale.numbersetting !== undefined)) {
+                const rawScale = payload.mapscale.numbersetting ?? payload.mapscale.setting;
+                const newScale = parseFloat(rawScale) / 100 || 1;
+                if (newScale !== settings.mapScale) {
+                    settings.mapScale = newScale;
+                    applyMapScale();
+                }
+            }
             hudEl.classList.toggle('hidden', !settings.showList && !settings.showTotals);
             updateStatusBanner();
         }
@@ -1983,6 +2055,17 @@
             if (data.settings) {
                 debugLog('settings update received', data.settings);
                 applySettingsFromPayload(data.settings);
+                updateStats();
+                updateTopList();
+                return;
+            }
+
+            // Handle individual setting updates from popup (saveSetting format)
+            if (data.setting && data.value !== undefined) {
+                debugLog('individual setting update received', { setting: data.setting, value: data.value });
+                const payload = {};
+                payload[data.setting] = { setting: data.value };
+                applySettingsFromPayload(payload);
                 updateStats();
                 updateTopList();
                 return;

@@ -7170,7 +7170,7 @@ socketserver.addEventListener("message", async function (event) {
 			} else if (data.action && data.action === "getpollpresets") {
 				// Return list of saved poll presets
 				getPollPresets(function(presets) {
-					if (data.get && e.data.UUID) {
+					if (data.get) {
 						var ret = {};
 						ret.callback = {};
 						ret.callback.get = data.get;
