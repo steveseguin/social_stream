@@ -366,7 +366,8 @@
 			return true;
 		}
 		const player = document.querySelector(".html5-video-player");
-		return !!(player && (player.classList.contains("ytp-fullscreen") || player.classList.contains("ytp-big-mode")));
+		// Only hide in actual fullscreen, not theater/cinema mode (which also has ytp-big-mode)
+		return !!(player && player.classList.contains("ytp-fullscreen"));
 	}
 
 	function syncAudioPickerVisibility() {
