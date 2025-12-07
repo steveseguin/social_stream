@@ -216,6 +216,7 @@
 				if (mutation.addedNodes.length) {
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
+							console.warn(mutation.addedNodes);
 							if (mutation.addedNodes[i].skip){continue;}
 							mutation.addedNodes[i].skip = true;
 							processMessage(mutation.addedNodes[i], events);

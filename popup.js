@@ -2253,10 +2253,12 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 
                     ele.value = storedValue;
 
-                    if (key == "ttsprovider" && paramNum == 2) { 
-                        handleTTSProvider2Visibility(ele.value); 
-                    } else if (key == "ttsprovider" && paramNum == 10) { // Ensure paramNum is compared as number or string consistently
-                        handleTTSProvider10Visibility(ele.value); 
+                    if (key == "ttsprovider" && paramNum == 2) {
+                        handleTTSProvider2Visibility(ele.value);
+                    } else if (key == "ttsprovider" && paramNum == 10) {
+                        handleTTSProvider10Visibility(ele.value);
+                    } else if (key == "ttsprovider" && paramNum == 18) {
+                        handleTTSProvider18Visibility(ele.value);
                     }
                 } else if (storedValue !== undefined) {
                     ele.value = storedValue;
@@ -2898,6 +2900,33 @@ function handleTTSProvider2Visibility(provider) {
     }
 }
 
+// Handle Flow Actions TTS provider visibility (param18)
+function handleTTSProvider18Visibility(provider) {
+    // Hide all TTS18 elements
+    ["systemTTS18", "elevenlabsTTS18", "googleTTS18", "geminiTTS18", "speechifyTTS18", "kokoroTTS18", "kittenTTS18", "openaiTTS18"].forEach(id => {
+        document.getElementById(id)?.classList.add("hidden");
+    });
+
+    // Show element based on selected provider
+    if (provider == "system") {
+        document.getElementById("systemTTS18")?.classList.remove("hidden");
+    } else if (provider == "elevenlabs") {
+        document.getElementById("elevenlabsTTS18")?.classList.remove("hidden");
+    } else if (provider == "google") {
+        document.getElementById("googleTTS18")?.classList.remove("hidden");
+    } else if (provider == "gemini") {
+        document.getElementById("geminiTTS18")?.classList.remove("hidden");
+    } else if (provider == "speechify") {
+        document.getElementById("speechifyTTS18")?.classList.remove("hidden");
+    } else if (provider == "kokoro") {
+        document.getElementById("kokoroTTS18")?.classList.remove("hidden");
+    } else if (provider == "kitten") {
+        document.getElementById("kittenTTS18")?.classList.remove("hidden");
+    } else if (provider == "openai") {
+        document.getElementById("openaiTTS18")?.classList.remove("hidden");
+    }
+}
+
 // Handle the deprecated sentiment setting
 function handleDeprecatedSentiment() {
     try {
@@ -3466,6 +3495,17 @@ function handleOptionParam(ele, targetId, paramType, sync) {
         if (paramValue === 'ttsprovider') {
             // Clean TTS provider-specific parameters when changing providers
             targetElement.raw = removeTTSProviderParams(targetElement.raw, ele.value);
+
+            // Handle visibility for TTS provider options based on paramNum
+            if (paramNum === '18') {
+                handleTTSProvider18Visibility(ele.value);
+            } else if (paramNum === '10') {
+                handleTTSProvider10Visibility(ele.value);
+            } else if (paramNum === '2') {
+                handleTTSProvider2Visibility(ele.value);
+            } else if (paramNum === '' || paramNum === '1') {
+                handleTTSProviderVisibility(ele.value);
+            }
         }
         
         // Check if this is a select element with language/voice options
@@ -5986,6 +6026,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			populateDropdown('systemLanguageSelect');
 			populateDropdown('languageSelect2');
 			populateDropdown('systemLanguageSelect10');
+			populateDropdown('systemLanguageSelect18');
 
 			if (typeof TTSManager !== 'undefined') {
 				try {
@@ -6318,7 +6359,102 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		spotifyClientSecretInput.addEventListener('change', saveSpotifyCredentials);
 		spotifyClientSecretInput.addEventListener('blur', saveSpotifyCredentials);
 	}
-	
+
+	// Spotify Command Permissions
+	function initSpotifyCommandSettings() {
+		const commandRows = document.querySelectorAll('.spotify-command-row');
+		if (!commandRows.length) return;
+
+		// Load saved settings
+		chrome.storage.local.get(['settings'], function(result) {
+			// Settings stored as { json: string, object: parsed } - access .object
+			const permissions = result.settings?.spotifyCommandPermissions?.object || {};
+			const disabledCommands = result.settings?.spotifyDisabledCommands?.object || [];
+
+			commandRows.forEach(row => {
+				const command = row.dataset.command;
+				const enabledCheckbox = row.querySelector('.spotify-cmd-enabled');
+				const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]');
+
+				// Apply saved enabled state
+				if (enabledCheckbox && disabledCommands.includes(command)) {
+					enabledCheckbox.checked = false;
+				}
+
+				// Apply saved role permissions
+				if (permissions[command] && permissions[command].length > 0) {
+					const savedRoles = permissions[command];
+					roleCheckboxes.forEach(cb => {
+						cb.checked = savedRoles.includes(cb.value);
+					});
+				}
+			});
+		});
+
+		// Save on change
+		commandRows.forEach(row => {
+			const enabledCheckbox = row.querySelector('.spotify-cmd-enabled');
+			const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]');
+
+			if (enabledCheckbox) {
+				enabledCheckbox.addEventListener('change', () => saveSpotifyCommandSettings());
+			}
+			roleCheckboxes.forEach(cb => {
+				cb.addEventListener('change', () => saveSpotifyCommandSettings());
+			});
+		});
+	}
+
+	function saveSpotifyCommandSettings() {
+		const commandRows = document.querySelectorAll('.spotify-command-row');
+		const permissions = {};
+		const disabledCommands = [];
+
+		commandRows.forEach(row => {
+			const command = row.dataset.command;
+			const enabledCheckbox = row.querySelector('.spotify-cmd-enabled');
+			const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]:checked');
+
+			if (enabledCheckbox && !enabledCheckbox.checked) {
+				disabledCommands.push(command);
+			}
+
+			// Collect all checked roles
+			const roles = [];
+			roleCheckboxes.forEach(cb => roles.push(cb.value));
+
+			// If no roles selected, use default from data attribute
+			if (roles.length === 0) {
+				const defaultRoles = row.dataset.defaultRoles;
+				if (defaultRoles) {
+					roles.push(...defaultRoles.split(','));
+				}
+			}
+
+			permissions[command] = roles;
+		});
+
+		// Save to storage
+		chrome.runtime.sendMessage({
+			cmd: "saveSetting",
+			type: "json",
+			setting: "spotifyCommandPermissions",
+			value: JSON.stringify(permissions)
+		});
+
+		chrome.runtime.sendMessage({
+			cmd: "saveSetting",
+			type: "json",
+			setting: "spotifyDisabledCommands",
+			value: JSON.stringify(disabledCommands)
+		});
+
+		console.log('Spotify command settings saved:', { permissions, disabledCommands });
+	}
+
+	// Initialize on page load
+	initSpotifyCommandSettings();
+
 	// Spotify Auth Button
 	const spotifyAuthButton = document.getElementById('spotifyAuthButton');
 	const spotifyAuthStatus = document.getElementById('spotifyAuthStatus');

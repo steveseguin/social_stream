@@ -808,12 +808,22 @@ class SpotifyIntegration {
             '!sr': ['anyone']
         };
 
-        // Allow settings to override defaults
-        if (this.settings?.spotifyCommandPermissions) {
-            return { ...defaults, ...this.settings.spotifyCommandPermissions };
+        // Allow settings to override defaults (stored as { json: string, object: parsed })
+        const savedPerms = this.settings?.spotifyCommandPermissions?.object || this.settings?.spotifyCommandPermissions;
+        if (savedPerms && typeof savedPerms === 'object') {
+            return { ...defaults, ...savedPerms };
         }
 
         return defaults;
+    }
+
+    // Check if a command is disabled
+    isCommandDisabled(cmd) {
+        const disabled = this.settings?.spotifyDisabledCommands?.object || this.settings?.spotifyDisabledCommands || [];
+        if (Array.isArray(disabled)) {
+            return disabled.includes(cmd);
+        }
+        return false;
     }
 
     async handleCommand(command, data = {}) {
@@ -821,6 +831,11 @@ class SpotifyIntegration {
         const parts = lowerCommand.split(' ');
         const cmd = parts[0];
         const args = parts.slice(1).join(' ');
+
+        // Check if command is disabled
+        if (this.isCommandDisabled(cmd)) {
+            return null; // Silent fail for disabled command
+        }
 
         const permissions = this.getCommandPermissions();
 
