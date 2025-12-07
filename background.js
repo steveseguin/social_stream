@@ -4829,6 +4829,45 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			
 			// Respond immediately - tokens are already cleared in memory
 			sendResponse({success: true});
+		} else if (request.spotifyAction) {
+			// Handle Spotify actions from Event Flow
+			if (spotify && settings.spotifyEnabled) {
+				(async () => {
+					try {
+						let result;
+						switch (request.spotifyAction) {
+							case 'skip':
+								result = await spotify.skip();
+								break;
+							case 'previous':
+								result = await spotify.previous();
+								break;
+							case 'pause':
+								result = await spotify.pause();
+								break;
+							case 'resume':
+								result = await spotify.resume();
+								break;
+							case 'volume':
+								result = await spotify.setVolume(request.volume);
+								break;
+							case 'queue':
+								result = await spotify.addToQueue(request.query);
+								break;
+							default:
+								result = { success: false, message: 'Unknown Spotify action' };
+						}
+						console.log('[Spotify Action]', request.spotifyAction, result);
+						sendResponse({ success: result?.success, message: result?.message });
+					} catch (error) {
+						console.error('[Spotify Action Error]', error);
+						sendResponse({ success: false, error: error.message });
+					}
+				})();
+				return true; // Keep message channel open for async response
+			} else {
+				sendResponse({ success: false, error: 'Spotify not enabled or not connected' });
+			}
 		} else if (request.cmd && request.target){
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P(request, request.target);
@@ -11665,30 +11704,33 @@ async function applyBotActions(data, tab = false) {
 		
 		// Handle Spotify commands
 		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
-			const response = spotify.handleCommand(data.chatmessage);
-			if (response) {
-				const botResponse = {
-					chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
-					chatbadges: "",
-					backgroundColor: "",
-					textColor: "",
-					chatmessage: response,
-					chatimg: "https://socialstream.ninja/icons/bot.png",
-					hasDonation: "",
-					membership: "",
-					isRelay: false,
-					type: "spotify",
-					bot: "spotify",
-					timestamp: Date.now()
-				};
-				
-				sendToS10({ ...botResponse });
-				sendToSSC({ ...botResponse });
-				setTimeout(() => {
-					sendToDestinations({ ...botResponse });
-				}, 50);
-				return null; // Don't process the original command further
-			}
+			// Pass message data for role-based permission checking
+			spotify.handleCommand(data.chatmessage, data).then(response => {
+				if (response) {
+					const botResponse = {
+						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
+						chatbadges: "",
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: response,
+						chatimg: "https://socialstream.ninja/icons/bot.png",
+						hasDonation: "",
+						membership: "",
+						isRelay: false,
+						type: "spotify",
+						bot: "spotify",
+						timestamp: Date.now()
+					};
+
+					sendToS10({ ...botResponse });
+					sendToSSC({ ...botResponse });
+					setTimeout(() => {
+						sendToDestinations({ ...botResponse });
+					}, 50);
+				}
+			}).catch(err => {
+				console.warn('Spotify command error:', err);
+			});
 		}
 		
 		if (settings.dice && data.chatname && data.chatmessage && (data.chatmessage.toLowerCase().startsWith("!dice ") || data.chatmessage.toLowerCase() === "!dice")) {

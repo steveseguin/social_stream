@@ -56,6 +56,8 @@ chrome.runtime.onMessage.addListener(
 
 // Get initial settings
 chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response) {
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
+    response = response || {};
     if ("settings" in response) {
         settings = response.settings;
     }

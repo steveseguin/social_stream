@@ -537,6 +537,49 @@ label {
     border-color: var(--state-color);
 }
 
+/* --- Action Group Collapsible Sections --- */
+.action-group {
+    margin-bottom: 4px;
+}
+
+.action-group-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    background-color: var(--background-base);
+    border: 1px solid var(--border-color);
+    transition: background-color var(--transition-speed-fast) ease;
+    user-select: none;
+}
+
+.action-group-header:hover {
+    background-color: var(--background-surface);
+}
+
+.action-group-toggle {
+    font-size: 0.7rem;
+    margin-right: 8px;
+    color: var(--text-secondary);
+    width: 10px;
+}
+
+.action-group-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.action-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 4px 0 4px 8px;
+    margin-left: 8px;
+    border-left: 2px solid var(--border-color);
+}
+
 
 /* --- Flow Editor Main Area --- */
 .flow-editor { /* Panel containing header (name, save) and canvas container */
