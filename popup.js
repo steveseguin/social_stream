@@ -5472,7 +5472,8 @@ const PollManager = {
             pollTimer: document.querySelector('[data-numbersetting="pollTimer"]').value,
             pollTimerState: document.querySelector('[data-setting="pollTimerState"]').checked,
             pollTally: document.querySelector('[data-setting="pollTally"]').checked,
-            pollSpam: document.querySelector('[data-setting="pollSpam"]').checked
+            pollSpam: document.querySelector('[data-setting="pollSpam"]').checked,
+            pollDonationWeighted: document.querySelector('[data-setting="pollDonationWeighted"]')?.checked || false
         };
     },
 
@@ -5502,7 +5503,8 @@ const PollManager = {
             pollTimer: 60,
             pollTimerState: false,
             pollTally: false,
-            pollSpam: false
+            pollSpam: false,
+            pollDonationWeighted: false
         };
 
         const elements = {
@@ -5513,7 +5515,8 @@ const PollManager = {
             '[data-numbersetting="pollTimer"]': defaultSettings.pollTimer,
             '[data-setting="pollTimerState"]': defaultSettings.pollTimerState,
             '[data-setting="pollTally"]': defaultSettings.pollTally,
-            '[data-setting="pollSpam"]': defaultSettings.pollSpam
+            '[data-setting="pollSpam"]': defaultSettings.pollSpam,
+            '[data-setting="pollDonationWeighted"]': defaultSettings.pollDonationWeighted
         };
 
         for (const [selector, value] of Object.entries(elements)) {
@@ -5548,7 +5551,8 @@ const PollManager = {
             '[data-numbersetting="pollTimer"]': poll.settings.pollTimer,
             '[data-setting="pollTimerState"]': poll.settings.pollTimerState,
             '[data-setting="pollTally"]': poll.settings.pollTally,
-            '[data-setting="pollSpam"]': poll.settings.pollSpam
+            '[data-setting="pollSpam"]': poll.settings.pollSpam,
+            '[data-setting="pollDonationWeighted"]': poll.settings.pollDonationWeighted || false
         };
 
         for (const [selector, value] of Object.entries(elements)) {

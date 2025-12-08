@@ -1564,13 +1564,13 @@ input:checked + .slider:before {
                 <span class="slider round"></span>
             </label>
         </button>
-        <div  style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0;">
-            <button class="glowingButton showalways" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; position: sticky; top: 35px; z-index: 10; padding: 0;" data-action="fakemsg">
+        <div style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0; position: sticky; top: 35px; z-index: 99; background: var(--body-background-color);">
+            <button class="glowingButton showalways" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0;" data-action="fakemsg">
                 <span data-translate="trigger-fake-message">Trigger a fake test message</span>
             </button>
             <button
                 class="glowingButton showalways"
-                style="margin: 0 1px 0 1px; width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; position: sticky; top: 35px; z-index: 10; padding: 0; max-width: 100px;"
+                style="margin: 0 1px 0 1px; width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0; max-width: 100px;"
                 data-action="cleardock"
                 title="Clears messages in the dock, excluding pinned messages. Hold CTRL while clicking to clear pinned messages as well."
             >
@@ -8951,7 +8951,14 @@ input:checked + .slider:before {
 										<input type="checkbox" data-target="poll" data-setting="pollTally" />
 										<span class="slider round"></span>
 									</label>
-									<span> ✌️ Show number of votes instead of perecent</span>
+									<span> ✌️ Show number of votes instead of percent</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="poll" data-setting="pollDonationWeighted" />
+										<span class="slider round"></span>
+									</label>
+									<span title="Donations add bonus votes equal to their USD value. A $5 donation = 5 bonus votes. Regular chat votes still count as 1."> 💰 Donation-weighted voting (Dono Poll)</span>
 								</div>
 								<br>
 								<div>

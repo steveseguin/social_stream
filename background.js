@@ -8625,8 +8625,8 @@ function loadPollPreset(pollId) {
 function updatePollSettings(newSettings) {
 	try {
 		// Update poll-related settings
-		const pollKeys = ['pollType', 'pollQuestion', 'multipleChoiceOptions', 
-						 'pollStyle', 'pollTimer', 'pollTimerState', 'pollTally', 'pollSpam'];
+		const pollKeys = ['pollType', 'pollQuestion', 'multipleChoiceOptions',
+						 'pollStyle', 'pollTimer', 'pollTimerState', 'pollTally', 'pollSpam', 'pollDonationWeighted'];
 		
 		pollKeys.forEach(key => {
 			if (newSettings.hasOwnProperty(key)) {
@@ -8675,7 +8675,8 @@ function createNewPoll(pollSettings) {
 			pollTimer: '60',
 			pollTimerState: false,
 			pollTally: true,
-			pollSpam: false
+			pollSpam: false,
+			pollDonationWeighted: false
 		};
 		
 		// Merge with provided settings
