@@ -128,7 +128,7 @@
 					<h3>1. Installation</h3>
 					<p>Before you can use Social Stream Ninja, you'll need to install it first. There are multiple ways to install the browser extension:</p>
 					<ul class="guide-list">
-						<li><strong>Manual Installation (recommended)::</strong> For the most up-to-date version, install manually in developer mode.</li>
+						<li><strong>Manual Installation (recommended):</strong> For the most up-to-date version, install manually in developer mode.</li>
 						<li><strong>Chrome Web Store:</strong> Install via Chrome Web Store for the easiest setup experience.</li>
 					</ul>
 					<p>For detailed installation instructions, please visit the <a href="../docs/download.html">Download page</a>.</p>
@@ -294,18 +294,18 @@
 		<section id="extension-advanced" class="guide-section">
 			<div class="container">
 				<h2>Advanced Features (Browser Extension)</h2>
-				
+
 				<div class="guide-card">
 					<h3>Text-to-Speech</h3>
 					<p>Social Stream Ninja can read chat messages aloud using Text-to-Speech technology:</p>
-					
+
 					<h4>Setting Up TTS:</h4>
 					<ol class="guide-steps">
 						<li>Add <code>&speech=en-US</code> to your featured.html or dock.html URL</li>
 						<li>For other languages, change the language code (e.g., <code>&speech=fr-FR</code> for French)</li>
 						<li>Customize voice settings with parameters like <code>&pitch=1&volume=1&rate=1</code></li>
 					</ol>
-					
+
 					<h4>Premium TTS Options:</h4>
 					<ul class="guide-list">
 						<li><strong>Kokoro TTS:</strong> Browser-based premium quality TTS (included free)</li>
@@ -314,24 +314,195 @@
 						<li><strong>Speechify:</strong> Natural-sounding premium voices</li>
 					</ul>
 				</div>
-				
+
 				<div class="guide-card">
 					<h3>Queuing and Pinning Messages</h3>
 					<p>Organize how messages appear in your overlay:</p>
-					
+
 					<h4>Queuing Messages:</h4>
 					<ol class="guide-steps">
 						<li>Hold CTRL (or Cmd on Mac) while clicking messages in the dashboard</li>
 						<li>Click the "Next in Queue" button to display them one by one</li>
 						<li>Messages will appear in your overlay in the order they were queued</li>
 					</ol>
-					
+
 					<h4>Pinning Messages:</h4>
 					<ol class="guide-steps">
 						<li>Hold ALT while clicking a message in the dashboard</li>
 						<li>The message will stay pinned at the top of the dashboard</li>
 						<li>To unpin, hold ALT and click the pinned message again</li>
 					</ol>
+				</div>
+
+				<div class="guide-card" id="extension-stream-events">
+					<h3>Stream Events Capture</h3>
+					<p>Capture non-chat events like new followers, subscriptions, raids, and donations from your streaming platforms.</p>
+
+					<h4>How to Enable:</h4>
+					<ol class="guide-steps">
+						<li>Click the Social Stream Ninja extension icon</li>
+						<li>Find the <strong>"Capture Stream Events"</strong> toggle in settings</li>
+						<li>Enable it to start receiving alerts</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Note:</strong> Donation-style events (Super Chats, Bits, Tips) forward automatically regardless of this toggle. The toggle is primarily for follower/subscriber alerts.</p>
+					</div>
+
+					<h4>Events Captured by Platform:</h4>
+					<div class="platform-guide">
+						<h4>YouTube</h4>
+						<ul class="guide-list">
+							<li>New memberships and membership gifts</li>
+							<li>Membership upgrades and milestones</li>
+							<li>Super Chat and Super Sticker donations</li>
+							<li>Subscriber and viewer counts</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>Twitch</h4>
+						<ul class="guide-list">
+							<li>New subscribers, resubs, and gift subs</li>
+							<li>Followers and follower count</li>
+							<li>Bits/Cheers and channel point redemptions</li>
+							<li>Raids with viewer count</li>
+						</ul>
+					</div>
+
+					<div class="platform-guide">
+						<h4>TikTok, Kick, & Others</h4>
+						<ul class="guide-list">
+							<li>Followers and gifts (TikTok)</li>
+							<li>Subscriptions and tips (Kick)</li>
+							<li>Viewer counts across most platforms</li>
+						</ul>
+					</div>
+
+					<p>For a complete list of event payloads and data fields, see the <a href="../docs/event-reference.html">Event Reference</a> documentation.</p>
+				</div>
+
+				<div class="guide-card" id="extension-event-flow">
+					<h3>Event Flow Editor</h3>
+					<p>The Event Flow Editor is a powerful node-based automation system for building custom workflows. It's the "advanced automation" layer that lets you script your own routing logic.</p>
+
+					<h4>What You Can Do:</h4>
+					<ul class="guide-list">
+						<li><strong>Relay chat between platforms</strong> with smart filters (e.g., mirror Twitch to Discord but block commands)</li>
+						<li><strong>Build custom commands</strong> with AND/OR/NOT logic gates</li>
+						<li><strong>Trigger overlays and audio</strong> based on specific events or keywords</li>
+						<li><strong>Control OBS</strong> scenes and sources automatically</li>
+						<li><strong>Create raffles and giveaways</strong> with queue management</li>
+					</ul>
+
+					<h4>Getting Started:</h4>
+					<ol class="guide-steps">
+						<li>Open the Event Flow editor from the main dashboard menu</li>
+						<li>Create a new flow and add source nodes (e.g., "Twitch Message")</li>
+						<li>Connect logic nodes to filter messages (Contains Keyword, User Role, etc.)</li>
+						<li>Add action nodes to respond (Send Chat, Play Audio, Display Overlay)</li>
+						<li>Test with the built-in simulator before going live</li>
+					</ol>
+
+					<h4>Flow Actions Overlay:</h4>
+					<p>For audio, media overlays, and OBS actions to work, you need to add the Flow Actions page as a browser source in OBS:</p>
+					<ol class="guide-steps">
+						<li>In the popup, find the "Flow Actions" section and copy the URL</li>
+						<li>Add it as a Browser Source in OBS (1920×1080 recommended)</li>
+						<li>Keep the overlay open (hidden is fine, but don't close it)</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Important:</strong> Enable "No Reflections" when relaying chat to prevent infinite echo loops. For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-midi">
+					<h3>MIDI & Hotkey Control</h3>
+					<p>Control Social Stream Ninja directly from Stream Deck, MIDI controllers, or keyboard hotkeys.</p>
+
+					<h4>Setting Up MIDI:</h4>
+					<ol class="guide-steps">
+						<li>Connect your MIDI device (Stream Deck, MIDI controller, etc.)</li>
+						<li>Open the Social Stream Ninja popup</li>
+						<li>Find the MIDI settings section</li>
+						<li>Select your MIDI device from the dropdown</li>
+						<li>Map MIDI notes to specific actions</li>
+					</ol>
+
+					<h4>Available Actions:</h4>
+					<ul class="guide-list">
+						<li>Trigger custom overlays and media</li>
+						<li>Send predefined chat messages</li>
+						<li>Switch OBS scenes</li>
+						<li>Play audio clips or TTS</li>
+						<li>Execute Event Flow triggers</li>
+					</ul>
+
+					<div class="guide-note">
+						<p><strong>Tip:</strong> MIDI is perfect for hands-free stream control. Use a foot pedal to trigger alerts or a knob to adjust volume levels.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-bot-commands">
+					<h3>Bot Commands & Auto-Response</h3>
+					<p>Create interactive bot commands and automated responses for your chat.</p>
+
+					<h4>Built-in Commands:</h4>
+					<ul class="guide-list">
+						<li><code>!joke</code> - Sends a random geeky dad joke</li>
+						<li><code>!hi</code> - Auto-greets viewers</li>
+						<li><code>!cycle</code> - Allows viewers to change OBS scenes (with permission)</li>
+					</ul>
+
+					<h4>Setting Up Auto-Response:</h4>
+					<ol class="guide-steps">
+						<li>Open the extension popup and find the Bot/Auto-Response section</li>
+						<li>Enable the commands you want to use</li>
+						<li>Keep your chat window visible (not minimized) for responses to work</li>
+						<li>Ensure you're logged into the platform with posting permissions</li>
+					</ol>
+
+					<h4>Creating Custom Commands:</h4>
+					<p>For more complex commands, use the Event Flow Editor:</p>
+					<ol class="guide-steps">
+						<li>Create a new flow with a Message source</li>
+						<li>Add a "Contains Keyword" node to detect your command (e.g., "!social")</li>
+						<li>Connect a "Send Chat" action with your response</li>
+						<li>Optionally add User Role filters for mod-only commands</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Requirements:</strong> Auto-responses work best with Chromium-based browsers. Chat windows must remain visible, and you must have permission to post on the platform.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="extension-webhooks">
+					<h3>Webhooks & Integrations</h3>
+					<p>Connect external services and receive events from donation platforms.</p>
+
+					<h4>Supported Integrations:</h4>
+					<ul class="guide-list">
+						<li><strong>Stripe:</strong> Payment processing events</li>
+						<li><strong>Ko-Fi:</strong> Donation and supporter alerts</li>
+						<li><strong>Buy Me A Coffee:</strong> Tip notifications</li>
+						<li><strong>Custom Webhooks:</strong> Any service that sends HTTP POST</li>
+					</ul>
+
+					<h4>Setting Up Webhook Integration:</h4>
+					<ol class="guide-steps">
+						<li>Find your webhook relay URL in the Social Stream Ninja popup</li>
+						<li>Copy the URL to your donation platform's webhook settings</li>
+						<li>Events will automatically appear in your dashboard and flows</li>
+					</ol>
+
+					<h4>Exporting Chat via Webhook:</h4>
+					<p>You can also export chat data to external services:</p>
+					<ul class="guide-list">
+						<li>Configure an outbound webhook URL in settings</li>
+						<li>Chat messages are sent as POST requests with JSON payload</li>
+						<li>Use this to log chats, trigger external automations, or sync with other tools</li>
+					</ul>
 				</div>
 			</div>
 		</section>
@@ -586,7 +757,7 @@
 		<section id="standalone-advanced" class="guide-section">
 			<div class="container">
 				<h2>Advanced Features (Standalone App)</h2>
-				
+
 				<div class="guide-card">
 					<h3>Two-Way Chat</h3>
 					<p>The standalone app supports two-way chat messaging for supported platforms:</p>
@@ -596,7 +767,7 @@
 						<li>Use bot commands and automated responses</li>
 					</ul>
 				</div>
-				
+
 				<div class="guide-card">
 					<h3>LLM Integration</h3>
 					<p>Advanced AI features available in the standalone app:</p>
@@ -606,6 +777,104 @@
 						<li><strong>Chat Assistance:</strong> Use AI to assist with responses</li>
 						<li><strong>Custom Instructions:</strong> Create personalized AI behaviors</li>
 					</ul>
+				</div>
+
+				<div class="guide-card" id="standalone-stream-events">
+					<h3>Stream Events Capture</h3>
+					<p>Capture non-chat events like new followers, subscriptions, raids, and donations.</p>
+
+					<h4>How to Enable:</h4>
+					<ol class="guide-steps">
+						<li>Open the Social Stream Ninja app</li>
+						<li>Go to settings and find <strong>"Capture Stream Events"</strong></li>
+						<li>Enable it to start receiving alerts</li>
+					</ol>
+
+					<div class="guide-note">
+						<p><strong>Note:</strong> Donations (Super Chats, Bits, Tips) forward automatically. The toggle is primarily for follower/subscriber alerts.</p>
+					</div>
+
+					<h4>Events Captured:</h4>
+					<ul class="guide-list">
+						<li><strong>YouTube:</strong> Memberships, Super Chats, subscriber counts</li>
+						<li><strong>Twitch:</strong> Subscribers, followers, bits, raids, channel points</li>
+						<li><strong>TikTok:</strong> Followers, gifts, viewer counts</li>
+						<li><strong>Kick:</strong> Subscriptions, tips, follow alerts</li>
+					</ul>
+
+					<p>See the <a href="../docs/event-reference.html">Event Reference</a> for complete event payload documentation.</p>
+				</div>
+
+				<div class="guide-card" id="standalone-event-flow">
+					<h3>Event Flow Editor</h3>
+					<p>Build powerful automations with the node-based Event Flow Editor.</p>
+
+					<h4>What You Can Do:</h4>
+					<ul class="guide-list">
+						<li><strong>Relay chat</strong> between platforms with smart filters</li>
+						<li><strong>Trigger overlays and audio</strong> based on events or keywords</li>
+						<li><strong>Control OBS</strong> scenes and sources automatically</li>
+						<li><strong>Build custom commands</strong> with logic gates (AND/OR/NOT)</li>
+						<li><strong>Create raffles and games</strong> with queue management</li>
+					</ul>
+
+					<h4>Getting Started:</h4>
+					<ol class="guide-steps">
+						<li>Open the Event Flow editor from the app's menu</li>
+						<li>Create a flow with source nodes (Message, Timer, Manual Trigger)</li>
+						<li>Add logic nodes to filter (Contains Keyword, User Role, etc.)</li>
+						<li>Connect action nodes (Send Chat, Play Audio, Display Overlay)</li>
+						<li>Test with the simulator before going live</li>
+					</ol>
+
+					<h4>Flow Actions Overlay:</h4>
+					<p>Add the Flow Actions URL as a browser source in OBS for audio/overlay actions to work. Find the URL in the app's "Flow Actions" section.</p>
+
+					<div class="guide-note">
+						<p>For detailed documentation, see the <a href="../actions/event-flow-guide.html">Event Flow Guide</a>.</p>
+					</div>
+				</div>
+
+				<div class="guide-card" id="standalone-midi">
+					<h3>MIDI & Hotkey Control</h3>
+					<p>Control the app directly from Stream Deck, MIDI controllers, or keyboard shortcuts.</p>
+
+					<h4>Setting Up:</h4>
+					<ol class="guide-steps">
+						<li>Connect your MIDI device</li>
+						<li>Open settings and find the MIDI section</li>
+						<li>Select your device from the dropdown</li>
+						<li>Map MIDI notes to actions</li>
+					</ol>
+
+					<h4>Available Actions:</h4>
+					<ul class="guide-list">
+						<li>Trigger overlays and media</li>
+						<li>Send chat messages</li>
+						<li>Switch OBS scenes</li>
+						<li>Play audio clips</li>
+						<li>Execute Event Flow triggers</li>
+					</ul>
+				</div>
+
+				<div class="guide-card" id="standalone-webhooks">
+					<h3>Webhooks & Integrations</h3>
+					<p>Connect external donation platforms and services.</p>
+
+					<h4>Supported Integrations:</h4>
+					<ul class="guide-list">
+						<li><strong>Stripe:</strong> Payment events</li>
+						<li><strong>Ko-Fi:</strong> Donation alerts</li>
+						<li><strong>Buy Me A Coffee:</strong> Tips</li>
+						<li><strong>Custom Webhooks:</strong> Any HTTP POST service</li>
+					</ul>
+
+					<h4>Setup:</h4>
+					<ol class="guide-steps">
+						<li>Find your webhook relay URL in the app settings</li>
+						<li>Add it to your donation platform's webhook configuration</li>
+						<li>Events appear automatically in your dashboard and flows</li>
+					</ol>
 				</div>
 			</div>
 		</section>
@@ -697,7 +966,7 @@
 						<span class="accordion-icon"></span>
 					</button>
 					<div class="accordion-content">
-						<span>Social Stream Ninja supports over 70 platforms including YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram, and many more. For a complete list, see the <a href="../docs/supported-sites.html">Supported Platforms</a> page.</span>
+						<span>Social Stream Ninja supports 100+ platforms including YouTube, Twitch, Facebook, Instagram, TikTok, Discord, Zoom, Google Meet, X (Twitter), WhatsApp, Telegram, and many more. For a complete list, see the <a href="../docs/supported-sites.html">Supported Platforms</a> page.</span>
 					</div>
 				</div>
 				
@@ -790,7 +1059,7 @@
 						<span class="accordion-icon"></span>
 					</button>
 					<div class="accordion-content">
-						<span>All overlay URLs, dock APIs, WebSocket commands, and automation hooks are documented in <a href="../api.md">api.md</a>. It’s the best starting point when you want to script custom behaviours or integrate Social Stream Ninja with other tools.</span>
+						<span>All overlay URLs, dock APIs, WebSocket commands, and automation hooks are documented in the <a href="../docs/commands.html">Commands & API</a> page. It's the best starting point when you want to script custom behaviours or integrate Social Stream Ninja with other tools.</span>
 					</div>
 				</div>
 				
@@ -847,7 +1116,7 @@
 				<div class="footer-column">
 					<h3>Resources</h3>
 					<ul>
-						<li><a href="../docs/guides.html#installation">Installation Guide</a></li>
+						<li><a href="../docs/guides.html#getting-started">Installation Guide</a></li>
 						<li><a href="../docs/guides.html#customization">Customization Guide</a></li>
 						<li><a href="../docs/guides.html#faq">FAQ</a></li>
 						<li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
@@ -879,77 +1148,152 @@
 		const navSections = document.querySelectorAll('.nav-links');
 		const faqSection = document.getElementById('faq');
 
+		// Anchor alias mapping for generic links (e.g., #getting-started -> #extension-getting-started)
+		const anchorAliases = {
+			'getting-started': 'extension-getting-started',
+			'installation': 'extension-getting-started',
+			'customization': 'extension-customization',
+			'advanced': 'extension-advanced',
+			'troubleshooting': 'extension-troubleshooting',
+			'stream-events': 'extension-stream-events',
+			'event-flow': 'extension-event-flow',
+			'midi': 'extension-midi',
+			'bot-commands': 'extension-bot-commands',
+			'webhooks': 'extension-webhooks'
+		};
+
+		function switchTab(tabId, updateHash = false) {
+			// Remove active class from all buttons
+			tabButtons.forEach(btn => btn.classList.remove('active'));
+
+			// Find and activate the correct tab button
+			const targetButton = document.querySelector(`[data-tab="${tabId}"]`);
+			if (targetButton) {
+				targetButton.classList.add('active');
+			}
+
+			// Hide all guide sections
+			guideSections.forEach(section => section.style.display = 'none');
+
+			// Hide all nav sections
+			navSections.forEach(nav => nav.style.display = 'none');
+
+			// Show the selected sections
+			document.getElementById(tabId).style.display = 'block';
+
+			if (tabId === 'extension-guides') {
+				document.getElementById('extension-nav').style.display = 'flex';
+			} else {
+				document.getElementById('standalone-nav').style.display = 'flex';
+			}
+
+			// Make sure FAQ is visible when either tab is active
+			faqSection.style.display = 'block';
+		}
+
+		function scrollToSection(sectionId) {
+			const targetElement = document.getElementById(sectionId);
+			if (targetElement) {
+				const headerHeight = document.querySelector('header').offsetHeight;
+				const navHeight = document.querySelector('.navigation').offsetHeight;
+				const offsetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight - navHeight - 20;
+
+				window.scrollTo({
+					top: offsetPosition,
+					behavior: 'smooth'
+				});
+			}
+		}
+
+		function handleHash(hash, updateUrl = true) {
+			if (!hash) return;
+
+			// Remove the # if present
+			hash = hash.replace(/^#/, '');
+
+			// Check if it's an alias
+			if (anchorAliases[hash]) {
+				hash = anchorAliases[hash];
+			}
+
+			// Determine which tab to show based on the hash
+			let tabToShow = 'extension-guides';
+			if (hash.startsWith('standalone-')) {
+				tabToShow = 'standalone-guides';
+			}
+
+			// Switch to the appropriate tab
+			switchTab(tabToShow);
+
+			// Update URL hash
+			if (updateUrl) {
+				history.replaceState(null, null, '#' + hash);
+			}
+
+			// Scroll to the section after a brief delay for tab switch
+			setTimeout(() => {
+				scrollToSection(hash);
+
+				// Update active nav link
+				const currentNavLinks = tabToShow === 'extension-guides' ?
+					document.querySelectorAll('#extension-nav .nav-link') :
+					document.querySelectorAll('#standalone-nav .nav-link');
+
+				currentNavLinks.forEach(link => {
+					link.classList.remove('active');
+					if (link.getAttribute('href') === '#' + hash) {
+						link.classList.add('active');
+					}
+				});
+			}, 100);
+		}
+
 		tabButtons.forEach(button => {
 			button.addEventListener('click', () => {
-				// Remove active class from all buttons
-				tabButtons.forEach(btn => btn.classList.remove('active'));
-				// Add active class to clicked button
-				button.classList.add('active');
-				
-				// Hide all guide sections
-				guideSections.forEach(section => section.style.display = 'none');
-				
-				// Hide all nav sections
-				navSections.forEach(nav => nav.style.display = 'none');
-				
-				// Show the selected sections
 				const tabId = button.getAttribute('data-tab');
-				document.getElementById(tabId).style.display = 'block';
-				
-				if (tabId === 'extension-guides') {
-					document.getElementById('extension-nav').style.display = 'flex';
-				} else {
-					document.getElementById('standalone-nav').style.display = 'flex';
-				}
-				
-				// Make sure FAQ is visible when either tab is active
-				faqSection.style.display = 'block';
-				
+				switchTab(tabId);
+
+				// Update URL hash to reflect tab change
+				const defaultSection = tabId === 'extension-guides' ? 'extension-getting-started' : 'standalone-getting-started';
+				history.replaceState(null, null, '#' + defaultSection);
 			});
 		});
-		
+
 		// Smooth scroll for guide navigation
 		document.querySelectorAll('.nav-link').forEach(anchor => {
 			anchor.addEventListener('click', function(e) {
 				e.preventDefault();
 				e.stopPropagation();
-				
-				const targetId = this.getAttribute('href');
-				const targetElement = document.querySelector(targetId);
-				
-				if (targetElement) {
-					// Check if we need to switch tabs first
-					const isExtensionSection = targetId.includes('extension-');
-					const isStandaloneSection = targetId.includes('standalone-');
-					
-					if (isExtensionSection && document.getElementById('extension-guides').style.display === 'none') {
-						document.querySelector('[data-tab="extension-guides"]').click();
-					} else if (isStandaloneSection && document.getElementById('standalone-guides').style.display === 'none') {
-						document.querySelector('[data-tab="standalone-guides"]').click();
-					}
-					
-					// Wait for tab switch to complete if needed
-					setTimeout(() => {
-						const headerHeight = document.querySelector('header').offsetHeight;
-						const navHeight = document.querySelector('.navigation').offsetHeight;
-						const offsetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - headerHeight - navHeight - 20;
-						
-						window.scrollTo({
-							top: offsetPosition,
-							behavior: 'smooth'
-						});
-						
-						// Update active class on navigation
-						const parentNav = this.closest('.nav-links');
-						parentNav.querySelectorAll('.nav-link').forEach(link => {
-							link.classList.remove('active');
-						});
-						this.classList.add('active');
-					}, isExtensionSection || isStandaloneSection ? 100 : 0);
+
+				const targetId = this.getAttribute('href').replace(/^#/, '');
+
+				// Check if we need to switch tabs first
+				const isExtensionSection = targetId.includes('extension-');
+				const isStandaloneSection = targetId.includes('standalone-');
+
+				if (isExtensionSection && document.getElementById('extension-guides').style.display === 'none') {
+					switchTab('extension-guides');
+				} else if (isStandaloneSection && document.getElementById('standalone-guides').style.display === 'none') {
+					switchTab('standalone-guides');
 				}
+
+				// Update URL hash
+				history.replaceState(null, null, '#' + targetId);
+
+				// Wait for tab switch to complete if needed
+				setTimeout(() => {
+					scrollToSection(targetId);
+
+					// Update active class on navigation
+					const parentNav = this.closest('.nav-links');
+					parentNav.querySelectorAll('.nav-link').forEach(link => {
+						link.classList.remove('active');
+					});
+					this.classList.add('active');
+				}, isExtensionSection || isStandaloneSection ? 100 : 0);
 			});
 		});
-		
+
 		// Auto-activate menu items based on scroll position
 		function updateActiveNav() {
 			const scrollPosition = window.scrollY;
@@ -957,21 +1301,22 @@
 			const navElement = document.getElementById('guides-nav');
 			const navHeight = navElement ? navElement.offsetHeight : 0;
 			const offset = headerHeight + navHeight + 50;
-			
+
 			// Determine which tab is currently active
 			const isExtensionView = document.getElementById('extension-guides').style.display !== 'none';
-			const currentNavLinks = isExtensionView ? 
-				document.querySelectorAll('#extension-nav .nav-link') : 
+			const currentNavLinks = isExtensionView ?
+				document.querySelectorAll('#extension-nav .nav-link') :
 				document.querySelectorAll('#standalone-nav .nav-link');
-			
+
 			let activeSet = false;
-			
+			let activeSection = null;
+
 			// Loop through each section to find which one is in view
 			document.querySelectorAll('.guide-section').forEach(section => {
 				const sectionTop = section.offsetTop - offset;
 				const sectionBottom = sectionTop + section.offsetHeight;
 				const sectionId = section.getAttribute('id');
-				
+
 				// Check if this section is in view
 				if (scrollPosition >= sectionTop && scrollPosition < sectionBottom) {
 					currentNavLinks.forEach(link => {
@@ -979,11 +1324,12 @@
 						if (link.getAttribute('href') === `#${sectionId}`) {
 							link.classList.add('active');
 							activeSet = true;
+							activeSection = sectionId;
 						}
 					});
 				}
 			});
-			
+
 			// If no section is active (user scrolled to top), activate first link
 			if (!activeSet && currentNavLinks.length > 0) {
 				if (scrollPosition < 1000){
@@ -991,7 +1337,7 @@
 				}
 			}
 		}
-		
+
 		// Debounce scroll event for better performance
 		let scrollTimeout;
 		window.addEventListener('scroll', function() {
@@ -1002,15 +1348,17 @@
 				updateActiveNav();
 			});
 		});
-		
-		// Update active nav on page load
-		updateActiveNav();
-		
+
+		// Handle hash changes (browser back/forward)
+		window.addEventListener('hashchange', function() {
+			handleHash(window.location.hash, false);
+		});
+
 		// Sticky navigation on scroll
 		const guideNav = document.getElementById('guides-nav');
 		if (guideNav) {
 			const navOffset = guideNav.offsetTop;
-			
+
 			window.addEventListener('scroll', function() {
 				if (window.pageYOffset >= navOffset) {
 					guideNav.classList.add('sticky');
@@ -1019,21 +1367,27 @@
 				}
 			});
 		}
-		
+
 		// Accordion functionality
 		const accordionHeaders = document.querySelectorAll('.accordion-header');
-		
+
 		accordionHeaders.forEach(header => {
 			header.addEventListener('click', () => {
 				const accordionItem = header.parentElement;
 				accordionItem.classList.toggle('active');
 			});
 		});
-		
-		const firstTab = document.querySelector('.tab-btn[data-tab="extension-guides"]');
-		if (firstTab) {
-			firstTab.click();
+
+		// Handle initial hash on page load
+		if (window.location.hash) {
+			handleHash(window.location.hash, false);
+		} else {
+			// Default to extension guides
+			switchTab('extension-guides');
 		}
+
+		// Update active nav on page load
+		updateActiveNav();
 	});
 	</script>
 </body>
