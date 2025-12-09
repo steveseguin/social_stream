@@ -144,6 +144,8 @@ var lastMessage = {};
 	
 	
 	chrome.runtime.sendMessage(chrome.runtime.id, { "getSettings": true }, function(response){  // {"state":isExtensionOn,"streamID":channel, "settings":settings}
+		if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
+		response = response || {};
 		if ("settings" in response){
 			settings = response.settings;
 		}

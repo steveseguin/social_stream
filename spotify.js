@@ -548,6 +548,214 @@ class SpotifyIntegration {
         return null;
     }
 
+    // Playback control methods
+    async skip() {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        try {
+            const response = await fetch('https://api.spotify.com/v1/me/player/next', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                return { success: true, message: "⏭️ Skipped to next track" };
+            } else if (response.status === 401) {
+                await this.refreshAccessToken();
+                return this.skip();
+            } else if (response.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to skip track" };
+            }
+        } catch (error) {
+            console.warn('Spotify skip error:', error);
+            return { success: false, message: "Error skipping track" };
+        }
+    }
+
+    async previous() {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        try {
+            const response = await fetch('https://api.spotify.com/v1/me/player/previous', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                return { success: true, message: "⏮️ Playing previous track" };
+            } else if (response.status === 401) {
+                await this.refreshAccessToken();
+                return this.previous();
+            } else if (response.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to go to previous track" };
+            }
+        } catch (error) {
+            console.warn('Spotify previous error:', error);
+            return { success: false, message: "Error going to previous track" };
+        }
+    }
+
+    async pause() {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        try {
+            const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                return { success: true, message: "⏸️ Playback paused" };
+            } else if (response.status === 401) {
+                await this.refreshAccessToken();
+                return this.pause();
+            } else if (response.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to pause playback" };
+            }
+        } catch (error) {
+            console.warn('Spotify pause error:', error);
+            return { success: false, message: "Error pausing playback" };
+        }
+    }
+
+    async resume() {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        try {
+            const response = await fetch('https://api.spotify.com/v1/me/player/play', {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                return { success: true, message: "▶️ Playback resumed" };
+            } else if (response.status === 401) {
+                await this.refreshAccessToken();
+                return this.resume();
+            } else if (response.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to resume playback" };
+            }
+        } catch (error) {
+            console.warn('Spotify resume error:', error);
+            return { success: false, message: "Error resuming playback" };
+        }
+    }
+
+    async setVolume(percent) {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        const volume = Math.max(0, Math.min(100, parseInt(percent) || 50));
+
+        try {
+            const response = await fetch(`https://api.spotify.com/v1/me/player/volume?volume_percent=${volume}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                return { success: true, message: `🔊 Volume set to ${volume}%` };
+            } else if (response.status === 401) {
+                await this.refreshAccessToken();
+                return this.setVolume(percent);
+            } else if (response.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to set volume" };
+            }
+        } catch (error) {
+            console.warn('Spotify volume error:', error);
+            return { success: false, message: "Error setting volume" };
+        }
+    }
+
+    async addToQueue(query) {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        if (!query || !query.trim()) {
+            return { success: false, message: "Please specify a song to add to the queue" };
+        }
+
+        try {
+            // First search for the track
+            const searchResponse = await fetch(
+                `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=1`,
+                {
+                    headers: {
+                        'Authorization': `Bearer ${this.accessToken}`
+                    }
+                }
+            );
+
+            if (searchResponse.status === 401) {
+                await this.refreshAccessToken();
+                return this.addToQueue(query);
+            }
+
+            const searchData = await searchResponse.json();
+
+            if (!searchData.tracks || !searchData.tracks.items || searchData.tracks.items.length === 0) {
+                return { success: false, message: `No track found for "${query}"` };
+            }
+
+            const track = searchData.tracks.items[0];
+            const trackUri = track.uri;
+            const trackName = track.name;
+            const trackArtist = track.artists.map(a => a.name).join(', ');
+
+            // Add to queue
+            const queueResponse = await fetch(
+                `https://api.spotify.com/v1/me/player/queue?uri=${encodeURIComponent(trackUri)}`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${this.accessToken}`
+                    }
+                }
+            );
+
+            if (queueResponse.status === 204 || queueResponse.ok) {
+                return { success: true, message: `📋 Added to queue: ${trackName} by ${trackArtist}` };
+            } else if (queueResponse.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to add track to queue" };
+            }
+        } catch (error) {
+            console.warn('Spotify queue error:', error);
+            return { success: false, message: "Error adding to queue" };
+        }
+    }
+
     formatTrackMessage(track, template) {
         if (!track) return "";
         
@@ -558,10 +766,85 @@ class SpotifyIntegration {
             .replace('{album}', track.album);
     }
 
-    handleCommand(command) {
+    // Check if user has required role for a command
+    hasPermission(data, requiredRoles) {
+        if (!requiredRoles || requiredRoles.length === 0) {
+            return true; // No restrictions
+        }
+
+        // Host and admin always have permission
+        if (data.host || data.admin) {
+            return true;
+        }
+
+        for (const role of requiredRoles) {
+            if (role === 'mod' && data.mod) return true;
+            if (role === 'vip' && data.vip) return true;
+            if (role === 'subscriber' && data.subscriber) return true;
+            if (role === 'anyone') return true;
+        }
+
+        return false;
+    }
+
+    // Get command permissions from settings or use defaults
+    getCommandPermissions() {
+        const defaults = {
+            '!song': ['anyone'],
+            '!nowplaying': ['anyone'],
+            '!np': ['anyone'],
+            '!skip': ['mod'],
+            '!next': ['mod'],
+            '!previous': ['mod'],
+            '!prev': ['mod'],
+            '!pause': ['mod'],
+            '!stop': ['mod'],
+            '!play': ['mod'],
+            '!resume': ['mod'],
+            '!volume': ['mod'],
+            '!vol': ['mod'],
+            '!queue': ['anyone'],
+            '!request': ['anyone'],
+            '!sr': ['anyone']
+        };
+
+        // Allow settings to override defaults (stored as { json: string, object: parsed })
+        const savedPerms = this.settings?.spotifyCommandPermissions?.object || this.settings?.spotifyCommandPermissions;
+        if (savedPerms && typeof savedPerms === 'object') {
+            return { ...defaults, ...savedPerms };
+        }
+
+        return defaults;
+    }
+
+    // Check if a command is disabled
+    isCommandDisabled(cmd) {
+        const disabled = this.settings?.spotifyDisabledCommands?.object || this.settings?.spotifyDisabledCommands || [];
+        if (Array.isArray(disabled)) {
+            return disabled.includes(cmd);
+        }
+        return false;
+    }
+
+    async handleCommand(command, data = {}) {
         const lowerCommand = command.toLowerCase().trim();
-        
-        if (lowerCommand === "!song" || lowerCommand === "!nowplaying" || lowerCommand === "!np") {
+        const parts = lowerCommand.split(' ');
+        const cmd = parts[0];
+        const args = parts.slice(1).join(' ');
+
+        // Check if command is disabled
+        if (this.isCommandDisabled(cmd)) {
+            return null; // Silent fail for disabled command
+        }
+
+        const permissions = this.getCommandPermissions();
+
+        // !song, !nowplaying, !np - Show current track (anyone by default)
+        if (cmd === "!song" || cmd === "!nowplaying" || cmd === "!np") {
+            if (!this.hasPermission(data, permissions[cmd])) {
+                return null; // Silent fail for no permission
+            }
+
             if (this.currentTrack) {
                 return `🎵 Currently playing: ${this.currentTrack.name} by ${this.currentTrack.artist}`;
             } else {
@@ -569,9 +852,72 @@ class SpotifyIntegration {
             }
         }
 
-        // Future queue commands
-        if (lowerCommand.startsWith("!queue ") || lowerCommand.startsWith("!request ")) {
-            return "Song queue feature coming soon!";
+        // !skip, !next - Skip to next track (mods only by default)
+        if (cmd === "!skip" || cmd === "!next") {
+            if (!this.hasPermission(data, permissions[cmd])) {
+                return null;
+            }
+
+            const result = await this.skip();
+            return result.message;
+        }
+
+        // !previous, !prev - Go to previous track (mods only by default)
+        if (cmd === "!previous" || cmd === "!prev") {
+            if (!this.hasPermission(data, permissions[cmd])) {
+                return null;
+            }
+
+            const result = await this.previous();
+            return result.message;
+        }
+
+        // !pause, !stop - Pause playback (mods only by default)
+        if (cmd === "!pause" || cmd === "!stop") {
+            if (!this.hasPermission(data, permissions[cmd])) {
+                return null;
+            }
+
+            const result = await this.pause();
+            return result.message;
+        }
+
+        // !play, !resume - Resume playback (mods only by default)
+        if (cmd === "!play" || cmd === "!resume") {
+            if (!this.hasPermission(data, permissions[cmd])) {
+                return null;
+            }
+
+            const result = await this.resume();
+            return result.message;
+        }
+
+        // !volume, !vol - Set volume (mods only by default)
+        if (cmd === "!volume" || cmd === "!vol") {
+            if (!this.hasPermission(data, permissions[cmd])) {
+                return null;
+            }
+
+            if (!args) {
+                return "Usage: !volume <0-100>";
+            }
+
+            const result = await this.setVolume(args);
+            return result.message;
+        }
+
+        // !queue, !request, !sr - Add song to queue (anyone by default)
+        if (cmd === "!queue" || cmd === "!request" || cmd === "!sr") {
+            if (!this.hasPermission(data, permissions[cmd])) {
+                return null;
+            }
+
+            if (!args) {
+                return "Usage: !queue <song name or artist>";
+            }
+
+            const result = await this.addToQueue(args);
+            return result.message;
         }
 
         return null;
@@ -603,7 +949,7 @@ class SpotifyIntegration {
             return { success: true, alreadyConnected: true };
         }
 
-		const scopes = ['user-read-currently-playing', 'user-read-playback-state'];
+		const scopes = ['user-read-currently-playing', 'user-read-playback-state', 'user-modify-playback-state'];
 		const state = Math.random().toString(36).substring(7); // Generate random state for security
 
 		const persistAuthState = () => {

@@ -1483,6 +1483,74 @@ input:checked + .slider:before {
 		 margin-bottom: 0.5em;
 	}
 }
+
+/* Spotify Command Configuration */
+.spotify-command-group {
+    background: var(--options-group-background-color);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.spotify-command-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--collapsible-border-color);
+    flex-wrap: wrap;
+}
+
+.spotify-command-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.spotify-command-row code {
+    background: var(--color-accent-subtle);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    min-width: 70px;
+}
+
+.spotify-command-row .spotify-cmd-desc {
+    flex: 1;
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    min-width: 120px;
+}
+
+.spotify-command-row .spotify-cmd-roles {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.spotify-command-row .spotify-cmd-roles label {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.8em;
+    color: var(--options-group-text-color);
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--color-accent-subtle);
+}
+
+.spotify-command-row .spotify-cmd-roles label:hover {
+    background: var(--collapsible-border-color);
+}
+
+.spotify-command-row .spotify-cmd-roles input[type="checkbox"] {
+    margin: 0;
+    cursor: pointer;
+}
+
+.spotify-command-row .switch {
+    margin: 0;
+}
         </style>
     </head>
 
@@ -1496,13 +1564,13 @@ input:checked + .slider:before {
                 <span class="slider round"></span>
             </label>
         </button>
-        <div  style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0;">
-            <button class="glowingButton showalways" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; position: sticky; top: 35px; z-index: 10; padding: 0;" data-action="fakemsg">
+        <div style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0; position: sticky; top: 35px; z-index: 99; background: var(--body-background-color);">
+            <button class="glowingButton showalways" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0;" data-action="fakemsg">
                 <span data-translate="trigger-fake-message">Trigger a fake test message</span>
             </button>
             <button
                 class="glowingButton showalways"
-                style="margin: 0 1px 0 1px; width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; position: sticky; top: 35px; z-index: 10; padding: 0; max-width: 100px;"
+                style="margin: 0 1px 0 1px; width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0; max-width: 100px;"
                 data-action="cleardock"
                 title="Clears messages in the dock, excluding pinned messages. Hold CTRL while clicking to clear pinned messages as well."
             >
@@ -8383,7 +8451,439 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
-			
+
+			<div class="wrapper">
+                <div class="collapsible">
+                    <input type="checkbox" class="collapsible-input" id="wrapper-flowactions-tts-options" />
+                    <label class="collapsible-label" for="wrapper-flowactions-tts-options">🔊 <span data-translate="tts-settings">Text-to-Speech Settings</span></label>
+                    <div class="collapsible-text">
+                        <div class="options">
+                            <div class="options_group flowactions">
+                                <div>
+                                    <label class="switch">
+                                        <input type="checkbox" data-param18="volume" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="system-tts-volume">
+                                        🔉 Volume of speech
+                                        <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="1.0" size="5" data-numbersetting18="volume" />
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TTS Provider Selection -->
+                        <div class="tts-provider-selection" style="margin:0 10px 10px 10px">
+                            <h3 data-translate="tts-service-provider">Text-to-Speech Service Provider</h3>
+                            <select id="ttsProvider18" data-optionparam18="ttsprovider" class="textInput">
+                                <option selected value="system">System TTS</option>
+                                <option value="kokoro">Kokoro (webGPU/CPU)</option>
+                                <option value="kitten">Kitten TTS (browser-based)</option>
+                                <option value="elevenlabs">ElevenLabs</option>
+                                <option value="google">Google Cloud</option>
+                                <option value="gemini">Gemini (Preview TTS)</option>
+                                <option value="speechify">Speechify</option>
+                                <option value="openai">OpenAI</option>
+                                <option value="piper">Piper TTS</option>
+                                <option value="espeak">eSpeak TTS</option>
+                            </select>
+                        </div>
+
+                        <!-- System TTS Options -->
+                        <div class="tts-provider-options options_group" id="systemTTS18">
+                            <h4 data-translate="tts-system-options">Built-in System TTS Options</h4>
+                            <i>note: the free built-in TTS plays out via the default audio device.</i>
+                            <br /><br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="lang" data-del18="lang,voice"/>
+                                    <span class="slider round"></span>
+                                </label>
+                                <select id="systemLanguageSelect18" data-optionparam18="lang" title="Select the system TTS language"></select>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="rate" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="system-tts-rate">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" size="5" data-numbersetting18="rate" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="pitch" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="system-tts-pitch">
+                                    🎵 Pitch
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="2" min="0.1" value="1.0" size="5" data-numbersetting18="pitch" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Kokoro TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="kokoroTTS18">
+                            <h4 data-translate="tts-kokoro-options">Kokoro TTS Options</h4>
+                            <i>note: this free locally-running TTS needs a powerful computer to run well.</i>
+                            <br /><br />
+                            <div>
+                                🎭 Voice to use:
+                                <select id="kokoroVoiceSelect18" data-optionparam18="voicekokoro" title="Select the Kokoro TTS Voice">
+                                    <option value="af_heart">Heart (American Female)</option><option value="af_alloy">Alloy (American Female)</option><option selected value="af_aoede">Aoede (American Female)</option><option value="af_bella">Bella (American Female)</option><option value="af_jessica">Jessica (American Female)</option><option value="af_kore">Kore (American Female)</option><option value="af_nicole">Nicole (American Female)</option><option value="af_nova">Nova (American Female)</option><option value="af_river">River (American Female)</option><option value="af_sarah">Sarah (American Female)</option><option value="af_sky">Sky (American Female)</option><option value="am_adam">Adam (American Male)</option><option value="am_echo">Echo (American Male)</option><option value="am_eric">Eric (American Male)</option><option value="am_fenrir">Fenrir (American Male)</option><option value="am_liam">Liam (American Male)</option><option value="am_michael">Michael (American Male)</option><option value="am_onyx">Onyx (American Male)</option><option value="am_puck">Puck (American Male)</option><option value="am_santa">Santa (American Male)</option><option value="bf_emma">Emma (British Female)</option><option value="bf_isabella">Isabella (British Female)</option><option value="bm_george">George (British Male)</option><option value="bm_lewis">Lewis (British Male)</option><option value="bf_alice">Alice (British Female)</option><option value="bf_lily">Lily (British Female)</option><option value="bm_daniel">Daniel (British Male)</option><option value="bm_fable">Fable (British Male)</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="kokorospeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="kokoro-tts-speed">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="10" min="0.1" value="1.0" size="5" data-numbersetting18="kokorospeed" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Kitten TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="kittenTTS18">
+                            <h4 data-translate="tts-kitten-options">Kitten TTS Options</h4>
+                            <i>note: this free browser-based TTS needs to download a ~15MB model on first use.</i>
+                            <br /><br />
+                            <div>
+                                🎭 Voice to use:
+                                <select id="kittenVoiceSelect18" data-optionparam18="kittenvoice" title="Select the Kitten TTS Voice">
+                                    <option value="expr-voice-2-m">Voice 2 (Male)</option>
+                                    <option value="expr-voice-2-f">Voice 2 (Female)</option>
+                                    <option value="expr-voice-3-m">Voice 3 (Male)</option>
+                                    <option value="expr-voice-3-f">Voice 3 (Female)</option>
+                                    <option value="expr-voice-4-m">Voice 4 (Male)</option>
+                                    <option selected value="expr-voice-4-f">Voice 4 (Female)</option>
+                                    <option value="expr-voice-5-m">Voice 5 (Male)</option>
+                                    <option value="expr-voice-5-f">Voice 5 (Female)</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="kittenspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="kitten-tts-speed">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="2.0" min="0.5" value="1.0" size="5" data-numbersetting18="kittenspeed" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- ElevenLabs TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="elevenlabsTTS18">
+                            <h4 data-translate="tts-elevenlabs-options">ElevenLabs TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="elevenLabsKey18" class="textInput instant" autocomplete="off" placeholder="Your ElevenLabs API Key" data-textparam18="elevenlabskey" />
+                                <label for="elevenLabsKey18"><span data-translate="elevenlabs-api-key">ElevenLabs API Key</span></label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="text" id="elevenLabsVoiceID18" class="textInput instant" autocomplete="off" placeholder="e.g., VR6AewLTigWG4xSOukaG" data-textparam18="voice11" />
+                                <label for="elevenLabsVoiceID18"><span data-translate="elevenlabs-voice-id">ElevenLabs Voice ID</span></label>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="elevenlabsmodel" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <select id="elevenlabsmodelSelect18" data-optionparam18="elevenlabsmodel">
+                                    <option value="eleven_flash_v2_5" selected>eleven_flash_v2_5 (Fastest, 32 languages)</option>
+                                    <option value="eleven_flash_v2">eleven_flash_v2 (Fast, English only)</option>
+                                    <option value="eleven_turbo_v2_5">eleven_turbo_v2_5 (Fast, 32 languages)</option>
+                                    <option value="eleven_turbo_v2">eleven_turbo_v2 (Fast, English only)</option>
+                                    <option value="eleven_multilingual_v2">eleven_multilingual_v2 (High quality)</option>
+                                    <option value="eleven_english_sts_v2">eleven_english_sts_v2 (Speech-to-Speech)</option>
+                                    <option value="eleven_multilingual_sts_v2">eleven_multilingual_sts_v2 (Speech-to-Speech)</option>
+                                    <option value="eleven_monolingual_v1">eleven_monolingual_v1 (Legacy)</option>
+                                    <option value="eleven_multilingual_v1">eleven_multilingual_v1 (Legacy)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="elevenrate" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="elevenlabs-rate">
+                                    🔊 Speaking Rate
+                                    <input type="number" style="max-width: 6ch;" step="0.25" max="5.0" min="0.25" value="1.0" size="5" data-numbersetting18="elevenrate" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="elevenlatency" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="elevenlabs-latency">
+                                    🚀 ElevenLabs Latency Optimization
+                                    <input type="number" style="max-width: 6ch;" step="1" max="4" min="0" value="4" size="5" data-numbersetting18="elevenlatency" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="elevenstability" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="elevenlabs-stability">
+                                    🎯 Stability
+                                    <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting18="elevenstability" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="elevensimilarity" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="elevenlabs-similarity">
+                                    🎭 Similarity Boost
+                                    <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.75" size="5" data-numbersetting18="elevensimilarity" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="elevenstyle" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="elevenlabs-style">
+                                    🎨 Style
+                                    <input type="number" style="max-width: 6ch;" step="0.01" max="1" min="0" value="0.5" size="5" data-numbersetting18="elevenstyle" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="elevenspeakerboost" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="elevenlabs-speaker-boost">🔊 Use Speaker Boost</span>
+                            </div>
+                        </div>
+
+                        <!-- Google Cloud TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="googleTTS18">
+                            <h4 data-translate="tts-google-options">Google Cloud TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="googleAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your Google API Key" data-textparam18="ttskey" />
+                                <label for="googleAPIKey18"><span data-translate="google-api-key">Google API Key</span></label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="text" id="googleVoiceName18" class="textInput instant" autocomplete="off" placeholder="e.g., en-GB-Standard-A" data-textparam18="voicegoogle" />
+                                <label for="googleVoiceName18"><span data-translate="google-voice-name">Google Voice Name</span></label>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="googlelang" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <select id="googleLanguageSelect18" data-optionparam18="googlelang">
+                                    <option value="en-US">English (US)</option>
+                                    <option value="en-GB">English (UK)</option>
+                                    <option value="en-AU">English (Australia)</option>
+                                    <option value="es-ES">Spanish (Spain)</option>
+                                    <option value="es-US">Spanish (US)</option>
+                                    <option value="fr-FR">French</option>
+                                    <option value="de-DE">German</option>
+                                    <option value="it-IT">Italian</option>
+                                    <option value="ja-JP">Japanese</option>
+                                    <option value="ko-KR">Korean</option>
+                                    <option value="pt-BR">Portuguese (Brazil)</option>
+                                    <option value="hi-IN">Hindi</option>
+                                    <option value="ar-XA">Arabic</option>
+                                    <option value="cmn-CN">Chinese, Mandarin (Simplified)</option>
+                                    <option value="cmn-TW">Chinese, Mandarin (Taiwan)</option>
+                                    <option value="nl-NL">Dutch</option>
+                                    <option value="pl-PL">Polish</option>
+                                    <option value="ru-RU">Russian</option>
+                                    <option value="sv-SE">Swedish</option>
+                                    <option value="tr-TR">Turkish</option>
+                                    <option value="vi-VN">Vietnamese</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="googlerate" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="google-tts-rate">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="4" min="0.25" value="1.0" size="5" data-numbersetting18="googlerate" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="googlepitch" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="google-pitch">
+                                    🎵 Pitch
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="20" min="-20" value="0" size="5" data-numbersetting18="googlepitch" />
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Gemini TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="geminiTTS18">
+                            <h4>Gemini TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="geminiAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your Gemini API Key" data-textparam18="geminikey" />
+                                <label for="geminiAPIKey18">Gemini API Key</label>
+                            </div>
+                            <div>
+                                <label for="geminiModelSelect18">Model</label>
+                                <select id="geminiModelSelect18" data-optionparam18="geminimodel">
+                                    <option value="gemini-2.5-flash-preview-tts" selected>Gemini 2.5 Flash Preview TTS</option>
+                                    <option value="gemini-2.5-pro-preview-tts">Gemini 2.5 Pro Preview TTS</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="geminiVoiceSelect18">Voice</label>
+                                <select id="geminiVoiceSelect18" data-optionparam18="voicegemini">
+                                    <option value="Zephyr">Zephyr - Bright</option>
+                                    <option value="Puck">Puck - Upbeat</option>
+                                    <option value="Charon">Charon - Informative</option>
+                                    <option value="Kore" selected>Kore - Firm</option>
+                                    <option value="Fenrir">Fenrir - Excitable</option>
+                                    <option value="Leda">Leda - Youthful</option>
+                                    <option value="Orus">Orus - Firm</option>
+                                    <option value="Aoede">Aoede - Breezy</option>
+                                    <option value="Callirrhoe">Callirrhoe - Easy-going</option>
+                                    <option value="Autonoe">Autonoe - Bright</option>
+                                    <option value="Enceladus">Enceladus - Breathy</option>
+                                    <option value="Iapetus">Iapetus - Clear</option>
+                                    <option value="Umbriel">Umbriel - Easy-going</option>
+                                    <option value="Algieba">Algieba - Smooth</option>
+                                    <option value="Despina">Despina - Smooth</option>
+                                    <option value="Erinome">Erinome - Clear</option>
+                                    <option value="Algenib">Algenib - Gravelly</option>
+                                    <option value="Rasalgethi">Rasalgethi - Informative</option>
+                                    <option value="Laomedeia">Laomedeia - Upbeat</option>
+                                    <option value="Achernar">Achernar - Soft</option>
+                                    <option value="Alnilam">Alnilam - Firm</option>
+                                    <option value="Schedar">Schedar - Even</option>
+                                    <option value="Gacrux">Gacrux - Mature</option>
+                                    <option value="Pulcherrima">Pulcherrima - Forward</option>
+                                    <option value="Achird">Achird - Friendly</option>
+                                    <option value="Zubenelgenubi">Zubenelgenubi - Casual</option>
+                                    <option value="Vindemiatrix">Vindemiatrix - Gentle</option>
+                                    <option value="Sadachbia">Sadachbia - Lively</option>
+                                    <option value="Sadaltager">Sadaltager - Knowledgeable</option>
+                                    <option value="Sulafat">Sulafat - Warm</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Speechify TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="speechifyTTS18">
+                            <h4 data-translate="tts-speechify-options">Speechify TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="speechifyAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your Speechify API Key" data-textparam18="speechifykey" />
+                                <label for="speechifyAPIKey18"><span data-translate="speechify-api-key">Speechify API Key</span></label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="text" id="speechifyVoiceID18" class="textInput instant" autocomplete="off" placeholder="e.g., henry" data-textparam18="voicespeechify" />
+                                <label for="speechifyVoiceID18"><span data-translate="speechify-voice-id">Speechify Voice ID</span></label>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="speechifyspeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="speechify-speed">
+                                    ⚡ Speed
+                                    <input type="number" style="max-width: 6ch;" step="0.1" max="3" min="0.1" value="1.0" size="5" data-numbersetting18="speechifyspeed" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="speechifymodel" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="speechify-model">
+                                    🤖 Model
+                                    <select data-optionparam18="speechifymodel">
+                                        <option value="simba-english">English</option>
+                                        <option value="simba-multilingual">Multilingual</option>
+                                    </select>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- OpenAI TTS Options -->
+                        <div class="tts-provider-options options_group hidden" id="openaiTTS18">
+                            <h4 data-translate="tts-openai-options">OpenAI TTS Options</h4>
+                            <div class="textInputContainer" style="width: 95%;">
+                                <input type="password" id="openaiAPIKey18" class="textInput instant" autocomplete="off" placeholder="Your OpenAI API Key" data-textparam18="openaikey" />
+                                <label for="openaiAPIKey18"><span data-translate="openai-api-key">OpenAI API Key</span></label>
+                            </div>
+                            <div class="textInputContainer" style="width: 95%;" title="Custom OpenAI-compatible endpoint (optional)">
+                                <input type="text" id="openaiEndpoint18" class="textInput instant" autocomplete="off" placeholder="https://api.openai.com/v1/audio/speech" data-textparam18="openaiendpoint" />
+                                <label for="openaiEndpoint18"><span data-translate="openai-endpoint">Custom API Endpoint (optional)</span></label>
+                            </div>
+                            <div>
+                                🎭 Voice to use:
+                                <select id="openaiVoiceSelect18" data-optionparam18="voiceopenai" title="Select the OpenAI TTS Voice">
+                                    <option value="alloy" selected>Alloy</option>
+                                    <option value="echo">Echo</option>
+                                    <option value="fable">Fable</option>
+                                    <option value="onyx">Onyx</option>
+                                    <option value="nova">Nova</option>
+                                    <option value="shimmer">Shimmer</option>
+                                </select>
+                            </div>
+                            <br />
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="openaimodel" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-model">
+                                    🤖 Model
+                                    <select id="openaiModelSelect18" data-optionparam18="openaimodel">
+                                        <option value="tts-1" selected>tts-1 (faster)</option>
+                                        <option value="tts-1-hd">tts-1-hd (higher quality)</option>
+                                    </select>
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="openaispeed" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-tts-speed">
+                                    ⏩ Speaking rate
+                                    <input type="number" style="max-width: 6ch;" step="0.05" max="4.0" min="0.25" value="1.0" size="5" data-numbersetting18="openaispeed" />
+                                </span>
+                            </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" data-param18="openaiformat" />
+                                    <span class="slider round"></span>
+                                </label>
+                                <span data-translate="openai-format">
+                                    🎵 Audio Format
+                                    <select data-optionparam18="openaiformat">
+                                        <option value="mp3" selected>MP3</option>
+                                        <option value="opus">Opus</option>
+                                        <option value="aac">AAC</option>
+                                        <option value="flac">FLAC</option>
+                                    </select>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div style="margin: 10px; padding: 10px; background-color: var(--color-accent-subtle); border-radius: 5px;">
+                            <small data-translate="tts-info">💡 Configure TTS settings for the Flow Actions overlay. API keys are stored locally and added to the overlay URL.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 			<div class="link" title="Giveaway Tool">
                 <h2 class="giveaway_mode_title">
                     <span class="title-group"><span class="emoji" aria-hidden="true">🎁</span><span data-translate="giveaway">Giveaway Tool</span></span>
@@ -8451,7 +8951,14 @@ input:checked + .slider:before {
 										<input type="checkbox" data-target="poll" data-setting="pollTally" />
 										<span class="slider round"></span>
 									</label>
-									<span> ✌️ Show number of votes instead of perecent</span>
+									<span> ✌️ Show number of votes instead of percent</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-target="poll" data-setting="pollDonationWeighted" />
+										<span class="slider round"></span>
+									</label>
+									<span title="Donations add bonus votes equal to their USD value. A $5 donation = 5 bonus votes. Regular chat votes still count as 1."> 💰 Donation-weighted voting (Dono Poll)</span>
 								</div>
 								<br>
 								<div>
@@ -10263,11 +10770,155 @@ input:checked + .slider:before {
                         <div class="options">
                             <div class="options_group">
                                 <h4>Spotify Chat Commands</h4>
-                              
-                                <h4 style="margin-top: 20px;">Chat Commands</h4>
-                                <p style="font-size: 0.9em; color: var(--text-secondary);">
-                                    Available commands: <code>!song</code>, <code>!nowplaying</code>, <code>!np</code><br>
-                                    Coming soon: <code>!queue</code>, <code>!request</code>
+                                <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 15px;">
+                                    Configure which Spotify commands are available and who can use them.
+                                </p>
+
+                                <div id="spotifyCommandsList" style="display: flex; flex-direction: column; gap: 10px;">
+                                    <!-- Info Commands -->
+                                    <div class="spotify-command-group">
+                                        <h5 style="margin: 0 0 8px 0; color: var(--text-secondary);">📋 Info Commands</h5>
+                                        <div class="spotify-command-row" data-command="!song" data-default-roles="anyone">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!song</code>
+                                            <span class="spotify-cmd-desc">Show current track</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" checked /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!np" data-default-roles="anyone">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!np</code>
+                                            <span class="spotify-cmd-desc">Alias for !song</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" checked /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" /> Mods</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Playback Control Commands -->
+                                    <div class="spotify-command-group">
+                                        <h5 style="margin: 0 0 8px 0; color: var(--text-secondary);">🎮 Playback Control</h5>
+                                        <div class="spotify-command-row" data-command="!skip" data-default-roles="mod">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!skip</code>
+                                            <span class="spotify-cmd-desc">Skip to next track</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" checked /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!previous" data-default-roles="mod">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!previous</code>
+                                            <span class="spotify-cmd-desc">Go to previous track</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" checked /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!pause" data-default-roles="mod">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!pause</code>
+                                            <span class="spotify-cmd-desc">Pause playback</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" checked /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!play" data-default-roles="mod">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!play</code>
+                                            <span class="spotify-cmd-desc">Resume playback</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" checked /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!volume" data-default-roles="mod">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!volume</code>
+                                            <span class="spotify-cmd-desc">Set volume (0-100)</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" checked /> Mods</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Queue Commands -->
+                                    <div class="spotify-command-group">
+                                        <h5 style="margin: 0 0 8px 0; color: var(--text-secondary);">📝 Queue Commands</h5>
+                                        <div class="spotify-command-row" data-command="!queue" data-default-roles="anyone">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!queue</code>
+                                            <span class="spotify-cmd-desc">Add song to queue</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" checked /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!sr" data-default-roles="anyone">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <code>!sr</code>
+                                            <span class="spotify-cmd-desc">Song request (alias)</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" checked /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" /> Mods</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p style="font-size: 0.85em; color: var(--text-secondary); margin-top: 15px;">
+                                    💡 <strong>Note:</strong> Hosts and admins can always use all commands regardless of permission settings.
                                 </p>
                             </div>
                         </div>

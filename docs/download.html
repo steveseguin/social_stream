@@ -100,7 +100,7 @@
                     </div>
                 </div>
             </div>
-            <div class="download-tabs">
+            <div id="downloads" class="download-tabs">
                 <button class="tab-btn recommend" data-tab="extension">Browser Extension</button>
                 <button class="tab-btn recommend active" data-tab="standalone">Standalone App</button>
                 <button class="tab-btn recommend" data-tab="lite">Lite Web App</button>
@@ -456,7 +456,7 @@
                 <div class="footer-column">
                     <h3>Resources</h3>
                     <ul>
-                        <li><a href="../docs/guides.html#installation">Installation Guide</a></li>
+                        <li><a href="../docs/guides.html#getting-started">Installation Guide</a></li>
                         <li><a href="../docs/guides.html#customization">Customization Guide</a></li>
                         <li><a href="../docs/guides.html#faq">FAQ</a></li>
                         <li><a href="https://github.com/steveseguin/social_stream/issues" target="_blank">Report an Issue</a></li>
@@ -484,25 +484,29 @@
     <script>
         // Set current year in footer
         document.getElementById('current-year').textContent = new Date().getFullYear();
-        
+
 		document.addEventListener('DOMContentLoaded', function() {
 			const tabButtons = document.querySelectorAll('.tab-btn');
 			const tabContents = document.querySelectorAll('.tab-content');
 			const manualInstall = document.getElementById('manual-install');
 			const firefoxInstall = document.getElementById('firefox-install');
 			const linuxInstall = document.getElementById('linux-install');
-			
+
+			// Valid tab IDs and installation guide IDs for anchor linking
+			const validTabIds = ['extension', 'standalone', 'lite', 'source'];
+			const installGuideIds = ['manual-install', 'firefox-install', 'linux-install'];
+
 			// Update visibility of installation guides based on active tab
 			function updateInstallationGuides() {
 				const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
-				
+
 				// Hide all installation guides first
 				manualInstall.style.display = 'none';
 				firefoxInstall.style.display = 'none';
 				if (linuxInstall) {
 					linuxInstall.style.display = 'none';
 				}
-				
+
 				// Show appropriate guides based on active tab
 				if (activeTab === 'extension') {
 					manualInstall.style.display = 'block';
@@ -512,31 +516,101 @@
 					linuxInstall.style.display = 'block';
 				}
 			}
-			
-			tabButtons.forEach(button => {
-				button.addEventListener('click', () => {
-					// Remove active class from all buttons and contents
-					tabButtons.forEach(btn => btn.classList.remove('active'));
-					tabContents.forEach(content => content.classList.remove('active'));
-					
-					// Add active class to clicked button
-					button.classList.add('active');
-					
-					// Show corresponding content
-					const tabId = button.getAttribute('data-tab');
+
+			// Switch to a specific tab by ID
+			function switchToTab(tabId, updateHash = true) {
+				if (!validTabIds.includes(tabId)) return false;
+
+				// Remove active class from all buttons and contents
+				tabButtons.forEach(btn => btn.classList.remove('active'));
+				tabContents.forEach(content => content.classList.remove('active'));
+
+				// Find and activate the correct tab button
+				const targetButton = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+				if (targetButton) {
+					targetButton.classList.add('active');
 					document.getElementById(tabId).classList.add('active');
-					
+
+					// Update URL hash without scrolling
+					if (updateHash) {
+						history.replaceState(null, null, '#' + tabId);
+					}
+
 					// Update installation guides visibility
 					updateInstallationGuides();
+					return true;
+				}
+				return false;
+			}
+
+			// Handle URL hash on page load
+			function handleInitialHash() {
+				const hash = window.location.hash.substring(1);
+				if (!hash) return;
+
+				// Check if hash is a tab ID
+				if (validTabIds.includes(hash)) {
+					switchToTab(hash, false);
+					// Scroll to downloads section
+					const downloadsSection = document.getElementById('downloads');
+					if (downloadsSection) {
+						setTimeout(() => {
+							downloadsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						}, 100);
+					}
+				}
+				// Check if hash is an installation guide ID
+				else if (installGuideIds.includes(hash)) {
+					// First, switch to the appropriate tab to show the guide
+					if (hash === 'manual-install' || hash === 'firefox-install') {
+						switchToTab('extension', false);
+					} else if (hash === 'linux-install') {
+						switchToTab('standalone', false);
+					}
+					// Update hash in URL
+					history.replaceState(null, null, '#' + hash);
+					// Scroll to the installation guide
+					const guideSection = document.getElementById(hash);
+					if (guideSection) {
+						setTimeout(() => {
+							guideSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+						}, 100);
+					}
+				}
+			}
+
+			tabButtons.forEach(button => {
+				button.addEventListener('click', () => {
+					const tabId = button.getAttribute('data-tab');
+					switchToTab(tabId, true);
 				});
 			});
-			
+
+			// Handle "View Installation Instructions" links
+			const installLinks = document.querySelectorAll('.view-installation-instructions');
+			installLinks.forEach(link => {
+				link.addEventListener('click', (e) => {
+					const href = link.getAttribute('href');
+					if (href && href.startsWith('#')) {
+						const targetId = href.substring(1);
+						// Update URL hash
+						history.replaceState(null, null, '#' + targetId);
+					}
+				});
+			});
+
+			// Handle hash changes (browser back/forward)
+			window.addEventListener('hashchange', function() {
+				handleInitialHash();
+			});
+
 			// Set initial state
+			handleInitialHash();
 			updateInstallationGuides();
-					
+
 			// Accordion functionality
 			const accordionHeaders = document.querySelectorAll('.accordion-header');
-			
+
 			accordionHeaders.forEach(header => {
 				header.addEventListener('click', () => {
 					const accordionItem = header.parentElement;

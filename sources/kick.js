@@ -928,9 +928,14 @@
 	  
 	  var chatname = "";
 	  let messageId = "";
-	  
+	  var eventName = "";
 	  try {
-		chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+		  if (ele.querySelector("button[title]")){
+			chatname = escapeHtml(ele.querySelector("button[title]").innerText);
+		  } else {
+			chatname = escapeHtml(ele.querySelector("button.font-bold.inline.text-white").innerText);
+			eventName = true;
+		  }
 		
 	  } catch(e){
 		  return;
@@ -1082,6 +1087,12 @@
 			data.reply = originalMessage;
 		}
 		
+		if (eventName){
+			if (chatmessage.startsWith("has redeemed ")){
+				eventName = "reward";
+			}
+		}
+	  data.event = eventName;
 	  data.chatname = chatname;
 	  data.chatbadges = chatbadges;
 	  data.nameColor = nameColor;
@@ -1198,6 +1209,8 @@
 					isExtensionOn = response.state;
 				}
 			}
+			if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.lastError) { return; }
+			response = response || {};
 			if ("settings" in response){
 				settings = response.settings;
 				

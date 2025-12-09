@@ -40,6 +40,7 @@ class EventFlowEditor {
             { id: 'fromUser', name: '👤 From User' },
             { id: 'userRole', name: '👑 User Role' },
             { id: 'hasDonation', name: '💰 Has Donation' },
+            { id: 'compareProperty', name: '⚖️ Compare Property' },
             { id: 'randomChance', name: '🎲 Random Chance' },
             { id: 'timeInterval', name: '⏰ Time Interval' },
             { id: 'timeOfDay', name: '🕐 Time of Day' },
@@ -49,42 +50,113 @@ class EventFlowEditor {
             { id: 'messageProperties', name: '⚙️ Message Properties Filter' }
         ];
 
-        this.actionTypes = [
-            { id: 'blockMessage', name: '🚫 Block Message' },
-            { id: 'returnMessage', name: '✅ Return Message' },
-            { id: 'continueAsync', name: '⚡ Continue Async' },
-            { id: 'modifyMessage', name: '✏️ Modify Message' },
-            { id: 'addPrefix', name: '⬅️ Add Prefix' },
-            { id: 'addSuffix', name: '➡️ Add Suffix' },
-            { id: 'findReplace', name: '🔄 Find & Replace' },
-            { id: 'removeText', name: '✂️ Remove Text' },
-            { id: 'setProperty', name: '🎨 Set Property' },
-            { id: 'sendMessage', name: '💬 Send Message' },
-            { id: 'relay', name: '📢 Relay Chat' },
-            { id: 'reflectionFilter', name: '🪞 Reflection Filter' },
-            { id: 'webhook', name: '🌐 Call Webhook' },
-            { id: 'addPoints', name: '⬆️ Add Points' },
-            { id: 'spendPoints', name: '⬇️ Spend Points' },
-            { id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
-            { id: 'triggerOBSScene', name: '🎬 Trigger OBS Scene' },
-			{ id: 'playAudioClip', name: '🔊 Play Audio Clip' },
-			{ id: 'delay', name: '⏱️ Delay' },
-			{ id: 'obsChangeScene', name: '🎬 OBS: Change Scene' },
-			{ id: 'obsToggleSource', name: '👁️ OBS: Toggle Source' },
-			{ id: 'obsSetSourceFilter', name: '🎨 OBS: Toggle Filter' },
-			{ id: 'obsMuteSource', name: '🔇 OBS: Mute/Unmute Audio' },
-			{ id: 'obsStartRecording', name: '🔴 OBS: Start Recording' },
-			{ id: 'obsStopRecording', name: '⏹️ OBS: Stop Recording' },
-			{ id: 'obsStartStreaming', name: '📡 OBS: Start Streaming' },
-			{ id: 'obsStopStreaming', name: '⏹️ OBS: Stop Streaming' },
-			{ id: 'obsReplayBuffer', name: '💾 OBS: Save Replay Buffer' },
-			{ id: 'midiSendNote', name: '🎹 MIDI: Send Note' },
-			{ id: 'midiSendCC', name: '🎛️ MIDI: Send Control Change' },
-			{ id: 'setGateState', name: '🚦 Set Gate State' },
-			{ id: 'resetStateNode', name: '🔄 Reset State Node' },
-			{ id: 'setCounter', name: '🔢 Set Counter Value' },
-			{ id: 'incrementCounter', name: '➕ Increment Counter' }
-		];
+        // Grouped action types for collapsible sections
+        this.actionGroups = [
+            {
+                id: 'message',
+                name: '💬 Message Actions',
+                expanded: true,
+                actions: [
+                    { id: 'blockMessage', name: '🚫 Block Message' },
+                    { id: 'returnMessage', name: '✅ Return Message' },
+                    { id: 'continueAsync', name: '⚡ Continue Async' },
+                    { id: 'modifyMessage', name: '✏️ Modify Message' },
+                    { id: 'addPrefix', name: '⬅️ Add Prefix' },
+                    { id: 'addSuffix', name: '➡️ Add Suffix' },
+                    { id: 'findReplace', name: '🔄 Find & Replace' },
+                    { id: 'removeText', name: '✂️ Remove Text' },
+                    { id: 'setProperty', name: '🎨 Set Property' },
+                    { id: 'sendMessage', name: '💬 Send Message' },
+                    { id: 'relay', name: '📢 Relay Chat' },
+                    { id: 'reflectionFilter', name: '🪞 Reflection Filter' }
+                ]
+            },
+            {
+                id: 'integrations',
+                name: '🔌 Integrations',
+                expanded: true,
+                actions: [
+                    { id: 'webhook', name: '🌐 Call Webhook' },
+                    { id: 'addPoints', name: '⬆️ Add Points' },
+                    { id: 'spendPoints', name: '⬇️ Spend Points' }
+                ]
+            },
+            {
+                id: 'media',
+                name: '🎨 Media & Effects',
+                expanded: true,
+                actions: [
+                    { id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
+                    { id: 'playAudioClip', name: '🔊 Play Audio Clip' },
+                    { id: 'delay', name: '⏱️ Delay' }
+                ]
+            },
+            {
+                id: 'obs',
+                name: '🎬 OBS Studio',
+                expanded: false,
+                actions: [
+                    { id: 'triggerOBSScene', name: '🎬 Trigger OBS Scene' },
+                    { id: 'obsChangeScene', name: '🎬 Change Scene' },
+                    { id: 'obsToggleSource', name: '👁️ Toggle Source' },
+                    { id: 'obsSetSourceFilter', name: '🎨 Toggle Filter' },
+                    { id: 'obsMuteSource', name: '🔇 Mute/Unmute Audio' },
+                    { id: 'obsStartRecording', name: '🔴 Start Recording' },
+                    { id: 'obsStopRecording', name: '⏹️ Stop Recording' },
+                    { id: 'obsStartStreaming', name: '📡 Start Streaming' },
+                    { id: 'obsStopStreaming', name: '⏹️ Stop Streaming' },
+                    { id: 'obsReplayBuffer', name: '💾 Save Replay Buffer' }
+                ]
+            },
+            {
+                id: 'spotify',
+                name: '🎵 Spotify',
+                expanded: false,
+                actions: [
+                    { id: 'spotifySkip', name: '⏭️ Skip Track' },
+                    { id: 'spotifyPrevious', name: '⏮️ Previous Track' },
+                    { id: 'spotifyPause', name: '⏸️ Pause' },
+                    { id: 'spotifyResume', name: '▶️ Resume' },
+                    { id: 'spotifyVolume', name: '🔊 Set Volume' },
+                    { id: 'spotifyQueue', name: '📋 Add to Queue' }
+                ]
+            },
+            {
+                id: 'tts',
+                name: '🔊 Text to Speech',
+                expanded: false,
+                actions: [
+                    { id: 'ttsSpeak', name: '🗣️ Speak Text' },
+                    { id: 'ttsToggle', name: '🔇 Toggle TTS' },
+                    { id: 'ttsSkip', name: '⏭️ Skip TTS' },
+                    { id: 'ttsClear', name: '🗑️ Clear TTS Queue' },
+                    { id: 'ttsVolume', name: '🔊 Set TTS Volume' }
+                ]
+            },
+            {
+                id: 'midi',
+                name: '🎹 MIDI',
+                expanded: false,
+                actions: [
+                    { id: 'midiSendNote', name: '🎹 Send Note' },
+                    { id: 'midiSendCC', name: '🎛️ Send Control Change' }
+                ]
+            },
+            {
+                id: 'state',
+                name: '🔧 State Control',
+                expanded: false,
+                actions: [
+                    { id: 'setGateState', name: '🚦 Set Gate State' },
+                    { id: 'resetStateNode', name: '🔄 Reset State Node' },
+                    { id: 'setCounter', name: '🔢 Set Counter Value' },
+                    { id: 'incrementCounter', name: '➕ Increment Counter' }
+                ]
+            }
+        ];
+
+        // Flatten for backward compatibility
+        this.actionTypes = this.actionGroups.flatMap(group => group.actions);
 
         // Check if we're in ssapp context for cross-origin communication
         const urlParams = new URLSearchParams(window.location.search);
@@ -138,9 +210,19 @@ class EventFlowEditor {
                         </div>
                         <h3>Actions</h3>
                         <div class="node-list" id="action-list">
-                            ${this.actionTypes.map(action => `
-                                <div class="node-item action" data-nodetype="action" data-subtype="${action.id}" draggable="true" ${action.id === 'customJs' ? 'style="display: none;"' : ''}>
-                                    ${action.name}
+                            ${this.actionGroups.map(group => `
+                                <div class="action-group" data-group="${group.id}">
+                                    <div class="action-group-header ${group.expanded ? 'expanded' : 'collapsed'}" data-group="${group.id}">
+                                        <span class="action-group-toggle">${group.expanded ? '▼' : '▶'}</span>
+                                        <span class="action-group-name">${group.name}</span>
+                                    </div>
+                                    <div class="action-group-items" style="${group.expanded ? '' : 'display: none;'}">
+                                        ${group.actions.map(action => `
+                                            <div class="node-item action" data-nodetype="action" data-subtype="${action.id}" draggable="true">
+                                                ${action.name}
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -253,6 +335,32 @@ class EventFlowEditor {
         actionItems.forEach(item => {
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'action', item.dataset.subtype)); // Changed to subtype
         });
+
+        // Add click handlers for collapsible action groups
+        const actionGroupHeaders = document.querySelectorAll('.action-group-header');
+        actionGroupHeaders.forEach(header => {
+            header.addEventListener('click', (e) => {
+                const groupId = header.dataset.group;
+                const group = this.actionGroups.find(g => g.id === groupId);
+                if (group) {
+                    group.expanded = !group.expanded;
+                    const toggle = header.querySelector('.action-group-toggle');
+                    const items = header.nextElementSibling;
+                    if (group.expanded) {
+                        header.classList.remove('collapsed');
+                        header.classList.add('expanded');
+                        toggle.textContent = '▼';
+                        items.style.display = '';
+                    } else {
+                        header.classList.remove('expanded');
+                        header.classList.add('collapsed');
+                        toggle.textContent = '▶';
+                        items.style.display = 'none';
+                    }
+                }
+            });
+        });
+
 		const logicItems = document.querySelectorAll('#logic-list .node-item');
         logicItems.forEach(item => {
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'logic', item.dataset.subtype));
@@ -1217,6 +1325,13 @@ class EventFlowEditor {
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
                 case 'userRole': return `Role: ${node.config.role || 'Any'}`;
                 case 'hasDonation': return 'Has donation';
+                case 'compareProperty': {
+                    const prop = node.config.property || 'donationAmount';
+                    const op = node.config.operator || 'gt';
+                    const val = node.config.value ?? 0;
+                    const opSymbols = { gt: '>', lt: '<', eq: '=', gte: '>=', lte: '<=', ne: '!=' };
+                    return `${prop} ${opSymbols[op] || op} ${val}`;
+                }
                 case 'randomChance': {
                     const prob = Math.round((node.config.probability || 0.1) * 100);
                     const cooldown = node.config.cooldownMs ? ` (${node.config.cooldownMs/1000}s cooldown)` : '';
@@ -1291,6 +1406,35 @@ class EventFlowEditor {
                 case 'obsStartStreaming': return 'Start Streaming';
                 case 'obsStopStreaming': return 'Stop Streaming';
                 case 'obsReplayBuffer': return 'Save Replay Buffer';
+                // Spotify actions
+                case 'spotifySkip': return 'Skip to next track';
+                case 'spotifyPrevious': return 'Go to previous track';
+                case 'spotifyPause': return 'Pause playback';
+                case 'spotifyResume': return 'Resume playback';
+                case 'spotifyVolume': return `Volume: ${node.config.volume || 50}%`;
+                case 'spotifyQueue': {
+                    const query = node.config.query || '';
+                    const useMsg = node.config.useMessageText;
+                    if (useMsg) return 'Queue: (from chat message)';
+                    if (!query) return 'Queue: Not configured';
+                    return `Queue: ${query.substring(0,20)}${query.length > 20 ? '...' : ''}`;
+                }
+                // TTS actions
+                case 'ttsSpeak': {
+                    if (node.config.useMessageText) return 'Speak: (chat message)';
+                    const text = node.config.text || '';
+                    if (!text) return 'Speak: Not configured';
+                    return `Speak: "${text.substring(0,20)}${text.length > 20 ? '...' : ''}"`;
+                }
+                case 'ttsToggle': {
+                    const mode = node.config.enabled;
+                    if (mode === true || mode === 'true') return 'TTS: Enable';
+                    if (mode === false || mode === 'false') return 'TTS: Disable';
+                    return 'TTS: Toggle';
+                }
+                case 'ttsSkip': return 'Skip current TTS';
+                case 'ttsClear': return 'Clear TTS queue';
+                case 'ttsVolume': return `TTS Volume: ${node.config.volume ?? 100}%`;
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'logic') { // NEW
@@ -1671,6 +1815,7 @@ class EventFlowEditor {
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
                 case 'hasDonation': node.config = {}; break;
+                case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
                 case 'timeOfDay': node.config = { times: ['12:00'] }; break;
@@ -2160,6 +2305,57 @@ class EventFlowEditor {
 				break;
 			case 'hasDonation': // Trigger type
 				html += `<p class="property-help">Fires if the message includes donation information.</p>`;
+				break;
+			case 'compareProperty':
+				const commonProperties = [
+					{ value: 'donationAmount', label: 'Donation Amount' },
+					{ value: 'karma', label: 'Karma Score (0-1)' },
+					{ value: 'memberMonths', label: 'Member Months' },
+					{ value: 'bitsAmount', label: 'Bits Amount (Twitch)' },
+					{ value: 'superChatAmount', label: 'Super Chat Amount (YouTube)' },
+					{ value: 'viewerCount', label: 'Viewer Count' },
+					{ value: 'messageLength', label: 'Message Length' },
+					{ value: 'wordCount', label: 'Word Count' },
+					{ value: '_custom', label: '-- Custom Property --' }
+				];
+				const operators = [
+					{ value: 'gt', label: 'Greater than (>)' },
+					{ value: 'gte', label: 'Greater or equal (>=)' },
+					{ value: 'lt', label: 'Less than (<)' },
+					{ value: 'lte', label: 'Less or equal (<=)' },
+					{ value: 'eq', label: 'Equals (=)' },
+					{ value: 'ne', label: 'Not equals (!=)' }
+				];
+				const isCustomProp = !commonProperties.some(p => p.value === node.config.property && p.value !== '_custom');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Property to Compare</label>
+						<select class="property-input" id="prop-property-select">
+							${commonProperties.map(p => `<option value="${p.value}" ${(node.config.property === p.value || (isCustomProp && p.value === '_custom')) ? 'selected' : ''}>${p.label}</option>`).join('')}
+						</select>
+					</div>
+					<div class="property-group" id="custom-property-group" style="${isCustomProp ? '' : 'display: none;'}">
+						<label class="property-label">Custom Property Name</label>
+						<input type="text" class="property-input" id="prop-property" value="${isCustomProp ? (node.config.property || '') : ''}" placeholder="e.g., customField">
+						<div class="property-help">Enter the exact property name from the message object</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Operator</label>
+						<select class="property-input" id="prop-operator">
+							${operators.map(o => `<option value="${o.value}" ${node.config.operator === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+						</select>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Compare Value</label>
+						<input type="number" class="property-input" id="prop-value" value="${node.config.value ?? 0}" step="any">
+						<div class="property-help">The value to compare against</div>
+					</div>
+					<div class="property-group" style="background: #e3f2fd; padding: 10px; border-radius: 4px;">
+						<strong>💡 Examples:</strong><br>
+						• donationAmount > 50 (tips over $50)<br>
+						• karma < 0.3 (low karma users)<br>
+						• memberMonths >= 12 (1 year+ members)
+					</div>`;
 				break;
 			case 'randomChance': // Random trigger
 				const probability = (node.config.probability || 0.1) * 100; // Convert to percentage for display
@@ -3332,6 +3528,178 @@ class EventFlowEditor {
 						<strong>💡 Tip:</strong> Perfect for saving highlight moments triggered by donations or special messages!
 					</div>`;
 				break;
+
+			// Spotify Actions
+			case 'spotifySkip':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Skips to the next track in the current playlist or queue.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>`;
+				break;
+
+			case 'spotifyPrevious':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Goes back to the previous track.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>`;
+				break;
+
+			case 'spotifyPause':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Pauses the current playback.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>`;
+				break;
+
+			case 'spotifyResume':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Resumes playback if paused.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>`;
+				break;
+
+			case 'spotifyVolume':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Volume Level</label>
+						<input type="range" class="property-input" id="prop-volume"
+							value="${node.config.volume || 50}" min="0" max="100" step="5"
+							oninput="document.getElementById('volume-display').textContent = this.value + '%'">
+						<div style="text-align: center; margin-top: 5px;">
+							<span id="volume-display">${node.config.volume || 50}%</span>
+						</div>
+						<div class="property-help">Set the playback volume (0-100%)</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>`;
+				break;
+
+			case 'spotifyQueue':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Song Search Query</label>
+						<input type="text" class="property-input" id="prop-query"
+							value="${node.config.query || ''}" placeholder="e.g., Never Gonna Give You Up">
+						<div class="property-help">Enter a song name, artist, or both. The top search result will be added to the queue.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" class="property-input" id="prop-useMessageText"
+								${node.config.useMessageText ? 'checked' : ''}>
+							Use chat message as search query
+						</label>
+						<div class="property-help">If checked, the triggering chat message will be used as the song search query instead of the text above.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>
+					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+						<strong>💡 Tip:</strong> Combine with a "Message Starts With" trigger (e.g., "!sr") to let viewers request songs!
+					</div>`;
+				break;
+
+			// TTS Actions
+			case 'ttsSpeak':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Text to Speak</label>
+						<textarea class="property-input" id="prop-text" rows="3" placeholder="Enter text to speak...">${node.config.text || ''}</textarea>
+						<div class="property-help">The text that will be spoken aloud</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" class="property-input" id="prop-useMessageText"
+								${node.config.useMessageText ? 'checked' : ''}>
+							Use chat message as text
+						</label>
+						<div class="property-help">If checked, the triggering chat message will be spoken instead of the text above.</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" class="property-input" id="prop-force"
+								${node.config.force ? 'checked' : ''}>
+							Force speak (even if TTS is disabled)
+						</label>
+						<div class="property-help">Will speak even when TTS is globally disabled.</div>
+					</div>
+					<div class="property-group" style="background: #9C27B0; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🔊 TTS Integration:</strong><br>
+						Requires TTS to be enabled on the actions.html overlay page.
+					</div>`;
+				break;
+
+			case 'ttsToggle':
+				html += `
+					<div class="property-group">
+						<label class="property-label">TTS State</label>
+						<select class="property-input" id="prop-enabled">
+							<option value="toggle" ${node.config.enabled === 'toggle' || node.config.enabled === undefined ? 'selected' : ''}>Toggle</option>
+							<option value="true" ${node.config.enabled === true || node.config.enabled === 'true' ? 'selected' : ''}>Enable</option>
+							<option value="false" ${node.config.enabled === false || node.config.enabled === 'false' ? 'selected' : ''}>Disable</option>
+						</select>
+						<div class="property-help">Enable, disable, or toggle TTS on the actions overlay.</div>
+					</div>`;
+				break;
+
+			case 'ttsSkip':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Skips the currently speaking TTS message and moves to the next in queue.</div>
+					</div>
+					<div class="property-group" style="background: #9C27B0; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🔊 TTS Integration:</strong><br>
+						Requires TTS to be enabled on the actions.html overlay page.
+					</div>`;
+				break;
+
+			case 'ttsClear':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Clears all queued TTS messages. The current message will finish playing.</div>
+					</div>
+					<div class="property-group" style="background: #9C27B0; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🔊 TTS Integration:</strong><br>
+						Requires TTS to be enabled on the actions.html overlay page.
+					</div>`;
+				break;
+
+			case 'ttsVolume':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Volume Level</label>
+						<input type="range" class="property-input" id="prop-volume"
+							value="${node.config.volume ?? 100}" min="0" max="100" step="5"
+							oninput="document.getElementById('tts-volume-display').textContent = this.value + '%'">
+						<div style="text-align: center; margin-top: 5px;">
+							<span id="tts-volume-display">${node.config.volume ?? 100}%</span>
+						</div>
+						<div class="property-help">Set the TTS volume (0-100%)</div>
+					</div>
+					<div class="property-group" style="background: #9C27B0; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🔊 TTS Integration:</strong><br>
+						Requires TTS to be enabled on the actions.html overlay page.
+					</div>`;
+				break;
+
 			case 'midiSendNote':
 				html += `<div class="property-group">
 					<label class="property-label">MIDI Output Device</label>
@@ -3598,6 +3966,25 @@ class EventFlowEditor {
                 // ensure config refresh
                 if (nodeData && nodeData.config) {
                     nodeData.config.policy = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for compareProperty - show/hide custom property input
+        const propertySelect = document.getElementById('prop-property-select');
+        const customPropertyGroup = document.getElementById('custom-property-group');
+        const customPropertyInput = document.getElementById('prop-property');
+        if (propertySelect && customPropertyGroup) {
+            propertySelect.addEventListener('change', (e) => {
+                if (e.target.value === '_custom') {
+                    customPropertyGroup.style.display = '';
+                    // Use the custom input value
+                    nodeData.config.property = customPropertyInput?.value || '';
+                } else {
+                    customPropertyGroup.style.display = 'none';
+                    nodeData.config.property = e.target.value;
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);

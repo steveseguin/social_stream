@@ -6,6 +6,7 @@
     <title>Poll - Social Stream Ninja</title>
     <link rel="icon" href="./favicon.ico" />
     <link rel="preload" href="./thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <script src="./currency.js"></script>
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@400;700&family=Oswald:wght@400;700&family=Poppins:wght@400;600&family=Press+Start+2P&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&family=Courier+Prime:wght@400;700&display=swap');
 
@@ -446,18 +447,22 @@ const settings = {
     styleType: urlParams.get('style') || 'default',
     pollSpam: urlParams.has('pollSpam') || false,
     pollClosed: false,
-    pollTally: urlParams.has('pollTally') || false, 
+    pollTally: urlParams.has('pollTally') || false,
+    pollDonationWeighted: urlParams.has('pollDonationWeighted') || false,
 };
 
 settings.pollEnabled = normalizeBoolean(settings.pollEnabled) ?? false;
 settings.pollSpam = normalizeBoolean(settings.pollSpam) ?? false;
 settings.pollTally = normalizeBoolean(settings.pollTally) ?? false;
+settings.pollDonationWeighted = normalizeBoolean(settings.pollDonationWeighted) ?? false;
 settings.pollTimer = normalizeNumber(settings.pollTimer, 60) || 60;
 settings.pollOptions = normalizeOptionsList(settings.pollOptions);
 
 let results = {};
 let totalVotes = 0;
 let alreadyVoted = {};
+let donationTotals = {}; // Track donation amounts per option
+let totalDonations = 0;  // Track total donations
 let updatePending = false;
 let lastUpdateTime = 0;
 const UPDATE_THROTTLE = 200; // Only update UI every 200ms
@@ -587,13 +592,19 @@ function updatePollResults() {
         }
         
         html += `<span class="option-text">${option}</span>`;
-        
-		if (settings.pollTally) {
-			html += `<span class="option-tally">${votes} votes</span>`;
-		} else {
-			html += `<span class="option-percentage">${percentage}%</span>`;
-		}
-        
+
+        // Show donation amount if donation-weighted voting is enabled and there are donations
+        const optionDonations = donationTotals[option] || 0;
+        if (settings.pollDonationWeighted && optionDonations > 0) {
+            html += `<span class="option-tally" style="color: #2ecc71;">$${optionDonations.toFixed(2)}</span>`;
+        }
+
+        if (settings.pollTally) {
+            html += `<span class="option-tally">${votes} votes</span>`;
+        } else {
+            html += `<span class="option-percentage">${percentage}%</span>`;
+        }
+
         html += `<div class="poll-bar" style="width: ${percentage}%;"></div>`;
         
         optionElement.innerHTML = html;
@@ -633,16 +644,23 @@ function extractVoterId(payload) {
     return payload.userid || payload.userId || payload.user_id || payload.uid || null;
 }
 
-function recordVote(option, voterKey, context = {}) {
-    results[option] = (results[option] || 0) + 1;
-    totalVotes++;
+function recordVote(option, voterKey, context = {}, voteWeight = 1, donationAmount = 0) {
+    results[option] = (results[option] || 0) + voteWeight;
+    totalVotes += voteWeight;
+    if (donationAmount > 0) {
+        donationTotals[option] = (donationTotals[option] || 0) + donationAmount;
+        totalDonations += donationAmount;
+    }
     if (!settings.pollSpam) {
         alreadyVoted[voterKey] = true;
     }
     debugLog('Vote counted', {
         option,
         voterKey,
+        voteWeight,
+        donationAmount,
         totalVotes,
+        totalDonations,
         ...context
     });
 }
@@ -651,9 +669,9 @@ function logVoteIgnored(reason, context = {}) {
     debugLog(`Vote ignored: ${reason}`, context);
 }
 
-function queueVote(vote, name, source, userId) {
-    messageQueue.push({vote, name, source, userId});
-    debugLog('Queued vote message', { vote, name, source, userId });
+function queueVote(vote, name, source, userId, hasDonation = null) {
+    messageQueue.push({vote, name, source, userId, hasDonation});
+    debugLog('Queued vote message', { vote, name, source, userId, hasDonation });
     if (!processingQueue) {
         processingQueue = true;
         setTimeout(processVoteQueue, 50); // Process votes in batches every 50ms
@@ -663,10 +681,10 @@ function queueVote(vote, name, source, userId) {
 function processVoteQueue() {
     const startTime = Date.now();
     const timeLimit = 20; // Process for max 20ms to avoid UI freezing
-    
+
     while (messageQueue.length > 0 && (Date.now() - startTime < timeLimit)) {
-        const {vote, name, source, userId} = messageQueue.shift();
-        processVoteSingle(vote, name, source, userId);
+        const {vote, name, source, userId, hasDonation} = messageQueue.shift();
+        processVoteSingle(vote, name, source, userId, hasDonation);
     }
     
     if (messageQueue.length > 0) {
@@ -678,7 +696,7 @@ function processVoteQueue() {
     }
 }
 
-function processVoteSingle(vote, name, source, userId) {
+function processVoteSingle(vote, name, source, userId, hasDonation = null) {
     if (settings.pollClosed) {
         logVoteIgnored('poll closed', { name, source, userId, vote });
         return;
@@ -688,13 +706,13 @@ function processVoteSingle(vote, name, source, userId) {
         logVoteIgnored('invalid vote payload', { name, source, userId, vote });
         return;
     }
-    
+
     const voterKey = buildVoterKey(name, source, userId);
     if (!settings.pollSpam && alreadyVoted[voterKey]) {
         logVoteIgnored('duplicate voter', { voterKey, name, source, userId, vote });
         return;
     }
-    
+
     const rawVote = vote;
     // Clean the vote: lowercase and remove common punctuation
     vote = vote.trim().toLowerCase().replace(/[!.,?]+$/, '');
@@ -704,12 +722,26 @@ function processVoteSingle(vote, name, source, userId) {
         return;
     }
 
+    // Calculate vote weight for donation-weighted polls
+    let voteWeight = 1;
+    let donationAmount = 0;
+    if (settings.pollDonationWeighted && hasDonation) {
+        donationAmount = (typeof convertToUSD === 'function') ? convertToUSD(hasDonation, source) : 0;
+        if (donationAmount > 0) {
+            voteWeight = Math.round(donationAmount); // $5 = 5 bonus votes
+            if (voteWeight < 1) voteWeight = 1; // Minimum 1 vote
+        }
+    }
+
     const voteContext = {
         name,
         source,
         userId,
         rawVote,
-        normalizedVote: vote
+        normalizedVote: vote,
+        hasDonation,
+        donationAmount,
+        voteWeight
     };
     
     if (settings.pollType === 'multiple' || settings.pollType === 'yesno') {
@@ -719,17 +751,17 @@ function processVoteSingle(vote, name, source, userId) {
             // For yes/no, 1 = Yes, 2 = No
             if (settings.pollType === 'yesno') {
                 if (numericVote === 1) {
-                    recordVote('Yes', voterKey, { ...voteContext, matchedBy: 'yesno-numeric' });
+                    recordVote('Yes', voterKey, { ...voteContext, matchedBy: 'yesno-numeric' }, voteWeight, donationAmount);
                     return;
                 } else if (numericVote === 2 || numericVote === 0) {
-                    recordVote('No', voterKey, { ...voteContext, matchedBy: 'yesno-numeric' });
+                    recordVote('No', voterKey, { ...voteContext, matchedBy: 'yesno-numeric' }, voteWeight, donationAmount);
                     return;
                 }
             } else {
                 // Regular multiple choice handling
                 const option = settings.pollOptions[numericVote - 1];
                 if (option) {
-                    recordVote(option, voterKey, { ...voteContext, matchedBy: 'multiple-numeric' });
+                    recordVote(option, voterKey, { ...voteContext, matchedBy: 'multiple-numeric' }, voteWeight, donationAmount);
                     return;
                 }
             }
@@ -738,32 +770,32 @@ function processVoteSingle(vote, name, source, userId) {
         // Special handling for yes/no polls
         if (settings.pollType === 'yesno') {
             if (yesMatches.has(vote)) {
-                recordVote('Yes', voterKey, { ...voteContext, matchedBy: 'yesno-text' });
+                recordVote('Yes', voterKey, { ...voteContext, matchedBy: 'yesno-text' }, voteWeight, donationAmount);
                 return;
             }
             if (noMatches.has(vote)) {
-                recordVote('No', voterKey, { ...voteContext, matchedBy: 'yesno-text' });
+                recordVote('No', voterKey, { ...voteContext, matchedBy: 'yesno-text' }, voteWeight, donationAmount);
                 return;
             }
         }
 
         // For multiple choice, cached option lookup
         let cleanVote = vote;
-        
+
         // Remove hashtag if it exists
         if (cleanVote.startsWith('#')) {
             cleanVote = cleanVote.substring(1);
         }
-        
+
         for (let i = 0; i < settings.pollOptions.length; i += 1) {
             const option = settings.pollOptions[i];
             const normalizedOption = option.toLowerCase();
-            
-            if (cleanVote === normalizedOption || 
-                normalizedOption === cleanVote + 's' || 
+
+            if (cleanVote === normalizedOption ||
+                normalizedOption === cleanVote + 's' ||
                 cleanVote === normalizedOption + 's') {
-                
-                recordVote(option, voterKey, { ...voteContext, matchedBy: 'multiple-text' });
+
+                recordVote(option, voterKey, { ...voteContext, matchedBy: 'multiple-text' }, voteWeight, donationAmount);
                 return;
             }
         }
@@ -772,7 +804,7 @@ function processVoteSingle(vote, name, source, userId) {
         if (vote.startsWith('#') && vote.length > 1) {
             const hashtag = vote.substring(1).toUpperCase();
             if (hashtag.match(/^\w+$/)) {
-                recordVote(hashtag, voterKey, { ...voteContext, matchedBy: 'freeform-hashtag' });
+                recordVote(hashtag, voterKey, { ...voteContext, matchedBy: 'freeform-hashtag' }, voteWeight, donationAmount);
                 return;
             }
         } else {
@@ -780,7 +812,7 @@ function processVoteSingle(vote, name, source, userId) {
             const resultsKeys = Object.keys(results);
             if (!Number.isNaN(numericVote) && numericVote > 0 && numericVote <= resultsKeys.length) {
                 const selectedOption = resultsKeys[numericVote - 1];
-                recordVote(selectedOption, voterKey, { ...voteContext, matchedBy: 'freeform-numeric' });
+                recordVote(selectedOption, voterKey, { ...voteContext, matchedBy: 'freeform-numeric' }, voteWeight, donationAmount);
                 return;
             }
         }
@@ -897,6 +929,15 @@ function processData(data) {
                 updateUiSetting('pollSpam', incomingSpam);
             }
         }
+        if (data.settings.pollDonationWeighted !== undefined) {
+            const rawDonationWeighted = Object.prototype.hasOwnProperty.call(data.settings.pollDonationWeighted || {}, 'setting')
+                ? data.settings.pollDonationWeighted.setting
+                : data.settings.pollDonationWeighted;
+            const incomingDonationWeighted = normalizeBoolean(rawDonationWeighted);
+            if (typeof incomingDonationWeighted === 'boolean') {
+                updateUiSetting('pollDonationWeighted', incomingDonationWeighted);
+            }
+        }
         if (data.settings.multipleChoiceOptions) {
             const rawOptions = typeof data.settings.multipleChoiceOptions === 'string'
                 ? data.settings.multipleChoiceOptions
@@ -932,6 +973,8 @@ function processData(data) {
             results = {};
             totalVotes = 0;
             alreadyVoted = {};
+            donationTotals = {};
+            totalDonations = 0;
             settings.pollClosed = false;
             initializePoll();
             updatePollVisibility();
@@ -944,7 +987,7 @@ function processData(data) {
             debugLog('UI adjustments applied alongside core reset', { uiChanges });
         }
     } else if (data.chatmessage) {
-        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data));
+        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
     } else if (data.cmd) {
         if (data.cmd === "closepoll") {
             closePoll();
@@ -969,6 +1012,8 @@ function startPoll() {
     alreadyVoted = {};
     totalVotes = 0;
     results = {};
+    donationTotals = {};
+    totalDonations = 0;
     initializePoll();
     updatePollVisibility();
     debugLog('Poll started/reset', {
@@ -982,6 +1027,8 @@ function resetPoll() {
     results = {};
     totalVotes = 0;
     alreadyVoted = {};
+    donationTotals = {};
+    totalDonations = 0;
     initializePoll();
     debugLog('Poll reset without changing visibility', {
         pollQuestion: settings.pollQuestion
@@ -1004,8 +1051,8 @@ function processInput(data) {
         }
         return true;
     } else if (data.chatmessage) {
-        debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type });
-        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data));
+        debugLog('Chat message received for poll', { chatmessage: data.chatmessage, chatname: data.chatname, source: data.type, hasDonation: data.hasDonation });
+        queueVote(data.chatmessage, data.chatname, data.type, extractVoterId(data), data.hasDonation || data.donation);
         return true;
     } else if (data.settings) {
         debugLog('Settings payload received', data.settings);

@@ -12,6 +12,12 @@ class EventFlowSystem {
         this.sanitizeRelay = options.sanitizeRelay || window.sanitizeRelay || null;
 		this.checkExactDuplicateAlreadyRelayed = options.checkExactDuplicateAlreadyRelayed || window.checkExactDuplicateAlreadyRelayed || null;
 		this.sendTargetP2P = options.sendTargetP2P || window.sendTargetP2P || null;
+		// For sending messages to background.js (e.g., Spotify actions)
+		this.sendMessageToBackground = options.sendMessageToBackground || ((msg) => {
+			if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+				chrome.runtime.sendMessage(msg).catch(err => console.warn('[EventFlow] sendMessageToBackground error:', err));
+			}
+		});
 		this.messageStore = options.messageStore || window.messageStore || {}; // Share message store from background.js
 		this.handleMessageStore = options.handleMessageStore || window.handleMessageStore || null; // Function to handle message storage
 		
@@ -1423,7 +1429,45 @@ class EventFlowSystem {
                 match = !!message.hasDonation; // Assuming hasDonation is a truthy value if donation exists
               ////console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
                 return match;
-                
+
+            case 'compareProperty': {
+                const prop = config.property || 'donationAmount';
+                const operator = config.operator || 'gt';
+                const compareValue = parseFloat(config.value) || 0;
+
+                // Get the property value from the message
+                let msgValue = message[prop];
+
+                // Handle special cases for message length and word count
+                if (prop === 'messageLength' && message.chatmessage) {
+                    msgValue = message.chatmessage.length;
+                } else if (prop === 'wordCount' && message.chatmessage) {
+                    msgValue = message.chatmessage.trim().split(/\s+/).filter(w => w.length > 0).length;
+                }
+
+                // If property doesn't exist or is null/undefined, return false
+                if (msgValue === undefined || msgValue === null) {
+                    return false;
+                }
+
+                // Parse to number if string
+                const numValue = parseFloat(msgValue);
+                if (isNaN(numValue)) {
+                    return false; // Can't compare non-numeric value
+                }
+
+                // Perform comparison
+                switch (operator) {
+                    case 'gt': return numValue > compareValue;
+                    case 'lt': return numValue < compareValue;
+                    case 'eq': return numValue === compareValue;
+                    case 'gte': return numValue >= compareValue;
+                    case 'lte': return numValue <= compareValue;
+                    case 'ne': return numValue !== compareValue;
+                    default: return false;
+                }
+            }
+
             case 'timeInterval':
                 // Trigger at regular intervals (in seconds)
                 if (!config.interval || config.interval <= 0) return false;
@@ -2770,14 +2814,128 @@ class EventFlowSystem {
                 const replayBufferPayload = {
                     actionType: 'obsReplayBuffer'
                 };
-                
+
                 if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
                     this.sendTargetP2P({ overlayNinja: replayBufferPayload }, 'actions');
                 } else {
                     console.warn('[OBS] sendTargetP2P not available');
                 }
                 break;
-                
+
+            // Spotify Actions
+            case 'spotifySkip':
+                if (this.sendMessageToBackground) {
+                    this.sendMessageToBackground({ spotifyAction: 'skip' });
+                }
+                break;
+
+            case 'spotifyPrevious':
+                if (this.sendMessageToBackground) {
+                    this.sendMessageToBackground({ spotifyAction: 'previous' });
+                }
+                break;
+
+            case 'spotifyPause':
+                if (this.sendMessageToBackground) {
+                    this.sendMessageToBackground({ spotifyAction: 'pause' });
+                }
+                break;
+
+            case 'spotifyResume':
+                if (this.sendMessageToBackground) {
+                    this.sendMessageToBackground({ spotifyAction: 'resume' });
+                }
+                break;
+
+            case 'spotifyVolume':
+                if (this.sendMessageToBackground && config.volume !== undefined) {
+                    this.sendMessageToBackground({
+                        spotifyAction: 'volume',
+                        volume: config.volume
+                    });
+                }
+                break;
+
+            case 'spotifyQueue':
+                if (this.sendMessageToBackground) {
+                    // Use the chat message as query if configured, otherwise use the static query
+                    let query = config.query || '';
+                    if (config.useMessageText && message.chatmessage) {
+                        // Strip command prefix if present (e.g., "!sr song name" -> "song name")
+                        query = message.chatmessage.replace(/^!\w+\s*/, '').trim();
+                    }
+                    if (query) {
+                        this.sendMessageToBackground({
+                            spotifyAction: 'queue',
+                            query: query
+                        });
+                    }
+                }
+                break;
+
+            // TTS Actions
+            case 'ttsSpeak': {
+                let ttsText = config.text || '';
+                if (config.useMessageText && message.chatmessage) {
+                    ttsText = message.chatmessage;
+                }
+                if (ttsText && this.sendTargetP2P) {
+                    this.sendTargetP2P({
+                        overlayNinja: {
+                            actionType: 'tts',
+                            text: ttsText,
+                            force: config.force || false
+                        }
+                    }, 'actions');
+                }
+                break;
+            }
+
+            case 'ttsToggle': {
+                if (this.sendTargetP2P) {
+                    let enabled = config.enabled;
+                    // Convert string values to appropriate types
+                    if (enabled === 'true') enabled = true;
+                    else if (enabled === 'false') enabled = false;
+                    else if (enabled === 'toggle') enabled = undefined; // toggle behavior
+
+                    this.sendTargetP2P({
+                        overlayNinja: {
+                            actionType: 'toggleTTS',
+                            enabled: enabled
+                        }
+                    }, 'actions');
+                }
+                break;
+            }
+
+            case 'ttsSkip':
+                if (this.sendTargetP2P) {
+                    this.sendTargetP2P({
+                        overlayNinja: { actionType: 'skipTTS' }
+                    }, 'actions');
+                }
+                break;
+
+            case 'ttsClear':
+                if (this.sendTargetP2P) {
+                    this.sendTargetP2P({
+                        overlayNinja: { actionType: 'clearTTS' }
+                    }, 'actions');
+                }
+                break;
+
+            case 'ttsVolume':
+                if (this.sendTargetP2P && config.volume !== undefined) {
+                    this.sendTargetP2P({
+                        overlayNinja: {
+                            actionType: 'setTTSVolume',
+                            volume: config.volume
+                        }
+                    }, 'actions');
+                }
+                break;
+
             case 'midiSendNote':
                 if (!this.midiEnabled || !config.deviceId || !config.note) break;
                 
