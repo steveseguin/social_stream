@@ -1565,13 +1565,23 @@
 				target = target.parentNode;
 			}
 		} else {
-			target = document.querySelector('[data-item="list-message-list"], [class*="DivChatMessageList"], .absolute.w-full.top-0.left-0');
+			target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
+			if (target) {
+				subtree = true;
+			}
 			if (!target) {
-				target = document.querySelector('[data-e2e="chat-room"], [class*="DivChatRoomContent"], .live-shared-ui-chat-list-scrolling-list');
+				target = document.querySelector('.live-room-container div[data-index]:not([data-index="-1"])');
 				if (target) {
-					subtree = true;
+					target = target.parentNode;
+					subtree = false;
+				} else {
+					target = document.querySelector('.live-room-container div.flex-1.overflow-y-scroll.overflow-x-hidden.box-border div.relative.w-full div.absolute.w-full.top-0.left-0');
+					if(target){
+						subtree = false;
+					}
 				}
 			}
+			
 			if (!target) {
 				let potentialTargets = document.querySelectorAll('[data-index].w-full');
 				if (potentialTargets && potentialTargets.length > 3) {
