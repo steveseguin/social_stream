@@ -626,6 +626,7 @@ TTS.configure = function(urlParams) {
     TTS.geminiSettings.apiKey = TTS.GeminiAPIKey;
     TTS.geminiSettings.model = urlParams.get("geminimodel") || TTS.geminiSettings.model;
     TTS.geminiSettings.voice = urlParams.get("voicegemini") || TTS.geminiSettings.voice;
+    TTS.geminiSettings.lang = urlParams.get("geminilang") || false;
 
     // ElevenLabs settings
     TTS.elevenLabsSettings.latency = urlParams.has("elevenlatency") ? parseInt(urlParams.get("elevenlatency")) || 0 : TTS.voiceLatency;
@@ -1799,6 +1800,7 @@ TTS.geminiTTS = async function(tts) {
         generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: {
+                ...(TTS.geminiSettings.lang && { language_code: TTS.geminiSettings.lang }),
                 voiceConfig: {
                     prebuiltVoiceConfig: {
                         voiceName: TTS.geminiSettings.voice || "Kore"

@@ -1,3 +1,62 @@
+// Predefined flow templates for quick setup
+const FLOW_TEMPLATES = {
+    'chat-relay': {
+        name: 'Chat Relay to Discord',
+        description: 'Forward chat messages to a Discord webhook',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'webhook', x: 400, y: 150, config: { url: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN', method: 'POST', body: '{"content": "{username}: {message}"}', includeMessage: false, syncMode: false, blockOnFailure: false } }
+        ],
+        connections: [{ from: 'trigger_1', to: 'action_1' }]
+    },
+    'song-request': {
+        name: 'Song Request (!sr)',
+        description: 'Queue Spotify tracks from chat with !sr command',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageStartsWith', x: 100, y: 150, config: { text: '!sr ' } },
+            { id: 'action_1', type: 'action', actionType: 'spotifyQueue', x: 400, y: 150, config: { extractFromMessage: true, announceResult: true } }
+        ],
+        connections: [{ from: 'trigger_1', to: 'action_1' }]
+    },
+    'alert-overlay': {
+        name: 'Alert Overlay',
+        description: 'Show avatar and text overlay for new messages',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 50, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'continueAsync', x: 200, y: 150, config: {} },
+            { id: 'action_2', type: 'action', actionType: 'showAvatar', x: 350, y: 100, config: { avatarUrl: '', width: 15, height: 15, x: 5, y: 5, randomX: false, randomY: false, borderRadius: 50, borderWidth: 3, borderColor: '#ffffff', shadow: true, duration: 5000, clearFirst: true } },
+            { id: 'action_3', type: 'action', actionType: 'showText', x: 500, y: 100, config: { text: '{username}: {message}', x: 25, y: 5, width: 70, fontSize: 32, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 10, outlineWidth: 0, outlineColor: '#000000', animation: 'fadeIn', animationDuration: 300, duration: 5000, clearFirst: false } },
+            { id: 'action_4', type: 'action', actionType: 'delay', x: 650, y: 150, config: { delayMs: 5000 } },
+            { id: 'action_5', type: 'action', actionType: 'clearLayer', x: 800, y: 150, config: { layer: 'all' } }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'action_1' },
+            { from: 'action_1', to: 'action_2' },
+            { from: 'action_2', to: 'action_3' },
+            { from: 'action_3', to: 'action_4' },
+            { from: 'action_4', to: 'action_5' }
+        ]
+    },
+    'bad-words-filter': {
+        name: 'Bad Words Filter',
+        description: 'Block messages containing profanity',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'containsBadWords', x: 100, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 400, y: 150, config: {} }
+        ],
+        connections: [{ from: 'trigger_1', to: 'action_1' }]
+    },
+    'channel-points': {
+        name: 'Channel Points Reward',
+        description: 'Handle Twitch channel point redemptions',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'channelPointRedemption', x: 100, y: 150, config: { rewardName: '' } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 400, y: 150, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } }
+        ],
+        connections: [{ from: 'trigger_1', to: 'action_1' }]
+    }
+};
+
 class EventFlowEditor {
     constructor(container, eventFlowSystem) {
         this.container = typeof container === 'string' ? document.getElementById(container) : container;
@@ -35,11 +94,14 @@ class EventFlowEditor {
             { id: 'wordCount', name: '🔢 Word Count' },
             { id: 'containsEmoji', name: '😀 Contains Emoji' },
             { id: 'containsLink', name: '🔗 Contains Link' },
+            { id: 'containsBadWords', name: '🚫 Contains Bad Words' },
             { id: 'fromSource', name: '📡 From Source' },
             { id: 'fromChannelName', name: '📺 From Channel Name' },
             { id: 'fromUser', name: '👤 From User' },
             { id: 'userRole', name: '👑 User Role' },
             { id: 'hasDonation', name: '💰 Has Donation' },
+            { id: 'channelPointRedemption', name: '🎁 Channel Point Redemption' },
+            { id: 'eventType', name: '📣 Event Type' },
             { id: 'compareProperty', name: '⚖️ Compare Property' },
             { id: 'randomChance', name: '🎲 Random Chance' },
             { id: 'timeInterval', name: '⏰ Time Interval' },
@@ -87,6 +149,9 @@ class EventFlowEditor {
                 expanded: true,
                 actions: [
                     { id: 'playTenorGiphy', name: '🖼️ Display Media Overlay' },
+                    { id: 'showAvatar', name: '👤 Show Avatar' },
+                    { id: 'showText', name: '📝 Show Text' },
+                    { id: 'clearLayer', name: '🗑️ Clear Layer' },
                     { id: 'playAudioClip', name: '🔊 Play Audio Clip' },
                     { id: 'delay', name: '⏱️ Delay' }
                 ]
@@ -117,8 +182,12 @@ class EventFlowEditor {
                     { id: 'spotifyPrevious', name: '⏮️ Previous Track' },
                     { id: 'spotifyPause', name: '⏸️ Pause' },
                     { id: 'spotifyResume', name: '▶️ Resume' },
+                    { id: 'spotifyToggle', name: '⏯️ Toggle Play/Pause' },
                     { id: 'spotifyVolume', name: '🔊 Set Volume' },
-                    { id: 'spotifyQueue', name: '📋 Add to Queue' }
+                    { id: 'spotifyQueue', name: '📋 Add to Queue' },
+                    { id: 'spotifyNowPlaying', name: '🎵 Announce Now Playing' },
+                    { id: 'spotifyShuffle', name: '🔀 Toggle Shuffle' },
+                    { id: 'spotifyRepeat', name: '🔁 Set Repeat Mode' }
                 ]
             },
             {
@@ -198,6 +267,14 @@ class EventFlowEditor {
                             <button id="import-flow-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📥 Import</button>
                             <button id="export-all-btn" class="btn" style="flex: 1; min-width: 0; padding: 8px 12px; font-size: 14px;">📤 Export All</button>
                         </div>
+                        <select id="template-select" class="btn" style="width: 100%; margin-top: 10px; padding: 8px 12px; font-size: 14px; cursor: pointer;">
+                            <option value="">📋 Load Template...</option>
+                            <option value="chat-relay">Chat Relay to Discord</option>
+                            <option value="song-request">Song Request (!sr)</option>
+                            <option value="alert-overlay">Alert Overlay</option>
+                            <option value="bad-words-filter">Bad Words Filter</option>
+                            <option value="channel-points">Channel Points Reward</option>
+                        </select>
                     </div>
                     <div class="node-palette">
                         <h3>Triggers</h3>
@@ -292,6 +369,12 @@ class EventFlowEditor {
         document.getElementById('duplicate-flow-btn').addEventListener('click', () => this.duplicateCurrentFlow());
         document.getElementById('import-flow-btn').addEventListener('click', () => this.importFlows());
         document.getElementById('export-all-btn').addEventListener('click', () => this.exportAllFlows());
+        document.getElementById('template-select').addEventListener('change', (e) => {
+            if (e.target.value) {
+                this.loadTemplate(e.target.value);
+                e.target.value = ''; // Reset dropdown
+            }
+        });
         this.container.addEventListener('click', (e) => {
             const guideButton = e.target.closest('[data-guide-link]');
             if (guideButton) {
@@ -1093,6 +1176,42 @@ class EventFlowEditor {
         }
     }
 
+    async loadTemplate(templateId) {
+        const template = FLOW_TEMPLATES[templateId];
+        if (!template) return;
+
+        try {
+            // Deep copy the template to avoid modifying the original
+            const flowData = JSON.parse(JSON.stringify(template));
+
+            // Generate unique node IDs for this instance
+            const idMap = {};
+            flowData.nodes = flowData.nodes.map(node => {
+                const newId = `node_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+                idMap[node.id] = newId;
+                return { ...node, id: newId };
+            });
+
+            // Update connection references with new IDs
+            flowData.connections = flowData.connections.map(conn => ({
+                from: idMap[conn.from] || conn.from,
+                to: idMap[conn.to] || conn.to
+            }));
+
+            // Import using existing method
+            const success = await this.importSingleFlow(flowData);
+            if (success) {
+                await this.loadFlows();
+                this.showNotification(`Template "${template.name}" loaded!`, 'success');
+            } else {
+                this.showNotification('Failed to load template', 'warning');
+            }
+        } catch (error) {
+            console.error('Error loading template:', error);
+            this.showNotification('Error loading template', 'warning');
+        }
+    }
+
     showNotification(message, type = 'info') {
         // Create notification element
         const notification = document.createElement('div');
@@ -1320,11 +1439,22 @@ class EventFlowEditor {
                 case 'wordCount': return `Words ${node.config.comparison || 'gt'} ${node.config.count || 5}`;
                 case 'containsEmoji': return 'Has emoji';
                 case 'containsLink': return 'Contains URL';
+                case 'containsBadWords': return 'Contains bad words';
                 case 'fromSource': return `Source: ${node.config.source === '*' ? 'Any' : (node.config.source || 'Any')}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
                 case 'userRole': return `Role: ${node.config.role || 'Any'}`;
                 case 'hasDonation': return 'Has donation';
+                case 'channelPointRedemption': {
+                    const rewardName = node.config.rewardName || '';
+                    if (rewardName) return `Redeem: "${rewardName}"`;
+                    return 'Any redemption';
+                }
+                case 'eventType': {
+                    const eventType = node.config.eventType || '';
+                    if (eventType) return `Event: ${eventType}`;
+                    return 'Any event';
+                }
                 case 'compareProperty': {
                     const prop = node.config.property || 'donationAmount';
                     const op = node.config.operator || 'gt';
@@ -1418,6 +1548,46 @@ class EventFlowEditor {
                     if (useMsg) return 'Queue: (from chat message)';
                     if (!query) return 'Queue: Not configured';
                     return `Queue: ${query.substring(0,20)}${query.length > 20 ? '...' : ''}`;
+                }
+                case 'spotifyToggle': return 'Toggle play/pause';
+                case 'spotifyNowPlaying': {
+                    const format = node.config.format || '';
+                    if (!format) return 'Announce current track';
+                    return `Announce: "${format.substring(0,25)}${format.length > 25 ? '...' : ''}"`;
+                }
+                case 'spotifyShuffle': {
+                    const state = node.config.state;
+                    if (state === true || state === 'true') return 'Shuffle: Enable';
+                    if (state === false || state === 'false') return 'Shuffle: Disable';
+                    return 'Shuffle: Toggle';
+                }
+                case 'spotifyRepeat': {
+                    const mode = node.config.mode || 'off';
+                    if (mode === 'track') return 'Repeat: Track';
+                    if (mode === 'context') return 'Repeat: Playlist';
+                    return 'Repeat: Off';
+                }
+                // Media & Layer actions
+                case 'playTenorGiphy': {
+                    const url = node.config.mediaUrl || '';
+                    const duration = node.config.duration || 10000;
+                    const shortUrl = url.length > 25 ? url.substring(0, 25) + '...' : url;
+                    return `${shortUrl} (${duration}ms)`;
+                }
+                case 'showAvatar': {
+                    const duration = node.config.duration || 5000;
+                    const pos = `${node.config.x ?? 5}%,${node.config.y ?? 5}%`;
+                    return `Avatar at ${pos} (${duration}ms)`;
+                }
+                case 'showText': {
+                    const text = node.config.text || '';
+                    const shortText = text.length > 20 ? text.substring(0, 20) + '...' : text;
+                    return `"${shortText}"`;
+                }
+                case 'clearLayer': {
+                    const layer = node.config.layer || 'all';
+                    if (layer === 'all') return 'Clear all layers';
+                    return `Clear ${layer} layer`;
                 }
                 // TTS actions
                 case 'ttsSpeak': {
@@ -1810,11 +1980,14 @@ class EventFlowEditor {
                 case 'wordCount': node.config = { comparison: 'gt', count: 5 }; break;
                 case 'containsEmoji': node.config = {}; break;
                 case 'containsLink': node.config = {}; break;
+                case 'containsBadWords': node.config = {}; break;
                 case 'fromSource': node.config = { source: '*' }; break;
                 case 'fromChannelName': node.config = { channelName: '' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
                 case 'userRole': node.config = { role: 'mod' }; break;
                 case 'hasDonation': node.config = {}; break;
+                case 'channelPointRedemption': node.config = { rewardName: '' }; break;
+                case 'eventType': node.config = { eventType: 'reward' }; break;
                 case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
@@ -1856,7 +2029,16 @@ class EventFlowEditor {
                 case 'spendPoints':
 					node.config = { amount: 100 }; break;
 				case 'playTenorGiphy':
-					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000, width: 100, height: 100, x: 0, y: 0, randomX: false, randomY: false };
+					node.config = { mediaUrl: 'https://giphy.com/embed/X9izlczKyCpmCSZu0l', mediaType: 'iframe', duration: 10000, width: 100, height: 100, x: 0, y: 0, randomX: false, randomY: false, useLayer: false, clearFirst: true };
+					break;
+				case 'showAvatar':
+					node.config = { avatarUrl: '', width: 15, height: 15, x: 5, y: 5, randomX: false, randomY: false, borderRadius: 50, borderWidth: 3, borderColor: '#ffffff', shadow: true, duration: 5000, clearFirst: false };
+					break;
+				case 'showText':
+					node.config = { text: 'Hello {username}!', x: 50, y: 50, width: 80, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.5)', padding: 20, borderRadius: 10, outlineWidth: 2, outlineColor: '#000000', animation: 'fadeIn', animationDuration: 500, duration: 5000, clearFirst: false };
+					break;
+				case 'clearLayer':
+					node.config = { layer: 'all' };
 					break;
 				case 'triggerOBSScene':
 					node.config = { sceneName: 'Your Scene Name' };
@@ -2196,6 +2378,21 @@ class EventFlowEditor {
 			case 'containsLink':
 				html += `<p class="property-help">Triggers when a message contains a URL (http://, https://, or www.)</p>`;
 				break;
+			case 'containsBadWords':
+				html += `
+					<div class="property-group" style="background: #ffebee; padding: 10px; border-radius: 4px;">
+						<strong>🚫 Bad Words Filter</strong><br>
+						Triggers when the chat message contains words from your blocked words list.<br><br>
+						<strong>Configure your word list:</strong><br>
+						Go to the extension popup → Filter Settings → Blocked Words
+					</div>
+					<div class="property-group" style="background: #e3f2fd; padding: 10px; border-radius: 4px; margin-top: 10px;">
+						<strong>💡 Use Case:</strong> Block song requests with bad words<br>
+						<code>Channel Point Redemption</code> → <code>Contains Bad Words?</code><br>
+						If true → Block Message<br>
+						If false → Add to Queue
+					</div>`;
+				break;
 			case 'anyMessage':
 				html += `<p class="property-help">Triggers on any message regardless of content.</p>`;
 				break;
@@ -2305,6 +2502,55 @@ class EventFlowEditor {
 				break;
 			case 'hasDonation': // Trigger type
 				html += `<p class="property-help">Fires if the message includes donation information.</p>`;
+				break;
+			case 'channelPointRedemption':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Reward Name (optional)</label>
+						<input type="text" class="property-input" id="prop-rewardName"
+							value="${this.escapeHtml(node.config.rewardName || '')}" placeholder="Leave empty for any redemption">
+						<div class="property-help">Filter by specific reward name. Leave empty to match any channel point redemption.</div>
+					</div>
+					<div class="property-group" style="background: #e8f5e9; padding: 10px; border-radius: 4px;">
+						<strong>🎁 Channel Point Redemption</strong><br>
+						Triggers when a viewer redeems channel points (Twitch, Kick, etc.).<br><br>
+						<strong>💡 Song Request Setup:</strong><br>
+						1. Create a channel point reward like "Song Request"<br>
+						2. Add this trigger with the reward name<br>
+						3. Connect to "Add to Queue" action with "Use chat message" checked<br>
+						4. Viewers redeem points with a song name to add it!
+					</div>`;
+				break;
+			case 'eventType':
+				const eventTypes = [
+					{ value: 'reward', label: 'Channel Point Redemption' },
+					{ value: 'newmember', label: 'New Member/Subscriber' },
+					{ value: 'giftpurchase', label: 'Gift Sub Purchase' },
+					{ value: 'raid', label: 'Raid' },
+					{ value: 'follow', label: 'Follow' },
+					{ value: 'host', label: 'Host' },
+					{ value: 'cheer', label: 'Cheer/Bits' },
+					{ value: 'superchat', label: 'Super Chat' },
+					{ value: 'membership', label: 'Membership' },
+					{ value: '_custom', label: '-- Custom Event --' }
+				];
+				const isCustomEvent = !eventTypes.some(e => e.value === node.config.eventType && e.value !== '_custom');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Event Type</label>
+						<select class="property-input" id="prop-eventType-select">
+							${eventTypes.map(e => `<option value="${e.value}" ${(node.config.eventType === e.value || (isCustomEvent && e.value === '_custom')) ? 'selected' : ''}>${e.label}</option>`).join('')}
+						</select>
+					</div>
+					<div class="property-group" id="custom-event-group" style="${isCustomEvent ? '' : 'display: none;'}">
+						<label class="property-label">Custom Event Name</label>
+						<input type="text" class="property-input" id="prop-eventType" value="${isCustomEvent ? (node.config.eventType || '') : ''}" placeholder="e.g., reaction">
+						<div class="property-help">Enter the exact event type from the message object</div>
+					</div>
+					<div class="property-group" style="background: #fff3e0; padding: 10px; border-radius: 4px;">
+						<strong>📣 Event Types</strong><br>
+						Triggers on specific stream events like raids, follows, subs, etc.
+					</div>`;
 				break;
 			case 'compareProperty':
 				const commonProperties = [
@@ -3359,8 +3605,233 @@ class EventFlowEditor {
 								</label>
 							</div>
 							<div class="property-help">Percent values are relative to the page. Randomize X/Y keeps the media within bounds based on its width/height.</div>
+						</div>
+						<div class="property-group">
+							<label style="display:flex; align-items:center; gap:6px;">
+								<input type="checkbox" class="property-input" id="prop-useLayer" ${node.config.useLayer ? 'checked' : ''}>
+								<span>Use Layer System</span>
+							</label>
+							<div class="property-help">Enable to display on the media layer (allows simultaneous avatar/text overlays)</div>
+						</div>
+						<div class="property-group">
+							<label style="display:flex; align-items:center; gap:6px;">
+								<input type="checkbox" class="property-input" id="prop-clearFirst" ${node.config.clearFirst !== false ? 'checked' : ''}>
+								<span>Clear Layer First</span>
+							</label>
+							<div class="property-help">Clear existing media before showing new content</div>
 						</div>`;
 					break;
+
+			case 'showAvatar':
+				html += `<div class="property-group">
+						 <label class="property-label">Avatar URL (optional)</label>
+						 <input type="url" class="property-input" id="prop-avatarUrl" value="${node.config.avatarUrl || ''}" placeholder="Leave empty to use message avatar">
+						 <div class="property-help">Override the avatar image. Leave empty to use the sender's avatar (chatimg).</div>
+					 </div>
+					 <div class="property-group">
+						<label class="property-label">Position and Size (%)</label>
+						<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Width (%)</label>
+								<input type="number" class="property-input" id="prop-width" value="${(node.config.width ?? 15)}" min="1" max="100">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Height (%)</label>
+								<input type="number" class="property-input" id="prop-height" value="${(node.config.height ?? 15)}" min="1" max="100">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">X (%)</label>
+								<input type="number" class="property-input" id="prop-x" value="${(node.config.x ?? 5)}" min="0" max="100">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Y (%)</label>
+								<input type="number" class="property-input" id="prop-y" value="${(node.config.y ?? 5)}" min="0" max="100">
+							</div>
+						</div>
+						<div style="display:flex; gap: 16px; margin-top: 8px;">
+							<label style="display:flex; align-items:center; gap:6px;">
+								<input type="checkbox" class="property-input" id="prop-randomX" ${node.config.randomX ? 'checked' : ''}>
+								<span>Randomize X</span>
+							</label>
+							<label style="display:flex; align-items:center; gap:6px;">
+								<input type="checkbox" class="property-input" id="prop-randomY" ${node.config.randomY ? 'checked' : ''}>
+								<span>Randomize Y</span>
+							</label>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Appearance</label>
+						<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Border Radius (%)</label>
+								<input type="number" class="property-input" id="prop-borderRadius" value="${(node.config.borderRadius ?? 50)}" min="0" max="50">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Border Width (px)</label>
+								<input type="number" class="property-input" id="prop-borderWidth" value="${(node.config.borderWidth ?? 3)}" min="0" max="20">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Border Color</label>
+								<input type="color" class="property-input" id="prop-borderColor" value="${node.config.borderColor || '#ffffff'}">
+							</div>
+							<div>
+								<label style="display:flex; align-items:center; gap:6px; margin-top: 16px;">
+									<input type="checkbox" class="property-input" id="prop-shadow" ${node.config.shadow !== false ? 'checked' : ''}>
+									<span>Drop Shadow</span>
+								</label>
+							</div>
+						</div>
+						<div class="property-help">50% border radius = circle</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Duration (ms, 0 = stay until cleared)</label>
+						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 5000}" min="0" step="100">
+					</div>
+					<div class="property-group">
+						<label style="display:flex; align-items:center; gap:6px;">
+							<input type="checkbox" class="property-input" id="prop-clearFirst" ${node.config.clearFirst ? 'checked' : ''}>
+							<span>Clear Avatar Layer First</span>
+						</label>
+					</div>`;
+				break;
+
+			case 'showText':
+				html += `<div class="property-group">
+						 <label class="property-label">Text</label>
+						 <textarea class="property-input" id="prop-text" rows="3" style="resize: vertical;">${node.config.text || 'Hello {username}!'}</textarea>
+						 <div class="property-help">Use placeholders: {username}, {message}, {source}, {donation}</div>
+					 </div>
+					 <div class="property-group">
+						<label class="property-label">Position (%)</label>
+						<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">X (%)</label>
+								<input type="number" class="property-input" id="prop-x" value="${(node.config.x ?? 50)}" min="0" max="100">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Y (%)</label>
+								<input type="number" class="property-input" id="prop-y" value="${(node.config.y ?? 50)}" min="0" max="100">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Max Width (%)</label>
+								<input type="number" class="property-input" id="prop-width" value="${(node.config.width ?? 80)}" min="1" max="100">
+							</div>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Font</label>
+						<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Size (px)</label>
+								<input type="number" class="property-input" id="prop-fontSize" value="${(node.config.fontSize ?? 48)}" min="8" max="200">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Weight</label>
+								<select class="property-input" id="prop-fontWeight">
+									<option value="normal" ${node.config.fontWeight === 'normal' ? 'selected' : ''}>Normal</option>
+									<option value="bold" ${node.config.fontWeight === 'bold' ? 'selected' : ''}>Bold</option>
+									<option value="100" ${node.config.fontWeight === '100' ? 'selected' : ''}>100</option>
+									<option value="300" ${node.config.fontWeight === '300' ? 'selected' : ''}>300</option>
+									<option value="500" ${node.config.fontWeight === '500' ? 'selected' : ''}>500</option>
+									<option value="700" ${node.config.fontWeight === '700' ? 'selected' : ''}>700</option>
+									<option value="900" ${node.config.fontWeight === '900' ? 'selected' : ''}>900</option>
+								</select>
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Family</label>
+								<input type="text" class="property-input" id="prop-fontFamily" value="${node.config.fontFamily || 'Arial'}">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Align</label>
+								<select class="property-input" id="prop-textAlign">
+									<option value="left" ${node.config.textAlign === 'left' ? 'selected' : ''}>Left</option>
+									<option value="center" ${node.config.textAlign === 'center' ? 'selected' : ''}>Center</option>
+									<option value="right" ${node.config.textAlign === 'right' ? 'selected' : ''}>Right</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Colors</label>
+						<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Text Color</label>
+								<input type="color" class="property-input" id="prop-color" value="${node.config.color || '#ffffff'}">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Outline Color</label>
+								<input type="color" class="property-input" id="prop-outlineColor" value="${node.config.outlineColor || '#000000'}">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Outline Width (px)</label>
+								<input type="number" class="property-input" id="prop-outlineWidth" value="${(node.config.outlineWidth ?? 2)}" min="0" max="20">
+							</div>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Background</label>
+						<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Background</label>
+								<input type="text" class="property-input" id="prop-backgroundColor" value="${node.config.backgroundColor || 'rgba(0,0,0,0.5)'}" placeholder="rgba(0,0,0,0.5) or transparent">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Padding (px)</label>
+								<input type="number" class="property-input" id="prop-padding" value="${(node.config.padding ?? 20)}" min="0" max="100">
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Border Radius (px)</label>
+								<input type="number" class="property-input" id="prop-borderRadius" value="${(node.config.borderRadius ?? 10)}" min="0" max="50">
+							</div>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Animation</label>
+						<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; align-items: center;">
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Effect</label>
+								<select class="property-input" id="prop-animation">
+									<option value="none" ${node.config.animation === 'none' ? 'selected' : ''}>None</option>
+									<option value="fadeIn" ${node.config.animation === 'fadeIn' ? 'selected' : ''}>Fade In</option>
+									<option value="slideInLeft" ${node.config.animation === 'slideInLeft' ? 'selected' : ''}>Slide In Left</option>
+									<option value="slideInRight" ${node.config.animation === 'slideInRight' ? 'selected' : ''}>Slide In Right</option>
+									<option value="slideInTop" ${node.config.animation === 'slideInTop' ? 'selected' : ''}>Slide In Top</option>
+									<option value="slideInBottom" ${node.config.animation === 'slideInBottom' ? 'selected' : ''}>Slide In Bottom</option>
+									<option value="bounce" ${node.config.animation === 'bounce' ? 'selected' : ''}>Bounce</option>
+									<option value="pulse" ${node.config.animation === 'pulse' ? 'selected' : ''}>Pulse</option>
+									<option value="shake" ${node.config.animation === 'shake' ? 'selected' : ''}>Shake</option>
+								</select>
+							</div>
+							<div>
+								<label style="display:block; font-size: 12px; opacity: 0.8;">Animation Duration (ms)</label>
+								<input type="number" class="property-input" id="prop-animationDuration" value="${(node.config.animationDuration ?? 500)}" min="0" max="5000" step="100">
+							</div>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Duration (ms, 0 = stay until cleared)</label>
+						<input type="number" class="property-input" id="prop-duration" value="${node.config.duration || 5000}" min="0" step="100">
+					</div>
+					<div class="property-group">
+						<label style="display:flex; align-items:center; gap:6px;">
+							<input type="checkbox" class="property-input" id="prop-clearFirst" ${node.config.clearFirst ? 'checked' : ''}>
+							<span>Clear Text Layer First</span>
+						</label>
+					</div>`;
+				break;
+
+			case 'clearLayer':
+				html += `<div class="property-group">
+						 <label class="property-label">Layer to Clear</label>
+						 <select class="property-input" id="prop-layer">
+							 <option value="all" ${node.config.layer === 'all' ? 'selected' : ''}>All Layers</option>
+							 <option value="avatar" ${node.config.layer === 'avatar' ? 'selected' : ''}>Avatar Layer</option>
+							 <option value="media" ${node.config.layer === 'media' ? 'selected' : ''}>Media Layer</option>
+							 <option value="text" ${node.config.layer === 'text' ? 'selected' : ''}>Text Layer</option>
+						 </select>
+						 <div class="property-help">Choose which overlay layer(s) to clear.</div>
+					 </div>`;
+				break;
 
 			case 'triggerOBSScene':
 				html += `<div class="property-group">
@@ -3614,6 +4085,81 @@ class EventFlowEditor {
 					</div>
 					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Combine with a "Message Starts With" trigger (e.g., "!sr") to let viewers request songs!
+					</div>`;
+				break;
+
+			case 'spotifyToggle':
+				html += `
+					<div class="property-group">
+						<div class="property-help">Toggles between play and pause based on current playback state.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>
+					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+						<strong>💡 Tip:</strong> Great for a "!pause" command that toggles playback!
+					</div>`;
+				break;
+
+			case 'spotifyNowPlaying':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Announcement Format</label>
+						<input type="text" class="property-input" id="prop-format"
+							value="${this.escapeHtml(node.config.format || '')}" placeholder="🎵 Now playing: {song} by {artist}">
+						<div class="property-help">
+							Use placeholders: <code>{song}</code>, <code>{artist}</code>, <code>{album}</code>
+						</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">
+							<input type="checkbox" class="property-input" id="prop-sendToDock"
+								${node.config.sendToDock !== false ? 'checked' : ''}>
+							Send to dock/overlay
+						</label>
+						<div class="property-help">Sends the announcement to the dock as a chat message.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings.
+					</div>
+					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+						<strong>💡 Tip:</strong> Create a custom "!song" response with your own format!
+					</div>`;
+				break;
+
+			case 'spotifyShuffle':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Shuffle Mode</label>
+						<select class="property-input" id="prop-state">
+							<option value="toggle" ${!node.config.state || node.config.state === 'toggle' ? 'selected' : ''}>Toggle (flip current state)</option>
+							<option value="true" ${node.config.state === 'true' || node.config.state === true ? 'selected' : ''}>Enable shuffle</option>
+							<option value="false" ${node.config.state === 'false' || node.config.state === false ? 'selected' : ''}>Disable shuffle</option>
+						</select>
+						<div class="property-help">Choose whether to toggle, enable, or disable shuffle mode.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
+					</div>`;
+				break;
+
+			case 'spotifyRepeat':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Repeat Mode</label>
+						<select class="property-input" id="prop-mode">
+							<option value="off" ${!node.config.mode || node.config.mode === 'off' ? 'selected' : ''}>Off (no repeat)</option>
+							<option value="track" ${node.config.mode === 'track' ? 'selected' : ''}>Repeat Track (loop current song)</option>
+							<option value="context" ${node.config.mode === 'context' ? 'selected' : ''}>Repeat Playlist (loop playlist/album)</option>
+						</select>
+						<div class="property-help">Set the repeat mode for playback.</div>
+					</div>
+					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
+						<strong>🎵 Spotify Integration:</strong><br>
+						Requires Spotify to be connected in Social Stream settings with playback permissions.
 					</div>`;
 				break;
 
@@ -3985,6 +4531,25 @@ class EventFlowEditor {
                 } else {
                     customPropertyGroup.style.display = 'none';
                     nodeData.config.property = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for eventType - show/hide custom event input
+        const eventTypeSelect = document.getElementById('prop-eventType-select');
+        const customEventGroup = document.getElementById('custom-event-group');
+        const customEventInput = document.getElementById('prop-eventType');
+        if (eventTypeSelect && customEventGroup) {
+            eventTypeSelect.addEventListener('change', (e) => {
+                if (e.target.value === '_custom') {
+                    customEventGroup.style.display = '';
+                    // Use the custom input value
+                    nodeData.config.eventType = customEventInput?.value || '';
+                } else {
+                    customEventGroup.style.display = 'none';
+                    nodeData.config.eventType = e.target.value;
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);

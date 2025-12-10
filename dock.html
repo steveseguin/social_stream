@@ -10983,7 +10983,49 @@
 			} else {
 				setupUserInteractionHandler();
 			}
-			
+
+			// Hotkey system for quick actions
+			const DEFAULT_HOTKEYS = {
+				'Ctrl+Shift+E': 'closepoll',
+				'Ctrl+Shift+W': 'selectwinner',
+				'Ctrl+Shift+S': 'stopentries',
+				'Ctrl+Shift+R': 'resetpoll',
+				'Ctrl+Shift+X': 'resetwaitlist',
+				'Ctrl+Shift+C': 'cleardock'
+			};
+
+			function buildKeyCombo(e) {
+				const parts = [];
+				if (e.ctrlKey) parts.push('Ctrl');
+				if (e.shiftKey) parts.push('Shift');
+				if (e.altKey) parts.push('Alt');
+				if (e.key.length === 1) parts.push(e.key.toUpperCase());
+				else parts.push(e.key);
+				return parts.join('+');
+			}
+
+			function initHotkeys() {
+				chrome.storage.sync.get(['hotkeys'], (result) => {
+					const hotkeys = result.hotkeys || DEFAULT_HOTKEYS;
+
+					document.addEventListener('keydown', (e) => {
+						// Don't trigger if typing in input/textarea/select
+						if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+						if (e.target.isContentEditable) return;
+
+						const combo = buildKeyCombo(e);
+						const action = hotkeys[combo];
+						if (action) {
+							e.preventDefault();
+							chrome.runtime.sendMessage({ cmd: action });
+						}
+					});
+				});
+			}
+
+			// Initialize hotkeys
+			initHotkeys();
+
 		</script>
 	</body>
 </html>

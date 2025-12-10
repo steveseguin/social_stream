@@ -2696,6 +2696,40 @@ input:checked + .slider:before {
 									<option value="Sulafat">Sulafat - Warm</option>
 								</select>
 							</div>
+							<div>
+								<label for="geminiLangSelect">Language</label>
+								<select id="geminiLangSelect" data-optionparam1="geminilang">
+									<option value="" selected>Auto-detect</option>
+									<option value="ar-EG">Arabic (Egyptian)</option>
+									<option value="bn-IN">Bengali (India)</option>
+									<option value="cmn-CN">Chinese (Mandarin)</option>
+									<option value="de-DE">German</option>
+									<option value="en-US">English (US)</option>
+									<option value="en-IN">English (India)</option>
+									<option value="en-GB">English (UK)</option>
+									<option value="es-US">Spanish (US)</option>
+									<option value="fr-FR">French</option>
+									<option value="gu-IN">Gujarati</option>
+									<option value="hi-IN">Hindi</option>
+									<option value="id-ID">Indonesian</option>
+									<option value="it-IT">Italian</option>
+									<option value="ja-JP">Japanese</option>
+									<option value="kn-IN">Kannada</option>
+									<option value="ko-KR">Korean</option>
+									<option value="ml-IN">Malayalam</option>
+									<option value="mr-IN">Marathi</option>
+									<option value="nl-NL">Dutch</option>
+									<option value="pl-PL">Polish</option>
+									<option value="pt-BR">Portuguese (Brazil)</option>
+									<option value="ru-RU">Russian</option>
+									<option value="ta-IN">Tamil</option>
+									<option value="te-IN">Telugu</option>
+									<option value="th-TH">Thai</option>
+									<option value="tr-TR">Turkish</option>
+									<option value="uk-UA">Ukrainian</option>
+									<option value="vi-VN">Vietnamese</option>
+								</select>
+							</div>
 						</div>
 						<!-- Speechify TTS Options -->
 						<div class="tts-provider-options options_group hidden" id="speechifyTTS">
@@ -5547,7 +5581,14 @@ input:checked + .slider:before {
                                 <div style="margin-top: 10px;">
                                     <button id="viewPointsLeaderboard" class="button" data-translate="view-points-leaderboard">View Leaderboard</button>
                                 </div>
-                                
+
+                                <h4 style="margin-top: 15px;">Backup & Restore</h4>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                    <button id="exportPointsData" class="button" style="background-color: #28a745;">Export Points</button>
+                                    <button id="importPointsData" class="button" style="background-color: #17a2b8;">Import Points</button>
+                                </div>
+                                <input type="file" id="importPointsFile" accept=".json" style="display: none;">
+
                                 <div style="margin-top: 10px;">
                                     <button id="resetPoints" class="button" style="background-color: #dc3545;" data-translate="reset-all-points">Reset All Points</button>
                                 </div>
@@ -9133,6 +9174,47 @@ input:checked + .slider:before {
 										<option value="150">150% (Extra Large)</option>
 									</select>
 								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Keyboard Shortcuts Reference -->
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-keyboard-shortcuts" />
+					<label class="collapsible-label" for="wrapper-keyboard-shortcuts"><span>⌨️ Keyboard Shortcuts</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group" style="padding: 15px;">
+								<p style="margin-bottom: 10px; color: #666;">Use these shortcuts while the popup or dock is focused:</p>
+								<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+									<tr style="border-bottom: 1px solid #ddd;">
+										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+E</kbd></td>
+										<td style="padding: 8px;">End Poll</td>
+									</tr>
+									<tr style="border-bottom: 1px solid #ddd;">
+										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+R</kbd></td>
+										<td style="padding: 8px;">Reset Poll</td>
+									</tr>
+									<tr style="border-bottom: 1px solid #ddd;">
+										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+W</kbd></td>
+										<td style="padding: 8px;">Select Winner (Waitlist)</td>
+									</tr>
+									<tr style="border-bottom: 1px solid #ddd;">
+										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+S</kbd></td>
+										<td style="padding: 8px;">Stop Entries (Waitlist)</td>
+									</tr>
+									<tr style="border-bottom: 1px solid #ddd;">
+										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+X</kbd></td>
+										<td style="padding: 8px;">Reset Waitlist</td>
+									</tr>
+									<tr>
+										<td style="padding: 8px;"><kbd style="background: #eee; padding: 2px 6px; border-radius: 3px; border: 1px solid #ccc;">Ctrl+Shift+C</kbd></td>
+										<td style="padding: 8px;">Clear Dock</td>
+									</tr>
+								</table>
 							</div>
 						</div>
 					</div>

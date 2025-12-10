@@ -5608,8 +5608,50 @@ const PollManager = {
     }
 };
 
+// Hotkey system for quick actions
+const DEFAULT_HOTKEYS = {
+    'Ctrl+Shift+E': 'closepoll',
+    'Ctrl+Shift+W': 'selectwinner',
+    'Ctrl+Shift+S': 'stopentries',
+    'Ctrl+Shift+R': 'resetpoll',
+    'Ctrl+Shift+X': 'resetwaitlist',
+    'Ctrl+Shift+C': 'cleardock'
+};
+
+function buildKeyCombo(e) {
+    const parts = [];
+    if (e.ctrlKey) parts.push('Ctrl');
+    if (e.shiftKey) parts.push('Shift');
+    if (e.altKey) parts.push('Alt');
+    if (e.key.length === 1) parts.push(e.key.toUpperCase());
+    else parts.push(e.key);
+    return parts.join('+');
+}
+
+function initHotkeys() {
+    chrome.storage.sync.get(['hotkeys'], (result) => {
+        const hotkeys = result.hotkeys || DEFAULT_HOTKEYS;
+
+        document.addEventListener('keydown', (e) => {
+            // Don't trigger if typing in input/textarea/select
+            if (['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName)) return;
+            if (e.target.isContentEditable) return;
+
+            const combo = buildKeyCombo(e);
+            const action = hotkeys[combo];
+            if (action) {
+                e.preventDefault();
+                chrome.runtime.sendMessage({ cmd: action });
+            }
+        });
+    });
+}
+
 document.addEventListener("DOMContentLoaded", async function(event) {
     await ensureSourcesListLoaded();
+
+    // Initialize hotkey system
+    initHotkeys();
 	// Add event listener for Event Flow Editor link
 	const eventFlowLink = document.getElementById('open-event-flow-editor-link');
 	if (eventFlowLink) {
@@ -6291,6 +6333,101 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					}
 				});
 			}
+		});
+	}
+
+	// Export Points Data
+	const exportPointsBtn = document.getElementById('exportPointsData');
+	if (exportPointsBtn) {
+		exportPointsBtn.addEventListener('click', async function() {
+			exportPointsBtn.disabled = true;
+			exportPointsBtn.textContent = 'Exporting...';
+
+			chrome.runtime.sendMessage({
+				cmd: "exportPointsData"
+			}, function(response) {
+				exportPointsBtn.disabled = false;
+				exportPointsBtn.textContent = 'Export Points';
+
+				if (response && response.success && response.data) {
+					// Create and trigger download
+					const blob = new Blob([response.data], { type: 'application/json' });
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					a.href = url;
+					a.download = `points-backup-${new Date().toISOString().split('T')[0]}.json`;
+					document.body.appendChild(a);
+					a.click();
+					document.body.removeChild(a);
+					URL.revokeObjectURL(url);
+
+					const data = JSON.parse(response.data);
+					alert(`Exported ${data.userCount} users successfully!`);
+				} else {
+					alert('Failed to export points data: ' + (response?.error || 'Unknown error'));
+				}
+			});
+		});
+	}
+
+	// Import Points Data
+	const importPointsBtn = document.getElementById('importPointsData');
+	const importPointsFile = document.getElementById('importPointsFile');
+
+	if (importPointsBtn && importPointsFile) {
+		importPointsBtn.addEventListener('click', function() {
+			importPointsFile.click();
+		});
+
+		importPointsFile.addEventListener('change', async function(e) {
+			const file = e.target.files[0];
+			if (!file) return;
+
+			// Ask for import mode
+			const mode = confirm(
+				'Import Mode:\n\n' +
+				'OK = Merge (keep higher point values)\n' +
+				'Cancel = Replace (overwrite all data)\n\n' +
+				'Choose your import mode:'
+			) ? 'merge' : 'replace';
+
+			if (mode === 'replace') {
+				if (!confirm('WARNING: Replace mode will overwrite all existing points data. Are you sure?')) {
+					importPointsFile.value = '';
+					return;
+				}
+			}
+
+			importPointsBtn.disabled = true;
+			importPointsBtn.textContent = 'Importing...';
+
+			const reader = new FileReader();
+			reader.onload = function(event) {
+				chrome.runtime.sendMessage({
+					cmd: "importPointsData",
+					data: event.target.result,
+					mode: mode
+				}, function(response) {
+					importPointsBtn.disabled = false;
+					importPointsBtn.textContent = 'Import Points';
+					importPointsFile.value = '';
+
+					if (response && response.success) {
+						alert(`Import complete!\n\nImported: ${response.imported}\nSkipped: ${response.skipped}\nErrors: ${response.errors || 0}`);
+					} else {
+						alert('Failed to import points data: ' + (response?.error || response?.message || 'Unknown error'));
+					}
+				});
+			};
+
+			reader.onerror = function() {
+				importPointsBtn.disabled = false;
+				importPointsBtn.textContent = 'Import Points';
+				importPointsFile.value = '';
+				alert('Failed to read file');
+			};
+
+			reader.readAsText(file);
 		});
 	}
 

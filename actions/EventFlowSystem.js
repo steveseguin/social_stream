@@ -1394,7 +1394,11 @@ class EventFlowSystem {
                 // Simple URL detection - matches http://, https://, or www.
                 const urlRegex = /https?:\/\/[^\s]+|www\.[^\s]+/i;
                 return messageText ? urlRegex.test(messageText) : false;
-                
+
+            case 'containsBadWords':
+                // Check if message contains bad words (set by background.js)
+                return !!message.containsBadWords;
+
             case 'fromSource':
                 if (config.source === '*') {
                     match = true; // Match any source
@@ -1428,6 +1432,32 @@ class EventFlowSystem {
             case 'hasDonation':
                 match = !!message.hasDonation; // Assuming hasDonation is a truthy value if donation exists
               ////console.log(`[EvaluateTrigger - hasDonation] Message hasDonation: "${message.hasDonation}", Match: ${match}`);
+                return match;
+
+            case 'channelPointRedemption':
+                // Check if this is a reward/redemption event
+                if (message.event !== 'reward') {
+                    return false;
+                }
+                // If a specific reward name is configured, check it
+                if (config.rewardName && config.rewardName.trim()) {
+                    // Check if the message contains the reward name (case-insensitive)
+                    const rewardName = config.rewardName.toLowerCase().trim();
+                    const msgText = (message.chatmessage || '').toLowerCase();
+                    // Also check if there's a rewardTitle property
+                    const rewardTitle = (message.rewardTitle || message.rewardName || '').toLowerCase();
+                    match = msgText.includes(rewardName) || rewardTitle.includes(rewardName);
+                } else {
+                    // Any redemption matches
+                    match = true;
+                }
+                return match;
+
+            case 'eventType':
+                // Check if the event type matches
+                const targetEvent = (config.eventType || '').toLowerCase().trim();
+                const msgEvent = (message.event || '').toLowerCase().trim();
+                match = targetEvent && msgEvent === targetEvent;
                 return match;
 
             case 'compareProperty': {
@@ -2628,24 +2658,107 @@ class EventFlowSystem {
 						x: (typeof config.x === 'number') ? config.x : undefined,
 						y: (typeof config.y === 'number') ? config.y : undefined,
 						randomX: !!config.randomX,
-						randomY: !!config.randomY
+						randomY: !!config.randomY,
+						// Layer system options
+						useLayer: !!config.useLayer,
+						clearFirst: config.clearFirst !== false
 					};
-					// Assuming sendTargetP2P is globally available or accessible via this.sendToDestinations
-					// or a similar mechanism. The user prompt implies 'sendTargetP2P' is the target function.
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
-						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions'); // 'actions' is the PAGE IDENTIFIER for actions.html
-						//console.log('[ExecuteAction - playTenorGiphy] Sent to actions page:', actionPayload);
-					} else if (this.sendMessageToTabs) { // Fallback or alternative
-						 // Adapt this if sendMessageToTabs can target a specific page by a label/identifier
-						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true); // Sending to all tabs might not be ideal, adjust if possible
-						//console.log('[ExecuteAction - playTenorGiphy] Sent via sendMessageToTabs:', actionPayload);
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else if (this.sendMessageToTabs) {
+						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
 					} else {
 						console.warn('[ExecuteAction - playTenorGiphy] No function available to send message to actions page.');
 					}
-					// This action usually doesn't modify the message or block it.
-					// result.modified = false; result.blocked = false;
 				} else {
 					console.warn('[ExecuteAction - playTenorGiphy] Media URL not configured.');
+				}
+				break;
+
+			case 'showAvatar':
+				{
+					const actionPayload = {
+						actionType: 'show_avatar',
+						avatarUrl: config.avatarUrl || '',
+						width: config.width ?? 15,
+						height: config.height ?? 15,
+						x: config.x ?? 5,
+						y: config.y ?? 5,
+						randomX: !!config.randomX,
+						randomY: !!config.randomY,
+						borderRadius: config.borderRadius ?? 50,
+						borderWidth: config.borderWidth ?? 3,
+						borderColor: config.borderColor || '#ffffff',
+						shadow: config.shadow !== false,
+						duration: config.duration || 5000,
+						clearFirst: !!config.clearFirst,
+						messageData: {
+							chatimg: message.chatimg || '',
+							chatname: message.chatname || message.displayname || ''
+						}
+					};
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else if (this.sendMessageToTabs) {
+						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
+					} else {
+						console.warn('[ExecuteAction - showAvatar] No function available to send message to actions page.');
+					}
+				}
+				break;
+
+			case 'showText':
+				{
+					const actionPayload = {
+						actionType: 'show_text',
+						text: config.text || 'Hello {username}!',
+						x: config.x ?? 50,
+						y: config.y ?? 50,
+						width: config.width ?? 80,
+						fontSize: config.fontSize ?? 48,
+						fontFamily: config.fontFamily || 'Arial',
+						fontWeight: config.fontWeight || 'bold',
+						textAlign: config.textAlign || 'center',
+						color: config.color || '#ffffff',
+						backgroundColor: config.backgroundColor || 'rgba(0,0,0,0.5)',
+						padding: config.padding ?? 20,
+						borderRadius: config.borderRadius ?? 10,
+						outlineWidth: config.outlineWidth ?? 2,
+						outlineColor: config.outlineColor || '#000000',
+						animation: config.animation || 'fadeIn',
+						animationDuration: config.animationDuration ?? 500,
+						duration: config.duration || 5000,
+						clearFirst: !!config.clearFirst,
+						messageData: {
+							username: message.chatname || message.displayname || '',
+							message: message.chatmessage || '',
+							source: message.type || '',
+							donation: message.hasDonation ? (message.donationAmount || message.donation || 'yes') : ''
+						}
+					};
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else if (this.sendMessageToTabs) {
+						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
+					} else {
+						console.warn('[ExecuteAction - showText] No function available to send message to actions page.');
+					}
+				}
+				break;
+
+			case 'clearLayer':
+				{
+					const actionPayload = {
+						actionType: 'clear_layer',
+						layer: config.layer || 'all'
+					};
+					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {
+						this.sendTargetP2P({ overlayNinja: actionPayload }, 'actions');
+					} else if (this.sendMessageToTabs) {
+						this.sendMessageToTabs({ overlayNinja: actionPayload, targetPage: 'actions' }, true);
+					} else {
+						console.warn('[ExecuteAction - clearLayer] No function available to send message to actions page.');
+					}
 				}
 				break;
 
@@ -2870,6 +2983,50 @@ class EventFlowSystem {
                             query: query
                         });
                     }
+                }
+                break;
+
+            case 'spotifyToggle':
+                if (this.sendMessageToBackground) {
+                    this.sendMessageToBackground({ spotifyAction: 'toggle' });
+                }
+                break;
+
+            case 'spotifyNowPlaying':
+                if (this.sendMessageToBackground) {
+                    // Get current track and format announcement
+                    this.sendMessageToBackground({
+                        spotifyAction: 'nowPlaying',
+                        format: config.format || '🎵 Now playing: {song} by {artist}',
+                        sendToDock: config.sendToDock !== false
+                    });
+                }
+                break;
+
+            case 'spotifyShuffle':
+                if (this.sendMessageToBackground) {
+                    let shuffleState = config.state;
+                    // Convert 'toggle' to null so spotify.js knows to toggle
+                    if (shuffleState === 'toggle' || shuffleState === undefined) {
+                        shuffleState = null;
+                    } else if (shuffleState === 'true') {
+                        shuffleState = true;
+                    } else if (shuffleState === 'false') {
+                        shuffleState = false;
+                    }
+                    this.sendMessageToBackground({
+                        spotifyAction: 'shuffle',
+                        state: shuffleState
+                    });
+                }
+                break;
+
+            case 'spotifyRepeat':
+                if (this.sendMessageToBackground) {
+                    this.sendMessageToBackground({
+                        spotifyAction: 'repeat',
+                        mode: config.mode || 'off'
+                    });
                 }
                 break;
 
