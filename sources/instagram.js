@@ -398,6 +398,44 @@ function checkConditions(element) {
 		}
 	}
 	
+	var counter = 0;
+	
+	function checkViewers(){
+		if (settings.showviewercount || settings.hypemode){
+			//console.log(counter);
+			try {
+				let viewerSpan = document.querySelector("svg path[d='M3.267 24.652C8.32 14.772 15.156 9.94 23.905 9.94c8.761 0 15.768 4.847 21.136 14.745a1.47 1.47 0 1 0 2.583-1.401C41.774 12.496 33.83 7 23.905 7 13.97 7 6.175 12.51.651 23.314a1.47 1.47 0 0 0 2.616 1.338Z']").parentNode.parentNode.parentNode.parentNode.nextElementSibling;
+				//console.log( viewerSpan.textContent);
+				if (viewerSpan && viewerSpan.textContent){
+					let views = viewerSpan.textContent.toUpperCase();
+					let multiplier = 1;
+					if (views.includes("K")){
+						multiplier = 1000;
+						views = views.replace("K","");
+					} else if (views.includes("M")){
+						multiplier = 1000000;
+						views = views.replace("M","");
+					}
+					views = views.split(" ")[0];
+					if (views == parseFloat(views)){
+						views = parseFloat(views) * multiplier;
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							({message:{
+									type: 'instagramlive',
+									event: 'viewer_update',
+									meta: views
+								}
+							}),
+							function (e) {}
+						);
+					}
+				}
+			} catch (e) {
+			}
+		}
+	}	
+	
 	function processMessageIGLive(ele){
 	//	console.log(ele);
 		try {
@@ -653,6 +691,11 @@ function checkConditions(element) {
 				}
 				
 			});
+			
+			if (counter%20==0){
+				checkViewers();
+			}
+			counter+=1;
 			
 		},500);
 		
