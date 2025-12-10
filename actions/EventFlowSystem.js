@@ -175,32 +175,38 @@ class EventFlowSystem {
 	// Set up MIDI listeners for trigger nodes
 	setupMIDIListeners() {
 		if (!this.midiEnabled) return;
-		
-		// Clear existing listeners
-		this.midiListeners.forEach((listener, key) => {
-			const [deviceId, eventType] = key.split('|');
-			const input = this.getMIDIInputDevice(deviceId);
-			if (input) {
-				input.removeListener(eventType, 'all', listener);
+
+		// Clear existing listeners - store input reference to ensure proper cleanup
+		this.midiListeners.forEach((listenerData, key) => {
+			const { input, eventType, listener } = listenerData;
+			// Try to remove from the stored input reference (works even if device still connected)
+			try {
+				if (input && typeof input.removeListener === 'function') {
+					input.removeListener(eventType, 'all', listener);
+				}
+			} catch (e) {
+				console.debug('Could not remove MIDI listener:', e);
 			}
 		});
 		this.midiListeners.clear();
-		
+
 		// Set up new listeners for active flows
 		this.flows.forEach(flow => {
 			if (!flow.active) return;
-			
+
 			flow.nodes.forEach(node => {
 				if (!node.config || !node.config.deviceId) return;
-				
+
 				const input = this.getMIDIInputDevice(node.config.deviceId);
 				if (!input) return;
-				
+
 				let listener = null;
+				let eventType = null;
 				const listenerKey = `${node.config.deviceId}|${node.triggerType}`;
-				
+
 				switch (node.triggerType) {
 					case 'midiNoteOn':
+						eventType = 'noteon';
 						listener = (e) => {
 							// Check if note matches config (if specified)
 							if (!node.config.note || node.config.note === e.note.identifier) {
@@ -212,10 +218,11 @@ class EventFlowSystem {
 								});
 							}
 						};
-						input.addListener('noteon', 'all', listener);
+						input.addListener(eventType, 'all', listener);
 						break;
-						
+
 					case 'midiNoteOff':
+						eventType = 'noteoff';
 						listener = (e) => {
 							if (!node.config.note || node.config.note === e.note.identifier) {
 								this.processMIDITrigger(flow, node, {
@@ -226,10 +233,11 @@ class EventFlowSystem {
 								});
 							}
 						};
-						input.addListener('noteoff', 'all', listener);
+						input.addListener(eventType, 'all', listener);
 						break;
-						
+
 					case 'midiCC':
+						eventType = 'controlchange';
 						listener = (e) => {
 							if (!node.config.controller || node.config.controller === e.controller.number) {
 								this.processMIDITrigger(flow, node, {
@@ -240,12 +248,13 @@ class EventFlowSystem {
 								});
 							}
 						};
-						input.addListener('controlchange', 'all', listener);
+						input.addListener(eventType, 'all', listener);
 						break;
 				}
-				
-				if (listener) {
-					this.midiListeners.set(listenerKey, listener);
+
+				if (listener && eventType) {
+					// Store input reference along with listener for proper cleanup
+					this.midiListeners.set(listenerKey, { input, eventType, listener });
 				}
 			});
 		});
@@ -264,7 +273,7 @@ class EventFlowSystem {
 		await this.evaluateFlow(flow, midiMessage);
 	}
 	
-	async evaluateSpecificLogicNode(logicType, inputValues, nodeConfig) {
+	async evaluateSpecificLogicNode(logicType, inputValues, nodeConfig, message = null) {
         if (!Array.isArray(inputValues)) return false;
 
         switch (logicType) {
@@ -282,13 +291,19 @@ class EventFlowSystem {
                 // If no active input, output false
                 const hasActiveInput = inputValues.some(v => v === true);
                 if (!hasActiveInput) return false;
-                
+
                 // Get probability from config (0-100), default to 50%
                 const probability = (nodeConfig && nodeConfig.probability) || 50;
                 const roll = Math.random() * 100;
-                
+
                 // Pass the input through if roll succeeds, otherwise block it
                 return roll < probability;
+            case 'CHECK_BAD_WORDS':
+                // Check if message contains bad words (set by background.js)
+                // Only evaluate if we have an active input (message is flowing through)
+                if (!inputValues.some(v => v === true)) return false;
+                if (!message) return false;
+                return !!message.containsBadWords;
             default:
                 return false;
         }
@@ -861,68 +876,38 @@ class EventFlowSystem {
         const db = await this.ensureDB();
         const transaction = db.transaction(this.storeName, 'readwrite');
         const store = transaction.objectStore(this.storeName);
-        const promises = [];
 
-        // Update order in memory first to get the correct flow objects
+        // Build order map
         const idToNewOrderMap = new Map();
         orderedFlowIds.forEach((id, index) => idToNewOrderMap.set(id, index));
 
-        // Create a new array for this.flows to ensure proper update
-        const newOrderedFlows = [];
-
+        // Prepare flow updates for DB (don't modify in-memory yet)
+        const flowUpdates = [];
         this.flows.forEach(flow => {
             if (idToNewOrderMap.has(flow.id)) {
-                flow.order = idToNewOrderMap.get(flow.id);
+                // Create a copy with updated order for DB storage
+                const updatedFlow = { ...flow, order: idToNewOrderMap.get(flow.id) };
+                flowUpdates.push(updatedFlow);
+                store.put(updatedFlow);
             }
-            // If a flow was somehow not in orderedFlowIds, it will retain its old order,
-            // which might cause issues. It's better if orderedFlowIds is comprehensive.
-            // For now, we assume orderedFlowIds contains all relevant flows for reordering.
         });
-        
-        // Sort based on new order and push promises for DB update
-        this.flows.sort((a,b) => (a.order || 0) - (b.order || 0));
-
-        this.flows.forEach(flow => {
-            // We only need to update flows whose order might have changed
-            // or to ensure all flows in the list get a sequential order.
-            // The orderedFlowIds implies the complete new order for those IDs.
-            if (idToNewOrderMap.has(flow.id)) { // Check if this flow was part of the reorder list
-                 promises.push(new Promise((resolve, reject) => {
-                    const request = store.put(flow);
-                    request.onsuccess = () => resolve();
-                    request.onerror = (event) => {
-                        console.error(`Error updating order for flow ${flow.id}:`, event.target.error);
-                        reject(event.target.error);
-                    };
-                }));
-            }
-            newOrderedFlows.push(flow); // Build the new in-memory list
-        });
-        
-        this.flows = newOrderedFlows; // Update the main flows array
 
         return new Promise((resolveOuter, rejectOuter) => {
             transaction.oncomplete = () => {
-                // All puts succeeded
-                this.flows.sort((a,b) => (a.order || 0) - (b.order || 0)); // Final sort of in-memory
+                // Transaction succeeded - NOW update in-memory state
+                this.flows.forEach(flow => {
+                    if (idToNewOrderMap.has(flow.id)) {
+                        flow.order = idToNewOrderMap.get(flow.id);
+                    }
+                });
+                this.flows.sort((a, b) => (a.order || 0) - (b.order || 0));
                 resolveOuter({ success: true, message: "Flows reordered successfully." });
             };
             transaction.onerror = (event) => {
                 console.error("Transaction error during flow reorder:", event.target.error);
-                // If transaction fails, IndexedDB rolls back. The in-memory this.flows might be partially updated.
-                // It would be best to reload from DB to ensure consistency or revert in-memory changes.
-                // For simplicity now, just reject.
+                // Transaction failed and rolled back - in-memory state unchanged (consistent)
                 rejectOuter({ success: false, message: "Transaction error during flow reorder.", error: event.target.error });
             };
-
-            // If using individual promises (not strictly necessary with transaction.oncomplete)
-            // Promise.all(promises)
-            //     .then(() => {
-            //         // This block is effectively handled by transaction.oncomplete
-            //     })
-            //     .catch(error => {
-            //         // This block is effectively handled by transaction.onerror
-            //     });
         });
     }
 
@@ -1077,7 +1062,7 @@ class EventFlowSystem {
                     if (allInputsEvaluated) {
                         const inputValues = inputNodeIds.map(inputId => nodeActivationStates[inputId]);
                       //console.log(`[EvaluateFlow "${flow.name}"] Evaluating Logic Node ID: ${node.id} (${node.logicType}) with inputs: ${JSON.stringify(inputValues)} from nodes: ${JSON.stringify(inputNodeIds)}`);
-                        const result = await this.evaluateSpecificLogicNode(node.logicType, inputValues, node.config);
+                        const result = await this.evaluateSpecificLogicNode(node.logicType, inputValues, node.config, message);
                         nodeActivationStates[node.id] = result;
                         
                       //console.log(`[EvaluateFlow "${flow.name}"] Logic Node ID: ${node.id} Activation State: ${nodeActivationStates[node.id]}`);
@@ -1395,10 +1380,6 @@ class EventFlowSystem {
                 const urlRegex = /https?:\/\/[^\s]+|www\.[^\s]+/i;
                 return messageText ? urlRegex.test(messageText) : false;
 
-            case 'containsBadWords':
-                // Check if message contains bad words (set by background.js)
-                return !!message.containsBadWords;
-
             case 'fromSource':
                 if (config.source === '*') {
                     match = true; // Match any source
@@ -1587,12 +1568,17 @@ class EventFlowSystem {
                     counterState.lastReset = now;
                 }
                 
-                // Determine counter key
+                // Determine counter key (sanitize to prevent prototype pollution)
+                const sanitizeKey = (key) => {
+                    if (typeof key !== 'string') return String(key);
+                    const dangerous = ['__proto__', 'constructor', 'prototype'];
+                    return dangerous.includes(key.toLowerCase()) ? `_safe_${key}` : key;
+                };
                 let counterKey = 'global';
                 if (countType === 'perUser' && message.userid) {
-                    counterKey = `user_${message.userid}`;
+                    counterKey = `user_${sanitizeKey(message.userid)}`;
                 } else if (countType === 'perSource' && message.type) {
-                    counterKey = `source_${message.type}`;
+                    counterKey = `source_${sanitizeKey(message.type)}`;
                 }
                 
                 // Skip if counting specific property that doesn't exist

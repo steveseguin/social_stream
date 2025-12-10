@@ -1,5 +1,6 @@
 // Predefined flow templates for quick setup
 const FLOW_TEMPLATES = {
+    // === SIMPLE TEMPLATES ===
     'chat-relay': {
         name: 'Chat Relay to Discord',
         description: 'Forward chat messages to a Discord webhook',
@@ -18,8 +19,69 @@ const FLOW_TEMPLATES = {
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
+    'channel-points': {
+        name: 'Channel Points Sound',
+        description: 'Play a sound when channel points are redeemed',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'channelPointRedemption', x: 100, y: 150, config: { rewardName: '' } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 400, y: 150, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } }
+        ],
+        connections: [{ from: 'trigger_1', to: 'action_1' }]
+    },
+    'tts-chat': {
+        name: 'TTS for Chat',
+        description: 'Read chat messages aloud with text-to-speech',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'ttsSpeak', x: 400, y: 150, config: { text: '{username} says {message}', voice: '', rate: 1, pitch: 1, volume: 1 } }
+        ],
+        connections: [{ from: 'trigger_1', to: 'action_1' }]
+    },
+    'donation-alert': {
+        name: 'Donation Alert',
+        description: 'Play sound and show text when someone donates',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 100, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 350, y: 100, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 350, y: 200, config: { text: '💰 {username} donated!', x: 50, y: 50, width: 50, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(0,0,0,0.8)', padding: 20, borderRadius: 10, animation: 'bounceIn', animationDuration: 500, duration: 5000 } }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'action_1' },
+            { from: 'trigger_1', to: 'action_2' }
+        ]
+    },
+    'skip-song': {
+        name: 'Skip Song Command',
+        description: 'Let mods skip the current Spotify track with !skip',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageEquals', x: 100, y: 100, config: { text: '!skip' } },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'userRole', x: 100, y: 200, config: { role: 'mod' } },
+            { id: 'logic_1', type: 'logic', logicType: 'AND', x: 300, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'spotifySkip', x: 500, y: 150, config: {} }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'logic_1' },
+            { from: 'trigger_2', to: 'logic_1' },
+            { from: 'logic_1', to: 'action_1' }
+        ]
+    },
+
+    // === INTERMEDIATE TEMPLATES ===
+    'bad-words-filter': {
+        name: 'Bad Words Filter',
+        description: 'Block messages containing profanity',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
+            { id: 'logic_1', type: 'logic', logicType: 'CHECK_BAD_WORDS', x: 300, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 500, y: 150, config: {} }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'logic_1' },
+            { from: 'logic_1', to: 'action_1' }
+        ]
+    },
     'alert-overlay': {
-        name: 'Alert Overlay',
+        name: 'Chat Alert Overlay',
         description: 'Show avatar and text overlay for new messages',
         nodes: [
             { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 50, y: 150, config: {} },
@@ -37,23 +99,114 @@ const FLOW_TEMPLATES = {
             { from: 'action_4', to: 'action_5' }
         ]
     },
-    'bad-words-filter': {
-        name: 'Bad Words Filter',
-        description: 'Block messages containing profanity',
+    'vip-highlight': {
+        name: 'VIP Message Highlight',
+        description: 'Show special overlay for VIP/sub messages',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'containsBadWords', x: 100, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 400, y: 150, config: {} }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'userRole', x: 100, y: 150, config: { role: 'vip' } },
+            { id: 'action_1', type: 'action', actionType: 'showText', x: 400, y: 150, config: { text: '⭐ {username}: {message}', x: 10, y: 80, width: 80, fontSize: 36, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#FFD700', backgroundColor: 'rgba(0,0,0,0.8)', padding: 15, borderRadius: 10, animation: 'slideInLeft', animationDuration: 300, duration: 6000 } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
-    'channel-points': {
-        name: 'Channel Points Reward',
-        description: 'Handle Twitch channel point redemptions',
+    'link-blocker': {
+        name: 'Block Links (Non-Mods)',
+        description: 'Block messages with links unless from mods',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'channelPointRedemption', x: 100, y: 150, config: { rewardName: '' } },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 400, y: 150, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'containsLink', x: 100, y: 100, config: {} },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'userRole', x: 100, y: 200, config: { role: 'mod' } },
+            { id: 'logic_1', type: 'logic', logicType: 'NOT', x: 300, y: 200, config: {} },
+            { id: 'logic_2', type: 'logic', logicType: 'AND', x: 450, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 650, y: 150, config: {} }
         ],
-        connections: [{ from: 'trigger_1', to: 'action_1' }]
+        connections: [
+            { from: 'trigger_1', to: 'logic_2' },
+            { from: 'trigger_2', to: 'logic_1' },
+            { from: 'logic_1', to: 'logic_2' },
+            { from: 'logic_2', to: 'action_1' }
+        ]
+    },
+    'now-playing': {
+        name: 'Now Playing Command',
+        description: 'Show current Spotify track with !np or !song',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageEquals', x: 100, y: 100, config: { text: '!np' } },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'messageEquals', x: 100, y: 200, config: { text: '!song' } },
+            { id: 'logic_1', type: 'logic', logicType: 'OR', x: 300, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'spotifyNowPlaying', x: 500, y: 150, config: { format: '🎵 Now playing: {song} by {artist}' } }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'logic_1' },
+            { from: 'trigger_2', to: 'logic_1' },
+            { from: 'logic_1', to: 'action_1' }
+        ]
+    },
+
+    // === ADVANCED TEMPLATES ===
+    'song-request-filtered': {
+        name: 'Safe Song Requests',
+        description: 'Song requests with bad words filter',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageStartsWith', x: 50, y: 150, config: { text: '!sr ' } },
+            { id: 'logic_1', type: 'logic', logicType: 'CHECK_BAD_WORDS', x: 250, y: 150, config: {} },
+            { id: 'logic_2', type: 'logic', logicType: 'NOT', x: 400, y: 200, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 550, y: 100, config: {} },
+            { id: 'action_2', type: 'action', actionType: 'spotifyQueue', x: 550, y: 200, config: { extractFromMessage: true, announceResult: true } }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'logic_1' },
+            { from: 'logic_1', to: 'action_1' },
+            { from: 'logic_1', to: 'logic_2' },
+            { from: 'logic_2', to: 'action_2' }
+        ]
+    },
+    'raid-welcome': {
+        name: 'Raid Welcome',
+        description: 'Welcome raiders with sound and overlay',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'eventType', x: 100, y: 150, config: { eventType: 'raid' } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 350, y: 80, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 350, y: 180, config: { text: '🎉 RAID! Welcome {username} and their community!', x: 10, y: 40, width: 80, fontSize: 42, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FF6B6B', backgroundColor: 'rgba(0,0,0,0.9)', padding: 25, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
+            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 350, y: 280, config: { text: 'Welcome raiders from {username}!', voice: '', rate: 1, pitch: 1, volume: 1 } }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'action_1' },
+            { from: 'trigger_1', to: 'action_2' },
+            { from: 'trigger_1', to: 'action_3' }
+        ]
+    },
+    'random-highlight': {
+        name: 'Random Message Highlight',
+        description: 'Randomly highlight 10% of chat messages',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
+            { id: 'logic_1', type: 'logic', logicType: 'RANDOM', x: 300, y: 150, config: { probability: 10 } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 500, y: 100, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 0.5 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 500, y: 200, config: { text: '✨ {username}: {message}', x: 10, y: 10, width: 80, fontSize: 36, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#00FF00', backgroundColor: 'rgba(0,0,0,0.8)', padding: 15, borderRadius: 10, animation: 'pulse', animationDuration: 300, duration: 5000 } }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'logic_1' },
+            { from: 'logic_1', to: 'action_1' },
+            { from: 'logic_1', to: 'action_2' }
+        ]
+    },
+    'big-donation': {
+        name: 'Big Donation Alert',
+        description: 'Special alert for donations over $10',
+        nodes: [
+            { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 100, y: 100, config: {} },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 100, y: 200, config: { property: 'donationAmount', operator: 'gte', value: 10 } },
+            { id: 'logic_1', type: 'logic', logicType: 'AND', x: 300, y: 150, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 500, y: 100, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 500, y: 200, config: { text: '🎉 BIG DONATION! {username} donated ${donationAmount}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
+            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 700, y: 150, config: { text: 'Wow! {username} just donated ${donationAmount}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
+        ],
+        connections: [
+            { from: 'trigger_1', to: 'logic_1' },
+            { from: 'trigger_2', to: 'logic_1' },
+            { from: 'logic_1', to: 'action_1' },
+            { from: 'logic_1', to: 'action_2' },
+            { from: 'action_2', to: 'action_3' }
+        ]
     }
 };
 
@@ -94,7 +247,6 @@ class EventFlowEditor {
             { id: 'wordCount', name: '🔢 Word Count' },
             { id: 'containsEmoji', name: '😀 Contains Emoji' },
             { id: 'containsLink', name: '🔗 Contains Link' },
-            { id: 'containsBadWords', name: '🚫 Contains Bad Words' },
             { id: 'fromSource', name: '📡 From Source' },
             { id: 'fromChannelName', name: '📺 From Channel Name' },
             { id: 'fromUser', name: '👤 From User' },
@@ -236,7 +388,8 @@ class EventFlowEditor {
             { id: 'AND', name: '🔀 AND Gate', type: 'logic', logicType: 'AND' }, // Added type/logicType for consistency if needed elsewhere
             { id: 'OR', name: '🔄 OR Gate', type: 'logic', logicType: 'OR' },
             { id: 'NOT', name: '🚫 NOT Gate', type: 'logic', logicType: 'NOT' },
-            { id: 'RANDOM', name: '🎲 RANDOM Gate', type: 'logic', logicType: 'RANDOM' }
+            { id: 'RANDOM', name: '🎲 RANDOM Gate', type: 'logic', logicType: 'RANDOM' },
+            { id: 'CHECK_BAD_WORDS', name: '🚫 Check Bad Words', type: 'logic', logicType: 'CHECK_BAD_WORDS' }
         ];
         
         // State management nodes - maintain state between messages
@@ -247,6 +400,17 @@ class EventFlowEditor {
         ];
 
         this.init(); // init() will call createEditorLayout()
+    }
+
+    // Helper method to escape HTML special characters to prevent XSS
+    escapeHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
     init() {
@@ -269,11 +433,27 @@ class EventFlowEditor {
                         </div>
                         <select id="template-select" class="btn" style="width: 100%; margin-top: 10px; padding: 8px 12px; font-size: 14px; cursor: pointer;">
                             <option value="">📋 Load Template...</option>
-                            <option value="chat-relay">Chat Relay to Discord</option>
-                            <option value="song-request">Song Request (!sr)</option>
-                            <option value="alert-overlay">Alert Overlay</option>
-                            <option value="bad-words-filter">Bad Words Filter</option>
-                            <option value="channel-points">Channel Points Reward</option>
+                            <optgroup label="Simple">
+                                <option value="chat-relay">Chat Relay to Discord</option>
+                                <option value="song-request">Song Request (!sr)</option>
+                                <option value="channel-points">Channel Points Sound</option>
+                                <option value="tts-chat">TTS for Chat</option>
+                                <option value="donation-alert">Donation Alert</option>
+                                <option value="skip-song">Skip Song Command (Mods)</option>
+                            </optgroup>
+                            <optgroup label="Intermediate">
+                                <option value="bad-words-filter">Bad Words Filter</option>
+                                <option value="alert-overlay">Chat Alert Overlay</option>
+                                <option value="vip-highlight">VIP Message Highlight</option>
+                                <option value="link-blocker">Block Links (Non-Mods)</option>
+                                <option value="now-playing">Now Playing Command</option>
+                            </optgroup>
+                            <optgroup label="Advanced">
+                                <option value="song-request-filtered">Safe Song Requests</option>
+                                <option value="raid-welcome">Raid Welcome</option>
+                                <option value="random-highlight">Random Message Highlight</option>
+                                <option value="big-donation">Big Donation Alert</option>
+                            </optgroup>
                         </select>
                     </div>
                     <div class="node-palette">
@@ -566,13 +746,13 @@ class EventFlowEditor {
 
             item.innerHTML = `
                 <span class="drag-handle">⠿</span>
-                <div class="flow-item-name">${flow.name || 'Unnamed Flow'}</div>
+                <div class="flow-item-name">${this.escapeHtml(flow.name || 'Unnamed Flow')}</div>
                 <div class="flow-item-controls">
                     <span class="flow-item-status ${flow.active ? 'active' : 'inactive'}" title="${flow.active ? 'Active' : 'Inactive'}">
                         ${flow.active ? '✓' : '◯'}
                     </span>
-                    <span class="flow-item-export" data-id="${flow.id}" title="Export Flow" style="cursor: pointer; margin: 0 5px;">📤</span>
-                    <span class="flow-item-delete" data-id="${flow.id}" title="Delete Flow">×</span>
+                    <span class="flow-item-export" data-id="${this.escapeHtml(flow.id)}" title="Export Flow" style="cursor: pointer; margin: 0 5px;">📤</span>
+                    <span class="flow-item-delete" data-id="${this.escapeHtml(flow.id)}" title="Delete Flow">×</span>
                 </div>
             `;
             flowListEl.appendChild(item);
@@ -1331,10 +1511,10 @@ class EventFlowEditor {
 
 		nodeEl.innerHTML = `
 			<div class="node-header">
-				<div class="node-title">${this.getNodeTitle(node)}</div>
+				<div class="node-title">${this.escapeHtml(this.getNodeTitle(node))}</div>
 				<div class="node-delete" title="Delete Node">×</div>
 			</div>
-			<div class="node-body">${this.getNodeDescription(node)}</div>
+			<div class="node-body">${this.escapeHtml(this.getNodeDescription(node))}</div>
 			${inputPointsHTML}
 			${outputPointsHTML}
 		`;
@@ -1439,7 +1619,6 @@ class EventFlowEditor {
                 case 'wordCount': return `Words ${node.config.comparison || 'gt'} ${node.config.count || 5}`;
                 case 'containsEmoji': return 'Has emoji';
                 case 'containsLink': return 'Contains URL';
-                case 'containsBadWords': return 'Contains bad words';
                 case 'fromSource': return `Source: ${node.config.source === '*' ? 'Any' : (node.config.source || 'Any')}`;
                 case 'fromChannelName': return `Channel: ${node.config.channelName || 'Any'}`;
                 case 'fromUser': return `User: ${node.config.username || 'Any'}`;
@@ -1613,6 +1792,7 @@ class EventFlowEditor {
                 case 'OR': return 'Any input can be true.';
                 case 'NOT': return 'Inverts the input signal.';
                 case 'RANDOM': return `${node.config?.probability || 50}% chance`;
+                case 'CHECK_BAD_WORDS': return 'Bad words? → TRUE/FALSE';
                 default: return 'Logic Gate';
             }
         } else if (node.type === 'state') {
@@ -1781,40 +1961,36 @@ class EventFlowEditor {
 			// Test against all active flows in the system
 			this.eventFlowSystem.processMessage(testMessage)
 				.then(result => {
-					testResult = { 
-						success: true, 
-						message: result ? 'Message was processed successfully' : 'Message was blocked', 
-						result: result 
-					};
-					this.displayTestResults(testResult, testMessage);
-				});
-		} else {
-			// Just test the flow using the real eventFlowSystem with temporarily modified flows
-			// Save the current flows
-			const originalFlows = this.eventFlowSystem.flows;
-			
-			// Temporarily set just this flow for testing
-			this.eventFlowSystem.flows = [testFlow];
-			
-			// Process the message through just this flow
-			this.eventFlowSystem.evaluateFlow(testFlow, testMessage)
-				.then(result => {
-					// Restore the original flows
-					this.eventFlowSystem.flows = originalFlows;
-					
-					testResult = { 
-						success: true, 
-						message: result.blocked ? 'Message was blocked by this flow' : 
-								 result.modified ? 'Message was modified by this flow' : 
-								 'Flow triggered but no actions affected the message',
-						result: result 
+					testResult = {
+						success: true,
+						message: result ? 'Message was processed successfully' : 'Message was blocked',
+						result: result
 					};
 					this.displayTestResults(testResult, testMessage);
 				})
 				.catch(error => {
-					// Restore the original flows even on error
-					this.eventFlowSystem.flows = originalFlows;
-					
+					testResult = {
+						success: false,
+						message: 'Error testing flows: ' + error.message,
+						error: error
+					};
+					this.displayTestResults(testResult, testMessage);
+				});
+		} else {
+			// Test the flow directly - evaluateFlow takes the flow as a parameter
+			// and doesn't need this.flows to be modified
+			this.eventFlowSystem.evaluateFlow(testFlow, testMessage)
+				.then(result => {
+					testResult = {
+						success: true,
+						message: result.blocked ? 'Message was blocked by this flow' :
+								 result.modified ? 'Message was modified by this flow' :
+								 'Flow triggered but no actions affected the message',
+						result: result
+					};
+					this.displayTestResults(testResult, testMessage);
+				})
+				.catch(error => {
 					testResult = {
 						success: false,
 						message: 'Error testing flow: ' + error.message,
@@ -1922,14 +2098,14 @@ class EventFlowEditor {
 	displayTestResults(testResult, originalMessage = {}) {
 		const resultsEl = document.getElementById('test-results');
 		if (!resultsEl) return;
-		
+
 		let html = `<h4>Test Results</h4>`;
-		
+
 		if (!testResult.success) {
-			html += `<p class="test-error">${testResult.message}</p>`;
+			html += `<p class="test-error">${this.escapeHtml(testResult.message)}</p>`;
 		} else {
 			const result = testResult.result;
-			
+
 			if (result === null) {
 				html += `<p class="test-blocked">Message was BLOCKED by a flow.</p>`;
 			} else if (result.blocked) {
@@ -1938,20 +2114,20 @@ class EventFlowEditor {
 				html += `
 					<p class="test-modified">Message was MODIFIED.</p>
 					<div class="test-result-detail">
-						<strong>New Message:</strong> ${result.message.chatmessage}
+						<strong>New Message:</strong> ${this.escapeHtml(result.message.chatmessage || '')}
 					</div>
 				`;
-				
+
 				// Show any properties that were modified
 				const originalKeys = Object.keys(originalMessage || {});
-				const modifiedKeys = Object.keys(result.message || {}).filter(key => 
+				const modifiedKeys = Object.keys(result.message || {}).filter(key =>
 					!originalKeys.includes(key) || result.message[key] !== originalMessage[key]
 				);
-				
+
 				if (modifiedKeys.length > 0) {
 					html += `<div class="test-result-detail"><strong>Modified Properties:</strong><ul>`;
 					modifiedKeys.forEach(key => {
-						html += `<li>${key}: ${JSON.stringify(result.message[key])}</li>`;
+						html += `<li>${this.escapeHtml(key)}: ${this.escapeHtml(JSON.stringify(result.message[key]))}</li>`;
 					});
 					html += `</ul></div>`;
 				}
@@ -1959,7 +2135,7 @@ class EventFlowEditor {
 				html += `<p class="test-passed">Flow was triggered but did not modify or block the message.</p>`;
 			}
 		}
-		
+
 		resultsEl.innerHTML = html;
 	}
 
@@ -1980,7 +2156,6 @@ class EventFlowEditor {
                 case 'wordCount': node.config = { comparison: 'gt', count: 5 }; break;
                 case 'containsEmoji': node.config = {}; break;
                 case 'containsLink': node.config = {}; break;
-                case 'containsBadWords': node.config = {}; break;
                 case 'fromSource': node.config = { source: '*' }; break;
                 case 'fromChannelName': node.config = { channelName: '' }; break;
                 case 'fromUser': node.config = { username: 'user' }; break;
@@ -2310,8 +2485,8 @@ class EventFlowEditor {
 
 	showNodeProperties(node) {
 		const propertiesContent = document.getElementById('node-properties-content');
-		let html = `<h4>${this.getNodeTitle(node)} Properties</h4>
-					<input type="hidden" id="node-id-prop" value="${node.id}">`;
+		let html = `<h4>${this.escapeHtml(this.getNodeTitle(node))} Properties</h4>
+					<input type="hidden" id="node-id-prop" value="${this.escapeHtml(node.id)}">`;
 
 		let typeArray, subtypeField; // Use subtypeField to get the specific type (triggerType, actionType, logicType)
 		
@@ -2377,21 +2552,6 @@ class EventFlowEditor {
 				break;
 			case 'containsLink':
 				html += `<p class="property-help">Triggers when a message contains a URL (http://, https://, or www.)</p>`;
-				break;
-			case 'containsBadWords':
-				html += `
-					<div class="property-group" style="background: #ffebee; padding: 10px; border-radius: 4px;">
-						<strong>🚫 Bad Words Filter</strong><br>
-						Triggers when the chat message contains words from your blocked words list.<br><br>
-						<strong>Configure your word list:</strong><br>
-						Go to the extension popup → Filter Settings → Blocked Words
-					</div>
-					<div class="property-group" style="background: #e3f2fd; padding: 10px; border-radius: 4px; margin-top: 10px;">
-						<strong>💡 Use Case:</strong> Block song requests with bad words<br>
-						<code>Channel Point Redemption</code> → <code>Contains Bad Words?</code><br>
-						If true → Block Message<br>
-						If false → Add to Queue
-					</div>`;
 				break;
 			case 'anyMessage':
 				html += `<p class="property-help">Triggers on any message regardless of content.</p>`;
@@ -2511,7 +2671,7 @@ class EventFlowEditor {
 							value="${this.escapeHtml(node.config.rewardName || '')}" placeholder="Leave empty for any redemption">
 						<div class="property-help">Filter by specific reward name. Leave empty to match any channel point redemption.</div>
 					</div>
-					<div class="property-group" style="background: #e8f5e9; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>🎁 Channel Point Redemption</strong><br>
 						Triggers when a viewer redeems channel points (Twitch, Kick, etc.).<br><br>
 						<strong>💡 Song Request Setup:</strong><br>
@@ -2547,7 +2707,7 @@ class EventFlowEditor {
 						<input type="text" class="property-input" id="prop-eventType" value="${isCustomEvent ? (node.config.eventType || '') : ''}" placeholder="e.g., reaction">
 						<div class="property-help">Enter the exact event type from the message object</div>
 					</div>
-					<div class="property-group" style="background: #fff3e0; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>📣 Event Types</strong><br>
 						Triggers on specific stream events like raids, follows, subs, etc.
 					</div>`;
@@ -2596,7 +2756,7 @@ class EventFlowEditor {
 						<input type="number" class="property-input" id="prop-value" value="${node.config.value ?? 0}" step="any">
 						<div class="property-help">The value to compare against</div>
 					</div>
-					<div class="property-group" style="background: #e3f2fd; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💡 Examples:</strong><br>
 						• donationAmount > 50 (tips over $50)<br>
 						• karma < 0.3 (low karma users)<br>
@@ -3426,7 +3586,22 @@ class EventFlowEditor {
 				</div>
 				<p class="property-help">This gate randomly passes or blocks the input signal based on the probability. For example, 25% means the signal will pass through roughly 1 in 4 times.</p>`;
 				break;
-			
+			case 'CHECK_BAD_WORDS':
+				html += `
+					<div class="property-group" style="background: #ffebee; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>🚫 Bad Words Check</strong><br>
+						Outputs TRUE if the message contains bad words, FALSE if clean.<br><br>
+						<strong>Configure your word list:</strong><br>
+						Extension popup → Filter Settings → Blocked Words
+					</div>
+					<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px; margin-top: 10px;">
+						<strong>💡 Use Case:</strong> Filter song requests<br><br>
+						<code>Channel Point Redemption</code> → <code>Check Bad Words</code><br>
+						• TRUE path → Block Message<br>
+						• FALSE path (via NOT gate) → Add to Queue
+					</div>`;
+				break;
+
 			// State Node Configurations
 			case 'GATE':
 				html += `<div class="property-group">
@@ -3858,7 +4033,7 @@ class EventFlowEditor {
 							value="${node.config.sceneName || ''}" placeholder="e.g., Game Scene, Starting Soon">
 						<div class="property-help">The exact name of the OBS scene to switch to</div>
 					</div>
-					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Set your Browser Source permissions to "Advanced Access Level" to enable OBS control.
 					</div>`;
@@ -3881,7 +4056,7 @@ class EventFlowEditor {
 						</select>
 						<div class="property-help">Set whether to show, hide, or toggle the source</div>
 					</div>
-					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
 						2. Note your password (required by OBS)<br>
@@ -3912,7 +4087,7 @@ class EventFlowEditor {
 							<option value="false" ${node.config.enabled === false || node.config.enabled === 'false' ? 'selected' : ''}>Disable</option>
 						</select>
 					</div>
-					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
 						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
@@ -3935,7 +4110,7 @@ class EventFlowEditor {
 							<option value="false" ${node.config.muted === false || node.config.muted === 'false' ? 'selected' : ''}>Unmute</option>
 						</select>
 					</div>
-					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>ℹ️ Requires OBS WebSocket:</strong><br>
 						1. Enable in OBS: Tools → WebSocket Server Settings<br>
 						2. Add password to actions.html URL: <code>&obspw=yourpassword</code>
@@ -3947,7 +4122,7 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Starts recording in OBS. Make sure recording is configured in OBS settings.</div>
 					</div>
-					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
 					</div>`;
@@ -3958,7 +4133,7 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Stops the current recording in OBS.</div>
 					</div>
-					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
 					</div>`;
@@ -3969,7 +4144,7 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Starts streaming in OBS. Make sure stream settings are configured.</div>
 					</div>
-					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
 					</div>`;
@@ -3980,7 +4155,7 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Stops the current stream in OBS.</div>
 					</div>
-					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
 					</div>`;
@@ -3991,11 +4166,11 @@ class EventFlowEditor {
 					<div class="property-group">
 						<div class="property-help">Saves the replay buffer. Replay buffer must be enabled and running in OBS.</div>
 					</div>
-					<div class="property-group" style="background: #ff9800; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #ff9800; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>⚠️ OBS Permission Required:</strong><br>
 						Browser Source needs "Advanced Access Level" permissions.
 					</div>
-					<div class="property-group" style="background: #4CAF50; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #4CAF50; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Perfect for saving highlight moments triggered by donations or special messages!
 					</div>`;
 				break;
@@ -4083,7 +4258,7 @@ class EventFlowEditor {
 						<strong>🎵 Spotify Integration:</strong><br>
 						Requires Spotify to be connected in Social Stream settings with playback permissions.
 					</div>
-					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Combine with a "Message Starts With" trigger (e.g., "!sr") to let viewers request songs!
 					</div>`;
 				break;
@@ -4097,7 +4272,7 @@ class EventFlowEditor {
 						<strong>🎵 Spotify Integration:</strong><br>
 						Requires Spotify to be connected in Social Stream settings with playback permissions.
 					</div>
-					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Great for a "!pause" command that toggles playback!
 					</div>`;
 				break;
@@ -4124,7 +4299,7 @@ class EventFlowEditor {
 						<strong>🎵 Spotify Integration:</strong><br>
 						Requires Spotify to be connected in Social Stream settings.
 					</div>
-					<div class="property-group" style="background: #2196F3; padding: 10px; border-radius: 4px;">
+					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Create a custom "!song" response with your own format!
 					</div>`;
 				break;
@@ -4297,7 +4472,7 @@ class EventFlowEditor {
 				
 			case 'setGateState':
 				html += `
-					<div class="property-group" style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+					<div class="property-group" style="background: #f0f8ff; color: #333; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
 						<strong>💡 How this works:</strong><br>
 						Controls an <strong>ON/OFF Switch</strong> node. First add a 🚦 ON/OFF Switch to your flow, then use this action to flip it ON or OFF.
 					</div>
@@ -4340,7 +4515,7 @@ class EventFlowEditor {
 				
 			case 'setCounter':
 				html += `
-					<div class="property-group" style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+					<div class="property-group" style="background: #f0f8ff; color: #333; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
 						<strong>💡 How this works:</strong><br>
 						Sets a <strong>Counter</strong> node to a specific value. First add a 🔢 Counter to your flow, then use this to reset it or set it to any number.
 					</div>
@@ -4367,7 +4542,7 @@ class EventFlowEditor {
 				
 			case 'incrementCounter':
 				html += `
-					<div class="property-group" style="background: #f0f8ff; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+					<div class="property-group" style="background: #f0f8ff; color: #333; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
 						<strong>💡 How this works:</strong><br>
 						Adds or subtracts from a <strong>Counter</strong> node. Use this when you want to add points, track multiple items, or count down.
 					</div>

@@ -148,15 +148,19 @@
 <div id="prerequisites" class="section">
    <h2>Prerequisites</h2>
    <ul>
-      <li><a href="https://streamer.bot/">Streamer.bot</a> installed on your computer (v0.2.0 or higher recommended)</li>
+      <li><a href="https://streamer.bot/">Streamer.bot</a> installed on your computer (v0.2.3 or higher recommended; v1.0+ has a redesigned UI)</li>
       <li>SocialStream.Ninja's Standalone app installed and configured</li>
       <li>Basic familiarity with Streamer.bot's interface (Actions, Sub-Actions)</li>
    </ul>
+   <div class="note">
+      <strong>Note:</strong> Streamer.bot v1.0 introduced a redesigned UI with dark mode. Menu locations may differ slightly from earlier versions. The WebSocket Server settings are typically found under <strong>Settings</strong> → <strong>Servers</strong> or similar. See the <a href="https://docs.streamer.bot/api/servers">official documentation</a> for your version.
+   </div>
 </div>
 <div id="setting-up-streamerbot-ws" class="section">
    <h2>Setting Up Streamer.bot WebSocket Server</h2>
+   <p class="note"><strong>v1.0 Users:</strong> In Streamer.bot v1.0+, navigate to <strong>Settings</strong> (gear icon) → <strong>Servers</strong> → <strong>WebSocket Server</strong>. Earlier versions use <strong>Servers/Clients</strong> → <strong>WebSocket Server</strong>.</p>
    <ol>
-      <li>In Streamer.bot, go to <strong>Servers/Clients</strong> → <strong>WebSocket Server</strong></li>
+      <li>In Streamer.bot, locate the <strong>WebSocket Server</strong> settings (see note above)</li>
       <li>Enable the server by checking <strong>Enabled</strong></li>
       <li>Check <strong>Auto Start</strong> to start the server automatically when Streamer.bot launches</li>
       <li>Note the <strong>Port</strong> (default is 8080)</li>
@@ -177,45 +181,47 @@
       <li>Paste the following C# code. This code extracts the chat data sent by SocialStream.Ninja from the `chatData` argument:</li>
    </ol>
 <pre><code>using System;
-using Newtonsoft.Json.Linq; // Make sure Newtonsoft.Json is referenced
+using Newtonsoft.Json.Linq;
+
 public class CPHInline
 {
     public bool Execute()
     {
-        // --- Get the main chatData object sent from SocialStream.Ninja ---
-        JObject chatData = null;
-        if (args.ContainsKey("chatData") && args["chatData"] is JObject)
+        // --- Get the chatData object sent from SocialStream.Ninja ---
+        // Using TryGetArg (best practice since v0.2.3)
+        if (!CPH.TryGetArg("chatData", out JObject chatData))
         {
-            chatData = (JObject)args["chatData"];
-        }
-        else
-        {
-             CPH.LogWarn("[SocialStream] Action triggered but 'chatData' argument was missing or not a JSON object.");
-             // Try converting if it's a string representation of JSON (less ideal)
-             if (args.ContainsKey("chatData") && args["chatData"] is string) {
+            // Fallback: Try parsing as string (older format)
+            if (CPH.TryGetArg("chatData", out string chatDataStr))
+            {
                 try {
-                    chatData = JObject.Parse((string)args["chatData"]);
+                    chatData = JObject.Parse(chatDataStr);
                 } catch (Exception ex) {
-                    CPH.LogError($"[SocialStream] Failed to parse chatData string: {ex.Message}");
+                    CPH.LogError($"[SocialStream] Failed to parse chatData: {ex.Message}");
                     return false;
                 }
-             } else {
-                 return false; // Exit if we definitely don't have chatData
-             }
+            }
+            else
+            {
+                CPH.LogWarn("[SocialStream] Action triggered but 'chatData' argument was missing.");
+                return false;
+            }
         }
+
         // --- Extract specific fields from the chatData object ---
-        string message = GetStringValue(chatData, "chatmessage", ""); 
+        string message = GetStringValue(chatData, "chatmessage", "");
         string username = GetStringValue(chatData, "chatname", "Unknown User");
         string userId = GetStringValue(chatData, "userid", "");
         string avatar = GetStringValue(chatData, "chatimg", "");
         bool isBot = GetBoolValue(chatData, "isBot", false);
         string originalPlatform = GetStringValue(chatData, "originalPlatform", "unknown");
         string source = GetStringValue(chatData, "source", "unknown");
-        
-        // Log the received message to Streamer.bot's Action Queue logs for debugging
+
+        // Log for debugging (visible in Action Queue logs)
         CPH.LogInfo($"[SocialStream][{originalPlatform}] {username}: {message}");
-        
+
         // --- Set arguments for subsequent sub-actions ---
+        // Access these in other sub-actions as %ss_message%, %ss_username%, etc.
         CPH.SetArgument("ss_message", message);
         CPH.SetArgument("ss_username", username);
         CPH.SetArgument("ss_userId", userId);
@@ -223,37 +229,29 @@ public class CPHInline
         CPH.SetArgument("ss_isBot", isBot);
         CPH.SetArgument("ss_platform", originalPlatform);
         CPH.SetArgument("ss_source", source);
-        
+
         return true;
     }
-    
-    // Helper methods to safely get values from JObject with specific types
+
+    // Helper: Safely get string value from JObject
     private string GetStringValue(JObject obj, string key, string defaultValue)
     {
-        try
+        if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
         {
-            if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
-            {
-                return token.ToString();
-            }
-        }
-        catch (Exception ex) {
-             CPH.LogWarn($"[SocialStream] Error getting value for key '{key}': {ex.Message}");
+            return token.ToString();
         }
         return defaultValue;
     }
-    
+
+    // Helper: Safely get bool value from JObject
     private bool GetBoolValue(JObject obj, string key, bool defaultValue)
     {
-        try
+        if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
         {
-            if (obj != null && obj.TryGetValue(key, StringComparison.OrdinalIgnoreCase, out JToken token))
-            {
-                return token.ToObject&lt;bool&gt;();
-            }
-        }
-        catch (Exception ex) {
-             CPH.LogWarn($"[SocialStream] Error getting value for key '{key}': {ex.Message}");
+            if (token.Type == JTokenType.Boolean)
+                return token.Value&lt;bool&gt;();
+            if (bool.TryParse(token.ToString(), out bool result))
+                return result;
         }
         return defaultValue;
     }
@@ -360,85 +358,89 @@ public class CPHInline
             <td>contentimg</td>
             <td>String</td>
             <td>URL to content image, if present in the message.</td>
-            <td>GetValue&lt;string&gt;(chatData, "contentimg", "")</td>
+            <td>GetStringValue(chatData, "contentimg", "")</td>
          </tr>
          <tr>
             <td>subtitle</td>
             <td>String</td>
             <td>Additional text like user status or other metadata.</td>
-            <td>GetValue&lt;string&gt;(chatData, "subtitle", "")</td>
+            <td>GetStringValue(chatData, "subtitle", "")</td>
          </tr>
          <tr>
             <td>membership</td>
             <td>String</td>
             <td>Membership information, if applicable.</td>
-            <td>GetValue&lt;string&gt;(chatData, "membership", "")</td>
+            <td>GetStringValue(chatData, "membership", "")</td>
          </tr>
          <tr>
             <td>hasDonation</td>
             <td>String/Boolean</td>
             <td>Donation information, if present.</td>
-            <td>GetValue&lt;string&gt;(chatData, "hasDonation", "")</td>
+            <td>GetStringValue(chatData, "hasDonation", "")</td>
          </tr>
          <tr>
             <td>type</td>
             <td>String</td>
             <td>Source type (e.g., "twitch", "youtube", "kick").</td>
-            <td>GetValue&lt;string&gt;(chatData, "type", "")</td>
+            <td>GetStringValue(chatData, "type", "")</td>
          </tr>
          <tr>
             <td>id</td>
             <td>String</td>
             <td>Unique message ID from the source platform.</td>
-            <td>GetValue&lt;string&gt;(chatData, "id", "")</td>
+            <td>GetStringValue(chatData, "id", "")</td>
          </tr>
          <tr>
             <td>nameColor</td>
             <td>String</td>
             <td>HEX color code for the username (e.g., "#FF0000").</td>
-            <td>GetValue&lt;string&gt;(chatData, "nameColor", "#FFFFFF")</td>
+            <td>GetStringValue(chatData, "nameColor", "#FFFFFF")</td>
          </tr>
          <tr>
             <td>chatbadges</td>
             <td>String/Array</td>
             <td>Chat badges from the source platform.</td>
-            <td>GetValue&lt;string&gt;(chatData, "chatbadges", "")</td>
+            <td>GetStringValue(chatData, "chatbadges", "")</td>
          </tr>
          <tr>
             <td>textonly</td>
             <td>Boolean</td>
             <td>If true, indicates that HTML has been stripped from the message.</td>
-            <td>GetValue&lt;bool&gt;(chatData, "textonly", false)</td>
+            <td>GetBoolValue(chatData, "textonly", false)</td>
          </tr>
          <tr>
             <td>tid</td>
             <td>String</td>
             <td>Transaction ID used for duplicate detection.</td>
-            <td>GetValue&lt;string&gt;(chatData, "tid", "")</td>
+            <td>GetStringValue(chatData, "tid", "")</td>
          </tr>
       </table>
    </div>
    <h3>Accessing Additional Fields in C#</h3>
-   <p>To access fields not already extracted in the example C# code, add lines like:</p>
+   <p>To access fields not already extracted in the example C# code, add lines like these inside your Execute() method (after parsing chatData):</p>
    <pre><code>// Extract additional fields as needed
-string contentImage = GetValue&lt;string&gt;(chatData, "contentimg", "");
-string subtitle = GetValue&lt;string&gt;(chatData, "subtitle", "");
-string nameColor = GetValue&lt;string&gt;(chatData, "nameColor", "#FFFFFF");
+string contentImage = GetStringValue(chatData, "contentimg", "");
+string subtitle = GetStringValue(chatData, "subtitle", "");
+string nameColor = GetStringValue(chatData, "nameColor", "#FFFFFF");
+string donation = GetStringValue(chatData, "hasDonation", "");
+string membership = GetStringValue(chatData, "membership", "");
 
-// Make them available as arguments
+// Make them available as arguments for subsequent sub-actions
 CPH.SetArgument("ss_contentImage", contentImage);
 CPH.SetArgument("ss_subtitle", subtitle);
-CPH.SetArgument("ss_nameColor", nameColor);</code></pre>
+CPH.SetArgument("ss_nameColor", nameColor);
+CPH.SetArgument("ss_donation", donation);
+CPH.SetArgument("ss_membership", membership);</code></pre>
    <h3>Example: Working with Platform-Specific Messages</h3>
-   <p>You can add conditional logic based on the platform or other message properties:</p>
+   <p>You can add conditional logic based on the platform or other message properties. Add this inside your Execute() method:</p>
    <pre><code>// Example: Process messages differently based on platform
 if (originalPlatform.Equals("youtube", StringComparison.OrdinalIgnoreCase))
 {
     // YouTube-specific processing
     CPH.PlaySound("sounds/youtube_alert.mp3");
-    
+
     // Check for YouTube memberships
-    string membership = GetValue&lt;string&gt;(chatData, "membership", "");
+    string membership = GetStringValue(chatData, "membership", "");
     if (!string.IsNullOrEmpty(membership))
     {
         CPH.SetArgument("ss_hasMembership", true);
@@ -449,55 +451,87 @@ if (originalPlatform.Equals("youtube", StringComparison.OrdinalIgnoreCase))
 else if (originalPlatform.Equals("twitch", StringComparison.OrdinalIgnoreCase))
 {
     // Twitch-specific processing
-    string badges = GetValue&lt;string&gt;(chatData, "chatbadges", "");
+    string badges = GetStringValue(chatData, "chatbadges", "");
     bool isSubscriber = badges.Contains("subscriber");
     CPH.SetArgument("ss_isSubscriber", isSubscriber);
+}
+else if (originalPlatform.Equals("kick", StringComparison.OrdinalIgnoreCase))
+{
+    // Kick-specific processing
+    CPH.LogInfo($"[Kick] Message from {username}");
 }</code></pre>
    <h3>Example: Creating Custom Text Formats</h3>
-   <p>You can format messages for display in various ways:</p>
+   <p>You can format messages for display in various ways. Add this inside your Execute() method:</p>
    <pre><code>// Standard format with platform
 string formattedMessage = $"[{originalPlatform.ToUpper()}] {username}: {message}";
 CPH.SetArgument("ss_formattedMessage", formattedMessage);
 
-// HTML format for web display
-string htmlFormat = $"&lt;span style='color:{GetValue&lt;string&gt;(chatData, "nameColor", "#FFFFFF")}'&gt;{username}&lt;/span&gt;: {message}";
-CPH.SetArgument("ss_htmlMessage", htmlFormat);
+// Get name color for styled display
+string nameColor = GetStringValue(chatData, "nameColor", "#FFFFFF");
 
-// Format for OBS Text Source
+// Format for OBS Text Source (GDI+ or Browser Source)
 string obsText = $"{originalPlatform} | {username} says: {message}";
-CPH.SetArgument("ss_obsText", obsText);</code></pre>
+CPH.SetArgument("ss_obsText", obsText);
+
+// Check for donations/Super Chats
+string donation = GetStringValue(chatData, "hasDonation", "");
+if (!string.IsNullOrEmpty(donation))
+{
+    CPH.SetArgument("ss_isDonation", true);
+    CPH.SetArgument("ss_donationAmount", donation);
+    // You could trigger a different action for donations
+    // CPH.RunAction("Donation Alert", false);
+}</code></pre>
 </div>
 <div id="troubleshooting" class="section">
    <h2>Troubleshooting</h2>
    <ul>
       <li>
-         <strong>Cannot connect to WebSocket</strong>:                
+         <strong>Cannot connect to WebSocket</strong>:
          <ul>
-            <li>Verify the WebSocket Server is **Enabled** and **Running** (Status: Listening) in Streamer.bot (Servers/Clients → WebSocket Server).</li>
-            <li>Ensure the **Port** in SocialStream.Ninja matches the Port in Streamer.bot.</li>
-            <li>Check firewall rules on your PC aren't blocking the connection (especially if not using `127.0.0.1`).</li>
-            <li>Verify the **Password** matches exactly if authentication is enabled in Streamer.bot (or that it's blank in both if disabled).</li>
+            <li>Verify the WebSocket Server is <strong>Enabled</strong> and <strong>Running</strong> (Status: Listening) in Streamer.bot.</li>
+            <li>In v1.0+, check <strong>Settings</strong> → <strong>Servers</strong> → <strong>WebSocket Server</strong>. In older versions, check <strong>Servers/Clients</strong> → <strong>WebSocket Server</strong>.</li>
+            <li>Ensure the <strong>Port</strong> in SocialStream.Ninja matches the Port in Streamer.bot (default: 8080).</li>
+            <li>Check firewall rules on your PC aren't blocking the connection (especially if not using <code>127.0.0.1</code>).</li>
+            <li>Verify the <strong>Password</strong> matches exactly if authentication is enabled in Streamer.bot (or that it's blank in both if disabled).</li>
             <li>Check the SocialStream.Ninja console logs (usually F12 in the app/browser) for connection errors.</li>
          </ul>
       </li>
       <li>
-         <strong>Messages not triggering Action in Streamer.bot</strong>:                
+         <strong>Messages not triggering Action in Streamer.bot</strong>:
          <ul>
-            <li>Verify the **Action ID** in SocialStream.Ninja settings exactly matches the ID copied from Streamer.bot (right-click action -> Copy Action ID).</li>
-            <li>Check the Streamer.bot **Action Queues** tab (under Processing) to see if the action is being triggered but failing. Look for errors.</li>
-            <li>Ensure the C# code in your action compiles successfully.</li>
-            <li>Add a simple `Core -> Misc -> Log Message` sub-action as the *first* sub-action in your Streamer.bot action to confirm it's being triggered at all.</li>
-            <li>Check the SocialStream.Ninja console logs for errors when sending the `DoAction` request.</li>
+            <li>Verify the <strong>Action ID</strong> in SocialStream.Ninja settings exactly matches the ID copied from Streamer.bot (right-click action → Copy Action ID).</li>
+            <li>Check the Streamer.bot <strong>Action Queues</strong> tab to see if the action is being triggered but failing. Look for errors in the logs.</li>
+            <li>Ensure the C# code in your action compiles successfully (click <strong>Compile</strong> in the C# sub-action editor).</li>
+            <li>Add a simple <code>Core → Misc → Log Message</code> sub-action as the <em>first</em> sub-action to confirm the action is being triggered at all.</li>
+            <li>Check the SocialStream.Ninja console logs for errors when sending the DoAction request.</li>
          </ul>
       </li>
       <li>
-         <strong>Arguments not working in Sub-Actions</strong>:                
+         <strong>C# Code won't compile</strong>:
          <ul>
-            <li>Ensure the C# sub-action runs *before* the sub-actions that use the arguments.</li>
-            <li>Double-check the argument names set in C# (`CPH.SetArgument("ss_message", ...)` correspond to the variables used in sub-actions (`%ss_message%`).</li>
-            <li>Ensure the "Use Arguments" option (or similar) is enabled in the sub-actions that need them.</li>
+            <li>Ensure you have <code>using Newtonsoft.Json.Linq;</code> at the top of your code.</li>
+            <li>Streamer.bot includes Newtonsoft.Json by default - you don't need to add a reference manually.</li>
+            <li>Check for typos in method names (<code>CPH.TryGetArg</code>, <code>CPH.SetArgument</code>, <code>CPH.LogInfo</code>).</li>
+            <li>Make sure all braces <code>{}</code> are properly matched.</li>
          </ul>
       </li>
+      <li>
+         <strong>Arguments not working in Sub-Actions</strong>:
+         <ul>
+            <li>Ensure the C# sub-action runs <em>before</em> the sub-actions that use the arguments.</li>
+            <li>Double-check argument names: <code>CPH.SetArgument("ss_message", ...)</code> becomes <code>%ss_message%</code> in sub-actions.</li>
+            <li>Arguments are case-sensitive - ensure exact match between what you set and what you use.</li>
+         </ul>
+      </li>
+   </ul>
+   <h3>Useful Resources</h3>
+   <ul>
+      <li><a href="https://docs.streamer.bot/">Streamer.bot Documentation</a></li>
+      <li><a href="https://docs.streamer.bot/api/csharp">C# Code Actions Reference</a></li>
+      <li><a href="https://docs.streamer.bot/api/csharp/methods/core/arguments/try-get-arg">TryGetArg Method</a></li>
+      <li><a href="https://docs.streamer.bot/api/csharp/methods/core/arguments/set-argument">SetArgument Method</a></li>
+      <li><a href="https://streamerbot.github.io/client/guide/actions/">WebSocket Client Actions</a></li>
    </ul>
 </div>
 <div id="important-note" class="section">
