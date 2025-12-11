@@ -346,13 +346,17 @@ function getPersistedSession() {
 	let storedState = null;
 	try {
 		storedId = localStorage.getItem("ssninja_stream_id") || localStorage.getItem("streamID");
-	} catch (e) {}
+	} catch (e) {
+		console.error('[Storage] Failed to read stream ID:', e.message);
+	}
 	try {
 		const rawState = localStorage.getItem("ssninja_state");
 		if (rawState !== null) {
 			storedState = rawState === "true";
 		}
-	} catch (e) {}
+	} catch (e) {
+		console.error('[Storage] Failed to read state:', e.message);
+	}
 	return { storedId, storedState };
 }
 
@@ -362,12 +366,16 @@ function persistSession({ streamId = null, state = null } = {}) {
 			localStorage.setItem("ssninja_stream_id", streamId);
 			localStorage.setItem("streamID", streamId);
 		}
-	} catch (e) {}
+	} catch (e) {
+		console.error('[Storage] Failed to save stream ID:', e.message);
+	}
 	try {
 		if (typeof state === "boolean") {
 			localStorage.setItem("ssninja_state", state ? "true" : "false");
 		}
-	} catch (e) {}
+	} catch (e) {
+		console.error('[Storage] Failed to save state:', e.message);
+	}
 	if (chrome && chrome.storage && chrome.storage.sync && chrome.storage.sync.set) {
 		const payload = {};
 		if (streamId) {
@@ -754,7 +762,7 @@ function isProfanity(word) {
 
 function filterProfanity(sentence) {
     let filteredSentence = sentence;
-    
+
     // Handle multi-word phrases first
     if (profanityHashTable) {
         Object.values(profanityHashTable)
@@ -767,11 +775,11 @@ function filterProfanity(sentence) {
                 filteredSentence = filteredSentence.replace(phraseRegex, match => '*'.repeat(match.length));
             });
     }
-    
+
     // Handle single words
     const words = filteredSentence.split(/[\s\.\-_!?,]+/);
     const uniqueWords = [...new Set(words)];
-    
+
     for (let word of uniqueWords) {
         if (word && isProfanity(word)) {
             const escapedWord = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -780,8 +788,35 @@ function filterProfanity(sentence) {
             filteredSentence = filteredSentence.replace(wordRegex, match => '*'.repeat(match.length));
         }
     }
-    
+
     return filteredSentence;
+}
+
+function containsProfanity(sentence) {
+    if (!sentence || !profanityHashTable) {
+        return false;
+    }
+
+    // Check multi-word phrases first
+    const phrases = Object.values(profanityHashTable)
+        .flatMap(obj => Object.keys(obj))
+        .filter(word => word.includes(' '));
+
+    for (const phrase of phrases) {
+        if (sentence.toLowerCase().includes(phrase.toLowerCase())) {
+            return true;
+        }
+    }
+
+    // Check single words
+    const words = sentence.split(/[\s\.\-_!?,]+/);
+    for (const word of words) {
+        if (word && isProfanity(word)) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 var profanityHashTable = false;
@@ -1652,7 +1687,10 @@ async function loadmidi() {
 	try {
 		midiConfigFile = await midiConfigFile[0].getFile();
 		midiConfigFile = await midiConfigFile.text();
-	} catch (e) {}
+	} catch (e) {
+		console.error('[MIDI] Failed to read config file:', e.message);
+		return;
+	}
 
 	try {
 		settings.midiConfig = JSON.parse(midiConfigFile);
@@ -2205,11 +2243,15 @@ async function importSettings(item = false) {
 	try {
 		importFile = await importFile[0].getFile();
 		importFile = await importFile.text(); // fail if IPC
-	} catch (e) {}
+	} catch (e) {
+		console.error('[Settings] Failed to read import file:', e.message);
+		return;
+	}
 
 	try {
 		loadSettings(JSON.parse(importFile), true);
 	} catch (e) {
+		console.error('[Settings] Invalid JSON in import file:', e.message);
 		messagePopup({alert: "File does not contain a valid JSON structure"});
 	}
 }
@@ -4437,6 +4479,41 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				sendResponse({ success: false, error: error?.message || 'Failed to reset points' });
 			}
 			return response;
+		} else if (request.cmd === 'exportPointsData') {
+			try {
+				if (typeof window.pointsSystemReady === 'function') {
+					await window.pointsSystemReady();
+				}
+				const system = window.pointsSystem;
+				if (!system) {
+					throw new Error('Points system unavailable');
+				}
+				const jsonData = await system.exportAllPoints();
+				sendResponse({ success: true, data: jsonData });
+			} catch (error) {
+				console.error('exportPointsData failed:', error);
+				sendResponse({ success: false, error: error?.message || 'Failed to export points' });
+			}
+			return response;
+		} else if (request.cmd === 'importPointsData') {
+			try {
+				if (typeof window.pointsSystemReady === 'function') {
+					await window.pointsSystemReady();
+				}
+				const system = window.pointsSystem;
+				if (!system) {
+					throw new Error('Points system unavailable');
+				}
+				const result = await system.importPoints(request.data, request.mode || 'merge');
+				if (typeof window.requestPointsLeaderboardBroadcast === 'function') {
+					window.requestPointsLeaderboardBroadcast('import', { immediate: true });
+				}
+				sendResponse(result);
+			} catch (error) {
+				console.error('importPointsData failed:', error);
+				sendResponse({ success: false, error: error?.message || 'Failed to import points' });
+			}
+			return response;
 		} else if (request.cmd && request.cmd === "export") {
 			sendResponse({ state: isExtensionOn });
 			await exportSettings();
@@ -4518,9 +4595,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch(e){}
 		} else if (request.cmd && request.cmd === "fakemsg") {
 			sendResponse({ state: isExtensionOn });
-			
+
 			triggerFakeRandomMessage();
-			
+
+		} else if (request.cmd && request.cmd === "creditsStart") {
+			sendResponse({ state: isExtensionOn });
+			sendTargetP2P({ creditsCommand: "start" }, "credits");
+		} else if (request.cmd && request.cmd === "creditsPreview") {
+			sendResponse({ state: isExtensionOn });
+			sendTargetP2P({ creditsCommand: "preview" }, "credits");
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
 			console.log('Received startReplay request:', request);
@@ -4854,6 +4937,37 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 							case 'queue':
 								result = await spotify.addToQueue(request.query);
 								break;
+							case 'toggle':
+								result = await spotify.toggle();
+								break;
+							case 'shuffle':
+								result = await spotify.shuffle(request.state);
+								break;
+							case 'repeat':
+								result = await spotify.setRepeat(request.mode);
+								break;
+							case 'nowPlaying':
+								result = await spotify.getNowPlaying();
+								// Format the message if track info available
+								if (result.success && result.track) {
+									const format = request.format || '🎵 Now playing: {song} by {artist}';
+									const formattedMsg = format
+										.replace(/{song}/gi, result.track.name || '')
+										.replace(/{artist}/gi, result.track.artist || '')
+										.replace(/{album}/gi, result.track.album || '');
+									result.message = formattedMsg;
+
+									// Send to dock if configured
+									if (request.sendToDock !== false) {
+										sendTargetP2P({
+											chatname: 'Spotify',
+											chatmessage: formattedMsg,
+											type: 'spotify',
+											chatimg: result.track.albumArt || ''
+										}, 'dock');
+									}
+								}
+								break;
 							default:
 								result = { success: false, message: 'Unknown Spotify action' };
 						}
@@ -4987,7 +5101,9 @@ function ajax(object2send, url, ajaxType = "PUT", type = "application/json; char
 			xhttp.setRequestHeader("Content-Type", type);
 			xhttp.send(JSON.stringify(object2send));
 		}
-	} catch (e) {}
+	} catch (e) {
+		console.error('[Ajax] Request failed:', e.message);
+	}
 }
 
 const metaDataStore = new Map(); // Using Map instead of {} for better cleanup
@@ -11550,7 +11666,12 @@ async function applyBotActions(data, tab = false) {
 		if (settings.normalizeText && data.chatmessage){
 			data.chatmessage = normalizeText(data.chatmessage, data.textonly || false)
 		}
-		
+
+		// Check for bad words in the message (for Event Flow filtering)
+		if (data.chatmessage) {
+			data.containsBadWords = containsProfanity(data.chatmessage);
+		}
+
 		if (settings.firsttimers && data.chatname && data.chatmessage && data.type){
 			try {
 				const checkResult = await messageStoreDB.checkUserTypeExists((data.userid || data.chatname), data.type);

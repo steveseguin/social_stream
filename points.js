@@ -90,6 +90,7 @@ class PointsSystem {
         
         this.db = null;
         this.cache = new Map();
+        this.userLocks = new Map(); // Per-user operation locks to prevent race conditions
         this.initPromise = this.initDatabase();
         this.migrationComplete = false;
         this.migrationInProgress = false;
@@ -128,6 +129,24 @@ class PointsSystem {
     async ensureDB() {
         if (!this.db) await this.initPromise;
         return this.db;
+    }
+
+    // Lock mechanism to prevent race conditions on per-user operations
+    async withUserLock(userKey, operation) {
+        // Wait for any existing lock on this user
+        while (this.userLocks.get(userKey)) {
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+
+        // Acquire lock
+        this.userLocks.set(userKey, true);
+
+        try {
+            return await operation();
+        } finally {
+            // Release lock
+            this.userLocks.delete(userKey);
+        }
     }
 
     async getUserPoints(username, type = 'default') {
@@ -190,95 +209,110 @@ class PointsSystem {
 
     async recordEngagement(username, type = 'default', timestamp = Date.now()) {
         if (!username) return null;
-        
-        const userData = await this.getUserPoints(username, type);
-        const now = timestamp;
-        
-        // Check if this engagement is in a new window from the last one
-        const timeSinceLastEngagement = now - userData.lastEngagement;
-        
-        if (timeSinceLastEngagement >= this.engagementWindow) {
-            // Award points for a new engagement
-            userData.points += this.pointsPerEngagement;
-            
-            // Update streak logic
-            if (timeSinceLastEngagement <= this.streakBreakTime) {
-                // Continue streak
-                userData.currentStreak++;
-                
-                // Calculate streak bonus capped at streakCap
-                const streakMultiplier = Math.min(userData.currentStreak * this.streakMultiplierBase, this.streakCap);
-                const streakBonus = Math.floor(this.pointsPerEngagement * streakMultiplier);
-                
-                // Add streak bonus if applicable
-                if (streakBonus > 0) {
-                    userData.points += streakBonus;
+
+        const userKey = this.getUserKey(username, type);
+
+        // Use lock to prevent race conditions with concurrent messages
+        return this.withUserLock(userKey, async () => {
+            const userData = await this.getUserPoints(username, type);
+            const now = timestamp;
+
+            // Check if this engagement is in a new window from the last one
+            const timeSinceLastEngagement = now - userData.lastEngagement;
+
+            if (timeSinceLastEngagement >= this.engagementWindow) {
+                // Award points for a new engagement
+                userData.points += this.pointsPerEngagement;
+
+                // Update streak logic
+                if (timeSinceLastEngagement <= this.streakBreakTime) {
+                    // Continue streak
+                    userData.currentStreak++;
+
+                    // Calculate streak bonus capped at streakCap
+                    const streakMultiplier = Math.min(userData.currentStreak * this.streakMultiplierBase, this.streakCap);
+                    const streakBonus = Math.floor(this.pointsPerEngagement * streakMultiplier);
+
+                    // Add streak bonus if applicable
+                    if (streakBonus > 0) {
+                        userData.points += streakBonus;
+                    }
+                } else {
+                    // Break streak if too much time has passed
+                    userData.currentStreak = 1;
                 }
-            } else {
-                // Break streak if too much time has passed
-                userData.currentStreak = 1;
+
+                // Keep track of engagement for history
+                userData.engagementHistory.push(now);
+
+                // Trim history to keep only last 100 entries
+                if (userData.engagementHistory.length > 100) {
+                    userData.engagementHistory = userData.engagementHistory.slice(-100);
+                }
             }
-            
-            // Keep track of engagement for history
-            userData.engagementHistory.push(now);
-            
-            // Trim history to keep only last 100 entries
-            if (userData.engagementHistory.length > 100) {
-                userData.engagementHistory = userData.engagementHistory.slice(-100);
-            }
-        }
-        
-        userData.lastEngagement = now;
-        userData.lastActive = now;
-        
-        await this.saveUserPoints(userData);
-        return userData;
+
+            userData.lastEngagement = now;
+            userData.lastActive = now;
+
+            await this.saveUserPoints(userData);
+            return userData;
+        });
     }
 
     async addPoints(username, type = 'default', amount) {
         if (amount <= 0) return { success: false, message: "Amount must be positive" };
-        
-        const userData = await this.getUserPoints(username, type);
-        
-        userData.points += amount;
-        userData.lastActive = Date.now();
-        await this.saveUserPoints(userData);
-        
-        return { 
-            success: true, 
-            message: "Points added successfully", 
-            added: amount,
-            points: userData.points,
-            available: userData.points - userData.pointsSpent
-        };
+
+        const userKey = this.getUserKey(username, type);
+
+        // Use lock to prevent race conditions
+        return this.withUserLock(userKey, async () => {
+            const userData = await this.getUserPoints(username, type);
+
+            userData.points += amount;
+            userData.lastActive = Date.now();
+            await this.saveUserPoints(userData);
+
+            return {
+                success: true,
+                message: "Points added successfully",
+                added: amount,
+                points: userData.points,
+                available: userData.points - userData.pointsSpent
+            };
+        });
     }
     
     async spendPoints(username, type = 'default', amount) {
         if (amount <= 0) return { success: false, message: "Amount must be positive" };
-        
-        const userData = await this.getUserPoints(username, type);
-        
-        // Calculate available points
-        const availablePoints = userData.points - userData.pointsSpent;
-        
-        if (availablePoints < amount) {
-            return { 
-                success: false, 
-                message: "Not enough points", 
-                available: availablePoints,
-                requested: amount
+
+        const userKey = this.getUserKey(username, type);
+
+        // Use lock to prevent race conditions (critical for spending to prevent double-spend)
+        return this.withUserLock(userKey, async () => {
+            const userData = await this.getUserPoints(username, type);
+
+            // Calculate available points
+            const availablePoints = userData.points - userData.pointsSpent;
+
+            if (availablePoints < amount) {
+                return {
+                    success: false,
+                    message: "Not enough points",
+                    available: availablePoints,
+                    requested: amount
+                };
+            }
+
+            userData.pointsSpent += amount;
+            await this.saveUserPoints(userData);
+
+            return {
+                success: true,
+                message: "Points spent successfully",
+                spent: amount,
+                remaining: userData.points - userData.pointsSpent
             };
-        }
-        
-        userData.pointsSpent += amount;
-        await this.saveUserPoints(userData);
-        
-        return { 
-            success: true, 
-            message: "Points spent successfully", 
-            spent: amount,
-            remaining: userData.points - userData.pointsSpent
-        };
+        });
     }
 
     async getLeaderboard(limit = 10, type = null) {
@@ -333,7 +367,97 @@ class PointsSystem {
             request.onerror = () => reject(request.error);
         });
     }
-    
+
+    // Export all points data to JSON for backup
+    async exportAllPoints() {
+        const db = await this.ensureDB();
+
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction(this.storeName, 'readonly');
+            const store = tx.objectStore(this.storeName);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const users = request.result || [];
+                const exportData = {
+                    version: 1,
+                    exported: Date.now(),
+                    exportedDate: new Date().toISOString(),
+                    userCount: users.length,
+                    users: users
+                };
+                resolve(JSON.stringify(exportData, null, 2));
+            };
+
+            request.onerror = () => reject(request.error);
+        });
+    }
+
+    // Import points data from JSON backup
+    async importPoints(jsonString, mode = 'merge') {
+        let data;
+        try {
+            data = JSON.parse(jsonString);
+        } catch (e) {
+            return { success: false, message: 'Invalid JSON format', error: e.message };
+        }
+
+        if (!data.users || !Array.isArray(data.users)) {
+            return { success: false, message: 'Invalid backup format: missing users array' };
+        }
+
+        const db = await this.ensureDB();
+        let imported = 0;
+        let skipped = 0;
+        let errors = 0;
+
+        for (const user of data.users) {
+            try {
+                // Validate required fields
+                if (!user.username || !user.userKey) {
+                    skipped++;
+                    continue;
+                }
+
+                if (mode === 'replace') {
+                    // Replace mode: overwrite all data
+                    await this.saveUserPoints(user);
+                    imported++;
+                } else {
+                    // Merge mode: keep higher point values
+                    const existing = await this.getUserPoints(user.username, user.type || 'default');
+
+                    if (user.points > existing.points) {
+                        // Import has more points, use imported data
+                        await this.saveUserPoints(user);
+                        imported++;
+                    } else if (user.points === existing.points && user.pointsSpent < existing.pointsSpent) {
+                        // Same points but less spent (more available), use imported
+                        await this.saveUserPoints(user);
+                        imported++;
+                    } else {
+                        skipped++;
+                    }
+                }
+            } catch (e) {
+                console.error(`Error importing user ${user.username}:`, e);
+                errors++;
+            }
+        }
+
+        // Clear cache to ensure fresh data
+        this.cache.clear();
+
+        return {
+            success: true,
+            message: `Import complete: ${imported} imported, ${skipped} skipped, ${errors} errors`,
+            imported,
+            skipped,
+            errors,
+            total: data.users.length
+        };
+    }
+
     // Get users with the same name across different platforms
     async getUsersWithSameName(username) {
         const db = await this.ensureDB();

@@ -136,13 +136,113 @@
 			color: #666;
 			margin: 10px 0;
 		}
+
+		/* Multi-layer overlay system */
+		.overlay-layers {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 9998;
+		}
+
+		.overlay-layer {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+		}
+
+		#layer-avatar { z-index: 100; }
+		#layer-media { z-index: 200; }
+		#layer-text { z-index: 300; }
+
+		/* Avatar styles */
+		.overlay-avatar {
+			position: absolute;
+			overflow: hidden;
+			pointer-events: none;
+		}
+
+		.overlay-avatar img {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		/* Text overlay styles */
+		.overlay-text {
+			position: absolute;
+			pointer-events: none;
+			white-space: pre-wrap;
+			word-wrap: break-word;
+		}
+
+		/* Animation keyframes */
+		@keyframes overlayFadeIn {
+			from { opacity: 0; }
+			to { opacity: 1; }
+		}
+
+		@keyframes overlayFadeOut {
+			from { opacity: 1; }
+			to { opacity: 0; }
+		}
+
+		@keyframes overlaySlideInLeft {
+			from { transform: translate(-50%, -50%) translateX(-100vw); opacity: 0; }
+			to { transform: translate(-50%, -50%) translateX(0); opacity: 1; }
+		}
+
+		@keyframes overlaySlideInRight {
+			from { transform: translate(-50%, -50%) translateX(100vw); opacity: 0; }
+			to { transform: translate(-50%, -50%) translateX(0); opacity: 1; }
+		}
+
+		@keyframes overlaySlideInTop {
+			from { transform: translate(-50%, -50%) translateY(-100vh); opacity: 0; }
+			to { transform: translate(-50%, -50%) translateY(0); opacity: 1; }
+		}
+
+		@keyframes overlaySlideInBottom {
+			from { transform: translate(-50%, -50%) translateY(100vh); opacity: 0; }
+			to { transform: translate(-50%, -50%) translateY(0); opacity: 1; }
+		}
+
+		@keyframes overlayBounce {
+			0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+			50% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+			70% { transform: translate(-50%, -50%) scale(0.9); }
+			100% { transform: translate(-50%, -50%) scale(1); }
+		}
+
+		@keyframes overlayPulse {
+			0%, 100% { transform: translate(-50%, -50%) scale(1); }
+			50% { transform: translate(-50%, -50%) scale(1.05); }
+		}
+
+		@keyframes overlayShake {
+			0%, 100% { transform: translate(-50%, -50%) translateX(0); }
+			25% { transform: translate(-50%, -50%) translateX(-5px); }
+			75% { transform: translate(-50%, -50%) translateX(5px); }
 		}
     </style>
 </head>
 <body>
     <div id="status-message"></div>
     <div id="fullscreen-media-container" class="fullscreen-media-container"></div>
-    
+
+    <!-- Multi-layer overlay system -->
+    <div id="overlay-layers" class="overlay-layers">
+        <div id="layer-avatar" class="overlay-layer" data-layer="avatar"></div>
+        <div id="layer-media" class="overlay-layer" data-layer="media"></div>
+        <div id="layer-text" class="overlay-layer" data-layer="text"></div>
+    </div>
+
     <!-- Session ID Modal -->
     <div id="sessionModal" class="modal">
         <div class="modal-content">
@@ -196,6 +296,157 @@
         var obsStudio = null;
         var obsWebSocket = null;
         var audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Multi-layer overlay system references
+        var overlayLayers = {
+            avatar: document.getElementById('layer-avatar'),
+            media: document.getElementById('layer-media'),
+            text: document.getElementById('layer-text')
+        };
+
+        // Clear a specific layer or all layers
+        function clearOverlayLayer(layerName) {
+            if (layerName === 'all') {
+                Object.values(overlayLayers).forEach(layer => {
+                    if (layer) layer.innerHTML = '';
+                });
+            } else if (overlayLayers[layerName]) {
+                overlayLayers[layerName].innerHTML = '';
+            }
+        }
+
+        // Show avatar on overlay layer
+        function showOverlayAvatar(config, messageData = {}) {
+            var layer = overlayLayers.avatar;
+            if (!layer) return;
+
+            if (config.clearFirst) {
+                layer.innerHTML = '';
+            }
+
+            // Determine avatar URL - use config override or message chatimg
+            var avatarUrl = config.avatarUrl || messageData.chatimg || '';
+            if (!avatarUrl) {
+                console.warn('[showOverlayAvatar] No avatar URL available');
+                return;
+            }
+
+            // Calculate position with bounds checking
+            var width = Math.max(1, Math.min(100, Number(config.width) || 15));
+            var height = Math.max(1, Math.min(100, Number(config.height) || 15));
+            var maxX = Math.max(0, 100 - width);
+            var maxY = Math.max(0, 100 - height);
+            var x = config.randomX ? Math.random() * maxX : Math.max(0, Math.min(maxX, Number(config.x) || 0));
+            var y = config.randomY ? Math.random() * maxY : Math.max(0, Math.min(maxY, Number(config.y) || 0));
+
+            // Create avatar wrapper element
+            var wrapper = document.createElement('div');
+            wrapper.className = 'overlay-avatar';
+            wrapper.style.cssText = [
+                'left: ' + x + 'vw',
+                'top: ' + y + 'vh',
+                'width: ' + width + 'vw',
+                'height: ' + height + 'vh',
+                'border-radius: ' + (config.borderRadius !== undefined ? config.borderRadius : 50) + '%',
+                'border: ' + (config.borderWidth || 3) + 'px solid ' + (config.borderColor || '#ffffff'),
+                config.shadow !== false ? 'box-shadow: 0 4px 15px rgba(0,0,0,0.5)' : '',
+                config.zIndex ? 'z-index: ' + config.zIndex : ''
+            ].filter(Boolean).join('; ');
+
+            // Create image element
+            var img = document.createElement('img');
+            img.src = avatarUrl;
+            img.style.borderRadius = (config.borderRadius !== undefined ? config.borderRadius : 50) + '%';
+            img.onerror = function() { wrapper.remove(); };
+
+            wrapper.appendChild(img);
+            layer.appendChild(wrapper);
+
+            // Auto-remove after duration
+            var duration = Number(config.duration);
+            if (duration > 0) {
+                setTimeout(function() { wrapper.remove(); }, duration);
+            }
+        }
+
+        // Show text on overlay layer
+        function showOverlayText(config, messageData = {}) {
+            var layer = overlayLayers.text;
+            if (!layer) return;
+
+            if (config.clearFirst) {
+                layer.innerHTML = '';
+            }
+
+            // Process text with placeholder replacement
+            var text = config.text || '';
+            text = text.replace(/\{username\}/gi, messageData.username || messageData.chatname || 'User');
+            text = text.replace(/\{message\}/gi, messageData.message || messageData.chatmessage || '');
+            text = text.replace(/\{source\}/gi, messageData.source || messageData.type || '');
+            text = text.replace(/\{donation\}/gi, messageData.donation || messageData.hasDonation || '');
+
+            if (!text) {
+                console.warn('[showOverlayText] No text to display');
+                return;
+            }
+
+            // Calculate position
+            var x = Math.max(0, Math.min(100, Number(config.x) || 50));
+            var y = Math.max(0, Math.min(100, Number(config.y) || 50));
+
+            // Build text stroke style
+            var outlineStyle = config.outlineWidth > 0
+                ? '-webkit-text-stroke: ' + config.outlineWidth + 'px ' + (config.outlineColor || '#000') + ';'
+                : '';
+
+            // Map animation names to CSS keyframes
+            var animationMap = {
+                'fadeIn': 'overlayFadeIn',
+                'fadeOut': 'overlayFadeOut',
+                'slideInLeft': 'overlaySlideInLeft',
+                'slideInRight': 'overlaySlideInRight',
+                'slideInTop': 'overlaySlideInTop',
+                'slideInBottom': 'overlaySlideInBottom',
+                'bounce': 'overlayBounce',
+                'pulse': 'overlayPulse',
+                'shake': 'overlayShake'
+            };
+
+            var animationName = animationMap[config.animation] || '';
+            var animationStyle = animationName
+                ? 'animation: ' + animationName + ' ' + (config.animationDuration || 500) + 'ms ease-out;'
+                : '';
+
+            // Create text element
+            var textEl = document.createElement('div');
+            textEl.className = 'overlay-text';
+            textEl.textContent = text;
+            textEl.style.cssText = [
+                'left: ' + x + 'vw',
+                'top: ' + y + 'vh',
+                'transform: translate(-50%, -50%)',
+                'max-width: ' + (config.width || 80) + 'vw',
+                'font-size: ' + (config.fontSize || 48) + 'px',
+                'font-family: ' + (config.fontFamily || 'Arial, sans-serif'),
+                'font-weight: ' + (config.fontWeight || 'bold'),
+                'text-align: ' + (config.textAlign || 'center'),
+                'color: ' + (config.color || '#ffffff'),
+                'background-color: ' + (config.backgroundColor || 'transparent'),
+                'padding: ' + (config.padding || 20) + 'px',
+                'border-radius: ' + (config.borderRadius || 10) + 'px',
+                outlineStyle,
+                animationStyle,
+                config.zIndex ? 'z-index: ' + config.zIndex : ''
+            ].filter(Boolean).join('; ');
+
+            layer.appendChild(textEl);
+
+            // Auto-remove after duration
+            var duration = Number(config.duration);
+            if (duration > 0) {
+                setTimeout(function() { textEl.remove(); }, duration);
+            }
+        }
 
         // Attempt to connect to OBS Studio API if available
         if (window.obsstudio) {
@@ -480,7 +731,9 @@
                             x: payload.x,
                             y: payload.y,
                             randomX: payload.randomX,
-                            randomY: payload.randomY
+                            randomY: payload.randomY,
+                            useLayer: payload.useLayer,
+                            clearFirst: payload.clearFirst
                         };
                         playMediaFullscreen(payload.url, payload.mediaType || 'iframe', payload.duration || 10000, opts);
                     } else {
@@ -784,6 +1037,19 @@
                     }
                     break;
 
+                // Layer Overlay Actions
+                case 'show_avatar':
+                    showOverlayAvatar(payload, payload.messageData || {});
+                    break;
+
+                case 'show_text':
+                    showOverlayText(payload, payload.messageData || {});
+                    break;
+
+                case 'clear_layer':
+                    clearOverlayLayer(payload.layer || 'all');
+                    break;
+
                 default:
                     console.warn("Unknown action type received:", payload.actionType);
             }
@@ -791,7 +1057,15 @@
 
         // Function to play media with optional positioned area (percent-based)
 		function playMediaFullscreen(url, mediaType, duration = 10000, opts = {}) {
-			mediaContainer.innerHTML = ''; // Clear previous media
+			// Determine target container - use layer system if opts.useLayer is true
+			const useLayer = !!opts.useLayer;
+			const targetContainer = useLayer ? overlayLayers.media : mediaContainer;
+
+			// Clear behavior: default to clearing, but can be disabled with clearFirst: false
+			const shouldClear = opts.clearFirst !== false;
+			if (shouldClear) {
+				targetContainer.innerHTML = '';
+			}
 
 			const toNum = (v, def) => {
 				const n = Number(v);
@@ -835,12 +1109,16 @@
 					mediaElement.style.overflow = 'hidden';
 					mediaElement.style.backgroundColor = 'transparent';
 				}
-				mediaContainer.appendChild(mediaElement);
-				mediaContainer.style.display = 'flex';
+				targetContainer.appendChild(mediaElement);
+				if (!useLayer) {
+					targetContainer.style.display = 'flex';
+				}
 				const hideLegacy = () => {
-					mediaContainer.style.display = 'none';
-					mediaContainer.innerHTML = '';
-					statusMessage.style.display = 'block';
+					if (!useLayer) {
+						targetContainer.style.display = 'none';
+						statusMessage.style.display = 'block';
+					}
+					mediaElement.remove();
 				};
 				if (Number(duration) > 0) setTimeout(hideLegacy, duration);
 				return;
@@ -878,14 +1156,18 @@
 			}
 
 			wrapper.appendChild(mediaElement);
-			mediaContainer.appendChild(wrapper);
-			mediaContainer.style.display = 'block';
+			targetContainer.appendChild(wrapper);
+			if (!useLayer) {
+				targetContainer.style.display = 'block';
+			}
 
 			// Hide after specified duration
 			const hide = () => {
-				mediaContainer.style.display = 'none';
-				mediaContainer.innerHTML = ''; // Clean up
-				statusMessage.style.display = 'block'; // Show status message again
+				if (!useLayer) {
+					targetContainer.style.display = 'none';
+					statusMessage.style.display = 'block'; // Show status message again
+				}
+				wrapper.remove(); // Clean up just this element
 			};
 			if (Number(duration) > 0) {
 				setTimeout(hide, duration);

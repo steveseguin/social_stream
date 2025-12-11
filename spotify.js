@@ -696,6 +696,152 @@ class SpotifyIntegration {
         }
     }
 
+    async toggle() {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        try {
+            // Get current playback state
+            const stateResponse = await fetch('https://api.spotify.com/v1/me/player', {
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (stateResponse.status === 401) {
+                await this.refreshAccessToken();
+                return this.toggle();
+            }
+
+            if (stateResponse.status === 204 || stateResponse.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            }
+
+            const state = await stateResponse.json();
+            const isPlaying = state.is_playing;
+
+            // Toggle based on current state
+            if (isPlaying) {
+                return this.pause();
+            } else {
+                return this.resume();
+            }
+        } catch (error) {
+            console.warn('Spotify toggle error:', error);
+            return { success: false, message: "Error toggling playback" };
+        }
+    }
+
+    async shuffle(state = null) {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        try {
+            // If state not specified, toggle current state
+            if (state === null) {
+                const stateResponse = await fetch('https://api.spotify.com/v1/me/player', {
+                    headers: {
+                        'Authorization': `Bearer ${this.accessToken}`
+                    }
+                });
+
+                if (stateResponse.status === 401) {
+                    await this.refreshAccessToken();
+                    return this.shuffle(state);
+                }
+
+                if (stateResponse.status === 204 || stateResponse.status === 404) {
+                    return { success: false, message: "No active Spotify device found" };
+                }
+
+                const playerState = await stateResponse.json();
+                state = !playerState.shuffle_state;
+            }
+
+            const response = await fetch(`https://api.spotify.com/v1/me/player/shuffle?state=${state}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                return { success: true, message: state ? "🔀 Shuffle enabled" : "➡️ Shuffle disabled" };
+            } else if (response.status === 401) {
+                await this.refreshAccessToken();
+                return this.shuffle(state);
+            } else if (response.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to set shuffle" };
+            }
+        } catch (error) {
+            console.warn('Spotify shuffle error:', error);
+            return { success: false, message: "Error setting shuffle" };
+        }
+    }
+
+    async setRepeat(mode = 'off') {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify" };
+        }
+
+        // Valid modes: 'off', 'track', 'context'
+        const validModes = ['off', 'track', 'context'];
+        if (!validModes.includes(mode)) {
+            mode = 'off';
+        }
+
+        try {
+            const response = await fetch(`https://api.spotify.com/v1/me/player/repeat?state=${mode}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${this.accessToken}`
+                }
+            });
+
+            if (response.status === 204 || response.ok) {
+                const modeEmoji = mode === 'track' ? '🔂' : mode === 'context' ? '🔁' : '➡️';
+                const modeText = mode === 'track' ? 'Repeat track' : mode === 'context' ? 'Repeat playlist' : 'Repeat off';
+                return { success: true, message: `${modeEmoji} ${modeText}` };
+            } else if (response.status === 401) {
+                await this.refreshAccessToken();
+                return this.setRepeat(mode);
+            } else if (response.status === 404) {
+                return { success: false, message: "No active Spotify device found" };
+            } else {
+                return { success: false, message: "Failed to set repeat mode" };
+            }
+        } catch (error) {
+            console.warn('Spotify repeat error:', error);
+            return { success: false, message: "Error setting repeat mode" };
+        }
+    }
+
+    async getNowPlaying() {
+        if (!this.accessToken) {
+            return { success: false, message: "Not connected to Spotify", track: null };
+        }
+
+        try {
+            const track = await this.getCurrentTrack();
+            if (track) {
+                return {
+                    success: true,
+                    message: `🎵 Now playing: ${track.name} by ${track.artist}`,
+                    track: track
+                };
+            } else {
+                return { success: false, message: "No song currently playing", track: null };
+            }
+        } catch (error) {
+            console.warn('Spotify now playing error:', error);
+            return { success: false, message: "Error getting current track", track: null };
+        }
+    }
+
     async addToQueue(query) {
         if (!this.accessToken) {
             return { success: false, message: "Not connected to Spotify" };
