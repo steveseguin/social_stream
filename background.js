@@ -4595,9 +4595,15 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			} catch(e){}
 		} else if (request.cmd && request.cmd === "fakemsg") {
 			sendResponse({ state: isExtensionOn });
-			
+
 			triggerFakeRandomMessage();
-			
+
+		} else if (request.cmd && request.cmd === "creditsStart") {
+			sendResponse({ state: isExtensionOn });
+			sendTargetP2P({ creditsCommand: "start" }, "credits");
+		} else if (request.cmd && request.cmd === "creditsPreview") {
+			sendResponse({ state: isExtensionOn });
+			sendTargetP2P({ creditsCommand: "preview" }, "credits");
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
 			console.log('Received startReplay request:', request);

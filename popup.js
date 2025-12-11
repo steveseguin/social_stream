@@ -5675,7 +5675,22 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			ProfileManager.saveCurrentProfile();
 		});
 	}
-	
+
+	// Add event listeners for credits roll buttons
+	const creditsStartBtn = document.getElementById('creditsStartBtn');
+	if (creditsStartBtn) {
+		creditsStartBtn.addEventListener('click', function() {
+			chrome.runtime.sendMessage({ cmd: "creditsStart" });
+		});
+	}
+
+	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
+	if (creditsPreviewBtn) {
+		creditsPreviewBtn.addEventListener('click', function() {
+			chrome.runtime.sendMessage({ cmd: "creditsPreview" });
+		});
+	}
+
 	// Add event listeners for OpenAI custom voice/model dropdowns
 	const setupOpenAICustomInputs = (voiceSelectId, modelSelectId, customVoiceId, customModelId) => {
 		const voiceSelect = document.getElementById(voiceSelectId);

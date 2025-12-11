@@ -602,9 +602,23 @@
 		return users.get(key);
 	}
 
+	let previewMode = false;
+
 	function processData(data) {
 		if (data.content) {
 			data = data.content;
+		}
+
+		// Handle command messages from dock
+		if (data.creditsCommand) {
+			if (data.creditsCommand === "start") {
+				previewMode = false;
+				startCredits();
+			} else if (data.creditsCommand === "preview") {
+				previewMode = true;
+				startCredits();
+			}
+			return;
 		}
 
 		if (!data.chatname || !data.type) return;
@@ -977,9 +991,14 @@
 		document.body.classList.remove('visible');
 	}
 
+	const triggerMode = urlParams.get('triggermode') || 'auto';
+
 	function handleVisibilityState(visible) {
 		if (visible) {
-			startCredits();
+			// In manual mode, don't auto-start on visibility - wait for command from dock
+			if (triggerMode === 'auto') {
+				startCredits();
+			}
 		} else {
 			stopCredits();
 		}
@@ -1013,15 +1032,17 @@
 		} catch (err) {
 			console.warn('OBS visibility callbacks unavailable:', err);
 		}
-	} else if (!document.hidden) {
-		// Non-OBS environments: start immediately so manual previews still work.
+	} else if (!document.hidden && triggerMode === 'auto') {
+		// Non-OBS environments in auto mode: start immediately so manual previews still work.
 		startCredits();
 	}
 
 	// Handle animation end
 	document.querySelector('.text-container').addEventListener('animationend', function() {
-		// Clear collected names when animation completes
-		users.clear();
+		// Clear collected names when animation completes (unless in preview mode)
+		if (!previewMode) {
+			users.clear();
+		}
 
 		// Apply fadeout class
 		this.classList.add('fadeout');
