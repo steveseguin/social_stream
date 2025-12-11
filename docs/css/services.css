@@ -7,7 +7,8 @@
     border-left: 4px solid #ffc107;
     border-radius: var(--radius-md);
     padding: 2.5rem 3rem;
-    margin: 3rem 0;
+    margin: 3rem auto;
+    max-width: 80rem;
     position: relative;
     overflow: hidden;
 }
@@ -54,6 +55,23 @@
 .dark-mode .disclaimer-banner {
     background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 152, 0, 0.08) 100%);
     border-color: rgba(255, 193, 7, 0.3);
+}
+
+/* Page Hero Image */
+.page-hero .hero-image {
+    margin-top: 3rem;
+    max-width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.page-hero .hero-image img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    object-fit: cover;
+    max-height: 35rem;
 }
 
 /* Services Hero */
@@ -293,11 +311,16 @@
     text-align: center;
     padding: 6rem 2rem;
     color: var(--text-secondary);
+    grid-column: 1 / -1;
 }
 
 .services-empty h3 {
     color: var(--text-primary);
     margin-bottom: 1rem;
+}
+
+.services-empty p {
+    margin: 0.5rem 0;
 }
 
 /* Submit Section */
