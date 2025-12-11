@@ -170,6 +170,14 @@
     flex-shrink: 0;
 }
 
+.service-avatar-img {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
 .service-card-header h3 {
     font-size: 2rem;
     margin: 0;
@@ -675,6 +683,92 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+/* Discord Auth Section */
+.discord-auth-section {
+    background: linear-gradient(135deg, rgba(88, 101, 242, 0.08) 0%, rgba(114, 137, 218, 0.12) 100%);
+    border: 1px solid rgba(88, 101, 242, 0.3);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    text-align: center;
+}
+
+.discord-auth-section h3 {
+    border-bottom: none;
+    padding-bottom: 0;
+    justify-content: center;
+}
+
+.discord-auth-section h3 i {
+    color: #5865F2;
+}
+
+.discord-btn {
+    background-color: #5865F2;
+    color: white;
+    border: none;
+    padding: 1.2rem 2.5rem;
+    font-size: 1.6rem;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.discord-btn:hover {
+    background-color: #4752C4;
+}
+
+.discord-btn i {
+    font-size: 2rem;
+}
+
+.discord-connected {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background-color: var(--background-light);
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(88, 101, 242, 0.3);
+}
+
+.discord-avatar-preview {
+    width: 6rem;
+    height: 6rem;
+    border-radius: 50%;
+    border: 3px solid #5865F2;
+}
+
+.discord-user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+
+.discord-username-display {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.btn-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.3rem;
+    padding: 0;
+    text-decoration: underline;
+}
+
+.btn-link:hover {
+    color: var(--error-color);
 }
 
 /* Upload Button */

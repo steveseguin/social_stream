@@ -39,6 +39,7 @@
         initForm();
         initAdmin();
         initMultiInputs();
+        initDiscordAuth();
         initDiscordHelp();
     });
 
@@ -115,10 +116,15 @@
         const contactLink = service.socials?.discord || service.socials?.website ||
                            (service.paymentLinks && service.paymentLinks[0]) || '#';
 
+        // Use real avatar if available, otherwise show initials
+        const avatarHtml = service.avatarUrl
+            ? `<img src="${escapeHtml(service.avatarUrl)}" alt="${escapeHtml(service.name)}" class="service-avatar-img">`
+            : `<div class="service-avatar">${initials}</div>`;
+
         return `
             <div class="service-card">
                 <div class="service-card-header">
-                    <div class="service-avatar">${initials}</div>
+                    ${avatarHtml}
                     <div>
                         <h3>${escapeHtml(service.name)}</h3>
                         <div class="service-discord">${escapeHtml(service.discord || '')}</div>
@@ -230,6 +236,8 @@
         // Gather data
         const name = formData.get('name');
         const discord = formData.get('discord');
+        const discordId = formData.get('discord-id') || '';
+        const discordAvatar = formData.get('discord-avatar') || '';
         const description = formData.get('description');
 
         // Platforms (checkboxes)
@@ -283,21 +291,32 @@
         }
 
         // Build webhook payload
+        const embedFields = [
+            { name: 'Name', value: name, inline: true },
+            { name: 'Discord', value: discord, inline: true },
+            { name: 'Platforms', value: platforms.join(', ') || 'None', inline: false },
+            { name: 'Service Types', value: serviceTypes.join(', ') || 'None', inline: false },
+            { name: 'Description', value: description.substring(0, 1000), inline: false },
+            { name: 'Social Links', value: socials.join('\n') || 'None', inline: false },
+            { name: 'Portfolio URLs', value: portfolio.join('\n') || 'None', inline: false },
+            { name: 'Payment Links', value: payments.join('\n') || 'None', inline: false }
+        ];
+
+        // Add Discord ID and avatar if user signed in with Discord
+        if (discordId) {
+            embedFields.push({ name: 'Discord ID', value: discordId, inline: true });
+        }
+        if (discordAvatar) {
+            embedFields.push({ name: 'Avatar URL', value: discordAvatar, inline: true });
+        }
+
         const payload = {
             username: 'Services Submission',
             embeds: [{
                 title: 'New Freelancer Submission',
                 color: 7855479, // Purple
-                fields: [
-                    { name: 'Name', value: name, inline: true },
-                    { name: 'Discord', value: discord, inline: true },
-                    { name: 'Platforms', value: platforms.join(', ') || 'None', inline: false },
-                    { name: 'Service Types', value: serviceTypes.join(', ') || 'None', inline: false },
-                    { name: 'Description', value: description.substring(0, 1000), inline: false },
-                    { name: 'Social Links', value: socials.join('\n') || 'None', inline: false },
-                    { name: 'Portfolio URLs', value: portfolio.join('\n') || 'None', inline: false },
-                    { name: 'Payment Links', value: payments.join('\n') || 'None', inline: false }
-                ],
+                thumbnail: discordAvatar ? { url: discordAvatar } : undefined,
+                fields: embedFields,
                 timestamp: new Date().toISOString()
             }]
         };
@@ -412,6 +431,73 @@
                 window.removeEventListener('message', handleMessage);
             }
         });
+    }
+
+    // Discord OAuth sign-in
+    function initDiscordAuth() {
+        const signinBtn = document.getElementById('discord-signin-btn');
+        const disconnectBtn = document.getElementById('discord-disconnect-btn');
+        const authContainer = document.getElementById('discord-auth-container');
+        const connectedContainer = document.getElementById('discord-connected');
+
+        if (signinBtn) {
+            signinBtn.addEventListener('click', () => {
+                // Open Discord OAuth popup
+                window.open(
+                    'https://auth.socialstream.ninja/auth/discord/services',
+                    'discordAuth',
+                    'width=500,height=700'
+                );
+
+                // Listen for the response
+                window.addEventListener('message', function handleDiscordAuth(event) {
+                    // Accept from our auth services
+                    if (event.origin !== 'https://auth.socialstream.ninja' && event.origin !== 'https://auth.vdo.ninja') return;
+
+                    if (event.data.type === 'discord-auth-success') {
+                        // Store Discord data
+                        document.getElementById('discord-id').value = event.data.id;
+                        document.getElementById('discord-avatar').value = event.data.avatar;
+                        document.getElementById('discord').value = event.data.username;
+
+                        // Optionally use global_name as display name if empty
+                        const nameInput = document.getElementById('name');
+                        if (nameInput && !nameInput.value && event.data.globalName) {
+                            nameInput.value = event.data.globalName;
+                        }
+
+                        // Show connected state
+                        document.getElementById('discord-avatar-preview').src = event.data.avatar;
+                        document.getElementById('discord-username-display').textContent = event.data.username;
+
+                        authContainer.style.display = 'none';
+                        connectedContainer.style.display = 'flex';
+
+                        // Make discord input readonly since we got it from OAuth
+                        document.getElementById('discord').readOnly = true;
+
+                        window.removeEventListener('message', handleDiscordAuth);
+                    } else if (event.data.type === 'discord-auth-error') {
+                        console.error('Discord auth error:', event.data.error);
+                        window.removeEventListener('message', handleDiscordAuth);
+                    }
+                });
+            });
+        }
+
+        if (disconnectBtn) {
+            disconnectBtn.addEventListener('click', () => {
+                // Clear Discord data
+                document.getElementById('discord-id').value = '';
+                document.getElementById('discord-avatar').value = '';
+                document.getElementById('discord').value = '';
+                document.getElementById('discord').readOnly = false;
+
+                // Show sign-in button again
+                authContainer.style.display = 'block';
+                connectedContainer.style.display = 'none';
+            });
+        }
     }
 
     // Discord help modal

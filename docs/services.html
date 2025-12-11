@@ -122,6 +122,30 @@
                 <div id="form-message" class="form-message"></div>
 
                 <form id="service-form">
+                    <!-- Discord Sign-in -->
+                    <div class="form-section discord-auth-section">
+                        <h3><i class="fab fa-discord"></i> Connect Your Discord</h3>
+                        <p>Sign in with Discord to automatically fill your profile info and show your avatar on your listing.</p>
+
+                        <div id="discord-auth-container">
+                            <button type="button" id="discord-signin-btn" class="btn discord-btn">
+                                <i class="fab fa-discord"></i> Sign in with Discord
+                            </button>
+                        </div>
+
+                        <div id="discord-connected" class="discord-connected" style="display: none;">
+                            <img id="discord-avatar-preview" src="" alt="Avatar" class="discord-avatar-preview">
+                            <div class="discord-user-info">
+                                <span id="discord-username-display" class="discord-username-display"></span>
+                                <button type="button" id="discord-disconnect-btn" class="btn-link">Disconnect</button>
+                            </div>
+                        </div>
+
+                        <!-- Hidden fields to store Discord data -->
+                        <input type="hidden" id="discord-id" name="discord-id">
+                        <input type="hidden" id="discord-avatar" name="discord-avatar">
+                    </div>
+
                     <!-- Basic Info -->
                     <div class="form-section">
                         <h3>Basic Information</h3>
@@ -134,7 +158,7 @@
                         <div class="form-group">
                             <label for="discord">Discord Username <span class="required">*</span></label>
                             <input type="text" id="discord" name="discord" required placeholder="username or username#1234">
-                            <small>This will be displayed publicly for potential clients to contact you. <a href="#" id="discord-id-help" class="help-link">How to find your Discord ID?</a></small>
+                            <small>This will be displayed publicly for potential clients to contact you. <a href="#" id="discord-id-help" class="help-link">Enter manually or use Discord sign-in above</a></small>
                         </div>
 
                         <div class="form-group">
