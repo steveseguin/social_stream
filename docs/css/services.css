@@ -2,41 +2,73 @@
 
 /* Disclaimer Banner */
 .disclaimer-banner {
-    background-color: rgba(var(--warning-color-rgb), 0.15);
-    border: 2px solid var(--warning-color);
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.08) 0%, rgba(255, 152, 0, 0.12) 100%);
+    border: 1px solid rgba(255, 193, 7, 0.4);
+    border-left: 4px solid #ffc107;
     border-radius: var(--radius-md);
-    padding: 2rem;
+    padding: 2.5rem 3rem;
     margin: 3rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.disclaimer-banner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: radial-gradient(ellipse at top left, rgba(255, 193, 7, 0.1) 0%, transparent 50%);
+    pointer-events: none;
 }
 
 .disclaimer-banner h3 {
-    color: var(--text-primary);
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
+    color: #f59e0b;
+    font-size: 1.6rem;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
     padding: 0;
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.disclaimer-banner h3 i {
+    font-size: 1.4rem;
 }
 
 .disclaimer-banner p {
     color: var(--text-secondary);
     font-size: 1.5rem;
     margin: 0;
+    line-height: 1.7;
+}
+
+.disclaimer-banner strong {
+    color: var(--text-primary);
+}
+
+.dark-mode .disclaimer-banner {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.05) 0%, rgba(255, 152, 0, 0.08) 100%);
+    border-color: rgba(255, 193, 7, 0.3);
 }
 
 /* Services Hero */
 .services-hero {
-    padding: 3rem 0;
+    padding: 2rem 0 4rem;
     background-color: var(--background-dark);
     text-align: center;
 }
 
-.services-hero p {
+.services-hero > .container > p:first-child {
     max-width: 80rem;
-    margin: 0 auto;
+    margin: 0 auto 2rem;
     font-size: 1.8rem;
     color: var(--text-secondary);
+    line-height: 1.6;
 }
 
 /* Platform Filters */
@@ -624,6 +656,19 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+    .disclaimer-banner {
+        padding: 1.5rem 2rem;
+        margin: 2rem 0;
+    }
+
+    .disclaimer-banner h3 {
+        font-size: 1.4rem;
+    }
+
+    .disclaimer-banner p {
+        font-size: 1.4rem;
+    }
+
     .services-grid {
         grid-template-columns: 1fr;
     }

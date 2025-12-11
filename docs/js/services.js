@@ -3,7 +3,9 @@
 (function() {
     'use strict';
 
-    const STORAGE_KEY = 'ssn_services_webhook';
+    // Discord webhook for form submissions (public - submissions go to private channel for review)
+    const WEBHOOK_URL = 'https://discord.com/api/webhooks/1448484964961357935/9YPrpWrA4EHJZ0kjPAQfmT7brPKxYaJGXj0L3-wBG5kTYiSxuNg2Wk20QCh267KxhXDz';
+
     // Fetch approved services from GitHub Gist (updated by Discord bot on approval)
     const GIST_ID = '3642a19e9ed4b16571906cdb2e216a45';
     const GIST_URL = GIST_ID
@@ -208,13 +210,6 @@
 
     // Submit form to Discord webhook
     async function submitForm(form) {
-        const webhookUrl = localStorage.getItem(STORAGE_KEY);
-
-        if (!webhookUrl) {
-            showFormMessage('error', 'Webhook not configured. Please contact the site administrator.');
-            return;
-        }
-
         const formData = new FormData(form);
 
         // Gather data
@@ -294,7 +289,7 @@
 
         // Send to Discord
         try {
-            const response = await fetch(webhookUrl, {
+            const response = await fetch(WEBHOOK_URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -321,91 +316,9 @@
         formMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 
-    // Initialize admin panel
+    // Initialize admin panel (no longer needed - webhook is hardcoded)
     function initAdmin() {
-        // Check for admin mode
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('admin') === 'true' && adminPanel) {
-            adminPanel.classList.add('active');
-            updateAdminStatus();
-        }
-
-        // Admin form handlers
-        const webhookInput = document.getElementById('webhook-url');
-        const saveBtn = document.getElementById('save-webhook');
-        const testBtn = document.getElementById('test-webhook');
-        const clearBtn = document.getElementById('clear-webhook');
-
-        if (saveBtn && webhookInput) {
-            // Load existing webhook URL
-            const existing = localStorage.getItem(STORAGE_KEY);
-            if (existing) {
-                webhookInput.value = existing;
-            }
-
-            saveBtn.addEventListener('click', () => {
-                const url = webhookInput.value.trim();
-                if (url && url.includes('discord.com/api/webhooks')) {
-                    localStorage.setItem(STORAGE_KEY, url);
-                    updateAdminStatus();
-                    alert('Webhook URL saved!');
-                } else {
-                    alert('Please enter a valid Discord webhook URL');
-                }
-            });
-        }
-
-        if (testBtn) {
-            testBtn.addEventListener('click', async () => {
-                const url = localStorage.getItem(STORAGE_KEY);
-                if (!url) {
-                    alert('No webhook configured');
-                    return;
-                }
-
-                try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: 'Services Test',
-                            content: 'Test message from Services page admin panel.'
-                        })
-                    });
-
-                    if (response.ok) {
-                        alert('Test message sent successfully!');
-                    } else {
-                        alert('Test failed. Check your webhook URL.');
-                    }
-                } catch (error) {
-                    alert('Test failed: ' + error.message);
-                }
-            });
-        }
-
-        if (clearBtn) {
-            clearBtn.addEventListener('click', () => {
-                if (confirm('Are you sure you want to clear the webhook URL?')) {
-                    localStorage.removeItem(STORAGE_KEY);
-                    if (webhookInput) webhookInput.value = '';
-                    updateAdminStatus();
-                    alert('Webhook URL cleared');
-                }
-            });
-        }
-    }
-
-    // Update admin status display
-    function updateAdminStatus() {
-        const status = document.getElementById('admin-status');
-        if (!status) return;
-
-        const hasWebhook = !!localStorage.getItem(STORAGE_KEY);
-        status.className = 'admin-status ' + (hasWebhook ? 'configured' : 'not-configured');
-        status.textContent = hasWebhook
-            ? 'Webhook configured and ready'
-            : 'No webhook configured - submissions will fail';
+        // Admin panel removed - webhook URL is now in code
     }
 
     // Initialize multi-input fields (social links, portfolio, payments)
