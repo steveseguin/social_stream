@@ -178,6 +178,15 @@
         .service-discord {
             color: var(--text-secondary);
             font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .discord-icon {
+            width: 1.2rem;
+            height: 1.2rem;
+            opacity: 0.7;
         }
 
         .service-card-body {
@@ -909,7 +918,7 @@
                         ${avatarHtml}
                         <div>
                             <h3>${escapeHtml(service.name)}</h3>
-                            <div class="service-discord">${escapeHtml(service.discord || '')}</div>
+                            <div class="service-discord"><img src="https://socialstream.ninja/icons/discord.svg" alt="Discord" class="discord-icon"> ${escapeHtml(service.discord || '')}</div>
                         </div>
                     </div>
                     <div class="service-card-body">

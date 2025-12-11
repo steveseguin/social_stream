@@ -127,7 +127,7 @@
                     ${avatarHtml}
                     <div>
                         <h3>${escapeHtml(service.name)}</h3>
-                        <div class="service-discord">${escapeHtml(service.discord || '')}</div>
+                        <div class="service-discord"><img src="../icons/discord.svg" alt="Discord" class="discord-icon"> ${escapeHtml(service.discord || '')}</div>
                     </div>
                 </div>
                 <div class="service-card-body">
