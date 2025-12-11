@@ -39,6 +39,7 @@
         initForm();
         initAdmin();
         initMultiInputs();
+        initDiscordHelp();
     });
 
     // Load services from Gist (or fallback to local JSON)
@@ -77,6 +78,20 @@
         // Add click handlers for portfolio images
         document.querySelectorAll('.portfolio-thumb').forEach(img => {
             img.addEventListener('click', () => openPortfolioModal(img.src));
+        });
+
+        // Add click handlers for reveal links (SEO protection)
+        document.querySelectorAll('.reveal-link').forEach(span => {
+            span.addEventListener('click', function() {
+                if (this.classList.contains('revealed')) return;
+
+                const encodedUrl = this.dataset.url;
+                const url = atob(encodedUrl); // Decode Base64
+                const icon = this.querySelector('img');
+
+                this.classList.add('revealed');
+                this.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener nofollow">${icon.outerHTML}</a>`;
+            });
         });
     }
 
@@ -123,32 +138,32 @@
         `;
     }
 
-    // Create social links HTML
+    // Create social links HTML (click-to-reveal for SEO protection)
     function createSocialLinks(socials) {
         const links = [];
 
         if (socials.discord) {
-            links.push(`<a href="${escapeHtml(socials.discord)}" target="_blank" rel="noopener" class="service-social-link" title="Discord">
-                <img src="../icons/discord.svg" alt="Discord">
-            </a>`);
+            links.push(createRevealLink('Discord', socials.discord, '../icons/discord.svg'));
         }
         if (socials.instagram) {
-            links.push(`<a href="${escapeHtml(socials.instagram)}" target="_blank" rel="noopener" class="service-social-link" title="Instagram">
-                <img src="../icons/instagram.svg" alt="Instagram">
-            </a>`);
+            links.push(createRevealLink('Instagram', socials.instagram, '../icons/instagram.svg'));
         }
         if (socials.twitter) {
-            links.push(`<a href="${escapeHtml(socials.twitter)}" target="_blank" rel="noopener" class="service-social-link" title="X/Twitter">
-                <img src="../icons/x.svg" alt="X/Twitter">
-            </a>`);
+            links.push(createRevealLink('X/Twitter', socials.twitter, '../icons/x.svg'));
         }
         if (socials.website) {
-            links.push(`<a href="${escapeHtml(socials.website)}" target="_blank" rel="noopener" class="service-social-link" title="Website">
-                <img src="../icons/link.svg" alt="Website">
-            </a>`);
+            links.push(createRevealLink('Website', socials.website, '../icons/link.svg'));
         }
 
         return links.join('');
+    }
+
+    // Create a click-to-reveal link (prevents SEO crawling of external links)
+    function createRevealLink(label, url, icon) {
+        const encodedUrl = btoa(url); // Base64 encode to hide from crawlers
+        return `<span class="reveal-link" data-url="${encodedUrl}" title="Click to reveal ${label}">
+            <img src="${icon}" alt="${label}" style="width: 1.8rem; height: 1.8rem; opacity: 0.8;">
+        </span>`;
     }
 
     // Render empty state
@@ -328,11 +343,13 @@
                 const group = btn.closest('.multi-input-group');
                 const inputClass = btn.dataset.inputClass;
                 const placeholder = btn.dataset.placeholder || 'Enter URL';
+                const withUpload = btn.dataset.withUpload === 'true';
 
                 const row = document.createElement('div');
                 row.className = 'multi-input-row';
                 row.innerHTML = `
                     <input type="url" class="${inputClass}" placeholder="${placeholder}">
+                    ${withUpload ? '<button type="button" class="upload-btn" title="Upload an image"><i class="fas fa-upload"></i></button>' : ''}
                     <button type="button" class="remove-btn">&times;</button>
                 `;
 
@@ -341,6 +358,13 @@
                 row.querySelector('.remove-btn').addEventListener('click', () => {
                     row.remove();
                 });
+
+                // Add upload handler if this is a portfolio input
+                if (withUpload) {
+                    const uploadBtn = row.querySelector('.upload-btn');
+                    const input = row.querySelector('input');
+                    uploadBtn.addEventListener('click', () => openFileUpload(input));
+                }
             });
         });
 
@@ -350,7 +374,71 @@
                 btn.closest('.multi-input-row').remove();
             });
         });
+
+        // Initialize existing upload buttons
+        initUploadButtons();
     }
+
+    // Initialize upload buttons
+    function initUploadButtons() {
+        document.querySelectorAll('.upload-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const row = btn.closest('.multi-input-row');
+                const input = row.querySelector('input');
+                openFileUpload(input);
+            });
+        });
+    }
+
+    // Open file upload popup and handle result
+    function openFileUpload(targetInput) {
+        const popup = window.open(
+            'https://fileuploads.socialstream.ninja/popup/upload',
+            'uploadPortfolio',
+            'width=640,height=640'
+        );
+
+        window.addEventListener('message', function handleMessage(event) {
+            // Verify the origin for security
+            if (event.origin !== 'https://fileuploads.socialstream.ninja') return;
+
+            // Check if this is our media upload message
+            if (event.data && event.data.type === 'media-uploaded') {
+                targetInput.value = event.data.url;
+                targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+                targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+
+                // Remove this specific listener
+                window.removeEventListener('message', handleMessage);
+            }
+        });
+    }
+
+    // Discord help modal
+    function initDiscordHelp() {
+        const helpLink = document.getElementById('discord-id-help');
+        if (helpLink) {
+            helpLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const modal = document.getElementById('discord-help-modal');
+                if (modal) modal.classList.add('active');
+            });
+        }
+    }
+
+    // Close Discord help modal (global function)
+    window.closeDiscordHelpModal = function() {
+        const modal = document.getElementById('discord-help-modal');
+        if (modal) modal.classList.remove('active');
+    };
+
+    // Click outside help modal to close
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('discord-help-modal');
+        if (modal && e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
 
     // Portfolio modal
     function openPortfolioModal(src) {

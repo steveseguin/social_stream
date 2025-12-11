@@ -409,6 +409,44 @@
 			text-transform: uppercase;
 		}
 
+		/* Instructions Overlay */
+		#instructions-overlay {
+			position: fixed;
+			top: 0; left: 0; right: 0; bottom: 0;
+			background: rgba(0, 0, 0, 0.85);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			z-index: 1000;
+			opacity: 1;
+			transition: opacity 1s ease-out;
+		}
+		#instructions-overlay.hidden { opacity: 0; pointer-events: none; }
+		#instructions-overlay.removed { display: none; }
+
+		.instructions-content {
+			background: linear-gradient(145deg, #1a2a48, #162238);
+			border: 1px solid #2e3b55;
+			border-radius: 15px;
+			padding: 30px 40px;
+			max-width: 600px;
+			margin: 20px;
+			box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+			text-align: center;
+		}
+		.instructions-icon { font-size: 48px; margin-bottom: 15px; }
+		.instructions-title { color: #ebbc3c; font-size: 24px; margin: 0 0 20px; text-shadow: 0 0 10px rgba(235, 188, 60, 0.5); }
+		#instructions-text { color: #e4e6eb; font-size: 16px; line-height: 1.6; text-align: left; }
+		#instructions-text ul { margin: 15px 0; padding-left: 20px; }
+		#instructions-text li { margin: 10px 0; }
+		#instructions-text .highlight { color: #feda4a; font-weight: bold; }
+		#instructions-text .warning { color: #ff6b6b; font-weight: bold; }
+		.mode-badge { display: inline-block; background: rgba(235,188,60,0.2); border: 1px solid #ebbc3c; border-radius: 4px; padding: 2px 8px; font-size: 12px; color: #ebbc3c; margin-left: 10px; }
+		.instructions-footer { margin-top: 25px; padding-top: 15px; border-top: 1px solid #2e3b55; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+		.docs-link { color: #5af; text-decoration: none; font-size: 14px; }
+		.docs-link:hover { text-decoration: underline; }
+		.dismiss-hint { color: #888; font-size: 12px; font-style: italic; }
+
 		.text-container.animate.starwars {
 			animation-name: translateText;
 			animation-duration: var(--animation-speed, 600s);
@@ -511,6 +549,17 @@
 	</style>
 </head>
 <body>
+	<div id="instructions-overlay">
+		<div class="instructions-content">
+			<div class="instructions-icon">&#127909;</div>
+			<h2 class="instructions-title">Stream Credits Setup</h2>
+			<div id="instructions-text"></div>
+			<div class="instructions-footer">
+				<a href="https://socialstream.ninja/docs/guides.html" target="_blank" class="docs-link">View Documentation</a>
+				<span class="dismiss-hint">This message will auto-dismiss</span>
+			</div>
+		</div>
+	</div>
    <div id="app">
         <div class="background"></div>
         <div class="fade"></div>
@@ -540,7 +589,22 @@
     // Session security and network options
     const password = urlParams.get('password') || 'false';
     const lanonly = urlParams.has('lanonly') ? '&lanonly' : '';
-	
+
+	// Instructions configuration
+	const showInstructions = !urlParams.has('noinstructions');
+
+	// Environment detection
+	function detectEnvironment() {
+		const isElectron = !!(window.ninjafy || window.electronApi);
+		const isOBS = !!window.obsstudio;
+		return { isElectron, isOBS, isBrowser: !isElectron && !isOBS };
+	}
+
+	// Instructions state management
+	let instructionsCleared = false;
+	let instructionsTimeout = null;
+	let hasBeenHiddenOnce = false;
+
 	// User tracking
 	const users = new Map();
 
@@ -607,6 +671,11 @@
 	function processData(data) {
 		if (data.content) {
 			data = data.content;
+		}
+
+		// Clear instructions on first message
+		if (!instructionsCleared && (data.chatname || data.creditsCommand)) {
+			clearInstructions('first-message');
 		}
 
 		// Handle command messages from dock
@@ -993,6 +1062,63 @@
 
 	const triggerMode = urlParams.get('triggermode') || 'auto';
 
+	// Build instructions content based on environment and mode
+	function buildInstructionsContent() {
+		const env = detectEnvironment();
+		const mode = triggerMode;
+		let html = '';
+
+		const envLabel = env.isOBS ? 'OBS Studio' : (env.isElectron ? 'Electron App' : 'Browser');
+		html += `<p><strong>Detected:</strong> ${envLabel} <span class="mode-badge">${mode === 'auto' ? 'Auto Mode' : 'Manual Mode'}</span></p>`;
+
+		// Electron warning
+		if (env.isElectron && mode === 'auto') {
+			html += `<p class="warning">&#9888; Warning: Auto mode may not work in the Electron app.</p>
+			<p><strong>Recommended:</strong> Use <span class="highlight">manual mode</span> (&triggermode=manual) or OBS Browser Source.</p>`;
+		}
+
+		// Mode instructions
+		if (mode === 'auto') {
+			html += `<p><strong>How Auto Mode Works:</strong></p><ul>
+				<li><span class="highlight">Keep this page running but hidden</span></li>
+				<li>Chat messages will be collected in the background</li>
+				<li>When you <span class="highlight">make the page visible</span>, credits auto-start</li>
+				<li><span class="warning">Do not refresh</span> - this resets all data</li></ul>`;
+		} else {
+			html += `<p><strong>How Manual Mode Works:</strong></p><ul>
+				<li>Keep this page <span class="highlight">running in the background</span></li>
+				<li>Chat messages will be collected automatically</li>
+				<li>Use the <span class="highlight">extension menu</span> to click "Start Credits"</li>
+				<li><span class="warning">Do not refresh</span> - this resets all data</li></ul>`;
+		}
+		return html;
+	}
+
+	// Instructions management functions
+	function initializeInstructions() {
+		if (!showInstructions) { removeInstructions(); return; }
+		const textContainer = document.getElementById('instructions-text');
+		if (textContainer) textContainer.innerHTML = buildInstructionsContent();
+		instructionsTimeout = setTimeout(() => clearInstructions('timeout'), 30000);
+	}
+
+	function clearInstructions(reason) {
+		if (instructionsCleared) return;
+		instructionsCleared = true;
+		if (instructionsTimeout) { clearTimeout(instructionsTimeout); instructionsTimeout = null; }
+		const overlay = document.getElementById('instructions-overlay');
+		if (overlay) {
+			overlay.classList.add('hidden');
+			setTimeout(() => overlay.classList.add('removed'), 1000);
+		}
+	}
+
+	function removeInstructions() {
+		const overlay = document.getElementById('instructions-overlay');
+		if (overlay) overlay.classList.add('removed');
+		instructionsCleared = true;
+	}
+
 	function handleVisibilityState(visible) {
 		if (visible) {
 			// In manual mode, don't auto-start on visibility - wait for command from dock
@@ -1005,7 +1131,13 @@
 	}
 
 	document.addEventListener('visibilitychange', function () {
-		handleVisibilityState(!document.hidden);
+		const isVisible = !document.hidden;
+		// Clear instructions on first hide
+		if (!isVisible && !hasBeenHiddenOnce) {
+			hasBeenHiddenOnce = true;
+			clearInstructions('visibility-hidden');
+		}
+		handleVisibilityState(isVisible);
 	});
 
 	if (window.obsstudio) {
@@ -1050,6 +1182,9 @@
 		// Hide the app while keeping the fadeout applied
 		stopCredits({ keepFadeout: true });
 	});
+
+	// Initialize instructions overlay
+	initializeInstructions();
     </script>
 </body>
 </html>
