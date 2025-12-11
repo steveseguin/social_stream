@@ -5676,19 +5676,31 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
-	// Add event listeners for credits roll buttons
+	// Add event listeners for credits roll buttons and trigger mode
 	const creditsStartBtn = document.getElementById('creditsStartBtn');
+	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
+	const creditsTriggerMode = document.querySelector('select[data-optionparam13="triggermode"]');
+	const creditsActionsDiv = document.querySelector('.credits-actions');
+
 	if (creditsStartBtn) {
 		creditsStartBtn.addEventListener('click', function() {
 			chrome.runtime.sendMessage({ cmd: "creditsStart" });
 		});
 	}
 
-	const creditsPreviewBtn = document.getElementById('creditsPreviewBtn');
 	if (creditsPreviewBtn) {
 		creditsPreviewBtn.addEventListener('click', function() {
 			chrome.runtime.sendMessage({ cmd: "creditsPreview" });
 		});
+	}
+
+	// Show/hide credits buttons based on trigger mode
+	if (creditsTriggerMode && creditsActionsDiv) {
+		const updateCreditsButtonsVisibility = () => {
+			creditsActionsDiv.style.display = creditsTriggerMode.value === 'manual' ? 'flex' : 'none';
+		};
+		creditsTriggerMode.addEventListener('change', updateCreditsButtonsVisibility);
+		updateCreditsButtonsVisibility(); // Set initial state
 	}
 
 	// Add event listeners for OpenAI custom voice/model dropdowns
