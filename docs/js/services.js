@@ -22,7 +22,7 @@
 
     // State
     let services = [];
-    let currentFilter = 'all';
+    let currentFilter = 'ssn'; // Default to SSN filter
 
     // Initialize
     document.addEventListener('DOMContentLoaded', function() {
