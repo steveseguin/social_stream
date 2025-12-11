@@ -4,7 +4,11 @@
     'use strict';
 
     const STORAGE_KEY = 'ssn_services_webhook';
-    const DATA_URL = 'data/services.json';
+    // Fetch approved services from GitHub Gist (updated by Discord bot on approval)
+    const GIST_ID = '3642a19e9ed4b16571906cdb2e216a45';
+    const GIST_URL = GIST_ID
+        ? `https://gist.githubusercontent.com/steveseguin/${GIST_ID}/raw/services.json`
+        : 'data/services.json'; // Fallback to local file
 
     // DOM Elements
     let servicesGrid;
@@ -35,10 +39,15 @@
         initMultiInputs();
     });
 
-    // Load services from JSON
+    // Load services from Gist (or fallback to local JSON)
     async function loadServices() {
         try {
-            const response = await fetch(DATA_URL);
+            // Add cache-busting for gist URL to get latest data
+            const url = GIST_ID
+                ? `${GIST_URL}?t=${Date.now()}`
+                : GIST_URL;
+
+            const response = await fetch(url);
             const data = await response.json();
             services = data.services || [];
             renderServices();
