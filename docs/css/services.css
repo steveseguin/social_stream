@@ -930,35 +930,50 @@
 .reveal-link {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 1rem;
-    background-color: var(--background-light);
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: var(--background-card);
     border: 1px solid var(--border-color);
-    border-radius: var(--radius-sm);
-    color: var(--text-secondary);
-    font-size: 1.3rem;
+    border-radius: 50%;
     cursor: pointer;
     transition: all 0.2s ease;
 }
 
 .reveal-link:hover {
     border-color: var(--primary-color);
-    color: var(--primary-color);
+    background-color: var(--primary-color);
 }
 
-.reveal-link i {
-    font-size: 1.2rem;
+.reveal-link:hover img {
+    filter: brightness(0) invert(1);
+    opacity: 1;
+}
+
+.reveal-link img {
+    width: 1.8rem;
+    height: 1.8rem;
+    opacity: 0.7;
+    filter: brightness(0) invert(0.7);
+}
+
+.dark-mode .reveal-link img {
+    filter: brightness(0) invert(0.8);
 }
 
 .reveal-link.revealed {
-    background-color: transparent;
-    border-color: transparent;
-    padding: 0;
+    width: auto;
+    height: auto;
+    padding: 0.4rem 1rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--background-light);
+    border-color: var(--primary-color);
 }
 
 .reveal-link.revealed a {
     color: var(--primary-color);
     text-decoration: none;
+    font-size: 1.3rem;
 }
 
 .reveal-link.revealed a:hover {

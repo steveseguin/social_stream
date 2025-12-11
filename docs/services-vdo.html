@@ -792,12 +792,13 @@
                     <!-- Portfolio -->
                     <div class="form-section">
                         <h3>Portfolio Images (Optional)</h3>
+                        <small style="color: var(--text-secondary); display: block; margin-bottom: 0.75rem;">Images must be uploaded using the upload button</small>
                         <div class="multi-input-group" id="portfolio-group">
                             <div class="multi-input-row">
-                                <input type="url" class="portfolio-input" placeholder="https://example.com/image.png">
-                                <button type="button" class="upload-btn" title="Upload"><i class="fas fa-upload"></i></button>
+                                <input type="url" class="portfolio-input" placeholder="Click upload button to add image" readonly>
+                                <button type="button" class="upload-btn" title="Upload an image"><i class="fas fa-upload"></i></button>
                             </div>
-                            <button type="button" class="add-input-btn" data-input-class="portfolio-input" data-placeholder="https://..." data-with-upload="true">+ Add Another</button>
+                            <button type="button" class="add-input-btn" data-input-class="portfolio-input" data-placeholder="Click upload button to add image" data-with-upload="true">+ Add Another</button>
                         </div>
                     </div>
 
@@ -883,14 +884,20 @@
 
             grid.innerHTML = filtered.map(s => createCard(s)).join('');
 
-            // Reveal link handlers
+            // Reveal link handlers - show domain name on click
             document.querySelectorAll('.reveal-link').forEach(span => {
                 span.addEventListener('click', function() {
                     if (this.classList.contains('revealed')) return;
-                    const url = atob(this.dataset.url);
-                    const icon = this.querySelector('img');
+                    const encodedUrl = this.dataset.url;
+                    const url = atob(encodedUrl);
+                    let domain;
+                    try {
+                        domain = new URL(url).hostname.replace('www.', '');
+                    } catch {
+                        domain = url;
+                    }
                     this.classList.add('revealed');
-                    this.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener nofollow">${icon.outerHTML}</a>`;
+                    this.innerHTML = `<a href="${escapeHtml(url)}" target="_blank" rel="noopener nofollow">${escapeHtml(domain)}</a>`;
                 });
             });
         }
@@ -985,14 +992,52 @@
             }
         }
 
+        // Sanitize text input - remove potentially dangerous characters
+        function sanitizeText(text) {
+            if (!text) return '';
+            // Remove null bytes and control characters except newlines/tabs
+            return text
+                .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '')
+                .replace(/[<>]/g, '') // Remove angle brackets
+                .trim();
+        }
+
+        // Check if text contains URLs/links
+        function containsLinks(text) {
+            const urlPatterns = [
+                /https?:\/\//i,
+                /www\./i,
+                /\.[a-z]{2,}\/\S/i, // domain.tld/path
+                /discord\.(gg|com\/invite)/i,
+                /t\.me\//i,
+                /bit\.ly/i
+            ];
+            return urlPatterns.some(pattern => pattern.test(text));
+        }
+
         async function submitForm(form) {
             const fd = new FormData(form);
 
-            const name = fd.get('name');
-            const discord = fd.get('discord');
+            const name = sanitizeText(fd.get('name'));
+            const discord = sanitizeText(fd.get('discord'));
             const discordId = fd.get('discord-id') || '';
             const discordAvatar = fd.get('discord-avatar') || '';
-            const description = fd.get('description');
+            const description = sanitizeText(fd.get('description'));
+
+            // Validate name (alphanumeric, spaces, basic punctuation)
+            if (!/^[\w\s\-'.&]+$/i.test(name)) {
+                return showMessage('error', 'Name contains invalid characters. Use letters, numbers, spaces, and basic punctuation only.');
+            }
+
+            // Validate discord username (alphanumeric, underscores, periods)
+            if (!/^[\w.]+$/i.test(discord)) {
+                return showMessage('error', 'Discord username contains invalid characters.');
+            }
+
+            // Check for links in description
+            if (containsLinks(description)) {
+                return showMessage('error', 'Description cannot contain links. Please use the Social & Contact Links section for URLs.');
+            }
 
             const platforms = [];
             if (fd.get('platform-vdo')) platforms.push('VDO.Ninja');
@@ -1005,7 +1050,27 @@
             document.querySelectorAll('.social-input').forEach(i => { if (i.value.trim()) socials.push(i.value.trim()); });
 
             const portfolio = [];
-            document.querySelectorAll('.portfolio-input').forEach(i => { if (i.value.trim()) portfolio.push(i.value.trim()); });
+            const allowedImageHosts = ['fileuploads.socialstream.ninja', 'fileuploads.vdo.ninja'];
+            let hasInvalidPortfolio = false;
+            document.querySelectorAll('.portfolio-input').forEach(input => {
+                const url = input.value.trim();
+                if (url) {
+                    try {
+                        const hostname = new URL(url).hostname;
+                        if (allowedImageHosts.includes(hostname)) {
+                            portfolio.push(url);
+                        } else {
+                            hasInvalidPortfolio = true;
+                        }
+                    } catch {
+                        hasInvalidPortfolio = true;
+                    }
+                }
+            });
+
+            if (hasInvalidPortfolio) {
+                return showMessage('error', 'Portfolio images must be uploaded using the upload button. External image URLs are not allowed.');
+            }
 
             const payments = [];
             document.querySelectorAll('.payment-input').forEach(i => { if (i.value.trim()) payments.push(i.value.trim()); });
@@ -1078,8 +1143,9 @@
 
                     const row = document.createElement('div');
                     row.className = 'multi-input-row';
+                    const isPortfolio = cls === 'portfolio-input';
                     row.innerHTML = `
-                        <input type="url" class="${cls}" placeholder="${ph}">
+                        <input type="url" class="${cls}" placeholder="${ph}" ${isPortfolio ? 'readonly' : ''}>
                         ${withUpload ? '<button type="button" class="upload-btn" title="Upload"><i class="fas fa-upload"></i></button>' : ''}
                         <button type="button" class="remove-btn">&times;</button>
                     `;
