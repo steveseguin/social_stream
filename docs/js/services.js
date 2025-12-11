@@ -330,7 +330,7 @@
             });
 
             if (response.ok) {
-                showFormMessage('success', 'Your submission has been received! It will be reviewed and added if approved.');
+                showFormMessage('success', 'Your submission has been received! Reviews may take some time and you may not be notified of approval or rejection.');
                 form.reset();
                 document.getElementById('submit-btn').disabled = true;
             } else {
