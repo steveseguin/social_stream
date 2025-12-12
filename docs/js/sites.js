@@ -554,6 +554,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
             `
         },
+		{
+            name: 'Blaze.stream',
+            icon: 'blaze.png',
+            description: 'Live streaming platform.',
+            type: 'standard',
+            instructions: `
+                <ul>
+                    <li>No pop out chat support</li>
+                    <li>Just pause the video while keeping the chat open</li>
+                </ul>
+            `
+        },
         {
             name: 'BandLab',
             icon: 'bandlab.png',
@@ -1336,6 +1348,17 @@ document.addEventListener('DOMContentLoaded', function() {
 			instructions: `
 				<ul>
 					<li>URL: https://arena.social/live/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Blaze',
+			icon: 'blaze.png',
+			description: 'Social streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://blaze.stream/*</li>
 				</ul>
 			`
 		},
