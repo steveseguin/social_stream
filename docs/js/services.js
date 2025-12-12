@@ -78,7 +78,10 @@
 
         // Add click handlers for portfolio images
         document.querySelectorAll('.portfolio-thumb').forEach(img => {
-            img.addEventListener('click', () => openPortfolioModal(img.src));
+            img.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPortfolioModal(img.dataset.fullSrc || img.src);
+            });
         });
 
         // Add click handlers for reveal links (SEO protection)
@@ -114,8 +117,8 @@
             `<span class="service-type-tag">${t}</span>`
         ).join('');
 
-        const portfolio = (service.portfolio || []).slice(0, 3).map(url =>
-            `<img src="${escapeHtml(url)}" alt="Portfolio" class="portfolio-thumb">`
+        const portfolio = (service.portfolio || []).slice(0, 5).map(url =>
+            `<img src="${escapeHtml(url)}" alt="Portfolio" class="portfolio-thumb" data-full-src="${escapeHtml(url)}">`
         ).join('');
 
         const socials = createSocialLinks(service.socials || {});
@@ -598,9 +601,11 @@
     function openPortfolioModal(src) {
         const modal = document.getElementById('portfolio-modal');
         const img = document.getElementById('portfolio-modal-img');
-        if (modal && img) {
+        if (modal && img && src) {
             img.src = src;
             modal.classList.add('active');
+            // Force reflow to ensure modal displays
+            modal.offsetHeight;
         }
     }
 
