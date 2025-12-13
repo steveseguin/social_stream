@@ -353,6 +353,7 @@ label {
     flex-direction: column;
     padding: 15px;
     height: 100%; /* Ensure sidebar tries to fill parent height */
+    overflow-y: auto; /* Unified scrolling for entire sidebar */
 }
 
 .flow-sidebar h3 {
@@ -371,11 +372,7 @@ label {
 
 
 .flow-list-container {
-    margin-bottom: 15px; /* Optional: adjust spacing */
-    overflow-y: auto;   /* Allow vertical scrolling */
-    max-height: 30vh; /* ADJUSTABLE: Max 30% of viewport height */
-    /* Or use a fixed pixel height like: max-height: 250px; */
-    flex-shrink: 0; /* Prevent this container from shrinking */
+    margin-bottom: 15px;
 }
 
 .flow-list {
@@ -488,10 +485,7 @@ label {
 
 /* Node Palette */
 .node-palette {
-    overflow-y: auto; /* Allow vertical scrolling */
-    flex-grow: 1;   /* Allow this section to grow and fill remaining space */
-    padding-bottom: 500px; /* Add some padding at the bottom */
-	overflow-x: hidden;
+    padding-bottom: 50px; /* Add some padding at the bottom for scrolling comfort */
 }
 
 .node-list {
@@ -1206,13 +1200,6 @@ select.property-input {
 .flow-item.drag-over-bottom {
     border-bottom: 2px solid #2196F3; /* Blue indicator line */
     box-shadow: 0 2px 5px -2px #2196F3 inset; /* Inner shadow for effect */
-}
-
-/* Ensure the flow list container allows for scrolling if many flows */
-.flow-list-container {
-    /* ... existing styles ... */
-    max-height: calc(100vh - 250px); /* Example: Adjust based on your layout */
-    overflow-y: auto;
 }
 
 /* --- Scrollbar Styling (Optional, but nice for dark themes) --- */

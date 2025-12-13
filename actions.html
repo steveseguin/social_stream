@@ -449,9 +449,19 @@
         }
 
         // Attempt to connect to OBS Studio API if available
+        // Note: OBS may inject the API asynchronously, so we check at runtime too
         if (window.obsstudio) {
             obsStudio = window.obsstudio;
             console.log('OBS Studio API found.');
+        }
+
+        // Helper to get OBS API - checks lazily since OBS may inject it after page load
+        function getObsStudio() {
+            if (!obsStudio && window.obsstudio) {
+                obsStudio = window.obsstudio;
+                console.log('OBS Studio API found (late binding).');
+            }
+            return obsStudio;
         }
         
         // Initialize OBS WebSocket connection
@@ -742,15 +752,18 @@
                     break;
                     
                 case 'obs_scene_change':
-                    if (obsStudio && payload.sceneName) {
-                        console.log(`Attempting to change OBS scene to: ${payload.sceneName}`);
-                        obsStudio.setCurrentScene(payload.sceneName)
-                            .then(() => console.log(`OBS Scene changed to ${payload.sceneName}`))
-                            .catch(err => console.error("Error changing OBS scene:", err));
-                    } else if (!obsStudio) {
-                        console.warn("OBS API not available to change scene.");
-                    } else {
-                        console.warn("OBS scene change action received without a scene name.");
+                    {
+                        const obs = getObsStudio();
+                        if (obs && payload.sceneName) {
+                            console.log(`Attempting to change OBS scene to: ${payload.sceneName}`);
+                            obs.setCurrentScene(payload.sceneName)
+                                .then(() => console.log(`OBS Scene changed to ${payload.sceneName}`))
+                                .catch(err => console.error("Error changing OBS scene:", err));
+                        } else if (!obs) {
+                            console.warn("OBS API not available to change scene.");
+                        } else {
+                            console.warn("OBS scene change action received without a scene name.");
+                        }
                     }
                     break;
                     
@@ -766,13 +779,14 @@
                 case 'obsChangeScene':
                     if (payload.sceneName) {
                         // Try OBS WebSocket first, then fall back to Browser Source API
+                        const obs = getObsStudio();
                         if (obsWebSocket) {
                             obsWebSocket.call('SetCurrentProgramScene', { sceneName: payload.sceneName })
                                 .then(() => console.log(`[OBS WebSocket] Changed scene to ${payload.sceneName}`))
                                 .catch(err => console.error("[OBS WebSocket] Error changing scene:", err));
-                        } else if (obsStudio) {
+                        } else if (obs) {
                             try {
-                                const result = obsStudio.setCurrentScene(payload.sceneName);
+                                const result = obs.setCurrentScene(payload.sceneName);
                                 if (result && typeof result.then === 'function') {
                                     result.then(() => {})
                                           .catch(err => console.error("[OBS] Error changing scene:", err));
