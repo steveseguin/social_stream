@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Message - Gaming Themed</title>
+    <link rel="icon" href="../../favicon.ico" />
+    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Bebas+Neue&family=Russo+One&display=swap');
+        
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Russo One', sans-serif, 'NotoColorEmojiLimited';
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #00ff00;
+            border-radius: 50%;
+            animation: particleFloat 10s infinite linear;
+            opacity: 0.6;
+        }
+
+        @keyframes particleFloat {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.6;
+            }
+            90% {
+                opacity: 0.6;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+
+        /* Base message structure */
+        .message-wrapper {
+            position: relative;
+            margin: 20px 0;
+            opacity: 0;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            background: #1a1a1a;
+            border: 3px solid #333;
+            color: #fff;
+            box-shadow: 
+                0 0 0 1px #000,
+                0 0 0 2px #444,
+                0 4px 0 #000,
+                0 4px 0 1px #000,
+                0 6px 0 1px #000,
+                0 8px 16px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Health bar effect */
+        .health-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #333;
+            overflow: hidden;
+        }
+
+        .health-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+            animation: healthFill 2s ease-out forwards;
+        }
+
+        @keyframes healthFill {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(0); }
+        }
+
+        /* XP bar for donations */
+        .xp-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: #222;
+            overflow: hidden;
+        }
+
+        .xp-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #9d4edd, #c77dff, #e0aaff);
+            transform: translateX(-100%);
+            animation: xpFill 2s ease-out 0.5s forwards;
+        }
+
+        @keyframes xpFill {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(0); }
+        }
+
+        .avatar {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 3px solid #000;
+            outline: 3px solid #444;
+            position: relative;
+            image-rendering: crisp-edges;
+            filter: contrast(1.1);
+        }
+
+        /* Level badge on avatar */
+        .avatar::after {
+            content: 'LVL ' attr(data-level);
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            background: #ff6b00;
+            color: #fff;
+            padding: 2px 6px;
+            font-size: 10px;
+            font-family: 'Press Start 2P', monospace;
+            border: 2px solid #000;
+            z-index: 2;
+        }
+
+        .message-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .username {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 24px;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 
+                2px 2px 0 #000,
+                -1px -1px 0 #000,
+                1px -1px 0 #000,
+                -1px 1px 0 #000;
+            position: relative;
+        }
+
+        /* Combo counter */
+        .combo {
+            position: absolute;
+            top: -20px;
+            right: -40px;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            color: #ffff00;
+            text-shadow: 2px 2px 0 #000;
+            animation: comboPop 0.5s ease-out;
+        }
+
+        @keyframes comboPop {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.5) rotate(10deg);
+            }
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+        }
+
+        .badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .badge {
+            height: 24px;
+            filter: drop-shadow(2px 2px 0 #000);
+            image-rendering: crisp-edges;
+        }
+
+        .source-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.9;
+            filter: drop-shadow(2px 2px 0 #000);
+        }
+
+        .text {
+            font-size: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            color: #f0f0f0;
+            text-shadow: 1px 1px 0 #000;
+        }
+
+        /* Inline images/SVGs */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em;
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+            filter: drop-shadow(2px 2px 0 #000);
+        }
+
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
+        }
+
+        .donation-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            margin-top: 12px;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 100%);
+            color: #000;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-family: 'Press Start 2P', monospace;
+            font-size: 12px;
+            border: 3px solid #000;
+            box-shadow: 
+                0 0 0 1px #fff inset,
+                0 4px 0 #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Coin spin animation */
+        .donation-info::before {
+            content: '🪙';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            animation: coinSpin 2s ease-out;
+        }
+
+        @keyframes coinSpin {
+            0% {
+                left: -30px;
+                transform: translateY(-50%) rotate(0deg);
+            }
+            100% {
+                left: calc(100% + 30px);
+                transform: translateY(-50%) rotate(720deg);
+            }
+        }
+
+        .content-image {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 12px;
+            border: 3px solid #000;
+            outline: 3px solid #444;
+            box-shadow: 0 4px 0 #000;
+            image-rendering: auto;
+        }
+
+        /* Hide empty elements */
+        .badges:empty,
+        .donation-info:empty {
+            display: none;
+        }
+
+        /* Style 1: Arcade */
+        .style-arcade .message {
+            border-radius: 0;
+            background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
+        }
+
+        .style-arcade .message-wrapper.show {
+            animation: arcadeInsert 0.6s ease-out forwards;
+        }
+
+        @keyframes arcadeInsert {
+            0% {
+                opacity: 0;
+                transform: translateY(-100vh) scale(0.5);
+            }
+            60% {
+                transform: translateY(20px) scale(1.1);
+            }
+            80% {
+                transform: translateY(-10px) scale(0.95);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        /* Style 2: RPG */
+        .style-rpg .message {
+            border-radius: 8px;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-color: #d4af37;
+        }
+
+        .style-rpg .username {
+            color: #ffd700;
+        }
+
+        .style-rpg .message-wrapper.show {
+            animation: rpgSpawn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes rpgSpawn {
+            0% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+                filter: brightness(3);
+            }
+            50% {
+                filter: brightness(1.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0);
+                filter: brightness(1);
+            }
+        }
+
+        /* Style 3: FPS */
+        .style-fps .message {
+            border-radius: 0;
+            background: #0a0a0a;
+            border-color: #ff0000;
+            clip-path: polygon(
+                0 10px,
+                10px 0,
+                100% 0,
+                100% calc(100% - 10px),
+                calc(100% - 10px) 100%,
+                0 100%
+            );
+        }
+
+        .style-fps .message::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #ff0000;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: targetBlink 1s infinite;
+        }
+
+        @keyframes targetBlink {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        .style-fps .message-wrapper.show {
+            animation: fpsZoom 0.5s ease-out forwards;
+        }
+
+        @keyframes fpsZoom {
+            0% {
+                opacity: 0;
+                transform: scale(3) translateZ(500px);
+                filter: blur(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateZ(0);
+                filter: blur(0);
+            }
+        }
+
+        /* Style 4: Retro */
+        .style-retro .message {
+            border-radius: 0;
+            background: #000080;
+            border-color: #00ff00;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        .style-retro .text {
+            font-size: 14px;
+            color: #00ff00;
+        }
+
+        .style-retro .username {
+            font-family: 'Press Start 2P', monospace;
+            font-size: 16px;
+            color: #ffff00;
+        }
+
+        .style-retro .message-wrapper.show {
+            animation: retroPixelate 0.6s steps(8) forwards;
+        }
+
+        @keyframes retroPixelate {
+            0% {
+                opacity: 0;
+                transform: scale(0.1);
+                filter: contrast(0);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+                filter: contrast(1);
+            }
+        }
+
+        /* Style 5: Esports */
+        .style-esports .message {
+            border-radius: 0;
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%);
+            border: none;
+            outline: 2px solid transparent;
+            animation: esportsBorder 3s linear infinite;
+        }
+
+        @keyframes esportsBorder {
+            0%, 100% { outline-color: #ff0000; }
+            33% { outline-color: #00ff00; }
+            66% { outline-color: #0000ff; }
+        }
+
+        .style-esports .username {
+            background: linear-gradient(90deg, #ff0000, #00ff00, #0000ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: esportsShift 3s linear infinite;
+        }
+
+        @keyframes esportsShift {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .style-esports .message-wrapper.show {
+            animation: esportsSlam 0.5s ease-out forwards;
+        }
+
+        @keyframes esportsSlam {
+            0% {
+                opacity: 0;
+                transform: translateX(-100vw) rotate(-10deg);
+            }
+            60% {
+                transform: translateX(20px) rotate(2deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0) rotate(0);
+            }
+        }
+
+        /* Exit animations */
+        .message-wrapper.hide {
+            animation-duration: 0.5s;
+            animation-fill-mode: forwards;
+        }
+
+        .style-arcade .message-wrapper.hide {
+            animation: arcadeGameOver 0.5s steps(5) forwards;
+        }
+
+        @keyframes arcadeGameOver {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(180deg);
+                filter: brightness(0);
+            }
+        }
+
+        .style-rpg .message-wrapper.hide,
+        .style-fps .message-wrapper.hide,
+        .style-retro .message-wrapper.hide,
+        .style-esports .message-wrapper.hide {
+            animation: powerDown 0.5s ease-in forwards;
+        }
+
+        @keyframes powerDown {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.9) translateY(50px);
+                filter: brightness(0);
+            }
+        }
+
+        /* Special effects for donations/memberships */
+        .has-donation .health-bar::after {
+            background: linear-gradient(90deg, #ffd700, #ff8c00, #ff0000);
+        }
+
+        .has-donation .xp-bar {
+            display: block;
+        }
+
+        .has-membership .message {
+            background: linear-gradient(135deg, #1a1a2e 0%, #4a148c 100%);
+            border-color: #ffd700;
+        }
+
+        .has-membership .combo {
+            display: block;
+            content: 'x2';
+        }
+
+        /* Achievement popup */
+        @keyframes achievementPop {
+            0% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+            20% {
+                transform: translateY(-20px);
+                opacity: 1;
+            }
+            80% {
+                transform: translateY(-20px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #container {
+                width: 95%;
+            }
+            
+            .message {
+                padding: 16px;
+            }
+            
+            .text {
+                font-size: 16px;
+            }
+            
+            .username {
+                font-size: 20px;
+            }
+            
+            .avatar {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .particle,
+            .health-bar::after,
+            .xp-bar::after,
+            .message-wrapper,
+            .donation-info::before {
+                animation: none !important;
+            }
+            
+            .message-wrapper.show {
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
+            
+            .message-wrapper.hide {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles"></div>
+    <div id="container">
+        <div id="output"></div>
+    </div>
+
+    <script src="../../tts.js"></script>
+    <script>
+        // Configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get('session') || urlParams.get('room') || urlParams.get('roomid') || 'TESTROOM';
+        const style = urlParams.get('style') || 'arcade'; // arcade, rpg, fps, retro, esports
+        const password = urlParams.get('password') || urlParams.get('pass') || urlParams.get('pw') || "false";
+        const showtime = parseInt(urlParams.get('showtime') || urlParams.get('timer') || '30000');
+        
+        // Apply selected style
+        document.body.className = `style-${style}`;
+
+        // Create animated particles
+        const particlesContainer = document.querySelector('.particles');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 10 + 's';
+            particle.style.animationDuration = (Math.random() * 5 + 10) + 's';
+            particle.style.backgroundColor = ['#00ff00', '#ff0000', '#0000ff', '#ffff00'][Math.floor(Math.random() * 4)];
+            particlesContainer.appendChild(particle);
+        }
+
+        // State
+        let messageTimeout = null;
+        let currentMessage = null;
+        let messageCount = 0;
+
+        // Create VDO.Ninja iframe for receiving messages
+        function createIframe() {
+            var iframe = document.createElement("iframe");
+            
+            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+            
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            iframe.allow = "microphone";
+            document.body.appendChild(iframe);
+
+            var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            var eventer = window[eventMethod];
+            var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                
+                if ("dataReceived" in e.data) {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
+                            // pass
+                        } else {
+                            processData({ contents: e.data.dataReceived.overlayNinja });
+                        }
+                    }
+                }
+            });
+        }
+
+        // Process incoming messages
+        function processData(data) {
+            // Handle clear command
+            if (!data || data === false) {
+                hideMessage();
+                return;
+            }
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                hideMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
+            if (data && data.contents) {
+                showMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processData({ contents: data.content });
+                } else {
+                    hideMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            showMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    hideMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                showMessage(data);
+            }
+        }
+
+        // Display message
+        function showMessage(content) {
+            if (!content.chatmessage && !content.chatname) return;
+
+            hideMessage(() => {
+                messageCount++;
+                
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                
+                // Add special classes for donations/memberships
+                if (content.hasDonation) {
+                    wrapper.classList.add('has-donation');
+                }
+                if (content.membership) {
+                    wrapper.classList.add('has-membership');
+                }
+                
+                const message = document.createElement('div');
+                message.className = 'message';
+
+                // Add health bar
+                const healthBar = document.createElement('div');
+                healthBar.className = 'health-bar';
+                message.appendChild(healthBar);
+
+                // Add XP bar for donations
+                if (content.hasDonation) {
+                    const xpBar = document.createElement('div');
+                    xpBar.className = 'xp-bar';
+                    message.appendChild(xpBar);
+                }
+
+                // Avatar with level
+                if (content.chatimg) {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = content.chatimg;
+                    avatar.setAttribute('data-level', Math.min(99, Math.floor(messageCount / 10) + 1));
+                    avatar.onerror = () => {
+                        avatar.src = '../../sources/images/unknown.png';
+                    };
+                    message.appendChild(avatar);
+                }
+
+                // Content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'header';
+                
+                // Username with combo
+                if (content.chatname) {
+                    const nameWrapper = document.createElement('div');
+                    nameWrapper.style.position = 'relative';
+                    
+                    const name = document.createElement('span');
+                    name.className = 'username';
+                    name.innerHTML = content.chatname;
+                    nameWrapper.appendChild(name);
+                    
+                    if (content.membership || content.hasDonation) {
+                        const combo = document.createElement('span');
+                        combo.className = 'combo';
+                        combo.textContent = 'COMBO!';
+                        nameWrapper.appendChild(combo);
+                    }
+                    
+                    header.appendChild(nameWrapper);
+                }
+
+                // Badges
+                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                    const badges = document.createElement('div');
+                    badges.className = 'badges';
+                    content.chatbadges.forEach(badge => {
+                        if (typeof badge === 'string') {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge;
+                            badges.appendChild(img);
+                        } else if (badge.src) {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge.src;
+                            badges.appendChild(img);
+                        }
+                    });
+                    header.appendChild(badges);
+                }
+
+                // Source icon
+                if (content.type) {
+                    const sourceIcon = document.createElement('img');
+                    sourceIcon.className = 'source-icon';
+                    sourceIcon.src = `../../sources/images/${content.type}.png`;
+                    sourceIcon.onerror = () => { sourceIcon.style.display = 'none'; };
+                    header.appendChild(sourceIcon);
+                }
+
+                contentDiv.appendChild(header);
+
+                // Message text
+                if (content.chatmessage) {
+                    const text = document.createElement('div');
+                    text.className = 'text';
+                    text.innerHTML = content.chatmessage;
+                    contentDiv.appendChild(text);
+                }
+
+                // Donation/Membership info
+                if (content.hasDonation || content.membership) {
+                    const donationDiv = document.createElement('div');
+                    donationDiv.className = 'donation-info';
+                    
+                    if (content.hasDonation) {
+                        const amount = content.hasDonation;
+                        const title = content.title || 'LOOT';
+                        donationDiv.innerHTML = `${title}: ${amount}`;
+                    } else if (content.membership) {
+                        const memberInfo = typeof content.membership === 'string' ? 
+                            content.membership : 'JOINED PARTY';
+                        donationDiv.innerHTML = memberInfo;
+                    }
+                    
+                    contentDiv.appendChild(donationDiv);
+                }
+
+                // Content image (stickers, etc)
+                if (content.contentimg) {
+                    const img = document.createElement('img');
+                    img.className = 'content-image';
+                    img.src = content.contentimg;
+                    contentDiv.appendChild(img);
+                }
+
+                message.appendChild(contentDiv);
+                wrapper.appendChild(message);
+                
+                const output = document.getElementById('output');
+                output.innerHTML = '';
+                output.appendChild(wrapper);
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    wrapper.classList.add('show');
+                });
+
+                currentMessage = wrapper;
+
+                // TTS support
+                if (window.initTTS && urlParams.has('tts')) {
+                    const ttsText = content.chatmessage ? 
+                        content.chatmessage.replace(/<[^>]*>/g, '') : '';
+                    if (ttsText) {
+                        window.speak(content.chatname + ' says ' + ttsText);
+                    }
+                }
+
+                // Auto-hide after showtime
+                if (messageTimeout) clearTimeout(messageTimeout);
+                messageTimeout = setTimeout(() => {
+                    hideMessage();
+                }, showtime);
+            });
+        }
+
+        // Hide current message
+        function hideMessage(callback) {
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+                messageTimeout = null;
+            }
+
+            if (currentMessage) {
+                currentMessage.classList.remove('show');
+                currentMessage.classList.add('hide');
+                setTimeout(() => {
+                    if (currentMessage && currentMessage.parentNode) {
+                        currentMessage.parentNode.removeChild(currentMessage);
+                    }
+                    currentMessage = null;
+                    if (callback) callback();
+                }, 500); // Match animation duration
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        // Initialize TTS if requested
+        if (urlParams.has('tts') && window.initTTS) {
+            window.initTTS({
+                lang: urlParams.get('tts') || urlParams.get('lang') || 'en-US',
+                pitch: parseFloat(urlParams.get('pitch') || '1'),
+                rate: parseFloat(urlParams.get('rate') || '1'),
+                voice: urlParams.get('voice') || null
+            });
+        }
+
+        // Initialize iframe connection
+        createIframe();
+    </script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# Block pushes when settings/config*.json contains invalid JSON.
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+bash scripts/validate-configs.sh

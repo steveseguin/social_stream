@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width,initial-scale=1">
+	<title>Social Stream - Spotify Now Playing</title>
+	<link rel="icon" href="./favicon.ico">
+	<style>
+:root {
+  --accent: #1db954;
+  --bg: rgba(8, 8, 8, 0.7);
+  --text: #f5f5f5;
+  --muted: #cde6d2;
+  --font-body: 'Sora', 'Inter', 'Segoe UI', sans-serif;
+  --font-comic: 'Bangers', 'Luckiest Guy', 'Sora', cursive;
+  --outline: -0.5px -0.5px 0 #000, 0.5px -0.5px 0 #000, -0.5px 0.5px 0 #000, 0.5px 0.5px 0 #000;
+  --glass: rgba(255, 255, 255, 0.08);
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+  --scale: 1;
+}
+
+/* Local font for consistency */
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(./thirdparty/xMQbuFFYT72XzQUpDg.woff2) format('woff2');
+}
+@font-face {
+  font-family: 'Sora';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url(./thirdparty/xMQbuFFYT72XzQspDre2.woff2) format('woff2');
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-body);
+  color: var(--text);
+  background: transparent;
+  text-shadow: var(--outline);
+  overflow: hidden;
+}
+
+#overlay {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  background: linear-gradient(120deg, rgba(12, 18, 14, 0.92), rgba(8, 103, 53, 0.8));
+  box-shadow: var(--shadow);
+  max-width: min(900px, 95vw);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.hidden-state {
+  opacity: 0;
+  transform: translateY(6px);
+  pointer-events: none;
+}
+
+.art {
+  width: 96px;
+  height: 96px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
+}
+.art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.meta {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.artist {
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.95;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.album {
+  font-weight: 500;
+  opacity: 0.8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  flex-shrink: 0;
+}
+
+.progress {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+.bar {
+  background: rgba(255, 255, 255, 0.12);
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+.bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(29, 185, 84, 0.9), rgba(56, 249, 123, 0.8));
+  width: var(--progress, 0%);
+  transition: width 150ms linear;
+}
+.time {
+  font-size: 0.85rem;
+  color: #e0f7eb;
+  min-width: 46px;
+  text-align: center;
+}
+
+.device {
+  font-size: 0.9rem;
+  opacity: 0.85;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-minimal #overlay {
+  background: rgba(0, 0, 0, 0.12);
+  box-shadow: none;
+  backdrop-filter: blur(10px);
+}
+.theme-minimal .status {
+  background: rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.theme-glass #overlay {
+  background: linear-gradient(120deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.06));
+  backdrop-filter: blur(14px);
+  color: #0c1a12;
+  text-shadow: none;
+}
+.theme-glass .status {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.08);
+  color: #0c1a12;
+}
+.theme-glass .artist { color: #0b5c2c; }
+.theme-glass .bar { background: rgba(0, 0, 0, 0.12); }
+.theme-glass body { color: #0c1a12; }
+
+.theme-comic {
+  --accent: #ffdd2d;
+  --bg: #1b1d3c;
+  --text: #fff8e6;
+}
+.theme-comic body {
+  font-family: var(--font-comic);
+  text-shadow: 2px 2px 0 #1b1d3c, 3px 3px 0 #000;
+}
+.theme-comic #overlay {
+  background: radial-gradient(circle at 10% 20%, rgba(255, 221, 45, 0.35), transparent 35%), radial-gradient(circle at 80% 10%, rgba(255, 45, 85, 0.35), transparent 45%), linear-gradient(120deg, #2b1f50, #10254b);
+  border: 4px solid #070712;
+  box-shadow: 8px 8px 0 #070712;
+  transform: rotate(-0.3deg);
+}
+.theme-comic .status {
+  background: #ff2d55;
+  border: 2px solid #070712;
+  color: #fff;
+  box-shadow: 4px 4px 0 #070712;
+}
+.theme-comic .bar::after {
+  background: repeating-linear-gradient(45deg, #ffdd2d, #ffdd2d 8px, #ff2d55 8px, #ff2d55 16px);
+}
+.theme-comic .bar { border: 2px solid #070712; }
+
+.theme-ticker body {
+  background: transparent;
+}
+.theme-ticker #overlay {
+  width: 92vw;
+  max-width: 1200px;
+  background: #0c0c0f;
+  border-radius: 12px;
+  padding: 10px 14px;
+  position: relative;
+  overflow: hidden;
+}
+.theme-ticker .ticker-line {
+  white-space: nowrap;
+  overflow: hidden;
+}
+.theme-ticker .ticker-track {
+  display: inline-block;
+  min-width: 100%;
+  animation: ticker 18s linear infinite;
+}
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.theme-ticker .art { width: 72px; height: 72px; }
+.theme-ticker .progress,
+.theme-ticker .meta .details {
+  display: none;
+}
+
+.compact .art { width: 68px; height: 68px; }
+.compact .title { font-size: 1rem; }
+.compact .bar { height: 6px; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+	</style>
+</head>
+<body>
+	<div id="overlay" class="hidden-state">
+		<div class="art" id="artWrap"><img id="art" alt="Album artwork"></div>
+		<div class="meta">
+			<div class="title-row">
+				<div class="title" id="title">Waiting for Spotify…</div>
+				<div class="status" id="status">Idle</div>
+			</div>
+			<div class="details">
+				<div class="artist" id="artist">—</div>
+				<div class="album" id="album">—</div>
+				<div class="device" id="device" aria-live="polite"></div>
+			</div>
+			<div class="progress" id="progressRow">
+				<div class="time" id="currentTime">0:00</div>
+				<div class="bar" id="bar"></div>
+				<div class="time" id="totalTime">0:00</div>
+			</div>
+			<div class="ticker-line" id="tickerLine" aria-hidden="true" hidden>
+				<div class="ticker-track" id="tickerTrack"></div>
+			</div>
+		</div>
+	</div>
+	<span class="sr-only" id="ariaStatus" aria-live="polite"></span>
+	<script>
+(function() {
+	const urlParams = new URLSearchParams(location.search);
+	const sessionId = urlParams.get('session') || urlParams.get('room') || '';
+	const password = urlParams.get('password') || 'false';
+	const label = urlParams.get('label') || 'spotify';
+	const hidePaused = urlParams.has('hidepaused');
+	const hideInactive = urlParams.has('hideoffline') || urlParams.has('hideinactive');
+	const hideWhenNoSong = hideInactive || urlParams.has('hidenosong');
+	const hideArt = urlParams.has('hideart');
+	const hideAlbum = urlParams.has('hidealbum');
+	const hideProgress = urlParams.has('hideprogress');
+	const hideDevice = urlParams.has('hidedevice');
+	const hideStatus = urlParams.has('hidestatus');
+	const compact = urlParams.has('compact');
+	const accent = urlParams.get('accent');
+	const theme = (urlParams.get('style') || urlParams.get('theme') || 'spotify').toLowerCase();
+	const tickerMode = theme === 'ticker' || urlParams.has('ticker');
+	const fallbackArt = './unknown.png';
+	const outChannel = parseInt(urlParams.get('out') || urlParams.get('outchan') || '8') || 8;
+	const inChannel = parseInt(urlParams.get('in') || urlParams.get('inchan') || '9') || 9;
+
+	let state = {
+		track: null,
+		status: 'idle',
+		isPlaying: false,
+		progressMs: 0,
+		durationMs: 0,
+		receivedAt: Date.now(),
+		device: null
+	};
+
+	const overlayEl = document.getElementById('overlay');
+	const titleEl = document.getElementById('title');
+	const artistEl = document.getElementById('artist');
+	const albumEl = document.getElementById('album');
+	const statusEl = document.getElementById('status');
+	const deviceEl = document.getElementById('device');
+	const artEl = document.getElementById('art');
+	const progressRow = document.getElementById('progressRow');
+	const currentTimeEl = document.getElementById('currentTime');
+	const totalTimeEl = document.getElementById('totalTime');
+	const barEl = document.getElementById('bar');
+	const tickerLine = document.getElementById('tickerLine');
+	const tickerTrack = document.getElementById('tickerTrack');
+	const ariaStatus = document.getElementById('ariaStatus');
+
+	if (accent) {
+		document.documentElement.style.setProperty('--accent', accent);
+	}
+	document.body.classList.toggle('compact', compact);
+	document.body.classList.add(`theme-${theme}`);
+	if (tickerMode) {
+		tickerLine.hidden = false;
+		progressRow.style.display = 'none';
+	}
+	if (hideArt) document.getElementById('artWrap').style.display = 'none';
+	if (hideAlbum) albumEl.style.display = 'none';
+	if (hideProgress) progressRow.style.display = 'none';
+	if (hideDevice) deviceEl.style.display = 'none';
+	if (hideStatus) statusEl.style.display = 'none';
+
+	function formatMs(ms) {
+		if (!ms && ms !== 0) return '0:00';
+		const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+		const minutes = Math.floor(totalSeconds / 60);
+		const seconds = totalSeconds % 60;
+		return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+	}
+
+	function updateProgressBar() {
+		const { status, durationMs, progressMs, receivedAt, isPlaying } = state;
+		if (!durationMs) {
+			barEl.style.setProperty('--progress', '0%');
+			currentTimeEl.textContent = '0:00';
+			totalTimeEl.textContent = '0:00';
+			return;
+		}
+
+		let elapsed = progressMs || 0;
+		if (status === 'playing' || isPlaying) {
+			elapsed += Date.now() - (receivedAt || Date.now());
+		}
+		const clamped = Math.max(0, Math.min(durationMs, elapsed));
+		const pct = (clamped / durationMs) * 100;
+		barEl.style.setProperty('--progress', `${pct}%`);
+		currentTimeEl.textContent = formatMs(clamped);
+		totalTimeEl.textContent = formatMs(durationMs);
+	}
+
+	function render() {
+		const { track, status, isPlaying, device } = state;
+
+		const shouldHide = (!track && hideWhenNoSong) ||
+			(status === 'paused' && hidePaused) ||
+			(status === 'stopped' && hideInactive);
+
+		if (shouldHide) {
+			overlayEl.classList.add('hidden-state');
+			return;
+		} else {
+			overlayEl.classList.remove('hidden-state');
+		}
+
+		if (track) {
+			titleEl.textContent = track.name || 'Unknown track';
+			artistEl.textContent = track.artist || '';
+			albumEl.textContent = hideAlbum ? '' : (track.album || '');
+			artEl.src = track.imageUrl || fallbackArt;
+		} else {
+			titleEl.textContent = status === 'stopped' ? 'Nothing playing' : 'Waiting for Spotify…';
+			artistEl.textContent = '';
+			albumEl.textContent = '';
+			artEl.src = fallbackArt;
+		}
+
+		const badge = status || (isPlaying ? 'playing' : 'paused');
+		statusEl.textContent = badge.toUpperCase();
+
+		if (device && !hideDevice) {
+			const bits = [];
+			if (device.name) bits.push(device.name);
+			if (device.type) bits.push(device.type);
+			if (device.volume !== undefined) bits.push(`🔊 ${device.volume}%`);
+			deviceEl.textContent = bits.join(' • ');
+		} else {
+			deviceEl.textContent = '';
+		}
+
+		if (tickerMode) {
+			const parts = [];
+			if (track?.name) parts.push(track.name);
+			if (track?.artist) parts.push(`by ${track.artist}`);
+			if (track?.album && !hideAlbum) parts.push(`— ${track.album}`);
+			tickerTrack.textContent = parts.join('  •  ') || 'Loading Spotify…';
+		}
+
+		updateProgressBar();
+		ariaStatus.textContent = `${track?.name || 'No track'} ${badge}`;
+	}
+
+	function processPayload(raw) {
+		const payload = raw?.spotify || raw;
+		if (!payload || typeof payload !== 'object') return;
+
+		state = {
+			...state,
+			track: payload.track || null,
+			status: payload.status || (payload.isPlaying ? 'playing' : (payload.track ? 'paused' : 'idle')),
+			isPlaying: !!payload.isPlaying,
+			progressMs: payload.progressMs || payload.progress || 0,
+			durationMs: payload.durationMs || payload.duration || payload.track?.duration || 0,
+			device: payload.device || null,
+			receivedAt: payload.receivedAt || Date.now()
+		};
+
+		render();
+	}
+
+	// VDO Ninja bridge
+	const iframe = document.createElement('iframe');
+	iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(sessionId)}&novideo&noaudio&label=${encodeURIComponent(label)}&cleanoutput&room=${encodeURIComponent(sessionId)}`;
+	iframe.style.cssText = "width:0;height:0;border:0;position:absolute;left:-200px;top:-200px;";
+	document.body.appendChild(iframe);
+
+	window.addEventListener("message", (event) => {
+		if (event.source !== iframe.contentWindow) return;
+		if (event.data && event.data.dataReceived && event.data.dataReceived.overlayNinja) {
+			processPayload(event.data.dataReceived.overlayNinja);
+		}
+	});
+
+	// Optional websocket bridge (server/server2/server3)
+	function setupSocket(serverURL, outChan, inChan) {
+		let socket = null;
+		let attempts = 1;
+
+		const connect = () => {
+			if (socket) {
+				socket.onclose = null;
+				socket.close();
+			}
+			socket = new WebSocket(serverURL);
+			socket.onopen = () => {
+				attempts = 1;
+				socket.send(JSON.stringify({ join: sessionId, out: outChan, in: inChan }));
+			};
+			socket.onerror = () => socket.close();
+			socket.onclose = () => {
+				setTimeout(connect, 100 * attempts);
+				attempts += 1;
+			};
+			socket.addEventListener("message", (event) => {
+				if (!event.data) return;
+				try {
+					const data = JSON.parse(event.data);
+					processPayload(data);
+					if (data.get) {
+						socket.send(JSON.stringify({ callback: { get: data.get, result: true } }));
+					}
+				} catch (e) {
+					// ignore parse errors
+				}
+			});
+		};
+		connect();
+	}
+
+	if (urlParams.has("server")) {
+		const serverURL = urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
+		setupSocket(serverURL, outChannel, inChannel);
+	}
+	if (urlParams.has("server2") || urlParams.has("server3")) {
+		const serverURL = urlParams.get("server2") || urlParams.get("server3") || "wss://io.socialstream.ninja/extension";
+		setupSocket(serverURL, outChannel, inChannel);
+	}
+
+	// Kick off initial render
+	render();
+
+	// Keep progress smooth while playing
+	setInterval(updateProgressBar, 500);
+})();
+	</script>
+</body>
+</html>

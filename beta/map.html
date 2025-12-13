@@ -1,0 +1,2464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Map Overlay - Social Stream Ninja</title>
+    <link rel="icon" href="./favicon.ico" />
+    <script src="./thirdparty/d3.min.js"></script>
+    <script src="./thirdparty/topojson-client.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap');
+
+        :root {
+            --bg: rgba(6, 10, 16, 0.35);
+            --grid: rgba(255, 255, 255, 0.08);
+            --text: #e8edf6;
+            --muted: #9fb4cf;
+            --accent: #6ef7c8;
+            --accent-2: #f4b556;
+            --panel: rgba(14, 20, 32, 0.65);
+            --stroke: rgba(255, 255, 255, 0.14);
+            --country-fill: rgba(255, 255, 255, 0.06);
+            --country-highlight: rgba(255, 255, 255, 0.45);
+            --stroke-width: 0.6;
+            --country-opacity: 1;
+            --surface-opacity: 0.45;
+            --surface-blend: lighten;
+            --surface-rotate: 0deg;
+            --surface-shift-x: 0px;
+            --surface-shift-y: 0px;
+            --surface-scale: 1;
+            --surface-filter: none;
+            --map-zoom: 1;
+            --map-pan-x: 0px;
+            --map-pan-y: 0px;
+            --map-rotate: 0deg;
+            --map-tilt: 0deg;
+            --map-perspective: none;
+            --map-filter: none;
+            --panel-border: 1px solid rgba(255, 255, 255, 0.1);
+            --hud-shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
+            --hud-blur: 10px;
+            --status-bg: rgba(0, 0, 0, 0.4);
+            --status-color: var(--text);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Space Grotesk', 'Sora', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            color: var(--text);
+            perspective: var(--map-perspective, none);
+            background:
+                radial-gradient(120% 90% at 15% 15%, rgba(110, 247, 200, 0.12), transparent),
+                radial-gradient(80% 70% at 80% 20%, rgba(244, 181, 86, 0.14), transparent),
+                var(--bg);
+        }
+
+        .map-surface {
+            position: absolute;
+            inset: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent 0,
+                transparent 32px,
+                var(--grid) 32px,
+                var(--grid) 33px
+            ), repeating-linear-gradient(
+                90deg,
+                transparent 0,
+                transparent 32px,
+                var(--grid) 32px,
+                var(--grid) 33px
+            );
+            pointer-events: none;
+            mix-blend-mode: var(--surface-blend, lighten);
+            opacity: var(--surface-opacity, 0.45);
+            transform: translate(var(--surface-shift-x, 0px), var(--surface-shift-y, 0px)) scale(var(--surface-scale, 1)) rotate(var(--surface-rotate, 0deg));
+            transform-origin: center;
+            transition: opacity 0.8s ease, transform 1s ease;
+            filter: var(--surface-filter, none);
+        }
+
+        svg#world-map {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            transform: translate(var(--map-pan-x, 0px), var(--map-pan-y, 0px)) scale(var(--map-zoom, 1)) rotate(var(--map-rotate, 0deg)) rotateX(var(--map-tilt, 0deg));
+            transform-origin: center;
+            transform-style: preserve-3d;
+            transition: transform 1.2s ease, filter 1s ease, opacity 0.6s ease;
+            filter: var(--map-filter, none);
+        }
+
+        .country {
+            fill: var(--country-fill, rgba(255, 255, 255, 0.06));
+            stroke: var(--stroke);
+            stroke-width: var(--stroke-width, 0.6);
+            opacity: var(--country-opacity, 1);
+            transition: fill 0.4s ease, stroke 0.4s ease, opacity 0.4s ease;
+        }
+
+        .country.has-data {
+            stroke: var(--country-highlight, rgba(255, 255, 255, 0.45));
+        }
+
+        .country-label {
+            fill: var(--text);
+            font-size: 12px;
+            font-weight: 700;
+            text-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+        }
+
+        .marker {
+            pointer-events: none;
+            filter: drop-shadow(0 0 8px rgba(0, 0, 0, 0.35));
+        }
+
+        .marker circle {
+            fill: var(--accent);
+            opacity: 0.22;
+            stroke: var(--accent);
+            stroke-width: 1.4;
+            stroke-opacity: 0.65;
+        }
+
+        .marker text {
+            fill: #0b141f;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .pulse {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2px;
+            opacity: 0.85;
+        }
+
+        #hud {
+            position: absolute;
+            right: 24px;
+            bottom: 24px;
+            min-width: 280px;
+            max-width: 520px;
+            padding: 16px 18px;
+            background: var(--panel);
+            border: var(--panel-border, 1px solid rgba(255, 255, 255, 0.1));
+            border-radius: 16px;
+            backdrop-filter: blur(var(--hud-blur, 10px));
+            box-shadow: var(--hud-shadow, 0 18px 60px rgba(0, 0, 0, 0.35));
+        }
+
+        #title {
+            margin: 0 0 8px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        .stats {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .stat-pill .value {
+            color: var(--text);
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .stat-pill .label {
+            color: var(--muted);
+            font-size: 12px;
+            letter-spacing: 0.2px;
+        }
+
+        .top-list {
+            margin: 6px 0 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .top-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--muted);
+            font-size: 13px;
+            letter-spacing: 0.2px;
+        }
+
+        .top-list li:last-child {
+            border-bottom: none;
+        }
+
+        .pill {
+            padding: 4px 8px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            font-weight: 700;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        #status {
+            position: absolute;
+            top: 18px;
+            left: 18px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            background: var(--status-bg, rgba(0, 0, 0, 0.4));
+            color: var(--status-color, var(--text));
+            font-weight: 600;
+            letter-spacing: 0.2px;
+            pointer-events: none;
+        }
+
+        .hidden { display: none; }
+
+        @keyframes grid-drift {
+            0% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(24px, -18px, 0); }
+            100% { transform: translate3d(0, 0, 0); }
+        }
+
+        @keyframes hud-float {
+            0% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(-8px, -4px, 0); }
+            100% { transform: translate3d(0, 0, 0); }
+        }
+
+        .motion-drift .map-surface {
+            animation: grid-drift 36s ease-in-out infinite;
+        }
+
+        .motion-drift #hud {
+            animation: hud-float 16s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            #hud {
+                bottom: 14px;
+                left: 14px;
+                right: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="status">Loading map...</div>
+    <svg id="world-map"></svg>
+    <div class="map-surface"></div>
+    <div id="hud">
+        <p id="title">Where is everyone watching from?</p>
+        <div class="stats">
+            <span class="stat-pill">
+                <span class="value" id="total-people">0</span>
+                <span class="label" id="total-people-label">participants</span>
+            </span>
+            <span class="stat-pill">
+                <span class="value" id="countries-count">0</span>
+                <span class="label" id="location-label">countries</span>
+            </span>
+        </div>
+        <ol class="top-list" id="top-list"></ol>
+    </div>
+
+    <script>
+    (() => {
+        const rawParams = new URLSearchParams(window.location.search);
+        const urlParams = rawParams;
+        const normalizedParams = new Map();
+        for (const [key, value] of rawParams.entries()) {
+            const lower = key.toLowerCase();
+            normalizedParams.set(key, value);
+            if (!normalizedParams.has(lower)) {
+                normalizedParams.set(lower, value);
+            }
+        }
+
+        function getParam(key) {
+            if (!key) return null;
+            if (rawParams.has(key)) return rawParams.get(key);
+            const lower = key.toLowerCase();
+            if (rawParams.has(lower)) return rawParams.get(lower);
+            return normalizedParams.has(lower) ? normalizedParams.get(lower) : null;
+        }
+
+        function hasParam(key) {
+            if (!key) return false;
+            const lower = key.toLowerCase();
+            return rawParams.has(key) || rawParams.has(lower) || normalizedParams.has(lower);
+        }
+
+        const TRUE_STRINGS = new Set(['1', 'true', 'yes', 'on']);
+        const FALSE_STRINGS = new Set(['0', 'false', 'no', 'off']);
+
+        function normalizeBoolean(value, fallback) {
+            if (value === undefined || value === null) return fallback;
+            if (typeof value === 'boolean') return value;
+            const normalized = value.toString().trim().toLowerCase();
+            if (TRUE_STRINGS.has(normalized)) return true;
+            if (FALSE_STRINGS.has(normalized)) return false;
+            return fallback;
+        }
+
+        const debugMode = normalizeBoolean(getParam('debug'), false);
+        const settings = {
+            title: getParam('title') || 'Where is everyone watching from?',
+            showList: normalizeBoolean(getParam('showlist') ?? getParam('showList'), true),
+            showTotals: normalizeBoolean(getParam('showtotals') ?? getParam('showTotals'), true),
+            allowChanges: normalizeBoolean(getParam('allowchanges') ?? getParam('allowChanges'), false),
+            accent: getParam('accent') || null,
+            accentAlt: getParam('accentalt') ?? getParam('accentAlt') ?? null,
+            mapType: (getParam('maptype') ?? getParam('mapType') ?? 'country').toLowerCase(),
+            mapStyle: (getParam('mapstyle') ?? getParam('mapStyle') ?? 'default').toLowerCase(),
+            region: (getParam('region') ?? getParam('mapregion') ?? 'global').toLowerCase(),
+            multiVote: (() => {
+                const keys = ['multi', 'mapspam', 'mapSpam'];
+                for (const key of keys) {
+                    const raw = getParam(key);
+                    if (raw !== null && raw !== undefined && raw !== '') {
+                        return normalizeBoolean(raw, false);
+                    }
+                    if (hasParam(key)) return true; // presence without value counts as true
+                }
+                return false;
+            })(),
+            motion: normalizeBoolean(getParam('motion') ?? getParam('mapmotion') ?? getParam('mapMotion'), false),
+            autoStart: normalizeBoolean(getParam('autostart') ?? getParam('autoStart'), true),
+            autoFitMarkers: normalizeBoolean(getParam('autofit') ?? getParam('autoFit') ?? getParam('autofitmarkers') ?? getParam('autoFitMarkers') ?? getParam('mapautofit') ?? getParam('mapAutoFit'), false),
+            hideNumbers: normalizeBoolean(getParam('hidenumbers') ?? getParam('hideNumbers') ?? getParam('maphidenumbers') ?? getParam('mapHideNumbers'), false),
+            colorIntensity: normalizeBoolean(getParam('colorintensity') ?? getParam('colorIntensity') ?? getParam('mapcolorintensity') ?? getParam('mapColorIntensity'), false),
+            mapScale: parseFloat(getParam('mapscale') ?? getParam('mapScale') ?? '100') / 100 || 1
+        };
+
+        const VALID_MAP_TYPES = new Set(['country', 'state', 'city']);
+        if (!VALID_MAP_TYPES.has(settings.mapType)) settings.mapType = 'country';
+        settings.region = settings.region || 'global';
+
+        const statusEl = document.getElementById('status');
+        const titleEl = document.getElementById('title');
+        const totalPeopleEl = document.getElementById('total-people');
+        const totalPeopleLabelEl = document.getElementById('total-people-label');
+        const countryCountEl = document.getElementById('countries-count');
+        const locationLabelEl = document.getElementById('location-label');
+        const topListEl = document.getElementById('top-list');
+        const hudEl = document.getElementById('hud');
+        // Apply initial map scale after hudEl is defined
+        if (settings.mapScale !== 1) {
+            hudEl.style.transform = `scale(${settings.mapScale})`;
+            hudEl.style.transformOrigin = 'bottom right';
+        }
+        const svg = d3.select('#world-map');
+        const mapLayer = svg.append('g');
+        const markerLayer = svg.append('g');
+        const pulseLayer = svg.append('g');
+
+        let projection;
+        let pathGenerator;
+        let atlasFeatures = [];
+        let stateFeatures = [];
+        let isoLookup = new Map();
+        let isoByNumeric = new Map();
+        let isoMeta = new Map(); // iso -> { region, subRegion }
+        let regionSets = new Map(); // key -> Set(iso)
+        let renderedFeatures = [];
+        let featureByIso = new Map();
+        let featureNameLookup = new Map();
+        let ready = false;
+        const pendingMessages = [];
+
+        let isPaused = !settings.autoStart;
+        let isEnabled = true;
+        let totalEntries = 0;
+        const uniqueVoters = new Set();
+
+        const voters = new Map(); // voterKey -> countryKey
+        const countryTally = new Map(); // countryKey -> { key, code, name, count, feature }
+        const placeTally = new Map(); // mapType specific tally (state/city)
+
+        const aliasToIso = new Map();
+        const cityHints = new Map();
+        const placeCoords = new Map(); // normalized key -> { lat, lon, label, iso }
+        const placeFeatureLookup = new Map(); // normalized key (optionally with iso) -> feature
+        let regionalCityData = [];
+        const boostedCityRegions = new Set();
+
+        const US_STATE_ABBR = {
+            '01': 'AL', '02': 'AK', '04': 'AZ', '05': 'AR', '06': 'CA', '08': 'CO', '09': 'CT',
+            '10': 'DE', '11': 'DC', '12': 'FL', '13': 'GA', '15': 'HI', '16': 'ID', '17': 'IL',
+            '18': 'IN', '19': 'IA', '20': 'KS', '21': 'KY', '22': 'LA', '23': 'ME', '24': 'MD',
+            '25': 'MA', '26': 'MI', '27': 'MN', '28': 'MS', '29': 'MO', '30': 'MT', '31': 'NE',
+            '32': 'NV', '33': 'NH', '34': 'NJ', '35': 'NM', '36': 'NY', '37': 'NC', '38': 'ND',
+            '39': 'OH', '40': 'OK', '41': 'OR', '42': 'PA', '44': 'RI', '45': 'SC', '46': 'SD',
+            '47': 'TN', '48': 'TX', '49': 'UT', '50': 'VT', '51': 'VA', '53': 'WA', '54': 'WV',
+            '55': 'WI', '56': 'WY'
+        };
+
+        const CA_PROV_ABBR = {
+            'alberta': 'AB',
+            'british columbia': 'BC',
+            'manitoba': 'MB',
+            'new brunswick': 'NB',
+            'newfoundland and labrador': 'NL',
+            'nova scotia': 'NS',
+            'ontario': 'ON',
+            'prince edward island': 'PE',
+            'quebec': 'QC',
+            'saskatchewan': 'SK',
+            'northwest territories': 'NT',
+            'yukon': 'YT',
+            'nunavut': 'NU'
+        };
+
+        const MX_STATE_ABBR = {
+            'aguascalientes': 'AGS',
+            'baja california': 'BC',
+            'baja california sur': 'BCS',
+            'campeche': 'CAM',
+            'chiapas': 'CHP',
+            'chihuahua': 'CHH',
+            'coahuila': 'COA',
+            'colima': 'COL',
+            'durango': 'DUR',
+            'guanajuato': 'GUA',
+            'guerrero': 'GRO',
+            'hidalgo': 'HID',
+            'jalisco': 'JAL',
+            'mexico': 'MEX',
+            'estado de mexico': 'MEX',
+            'michoacan': 'MIC',
+            'michoacán': 'MIC',
+            'morelos': 'MOR',
+            'nayarit': 'NAY',
+            'nuevo leon': 'NL',
+            'nuevo león': 'NL',
+            'oaxaca': 'OAX',
+            'puebla': 'PUE',
+            'queretaro': 'QRO',
+            'querétaro': 'QRO',
+            'quintana roo': 'QR',
+            'san luis potosi': 'SLP',
+            'san luis potosí': 'SLP',
+            'sinaloa': 'SIN',
+            'sonora': 'SON',
+            'tabasco': 'TAB',
+            'tamaulipas': 'TAM',
+            'tlaxcala': 'TLA',
+            'veracruz': 'VER',
+            'yucatan': 'YUC',
+            'yucatán': 'YUC',
+            'zacatecas': 'ZAC'
+        };
+
+        const COUNTRY_COORD_OVERRIDES = {
+            FR: { lat: 46.2276, lon: 2.2137, label: 'France' }, // avoid overseas centroid drift
+            PT: { lat: 39.3999, lon: -8.2245, label: 'Portugal' }, // avoid Azores/Madeira skew
+            ES: { lat: 40.4637, lon: -3.7492, label: 'Spain' }, // avoid Canary Islands skew
+            NO: { lat: 60.472, lon: 8.4689, label: 'Norway' }, // avoid Svalbard skew
+            DK: { lat: 55.6761, lon: 12.5683, label: 'Denmark' }, // avoid Greenland skew
+            NL: { lat: 52.1326, lon: 5.2913, label: 'Netherlands' }, // avoid Aruba/Caribbean skew
+            DE: { lat: 51.1657, lon: 10.4515, label: 'Germany' } // mainland reference
+        };
+
+        function debugLog(msg, payload) {
+            if (!debugMode) return;
+            if (payload !== undefined) console.log('[map debug]', msg, payload);
+            else console.log('[map debug]', msg);
+        }
+
+        debugLog('init start', {
+            mapType: settings.mapType,
+            region: settings.region,
+            multiVote: settings.multiVote,
+            autoStart: settings.autoStart,
+            motion: settings.motion
+        });
+
+        function normalizeForMatch(input) {
+            if (!input && input !== 0) return '';
+            return input.toString()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .toLowerCase()
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function buildVoterKey(name, source, userId) {
+            const normalizedSource = source ? source.toString().trim().toLowerCase() : 'unknown';
+            const idPart = userId ? `id:${userId}` : name ? `name:${name.toString().trim().toLowerCase()}` : 'anon';
+            return `${idPart}:${normalizedSource}`;
+        }
+
+        function derivePlaceLabel(rawInput, fallback) {
+            if (!rawInput && rawInput !== 0) return fallback;
+            const cleaned = rawInput.toString().replace(/^#+/, '').trim();
+            return cleaned || fallback;
+        }
+
+        function activeTally() {
+            return settings.mapType === 'country' ? countryTally : placeTally;
+        }
+
+        function shouldAcceptVotes() {
+            return ready && isEnabled && !isPaused;
+        }
+
+        function setStatus(text) {
+            if (!text) {
+                statusEl.classList.add('hidden');
+                return;
+            }
+            statusEl.textContent = text;
+            statusEl.classList.remove('hidden');
+        }
+
+        const STYLE_PRESETS = {
+            default: {
+                '--bg': 'rgba(6, 10, 16, 0.35)',
+                '--grid': 'rgba(255, 255, 255, 0.08)',
+                '--text': '#e8edf6',
+                '--muted': '#9fb4cf',
+                '--accent': '#6ef7c8',
+                '--accent-2': '#f4b556',
+                '--panel': 'rgba(14, 20, 32, 0.65)',
+                '--stroke': 'rgba(255, 255, 255, 0.14)',
+                '--country-fill': 'rgba(255, 255, 255, 0.06)',
+                '--country-highlight': 'rgba(255, 255, 255, 0.45)',
+                '--stroke-width': '0.6',
+                '--country-opacity': '1',
+                '--surface-opacity': '0.45',
+                '--surface-blend': 'lighten',
+                '--surface-rotate': '0deg',
+                '--surface-shift-x': '0px',
+                '--surface-shift-y': '0px',
+                '--surface-scale': '1',
+                '--surface-filter': 'none',
+                '--map-zoom': '1',
+                '--map-pan-x': '0px',
+                '--map-pan-y': '0px',
+                '--map-rotate': '0deg',
+                '--map-tilt': '0deg',
+                '--map-perspective': 'none',
+                '--map-filter': 'none',
+                '--panel-border': '1px solid rgba(255, 255, 255, 0.1)',
+                '--hud-shadow': '0 18px 60px rgba(0, 0, 0, 0.35)',
+                '--hud-blur': '10px',
+                '--status-bg': 'rgba(0, 0, 0, 0.4)',
+                '--status-color': '#e8edf6'
+            },
+            aurora: {
+                '--bg': 'radial-gradient(120% 90% at 10% 10%, rgba(114, 210, 255, 0.12), transparent), radial-gradient(90% 80% at 80% 20%, rgba(141, 255, 196, 0.14), transparent), rgba(4, 10, 18, 0.55)',
+                '--grid': 'rgba(255, 255, 255, 0.06)',
+                '--text': '#ecf7ff',
+                '--muted': '#a7c7e7',
+                '--accent': '#7fffd4',
+                '--accent-2': '#6bb7ff',
+                '--panel': 'rgba(10, 18, 32, 0.72)',
+                '--stroke': 'rgba(255, 255, 255, 0.16)',
+                '--country-fill': 'rgba(255, 255, 255, 0.08)',
+                '--country-highlight': '#bce5ff',
+                '--stroke-width': '0.8',
+                '--surface-opacity': '0.52',
+                '--surface-blend': 'screen',
+                '--surface-scale': '1.05',
+                '--surface-rotate': '-2deg',
+                '--surface-shift-y': '-4px',
+                '--map-zoom': '1.05',
+                '--map-pan-y': '-6px',
+                '--map-tilt': '2deg',
+                '--map-perspective': '1000px',
+                '--map-filter': 'drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5))',
+                '--panel-border': '1px solid rgba(123, 207, 255, 0.22)',
+                '--hud-blur': '14px'
+            },
+            ember: {
+                '--bg': 'radial-gradient(90% 60% at 20% 20%, rgba(255, 171, 92, 0.22), transparent), radial-gradient(80% 80% at 80% 10%, rgba(255, 94, 98, 0.18), transparent), rgba(16, 8, 6, 0.68)',
+                '--grid': 'rgba(255, 255, 255, 0.05)',
+                '--text': '#fff3ec',
+                '--muted': '#f0cbb8',
+                '--accent': '#ff9f6f',
+                '--accent-2': '#ff5f6d',
+                '--panel': 'rgba(24, 12, 8, 0.75)',
+                '--stroke': 'rgba(255, 255, 255, 0.12)',
+                '--country-fill': 'rgba(255, 225, 210, 0.1)',
+                '--country-highlight': '#ffb48a',
+                '--stroke-width': '0.9',
+                '--surface-opacity': '0.38',
+                '--surface-blend': 'soft-light',
+                '--surface-rotate': '1deg',
+                '--map-zoom': '1.03',
+                '--map-rotate': '1deg',
+                '--map-filter': 'sepia(0.25) drop-shadow(0 12px 32px rgba(0, 0, 0, 0.5))',
+                '--panel-border': '1px solid rgba(255, 159, 111, 0.22)',
+                '--hud-shadow': '0 18px 55px rgba(0, 0, 0, 0.45)'
+            },
+            neon: {
+                '--bg': 'radial-gradient(100% 70% at 15% 15%, rgba(133, 255, 205, 0.14), transparent), radial-gradient(80% 80% at 80% 20%, rgba(97, 164, 255, 0.16), transparent), #04060a',
+                '--grid': 'rgba(110, 247, 200, 0.18)',
+                '--text': '#e9f5ff',
+                '--muted': '#9ac3ff',
+                '--accent': '#6ef7c8',
+                '--accent-2': '#8bd4ff',
+                '--panel': 'rgba(8, 12, 20, 0.75)',
+                '--stroke': 'rgba(110, 247, 200, 0.2)',
+                '--country-fill': 'rgba(255, 255, 255, 0.09)',
+                '--country-highlight': '#c2e9ff',
+                '--stroke-width': '0.8',
+                '--surface-opacity': '0.58',
+                '--surface-scale': '1.05',
+                '--surface-blend': 'screen',
+                '--surface-shift-x': '8px',
+                '--map-zoom': '1.08',
+                '--map-pan-x': '6px',
+                '--map-tilt': '4deg',
+                '--map-perspective': '1100px',
+                '--map-filter': 'drop-shadow(0 16px 38px rgba(0, 0, 0, 0.55)) saturate(1.1)',
+                '--panel-border': '1px solid rgba(110, 247, 200, 0.26)',
+                '--hud-blur': '14px'
+            },
+            blueprint: {
+                '--bg': 'radial-gradient(120% 90% at 15% 10%, rgba(48, 154, 255, 0.18), transparent), #051428',
+                '--grid': 'rgba(126, 196, 255, 0.25)',
+                '--text': '#d6e9ff',
+                '--muted': '#7fb4f0',
+                '--accent': '#8bd4ff',
+                '--accent-2': '#63b3ff',
+                '--panel': 'rgba(5, 22, 45, 0.82)',
+                '--stroke': 'rgba(139, 212, 255, 0.7)',
+                '--country-fill': 'rgba(255, 255, 255, 0.08)',
+                '--country-highlight': '#b7e5ff',
+                '--stroke-width': '1.05',
+                '--surface-opacity': '0.58',
+                '--surface-blend': 'screen',
+                '--surface-rotate': '-6deg',
+                '--surface-scale': '1.08',
+                '--surface-shift-x': '-12px',
+                '--surface-shift-y': '-8px',
+                '--surface-filter': 'drop-shadow(0 12px 28px rgba(0, 0, 0, 0.5))',
+                '--map-zoom': '1.1',
+                '--map-pan-y': '-10px',
+                '--map-rotate': '-1.8deg',
+                '--map-tilt': '6deg',
+                '--map-perspective': '1200px',
+                '--map-filter': 'drop-shadow(0 14px 34px rgba(0, 0, 0, 0.55))',
+                '--panel-border': '1px solid rgba(139, 212, 255, 0.28)',
+                '--hud-shadow': '0 20px 50px rgba(0, 0, 0, 0.48)',
+                '--hud-blur': '16px'
+            },
+            minimal: {
+                '--bg': 'radial-gradient(120% 80% at 12% 10%, rgba(91, 121, 182, 0.08), transparent), #f6f8fc',
+                '--grid': 'rgba(12, 26, 47, 0.06)',
+                '--text': '#0f1b2e',
+                '--muted': '#48607d',
+                '--accent': '#2d7dd2',
+                '--accent-2': '#8ecae6',
+                '--panel': 'rgba(255, 255, 255, 0.8)',
+                '--stroke': 'rgba(12, 26, 47, 0.16)',
+                '--country-fill': 'rgba(12, 26, 47, 0.08)',
+                '--country-highlight': 'rgba(12, 26, 47, 0.6)',
+                '--stroke-width': '0.8',
+                '--surface-opacity': '0.08',
+                '--surface-blend': 'multiply',
+                '--surface-rotate': '0deg',
+                '--surface-shift-y': '-6px',
+                '--map-zoom': '1.04',
+                '--map-pan-y': '-10px',
+                '--map-tilt': '3deg',
+                '--map-perspective': '900px',
+                '--map-filter': 'drop-shadow(0 8px 18px rgba(12, 26, 47, 0.18))',
+                '--panel-border': '1px solid rgba(12, 26, 47, 0.12)',
+                '--hud-shadow': '0 14px 38px rgba(12, 26, 47, 0.15)',
+                '--hud-blur': '12px',
+                '--status-bg': 'rgba(255, 255, 255, 0.82)',
+                '--status-color': '#0f1b2e'
+            },
+            retro: {
+                '--bg': 'radial-gradient(140% 100% at 20% 15%, rgba(255, 196, 130, 0.16), transparent), #1d1208',
+                '--grid': 'rgba(255, 186, 120, 0.14)',
+                '--text': '#f8e8d1',
+                '--muted': '#d0b89a',
+                '--accent': '#f2a65a',
+                '--accent-2': '#d7263d',
+                '--panel': 'rgba(28, 14, 6, 0.8)',
+                '--stroke': 'rgba(255, 230, 200, 0.18)',
+                '--country-fill': 'rgba(255, 230, 200, 0.1)',
+                '--country-highlight': '#f2a65a',
+                '--stroke-width': '0.9',
+                '--surface-opacity': '0.35',
+                '--surface-blend': 'soft-light',
+                '--surface-rotate': '3deg',
+                '--surface-scale': '1.04',
+                '--surface-filter': 'sepia(0.35)',
+                '--map-zoom': '1.02',
+                '--map-rotate': '1.5deg',
+                '--map-pan-x': '-6px',
+                '--map-pan-y': '8px',
+                '--map-filter': 'sepia(0.28) contrast(1.05) drop-shadow(0 12px 28px rgba(0, 0, 0, 0.45))',
+                '--panel-border': '1px solid rgba(242, 166, 90, 0.22)',
+                '--hud-shadow': '0 18px 48px rgba(0, 0, 0, 0.45)',
+                '--hud-blur': '10px'
+            },
+            radar: {
+                '--bg': 'radial-gradient(120% 90% at 50% 50%, rgba(16, 96, 80, 0.28), #03100c)',
+                '--grid': 'rgba(110, 247, 200, 0.18)',
+                '--text': '#dff7ed',
+                '--muted': '#96c7ad',
+                '--accent': '#7fffd4',
+                '--accent-2': '#00ffc3',
+                '--panel': 'rgba(4, 18, 14, 0.78)',
+                '--stroke': 'rgba(127, 255, 212, 0.22)',
+                '--country-fill': 'rgba(0, 255, 195, 0.08)',
+                '--country-highlight': '#a0ffe0',
+                '--stroke-width': '0.75',
+                '--surface-opacity': '0.62',
+                '--surface-blend': 'lighten',
+                '--surface-scale': '1.02',
+                '--surface-shift-x': '16px',
+                '--surface-shift-y': '-6px',
+                '--map-zoom': '1.12',
+                '--map-pan-x': '6px',
+                '--map-perspective': '1100px',
+                '--map-tilt': '5deg',
+                '--map-filter': 'saturate(1.2) contrast(1.15) drop-shadow(0 16px 40px rgba(0, 0, 0, 0.55))',
+                '--panel-border': '1px solid rgba(127, 255, 212, 0.18)',
+                '--hud-shadow': '0 16px 44px rgba(0, 0, 0, 0.52)',
+                '--hud-blur': '14px'
+            }
+        };
+
+        function applyStylePreset(presetName) {
+            const base = STYLE_PRESETS.default;
+            const preset = STYLE_PRESETS[presetName] || base;
+            Object.entries(base).forEach(([key, value]) => {
+                document.documentElement.style.setProperty(key, value);
+            });
+            if (preset !== base) {
+                Object.entries(preset).forEach(([key, value]) => {
+                    document.documentElement.style.setProperty(key, value);
+                });
+            }
+            document.body.dataset.mapStyle = presetName in STYLE_PRESETS ? presetName : 'default';
+        }
+
+        function applyMotionPreference(enabled) {
+            document.body.classList.toggle('motion-drift', !!enabled);
+        }
+        applyStylePreset(settings.mapStyle);
+        applyMotionPreference(settings.motion);
+        // Apply map scale is called after hudEl is defined
+
+        if (settings.accent) document.documentElement.style.setProperty('--accent', settings.accent);
+        if (settings.accentAlt) document.documentElement.style.setProperty('--accent-2', settings.accentAlt);
+
+        const REGION_PRESETS = {
+            global: (meta) => true,
+            northamerica: (meta) => {
+                if (meta.iso === 'MX') return true; // ensure Mexico is included
+                return meta.region === 'Americas' && ['Northern America', 'Caribbean', 'Central America', 'Latin America and the Caribbean'].includes(meta.subRegion);
+            },
+            southamerica: (meta) => meta.region === 'Americas' && meta.subRegion === 'South America',
+            europe: (meta) => meta.region === 'Europe',
+            asia: (meta) => meta.region === 'Asia',
+            africa: (meta) => meta.region === 'Africa',
+            oceania: (meta) => meta.region === 'Oceania'
+        };
+        const VALID_REGION_KEYS = new Set(Object.keys(REGION_PRESETS));
+        const REGION_EXCLUDES = {
+            northamerica: new Set(['GL', 'NU', 'NT', 'YT']), // avoid Greenland and far north territories dominating the viewport
+            europe: new Set(['RU', 'SJ']) // trim Russia + Svalbard from Europe framing
+        };
+        const REGION_LONGITUDE_CENTERS = {
+            northamerica: -100
+        };
+        const REGION_VIEWBOXES = {
+            northamerica: { west: -170, east: -50, south: 5, north: 75 },
+            europe: { west: -25, east: 45, south: 30, north: 72 }
+        };
+        const normalizedFeatureCache = new WeakMap();
+
+        function buildRegionSets() {
+            regionSets = new Map();
+            Object.entries(REGION_PRESETS).forEach(([key, matcher]) => {
+                const set = new Set();
+                for (const [iso, meta] of isoMeta.entries()) {
+                    if (matcher(meta)) {
+                        if (REGION_EXCLUDES[key] && REGION_EXCLUDES[key].has(iso)) continue;
+                        set.add(iso);
+                    }
+                }
+                regionSets.set(key, set);
+            });
+        }
+
+        function normalizeRegionKey(value) {
+            if (!value) return 'global';
+            const key = value.toString().trim().toLowerCase();
+            const aliases = {
+                'north-america': 'northamerica',
+                'north_america': 'northamerica',
+                'north america': 'northamerica',
+                na: 'northamerica',
+                'south-america': 'southamerica',
+                'south_america': 'southamerica',
+                'south america': 'southamerica',
+                sa: 'southamerica',
+                eu: 'europe',
+                apac: 'asia',
+                'asia-pacific': 'asia'
+            };
+            const normalized = aliases[key] || key;
+            if (VALID_REGION_KEYS.has(normalized)) return normalized;
+            if (VALID_REGION_KEYS.has(key)) return key;
+            if (regionSets.has(key)) return key;
+            if (regionSets.has(normalized)) return normalized;
+            return 'global';
+        }
+
+        function isIsoAllowedForRegion(iso, regionKey = settings.region) {
+            if (!iso) return true;
+            const isoUpper = iso.toString().toUpperCase();
+            const key = regionKey || 'global';
+            const set = regionSets.get(key);
+            if (!set || !set.size) return true;
+            return set.has(isoUpper);
+        }
+
+        function isIsoAllowed(iso) {
+            return isIsoAllowedForRegion(iso, settings.region);
+        }
+
+        function getVisibleFeatures() {
+            const regionKey = settings.region || 'global';
+            if (regionKey === 'global') return atlasFeatures;
+                const set = regionSets.get(regionKey);
+                if (!set || !set.size) return atlasFeatures;
+                const filtered = atlasFeatures.filter(feature => {
+                    const iso = feature.properties.iso_a2;
+                    if (!iso) return false;
+                    return set.has(iso);
+                });
+                return filtered.length ? filtered : atlasFeatures;
+            }
+
+        function getStateFeaturesForRegion() {
+            if (!stateFeatures.length) return [];
+            const filtered = stateFeatures.filter(feature => {
+                const iso = feature.properties.iso_a2 || feature.properties.iso;
+                return isIsoAllowed(iso);
+            });
+            if (settings.region === 'northamerica') {
+                const exclude = new Set(['Nunavut', 'Northwest Territories', 'Yukon']);
+                return filtered.filter(f => !exclude.has(f.properties.name));
+            }
+            return filtered;
+        }
+
+            function getActiveFeatures() {
+                if (settings.mapType === 'state') {
+                    const filtered = getStateFeaturesForRegion();
+                    if (filtered.length) return filtered;
+                }
+                return getVisibleFeatures();
+            }
+
+            function wrapLongitude(lon, center) {
+                if (center === undefined) return lon;
+                let adjusted = lon;
+                while (adjusted - center > 180) adjusted -= 360;
+                while (center - adjusted > 180) adjusted += 360;
+                return adjusted;
+            }
+
+            function normalizeCoordinates(coords, center) {
+                if (typeof coords[0] === 'number') {
+                    return [wrapLongitude(coords[0], center), coords[1]];
+                }
+                return coords.map(part => normalizeCoordinates(part, center));
+            }
+
+            function normalizeFeatureGeometry(feature, center) {
+                if (!feature || center === undefined) return feature;
+                let cache = normalizedFeatureCache.get(feature);
+                if (!cache) {
+                    cache = new Map();
+                    normalizedFeatureCache.set(feature, cache);
+                }
+                if (cache.has(center)) return cache.get(center);
+                const normalized = {
+                    ...feature,
+                    geometry: {
+                        ...feature.geometry,
+                        coordinates: normalizeCoordinates(feature.geometry.coordinates, center)
+                    }
+                };
+                cache.set(center, normalized);
+                return normalized;
+            }
+
+            function featureForProjection(feature) {
+                const center = REGION_LONGITUDE_CENTERS[settings.region];
+                if (center === undefined) return feature;
+                return normalizeFeatureGeometry(feature, center);
+            }
+
+            function normalizeCollectionForRegion(featureCollection) {
+                const center = REGION_LONGITUDE_CENTERS[settings.region];
+                if (center === undefined) return featureCollection;
+                return {
+                    type: 'FeatureCollection',
+                    features: featureCollection.features.map(f => featureForProjection(f)).filter(Boolean)
+                };
+            }
+
+        function boundsToFeatureCollection(bounds) {
+            if (!bounds) return null;
+            const { west, east, south, north } = bounds;
+            if (![west, east, south, north].every(Number.isFinite)) return null;
+            return {
+                type: 'FeatureCollection',
+                features: [{
+                    type: 'Feature',
+                    geometry: {
+                        type: 'Polygon',
+                        // Use clockwise ring order so d3 treats the rectangle as the interior rather than the inverted globe
+                        coordinates: [[[west, south], [west, north], [east, north], [east, south], [west, south]]]
+                    },
+                    properties: { kind: 'viewport-bounds' }
+                }]
+            };
+        }
+
+        function getRegionBoundsCollection() {
+            const bounds = REGION_VIEWBOXES[settings.region];
+            if (!bounds) return null;
+            return boundsToFeatureCollection(bounds);
+        }
+
+        function clampBoundsToRegion(bounds) {
+            if (!bounds) return null;
+            const regionBox = REGION_VIEWBOXES[settings.region];
+            if (!regionBox) return bounds;
+            return {
+                west: Math.max(bounds.west, regionBox.west),
+                east: Math.min(bounds.east, regionBox.east),
+                south: Math.max(bounds.south, regionBox.south),
+                north: Math.min(bounds.north, regionBox.north)
+            };
+        }
+
+        function getMarkerBoundsCollection(tallyOverride = null) {
+            const tally = tallyOverride || activeTally();
+            const entries = Array.from(tally.values()).filter(entry => entry.count > 0);
+            if (!entries.length) return null;
+
+            let west = Infinity;
+            let east = -Infinity;
+            let south = Infinity;
+            let north = -Infinity;
+
+            const pushBounds = (w, e, s, n) => {
+                if (!Number.isFinite(w) || !Number.isFinite(e) || !Number.isFinite(s) || !Number.isFinite(n)) return;
+                west = Math.min(west, w);
+                east = Math.max(east, e);
+                south = Math.min(south, s);
+                north = Math.max(north, n);
+            };
+
+            entries.forEach(entry => {
+                if (entry.coord) {
+                    pushBounds(entry.coord.lon, entry.coord.lon, entry.coord.lat, entry.coord.lat);
+                    return;
+                }
+                const countryCoord = entry.code ? getCountryCoord(entry.code) : null;
+                if (countryCoord) {
+                    pushBounds(countryCoord.lon, countryCoord.lon, countryCoord.lat, countryCoord.lat);
+                    return;
+                }
+                if (entry.feature) {
+                    try {
+                        const bounds = d3.geoBounds(featureForProjection(entry.feature));
+                        if (bounds && bounds.length === 2) {
+                            pushBounds(bounds[0][0], bounds[1][0], bounds[0][1], bounds[1][1]);
+                        }
+                    } catch (err) {
+                        debugLog('marker bounds failed', err);
+                    }
+                }
+            });
+
+            if (![west, east, south, north].every(Number.isFinite)) return null;
+
+            const lonSpan = Math.abs(east - west);
+            const latSpan = Math.abs(north - south);
+            const lonPad = Math.max(2, lonSpan * 0.2);
+            const latPad = Math.max(1, latSpan * 0.2);
+            let padded = {
+                west: west - lonPad,
+                east: east + lonPad,
+                south: south - latPad,
+                north: north + latPad
+            };
+
+            const minLonSpan = 6;
+            const minLatSpan = 4;
+            if (padded.east - padded.west < minLonSpan) {
+                const mid = (padded.east + padded.west) / 2;
+                padded.west = mid - minLonSpan / 2;
+                padded.east = mid + minLonSpan / 2;
+            }
+            if (padded.north - padded.south < minLatSpan) {
+                const mid = (padded.north + padded.south) / 2;
+                padded.south = mid - minLatSpan / 2;
+                padded.north = mid + minLatSpan / 2;
+            }
+
+            padded = clampBoundsToRegion(padded) || padded;
+            if (padded.east <= padded.west || padded.north <= padded.south) return null;
+
+            return boundsToFeatureCollection(padded);
+        }
+
+        function addAlias(alias, iso) {
+            const key = normalizeForMatch(alias);
+            if (!key) return;
+            const existing = aliasToIso.get(key);
+            if (existing && existing !== iso) return; // don't clobber country aliases with state-level entries
+            aliasToIso.set(key, iso);
+        }
+
+        function addCityHint(city, iso) {
+            const key = normalizeForMatch(city);
+            if (key) cityHints.set(key, iso);
+        }
+
+        function registerManualAliases() {
+            const bundles = {
+                US: ['usa', 'u.s.a', 'u.s', 'united states', 'united states of america', 'america', 'merica', 'murica', 'states', 'nyc', 'new york', 'california', 'texas', 'chicago', 'los angeles', 'la', 'vegas', 'washington dc', 'dc'],
+                GB: ['uk', 'u.k', 'great britain', 'britain', 'england', 'scotland', 'wales', 'london', 'manchester', 'united kingdom'],
+                IE: ['ireland', 'eire', 'dublin'],
+                CA: ['canada', 'cdn', 'toronto', 'montreal', 'vancouver', 'calgary', 'edmonton'],
+                AU: ['australia', 'oz', 'sydney', 'melbourne', 'brisbane', 'perth', 'adelaide'],
+                NZ: ['new zealand', 'nz', 'aotearoa', 'auckland', 'wellington'],
+                DE: ['germany', 'deutschland', 'berlin', 'munich', 'hamburg', 'frankfurt'],
+                FR: ['france', 'paris', 'marseille', 'lyon', 'nice'],
+                ES: ['spain', 'espana', 'madrid', 'barcelona', 'valencia', 'sevilla'],
+                IT: ['italy', 'italia', 'rome', 'milano', 'milan', 'napoli', 'naples', 'florence', 'torino'],
+                BR: ['brazil', 'brasil', 'rio', 'rio de janeiro', 'sao paulo'],
+                MX: ['mexico', 'cdmx', 'mexico city', 'guadalajara', 'monterrey'],
+                AR: ['argentina', 'buenos aires'],
+                CL: ['chile', 'santiago'],
+                CO: ['colombia', 'bogota', 'medellin'],
+                PE: ['peru', 'lima'],
+                VE: ['venezuela', 'caracas'],
+                NL: ['netherlands', 'holland', 'amsterdam', 'rotterdam'],
+                BE: ['belgium', 'brussels', 'bruges', 'antwerp'],
+                CH: ['switzerland', 'swiss', 'zurich', 'geneva', 'bern'],
+                AT: ['austria', 'wien', 'vienna', 'salzburg'],
+                PT: ['portugal', 'lisbon', 'porto'],
+                GR: ['greece', 'ellada', 'athens', 'thessaloniki'],
+                RU: ['russia', 'rossiya', 'moscow', 'moskva', 'st petersburg', 'saint petersburg'],
+                UA: ['ukraine', 'kyiv', 'kiev', 'odesa', 'odessa', 'lviv'],
+                PL: ['poland', 'polska', 'warsaw', 'wroclaw', 'krakow'],
+                CZ: ['czech republic', 'czechia', 'praha', 'prague', 'brno'],
+                SK: ['slovakia', 'slovensko', 'bratislava'],
+                HU: ['hungary', 'budapest'],
+                RO: ['romania', 'bucharest', 'cluj', 'brasov'],
+                SE: ['sweden', 'stockholm', 'gothenburg', 'malmo'],
+                NO: ['norway', 'oslo', 'bergen'],
+                FI: ['finland', 'suomi', 'helsinki', 'turku'],
+                DK: ['denmark', 'danmark', 'copenhagen', 'kobenhavn', 'aarhus'],
+                IS: ['iceland', 'reykjavik'],
+                JP: ['japan', 'nippon', 'nihon', 'tokyo', 'osaka', 'kyoto', 'sapporo'],
+                KR: ['south korea', 'korea', 'republic of korea', 'skorea', 'seoul', 'busan'],
+                CN: ['china', 'prc', 'beijing', 'shanghai', 'guangzhou', 'shenzhen'],
+                TW: ['taiwan', 'taipei', 'roc'],
+                HK: ['hong kong', 'hongkong', 'hk'],
+                SG: ['singapore', 'sg'],
+                IN: ['india', 'delhi', 'new delhi', 'mumbai', 'kolkata', 'bangalore', 'bengaluru', 'chennai'],
+                PK: ['pakistan', 'karachi', 'lahore', 'islamabad'],
+                BD: ['bangladesh', 'dhaka'],
+                LK: ['sri lanka', 'srilanka', 'colombo'],
+                NP: ['nepal', 'kathmandu'],
+                TH: ['thailand', 'bangkok', 'phuket', 'chiang mai', 'chiangmai'],
+                VN: ['vietnam', 'viet nam', 'hanoi', 'saigon', 'ho chi minh'],
+                KH: ['cambodia', 'kampuchea', 'phnom penh', 'siem reap'],
+                MY: ['malaysia', 'kuala lumpur', 'penang'],
+                ID: ['indonesia', 'jakarta', 'bali', 'bandung'],
+                PH: ['philippines', 'ph', 'manila', 'cebu', 'davao'],
+                IL: ['israel', 'tel aviv', 'jerusalem', 'haifa'],
+                AE: ['uae', 'u.a.e', 'dubai', 'abu dhabi'],
+                SA: ['saudi arabia', 'ksa', 'riyadh', 'jeddah'],
+                QA: ['qatar', 'doha'],
+                KW: ['kuwait'],
+                BH: ['bahrain'],
+                TR: ['turkey', 'turkiye', 'istanbul', 'ankara', 'izmir'],
+                EG: ['egypt', 'cairo', 'giza', 'alexandria'],
+                ZA: ['south africa', 'sa', 'cape town', 'johannesburg', 'joburg', 'jhb', 'durban'],
+                NG: ['nigeria', 'lagos', 'abuja'],
+                KE: ['kenya', 'nairobi', 'mombasa'],
+                GH: ['ghana', 'accra'],
+                MA: ['morocco', 'morroco', 'marrakesh', 'casablanca'],
+                DZ: ['algeria', 'algier', 'algerie'],
+                TN: ['tunisia', 'tunis'],
+                ET: ['ethiopia', 'addis ababa'],
+                TZ: ['tanzania', 'dar es salaam'],
+                SN: ['senegal', 'dakar'],
+                CO: ['colombia', 'bogota'],
+                CH: ['swiss', 'schweiz', 'suisse', 'svizzera'],
+                BE: ['belgique', 'belgie'],
+                AT: ['osterreich', 'austria'],
+                HR: ['croatia', 'hrvatska', 'zagreb', 'split'],
+                RS: ['serbia', 'beograd', 'belgrade'],
+                BA: ['bosnia', 'bosnia and herzegovina', 'sarajevo'],
+                BG: ['bulgaria', 'sofia'],
+                SI: ['slovenia', 'ljubljana'],
+                GE: ['georgia', 'tbilisi'],
+                AM: ['armenia', 'yerevan'],
+                IR: ['iran', 'tehran'],
+                IQ: ['iraq', 'baghdad'],
+                SY: ['syria', 'damascus'],
+                JO: ['jordan', 'amman'],
+                LB: ['lebanon', 'beirut'],
+                CI: ['ivory coast', "cote d'ivoire", 'cote divoire'],
+                CD: ['congo', 'dr congo', 'democratic republic of congo', 'kinshasa'],
+                CG: ['congo republic', 'republic of congo', 'brazzaville'],
+                SD: ['sudan', 'khartoum'],
+                UG: ['uganda', 'kampala'],
+                ZM: ['zambia', 'lusaka'],
+                ZW: ['zimbabwe', 'harare'],
+                BO: ['bolivia', 'la paz', 'santa cruz', 'sucre'],
+                PY: ['paraguay', 'asuncion'],
+                UY: ['uruguay', 'montevideo'],
+                CR: ['costa rica', 'san jose'],
+                DO: ['dominican republic', 'santo domingo'],
+                CU: ['cuba', 'havana'],
+                HT: ['haiti', 'port au prince', 'port-au-prince'],
+                JM: ['jamaica', 'kingston'],
+                TT: ['trinidad', 'trinidad and tobago', 'tobago'],
+                GT: ['guatemala', 'guate', 'guatemala city'],
+                HN: ['honduras', 'tegucigalpa'],
+                NI: ['nicaragua', 'managua'],
+                PA: ['panama', 'panama city'],
+                SV: ['el salvador', 'elsalvador', 'san salvador'],
+                PR: ['puerto rico', 'puertorico', 'san juan'],
+                GU: ['guam'],
+                VI: ['usvi', 'us virgin islands', 'st thomas'],
+                MP: ['northern mariana islands'],
+                FO: ['faroe islands', 'faroe', 'torshavn', 'torshavn'],
+                GL: ['greenland', 'kalaallit nunaat']
+            };
+
+            for (const [iso, aliases] of Object.entries(bundles)) {
+                aliases.forEach(alias => addAlias(alias, iso));
+            }
+
+            ['nyc', 'new york city', 'brooklyn', 'bronx', 'queens', 'manhattan', 'seattle', 'san francisco', 'boston', 'philadelphia', 'atlanta', 'miami'].forEach(city => addCityHint(city, 'US'));
+            ['ottawa', 'edmonton', 'winnipeg', 'ottawa', 'hamilton', 'halifax'].forEach(city => addCityHint(city, 'CA'));
+            ['madrid', 'barcelona', 'sevilla', 'valencia', 'granada'].forEach(city => addCityHint(city, 'ES'));
+            ['zurich', 'bern', 'geneva', 'lausanne'].forEach(city => addCityHint(city, 'CH'));
+            ['abu dhabi', 'dubai', 'sharjah'].forEach(city => addCityHint(city, 'AE'));
+            ['riyadh', 'jeddah', 'mecca', 'medina', 'dammam'].forEach(city => addCityHint(city, 'SA'));
+            ['doha'].forEach(city => addCityHint(city, 'QA'));
+            ['luxembourg'].forEach(city => addCityHint(city, 'LU'));
+            ['bratislava'].forEach(city => addCityHint(city, 'SK'));
+        }
+
+        function registerPlaceCoord(labels, lat, lon, iso) {
+            if (!Array.isArray(labels) || !labels.length) return;
+            const canonical = labels[0];
+            labels.forEach(label => {
+                const key = normalizeForMatch(label);
+                if (key) {
+                    placeCoords.set(key, { lat, lon, label: canonical || label, iso });
+                    addAlias(key, iso);
+                    placeFeatureLookup.set(`${key}|${iso}`, null); // placeholder for later feature linking
+                }
+            });
+        }
+
+        function registerPlaceCoords() {
+            // USA states + DC
+            registerPlaceCoord(['alabama', 'al', 'ala'], 32.8067, -86.7911, 'US');
+            registerPlaceCoord(['alaska', 'ak'], 64.2008, -149.4937, 'US');
+            registerPlaceCoord(['arizona', 'az'], 33.7298, -111.4312, 'US');
+            registerPlaceCoord(['arkansas', 'ar'], 34.9697, -92.3731, 'US');
+            registerPlaceCoord(['california', 'ca'], 36.7783, -119.4179, 'US');
+            registerPlaceCoord(['colorado', 'co'], 39.5501, -105.7821, 'US');
+            registerPlaceCoord(['connecticut', 'ct'], 41.6032, -73.0877, 'US');
+            registerPlaceCoord(['delaware', 'de'], 38.9108, -75.5277, 'US');
+            registerPlaceCoord(['district of columbia', 'dc', 'washington dc'], 38.9072, -77.0369, 'US');
+            registerPlaceCoord(['florida', 'fl'], 27.6648, -81.5158, 'US');
+            registerPlaceCoord(['georgia', 'ga'], 32.1656, -82.9001, 'US');
+            registerPlaceCoord(['hawaii', 'hi'], 19.8968, -155.5828, 'US');
+            registerPlaceCoord(['idaho', 'id'], 44.0682, -114.7420, 'US');
+            registerPlaceCoord(['illinois', 'il'], 40.6331, -89.3985, 'US');
+            registerPlaceCoord(['indiana', 'in'], 40.5512, -85.6024, 'US');
+            registerPlaceCoord(['iowa', 'ia'], 41.8780, -93.0977, 'US');
+            registerPlaceCoord(['kansas', 'ks'], 39.0119, -98.4842, 'US');
+            registerPlaceCoord(['kentucky', 'ky'], 37.8393, -84.2700, 'US');
+            registerPlaceCoord(['louisiana', 'la'], 30.9843, -91.9623, 'US');
+            registerPlaceCoord(['maine', 'me'], 45.2538, -69.4455, 'US');
+            registerPlaceCoord(['maryland', 'md'], 39.0458, -76.6413, 'US');
+            registerPlaceCoord(['massachusetts', 'ma'], 42.4072, -71.3824, 'US');
+            registerPlaceCoord(['michigan', 'mi'], 44.3148, -85.6024, 'US');
+            registerPlaceCoord(['minnesota', 'mn'], 46.7296, -94.6859, 'US');
+            registerPlaceCoord(['mississippi', 'ms'], 32.3547, -89.3985, 'US');
+            registerPlaceCoord(['missouri', 'mo'], 37.9643, -91.8318, 'US');
+            registerPlaceCoord(['montana', 'mt'], 46.8797, -110.3626, 'US');
+            registerPlaceCoord(['nebraska', 'ne'], 41.4925, -99.9018, 'US');
+            registerPlaceCoord(['nevada', 'nv'], 38.8026, -116.4194, 'US');
+            registerPlaceCoord(['new hampshire', 'nh'], 43.1939, -71.5724, 'US');
+            registerPlaceCoord(['new jersey', 'nj'], 40.0583, -74.4057, 'US');
+            registerPlaceCoord(['new mexico', 'nm'], 34.5199, -105.8701, 'US');
+            registerPlaceCoord(['new york', 'ny'], 43.0, -75.0, 'US');
+            registerPlaceCoord(['north carolina', 'nc'], 35.7596, -79.0193, 'US');
+            registerPlaceCoord(['north dakota', 'nd'], 47.5515, -101.002, 'US');
+            registerPlaceCoord(['ohio', 'oh'], 40.4173, -82.9071, 'US');
+            registerPlaceCoord(['oklahoma', 'ok'], 35.0078, -97.0929, 'US');
+            registerPlaceCoord(['oregon', 'or'], 43.8041, -120.5542, 'US');
+            registerPlaceCoord(['pennsylvania', 'pa'], 41.2033, -77.1945, 'US');
+            registerPlaceCoord(['rhode island', 'ri'], 41.5801, -71.4774, 'US');
+            registerPlaceCoord(['south carolina', 'sc'], 33.8361, -81.1637, 'US');
+            registerPlaceCoord(['south dakota', 'sd'], 43.9695, -99.9018, 'US');
+            registerPlaceCoord(['tennessee', 'tn'], 35.5175, -86.5804, 'US');
+            registerPlaceCoord(['texas', 'tx'], 31.9686, -99.9018, 'US');
+            registerPlaceCoord(['utah', 'ut'], 39.3210, -111.0937, 'US');
+            registerPlaceCoord(['vermont', 'vt'], 44.5588, -72.5778, 'US');
+            registerPlaceCoord(['virginia', 'va'], 37.4316, -78.6569, 'US');
+            registerPlaceCoord(['washington', 'wa'], 47.7511, -120.7401, 'US');
+            registerPlaceCoord(['west virginia', 'wv'], 38.5976, -80.4549, 'US');
+            registerPlaceCoord(['wisconsin', 'wi'], 43.7844, -88.7879, 'US');
+            registerPlaceCoord(['wyoming', 'wy'], 43.0759, -107.2903, 'US');
+
+            // Canada provinces/territories
+            registerPlaceCoord(['alberta', 'ab'], 53.9333, -116.5765, 'CA');
+            registerPlaceCoord(['british columbia', 'bc'], 53.7267, -127.6476, 'CA');
+            registerPlaceCoord(['manitoba', 'mb'], 53.7609, -98.8139, 'CA');
+            registerPlaceCoord(['new brunswick', 'nb'], 46.5653, -66.4619, 'CA');
+            registerPlaceCoord(['newfoundland and labrador', 'nl', 'newfoundland'], 53.1355, -57.6604, 'CA');
+            registerPlaceCoord(['nova scotia', 'ns'], 44.6820, -63.7443, 'CA');
+            registerPlaceCoord(['ontario', 'on'], 51.2538, -85.3232, 'CA');
+            registerPlaceCoord(['prince edward island', 'pei', 'pe'], 46.5107, -63.4168, 'CA');
+            registerPlaceCoord(['quebec', 'qc', 'quebec province'], 52.9399, -73.5491, 'CA');
+            registerPlaceCoord(['saskatchewan', 'sk'], 52.9399, -106.4509, 'CA');
+            registerPlaceCoord(['northwest territories', 'nt'], 64.8255, -124.8457, 'CA');
+            registerPlaceCoord(['yukon', 'yt'], 64.2823, -135.0, 'CA');
+            registerPlaceCoord(['nunavut', 'nu'], 70.2998, -83.1076, 'CA');
+
+            // Mexico states (selective centroids for coverage)
+            registerPlaceCoord(['aguascalientes', 'ags'], 21.8853, -102.2916, 'MX');
+            registerPlaceCoord(['baja california', 'bc'], 30.8406, -115.2838, 'MX');
+            registerPlaceCoord(['baja california sur', 'bcs'], 26.0444, -111.6661, 'MX');
+            registerPlaceCoord(['campeche', 'cam'], 19.8301, -90.5349, 'MX');
+            registerPlaceCoord(['chiapas', 'chp'], 16.7569, -93.1292, 'MX');
+            registerPlaceCoord(['chihuahua', 'chh'], 28.6320, -106.0691, 'MX');
+            registerPlaceCoord(['coahuila', 'coa'], 27.0587, -101.7068, 'MX');
+            registerPlaceCoord(['colima', 'col'], 19.1223, -104.0072, 'MX');
+            registerPlaceCoord(['durango', 'dur'], 24.5593, -104.6588, 'MX');
+            registerPlaceCoord(['guanajuato', 'gua'], 21.0190, -101.2574, 'MX');
+            registerPlaceCoord(['guerrero', 'gro'], 17.4392, -99.5451, 'MX');
+            registerPlaceCoord(['hidalgo', 'hid'], 20.0911, -98.7624, 'MX');
+            registerPlaceCoord(['jalisco', 'jal'], 20.6597, -103.3496, 'MX');
+            registerPlaceCoord(['mexico', 'estado de mexico', 'edomex'], 19.4326, -99.1332, 'MX');
+            registerPlaceCoord(['michoacan', 'mich', 'michoacán'], 19.5665, -101.7068, 'MX');
+            registerPlaceCoord(['morelos', 'mor'], 18.6813, -99.1013, 'MX');
+            registerPlaceCoord(['nayarit', 'nay'], 21.7514, -104.8455, 'MX');
+            registerPlaceCoord(['nuevo leon', 'nuevo león', 'nl'], 25.5922, -99.9962, 'MX');
+            registerPlaceCoord(['oaxaca', 'oax'], 17.0732, -96.7266, 'MX');
+            registerPlaceCoord(['puebla', 'pue'], 19.0414, -98.2063, 'MX');
+            registerPlaceCoord(['queretaro', 'querétaro', 'qro'], 20.5888, -100.3899, 'MX');
+            registerPlaceCoord(['quintana roo', 'q roo', 'ro', 'qr'], 19.1817, -88.4791, 'MX');
+            registerPlaceCoord(['san luis potosi', 'san luis potosí', 'slp'], 22.1565, -100.9855, 'MX');
+            registerPlaceCoord(['sinaloa', 'sin'], 24.8081, -107.3950, 'MX');
+            registerPlaceCoord(['sonora', 'son'], 29.2972, -110.3309, 'MX');
+            registerPlaceCoord(['tabasco', 'tab'], 17.8409, -92.6189, 'MX');
+            registerPlaceCoord(['tamaulipas', 'tam'], 24.2669, -98.8363, 'MX');
+            registerPlaceCoord(['tlaxcala', 'tla'], 19.3182, -98.2375, 'MX');
+            registerPlaceCoord(['veracruz', 'ver'], 19.1738, -96.1342, 'MX');
+            registerPlaceCoord(['yucatan', 'yucatán', 'yuc'], 20.7099, -89.0943, 'MX');
+            registerPlaceCoord(['zacatecas', 'zac'], 22.7709, -102.5833, 'MX');
+        }
+
+        function registerCityDataset(cityList) {
+            if (!Array.isArray(cityList)) return;
+            cityList.forEach(city => {
+                if (!city || !city.name || !city.iso) return;
+                const labels = [city.name];
+                if (Array.isArray(city.aliases)) {
+                    city.aliases.forEach(alias => {
+                        if (alias) labels.push(alias);
+                    });
+                }
+                const lat = Number(city.lat);
+                const lon = Number(city.lon);
+                const iso = city.iso.toString().toUpperCase();
+                if (!labels.length || !Number.isFinite(lat) || !Number.isFinite(lon) || !iso) return;
+                registerPlaceCoord(labels, lat, lon, iso);
+            });
+        }
+
+        function registerRegionalCities(regionKey) {
+            if (!regionalCityData.length) return;
+            if (settings.mapType !== 'city') return;
+            if (!regionSets || !regionSets.size) return;
+            const normalized = normalizeRegionKey(regionKey);
+            if (normalized === 'global') return;
+            if (boostedCityRegions.has(normalized)) return;
+            const allowedSet = regionSets.get(normalized);
+            const subset = (allowedSet && allowedSet.size)
+                ? regionalCityData.filter(city => city?.iso && allowedSet.has(city.iso.toString().toUpperCase()))
+                : regionalCityData;
+            if (subset.length) {
+                registerCityDataset(subset);
+                boostedCityRegions.add(normalized);
+                debugLog('regional city dataset registered', { region: normalized, count: subset.length });
+            }
+        }
+
+        function extractFlagCode(text) {
+            if (!text) return null;
+            const flags = [];
+            const codePoints = Array.from(text);
+            for (let i = 0; i < codePoints.length - 1; i += 1) {
+                const a = codePoints[i].codePointAt(0);
+                const b = codePoints[i + 1].codePointAt(0);
+                if (a >= 0x1f1e6 && a <= 0x1f1ff && b >= 0x1f1e6 && b <= 0x1f1ff) {
+                    const iso = String.fromCharCode(a - 0x1f1e6 + 65) + String.fromCharCode(b - 0x1f1e6 + 65);
+                    flags.push(iso);
+                }
+            }
+            if (flags.length) return flags[0];
+            return null;
+        }
+
+        function resolveCountry(input) {
+            if (!input && input !== 0) return null;
+            const rawString = input.toString();
+            const flagIso = extractFlagCode(rawString);
+            if (flagIso && isoLookup.has(flagIso)) {
+                const candidate = buildCountry(flagIso, 'flag');
+                return isCountryAllowed(candidate) ? candidate : null;
+            }
+
+            const normalized = normalizeForMatch(rawString);
+            if (!normalized) return null;
+
+            // Direct alias for the entire string
+            if (aliasToIso.has(normalized)) {
+                const candidate = buildCountry(aliasToIso.get(normalized), 'alias');
+                return isCountryAllowed(candidate) ? candidate : null;
+            }
+
+            // Look for city / state hints
+            for (const [cityKey, iso] of cityHints.entries()) {
+                if (normalized.includes(cityKey)) {
+                    const candidate = buildCountry(iso, 'city');
+                    if (isCountryAllowed(candidate)) return candidate;
+                }
+            }
+
+            // Match against known state / province features to infer the country
+            if (placeFeatureLookup.has(normalized)) {
+                const feature = placeFeatureLookup.get(normalized);
+                const iso = feature?.properties?.iso_a2 || feature?.properties?.iso;
+                if (iso) {
+                    const candidate = buildCountry(iso, 'place-feature');
+                    if (isCountryAllowed(candidate)) return candidate;
+                }
+            }
+
+            const tokens = normalized.split(' ').filter(Boolean);
+
+            // Check 3-gram, 2-gram, and single word aliases
+            for (let size = 3; size >= 1; size -= 1) {
+                for (let i = 0; i <= tokens.length - size; i += 1) {
+                    const phrase = tokens.slice(i, i + size).join(' ');
+                    if (aliasToIso.has(phrase)) {
+                        const candidate = buildCountry(aliasToIso.get(phrase), 'alias');
+                        if (isCountryAllowed(candidate)) return candidate;
+                    }
+                    if (cityHints.has(phrase)) {
+                        const candidate = buildCountry(cityHints.get(phrase), 'city');
+                        if (isCountryAllowed(candidate)) return candidate;
+                    }
+                }
+            }
+
+            // ISO tokens (alpha-2 / alpha-3)
+            for (const token of tokens) {
+                if (token.length === 2 || token.length === 3) {
+                    const tokenUpper = token.toUpperCase();
+                    if (isoLookup.has(tokenUpper)) {
+                        const candidate = buildCountry(tokenUpper, 'iso-token');
+                        if (isCountryAllowed(candidate)) return candidate;
+                    }
+                }
+            }
+
+            // Try matching against atlas country names
+            for (const [normalizedName, feature] of featureNameLookup.entries()) {
+                if (normalized.includes(normalizedName)) {
+                    const iso = feature.properties.iso_a2 || null;
+                    const candidate = buildCountry(iso || feature.properties.name, 'name-match');
+                    if (isCountryAllowed(candidate)) return candidate;
+                }
+            }
+
+            return null;
+        }
+
+        function buildCountry(codeOrName, reason) {
+            let code = isoLookup.has(codeOrName) ? codeOrName : null;
+            let displayName = code ? (isoLookup.get(code)?.name || code) : codeOrName;
+
+            if (!code) {
+                const normalized = normalizeForMatch(codeOrName);
+                for (const [key, feature] of featureNameLookup.entries()) {
+                    if (key === normalized) {
+                        displayName = feature.properties.name;
+                        code = feature.properties.iso_a2 || null;
+                        break;
+                    }
+                }
+            }
+
+            const feature = code ? featureByIso.get(code) : null;
+            const key = code || normalizeForMatch(displayName);
+            return {
+                key,
+                code,
+                name: displayName || code || 'Unknown',
+                feature,
+                reason
+            };
+        }
+
+        function isCountryAllowed(country) {
+            if (!country) return false;
+            if (settings.region === 'global') return true;
+            if (!country.code) return true;
+            return isIsoAllowed(country.code);
+        }
+
+        function ensureCountryEntry(country) {
+            if (!countryTally.has(country.key)) {
+                const coord = getCountryCoord(country.code);
+                countryTally.set(country.key, {
+                    key: country.key,
+                    code: country.code || null,
+                    name: country.name,
+                    feature: country.feature || null,
+                    coord,
+                    count: 0
+                });
+            }
+            return countryTally.get(country.key);
+        }
+
+        function getPlaceKey(rawInput, country) {
+            if (settings.mapType === 'country') return country.key;
+            const label = derivePlaceLabel(rawInput, country.name);
+            return normalizeForMatch(label) || country.key;
+        }
+
+        function getPlaceName(rawInput, country) {
+            if (settings.mapType === 'country') return country.name;
+            return derivePlaceLabel(rawInput, country.name);
+        }
+
+        function getPlaceCoord(placeKey, placeName, country) {
+            const normalized = normalizeForMatch(placeKey || placeName);
+            if (normalized && placeCoords.has(normalized)) return placeCoords.get(normalized);
+            return null;
+        }
+
+        function getCountryCoord(iso) {
+            if (!iso) return null;
+            if (COUNTRY_COORD_OVERRIDES[iso]) return COUNTRY_COORD_OVERRIDES[iso];
+            const feature = featureByIso.get(iso);
+            if (feature && typeof d3?.geoCentroid === 'function') {
+                try {
+                    const [lon, lat] = d3.geoCentroid(featureForProjection(feature));
+                    if (Number.isFinite(lat) && Number.isFinite(lon)) {
+                        const label = isoLookup.get(iso)?.name || iso;
+                        return { lat, lon, label };
+                    }
+                } catch (e) {
+                    // ignore centroid failures
+                }
+            }
+            return null;
+        }
+
+        function getPlaceFeature(placeKey, placeName, country) {
+            const normalized = normalizeForMatch(placeKey || placeName);
+            const iso = country?.code || null;
+            if (normalized && iso) {
+                const withIso = `${normalized}|${iso}`;
+                if (placeFeatureLookup.has(withIso) && placeFeatureLookup.get(withIso)) {
+                    return placeFeatureLookup.get(withIso);
+                }
+            }
+            if (normalized && placeFeatureLookup.has(normalized) && placeFeatureLookup.get(normalized)) {
+                return placeFeatureLookup.get(normalized);
+            }
+            return null;
+        }
+
+        function ensurePlaceEntry(placeKey, placeName, country) {
+            if (!placeTally.has(placeKey)) {
+                const isCityMode = settings.mapType === 'city';
+                const feature = getPlaceFeature(placeKey, placeName, country) || (!isCityMode ? country?.feature : null);
+                const coord = getPlaceCoord(placeKey, placeName, country) || getCountryCoord(country?.code);
+                const displayName = feature?.properties?.name || feature?.properties?.abbr || coord?.label || placeName;
+                placeTally.set(placeKey, {
+                    key: placeKey,
+                    code: country?.code || null,
+                    name: displayName,
+                    feature,
+                    coord,
+                    count: 0
+                });
+            }
+            return placeTally.get(placeKey);
+        }
+
+        function registerVote(country, voterKey, rawInput) {
+            if (!country || !country.key) {
+                debugLog('vote ignored: unresolved country', { rawInput });
+                return;
+            }
+
+            if (!shouldAcceptVotes()) {
+                debugLog('vote ignored: map paused/disabled', { rawInput });
+                return;
+            }
+
+            if (!isCountryAllowed(country)) {
+                debugLog('vote ignored: outside region filter', { country: country.code, region: settings.region });
+                return;
+            }
+
+            const existing = voters.get(voterKey);
+            const prevCountryKey = existing?.countryKey || existing; // support legacy shape
+            const prevPlaceKey = existing?.placeKey;
+
+            if (!settings.multiVote && existing && !settings.allowChanges) {
+                debugLog('duplicate voter ignored', { voterKey, country: country.name });
+                return;
+            }
+
+            if (!settings.multiVote) {
+                if (existing && settings.allowChanges && prevCountryKey && prevCountryKey !== country.key) {
+                    const prev = countryTally.get(prevCountryKey);
+                    if (prev) {
+                        prev.count = Math.max(prev.count - 1, 0);
+                        if (prev.count === 0) countryTally.delete(prevCountryKey);
+                    }
+                    if (prevPlaceKey) {
+                        const prevPlace = placeTally.get(prevPlaceKey);
+                        if (prevPlace) {
+                            prevPlace.count = Math.max(prevPlace.count - 1, 0);
+                            if (prevPlace.count === 0) placeTally.delete(prevPlaceKey);
+                        }
+                    }
+                }
+            }
+
+            uniqueVoters.add(voterKey);
+
+            const countryEntry = ensureCountryEntry(country);
+            countryEntry.count += 1;
+
+            const placeKey = getPlaceKey(rawInput, country);
+            const placeName = getPlaceName(rawInput, country);
+            const placeEntry = ensurePlaceEntry(placeKey, placeName, country);
+            placeEntry.count += 1;
+
+            voters.set(voterKey, { countryKey: country.key, placeKey });
+
+            totalEntries += 1;
+
+            debugLog('vote registered', {
+                voterKey,
+                country: country.name,
+                code: country.code,
+                place: placeEntry.name,
+                reason: country.reason,
+                total: countryEntry.count,
+                totalEntries
+            });
+
+            updateVisuals(country, placeEntry);
+        }
+
+        function updateStats() {
+            const participantCount = settings.multiVote ? totalEntries : voters.size;
+            totalPeopleEl.textContent = participantCount;
+            totalPeopleLabelEl.textContent = settings.multiVote ? 'entries' : 'participants';
+            countryCountEl.textContent = activeTally().size;
+            if (settings.mapType === 'state') {
+                locationLabelEl.textContent = 'states / provinces';
+            } else if (settings.mapType === 'city') {
+                locationLabelEl.textContent = 'cities';
+            } else {
+                locationLabelEl.textContent = 'countries';
+            }
+            const statsBlock = document.querySelector('.stats');
+            if (statsBlock) {
+                statsBlock.classList.toggle('hidden', !settings.showTotals);
+            }
+            hudEl.classList.toggle('hidden', !settings.showList && !settings.showTotals);
+        }
+
+        function updateTopList() {
+            if (!settings.showList) {
+                topListEl.innerHTML = '';
+                topListEl.classList.add('hidden');
+                return;
+            }
+
+            topListEl.classList.remove('hidden');
+            const top = Array.from(activeTally().values())
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 7);
+
+            topListEl.innerHTML = '';
+            top.forEach(entry => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${entry.name}</span><span class="pill">${entry.count}</span>`;
+                topListEl.appendChild(li);
+            });
+        }
+
+        function updateStatusBanner() {
+            if (!ready) return;
+            if (!isEnabled) {
+                setStatus('Map disabled');
+                return;
+            }
+            if (isPaused) {
+                setStatus('Paused – not accepting votes');
+                return;
+            }
+            setStatus('');
+        }
+
+        function setPausedState(state) {
+            const next = !!state;
+            if (isPaused === next) return;
+            isPaused = next;
+            updateStatusBanner();
+            debugLog(`map ${isPaused ? 'paused' : 'resumed'}`);
+        }
+
+        function setEnabledState(state) {
+            const next = !!state;
+            if (isEnabled === next) return;
+            isEnabled = next;
+            updateStatusBanner();
+            debugLog(`map ${isEnabled ? 'enabled' : 'disabled'}`);
+        }
+
+        function startCollection() {
+            setEnabledState(true);
+            setPausedState(false);
+        }
+
+        function pauseCollection() {
+            setPausedState(true);
+        }
+
+        function setMapType(value) {
+            const normalized = (value || '').toString().trim().toLowerCase();
+            const next = VALID_MAP_TYPES.has(normalized) ? normalized : 'country';
+            if (next === settings.mapType) return;
+            settings.mapType = next;
+            if (settings.mapType === 'city') {
+                registerRegionalCities(settings.region);
+            }
+            resetMap();
+            updateStats();
+            updateTopList();
+            renderMap({ preferMarkerFit: settings.autoFitMarkers });
+        }
+
+        function setRegion(value) {
+            const normalized = normalizeRegionKey(value);
+            if (normalized === settings.region) return;
+            settings.region = normalized;
+            registerRegionalCities(settings.region);
+            if (!atlasFeatures.length) return;
+            resetMap();
+            renderMap({ preferMarkerFit: settings.autoFitMarkers });
+            updateVisuals({});
+        }
+
+        function setMapStyle(value) {
+            const key = (value || 'default').toString().trim().toLowerCase();
+            settings.mapStyle = key;
+            applyStylePreset(key);
+            if (settings.accent) document.documentElement.style.setProperty('--accent', settings.accent);
+            if (settings.accentAlt) document.documentElement.style.setProperty('--accent-2', settings.accentAlt);
+            updateMapFill();
+        }
+
+        function setMotion(value) {
+            settings.motion = !!value;
+            applyMotionPreference(settings.motion);
+        }
+
+        function applyMapScale() {
+            // Apply scale to the HUD element
+            if (hudEl) {
+                const scale = settings.mapScale || 1;
+                hudEl.style.transform = scale !== 1 ? `scale(${scale})` : '';
+                hudEl.style.transformOrigin = 'bottom right';
+            }
+        }
+
+        function setMultiVote(value) {
+            const next = !!value;
+            if (settings.multiVote === next) return;
+            settings.multiVote = next;
+            resetMap();
+            updateStats();
+            updateTopList();
+        }
+
+        function colorScaleForCount(count, maxCount) {
+            if (!maxCount) return 'rgba(255,255,255,0.06)';
+            const t = Math.max(0.12, Math.min(count / maxCount, 1));
+            const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#6ef7c8';
+            const accent2 = getComputedStyle(document.documentElement).getPropertyValue('--accent-2').trim() || '#f4b556';
+            const blend = d3.interpolateRgb(accent, accent2)(Math.min(t * 1.2, 1));
+            return d3.color(blend).formatRgb();
+        }
+
+        function updateMapFill() {
+            if (!pathGenerator) return;
+            const tally = settings.mapType === 'country' ? countryTally : placeTally;
+            const maxCount = Math.max(...Array.from(tally.values()).map(c => c.count), 0);
+            mapLayer.selectAll('path').each(function(d) {
+                const iso = d.properties.iso_a2 || normalizeForMatch(d.properties.name);
+                const normalizedName = normalizeForMatch(d.properties.name);
+                const abbr = d.properties.abbr ? normalizeForMatch(d.properties.abbr) : null;
+                let entry = tally.get(iso) || tally.get(normalizedName) || (abbr ? tally.get(abbr) : null);
+                if (!entry && COUNTRY_COORD_OVERRIDES[iso]) {
+                    entry = tally.get(iso) || tally.get(normalizedName);
+                }
+                const hasData = entry && entry.count > 0;
+                const fill = hasData ? colorScaleForCount(entry.count, maxCount) : 'rgba(255,255,255,0.06)';
+                d3.select(this)
+                    .classed('has-data', !!hasData)
+                    .style('fill', fill)
+                    .style('opacity', hasData ? 0.95 : 0.55);
+            });
+        }
+
+        function updateMarkers() {
+            if (!pathGenerator) return;
+            function positionForEntry(entry) {
+                if (settings.mapType === 'country') {
+                    if (entry.coord) return projection([entry.coord.lon, entry.coord.lat]);
+                    if (entry.feature) return pathGenerator.centroid(featureForProjection(entry.feature));
+                    if (entry.code && featureByIso.has(entry.code)) return pathGenerator.centroid(featureForProjection(featureByIso.get(entry.code)));
+                } else {
+                    if (entry.coord) return projection([entry.coord.lon, entry.coord.lat]);
+                    if (entry.feature) return pathGenerator.centroid(featureForProjection(entry.feature));
+                }
+                return null;
+            }
+
+            const tally = activeTally();
+            const maxCount = Math.max(...Array.from(tally.values()).map(c => c.count), 0);
+            const entries = Array.from(tally.values()).filter(entry => entry.count > 0 && positionForEntry(entry));
+
+            const markers = markerLayer.selectAll('.marker').data(entries, d => d.key);
+
+            markers.exit().remove();
+
+            const enter = markers.enter().append('g')
+                .attr('class', 'marker')
+                .attr('transform', d => {
+                    const pos = positionForEntry(d) || [0, 0];
+                    return `translate(${pos[0]}, ${pos[1]})`;
+                });
+
+            enter.append('circle')
+                .attr('r', 0)
+                .transition().duration(500)
+                .attr('r', d => 8 + Math.log(d.count + 1) * 6);
+
+            enter.append('text')
+                .attr('text-anchor', 'middle')
+                .attr('y', 4)
+                .text(d => settings.hideNumbers ? '' : d.count)
+                .style('display', settings.hideNumbers ? 'none' : null);
+
+            // Calculate color based on settings
+            function getMarkerColor(count, maxCount) {
+                if (settings.colorIntensity) {
+                    // Red gradient: light pink (few votes) to intense red (many votes)
+                    const ratio = maxCount > 0 ? count / maxCount : 0;
+                    const minLightness = 35;  // intense red
+                    const maxLightness = 85;  // light pink
+                    const lightness = maxLightness - (ratio * (maxLightness - minLightness));
+                    const saturation = 70 + (ratio * 30); // 70-100% saturation
+                    return `hsl(0, ${saturation}%, ${lightness}%)`;
+                }
+                return null; // use default CSS accent color
+            }
+
+            markers.merge(enter)
+                .attr('transform', d => {
+                    const pos = positionForEntry(d) || [0, 0];
+                    return `translate(${pos[0]}, ${pos[1]})`;
+                })
+                .select('circle')
+                .transition().duration(400)
+                .attr('r', d => 8 + Math.log(d.count + 1) * 6)
+                .style('opacity', d => settings.colorIntensity ? 0.85 : (0.4 + 0.6 * (d.count / (maxCount || 1))))
+                .style('fill', d => getMarkerColor(d.count, maxCount))
+                .style('stroke', d => getMarkerColor(d.count, maxCount));
+
+            markers.merge(enter)
+                .select('text')
+                .text(d => settings.hideNumbers ? '' : d.count)
+                .style('display', settings.hideNumbers ? 'none' : null);
+        }
+
+        function triggerPulse(feature) {
+            if (!pathGenerator) return;
+            let x = null; let y = null;
+            if (feature) {
+                const projectedFeature = featureForProjection(feature);
+                [x, y] = pathGenerator.centroid(projectedFeature);
+            } else if (settings.mapType !== 'country') {
+                // try last place coord
+                return; // pulses handled via updateMarkers for non-country when feature missing
+            }
+            if (x === null || y === null) return;
+            const ring = pulseLayer.append('circle')
+                .attr('class', 'pulse')
+                .attr('cx', x)
+                .attr('cy', y)
+                .attr('r', 0);
+
+            ring.transition()
+                .duration(1200)
+                .attr('r', 70)
+                .style('opacity', 0)
+                .remove();
+        }
+
+        function updateVisuals(country, placeEntry) {
+            updateStats();
+            updateTopList();
+            const shouldAutoFit = settings.autoFitMarkers && settings.mapType !== 'country';
+            if (settings.mapType === 'country' || !shouldAutoFit) {
+                updateMapFill();
+                updateMarkers();
+            } else {
+                renderMap({ preferMarkerFit: true });
+            }
+            if (settings.mapType === 'country') {
+                triggerPulse(country.feature);
+            } else if (projection && (placeEntry?.feature || placeEntry?.coord)) {
+                const point = placeEntry.coord ? projection([placeEntry.coord.lon, placeEntry.coord.lat]) : pathGenerator.centroid(featureForProjection(placeEntry.feature));
+                if (point && Number.isFinite(point[0]) && Number.isFinite(point[1])) {
+                    const ring = pulseLayer.append('circle')
+                        .attr('class', 'pulse')
+                        .attr('cx', point[0])
+                        .attr('cy', point[1])
+                        .attr('r', 0);
+                    ring.transition()
+                        .duration(1200)
+                        .attr('r', 70)
+                        .style('opacity', 0)
+                        .remove();
+                }
+            }
+            updateStatusBanner();
+        }
+
+        function handleCommand(cmdRaw) {
+            if (!cmdRaw) return false;
+            const cmd = cmdRaw.toString().trim().toLowerCase();
+            debugLog('command received', cmd);
+            if (cmd === 'resetmap' || cmd === 'resetpoll' || cmd === 'reset') {
+                resetMap();
+                return true;
+            }
+            if (['startmap', 'start', 'resume', 'unpause', 'unpausemap'].includes(cmd)) {
+                startCollection();
+                return true;
+            }
+            if (['pausemap', 'pause', 'stop', 'stopmap'].includes(cmd)) {
+                pauseCollection();
+                return true;
+            }
+            if (['enable', 'enablemap'].includes(cmd)) {
+                setEnabledState(true);
+                return true;
+            }
+            if (['disable', 'disablemap'].includes(cmd)) {
+                setEnabledState(false);
+                return true;
+            }
+            return false;
+        }
+
+        function applySettingsFromPayload(payload) {
+            if (!payload) return;
+            if (payload.mapTitle && payload.mapTitle.textsetting) {
+                settings.title = payload.mapTitle.textsetting;
+                titleEl.textContent = settings.title;
+            }
+            if (payload.mapShowList && Object.prototype.hasOwnProperty.call(payload.mapShowList, 'setting')) {
+                settings.showList = normalizeBoolean(payload.mapShowList.setting, settings.showList);
+            }
+            if (payload.mapShowTotals && Object.prototype.hasOwnProperty.call(payload.mapShowTotals, 'setting')) {
+                settings.showTotals = normalizeBoolean(payload.mapShowTotals.setting, settings.showTotals);
+            }
+            if (payload.mapAllowChanges && Object.prototype.hasOwnProperty.call(payload.mapAllowChanges, 'setting')) {
+                settings.allowChanges = normalizeBoolean(payload.mapAllowChanges.setting, settings.allowChanges);
+            }
+            if (payload.mapEnabled && Object.prototype.hasOwnProperty.call(payload.mapEnabled, 'setting')) {
+                setEnabledState(normalizeBoolean(payload.mapEnabled.setting, isEnabled));
+            }
+            if (payload.mapType && (payload.mapType.setting || payload.mapType.textsetting || typeof payload.mapType === 'string')) {
+                const nextType = payload.mapType.setting ?? payload.mapType.textsetting ?? payload.mapType;
+                setMapType(nextType);
+            }
+            if (payload.maptype && (payload.maptype.setting || payload.maptype.textsetting || typeof payload.maptype === 'string')) {
+                const nextType = payload.maptype.setting ?? payload.maptype.textsetting ?? payload.maptype;
+                setMapType(nextType);
+            }
+            if (payload.mapStyle && (payload.mapStyle.setting || payload.mapStyle.textsetting || typeof payload.mapStyle === 'string')) {
+                const nextStyle = payload.mapStyle.setting ?? payload.mapStyle.textsetting ?? payload.mapStyle;
+                setMapStyle(nextStyle);
+            }
+            if (payload.mapstyle && (payload.mapstyle.setting || payload.mapstyle.textsetting || typeof payload.mapstyle === 'string')) {
+                const nextStyle = payload.mapstyle.setting ?? payload.mapstyle.textsetting ?? payload.mapstyle;
+                setMapStyle(nextStyle);
+            }
+            if (payload.mapspam && Object.prototype.hasOwnProperty.call(payload.mapspam, 'setting')) {
+                setMultiVote(normalizeBoolean(payload.mapspam.setting, settings.multiVote));
+            }
+            if (payload.mapSpam && Object.prototype.hasOwnProperty.call(payload.mapSpam, 'setting')) {
+                setMultiVote(normalizeBoolean(payload.mapSpam.setting, settings.multiVote));
+            }
+            if (payload.mapRegion && (payload.mapRegion.setting || typeof payload.mapRegion === 'string')) {
+                const nextRegion = payload.mapRegion.setting ?? payload.mapRegion;
+                setRegion(nextRegion);
+            }
+            if (payload.region && (payload.region.setting || typeof payload.region === 'string')) {
+                const nextRegion = payload.region.setting ?? payload.region;
+                setRegion(nextRegion);
+            }
+            if (payload.mapregion && (payload.mapregion.setting || typeof payload.mapregion === 'string')) {
+                const nextRegion = payload.mapregion.setting ?? payload.mapregion;
+                setRegion(nextRegion);
+            }
+            if (payload.mapMotion && Object.prototype.hasOwnProperty.call(payload.mapMotion, 'setting')) {
+                setMotion(normalizeBoolean(payload.mapMotion.setting, settings.motion));
+            }
+            if (payload.mapAutoFit && Object.prototype.hasOwnProperty.call(payload.mapAutoFit, 'setting')) {
+                const nextAutoFit = normalizeBoolean(payload.mapAutoFit.setting, settings.autoFitMarkers);
+                if (nextAutoFit !== settings.autoFitMarkers) {
+                    settings.autoFitMarkers = nextAutoFit;
+                    if (ready) {
+                        renderMap({ preferMarkerFit: settings.autoFitMarkers });
+                        updateMapFill();
+                        updateMarkers();
+                    }
+                }
+            }
+            // Handle hide numbers setting
+            if (payload.mapHideNumbers && Object.prototype.hasOwnProperty.call(payload.mapHideNumbers, 'setting')) {
+                settings.hideNumbers = normalizeBoolean(payload.mapHideNumbers.setting, settings.hideNumbers);
+                if (ready) updateMarkers();
+            }
+            if (payload.maphidenumbers && Object.prototype.hasOwnProperty.call(payload.maphidenumbers, 'setting')) {
+                settings.hideNumbers = normalizeBoolean(payload.maphidenumbers.setting, settings.hideNumbers);
+                if (ready) updateMarkers();
+            }
+            // Handle color intensity setting
+            if (payload.mapColorIntensity && Object.prototype.hasOwnProperty.call(payload.mapColorIntensity, 'setting')) {
+                settings.colorIntensity = normalizeBoolean(payload.mapColorIntensity.setting, settings.colorIntensity);
+                if (ready) updateMarkers();
+            }
+            if (payload.mapcolorintensity && Object.prototype.hasOwnProperty.call(payload.mapcolorintensity, 'setting')) {
+                settings.colorIntensity = normalizeBoolean(payload.mapcolorintensity.setting, settings.colorIntensity);
+                if (ready) updateMarkers();
+            }
+            // Handle map scale setting
+            if (payload.mapScale && (payload.mapScale.setting !== undefined || payload.mapScale.numbersetting !== undefined)) {
+                const rawScale = payload.mapScale.numbersetting ?? payload.mapScale.setting;
+                const newScale = parseFloat(rawScale) / 100 || 1;
+                if (newScale !== settings.mapScale) {
+                    settings.mapScale = newScale;
+                    applyMapScale();
+                }
+            }
+            if (payload.mapscale && (payload.mapscale.setting !== undefined || payload.mapscale.numbersetting !== undefined)) {
+                const rawScale = payload.mapscale.numbersetting ?? payload.mapscale.setting;
+                const newScale = parseFloat(rawScale) / 100 || 1;
+                if (newScale !== settings.mapScale) {
+                    settings.mapScale = newScale;
+                    applyMapScale();
+                }
+            }
+            hudEl.classList.toggle('hidden', !settings.showList && !settings.showTotals);
+            updateStatusBanner();
+        }
+
+        function processInput(data) {
+            if (!data) return;
+
+            if (data.cmd && handleCommand(data.cmd)) {
+                return;
+            }
+
+            if (data.settings) {
+                debugLog('settings update received', data.settings);
+                applySettingsFromPayload(data.settings);
+                updateStats();
+                updateTopList();
+                return;
+            }
+
+            // Handle individual setting updates from popup (saveSetting format)
+            if (data.setting && data.value !== undefined) {
+                debugLog('individual setting update received', { setting: data.setting, value: data.value });
+                const payload = {};
+                payload[data.setting] = { setting: data.value };
+                applySettingsFromPayload(payload);
+                updateStats();
+                updateTopList();
+                return;
+            }
+
+            if (data.chatmessage) {
+                if (!ready) {
+                    pendingMessages.push(data);
+                    debugLog('queued chat until map ready', { chatmessage: data.chatmessage });
+                    return;
+                }
+                handleChatMessage(data);
+            }
+        }
+
+        function handleChatMessage(data) {
+            const voterKey = buildVoterKey(data.chatname, data.type, data.userid || data.userId || data.uid);
+            const country = resolveCountry(data.chatmessage);
+            if (!country) {
+                debugLog('no country match', { chatmessage: data.chatmessage, chatname: data.chatname });
+                return;
+            }
+            registerVote(country, voterKey, data.chatmessage);
+        }
+
+        function resetMap() {
+            voters.clear();
+            countryTally.clear();
+            placeTally.clear();
+            uniqueVoters.clear();
+            totalEntries = 0;
+            updateVisuals({});
+            debugLog('map reset');
+        }
+
+        function hydrateIsoLookups(isoData) {
+            isoLookup = new Map();
+            isoByNumeric = new Map();
+            isoMeta = new Map();
+
+            isoData.forEach(entry => {
+                const iso2 = entry['alpha-2'];
+                const region = entry.region || '';
+                const subRegion = entry['sub-region'] || '';
+                isoLookup.set(iso2, { name: entry.name, numeric: entry['country-code'], region, subRegion });
+                isoMeta.set(iso2, { region, subRegion, iso: iso2 });
+                isoByNumeric.set(String(parseInt(entry['country-code'], 10)), iso2);
+                addAlias(entry.name, iso2);
+                addAlias(iso2, iso2);
+                addAlias(entry['alpha-3'], iso2);
+            });
+
+            buildRegionSets();
+            settings.region = normalizeRegionKey(settings.region);
+        }
+
+        function attachIsoToFeatures() {
+            atlasFeatures.forEach(feature => {
+                const iso = isoByNumeric.get(String(parseInt(feature.id, 10)));
+                if (iso) {
+                    feature.properties.iso_a2 = iso;
+                    featureByIso.set(iso, feature);
+                }
+                const normalizedName = normalizeForMatch(feature.properties.name);
+                featureNameLookup.set(normalizedName, feature);
+            });
+        }
+
+        function renderMap(options = {}) {
+            const width = window.innerWidth || 1;
+            const height = window.innerHeight || 1;
+            svg.attr('width', width).attr('height', height);
+
+            const features = getActiveFeatures();
+            const fallback = settings.mapType === 'state' ? getVisibleFeatures() : atlasFeatures;
+            let featureCollection = { type: 'FeatureCollection', features: features.length ? features : fallback };
+            featureCollection = normalizeCollectionForRegion(featureCollection);
+            if (!featureCollection.features || !featureCollection.features.length) return;
+
+            const preferMarkerFit = options.preferMarkerFit ?? false;
+            const markerBounds = preferMarkerFit
+                ? (getMarkerBoundsCollection() || getMarkerBoundsCollection(countryTally))
+                : null;
+            const regionBounds = getRegionBoundsCollection();
+
+            const padding = (settings.region === 'northamerica' || settings.region === 'europe') ? 28 : 20;
+            const buildProjection = (target) => {
+                const proj = d3.geoMercator().precision(0.1);
+                proj.fitExtent([[padding, padding], [width - padding, height - padding]], target);
+                return proj;
+            };
+
+            const regionTarget = regionBounds || featureCollection;
+            const regionProjection = buildProjection(regionTarget);
+            let chosenProjection = regionProjection;
+            let fitMode = regionBounds ? 'region' : 'features';
+            let markerScale = null;
+
+            if (markerBounds) {
+                const markerProjection = buildProjection(markerBounds);
+                markerScale = markerProjection.scale();
+                // When preferMarkerFit is requested, always fit to markers (zoom in or out as needed)
+                // This ensures the view adjusts to show all markers as they're added
+                if (preferMarkerFit) {
+                    chosenProjection = markerProjection;
+                    fitMode = 'markers';
+                } else if (markerProjection.scale() >= regionProjection.scale()) {
+                    // Without explicit preference, only zoom in (tighter view), don't zoom out
+                    chosenProjection = markerProjection;
+                    fitMode = 'markers';
+                }
+            }
+            debugLog('render projection', {
+                preferMarkerFit,
+                fitMode,
+                markerBounds: !!markerBounds,
+                regionBounds: !!regionBounds,
+                markerScale,
+                regionScale: regionProjection.scale()
+            });
+
+            projection = chosenProjection;
+            pathGenerator = d3.geoPath(projection);
+
+            const paths = mapLayer.selectAll('path').data(featureCollection.features, d => (d.properties.iso_a2 || d.properties.abbr || d.id || d.properties.name));
+
+            paths.exit().remove();
+
+            const enter = paths.enter().append('path')
+                .attr('class', 'country');
+
+            paths.merge(enter).attr('d', pathGenerator);
+            renderedFeatures = featureCollection.features;
+            updateMarkers();
+            updateMapFill();
+        }
+
+        function loadJsonWithFallback(primary, fallback) {
+            return fetch(primary).then(resp => {
+                if (!resp.ok) throw new Error(`primary fetch failed ${resp.status}`);
+                return resp.json();
+            }).catch(() => {
+                if (!fallback) throw new Error('no fallback provided');
+                return fetch(fallback).then(r => {
+                    if (!r.ok) throw new Error(`fallback fetch failed ${r.status}`);
+                    return r.json();
+                });
+            });
+        }
+
+        function loadData() {
+            return Promise.all([
+                loadJsonWithFallback(
+                    './thirdparty/iso-3166.json',
+                    'https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.json'
+                ),
+                loadJsonWithFallback(
+                    './thirdparty/world-110m.json',
+                    'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json'
+                ),
+                loadJsonWithFallback(
+                    './thirdparty/map/us-states.json',
+                    'https://cdn.jsdelivr.net/npm/us-atlas@3/states-10m.json'
+                ),
+                loadJsonWithFallback(
+                    './thirdparty/map/canada-provinces.geojson',
+                    'https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/canada.geojson'
+                ),
+                loadJsonWithFallback(
+                    './thirdparty/map/mexico-states.geojson',
+                    'https://raw.githubusercontent.com/codeforgermany/click_that_hood/master/public/data/mexico.geojson'
+                ),
+                fetch('./thirdparty/map/major-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => []),
+                fetch('./thirdparty/map/regional-cities.json').then(resp => (resp.ok ? resp.json() : [])).catch(() => [])
+            ]);
+        }
+
+        function setupConnections() {
+            const sessionRaw = urlParams.get('session');
+            if (!sessionRaw) {
+                debugLog('session missing; listening only for direct postMessage payloads');
+                return;
+            }
+            const session = sessionRaw.split(',')[0];
+            const password = urlParams.get('password') || 'false';
+
+            const label = urlParams.get('label') || 'map';
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${encodeURIComponent(password)}&solo&view=${encodeURIComponent(session)}&novideo&noaudio&label=${encodeURIComponent(label)}&cleanoutput&room=${encodeURIComponent(session)}`;
+            iframe.style.cssText = 'width:0;height:0;border:0;position:absolute;left:-1000px;top:-1000px;';
+            document.body.appendChild(iframe);
+
+            window.addEventListener('message', (event) => {
+                if (event.source !== iframe.contentWindow) return;
+                if (event.data?.dataReceived?.overlayNinja) {
+                    processInput(event.data.dataReceived.overlayNinja);
+                }
+            });
+
+            const ConnectionManager = {
+                setupMainSocket() {
+                    const target = urlParams.get('server') || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja/api');
+                    this.setupSocket(
+                        target,
+                        session,
+                        2,
+                        1,
+                        (data) => processInput(data)
+                    );
+                },
+                setupExtensionSocket() {
+                    if (urlParams.has('server2') || urlParams.has('server3')) {
+                        const serverURL = urlParams.has('server2')
+                            ? (urlParams.get('server2') || 'wss://io.socialstream.ninja/extension')
+                            : (urlParams.get('server3') || 'wss://io.socialstream.ninja/extension');
+
+                        this.setupSocket(
+                            serverURL,
+                            session,
+                            3,
+                            4,
+                            (data) => {
+                                if (urlParams.has('server2') || urlParams.has('server3')) {
+                                    processInput(data);
+                                }
+                            }
+                        );
+                    }
+                },
+                setupSocket(serverURL, room, outChannel, inChannel, messageHandler) {
+                    let socket = null;
+                    let attempts = 1;
+                    let reconnectTimer = null;
+
+                    const connect = () => {
+                        if (reconnectTimer) {
+                            clearTimeout(reconnectTimer);
+                            reconnectTimer = null;
+                        }
+                        if (socket) {
+                            socket.onclose = null;
+                            socket.close();
+                        }
+
+                        socket = new WebSocket(serverURL);
+
+                        socket.onclose = () => {
+                            reconnectTimer = setTimeout(() => {
+                                attempts += 1;
+                                connect();
+                            }, 100 * attempts);
+                        };
+
+                        socket.onopen = () => {
+                            attempts = 1;
+                            socket.send(JSON.stringify({ join: room, out: outChannel, in: inChannel }));
+                        };
+
+                        socket.onerror = () => socket.close();
+
+                        socket.addEventListener('message', (event) => {
+                            if (!event.data) return;
+                            try {
+                                const data = JSON.parse(event.data);
+                                const resp = messageHandler(data);
+                                if (resp !== null && data.get) {
+                                    const ret = { callback: { get: data.get, result: resp } };
+                                    socket.send(JSON.stringify(ret));
+                                }
+                            } catch (err) {
+                                debugLog('socket message parse error', err);
+                            }
+                        });
+                    };
+
+                    connect();
+                }
+            };
+
+            ConnectionManager.setupMainSocket();
+            ConnectionManager.setupExtensionSocket();
+        }
+
+        function init() {
+            titleEl.textContent = settings.title;
+            if (!settings.showTotals) {
+                document.querySelector('.stats').classList.add('hidden');
+            }
+            if (!settings.showList) {
+                topListEl.classList.add('hidden');
+            }
+
+            registerManualAliases();
+            registerPlaceCoords();
+            settings.region = normalizeRegionKey(settings.region);
+
+            loadData().then(([isoData, worldData, usStatesData, caGeo, mxGeo, cityData, regionalCityDataRaw]) => {
+                hydrateIsoLookups(isoData);
+                atlasFeatures = topojson.feature(worldData, worldData.objects.countries).features;
+                attachIsoToFeatures();
+                // Build state/province features
+                const collected = [];
+                try {
+                    if (usStatesData?.objects?.states) {
+                        const usFeats = topojson.feature(usStatesData, usStatesData.objects.states).features;
+                        usFeats.forEach(f => {
+                            f.properties.iso_a2 = 'US';
+                            const abbr = US_STATE_ABBR[f.id] || US_STATE_ABBR[f.properties?.id] || US_STATE_ABBR[f.properties?.STATEFP];
+                            if (abbr) f.properties.abbr = abbr;
+                            const normName = normalizeForMatch(f.properties.name);
+                            const normAbbr = abbr ? normalizeForMatch(abbr) : null;
+                            if (normName) {
+                                placeFeatureLookup.set(normName, f);
+                                placeFeatureLookup.set(`${normName}|US`, f);
+                            }
+                            if (normAbbr) {
+                                placeFeatureLookup.set(normAbbr, f);
+                                placeFeatureLookup.set(`${normAbbr}|US`, f);
+                            }
+                            collected.push(f);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('US state features failed', e);
+                }
+                try {
+                    if (caGeo?.features?.length) {
+                        caGeo.features.forEach(f => {
+                            f.properties.iso_a2 = 'CA';
+                            const name = f.properties.name || '';
+                            const normName = normalizeForMatch(name);
+                            const abbr = CA_PROV_ABBR[normName] || CA_PROV_ABBR[name?.toLowerCase?.()] || null;
+                            const normAbbr = abbr ? normalizeForMatch(abbr) : null;
+                            if (normName) {
+                                placeFeatureLookup.set(normName, f);
+                                placeFeatureLookup.set(`${normName}|CA`, f);
+                            }
+                            if (normAbbr) {
+                                f.properties.abbr = abbr;
+                                placeFeatureLookup.set(normAbbr, f);
+                                placeFeatureLookup.set(`${normAbbr}|CA`, f);
+                            }
+                            collected.push(f);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('CA province features failed', e);
+                }
+                try {
+                    if (mxGeo?.features?.length) {
+                        mxGeo.features.forEach(f => {
+                            f.properties.iso_a2 = 'MX';
+                            const name = f.properties.name || '';
+                            const normName = normalizeForMatch(name);
+                            const abbr = MX_STATE_ABBR[normName] || MX_STATE_ABBR[name?.toLowerCase?.()] || null;
+                            const normAbbr = abbr ? normalizeForMatch(abbr) : null;
+                            if (normName) {
+                                placeFeatureLookup.set(normName, f);
+                                placeFeatureLookup.set(`${normName}|MX`, f);
+                            }
+                            if (normAbbr) {
+                                f.properties.abbr = abbr;
+                                placeFeatureLookup.set(normAbbr, f);
+                                placeFeatureLookup.set(`${normAbbr}|MX`, f);
+                            }
+                            collected.push(f);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('MX state features failed', e);
+                }
+                stateFeatures = collected;
+                regionalCityData = Array.isArray(regionalCityDataRaw) ? regionalCityDataRaw : [];
+                registerCityDataset(cityData);
+                registerRegionalCities(settings.region);
+                renderMap({ preferMarkerFit: settings.autoFitMarkers });
+                updateStats();
+                updateTopList();
+                ready = true;
+                updateStatusBanner();
+                window.addEventListener('resize', () => renderMap({ preferMarkerFit: settings.autoFitMarkers }));
+                if (pendingMessages.length) {
+                    pendingMessages.splice(0).forEach(msg => handleChatMessage(msg));
+                }
+                setupConnections();
+            }).catch((error) => {
+                console.error('Failed to load map data', error);
+                setStatus('Map failed to load (data missing)');
+            });
+        }
+
+        init();
+    })();
+    </script>
+</body>
+</html>
