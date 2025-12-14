@@ -3961,6 +3961,15 @@ input:checked + .slider:before {
                                         ⌚ Queue + Show messages for at least <input type="number" style="max-width: 8ch;" max="999999" min="1" value="10000" size="6" data-numbersetting2="queuetime" />ms
                                     </span>
                                 </div>
+                                <div title="Rotate through the last N highlighted messages endlessly, showing each for the specified duration.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="rotate" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="rotate-featured-messages">
+                                        🔄 Rotate last <input type="number" style="max-width: 4ch;" max="10" min="1" value="5" size="2" data-numbersetting2="rotatecount" /> messages every <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="10000" size="6" data-numbersetting2="rotatetime" />ms
+                                    </span>
+                                </div>
                                 <div title="Console prints featured message payloads so developers can inspect live data updates.">
                                     <label class="switch">
                                         <input type="checkbox" data-param2="debug" />
