@@ -9,6 +9,9 @@ There is an easy to use sandbox to play with some of the common API commands and
 **Table of Contents**
 
   - [WebSocket API](#websocket-api)
+    - [Choose Your Use Case](#choose-your-use-case)
+    - [Quick Start: Remote Control (StreamDeck / Bitfocus Companion)](#quick-start-remote-control-streamdeck--bitfocus-companion)
+    - [Quick Start: Receiving Chat Messages (Python / Node.js)](#quick-start-receiving-chat-messages-python--nodejs)
     - [Connecting to the API Server](#connecting-to-the-api-server)
     - [Channel System Explained](#channel-system-explained)
     - [Available Commands](#available-commands)
