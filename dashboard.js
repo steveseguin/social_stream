@@ -136,6 +136,24 @@ function updateFeatureStatus() {
     // Hype Mode
     const hypeStatus = document.getElementById('hype-status');
     hypeStatus.className = 'status-indicator ' + (settings.hypemode ? 'status-active' : 'status-inactive');
+
+    // Spotify
+    const spotifyStatus = document.getElementById('spotify-status');
+    if (spotifyStatus) {
+        spotifyStatus.className = 'status-indicator ' + (settings.spotifyEnabled ? 'status-active' : 'status-inactive');
+    }
+
+    // Streamer.bot
+    const streamerbotStatus = document.getElementById('streamerbot-status');
+    if (streamerbotStatus) {
+        streamerbotStatus.className = 'status-indicator ' + (settings.streamerbot ? 'status-active' : 'status-inactive');
+    }
+
+    // Custom JS
+    const customjsStatus = document.getElementById('customjs-status');
+    if (customjsStatus) {
+        customjsStatus.className = 'status-indicator ' + (settings.customJsEnabled ? 'status-active' : 'status-inactive');
+    }
 }
 
 
