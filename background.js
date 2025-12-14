@@ -7277,7 +7277,6 @@ function setupSocketDock() {
             conConDock = nextAttempt;
             reconnectionTimeoutDock = setTimeout(function () {
                 if ((settings.server2 || settings.server3) && isExtensionOn) {
-                    socketserverDock = new WebSocket(serverURLDock);
                     setupSocketDock();
                 } else {
                     socketserverDock = false;
