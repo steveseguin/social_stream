@@ -5439,7 +5439,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="disable-host-chat">🚫🗨️ Disable the host chat and block functions </span>
                                 </div>
-								 <div title="See documentation on socialstream.ninja for details.">
+								 <div title="Allows external apps (Python, Node, StreamDeck, etc.) to control SSN via HTTP/WebSocket API. Enable this to send commands like sendChat, blockUser, etc. to the extension.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="socketserver" />
                                         <span class="slider round"></span>
@@ -5449,21 +5449,21 @@ input:checked + .slider:before {
                                         <span data-translate="remote-httpwss-api-control-extension">remote API control of extension</span>
                                     </a>
                                 </div>
-                                <div title="This is needed if HTTP/WSS commands are being sent to the dock for remote control, to bypass p2p if needed, and to publish featured messages via server instead of P2P">
+                                <div title="Connects the Dock/Featured pages to the API server for remote control. Needed if you want to send commands (clear, feature, nextInQueue, etc.) directly to the Dock via HTTP/WebSocket.">
                                     <label class="switch">
                                         <input type="checkbox" id="server" data-both="server" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="send-featured-chat-via-server-instead-of-p2p">Enable Dock to use and publish via API server</span>
                                 </div>
-                                <div  title="Mainly useful if P2P not working. It can also be used to send messages to the Dock via the API using channel 3/4">
+                                <div  title="IMPORTANT: Enable this to receive chat messages via WebSocket API! Routes chat from Twitch/YouTube/etc. through the API server (channel 4) so external apps can listen. Required for Python/Node chat listeners.">
                                     <label class="switch">
                                         <input type="checkbox" id="server2" data-both="server2" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="send-messages-to-dock-via-server-instead-of-p2p">Send messages to Dock from Extension via server</span>
+                                    <span data-translate="send-messages-to-dock-via-server-instead-of-p2p">📡 Send chat messages to API server (for external listeners)</span>
                                 </div>
-                                <div title="Mainly useful if P2P not working in cases where you want to send messages to a social end point via the Dock page.">
+                                <div title="Allows the Dock page to send commands back to the extension via the API server instead of P2P. Useful if P2P connections are blocked or unreliable.">
                                     <label class="switch" >
                                         <input type="checkbox" id="server3" data-both="server3" />
                                         <span class="slider round"></span>

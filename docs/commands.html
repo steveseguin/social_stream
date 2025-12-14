@@ -206,7 +206,12 @@
 				</div>
 				
 				<div class="command-note">
-					<p><strong>Important:</strong> You must enable the Server API toggle in the extension menu for API functionality to work.</p>
+					<p><strong>Required Settings (Global settings → Mechanics):</strong></p>
+					<ul style="text-align:left; margin: 10px 0;">
+						<li><strong>🎮 Remote Control (StreamDeck/Bitfocus):</strong> Enable <em>"Enable remote API control of extension"</em> (Toggle 1) — Connect to <strong>channel 1</strong></li>
+						<li><strong>📡 Chat Listener (Python/Node apps):</strong> Enable Toggle 1 + <em>"Send chat messages to API server"</em> (Toggle 3) — Connect to <strong>channel 4</strong></li>
+					</ul>
+					<p>See the <a href="../api.md">full API documentation</a> for detailed setup guides and code samples.</p>
 				</div>
 			
 			<div class="command-card">
@@ -241,19 +246,23 @@
 				
 				<div class="channel-system">
 					<h4>Channel System</h4>
-					<p>The API uses a channel system for message routing control:</p>
+					<p>The API uses a channel system for message routing:</p>
 					<div class="code-block">
 						<pre>
-	- Channel 1: Main communication channel (default)
-	- Channel 2: Typically used for dock.html communication
-	- Channel 3: Often used for extension communication
-	- Channel 4: Commonly used for featured.html communication
-	- Channel 5: Used for waitlist.html communication
+	- Channel 1: Remote control commands (default for StreamDeck/Bitfocus)
+	- Channel 2: Dock page output
+	- Channel 3: Extension receives commands from Dock
+	- Channel 4: <strong>Chat messages from Extension</strong> (use this to receive Twitch/YouTube chat!)
+	- Channel 5: Waitlist/giveaway communication
 	- Channels 6-9: Reserved for future use</pre>
 					</div>
-					<p>You can specify input and output channels when connecting:</p>
+					<p>Connect with your desired channel:</p>
 					<div class="code-block">
-						<pre>wss://io.socialstream.ninja/join/SESSION_ID/IN_CHANNEL/OUT_CHANNEL</pre>
+						<pre>// To receive chat messages (listen on channel 4):
+wss://io.socialstream.ninja/join/SESSION_ID/4
+
+// To send commands (channel 1 default):
+wss://io.socialstream.ninja/join/SESSION_ID</pre>
 					</div>
 				</div>
 			</div>
