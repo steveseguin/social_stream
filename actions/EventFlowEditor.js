@@ -1,12 +1,13 @@
 // Predefined flow templates for quick setup
+// Node positions are arranged top-to-bottom to match visual flow direction
 const FLOW_TEMPLATES = {
     // === SIMPLE TEMPLATES ===
     'chat-relay': {
         name: 'Chat Relay to Discord',
         description: 'Forward chat messages to a Discord webhook',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'webhook', x: 400, y: 150, config: { url: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN', method: 'POST', body: '{"content": "{username}: {message}"}', includeMessage: false, syncMode: false, blockOnFailure: false } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 50, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'webhook', x: 100, y: 230, config: { url: 'https://discord.com/api/webhooks/YOUR_WEBHOOK_ID/YOUR_WEBHOOK_TOKEN', method: 'POST', body: '{"content": "{username}: {message}"}', includeMessage: false, syncMode: false, blockOnFailure: false } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -14,8 +15,8 @@ const FLOW_TEMPLATES = {
         name: 'Song Request (!sr)',
         description: 'Queue Spotify tracks from chat with !sr command',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'messageStartsWith', x: 100, y: 150, config: { text: '!sr ' } },
-            { id: 'action_1', type: 'action', actionType: 'spotifyQueue', x: 400, y: 150, config: { extractFromMessage: true, announceResult: true } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageStartsWith', x: 100, y: 50, config: { text: '!sr ' } },
+            { id: 'action_1', type: 'action', actionType: 'spotifyQueue', x: 100, y: 230, config: { extractFromMessage: true, announceResult: true } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -23,8 +24,8 @@ const FLOW_TEMPLATES = {
         name: 'Channel Points Sound',
         description: 'Play a sound when channel points are redeemed',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'channelPointRedemption', x: 100, y: 150, config: { rewardName: '' } },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 400, y: 150, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'channelPointRedemption', x: 100, y: 50, config: { rewardName: '' } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 100, y: 230, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -32,8 +33,8 @@ const FLOW_TEMPLATES = {
         name: 'TTS for Chat',
         description: 'Read chat messages aloud with text-to-speech',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'ttsSpeak', x: 400, y: 150, config: { text: '{username} says {message}', voice: '', rate: 1, pitch: 1, volume: 1 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 50, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'ttsSpeak', x: 100, y: 230, config: { text: '{username} says {message}', voice: '', rate: 1, pitch: 1, volume: 1 } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -41,9 +42,9 @@ const FLOW_TEMPLATES = {
         name: 'Donation Alert',
         description: 'Play sound and show text when someone donates',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 100, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 350, y: 100, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
-            { id: 'action_2', type: 'action', actionType: 'showText', x: 350, y: 200, config: { text: '💰 {username} donated!', x: 50, y: 50, width: 50, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(0,0,0,0.8)', padding: 20, borderRadius: 10, animation: 'bounceIn', animationDuration: 500, duration: 5000 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 185, y: 50, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 230, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 230, config: { text: '💰 {username} donated!', x: 50, y: 50, width: 50, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(0,0,0,0.8)', padding: 20, borderRadius: 10, animation: 'bounceIn', animationDuration: 500, duration: 5000 } }
         ],
         connections: [
             { from: 'trigger_1', to: 'action_1' },
@@ -54,10 +55,10 @@ const FLOW_TEMPLATES = {
         name: 'Skip Song Command',
         description: 'Let mods skip the current Spotify track with !skip',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'messageEquals', x: 100, y: 100, config: { text: '!skip' } },
-            { id: 'trigger_2', type: 'trigger', triggerType: 'userRole', x: 100, y: 200, config: { role: 'mod' } },
-            { id: 'logic_1', type: 'logic', logicType: 'AND', x: 300, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'spotifySkip', x: 500, y: 150, config: {} }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageEquals', x: 50, y: 50, config: { text: '!skip' } },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'userRole', x: 320, y: 50, config: { role: 'mod' } },
+            { id: 'logic_1', type: 'logic', logicType: 'AND', x: 185, y: 230, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'spotifySkip', x: 185, y: 410, config: {} }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -71,9 +72,9 @@ const FLOW_TEMPLATES = {
         name: 'Bad Words Filter',
         description: 'Block messages containing profanity',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
-            { id: 'logic_1', type: 'logic', logicType: 'CHECK_BAD_WORDS', x: 300, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 500, y: 150, config: {} }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 50, config: {} },
+            { id: 'logic_1', type: 'logic', logicType: 'CHECK_BAD_WORDS', x: 100, y: 230, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 100, y: 410, config: {} }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -84,12 +85,12 @@ const FLOW_TEMPLATES = {
         name: 'Chat Alert Overlay',
         description: 'Show avatar and text overlay for new messages',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 50, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'continueAsync', x: 200, y: 150, config: {} },
-            { id: 'action_2', type: 'action', actionType: 'showAvatar', x: 350, y: 100, config: { avatarUrl: '', width: 15, height: 15, x: 5, y: 5, randomX: false, randomY: false, borderRadius: 50, borderWidth: 3, borderColor: '#ffffff', shadow: true, duration: 5000, clearFirst: true } },
-            { id: 'action_3', type: 'action', actionType: 'showText', x: 500, y: 100, config: { text: '{username}: {message}', x: 25, y: 5, width: 70, fontSize: 32, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 10, outlineWidth: 0, outlineColor: '#000000', animation: 'fadeIn', animationDuration: 300, duration: 5000, clearFirst: false } },
-            { id: 'action_4', type: 'action', actionType: 'delay', x: 650, y: 150, config: { delayMs: 5000 } },
-            { id: 'action_5', type: 'action', actionType: 'clearLayer', x: 800, y: 150, config: { layer: 'all' } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 50, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'continueAsync', x: 100, y: 200, config: {} },
+            { id: 'action_2', type: 'action', actionType: 'showAvatar', x: 100, y: 350, config: { avatarUrl: '', width: 15, height: 15, x: 5, y: 5, randomX: false, randomY: false, borderRadius: 50, borderWidth: 3, borderColor: '#ffffff', shadow: true, duration: 5000, clearFirst: true } },
+            { id: 'action_3', type: 'action', actionType: 'showText', x: 100, y: 500, config: { text: '{username}: {message}', x: 25, y: 5, width: 70, fontSize: 32, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#ffffff', backgroundColor: 'rgba(0,0,0,0.7)', padding: 15, borderRadius: 10, outlineWidth: 0, outlineColor: '#000000', animation: 'fadeIn', animationDuration: 300, duration: 5000, clearFirst: false } },
+            { id: 'action_4', type: 'action', actionType: 'delay', x: 100, y: 650, config: { delayMs: 5000 } },
+            { id: 'action_5', type: 'action', actionType: 'clearLayer', x: 100, y: 800, config: { layer: 'all' } }
         ],
         connections: [
             { from: 'trigger_1', to: 'action_1' },
@@ -103,8 +104,8 @@ const FLOW_TEMPLATES = {
         name: 'VIP Message Highlight',
         description: 'Show special overlay for VIP/sub messages',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'userRole', x: 100, y: 150, config: { role: 'vip' } },
-            { id: 'action_1', type: 'action', actionType: 'showText', x: 400, y: 150, config: { text: '⭐ {username}: {message}', x: 10, y: 80, width: 80, fontSize: 36, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#FFD700', backgroundColor: 'rgba(0,0,0,0.8)', padding: 15, borderRadius: 10, animation: 'slideInLeft', animationDuration: 300, duration: 6000 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'userRole', x: 100, y: 50, config: { role: 'vip' } },
+            { id: 'action_1', type: 'action', actionType: 'showText', x: 100, y: 230, config: { text: '⭐ {username}: {message}', x: 10, y: 80, width: 80, fontSize: 36, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#FFD700', backgroundColor: 'rgba(0,0,0,0.8)', padding: 15, borderRadius: 10, animation: 'slideInLeft', animationDuration: 300, duration: 6000 } }
         ],
         connections: [{ from: 'trigger_1', to: 'action_1' }]
     },
@@ -112,11 +113,11 @@ const FLOW_TEMPLATES = {
         name: 'Block Links (Non-Mods)',
         description: 'Block messages with links unless from mods',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'containsLink', x: 100, y: 100, config: {} },
-            { id: 'trigger_2', type: 'trigger', triggerType: 'userRole', x: 100, y: 200, config: { role: 'mod' } },
-            { id: 'logic_1', type: 'logic', logicType: 'NOT', x: 300, y: 200, config: {} },
-            { id: 'logic_2', type: 'logic', logicType: 'AND', x: 450, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 650, y: 150, config: {} }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'containsLink', x: 50, y: 50, config: {} },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'userRole', x: 320, y: 50, config: { role: 'mod' } },
+            { id: 'logic_1', type: 'logic', logicType: 'NOT', x: 320, y: 230, config: {} },
+            { id: 'logic_2', type: 'logic', logicType: 'AND', x: 185, y: 410, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 185, y: 590, config: {} }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_2' },
@@ -129,10 +130,10 @@ const FLOW_TEMPLATES = {
         name: 'Now Playing Command',
         description: 'Show current Spotify track with !np or !song',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'messageEquals', x: 100, y: 100, config: { text: '!np' } },
-            { id: 'trigger_2', type: 'trigger', triggerType: 'messageEquals', x: 100, y: 200, config: { text: '!song' } },
-            { id: 'logic_1', type: 'logic', logicType: 'OR', x: 300, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'spotifyNowPlaying', x: 500, y: 150, config: { format: '🎵 Now playing: {song} by {artist}' } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageEquals', x: 50, y: 50, config: { text: '!np' } },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'messageEquals', x: 320, y: 50, config: { text: '!song' } },
+            { id: 'logic_1', type: 'logic', logicType: 'OR', x: 185, y: 230, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'spotifyNowPlaying', x: 185, y: 410, config: { format: '🎵 Now playing: {song} by {artist}' } }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -146,11 +147,11 @@ const FLOW_TEMPLATES = {
         name: 'Safe Song Requests',
         description: 'Song requests with bad words filter',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'messageStartsWith', x: 50, y: 150, config: { text: '!sr ' } },
-            { id: 'logic_1', type: 'logic', logicType: 'CHECK_BAD_WORDS', x: 250, y: 150, config: {} },
-            { id: 'logic_2', type: 'logic', logicType: 'NOT', x: 400, y: 200, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 550, y: 100, config: {} },
-            { id: 'action_2', type: 'action', actionType: 'spotifyQueue', x: 550, y: 200, config: { extractFromMessage: true, announceResult: true } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'messageStartsWith', x: 185, y: 50, config: { text: '!sr ' } },
+            { id: 'logic_1', type: 'logic', logicType: 'CHECK_BAD_WORDS', x: 185, y: 230, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'blockMessage', x: 50, y: 410, config: {} },
+            { id: 'logic_2', type: 'logic', logicType: 'NOT', x: 320, y: 410, config: {} },
+            { id: 'action_2', type: 'action', actionType: 'spotifyQueue', x: 320, y: 590, config: { extractFromMessage: true, announceResult: true } }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -163,10 +164,10 @@ const FLOW_TEMPLATES = {
         name: 'Raid Welcome',
         description: 'Welcome raiders with sound and overlay',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'eventType', x: 100, y: 150, config: { eventType: 'raid' } },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 350, y: 80, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
-            { id: 'action_2', type: 'action', actionType: 'showText', x: 350, y: 180, config: { text: '🎉 RAID! Welcome {username} and their community!', x: 10, y: 40, width: 80, fontSize: 42, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FF6B6B', backgroundColor: 'rgba(0,0,0,0.9)', padding: 25, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
-            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 350, y: 280, config: { text: 'Welcome raiders from {username}!', voice: '', rate: 1, pitch: 1, volume: 1 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'eventType', x: 185, y: 50, config: { eventType: 'raid' } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 230, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 230, config: { text: '🎉 RAID! Welcome {username} and their community!', x: 10, y: 40, width: 80, fontSize: 42, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FF6B6B', backgroundColor: 'rgba(0,0,0,0.9)', padding: 25, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
+            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 185, y: 410, config: { text: 'Welcome raiders from {username}!', voice: '', rate: 1, pitch: 1, volume: 1 } }
         ],
         connections: [
             { from: 'trigger_1', to: 'action_1' },
@@ -178,10 +179,10 @@ const FLOW_TEMPLATES = {
         name: 'Random Message Highlight',
         description: 'Randomly highlight 10% of chat messages',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 100, y: 150, config: {} },
-            { id: 'logic_1', type: 'logic', logicType: 'RANDOM', x: 300, y: 150, config: { probability: 10 } },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 500, y: 100, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 0.5 } },
-            { id: 'action_2', type: 'action', actionType: 'showText', x: 500, y: 200, config: { text: '✨ {username}: {message}', x: 10, y: 10, width: 80, fontSize: 36, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#00FF00', backgroundColor: 'rgba(0,0,0,0.8)', padding: 15, borderRadius: 10, animation: 'pulse', animationDuration: 300, duration: 5000 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'anyMessage', x: 185, y: 50, config: {} },
+            { id: 'logic_1', type: 'logic', logicType: 'RANDOM', x: 185, y: 230, config: { probability: 10 } },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 410, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 0.5 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '✨ {username}: {message}', x: 10, y: 10, width: 80, fontSize: 36, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'left', color: '#00FF00', backgroundColor: 'rgba(0,0,0,0.8)', padding: 15, borderRadius: 10, animation: 'pulse', animationDuration: 300, duration: 5000 } }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -193,12 +194,12 @@ const FLOW_TEMPLATES = {
         name: 'Big Donation Alert',
         description: 'Special alert for donations over $10',
         nodes: [
-            { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 100, y: 100, config: {} },
-            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 100, y: 200, config: { property: 'donationAmount', operator: 'gte', value: 10 } },
-            { id: 'logic_1', type: 'logic', logicType: 'AND', x: 300, y: 150, config: {} },
-            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 500, y: 100, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
-            { id: 'action_2', type: 'action', actionType: 'showText', x: 500, y: 200, config: { text: '🎉 BIG DONATION! {username} donated ${donationAmount}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
-            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 700, y: 150, config: { text: 'Wow! {username} just donated ${donationAmount}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
+            { id: 'trigger_1', type: 'trigger', triggerType: 'hasDonation', x: 50, y: 50, config: {} },
+            { id: 'trigger_2', type: 'trigger', triggerType: 'compareProperty', x: 320, y: 50, config: { property: 'donationAmount', operator: 'gte', value: 10 } },
+            { id: 'logic_1', type: 'logic', logicType: 'AND', x: 185, y: 230, config: {} },
+            { id: 'action_1', type: 'action', actionType: 'playAudioClip', x: 50, y: 410, config: { audioUrl: 'https://vdo.ninja/media/join.wav', volume: 1.0 } },
+            { id: 'action_2', type: 'action', actionType: 'showText', x: 320, y: 410, config: { text: '🎉 BIG DONATION! {username} donated ${donationAmount}!', x: 20, y: 30, width: 60, fontSize: 48, fontFamily: 'Arial', fontWeight: 'bold', textAlign: 'center', color: '#FFD700', backgroundColor: 'rgba(139,0,0,0.9)', padding: 30, borderRadius: 15, animation: 'bounceIn', animationDuration: 500, duration: 10000 } },
+            { id: 'action_3', type: 'action', actionType: 'ttsSpeak', x: 320, y: 590, config: { text: 'Wow! {username} just donated ${donationAmount}! Thank you so much!', voice: '', rate: 1, pitch: 1, volume: 1 } }
         ],
         connections: [
             { from: 'trigger_1', to: 'logic_1' },
@@ -1321,7 +1322,7 @@ class EventFlowEditor {
         }
     }
 
-    async importSingleFlow(flowData) {
+    async importSingleFlow(flowData, returnFlow = false) {
         try {
             // Remove metadata fields
             const cleanFlow = { ...flowData };
@@ -1329,14 +1330,14 @@ class EventFlowEditor {
             delete cleanFlow.version;
             delete cleanFlow.exportedBy;
             delete cleanFlow.totalFlows;
-            
+
             // Clear ID to force new one
             delete cleanFlow.id;
-            
+
             // Check for duplicate names
             const flows = await this.eventFlowSystem.getAllFlows();
             const existingNames = flows.map(f => f.name);
-            
+
             if (existingNames.includes(cleanFlow.name)) {
                 // Add suffix to make unique
                 let suffix = 1;
@@ -1349,10 +1350,15 @@ class EventFlowEditor {
 
             // Import the flow
             const savedFlow = await this.eventFlowSystem.saveFlow(cleanFlow);
+
+            // Return the saved flow if requested, otherwise return success boolean
+            if (returnFlow) {
+                return savedFlow;
+            }
             return savedFlow !== null;
         } catch (error) {
             console.error('Error importing single flow:', error);
-            return false;
+            return returnFlow ? null : false;
         }
     }
 
@@ -1378,10 +1384,12 @@ class EventFlowEditor {
                 to: idMap[conn.to] || conn.to
             }));
 
-            // Import using existing method
-            const success = await this.importSingleFlow(flowData);
-            if (success) {
-                await this.loadFlows();
+            // Import using existing method - get the saved flow back
+            const savedFlow = await this.importSingleFlow(flowData, true);
+            if (savedFlow && savedFlow.id) {
+                await this.loadFlowList();
+                // Select the newly imported flow so it's visible in the editor
+                await this.loadFlow(savedFlow.id);
                 this.showNotification(`Template "${template.name}" loaded!`, 'success');
             } else {
                 this.showNotification('Failed to load template', 'warning');

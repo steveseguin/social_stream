@@ -1514,6 +1514,34 @@ input:checked + .slider:before {
     min-width: 70px;
 }
 
+.spotify-command-row .spotify-cmd-trigger {
+    background: var(--color-accent-subtle);
+    border: 1px solid transparent;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: monospace;
+    min-width: 90px;
+    max-width: 150px;
+    color: inherit;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.spotify-command-row .spotify-cmd-trigger:hover {
+    border-color: var(--collapsible-border-color);
+}
+
+.spotify-command-row .spotify-cmd-trigger:focus {
+    outline: none;
+    border-color: var(--accent-color, #007bff);
+    background: var(--options-group-background-color);
+}
+
+.spotify-command-row .spotify-cmd-trigger::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
 .spotify-command-row .spotify-cmd-desc {
     flex: 1;
     color: var(--text-secondary);
@@ -10988,7 +11016,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!song</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!song" placeholder="!song" title="Command trigger(s). Supports comma-separated aliases like !song, !cancion" />
                                             <span class="spotify-cmd-desc">Show current track</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
@@ -11002,7 +11030,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!np</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!np" placeholder="!np" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Alias for !song</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
@@ -11021,7 +11049,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!skip</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!skip" placeholder="!skip" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Skip to next track</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11035,7 +11063,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!previous</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!previous" placeholder="!previous" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Go to previous track</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11049,7 +11077,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!pause</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!pause" placeholder="!pause" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Pause playback</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11063,7 +11091,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!play</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!play" placeholder="!play" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Resume playback</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11077,7 +11105,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!volume</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!volume" placeholder="!volume" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Set volume (0-100)</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11096,7 +11124,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!queue</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!queue" placeholder="!queue" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Add song to queue</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
@@ -11110,8 +11138,22 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!sr</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!sr" placeholder="!sr" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Song request (alias)</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" checked /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!revoke" data-default-roles="anyone">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <input type="text" class="spotify-cmd-trigger" value="!revoke" placeholder="!revoke" title="Command trigger(s). Supports comma-separated aliases" />
+                                            <span class="spotify-cmd-desc">Remove your last request</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
                                                 <label><input type="checkbox" value="subscriber" /> Subs</label>
