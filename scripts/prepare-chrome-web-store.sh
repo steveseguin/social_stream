@@ -40,6 +40,20 @@ WEBSITE_HOSTED_FILES=(
     "actions.html"
     "poll.html"
     "hype.html"
+    "wordcloud.html"
+    "waitlist.html"
+    "tipjar.html"
+    "ticker.html"
+    "sampleoverlay.html"
+    "samplefeatured.html"
+    "sampleemote.html"
+)
+
+# Misc files not needed for extension
+MISC_FILES_TO_REMOVE=(
+    "badwords_sample.txt"
+    "sample_midi_messages.txt"
+    "robots.txt"
 )
 
 echo "=== Preparing Chrome Web Store Build ==="
@@ -49,14 +63,23 @@ rm -rf "$BUILD_DIR"
 mkdir -p "$BUILD_DIR"
 
 echo "Copying files to build directory..."
-# Copy everything except docs/, .git/, and build artifacts
+# Copy everything except excluded folders and files
 rsync -av \
     --exclude='.git/' \
+    --exclude='.github/' \
+    --exclude='.gitignore' \
+    --exclude='.gitattributes' \
+    --exclude='.githooks/' \
     --exclude='docs/' \
+    --exclude='games/' \
+    --exclude='lite/' \
+    --exclude='tests/' \
+    --exclude='scripts/' \
+    --exclude='themes/' \
     --exclude='cws-build/' \
     --exclude='web-ext-artifacts/' \
     --exclude='node_modules/' \
-    --exclude='.github/' \
+    --exclude='*.md' \
     ./ "$BUILD_DIR/"
 
 echo "Removing adult site source files..."
@@ -68,6 +91,13 @@ done
 
 echo "Removing website-hosted files (OBS overlay pages)..."
 for file in "${WEBSITE_HOSTED_FILES[@]}"; do
+    if [[ -f "$BUILD_DIR/$file" ]]; then
+        rm -v "$BUILD_DIR/$file"
+    fi
+done
+
+echo "Removing misc unnecessary files..."
+for file in "${MISC_FILES_TO_REMOVE[@]}"; do
     if [[ -f "$BUILD_DIR/$file" ]]; then
         rm -v "$BUILD_DIR/$file"
     fi
@@ -121,8 +151,10 @@ echo "=== Build Summary ==="
 echo "Content scripts: $ORIGINAL_CONTENT_SCRIPTS -> $FILTERED_CONTENT_SCRIPTS (removed $((ORIGINAL_CONTENT_SCRIPTS - FILTERED_CONTENT_SCRIPTS)))"
 echo "Host permissions: $ORIGINAL_HOST_PERMS -> $FILTERED_HOST_PERMS (removed $((ORIGINAL_HOST_PERMS - FILTERED_HOST_PERMS)))"
 echo ""
-echo "Removed folders: docs/"
+echo "Excluded folders: docs/, games/, lite/, tests/, scripts/, themes/, .github/, .githooks/"
+echo "Excluded patterns: *.md (markdown files)"
 echo "Removed adult site files: ${#ADULT_SOURCE_FILES[@]} source files"
 echo "Removed website-hosted files: ${#WEBSITE_HOSTED_FILES[@]} overlay pages"
+echo "Removed misc files: ${#MISC_FILES_TO_REMOVE[@]} files"
 echo ""
 echo "Chrome Web Store build ready in: $BUILD_DIR/"
