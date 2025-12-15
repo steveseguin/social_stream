@@ -2241,8 +2241,18 @@ async function importSettings(item = false) {
 	}
 	log(importFile);
 	try {
-		importFile = await importFile[0].getFile();
-		importFile = await importFile.text(); // fail if IPC
+		if (isSSAPP) {
+			// In Electron, showOpenDialog already returns the file content as a string
+			if (typeof importFile === 'number' || !importFile) {
+				console.error('[Settings] Failed to read import file: dialog canceled or error');
+				return;
+			}
+			// importFile is already the file content string
+		} else {
+			// Browser File System Access API returns FileSystemFileHandle array
+			importFile = await importFile[0].getFile();
+			importFile = await importFile.text();
+		}
 	} catch (e) {
 		console.error('[Settings] Failed to read import file:', e.message);
 		return;
