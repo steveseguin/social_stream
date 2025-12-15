@@ -75,6 +75,7 @@ rsync -av \
     --exclude='lite/' \
     --exclude='tests/' \
     --exclude='scripts/' \
+    --exclude='themes/' \
     --exclude='cws-build/' \
     --exclude='web-ext-artifacts/' \
     --exclude='node_modules/' \
@@ -150,7 +151,7 @@ echo "=== Build Summary ==="
 echo "Content scripts: $ORIGINAL_CONTENT_SCRIPTS -> $FILTERED_CONTENT_SCRIPTS (removed $((ORIGINAL_CONTENT_SCRIPTS - FILTERED_CONTENT_SCRIPTS)))"
 echo "Host permissions: $ORIGINAL_HOST_PERMS -> $FILTERED_HOST_PERMS (removed $((ORIGINAL_HOST_PERMS - FILTERED_HOST_PERMS)))"
 echo ""
-echo "Excluded folders: docs/, games/, lite/, tests/, scripts/, .github/, .githooks/"
+echo "Excluded folders: docs/, games/, lite/, tests/, scripts/, themes/, .github/, .githooks/"
 echo "Excluded patterns: *.md (markdown files)"
 echo "Removed adult site files: ${#ADULT_SOURCE_FILES[@]} source files"
 echo "Removed website-hosted files: ${#WEBSITE_HOSTED_FILES[@]} overlay pages"
