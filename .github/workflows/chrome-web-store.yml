@@ -1,0 +1,65 @@
+name: Prepare Chrome Web Store Release
+on:
+  push:
+    branches:
+      - production
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CWS_BRANCH: chrome-web-store
+
+jobs:
+  prepare-cws-release:
+    if: "!contains(github.event.head_commit.message, '[skip cws]')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read manifest version
+        id: manifest
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare Chrome Web Store build
+        run: |
+          set -euo pipefail
+          chmod +x scripts/prepare-chrome-web-store.sh
+          ./scripts/prepare-chrome-web-store.sh
+
+      - name: Push to chrome-web-store branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          cd cws-build
+
+          git init
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add .
+          git commit -m "Chrome Web Store release v${{ steps.manifest.outputs.version }} [skip cws]"
+          git branch -M "$CWS_BRANCH"
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          git push -f origin "$CWS_BRANCH"
+
+          echo "Published Chrome Web Store build to branch '$CWS_BRANCH'"
+          echo "Version: ${{ steps.manifest.outputs.version }}"
+
+      - name: Create ZIP artifact
+        run: |
+          cd cws-build
+          zip -r ../social-stream-ninja-cws-${{ steps.manifest.outputs.version }}.zip .
+
+      - name: Upload Chrome Web Store ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-web-store-${{ steps.manifest.outputs.version }}
+          path: social-stream-ninja-cws-*.zip
+          if-no-files-found: error
