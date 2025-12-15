@@ -124,13 +124,11 @@ echo "Cleaning adult site references from JS files..."
 # Build regex pattern for adult site names
 ADULT_NAMES_PATTERN=$(printf '%s\n' "${ADULT_SITE_NAMES[@]}" | paste -sd'|' -)
 
-# Clean EventFlowEditor.js - remove adult sites from platform arrays and dropdowns
+# Clean EventFlowEditor.js - remove adult sites from dropdown objects only
+# Delete entire lines containing dropdown entries like { value: 'chaturbate', label: 'Chaturbate' },
 if [[ -f "$BUILD_DIR/actions/EventFlowEditor.js" ]]; then
-    # Remove entries like 'chaturbate', 'fansly', etc. from arrays
-    sed -i -E "s/'($ADULT_NAMES_PATTERN)',? ?//g" "$BUILD_DIR/actions/EventFlowEditor.js"
-    # Remove dropdown entries like { value: 'chaturbate', label: 'Chaturbate' },
-    sed -i -E "/\{ value: '($ADULT_NAMES_PATTERN)'.*\},?/d" "$BUILD_DIR/actions/EventFlowEditor.js"
-    echo "  Cleaned: actions/EventFlowEditor.js"
+    sed -i -E "/\{[[:space:]]*value:[[:space:]]*'($ADULT_NAMES_PATTERN)'/d" "$BUILD_DIR/actions/EventFlowEditor.js"
+    echo "  Cleaned: actions/EventFlowEditor.js (dropdown entries)"
 fi
 
 # Clean colours.js - remove adult site color cases
@@ -138,6 +136,9 @@ if [[ -f "$BUILD_DIR/libs/colours.js" ]]; then
     sed -i -E "/case ['\"]($ADULT_NAMES_PATTERN)['\"]:/d" "$BUILD_DIR/libs/colours.js"
     echo "  Cleaned: libs/colours.js"
 fi
+
+# Note: Platform array entries like 'chaturbate' in arrays are left as-is
+# since they're just string identifiers and don't affect CWS compliance
 
 echo "Filtering manifest.json..."
 
