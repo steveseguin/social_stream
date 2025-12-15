@@ -33,6 +33,7 @@ ADULT_SOURCE_FILES=(
 
 # Website-hosted files (accessed via https://socialstream.ninja, not chrome-extension://)
 # These are overlay/widget pages intended for OBS browser sources, not extension UI
+# Also includes files that load external CDN scripts (CWS rejection risk)
 WEBSITE_HOSTED_FILES=(
     "dock.html"
     "featured.html"
@@ -47,6 +48,21 @@ WEBSITE_HOSTED_FILES=(
     "sampleoverlay.html"
     "samplefeatured.html"
     "sampleemote.html"
+    "giveaway.html"
+    "affiliate.html"
+    "vdo.html"
+    "sampleapi.html"
+    "sources/websocket/bilibili.html"
+)
+
+# Adult site names to filter from JS files (dropdowns, color mappings, etc.)
+ADULT_SITE_NAMES=(
+    "chaturbate"
+    "cherrytv"
+    "myfreecams"
+    "camsoda"
+    "fansly"
+    "simps"
 )
 
 # Misc files not needed for extension
@@ -76,6 +92,7 @@ rsync -av \
     --exclude='tests/' \
     --exclude='scripts/' \
     --exclude='themes/' \
+    --exclude='sources/graveyard/' \
     --exclude='cws-build/' \
     --exclude='web-ext-artifacts/' \
     --exclude='node_modules/' \
@@ -102,6 +119,25 @@ for file in "${MISC_FILES_TO_REMOVE[@]}"; do
         rm -v "$BUILD_DIR/$file"
     fi
 done
+
+echo "Cleaning adult site references from JS files..."
+# Build regex pattern for adult site names
+ADULT_NAMES_PATTERN=$(printf '%s\n' "${ADULT_SITE_NAMES[@]}" | paste -sd'|' -)
+
+# Clean EventFlowEditor.js - remove adult sites from platform arrays and dropdowns
+if [[ -f "$BUILD_DIR/actions/EventFlowEditor.js" ]]; then
+    # Remove entries like 'chaturbate', 'fansly', etc. from arrays
+    sed -i -E "s/'($ADULT_NAMES_PATTERN)',? ?//g" "$BUILD_DIR/actions/EventFlowEditor.js"
+    # Remove dropdown entries like { value: 'chaturbate', label: 'Chaturbate' },
+    sed -i -E "/\{ value: '($ADULT_NAMES_PATTERN)'.*\},?/d" "$BUILD_DIR/actions/EventFlowEditor.js"
+    echo "  Cleaned: actions/EventFlowEditor.js"
+fi
+
+# Clean colours.js - remove adult site color cases
+if [[ -f "$BUILD_DIR/libs/colours.js" ]]; then
+    sed -i -E "/case ['\"]($ADULT_NAMES_PATTERN)['\"]:/d" "$BUILD_DIR/libs/colours.js"
+    echo "  Cleaned: libs/colours.js"
+fi
 
 echo "Filtering manifest.json..."
 
@@ -151,10 +187,11 @@ echo "=== Build Summary ==="
 echo "Content scripts: $ORIGINAL_CONTENT_SCRIPTS -> $FILTERED_CONTENT_SCRIPTS (removed $((ORIGINAL_CONTENT_SCRIPTS - FILTERED_CONTENT_SCRIPTS)))"
 echo "Host permissions: $ORIGINAL_HOST_PERMS -> $FILTERED_HOST_PERMS (removed $((ORIGINAL_HOST_PERMS - FILTERED_HOST_PERMS)))"
 echo ""
-echo "Excluded folders: docs/, games/, lite/, tests/, scripts/, themes/, .github/, .githooks/"
+echo "Excluded folders: docs/, games/, lite/, tests/, scripts/, themes/, sources/graveyard/, .github/, .githooks/"
 echo "Excluded patterns: *.md (markdown files)"
 echo "Removed adult site files: ${#ADULT_SOURCE_FILES[@]} source files"
-echo "Removed website-hosted files: ${#WEBSITE_HOSTED_FILES[@]} overlay pages"
+echo "Removed website-hosted files: ${#WEBSITE_HOSTED_FILES[@]} overlay/CDN pages"
 echo "Removed misc files: ${#MISC_FILES_TO_REMOVE[@]} files"
+echo "Cleaned JS files: EventFlowEditor.js, colours.js (adult site references)"
 echo ""
 echo "Chrome Web Store build ready in: $BUILD_DIR/"
