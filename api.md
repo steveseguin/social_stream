@@ -9,6 +9,9 @@ There is an easy to use sandbox to play with some of the common API commands and
 **Table of Contents**
 
   - [WebSocket API](#websocket-api)
+    - [Choose Your Use Case](#choose-your-use-case)
+    - [Quick Start: Remote Control (StreamDeck / Bitfocus Companion)](#quick-start-remote-control-streamdeck--bitfocus-companion)
+    - [Quick Start: Receiving Chat Messages (Python / Node.js)](#quick-start-receiving-chat-messages-python--nodejs)
     - [Connecting to the API Server](#connecting-to-the-api-server)
     - [Channel System Explained](#channel-system-explained)
     - [Available Commands](#available-commands)
@@ -87,6 +90,126 @@ There is an easy to use sandbox to play with some of the common API commands and
 The WebSocket API allows real-time, bidirectional communication between your application and the Social Stream Ninja server.
 
 If you prefer to keep traffic peer-to-peer without enabling the WebSocket relay, you can instead integrate the Social Stream Ninja WebRTC SDK. It offers a Node- and browser-friendly interface that plugs into the same transport layer used by the extension. A Social Stream Ninja listener example is available at [ninjasdk/demos/socialstreamninja-listener.js](https://github.com/steveseguin/ninjasdk/blob/main/demos/socialstreamninja-listener.js).
+
+### Choose Your Use Case
+
+There are two main reasons to use the WebSocket API:
+
+| Use Case | What You Want | Required Toggle(s) | Channel |
+|----------|---------------|-------------------|---------|
+| **Remote Control** | Send commands to SSN (clear, feature, next in queue, send chat) from StreamDeck, Bitfocus Companion, or custom apps | ✅ Enable remote API control | Channel 1 (default) |
+| **Chat Listener** | Receive chat messages from Twitch/YouTube/etc. in your Python/Node app | ✅ Enable remote API control + ✅ Send chat messages to API server (3rd toggle) | Channel 4 |
+
+**Toggle Reference (Global settings > Mechanics):**
+
+| Toggle | Purpose |
+|--------|---------|
+| 1. Enable remote API control of extension | Required for ALL API usage. Allows sending commands to the extension. |
+| 2. Enable Dock to use and publish via API server | Needed to send commands directly to the Dock page (clear, nextInQueue, etc.) |
+| 3. **Send chat messages to API server** | **Required to RECEIVE chat messages!** Routes Twitch/YouTube/etc. chat through the server on channel 4. |
+| 4. Dock sends its commands to Extension via server | Optional. Allows Dock to send commands back to extension via server instead of P2P. |
+
+---
+
+### Quick Start: Remote Control (StreamDeck / Bitfocus Companion)
+
+For controlling SSN from StreamDeck, Bitfocus Companion, or similar tools, you only need the **first toggle** enabled.
+
+**Simple HTTP GET request:**
+```
+https://io.socialstream.ninja/SESSION_ID/nextInQueue
+https://io.socialstream.ninja/SESSION_ID/clearOverlay
+https://io.socialstream.ninja/SESSION_ID/sendEncodedChat/null/Hello%20World
+```
+
+**WebSocket commands:**
+```javascript
+ws = new WebSocket("wss://io.socialstream.ninja/join/SESSION_ID");
+ws.onopen = () => {
+    // Send a command
+    ws.send(JSON.stringify({ action: "nextInQueue" }));
+    ws.send(JSON.stringify({ action: "clearOverlay" }));
+    ws.send(JSON.stringify({ action: "sendChat", value: "Hello from API!" }));
+};
+```
+
+See the [StreamDeck Integration Guide](#streamdeck-integration-guide-for-social-stream-ninja) and [Bitfocus Companion](#using-bitfocus-companion-with-social-stream-ninja) sections below for detailed setup.
+
+---
+
+### Quick Start: Receiving Chat Messages (Python / Node.js)
+
+To receive chat messages from Twitch, YouTube, and other platforms in your own application:
+
+**Required toggles (Global settings > Mechanics):**
+1. ✅ **Enable remote API control of extension**
+2. ✅ **Send chat messages to API server** (the 3rd toggle) - This is the key one!
+
+**Connect to Channel 4** - This is where chat messages are broadcast:
+
+**Python Example:**
+
+```python
+import asyncio
+import websockets
+import json
+
+SESSION_ID = "YOUR_SESSION_ID_HERE"  # From your dock.html URL
+
+async def listen_to_chat():
+    uri = f"wss://io.socialstream.ninja/join/{SESSION_ID}/4"  # Channel 4 receives chat
+
+    async with websockets.connect(uri) as ws:
+        print(f"Connected! Listening for chat messages...")
+
+        while True:
+            message = await ws.recv()
+            data = json.loads(message)
+
+            # Chat messages have 'chatname' and 'chatmessage' fields
+            if "chatname" in data:
+                print(f"[{data.get('type', 'unknown')}] {data['chatname']}: {data.get('chatmessage', '')}")
+
+                # Check for donations
+                if data.get('hasDonation'):
+                    print(f"  💰 Donation: {data['hasDonation']}")
+
+asyncio.run(listen_to_chat())
+```
+
+**Node.js Example:**
+
+```javascript
+const WebSocket = require('ws');
+
+const SESSION_ID = 'YOUR_SESSION_ID_HERE';  // From your dock.html URL
+
+const ws = new WebSocket(`wss://io.socialstream.ninja/join/${SESSION_ID}/4`);
+
+ws.on('open', () => {
+    console.log('Connected! Listening for chat messages...');
+});
+
+ws.on('message', (message) => {
+    const data = JSON.parse(message);
+
+    // Chat messages have 'chatname' and 'chatmessage' fields
+    if (data.chatname) {
+        console.log(`[${data.type || 'unknown'}] ${data.chatname}: ${data.chatmessage || ''}`);
+
+        // Check for donations
+        if (data.hasDonation) {
+            console.log(`  💰 Donation: ${data.hasDonation}`);
+        }
+    }
+});
+
+ws.on('error', console.error);
+```
+
+**Channel Reference for Listeners:**
+- Channel 4 (`/join/SESSION/4`) - Receives chat messages from the extension (when "Send chat messages to API server" is enabled)
+- Channel 2 (`/join/SESSION/2`) - Receives messages from the Dock (when "Enable Dock to use and publish via API server" is enabled)
 
 ### Connecting to the API Server
 

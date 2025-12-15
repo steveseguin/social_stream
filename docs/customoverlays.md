@@ -91,15 +91,21 @@ See `dock.html`, `featured.html`, `events.html` etc. for more examples of iframe
 
 For more direct control or server-side integrations, you can connect to the SSN WebSocket server (`wss://io.socialstream.ninja`). This bypasses the need for an iframe but requires handling the WebSocket connection and message parsing directly in your JavaScript.
 
+**Required Settings (Global settings → Mechanics):**
+
+| Use Case | Required Toggles | Channel |
+|----------|-----------------|---------|
+| **Remote Control** (send commands) | Toggle 1: "Enable remote API control of extension" | Channel 1 (default) |
+| **Chat Listener** (receive chat messages) | Toggle 1 + Toggle 3: "Send chat messages to API server" | Channel 4 |
+
 **Connection:**
 
 ```javascript
 const urlParams = new URLSearchParams(window.location.search);
 const roomID = urlParams.get("session") || "test";
-// Choose appropriate IN_CHANNEL and OUT_CHANNEL based on your needs.
-// For a simple overlay listening to general messages, IN_CHANNEL 3 or 4 might be suitable.
-const inChannel = urlParams.get("in_channel") || "4"; // Channel to listen on
-const outChannel = urlParams.get("out_channel") || "3"; // Channel to send to (if needed)
+// Channel 4 receives chat messages when "Send chat messages to API server" toggle is enabled
+const inChannel = urlParams.get("in_channel") || "4"; // Channel 4 = chat messages from extension
+const outChannel = urlParams.get("out_channel") || "3"; // Channel to send commands (if needed)
 
 const socketServerURL = urlParams.get("server") || "wss://io.socialstream.ninja";
 const socket = new WebSocket(socketServerURL);

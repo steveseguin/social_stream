@@ -1372,7 +1372,25 @@
 			if (urlParams.has("queuetime")) {
 				queuetime = urlParams.get("queuetime");
 			}
-			
+
+			// rotation mode - cycles through last N messages endlessly
+			var rotateMode = false;
+			var rotateBuffer = [];
+			var rotateIndex = 0;
+			var rotateCount = 5;
+			var rotateTime = 10000;
+			var rotateTimer = null;
+
+			if (urlParams.has("rotate")) {
+				rotateMode = true;
+				if (urlParams.has("rotatecount")) {
+					rotateCount = Math.min(10, Math.max(1, parseInt(urlParams.get("rotatecount")) || 5));
+				}
+				if (urlParams.has("rotatetime")) {
+					rotateTime = parseInt(urlParams.get("rotatetime")) || 10000;
+				}
+			}
+
 			var firstNamesOnly = false;
 			if (urlParams.has("firstnamesonly") || urlParams.has("firstname") || urlParams.has("firstnames")) {
 				firstNamesOnly = true;
@@ -2448,7 +2466,19 @@
 					}
 					
 					
-					if (queuetime){
+					if (rotateMode) {
+						// Add to rotation buffer
+						rotateBuffer.push(data.contents);
+						// Trim to max count (remove oldest)
+						while (rotateBuffer.length > rotateCount) {
+							rotateBuffer.shift();
+						}
+						// Start rotation if not already running
+						if (!rotateTimer) {
+							rotateIndex = rotateBuffer.length - 1; // Start with newest
+							rotateNext();
+						}
+					} else if (queuetime){
 						queue.push(data.contents);
 						checkqueue(false);
 					} else {
@@ -2518,7 +2548,33 @@
 					showmessage(queue.shift());
 				}
 			}
-			
+
+			function rotateNext() {
+				if (!rotateMode || rotateBuffer.length === 0) {
+					rotateTimer = null;
+					return;
+				}
+
+				// Clear any existing timer
+				if (rotateTimer) {
+					clearTimeout(rotateTimer);
+				}
+
+				// Apply transition
+				lastMessageId = null;
+				document.getElementById("output").classList.add(transitionType);
+				clearTimeout(nextComment);
+
+				// Show current message
+				showmessage(rotateBuffer[rotateIndex]);
+
+				// Move to next index (wrap around)
+				rotateIndex = (rotateIndex + 1) % rotateBuffer.length;
+
+				// Schedule next rotation
+				rotateTimer = setTimeout(rotateNext, rotateTime);
+			}
+
 			function showmessage(contents) {
 			  try {
 				clearTimeout(timeoutTimer);

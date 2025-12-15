@@ -6538,11 +6538,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			// Settings stored as { json: string, object: parsed } - access .object
 			const permissions = result.settings?.spotifyCommandPermissions?.object || {};
 			const disabledCommands = result.settings?.spotifyDisabledCommands?.object || [];
+			const customTriggers = result.settings?.spotifyCommandTriggers?.object || {};
 
 			commandRows.forEach(row => {
 				const command = row.dataset.command;
 				const enabledCheckbox = row.querySelector('.spotify-cmd-enabled');
 				const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]');
+				const triggerInput = row.querySelector('.spotify-cmd-trigger');
 
 				// Apply saved enabled state
 				if (enabledCheckbox && disabledCommands.includes(command)) {
@@ -6556,6 +6558,11 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						cb.checked = savedRoles.includes(cb.value);
 					});
 				}
+
+				// Apply saved custom triggers
+				if (triggerInput && customTriggers[command]) {
+					triggerInput.value = customTriggers[command];
+				}
 			});
 		});
 
@@ -6563,6 +6570,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		commandRows.forEach(row => {
 			const enabledCheckbox = row.querySelector('.spotify-cmd-enabled');
 			const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]');
+			const triggerInput = row.querySelector('.spotify-cmd-trigger');
 
 			if (enabledCheckbox) {
 				enabledCheckbox.addEventListener('change', () => saveSpotifyCommandSettings());
@@ -6570,6 +6578,27 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			roleCheckboxes.forEach(cb => {
 				cb.addEventListener('change', () => saveSpotifyCommandSettings());
 			});
+
+			// Handle trigger input changes
+			if (triggerInput) {
+				const defaultTrigger = row.dataset.command;
+
+				// On blur: revert to default if empty, then save
+				triggerInput.addEventListener('blur', () => {
+					const value = triggerInput.value.trim();
+					if (!value) {
+						triggerInput.value = defaultTrigger;
+					}
+					saveSpotifyCommandSettings();
+				});
+
+				// On Enter key: blur to trigger save
+				triggerInput.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter') {
+						triggerInput.blur();
+					}
+				});
+			}
 		});
 	}
 
@@ -6577,11 +6606,13 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		const commandRows = document.querySelectorAll('.spotify-command-row');
 		const permissions = {};
 		const disabledCommands = [];
+		const customTriggers = {};
 
 		commandRows.forEach(row => {
 			const command = row.dataset.command;
 			const enabledCheckbox = row.querySelector('.spotify-cmd-enabled');
 			const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]:checked');
+			const triggerInput = row.querySelector('.spotify-cmd-trigger');
 
 			if (enabledCheckbox && !enabledCheckbox.checked) {
 				disabledCommands.push(command);
@@ -6600,6 +6631,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 
 			permissions[command] = roles;
+
+			// Collect custom triggers (normalize: trim, lowercase, handle comma-separated)
+			if (triggerInput) {
+				const triggerValue = triggerInput.value.trim();
+				// Only store if different from default
+				if (triggerValue && triggerValue !== command) {
+					customTriggers[command] = triggerValue;
+				}
+			}
 		});
 
 		// Save to storage
@@ -6617,7 +6657,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			value: JSON.stringify(disabledCommands)
 		});
 
-		console.log('Spotify command settings saved:', { permissions, disabledCommands });
+		chrome.runtime.sendMessage({
+			cmd: "saveSetting",
+			type: "json",
+			setting: "spotifyCommandTriggers",
+			value: JSON.stringify(customTriggers)
+		});
+
+		console.log('Spotify command settings saved:', { permissions, disabledCommands, customTriggers });
 	}
 
 	// Initialize on page load

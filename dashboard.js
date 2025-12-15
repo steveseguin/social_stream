@@ -2,20 +2,38 @@
 
 // Function to update connection status indicators
 function updateConnectionStatus() {
-    // API WebSocket (optional)
-    const wsEnabled = !!(window.settings && (window.settings.socketserver || window.settings.server2 || window.settings.server3));
-    const wsConnected = (window.socketserver && window.socketserver.readyState === 1) || (window.socketserverDock && window.socketserverDock.readyState === 1);
+    // Remote Control API WebSocket (ch 1/2) - controlled by socketserver setting
+    const wsEnabled = !!(window.settings && window.settings.socketserver);
+    const wsConnected = window.socketserver && window.socketserver.readyState === 1;
     const wsStatus = document.getElementById('websocket-status');
     const wsText = document.getElementById('websocket-status-text');
     if (!wsEnabled) {
         wsStatus.className = 'status-indicator status-inactive';
-        wsText.textContent = 'Disabled (optional)';
+        wsText.textContent = 'Disabled';
     } else if (wsConnected) {
         wsStatus.className = 'status-indicator status-active';
         wsText.textContent = 'Connected';
     } else {
-        wsStatus.className = 'status-indicator status-inactive';
-        wsText.textContent = 'Disconnected';
+        wsStatus.className = 'status-indicator status-warning';
+        wsText.textContent = 'Connecting...';
+    }
+
+    // Chat Relay API WebSocket (ch 3/4) - controlled by server2 setting
+    const wsDockEnabled = !!(window.settings && (window.settings.server2 || window.settings.server3));
+    const wsDockConnected = window.socketserverDock && window.socketserverDock.readyState === 1;
+    const wsDockStatus = document.getElementById('websocket-dock-status');
+    const wsDockText = document.getElementById('websocket-dock-status-text');
+    if (wsDockStatus && wsDockText) {
+        if (!wsDockEnabled) {
+            wsDockStatus.className = 'status-indicator status-inactive';
+            wsDockText.textContent = 'Disabled';
+        } else if (wsDockConnected) {
+            wsDockStatus.className = 'status-indicator status-active';
+            wsDockText.textContent = 'Connected';
+        } else {
+            wsDockStatus.className = 'status-indicator status-warning';
+            wsDockText.textContent = 'Connecting...';
+        }
     }
 
     // Signaling (VDO.Ninja) and WebRTC peers
@@ -118,6 +136,24 @@ function updateFeatureStatus() {
     // Hype Mode
     const hypeStatus = document.getElementById('hype-status');
     hypeStatus.className = 'status-indicator ' + (settings.hypemode ? 'status-active' : 'status-inactive');
+
+    // Spotify
+    const spotifyStatus = document.getElementById('spotify-status');
+    if (spotifyStatus) {
+        spotifyStatus.className = 'status-indicator ' + (settings.spotifyEnabled ? 'status-active' : 'status-inactive');
+    }
+
+    // Streamer.bot
+    const streamerbotStatus = document.getElementById('streamerbot-status');
+    if (streamerbotStatus) {
+        streamerbotStatus.className = 'status-indicator ' + (settings.streamerbot ? 'status-active' : 'status-inactive');
+    }
+
+    // Custom JS
+    const customjsStatus = document.getElementById('customjs-status');
+    if (customjsStatus) {
+        customjsStatus.className = 'status-indicator ' + (settings.customJsEnabled ? 'status-active' : 'status-inactive');
+    }
 }
 
 

@@ -1514,6 +1514,34 @@ input:checked + .slider:before {
     min-width: 70px;
 }
 
+.spotify-command-row .spotify-cmd-trigger {
+    background: var(--color-accent-subtle);
+    border: 1px solid transparent;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-family: monospace;
+    min-width: 90px;
+    max-width: 150px;
+    color: inherit;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.spotify-command-row .spotify-cmd-trigger:hover {
+    border-color: var(--collapsible-border-color);
+}
+
+.spotify-command-row .spotify-cmd-trigger:focus {
+    outline: none;
+    border-color: var(--accent-color, #007bff);
+    background: var(--options-group-background-color);
+}
+
+.spotify-command-row .spotify-cmd-trigger::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
 .spotify-command-row .spotify-cmd-desc {
     flex: 1;
     color: var(--text-secondary);
@@ -3933,6 +3961,15 @@ input:checked + .slider:before {
                                         ⌚ Queue + Show messages for at least <input type="number" style="max-width: 8ch;" max="999999" min="1" value="10000" size="6" data-numbersetting2="queuetime" />ms
                                     </span>
                                 </div>
+                                <div title="Rotate through the last N highlighted messages endlessly, showing each for the specified duration.">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param2="rotate" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="rotate-featured-messages">
+                                        🔄 Rotate last <input type="number" style="max-width: 4ch;" max="10" min="1" value="5" size="2" data-numbersetting2="rotatecount" /> messages every <input type="number" style="max-width: 8ch;" max="999999" min="1000" value="10000" size="6" data-numbersetting2="rotatetime" />ms
+                                    </span>
+                                </div>
                                 <div title="Console prints featured message payloads so developers can inspect live data updates.">
                                     <label class="switch">
                                         <input type="checkbox" data-param2="debug" />
@@ -5411,7 +5448,7 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="disable-host-chat">🚫🗨️ Disable the host chat and block functions </span>
                                 </div>
-								 <div title="See documentation on socialstream.ninja for details.">
+								 <div title="Allows external apps (Python, Node, StreamDeck, etc.) to control SSN via HTTP/WebSocket API. Enable this to send commands like sendChat, blockUser, etc. to the extension.">
                                     <label class="switch">
                                         <input type="checkbox" data-setting="socketserver" />
                                         <span class="slider round"></span>
@@ -5421,21 +5458,21 @@ input:checked + .slider:before {
                                         <span data-translate="remote-httpwss-api-control-extension">remote API control of extension</span>
                                     </a>
                                 </div>
-                                <div title="This is needed if HTTP/WSS commands are being sent to the dock for remote control, to bypass p2p if needed, and to publish featured messages via server instead of P2P">
+                                <div title="Connects the Dock/Featured pages to the API server for remote control. Needed if you want to send commands (clear, feature, nextInQueue, etc.) directly to the Dock via HTTP/WebSocket.">
                                     <label class="switch">
                                         <input type="checkbox" id="server" data-both="server" />
                                         <span class="slider round"></span>
                                     </label>
                                     <span data-translate="send-featured-chat-via-server-instead-of-p2p">Enable Dock to use and publish via API server</span>
                                 </div>
-                                <div  title="Mainly useful if P2P not working. It can also be used to send messages to the Dock via the API using channel 3/4">
+                                <div  title="IMPORTANT: Enable this to receive chat messages via WebSocket API! Routes chat from Twitch/YouTube/etc. through the API server (channel 4) so external apps can listen. Required for Python/Node chat listeners.">
                                     <label class="switch">
                                         <input type="checkbox" id="server2" data-both="server2" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="send-messages-to-dock-via-server-instead-of-p2p">Send messages to Dock from Extension via server</span>
+                                    <span data-translate="send-messages-to-dock-via-server-instead-of-p2p">📡 Send chat messages to API server (for external listeners)</span>
                                 </div>
-                                <div title="Mainly useful if P2P not working in cases where you want to send messages to a social end point via the Dock page.">
+                                <div title="Allows the Dock page to send commands back to the extension via the API server instead of P2P. Useful if P2P connections are blocked or unreliable.">
                                     <label class="switch" >
                                         <input type="checkbox" id="server3" data-both="server3" />
                                         <span class="slider round"></span>
@@ -10988,7 +11025,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!song</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!song" placeholder="!song" title="Command trigger(s). Supports comma-separated aliases like !song, !cancion" />
                                             <span class="spotify-cmd-desc">Show current track</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
@@ -11002,7 +11039,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!np</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!np" placeholder="!np" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Alias for !song</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
@@ -11021,7 +11058,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!skip</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!skip" placeholder="!skip" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Skip to next track</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11035,7 +11072,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!previous</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!previous" placeholder="!previous" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Go to previous track</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11049,7 +11086,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!pause</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!pause" placeholder="!pause" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Pause playback</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11063,7 +11100,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!play</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!play" placeholder="!play" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Resume playback</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11077,7 +11114,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!volume</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!volume" placeholder="!volume" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Set volume (0-100)</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" /> Anyone</label>
@@ -11096,7 +11133,7 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!queue</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!queue" placeholder="!queue" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Add song to queue</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
@@ -11110,8 +11147,22 @@ input:checked + .slider:before {
                                                 <input type="checkbox" class="spotify-cmd-enabled" checked />
                                                 <span class="slider round"></span>
                                             </label>
-                                            <code>!sr</code>
+                                            <input type="text" class="spotify-cmd-trigger" value="!sr" placeholder="!sr" title="Command trigger(s). Supports comma-separated aliases" />
                                             <span class="spotify-cmd-desc">Song request (alias)</span>
+                                            <div class="spotify-cmd-roles">
+                                                <label><input type="checkbox" value="anyone" checked /> Anyone</label>
+                                                <label><input type="checkbox" value="subscriber" /> Subs</label>
+                                                <label><input type="checkbox" value="vip" /> VIPs</label>
+                                                <label><input type="checkbox" value="mod" /> Mods</label>
+                                            </div>
+                                        </div>
+                                        <div class="spotify-command-row" data-command="!revoke" data-default-roles="anyone">
+                                            <label class="switch" title="Enable or disable this command">
+                                                <input type="checkbox" class="spotify-cmd-enabled" checked />
+                                                <span class="slider round"></span>
+                                            </label>
+                                            <input type="text" class="spotify-cmd-trigger" value="!revoke" placeholder="!revoke" title="Command trigger(s). Supports comma-separated aliases" />
+                                            <span class="spotify-cmd-desc">Remove your last request</span>
                                             <div class="spotify-cmd-roles">
                                                 <label><input type="checkbox" value="anyone" checked /> Anyone</label>
                                                 <label><input type="checkbox" value="subscriber" /> Subs</label>

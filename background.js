@@ -7243,10 +7243,15 @@ function setupSocketDock() {
 	} else if (!isExtensionOn) {
 		return;
 	}
-	
+
 	if (reconnectionTimeoutDock) {
 		clearTimeout(reconnectionTimeoutDock);
 		reconnectionTimeoutDock = null;
+	}
+
+	// Skip if socket is already connecting or open
+	if (socketserverDock && (socketserverDock.readyState === WebSocket.CONNECTING || socketserverDock.readyState === WebSocket.OPEN)) {
+		return;
 	}
 
 	if (socketserverDock) {
@@ -7277,7 +7282,6 @@ function setupSocketDock() {
             conConDock = nextAttempt;
             reconnectionTimeoutDock = setTimeout(function () {
                 if ((settings.server2 || settings.server3) && isExtensionOn) {
-                    socketserverDock = new WebSocket(serverURLDock);
                     setupSocketDock();
                 } else {
                     socketserverDock = false;
@@ -7332,10 +7336,15 @@ function setupSocket() {
 	} else if (!isExtensionOn) {
 		return;
 	}
-	
+
 	if (reconnectionTimeout) {
 		clearTimeout(reconnectionTimeout);
 		reconnectionTimeout = null;
+	}
+
+	// Skip if socket is already connecting or open
+	if (socketserver && (socketserver.readyState === WebSocket.CONNECTING || socketserver.readyState === WebSocket.OPEN)) {
+		return;
 	}
 
 	if (socketserver) {
