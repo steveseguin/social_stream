@@ -69,7 +69,10 @@
                 <h1>Live Event Reference</h1>
                 <p>This page documents the canonical event payloads that Social Stream Ninja emits for major platforms. Use it as a shared source of truth when wiring new sources, troubleshooting integrations, or aligning UI labels.</p>
                 <div class="alert-note">
-                    <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) only forward when users enable <em>Capture Stream Events</em> in <code>popup.html</code>. Donation-style items still pass through even if the toggle is off.
+                    <strong>Important:</strong> Stream events (follows, memberships, milestones, viewer counts, etc.) are always captured and forwarded. To hide events in the dock overlay, add <code>&amp;hideevents</code> to your dock.html URL. Donation-style items always pass through regardless of settings.
+                </div>
+                <div class="alert-note" style="background: #e3f2fd; border-left-color: #1976d2;">
+                    <strong>WebSocket Mode Required:</strong> For YouTube, Twitch, and Kick, most stream events (followers, subscriptions, raids, etc.) require <strong>WebSocket mode</strong> to be enabled in the extension settings. DOM capture alone only provides basic chat and viewer counts. See platform sections below for details.
                 </div>
             </section>
 
@@ -215,8 +218,8 @@
                     <p class="source-note">Implementation: <code>sources/youtube.js</code></p>
                     <ul class="requirements">
                         <li>Needs the live chat tab open in a signed-in browser session. Membership and gift cards only render for the channel owner or authorized moderators.</li>
-                        <li><strong>Capture Stream Events</strong> must stay enabled for membership, gift, and milestone notices. Super Chats/Super Stickers arrive regardless.</li>
                         <li>Viewer counts require <em>Show viewer count</em> or <em>Hype Mode</em> to be enabled in settings.</li>
+                        <li><strong>For follower alerts and additional events</strong>, enable WebSocket mode in extension settings.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -282,9 +285,9 @@
                     <p class="source-note">Implementation: <code>sources/websocket/youtube.html</code>, shared helpers under <code>shared/</code></p>
                     <ul class="requirements">
                         <li>Requires OAuth with scopes <code>youtube.readonly</code>, <code>youtube</code>, <code>youtube.force-ssl</code>, and <code>youtube.channel-memberships.creator</code>. Tokens live in <code>localStorage</code>.</li>
-                        <li>Non-donation events respect <strong>Capture Stream Events</strong>; channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewcount</code>).</li>
+                        <li>Channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewcount</code>).</li>
                         <li>The API cannot deliver custom badge imagery; badge fallbacks use emoji icons noted below.</li>
-                        <li>The Data API does not expose real-time subscriber/follower notifications. Social Stream polls <code>statistics.subscriberCount</code> every 30 minutes and emits a <code>subscriber_update</code>; individual “new subscriber” alerts are unavailable, but the <code>events.html</code> dashboard highlights the count changes so you can still react live.</li>
+                        <li>New subscriber alerts use the <code>myRecentSubscribers</code> API (polled every 5 minutes). Note: YouTube API has up to 4-hour delay and only shows subscribers with public subscription lists.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -367,7 +370,7 @@
                             <li>Polls the YouTube API every 5 minutes for recent subscribers</li>
                             <li>Tracks seen subscribers in localStorage to detect new ones</li>
                             <li>Emits <code>new_follower</code> events with the subscriber's name, avatar, and channel ID</li>
-                            <li>Only active when <em>Capture Stream Events</em> is enabled</li>
+                            <li>Requires WebSocket mode to be enabled in extension settings</li>
                         </ul>
                         <p><strong>Limitations (these are YouTube API restrictions, not Social Stream limitations):</strong></p>
                         <ul>
@@ -408,8 +411,8 @@
                     <p class="source-note">Implementation: <code>sources/twitch.js</code></p>
                     <ul class="requirements">
                         <li>Requires Twitch chat open with the user logged in. Membership/user notice elements only render for broadcaster accounts or moderators.</li>
-                        <li>Non-donation user notice handling (gift subs, channel point rewards) respects <strong>Capture Stream Events</strong>.</li>
                         <li>Viewer count requests hit <code>https://api.socialstream.ninja/twitch/viewers</code> every 30 seconds.</li>
+                        <li><strong>For follower alerts, raids, and full event support</strong>, enable WebSocket mode in extension settings.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -455,7 +458,8 @@
                     <p class="source-note">Implementation: <code>sources/websocket/twitch.js</code> with shared core <code>providers/twitch/chatClient.js</code></p>
                     <ul class="requirements">
                         <li>OAuth scopes: <code>chat:read</code>, <code>chat:edit</code>, <code>bits:read</code>, <code>moderator:read:followers</code>, <code>channel:read:subscriptions</code>, <code>moderator:manage:banned_users</code>, <code>moderator:manage:chat_messages</code>, <code>channel:read:redemptions</code>, <code>channel:read:ads</code>, <code>channel:manage:ads</code>. Broadcaster tokens unlock subscriber/follower counts.</li>
-                        <li>Events delivered by the Kick-style EventSub bridge, plus Helix polling for viewer/follower/subscriber totals. <strong>Capture Stream Events</strong> must remain on.</li>
+                        <li>Events delivered by EventSub, plus Helix polling for viewer/follower/subscriber totals.</li>
+                        <li><strong>WebSocket mode provides real-time</strong> follower alerts, subscription events, raids, cheers, and channel point redemptions.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -634,8 +638,9 @@
 <h3>TikTok Live</h3>
                     <p class="source-note">Implementation: <code>sources/tiktok.js</code></p>
                     <ul class="requirements">
-                        <li>Works on the broadcaster’s live page. Gift/like/follow banners only populate when the session is authenticated.</li>
-                        <li><strong>Capture Stream Events</strong> gate social/system cards; gift donations still pass.</li>
+                        <li>Works on the broadcaster's live page. Gift/like/follow banners only populate when the session is authenticated.</li>
+                        <li>TikTok provides many events via DOM detection <strong>without requiring WebSocket mode</strong> &ndash; gifts, follows, joins, and likes are captured automatically.</li>
+                        <li>No additional API authentication required.</li>
                     </ul>
                     <table class="event-table">
                         <thead>
@@ -947,7 +952,8 @@
                     <li>When adding a new event, reuse existing vocabulary (<code>subscription_gift</code>, <code>viewer_update</code>, etc.) whenever possible. If a deviation is unavoidable, document it here along with the rationale.</li>
                     <li>Keep <code>data.meta</code> predictable: prefer flat keys, never overload strings with mixed data, and always include units (<code>currency</code>, <code>bits</code>, <code>duration</code>).</li>
                     <li>Update <code>AGENTS.md</code> and this page in the same pull request so future contributors know which surface produces the event.</li>
-                    <li>Downstream overlays rely on the opt-in behaviour described above; do not bypass the <em>Capture Stream Events</em> toggle unless an event is intrinsically a donation or payment proof.</li>
+                    <li>Stream events are always captured. To hide events in the dock overlay, add <code>&amp;hideevents</code> to your dock.html URL.</li>
+                    <li>For YouTube, Twitch, and Kick, enable <strong>WebSocket mode</strong> in extension settings for full event support (followers, subscriptions, raids, etc.).</li>
                 </ul>
             </section>
         </div>
