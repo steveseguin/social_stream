@@ -6244,7 +6244,7 @@ function sendToSSC(data, fakechat=false, relayed=false) {
 			const apiKey = settings.sscapikey.textsetting.trim();
 			const apiBase = (settings.sscapibase && settings.sscapibase.textsetting)
 				? settings.sscapibase.textsetting.trim()
-				: "https://chat.socialstream.ninja";
+				: "https://api.ninjachatter.com";
 
 			try {
 				let xhr = new XMLHttpRequest();
