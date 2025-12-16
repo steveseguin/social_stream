@@ -229,7 +229,7 @@
 				
 				if ("getSource" == request){sendResponse("ebay");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-					document.querySelector('#type-a-message').focus();
+					document.querySelector('textarea.msg-content').focus();
 					sendResponse(true);
 					return;
 				}
