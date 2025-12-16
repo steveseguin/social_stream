@@ -1441,6 +1441,103 @@ class EventFlowSystem {
                 match = targetEvent && msgEvent === targetEvent;
                 return match;
 
+            // === NEW DEDICATED EVENT TRIGGERS ===
+            case 'eventNewFollower': {
+                const eventMatch = (message.event || '').toLowerCase() === 'new_follower';
+                const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
+                return eventMatch && sourceMatch;
+            }
+
+            case 'eventNewSubscriber': {
+                const event = (message.event || '').toLowerCase();
+                const eventMatch = event === 'new_subscriber' || event === 'sponsorship';
+                const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
+                return eventMatch && sourceMatch;
+            }
+
+            case 'eventResub': {
+                const eventMatch = (message.event || '').toLowerCase() === 'resub';
+                const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
+                return eventMatch && sourceMatch;
+            }
+
+            case 'eventGiftSub': {
+                const event = (message.event || '').toLowerCase();
+                const eventMatch = event === 'subscription_gift' || event === 'giftpurchase';
+                const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
+                return eventMatch && sourceMatch;
+            }
+
+            case 'eventDonation': {
+                const event = (message.event || '').toLowerCase();
+                const eventMatch = event === 'donation' || event === 'cheer' || event === 'supersticker';
+                const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
+
+                // Check minimum amount if specified
+                let amountMatch = true;
+                if (config.minAmount > 0 && message.hasDonation) {
+                    // Try to parse donation amount from hasDonation string
+                    const amountStr = String(message.hasDonation).replace(/[^0-9.]/g, '');
+                    const amount = parseFloat(amountStr) || 0;
+                    amountMatch = amount >= config.minAmount;
+                }
+
+                return eventMatch && sourceMatch && amountMatch;
+            }
+
+            case 'eventRaid': {
+                const eventMatch = (message.event || '').toLowerCase() === 'raid';
+                const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
+
+                // Check minimum viewers if specified
+                let viewerMatch = true;
+                if (config.minViewers > 0 && message.meta?.viewers) {
+                    viewerMatch = message.meta.viewers >= config.minViewers;
+                }
+
+                return eventMatch && sourceMatch && viewerMatch;
+            }
+
+            case 'eventCheer': {
+                const eventMatch = (message.event || '').toLowerCase() === 'cheer';
+                const sourceMatch = !config.sources?.length || config.sources.includes(message.type);
+
+                // Check minimum bits if specified
+                let bitsMatch = true;
+                if (config.minBits > 0 && message.bits) {
+                    bitsMatch = message.bits >= config.minBits;
+                }
+
+                return eventMatch && sourceMatch && bitsMatch;
+            }
+
+            case 'eventOther': {
+                const targetEventType = (config.eventType || '').toLowerCase().trim();
+                const msgEventType = (message.event || '').toLowerCase().trim();
+                return targetEventType && msgEventType === targetEventType;
+            }
+
+            case 'eventCustom': {
+                const targetEventType = (config.eventType || '').toLowerCase().trim();
+                const msgEventType = (message.event || '').toLowerCase().trim();
+                const eventMatch = targetEventType && msgEventType === targetEventType;
+
+                // If there's a custom condition, evaluate it
+                if (eventMatch && config.customCondition) {
+                    try {
+                        // Create a safe evaluation context
+                        const data = message;
+                        const result = new Function('data', `return ${config.customCondition}`)(data);
+                        return !!result;
+                    } catch (e) {
+                        console.warn('Custom condition evaluation failed:', e);
+                        return false;
+                    }
+                }
+
+                return eventMatch;
+            }
+
             case 'compareProperty': {
                 const prop = config.property || 'donationAmount';
                 const operator = config.operator || 'gt';

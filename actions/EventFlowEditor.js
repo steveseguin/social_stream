@@ -237,33 +237,95 @@ class EventFlowEditor {
         }
 		
         // Initialize all node type definitions here
-        this.triggerTypes = [
-            { id: 'anyMessage', name: '💬 Any Message' },
-            { id: 'messageContains', name: '🔍 Message Contains' },
-            { id: 'messageStartsWith', name: '▶️ Message Starts With' },
-            { id: 'messageEndsWith', name: '⏹️ Message Ends With' },
-            { id: 'messageEquals', name: '🟰 Message Equals' },
-            { id: 'messageRegex', name: '🔤 Message Regex' },
-            { id: 'messageLength', name: '📏 Message Length' },
-            { id: 'wordCount', name: '🔢 Word Count' },
-            { id: 'containsEmoji', name: '😀 Contains Emoji' },
-            { id: 'containsLink', name: '🔗 Contains Link' },
-            { id: 'fromSource', name: '📡 From Source' },
-            { id: 'fromChannelName', name: '📺 From Channel Name' },
-            { id: 'fromUser', name: '👤 From User' },
-            { id: 'userRole', name: '👑 User Role' },
-            { id: 'hasDonation', name: '💰 Has Donation' },
-            { id: 'channelPointRedemption', name: '🎁 Channel Point Redemption' },
-            { id: 'eventType', name: '📣 Event Type' },
-            { id: 'compareProperty', name: '⚖️ Compare Property' },
-            { id: 'randomChance', name: '🎲 Random Chance' },
-            { id: 'timeInterval', name: '⏰ Time Interval' },
-            { id: 'timeOfDay', name: '🕐 Time of Day' },
-            { id: 'midiNoteOn', name: '🎹 MIDI Note On' },
-            { id: 'midiNoteOff', name: '🎹 MIDI Note Off' },
-            { id: 'midiCC', name: '🎛️ MIDI Control Change' },
-            { id: 'messageProperties', name: '⚙️ Message Properties Filter' }
+        // Grouped trigger types for collapsible sections (like actions)
+        this.triggerGroups = [
+            {
+                id: 'stream-events',
+                name: '📣 Stream Events',
+                expanded: true,
+                triggers: [
+                    { id: 'eventNewFollower', name: '👋 New Follower' },
+                    { id: 'eventNewSubscriber', name: '⭐ New Subscriber' },
+                    { id: 'eventResub', name: '🔄 Resub/Renewal' },
+                    { id: 'eventGiftSub', name: '🎁 Gift Sub' },
+                    { id: 'eventDonation', name: '💰 Donation/Super Chat' },
+                    { id: 'eventRaid', name: '🚀 Raid' },
+                    { id: 'eventCheer', name: '💎 Cheer/Bits' },
+                    { id: 'eventOther', name: '📋 Other Event...' },
+                    { id: 'eventCustom', name: '✏️ Custom Event' }
+                ]
+            },
+            {
+                id: 'chat-messages',
+                name: '💬 Chat Messages',
+                expanded: true,
+                triggers: [
+                    { id: 'anyMessage', name: '💬 Any Message' },
+                    { id: 'messageContains', name: '🔍 Message Contains' },
+                    { id: 'messageStartsWith', name: '▶️ Message Starts With' },
+                    { id: 'messageEndsWith', name: '⏹️ Message Ends With' },
+                    { id: 'messageEquals', name: '🟰 Message Equals' },
+                    { id: 'messageRegex', name: '🔤 Message Regex' }
+                ]
+            },
+            {
+                id: 'message-properties',
+                name: '📊 Message Properties',
+                expanded: false,
+                triggers: [
+                    { id: 'messageLength', name: '📏 Message Length' },
+                    { id: 'wordCount', name: '🔢 Word Count' },
+                    { id: 'containsEmoji', name: '😀 Contains Emoji' },
+                    { id: 'containsLink', name: '🔗 Contains Link' },
+                    { id: 'hasDonation', name: '💰 Has Donation' },
+                    { id: 'compareProperty', name: '⚖️ Compare Property' },
+                    { id: 'messageProperties', name: '⚙️ Message Properties Filter' }
+                ]
+            },
+            {
+                id: 'user-source',
+                name: '👤 User & Source',
+                expanded: false,
+                triggers: [
+                    { id: 'fromSource', name: '📡 From Source' },
+                    { id: 'fromChannelName', name: '📺 From Channel Name' },
+                    { id: 'fromUser', name: '👤 From User' },
+                    { id: 'userRole', name: '👑 User Role' },
+                    { id: 'channelPointRedemption', name: '🎁 Channel Point Redemption' }
+                ]
+            },
+            {
+                id: 'timing-random',
+                name: '⏰ Timing & Random',
+                expanded: false,
+                triggers: [
+                    { id: 'randomChance', name: '🎲 Random Chance' },
+                    { id: 'timeInterval', name: '⏰ Time Interval' },
+                    { id: 'timeOfDay', name: '🕐 Time of Day' }
+                ]
+            },
+            {
+                id: 'midi',
+                name: '🎹 MIDI',
+                expanded: false,
+                triggers: [
+                    { id: 'midiNoteOn', name: '🎹 MIDI Note On' },
+                    { id: 'midiNoteOff', name: '🎹 MIDI Note Off' },
+                    { id: 'midiCC', name: '🎛️ MIDI Control Change' }
+                ]
+            },
+            {
+                id: 'legacy',
+                name: '📦 Legacy/Other',
+                expanded: false,
+                triggers: [
+                    { id: 'eventType', name: '📣 Event Type (Legacy)' }
+                ]
+            }
         ];
+
+        // Flat list for backwards compatibility and lookups
+        this.triggerTypes = this.triggerGroups.flatMap(g => g.triggers);
 
         // Grouped action types for collapsible sections
         this.actionGroups = [
@@ -314,7 +376,6 @@ class EventFlowEditor {
                 name: '🎬 OBS Studio',
                 expanded: false,
                 actions: [
-                    { id: 'triggerOBSScene', name: '🎬 Trigger OBS Scene' },
                     { id: 'obsChangeScene', name: '🎬 Change Scene' },
                     { id: 'obsToggleSource', name: '👁️ Toggle Source' },
                     { id: 'obsSetSourceFilter', name: '🎨 Toggle Filter' },
@@ -414,6 +475,36 @@ class EventFlowEditor {
             .replace(/'/g, '&#039;');
     }
 
+    // Helper to render source filter for event triggers
+    renderEventSourceFilter(node, eventTypes) {
+        const sources = [
+            { value: 'youtube', label: 'YouTube' },
+            { value: 'twitch', label: 'Twitch' },
+            { value: 'kick', label: 'Kick' },
+            { value: 'facebook', label: 'Facebook' },
+            { value: 'tiktok', label: 'TikTok' },
+            { value: 'instagram', label: 'Instagram' },
+            { value: 'rumble', label: 'Rumble' }
+        ];
+        const selectedSources = node.config.sources || [];
+
+        return `
+            <div class="property-group">
+                <label class="property-label">Filter by Source (optional)</label>
+                <div class="source-checkboxes" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    ${sources.map(s => `
+                        <label style="display: flex; align-items: center; gap: 4px; cursor: pointer;">
+                            <input type="checkbox" class="source-checkbox" value="${s.value}"
+                                ${selectedSources.includes(s.value) ? 'checked' : ''}>
+                            ${s.label}
+                        </label>
+                    `).join('')}
+                </div>
+                <div class="property-help">Leave all unchecked to match any source. Events matched: <code>${eventTypes}</code></div>
+            </div>
+        `;
+    }
+
     init() {
         this.createEditorLayout(); // Now this.logicNodeTypes will be defined
         this.initEventListeners();
@@ -460,9 +551,19 @@ class EventFlowEditor {
                     <div class="node-palette">
                         <h3>Triggers</h3>
                         <div class="node-list" id="trigger-list">
-                            ${this.triggerTypes.map(trigger => `
-                                <div class="node-item trigger" data-nodetype="trigger" data-subtype="${trigger.id}" draggable="true" ${trigger.id === 'customJs' ? 'style="display: none;"' : ''}>
-                                    ${trigger.name}
+                            ${this.triggerGroups.map(group => `
+                                <div class="trigger-group" data-group="${group.id}">
+                                    <div class="trigger-group-header ${group.expanded ? 'expanded' : 'collapsed'}" data-group="${group.id}">
+                                        <span class="trigger-group-toggle">${group.expanded ? '▼' : '▶'}</span>
+                                        <span class="trigger-group-name">${group.name}</span>
+                                    </div>
+                                    <div class="trigger-group-items" style="${group.expanded ? '' : 'display: none;'}">
+                                        ${group.triggers.map(trigger => `
+                                            <div class="node-item trigger" data-nodetype="trigger" data-subtype="${trigger.id}" draggable="true">
+                                                ${trigger.name}
+                                            </div>
+                                        `).join('')}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -595,6 +696,32 @@ class EventFlowEditor {
         triggerItems.forEach(item => {
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'trigger', item.dataset.subtype)); // Changed to subtype
         });
+
+        // Add click handlers for collapsible trigger groups
+        const triggerGroupHeaders = document.querySelectorAll('.trigger-group-header');
+        triggerGroupHeaders.forEach(header => {
+            header.addEventListener('click', (e) => {
+                const groupId = header.dataset.group;
+                const group = this.triggerGroups.find(g => g.id === groupId);
+                if (group) {
+                    group.expanded = !group.expanded;
+                    const toggle = header.querySelector('.trigger-group-toggle');
+                    const items = header.nextElementSibling;
+                    if (group.expanded) {
+                        header.classList.remove('collapsed');
+                        header.classList.add('expanded');
+                        toggle.textContent = '▼';
+                        items.style.display = '';
+                    } else {
+                        header.classList.remove('expanded');
+                        header.classList.add('collapsed');
+                        toggle.textContent = '▶';
+                        items.style.display = 'none';
+                    }
+                }
+            });
+        });
+
         const actionItems = document.querySelectorAll('#action-list .node-item');
         actionItems.forEach(item => {
             item.addEventListener('dragstart', (e) => this.handleNodeDragStart(e, 'action', item.dataset.subtype)); // Changed to subtype
@@ -1675,6 +1802,46 @@ class EventFlowEditor {
 
                     return parts.join('; ');
                 }
+                // New dedicated event triggers
+                case 'eventNewFollower': {
+                    const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All sources';
+                    return `New follower (${sources})`;
+                }
+                case 'eventNewSubscriber': {
+                    const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All sources';
+                    return `New subscriber (${sources})`;
+                }
+                case 'eventResub': {
+                    const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All sources';
+                    return `Resub (${sources})`;
+                }
+                case 'eventGiftSub': {
+                    const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All sources';
+                    return `Gift sub (${sources})`;
+                }
+                case 'eventDonation': {
+                    const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
+                    const minAmt = node.config.minAmount > 0 ? ` ≥$${node.config.minAmount}` : '';
+                    return `Donation${minAmt} (${sources})`;
+                }
+                case 'eventRaid': {
+                    const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
+                    const minViewers = node.config.minViewers > 0 ? ` ≥${node.config.minViewers} viewers` : '';
+                    return `Raid${minViewers} (${sources})`;
+                }
+                case 'eventCheer': {
+                    const sources = node.config.sources?.length ? node.config.sources.join(', ') : 'All';
+                    const minBits = node.config.minBits > 0 ? ` ≥${node.config.minBits} bits` : '';
+                    return `Cheer${minBits} (${sources})`;
+                }
+                case 'eventOther': {
+                    const eventType = node.config.eventType || 'Not set';
+                    return `Event: ${eventType}`;
+                }
+                case 'eventCustom': {
+                    const eventType = node.config.eventType || 'Custom';
+                    return `Custom: ${eventType}`;
+                }
                 default: return `${this.getNodeTitle(node)}`;
             }
         } else if (node.type === 'action') {
@@ -2171,6 +2338,16 @@ class EventFlowEditor {
                 case 'hasDonation': node.config = {}; break;
                 case 'channelPointRedemption': node.config = { rewardName: '' }; break;
                 case 'eventType': node.config = { eventType: 'reward' }; break;
+                // New dedicated event triggers
+                case 'eventNewFollower': node.config = { sources: [] }; break;
+                case 'eventNewSubscriber': node.config = { sources: [] }; break;
+                case 'eventResub': node.config = { sources: [] }; break;
+                case 'eventGiftSub': node.config = { sources: [] }; break;
+                case 'eventDonation': node.config = { sources: [], minAmount: 0 }; break;
+                case 'eventRaid': node.config = { sources: [], minViewers: 0 }; break;
+                case 'eventCheer': node.config = { sources: [], minBits: 0 }; break;
+                case 'eventOther': node.config = { eventType: '' }; break;
+                case 'eventCustom': node.config = { eventType: '', customCondition: '' }; break;
                 case 'compareProperty': node.config = { property: 'donationAmount', operator: 'gt', value: 0 }; break;
                 case 'randomChance': node.config = { probability: 0.1, cooldownMs: 0, maxPerMinute: 0, requireMessage: true }; break;
                 case 'timeInterval': node.config = { interval: 60 }; break;
@@ -2716,10 +2893,160 @@ class EventFlowEditor {
 						<div class="property-help">Enter the exact event type from the message object</div>
 					</div>
 					<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
-						<strong>📣 Event Types</strong><br>
-						Triggers on specific stream events like raids, follows, subs, etc.
+						<strong>📣 Event Types (Legacy)</strong><br>
+						Triggers on specific stream events. Consider using the dedicated Stream Events triggers for easier setup.
 					</div>`;
 				break;
+
+			// === NEW DEDICATED EVENT TRIGGERS ===
+			case 'eventNewFollower':
+				html += this.renderEventSourceFilter(node, 'new_follower');
+				html += `<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>👋 New Follower</strong><br>
+					Triggers when someone follows the channel.<br><br>
+					<strong>Platform notes:</strong><br>
+					• <strong>YouTube:</strong> Up to 4-hour delay, only public subscriptions<br>
+					• <strong>Twitch/Kick:</strong> Near real-time<br><br>
+					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #1976d2;">📖 Event Reference Documentation</a>
+				</div>`;
+				break;
+
+			case 'eventNewSubscriber':
+				html += this.renderEventSourceFilter(node, 'new_subscriber,sponsorship');
+				html += `<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>⭐ New Subscriber/Member</strong><br>
+					Triggers when someone subscribes or becomes a member.<br><br>
+					<strong>Matches events:</strong> <code>new_subscriber</code>, <code>sponsorship</code><br><br>
+					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #2e7d32;">📖 Event Reference Documentation</a>
+				</div>`;
+				break;
+
+			case 'eventResub':
+				html += this.renderEventSourceFilter(node, 'resub');
+				html += `<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>🔄 Resub/Renewal</strong><br>
+					Triggers when someone renews their subscription or membership.<br><br>
+					<strong>Matches event:</strong> <code>resub</code><br><br>
+					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #e65100;">📖 Event Reference Documentation</a>
+				</div>`;
+				break;
+
+			case 'eventGiftSub':
+				html += this.renderEventSourceFilter(node, 'subscription_gift,giftpurchase');
+				html += `<div class="property-group" style="background: #fce4ec; color: #333; padding: 10px; border-radius: 4px;">
+					<strong>🎁 Gift Sub</strong><br>
+					Triggers when someone gifts subscriptions.<br><br>
+					<strong>Matches events:</strong> <code>subscription_gift</code>, <code>giftpurchase</code><br><br>
+					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #c2185b;">📖 Event Reference Documentation</a>
+				</div>`;
+				break;
+
+			case 'eventDonation':
+				html += this.renderEventSourceFilter(node, 'donation,cheer,supersticker');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Minimum Amount (optional)</label>
+						<input type="number" class="property-input" id="prop-minAmount"
+							value="${node.config.minAmount || 0}" min="0" step="0.01">
+						<div class="property-help">Set to 0 to trigger on any donation amount</div>
+					</div>
+					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>💰 Donation / Super Chat</strong><br>
+						Triggers on donations, Super Chats, Super Stickers, etc.<br><br>
+						<strong>Matches events:</strong> <code>donation</code>, <code>cheer</code>, <code>supersticker</code><br><br>
+						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #f57f17;">📖 Event Reference Documentation</a>
+					</div>`;
+				break;
+
+			case 'eventRaid':
+				html += this.renderEventSourceFilter(node, 'raid');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Minimum Viewers (optional)</label>
+						<input type="number" class="property-input" id="prop-minViewers"
+							value="${node.config.minViewers || 0}" min="0">
+						<div class="property-help">Set to 0 to trigger on any raid</div>
+					</div>
+					<div class="property-group" style="background: #ede7f6; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>🚀 Raid</strong><br>
+						Triggers when another streamer raids the channel.<br><br>
+						<strong>Matches event:</strong> <code>raid</code><br>
+						<strong>Available on:</strong> Twitch<br><br>
+						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #512da8;">📖 Event Reference Documentation</a>
+					</div>`;
+				break;
+
+			case 'eventCheer':
+				html += this.renderEventSourceFilter(node, 'cheer');
+				html += `
+					<div class="property-group">
+						<label class="property-label">Minimum Bits (optional)</label>
+						<input type="number" class="property-input" id="prop-minBits"
+							value="${node.config.minBits || 0}" min="0">
+						<div class="property-help">Set to 0 to trigger on any cheer</div>
+					</div>
+					<div class="property-group" style="background: #e1f5fe; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>💎 Cheer/Bits</strong><br>
+						Triggers when someone cheers with bits.<br><br>
+						<strong>Matches event:</strong> <code>cheer</code><br>
+						<strong>Available on:</strong> Twitch<br><br>
+						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #0288d1;">📖 Event Reference Documentation</a>
+					</div>`;
+				break;
+
+			case 'eventOther':
+				const otherEventTypes = [
+					{ value: '', label: '-- Select Event --' },
+					{ value: 'channel_points', label: 'Channel Points (Twitch)' },
+					{ value: 'membermilestone', label: 'Member Milestone (YouTube)' },
+					{ value: 'giftredemption', label: 'Gift Received (YouTube)' },
+					{ value: 'stream_online', label: 'Stream Online' },
+					{ value: 'stream_offline', label: 'Stream Offline' },
+					{ value: 'viewer_update', label: 'Viewer Count Update' },
+					{ value: 'follower_update', label: 'Follower Count Update' },
+					{ value: 'subscriber_update', label: 'Subscriber Count Update' },
+					{ value: 'ad_break', label: 'Ad Break (Twitch)' }
+				];
+				html += `
+					<div class="property-group">
+						<label class="property-label">Event Type</label>
+						<select class="property-input" id="prop-eventType">
+							${otherEventTypes.map(e => `<option value="${e.value}" ${node.config.eventType === e.value ? 'selected' : ''}>${e.label}</option>`).join('')}
+						</select>
+						<div class="property-help">Select from other available stream events</div>
+					</div>
+					<div class="property-group" style="background: #eceff1; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>📋 Other Events</strong><br>
+						Select from additional stream events not covered by dedicated triggers.<br><br>
+						<a href="docs/event-reference.html" target="_blank" style="color: #455a64;">📖 Full Event Reference</a>
+					</div>`;
+				break;
+
+			case 'eventCustom':
+				html += `
+					<div class="property-group">
+						<label class="property-label">Event Type</label>
+						<input type="text" class="property-input" id="prop-eventType"
+							value="${this.escapeHtml(node.config.eventType || '')}" placeholder="e.g., custom_event">
+						<div class="property-help">Enter the exact <code>data.event</code> value to match</div>
+					</div>
+					<div class="property-group">
+						<label class="property-label">Additional Condition (optional)</label>
+						<input type="text" class="property-input" id="prop-customCondition"
+							value="${this.escapeHtml(node.config.customCondition || '')}" placeholder="e.g., data.type === 'youtube'">
+						<div class="property-help">JavaScript expression for additional filtering (advanced)</div>
+					</div>
+					<div class="property-group" style="background: #f3e5f5; color: #333; padding: 10px; border-radius: 4px;">
+						<strong>✏️ Custom Event</strong><br>
+						Create a custom trigger for any event type. Use the Event Reference to find available event names.<br><br>
+						<strong>Examples:</strong><br>
+						• <code>new_follower</code> - New followers<br>
+						• <code>sponsorship</code> - YouTube memberships<br>
+						• <code>subscription_gift</code> - Gift subs<br><br>
+						<a href="docs/event-reference.html" target="_blank" style="color: #7b1fa2;">📖 Full Event Reference</a>
+					</div>`;
+				break;
+
 			case 'compareProperty':
 				const commonProperties = [
 					{ value: 'donationAmount', label: 'Donation Amount' },
@@ -4736,6 +5063,22 @@ class EventFlowEditor {
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for source checkboxes in event triggers
+        const sourceCheckboxes = document.querySelectorAll('.source-checkbox');
+        if (sourceCheckboxes.length > 0) {
+            sourceCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', () => {
+                    const selectedSources = [];
+                    document.querySelectorAll('.source-checkbox:checked').forEach(cb => {
+                        selectedSources.push(cb.value);
+                    });
+                    nodeData.config.sources = selectedSources;
+                    this.markUnsavedChanges(true);
+                    this.renderNodeOnCanvas(nodeData.id);
+                });
             });
         }
 

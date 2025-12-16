@@ -90,7 +90,7 @@
                         <tr>
                             <td><strong>YouTube (Data API bridge)</strong></td>
                             <td>Membership joins, renewals, gifts</td>
-                            <td>Subscriber total updates only*</td>
+                            <td>Individual subscriber alerts* + totals</td>
                             <td>Super Chats &amp; Super Stickers</td>
                             <td>Viewer, subscriber, and view totals (polled)</td>
                         </tr>
@@ -152,7 +152,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <p class="field-highlights">*YouTube does not expose instant subscriber alerts. Watch for <code>subscriber_update</code> entries (and their deltas) inside <code>events.html</code> to spot milestones.</p>
+                <p class="field-highlights">*YouTube subscriber alerts have a 4-hour API delay and only show subscribers with public subscription lists. This is a YouTube API limitation that also affects Streamlabs and other apps.</p>
             </section>
 
             <section class="field-overview">
@@ -296,19 +296,24 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td><code>donation</code></td>
+                                <td class="donation-event"><code>donation</code></td>
                                 <td>Super Chat entries from the Data API backlog or stream polling.</td>
                                 <td><code>hasDonation</code> preserves site amount (currency + value); badges/avatars come from API metadata.</td>
                             </tr>
                             <tr>
-                                <td><code>supersticker</code></td>
+                                <td class="donation-event"><code>supersticker</code></td>
                                 <td>Super Stickers (message text fallback only, no image from API).</td>
                                 <td><code>hasDonation</code> holds the amount; <code>chatmessage</code> contains decoded description text.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>sponsorship</code></td>
-                                <td><code>membershipEventType</code> of new sponsor.</td>
-                                <td><code>membership</code> becomes <code>new_sponsor</code>; <code>meta</code> includes <code>originalEventType</code>, durations, and level info.</td>
+                                <td>New member joins via <code>newSponsorEvent</code>.</td>
+                                <td><code>membership</code> becomes <code>new_sponsor</code> or <code>new_member</code>; <code>meta</code> includes <code>originalEventType</code>, durations, and level info.</td>
+                            </tr>
+                            <tr>
+                                <td class="membership-event"><code>resub</code></td>
+                                <td>Member renewals or tier upgrades.</td>
+                                <td><code>membership</code> becomes <code>renewed_member</code> (renewals) or <code>upgraded_member</code> (upgrades); <code>subtitle</code> shows tier.</td>
                             </tr>
                             <tr>
                                 <td class="membership-event"><code>giftpurchase</code></td>
@@ -345,9 +350,57 @@
                                 <td>Live chat becomes unavailable for the bound broadcast.</td>
                                 <td><code>meta.streamTitle</code> populated when stream metadata was cached.</td>
                             </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>New subscriber detected via <code>myRecentSubscribers</code> API (polled every 5 minutes).</td>
+                                <td><code>chatname</code> is subscriber's channel name; <code>meta</code> includes <code>channelId</code>, <code>title</code>, <code>subscribedAt</code>. Note: YouTube API has up to 4-hour delay; only shows subscribers with public subscription lists.</td>
+                            </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Chat relays from the API reuse <code>meta.plainText</code> for sanitized content so future adapters can render emote-free summaries. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture. Watch <code>subscriber_update</code> entries inside <code>events.html</code> to keep an eye on count bumps even though instant alerts are unavailable.</p>
+                    <p class="field-highlights">Chat relays from the API reuse <code>meta.plainText</code> for sanitized content so future adapters can render emote-free summaries. Membership badges fall back to emoji (<code>⭐</code>, <code>💝</code>, <code>🏅</code>, etc.) to remain consistent with DOM capture.</p>
+
+                    <div class="alert-note">
+                        <strong>YouTube Subscriber Alerts (<code>new_follower</code>)</strong>
+                        <p>Social Stream can now detect new YouTube subscribers using the <code>myRecentSubscribers</code> API endpoint. This works similarly to Streamlabs subscriber alerts.</p>
+                        <p><strong>How it works:</strong></p>
+                        <ul>
+                            <li>Polls the YouTube API every 5 minutes for recent subscribers</li>
+                            <li>Tracks seen subscribers in localStorage to detect new ones</li>
+                            <li>Emits <code>new_follower</code> events with the subscriber's name, avatar, and channel ID</li>
+                            <li>Only active when <em>Capture Stream Events</em> is enabled</li>
+                        </ul>
+                        <p><strong>Limitations (these are YouTube API restrictions, not Social Stream limitations):</strong></p>
+                        <ul>
+                            <li><strong>Up to 4-hour delay</strong> &ndash; YouTube intentionally delays subscriber data in their API. This affects all apps including Streamlabs.</li>
+                            <li><strong>Public subscriptions only</strong> &ndash; Subscribers who have set their subscription list to private will not trigger alerts. Subscriptions are private by default on YouTube.</li>
+                            <li><strong>Channel owner only</strong> &ndash; You can only receive subscriber alerts for channels you own and are authenticated as.</li>
+                            <li><strong>API quota usage</strong> &ndash; Each poll costs 1 API unit. At 5-minute intervals, this uses approximately 288 units per day (out of the default 10,000 daily quota).</li>
+                        </ul>
+                        <p><strong>Event Flow Editor trigger:</strong> Use <code>data.event === "new_follower"</code> and <code>data.type === "youtube"</code></p>
+                    </div>
+
+                    <h4>YouTube Websocket: Event &amp; Membership Quick Reference</h4>
+                    <table class="field-table">
+                        <thead>
+                            <tr>
+                                <th><code>data.event</code></th>
+                                <th><code>data.membership</code></th>
+                                <th>Scenario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>sponsorship</code></td><td><code>new_sponsor</code></td><td>New member via <code>newSponsorEvent</code></td></tr>
+                            <tr><td><code>sponsorship</code></td><td><code>new_member</code></td><td>New member via <code>processMembership</code></td></tr>
+                            <tr><td><code>resub</code></td><td><code>renewed_member</code></td><td>Membership renewal</td></tr>
+                            <tr><td><code>resub</code></td><td><code>upgraded_member</code></td><td>Tier upgrade</td></tr>
+                            <tr><td><code>giftpurchase</code></td><td><code>gift_giver</code></td><td>Gifted memberships to channel</td></tr>
+                            <tr><td><code>giftredemption</code></td><td><code>gift_recipient</code></td><td>Received a gifted membership</td></tr>
+                            <tr><td><code>membermilestone</code></td><td><code>member_milestone</code></td><td>Membership anniversary chat</td></tr>
+                            <tr><td><code>donation</code></td><td>&mdash;</td><td>Super Chat</td></tr>
+                            <tr><td><code>supersticker</code></td><td>&mdash;</td><td>Super Sticker</td></tr>
+                            <tr><td><code>new_follower</code></td><td>&mdash;</td><td>New subscriber (up to 4hr delay)</td></tr>
+                        </tbody>
+                    </table>
                 </article>
 
                 <article class="platform-card" id="twitch-dom">
@@ -476,6 +529,31 @@
                         </tbody>
                     </table>
                     <p class="field-highlights">Chat payloads reuse the shared provider, so <code>data.event</code> is populated for `/me` (<code>action</code>) and legacy <code>bits</code> tags even outside EventSub flows. Dedupe logic uses message IDs; ensure downstream consumers honour <code>data.id</code>.</p>
+
+                    <h4>Twitch EventSub: Event Quick Reference</h4>
+                    <table class="field-table">
+                        <thead>
+                            <tr>
+                                <th><code>data.event</code></th>
+                                <th>Scenario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>new_follower</code></td><td>User followed channel</td></tr>
+                            <tr><td><code>new_subscriber</code></td><td>New subscription</td></tr>
+                            <tr><td><code>resub</code></td><td>Resubscription with message</td></tr>
+                            <tr><td><code>subscription_gift</code></td><td>Gifted subs to channel</td></tr>
+                            <tr><td><code>cheer</code></td><td>Bits cheered</td></tr>
+                            <tr><td><code>channel_points</code></td><td>Channel point redemption</td></tr>
+                            <tr><td><code>raid</code></td><td>Incoming raid</td></tr>
+                            <tr><td><code>viewer_update</code></td><td>Concurrent viewer count</td></tr>
+                            <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
+                            <tr><td><code>subscriber_update</code></td><td>Total subscriber count</td></tr>
+                            <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
+                            <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
+                            <tr><td><code>ad_break</code></td><td>Ad break started</td></tr>
+                        </tbody>
+                    </table>
                 </article>
 
                 <article class="platform-card" id="tiktok">
@@ -685,7 +763,27 @@
                             </tr>
                         </tbody>
                     </table>
-                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick’s badge assets with cached SVG when available. When Kick reports donations in “kicks”, the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to “KICK”.</p>
+                    <p class="field-highlights">Profile lookups leverage <code>profileCache</code>; <code>mapBadges</code> merges Kick's badge assets with cached SVG when available. When Kick reports donations in "kicks", the bridge converts them into <code>meta.amount</code> with <code>currency</code> fallback to "KICK".</p>
+
+                    <h4>Kick Websocket: Event Quick Reference</h4>
+                    <table class="field-table">
+                        <thead>
+                            <tr>
+                                <th><code>data.event</code></th>
+                                <th>Scenario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><code>new_follower</code></td><td>User followed channel</td></tr>
+                            <tr><td><code>new_subscriber</code></td><td>New subscription</td></tr>
+                            <tr><td><code>resub</code></td><td>Subscription renewal</td></tr>
+                            <tr><td><code>subscription_gift</code></td><td>Gifted subs</td></tr>
+                            <tr><td><code>donation</code></td><td>Tip/support event</td></tr>
+                            <tr><td><code>follower_update</code></td><td>Total follower count</td></tr>
+                            <tr><td><code>stream_online</code></td><td>Stream went live</td></tr>
+                            <tr><td><code>stream_offline</code></td><td>Stream ended</td></tr>
+                        </tbody>
+                    </table>
                 </article>
 
                 <article class="platform-card" id="facebook">
@@ -737,6 +835,110 @@
                         </tbody>
                     </table>
                 </article>
+            </section>
+
+            <section class="section-summary" id="cross-platform">
+                <h2>Cross-Platform Event Alignment</h2>
+                <p>Use this table to understand how similar concepts map across platforms. Where possible, new sources should align to the common event names in the first column.</p>
+                <table class="field-table summary-table">
+                    <thead>
+                        <tr>
+                            <th>Concept</th>
+                            <th>YouTube WS</th>
+                            <th>Twitch WS</th>
+                            <th>Kick WS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>New member/sub</strong></td>
+                            <td><code>sponsorship</code></td>
+                            <td><code>new_subscriber</code></td>
+                            <td><code>new_subscriber</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Renewal/resub</strong></td>
+                            <td><code>resub</code></td>
+                            <td><code>resub</code></td>
+                            <td><code>resub</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Gift subs</strong></td>
+                            <td><code>giftpurchase</code></td>
+                            <td><code>subscription_gift</code></td>
+                            <td><code>subscription_gift</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Received gift</strong></td>
+                            <td><code>giftredemption</code></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Milestone</strong></td>
+                            <td><code>membermilestone</code></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Donation/tip</strong></td>
+                            <td><code>donation</code> (Super Chat)</td>
+                            <td><code>cheer</code> (bits)</td>
+                            <td><code>donation</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>New follower</strong></td>
+                            <td><code>new_follower</code> (4hr delay)*</td>
+                            <td><code>new_follower</code></td>
+                            <td><code>new_follower</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Viewer count</strong></td>
+                            <td><code>viewer_update</code></td>
+                            <td><code>viewer_update</code></td>
+                            <td><code>viewer_update</code> (DOM only)</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Follower count</strong></td>
+                            <td>&mdash;</td>
+                            <td><code>follower_update</code></td>
+                            <td><code>follower_update</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sub count</strong></td>
+                            <td><code>subscriber_update</code></td>
+                            <td><code>subscriber_update</code></td>
+                            <td>&mdash;</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Stream status</strong></td>
+                            <td><code>live_chat_ended</code></td>
+                            <td><code>stream_online</code>/<code>stream_offline</code></td>
+                            <td><code>stream_online</code>/<code>stream_offline</code></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Raid</strong></td>
+                            <td>&mdash;</td>
+                            <td><code>raid</code></td>
+                            <td>&mdash;</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Channel points</strong></td>
+                            <td>&mdash;</td>
+                            <td><code>channel_points</code></td>
+                            <td>&mdash;</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Alignment Notes</h3>
+                <ul>
+                    <li><strong>YouTube uses <code>sponsorship</code></strong> for new members, while Twitch and Kick use <code>new_subscriber</code>. Consider checking both when building cross-platform triggers.</li>
+                    <li><strong><code>resub</code> is consistent</strong> across all three platforms for renewals.</li>
+                    <li><strong>Gift events differ:</strong> YouTube uses <code>giftpurchase</code>/<code>giftredemption</code>, while Twitch and Kick use <code>subscription_gift</code>.</li>
+                    <li><strong>Donations vary by platform:</strong> YouTube has Super Chats (<code>donation</code>), Twitch has bits (<code>cheer</code>), and Kick has tips (<code>donation</code>).</li>
+                    <li><strong><code>new_follower</code> is now consistent</strong> across all three platforms, but YouTube has a 4-hour API delay and only shows subscribers with public subscription lists.</li>
+                </ul>
             </section>
 
             <section class="usage-notes">

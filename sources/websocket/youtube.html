@@ -203,6 +203,7 @@ try {
     var videoId = '';
     let pollInterval;
     let channelStatsInterval; // Separate interval for channel stats
+    let subscriberAlertInterval; // Interval for checking new subscribers
     let fetchTimeout; // Track fetch timeout to clear on disconnect
     var lastMessageTime = null;
     var liveChatId = null;
@@ -2114,6 +2115,114 @@ function enableBackgroundKeepAlive() {
             console.error('Error fetching subscriber count:', error);
         }
     }
+
+    // Subscriber alerts - fetch recent subscribers and emit new_follower events
+    const SEEN_SUBSCRIBERS_KEY = 'yt_seen_subscribers';
+    const MAX_SEEN_SUBSCRIBERS = 2000; // Limit stored IDs to prevent localStorage bloat
+
+    function getSeenSubscribers() {
+        try {
+            const stored = localStorage.getItem(SEEN_SUBSCRIBERS_KEY);
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            console.error('Error reading seen subscribers:', e);
+            return [];
+        }
+    }
+
+    function saveSeenSubscribers(subscriberIds) {
+        try {
+            // Keep only the most recent entries to prevent unbounded growth
+            const trimmed = subscriberIds.slice(-MAX_SEEN_SUBSCRIBERS);
+            localStorage.setItem(SEEN_SUBSCRIBERS_KEY, JSON.stringify(trimmed));
+        } catch (e) {
+            console.error('Error saving seen subscribers:', e);
+        }
+    }
+
+    async function fetchRecentSubscribers() {
+        const token = getStoredToken();
+        if (!token) return;
+
+        // Only fetch if captureevents is enabled (respects user's stream events preference)
+        if (!settings.captureevents) return;
+
+        try {
+            const response = await fetchWithTimeout(
+                'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet,subscriberSnippet&myRecentSubscribers=true&maxResults=50',
+                10000,
+                { 'Authorization': `Bearer ${token}` }
+            );
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    console.log('Subscriber alerts: Insufficient permissions or quota exceeded');
+                } else {
+                    console.error('Error fetching recent subscribers:', response.status);
+                }
+                return;
+            }
+
+            const data = await response.json();
+            if (!data.items || data.items.length === 0) return;
+
+            const seenSubscribers = getSeenSubscribers();
+            const seenSet = new Set(seenSubscribers);
+            const newSubscribers = [];
+
+            // Process subscribers - API returns newest first
+            for (const item of data.items) {
+                const subscriberId = item.subscriberSnippet?.channelId || item.snippet?.channelId;
+                if (!subscriberId) continue;
+
+                if (!seenSet.has(subscriberId)) {
+                    seenSet.add(subscriberId);
+                    newSubscribers.push({
+                        channelId: subscriberId,
+                        title: item.subscriberSnippet?.title || item.snippet?.title || 'New Subscriber',
+                        description: item.subscriberSnippet?.description || '',
+                        thumbnails: item.subscriberSnippet?.thumbnails || item.snippet?.thumbnails || {},
+                        publishedAt: item.snippet?.publishedAt
+                    });
+                }
+            }
+
+            // Save updated seen list
+            if (newSubscribers.length > 0) {
+                saveSeenSubscribers(Array.from(seenSet));
+
+                // Emit events for new subscribers (oldest first for chronological order)
+                for (const subscriber of newSubscribers.reverse()) {
+                    const subscriberLabel = getTranslation('new-subscriber-event', 'New Subscriber');
+                    const chatimg = subscriber.thumbnails?.default?.url ||
+                                   subscriber.thumbnails?.medium?.url || '';
+
+                    addEvent(`${subscriberLabel}: ${subscriber.title}`);
+
+                    pushMessage(applySourceIdentity({
+                        type: youtubeShorts ? "youtubeshorts" : "youtube",
+                        event: 'new_follower',
+                        chatname: subscriber.title,
+                        chatmessage: getTranslation('subscribed-message', 'subscribed to the channel'),
+                        chatimg: chatimg,
+                        userid: subscriber.channelId,
+                        timestamp: subscriber.publishedAt,
+                        meta: {
+                            channelId: subscriber.channelId,
+                            title: subscriber.title,
+                            subscribedAt: subscriber.publishedAt
+                        },
+                        textonly: settings.textonlymode || false
+                    }));
+
+                    console.log('New subscriber detected:', subscriber.title);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching recent subscribers:', error);
+        }
+    }
+
 	function clearPolling() {
 		// Clear all tracked timeouts
 		activeTimeouts.forEach(timeout => {
@@ -2127,6 +2236,7 @@ function enableBackgroundKeepAlive() {
 		
 		if (pollInterval) clearInterval(pollInterval);
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
+		if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
 		}
@@ -2138,6 +2248,7 @@ function enableBackgroundKeepAlive() {
 		foregroundPollingInterval = null;
 		pollInterval = null;
 		channelStatsInterval = null;
+		subscriberAlertInterval = null;
 		fetchTimeout = null;
 		
 		// Track disconnection time and video ID
@@ -2431,6 +2542,16 @@ function enableBackgroundKeepAlive() {
                     getChannelStats(effectiveChannelIdToUse);
                 }, 30 * 60 * 1000); // 30 minutes
             }
+
+            // Subscriber alerts - check for new subscribers every 5 minutes
+            // Note: YouTube API has up to 4-hour delay for subscriber data, same as Streamlabs
+            // Only runs if captureevents setting is enabled
+            if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
+            fetchRecentSubscribers(); // Initial fetch
+            subscriberAlertInterval = setInterval(() => {
+                fetchRecentSubscribers();
+            }, 5 * 60 * 1000); // 5 minutes (quota cost: 1 unit per call = 288 units/day if running 24h)
+
             console.log('Connection process complete for target:', channelDisplayNameToUse);
 			const channelInput = document.getElementById('channel-input');
             if (channelInput.value && channelToUse) channelInput.value = '';
@@ -3111,8 +3232,9 @@ function enableBackgroundKeepAlive() {
 		// Clear all intervals
 		if (pollInterval) clearInterval(pollInterval);
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
+		if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
 		if (displayInterval) clearInterval(displayInterval);
-		
+
 		// Clear all timeouts
 		if (fetchTimeout) clearTimeout(fetchTimeout);
 		activeTimeouts.forEach(timeout => clearTimeout(timeout));
