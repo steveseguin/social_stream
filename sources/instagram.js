@@ -450,7 +450,6 @@ function checkConditions(element) {
 			
 			if (content.childNodes[1].children.length==1){
 				streamEvent = true;
-				if (!settings.captureevents){return;}
 			}
 			
 			let tt = chatname.split(" ");
@@ -458,9 +457,6 @@ function checkConditions(element) {
 				if (tt[1] == "joined"){
 					streamEvent = "joined";
 					if (!settings.capturejoinedevent){
-						return;
-					}
-					if (!settings.captureevents){
 						return;
 					}
 				}
@@ -472,7 +468,6 @@ function checkConditions(element) {
 			if (chatname && (chatname.slice(-1) == ",")){
 				chatname = chatname.slice(0, -1);
 				streamEvent = true;
-				if (!settings.captureevents){return;}
 			}
 			
 		} catch(e){
@@ -502,7 +497,6 @@ function checkConditions(element) {
 				if (msgs.length==1){
 					chatmessage = getAllContentNodes(msgs[0]);
 					streamEvent = true;
-					if (!settings.captureevents){return;}
 				} else {
 					chatmessage = getAllContentNodes(msgs.slice(-1)[0]);
 				}

@@ -2904,9 +2904,14 @@ class EventFlowEditor {
 				html += `<div class="property-group" style="background: #e3f2fd; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>👋 New Follower</strong><br>
 					Triggers when someone follows the channel.<br><br>
-					<strong>Platform notes:</strong><br>
-					• <strong>YouTube:</strong> Up to 4-hour delay, only public subscriptions<br>
-					• <strong>Twitch/Kick:</strong> Near real-time<br><br>
+					<strong>⚡ Supported platforms:</strong><br>
+					• <strong>Twitch:</strong> Real-time (WebSocket mode)<br>
+					• <strong>Kick:</strong> Real-time (WebSocket mode)<br>
+					• <strong>YouTube:</strong> Up to 4-hour delay (WebSocket mode)<br>
+					• <strong>TikTok:</strong> Via DOM detection<br><br>
+					<div style="background: #bbdefb; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+						⚠️ <strong>Twitch/YouTube/Kick require WebSocket mode</strong> in extension settings for follower events.
+					</div>
 					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #1976d2;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
@@ -2916,7 +2921,14 @@ class EventFlowEditor {
 				html += `<div class="property-group" style="background: #e8f5e9; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>⭐ New Subscriber/Member</strong><br>
 					Triggers when someone subscribes or becomes a member.<br><br>
-					<strong>Matches events:</strong> <code>new_subscriber</code>, <code>sponsorship</code><br><br>
+					<strong>⚡ Supported platforms:</strong><br>
+					• <strong>Twitch:</strong> New subs (WebSocket mode)<br>
+					• <strong>YouTube:</strong> New memberships/sponsors (WebSocket mode)<br>
+					• <strong>Kick:</strong> New subs (WebSocket mode)<br>
+					• <strong>TikTok:</strong> Gift subs detected<br><br>
+					<div style="background: #c8e6c9; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+						⚠️ <strong>Twitch/YouTube/Kick require WebSocket mode</strong> for subscription events.
+					</div>
 					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #2e7d32;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
@@ -2926,7 +2938,12 @@ class EventFlowEditor {
 				html += `<div class="property-group" style="background: #fff3e0; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>🔄 Resub/Renewal</strong><br>
 					Triggers when someone renews their subscription or membership.<br><br>
-					<strong>Matches event:</strong> <code>resub</code><br><br>
+					<strong>⚡ Supported platforms:</strong><br>
+					• <strong>Twitch:</strong> Resub messages (WebSocket mode)<br>
+					• <strong>YouTube:</strong> Membership renewals (WebSocket mode)<br><br>
+					<div style="background: #ffe0b2; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+						⚠️ <strong>Requires WebSocket mode</strong> for Twitch/YouTube.
+					</div>
 					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #e65100;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
@@ -2936,7 +2953,13 @@ class EventFlowEditor {
 				html += `<div class="property-group" style="background: #fce4ec; color: #333; padding: 10px; border-radius: 4px;">
 					<strong>🎁 Gift Sub</strong><br>
 					Triggers when someone gifts subscriptions.<br><br>
-					<strong>Matches events:</strong> <code>subscription_gift</code>, <code>giftpurchase</code><br><br>
+					<strong>⚡ Supported platforms:</strong><br>
+					• <strong>Twitch:</strong> Gift subs (WebSocket mode)<br>
+					• <strong>YouTube:</strong> Gift memberships (WebSocket mode)<br>
+					• <strong>TikTok:</strong> Gift subs detected<br><br>
+					<div style="background: #f8bbd0; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+						⚠️ <strong>Requires WebSocket mode</strong> for Twitch/YouTube.
+					</div>
 					<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #c2185b;">📖 Event Reference Documentation</a>
 				</div>`;
 				break;
@@ -2953,7 +2976,15 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #fff8e1; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💰 Donation / Super Chat</strong><br>
 						Triggers on donations, Super Chats, Super Stickers, etc.<br><br>
-						<strong>Matches events:</strong> <code>donation</code>, <code>cheer</code>, <code>supersticker</code><br><br>
+						<strong>⚡ Supported platforms:</strong><br>
+						• <strong>YouTube:</strong> Super Chat, Super Stickers (WebSocket mode)<br>
+						• <strong>Twitch:</strong> Cheers/Bits (WebSocket mode)<br>
+						• <strong>TikTok:</strong> Coin gifts (many events)<br>
+						• <strong>Kick:</strong> Donations (WebSocket mode)<br>
+						• <strong>Many others:</strong> Streamlabs, Ko-fi integrations, etc.<br><br>
+						<div style="background: #ffecb3; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+							⚠️ <strong>YouTube/Twitch/Kick require WebSocket mode</strong> for monetary events.
+						</div>
 						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #f57f17;">📖 Event Reference Documentation</a>
 					</div>`;
 				break;
@@ -2970,8 +3001,11 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #ede7f6; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>🚀 Raid</strong><br>
 						Triggers when another streamer raids the channel.<br><br>
-						<strong>Matches event:</strong> <code>raid</code><br>
-						<strong>Available on:</strong> Twitch<br><br>
+						<strong>⚡ Supported platforms:</strong><br>
+						• <strong>Twitch:</strong> Raid events (WebSocket mode)<br><br>
+						<div style="background: #d1c4e9; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+							⚠️ <strong>Twitch WebSocket mode required.</strong> Raids are Twitch-specific.
+						</div>
 						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #512da8;">📖 Event Reference Documentation</a>
 					</div>`;
 				break;
@@ -2988,8 +3022,11 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #e1f5fe; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>💎 Cheer/Bits</strong><br>
 						Triggers when someone cheers with bits.<br><br>
-						<strong>Matches event:</strong> <code>cheer</code><br>
-						<strong>Available on:</strong> Twitch<br><br>
+						<strong>⚡ Supported platforms:</strong><br>
+						• <strong>Twitch:</strong> Bit cheers (WebSocket mode)<br><br>
+						<div style="background: #b3e5fc; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+							⚠️ <strong>Twitch WebSocket mode required.</strong> Cheers/Bits are Twitch-specific.
+						</div>
 						<a href="docs/event-reference.html#cross-platform" target="_blank" style="color: #0288d1;">📖 Event Reference Documentation</a>
 					</div>`;
 				break;
@@ -3018,6 +3055,9 @@ class EventFlowEditor {
 					<div class="property-group" style="background: #eceff1; color: #333; padding: 10px; border-radius: 4px;">
 						<strong>📋 Other Events</strong><br>
 						Select from additional stream events not covered by dedicated triggers.<br><br>
+						<div style="background: #cfd8dc; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+							⚠️ Most Twitch/YouTube/Kick events require <strong>WebSocket mode</strong> enabled in extension settings.
+						</div>
 						<a href="docs/event-reference.html" target="_blank" style="color: #455a64;">📖 Full Event Reference</a>
 					</div>`;
 				break;
@@ -3043,6 +3083,10 @@ class EventFlowEditor {
 						• <code>new_follower</code> - New followers<br>
 						• <code>sponsorship</code> - YouTube memberships<br>
 						• <code>subscription_gift</code> - Gift subs<br><br>
+						<div style="background: #e1bee7; padding: 6px 8px; border-radius: 3px; margin-bottom: 8px;">
+							⚠️ <strong>Twitch/YouTube/Kick require WebSocket mode</strong> for most stream events.<br>
+							💡 <strong>TikTok</strong> provides many events via DOM detection without extra config.
+						</div>
 						<a href="docs/event-reference.html" target="_blank" style="color: #7b1fa2;">📖 Full Event Reference</a>
 					</div>`;
 				break;

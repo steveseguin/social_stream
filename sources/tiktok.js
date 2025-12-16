@@ -911,14 +911,8 @@
 		const eventHints = deriveEventHints(ele);
 		var ital = false;
 		if (ele.dataset.e2e && (ele.dataset.e2e == "social-message")) {
-			if (!settings.captureevents) {
-				return;
-			}
 			ital = true;
 		} else if (eventHints.hasEventIndicator) {
-			if (!settings.captureevents) {
-				return;
-			}
 			ital = true;
 		}
 		var chatimg = "";
@@ -1139,8 +1133,6 @@
 						}
 					}
 				}
-			} else if (!settings.captureevents && ital) {
-				return;
 			}
 		} catch (e) {
 			console.error("Donation parsing error:", e);
@@ -1629,7 +1621,7 @@
 									const chatMessageChild = node.querySelector && node.querySelector("[data-e2e='chat-message']");
 									if (chatMessageChild) {
 										setTimeout(processMessage, 10, chatMessageChild);
-									} else if (settings.captureevents) {
+									} else {
 										setTimeout(processEvent, 10, node);
 									}
 								}
@@ -1637,7 +1629,7 @@
 								let msg = (node.dataset && node.dataset.e2e === "chat-message") ? node : (node.querySelector && node.querySelector('[data-e2e="chat-message"]'));
 								if (msg) {
 									setTimeout(processMessage, 10, msg);
-								} else if (settings.captureevents) {
+								} else {
 									setTimeout(processEvent, 10, node);
 								}
 							}
@@ -1687,7 +1679,7 @@
 	}
 
 	function start2(other = false) {
-		if (!isExtensionOn || !settings.captureevents) {
+		if (!isExtensionOn) {
 			return;
 		}
 		if (observer2 && observedDomElementForObserver2) {
@@ -1719,7 +1711,7 @@
 		}
 		observer2 = new MutationObserver((mutations) => {
 			try {
-				if (!settings.captureevents || !isExtensionOn) return;
+				if (!isExtensionOn) return;
 				mutations.forEach((mutation) => {
 					if (mutation.addedNodes.length) {
 						for (let i = 0; i < mutation.addedNodes.length; i++) {

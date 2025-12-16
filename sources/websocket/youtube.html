@@ -2144,9 +2144,6 @@ function enableBackgroundKeepAlive() {
         const token = getStoredToken();
         if (!token) return;
 
-        // Only fetch if captureevents is enabled (respects user's stream events preference)
-        if (!settings.captureevents) return;
-
         try {
             const response = await fetchWithTimeout(
                 'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet,subscriberSnippet&myRecentSubscribers=true&maxResults=50',
@@ -2545,7 +2542,6 @@ function enableBackgroundKeepAlive() {
 
             // Subscriber alerts - check for new subscribers every 5 minutes
             // Note: YouTube API has up to 4-hour delay for subscriber data, same as Streamlabs
-            // Only runs if captureevents setting is enabled
             if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
             fetchRecentSubscribers(); // Initial fetch
             subscriberAlertInterval = setInterval(() => {

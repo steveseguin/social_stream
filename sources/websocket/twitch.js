@@ -1007,15 +1007,12 @@ async function ensureChatClientInstance() {
 			});
 			return;
 		}
-		if (!settings.captureevents) {
-			return;
-		}
 		const notice = convertMembershipPayloadToUserNotice(payload);
 		await processUserNotice(notice);
 	}
 
 	async function handleNormalizedRaid(payload) {
-		if (!payload || !settings.captureevents) {
+		if (!payload) {
 			return;
 		}
 		const tags = {
@@ -2589,11 +2586,6 @@ async function cleanupCurrentConnection() {
 	function handleEventSubNotification(payload) {
 		const event = payload.event;
 		const subscription = payload.subscription;
-		
-		// Skip if captureevents is disabled
-		if (!settings.captureevents) {
-			return;
-		}
 
 		switch (subscription.type) {
 		case 'channel.follow':
