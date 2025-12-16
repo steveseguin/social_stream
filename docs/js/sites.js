@@ -650,6 +650,18 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
+            name: 'eBay Live',
+            icon: 'ebay.png',
+            description: 'Live shopping and auction streaming on eBay.',
+            type: 'standard',
+            instructions: `
+                <ul>
+                    <li>No pop out needed</li>
+                    <li>Just open the watch page</li>
+                </ul>
+            `
+        },
+        {
             name: 'Sessions.us',
             icon: 'sessions.png',
             description: 'Video meeting platform.',
