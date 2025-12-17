@@ -90,9 +90,6 @@
 		if (event && msg){
 			if (msg.includes("just joined")){
 				eventType = "joined";
-				if (!settings.captureevents){
-					return;
-				}
 			} else if (ele.querySelector(".gift-img")){
 				hasDonation = msg.split("x");
 				hasDonation = hasDonation[hasDonation.length-1];
@@ -103,10 +100,6 @@
 					hasDonation = hasDonation +" gifts";
 				} else {
 					hasDonation = false;
-				}
-			} else {
-				if (!settings.captureevents){
-					return;
 				}
 			}
 		}

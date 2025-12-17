@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.39.4",
+  "version": "3.40.0",
   "homepage_url": "http://socialstream.ninja/",
   "browser_specific_settings": {
     "gecko": {
@@ -108,6 +108,8 @@
     "https://www.wix.com/*",
     "https://wix.com/*",
     "https://verticalpixelzone.com/*",
+	"https://www.ebay.com/ebaylive/events/*",
+	"https://ir.ebaystatic.com/cr/ebaylivepubweb/liveassets/shoplive/*",
     "https://rutube.ru/live/chat/*/",
     "https://chat.castr.io/*",
     "https://editor.wixapps.net/render/prod/modals/wix-vod-widget/*",
@@ -800,6 +802,11 @@
         "https://business.facebook.com/*",
         "https://*.workplace.com/*"
       ]
+    },
+    {
+      "js": ["./sources/ebay.js"],
+      "matches": ["https://www.ebay.com/ebaylive/events/*","https://ir.ebaystatic.com/cr/ebaylivepubweb/liveassets/shoplive/*"],
+	  "all_frames": true
     },
     {
       "js": [ "./sources/trovo.js" ],

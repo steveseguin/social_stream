@@ -977,7 +977,14 @@ class SpotifyIntegration {
             ).length;
 
             // Try to push to Spotify if buffer is empty
-            await this.pushNextToSpotify();
+            const pushResult = await this.pushNextToSpotify();
+
+            // If this was the first song and it failed to push, remove it and return the error
+            if (pushResult && !pushResult.success && !pushResult.buffered) {
+                const idx = this.managedQueue.entries.indexOf(entry);
+                if (idx !== -1) this.managedQueue.entries.splice(idx, 1);
+                return { success: false, message: pushResult.message };
+            }
 
             return {
                 success: true,
@@ -1038,17 +1045,17 @@ class SpotifyIntegration {
      * Maintains a buffer of 1 song in Spotify's queue
      */
     async pushNextToSpotify() {
-        if (!this.accessToken) return;
+        if (!this.accessToken) return { success: false, message: "Not connected to Spotify" };
 
         // Count how many songs are currently queued in Spotify
         const queuedCount = this.managedQueue.entries.filter(e => e.status === 'queued').length;
 
         // Only push if buffer is empty (no songs waiting in Spotify's queue)
-        if (queuedCount >= 1) return;
+        if (queuedCount >= 1) return { success: true, buffered: true };
 
         // Find the first pending entry
         const nextEntry = this.managedQueue.entries.find(e => e.status === 'pending');
-        if (!nextEntry) return;
+        if (!nextEntry) return { success: true, noPending: true };
 
         try {
             // Add to Spotify's queue
@@ -1066,14 +1073,20 @@ class SpotifyIntegration {
                 nextEntry.status = 'queued';
                 nextEntry.queuedAt = Date.now();
                 console.log(`[Spotify] Pushed to queue: ${nextEntry.trackName}`);
+                return { success: true };
             } else if (queueResponse.status === 401) {
                 await this.refreshAccessToken();
                 return this.pushNextToSpotify();
+            } else if (queueResponse.status === 404) {
+                console.warn(`[Spotify] No active device found`);
+                return { success: false, message: "No active Spotify device found. Open Spotify and play something first." };
             } else {
                 console.warn(`[Spotify] Failed to push to queue: ${queueResponse.status}`);
+                return { success: false, message: "Failed to add to Spotify queue" };
             }
         } catch (error) {
             console.warn('[Spotify] Error pushing to queue:', error);
+            return { success: false, message: "Error adding to Spotify queue" };
         }
     }
 

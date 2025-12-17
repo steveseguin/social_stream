@@ -86,7 +86,6 @@ function toDataURL(url, callback) {
 		}
 		var isEvent=false;
 		if (ele.querySelector(".kiwi-messagelist-message-traffic")){
-			if (!settings.captureevents){return;}
 			isEvent=true;
 		}
 		

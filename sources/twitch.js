@@ -1328,35 +1328,32 @@
 							continue;
 						}
 
-						if (settings.captureevents) {
-							nextElement = node.querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
-							if (nextElement){
-								if (nextElement.dataset.ignore) {
-									continue;
-								}
-								checkMessage(node);
-								checkList.push([processEvent,(nextElement)]);
-								
-							} else if ((node.dataset.testSelector == "user-notice-line") || node.classList.contains("user-notice-line")) {
-								checkMessage(node);
-								checkList.push([processEvent,(node)]);
-								
-							} else if ((node.parentNode.dataset.testSelector == "user-notice-line") || node.parentNode.classList.contains("user-notice-line")) {
-								if (node.parentNode.dataset.ignore){
-									continue;
-								}
-								checkMessage(node.parentNode); 
-								checkList.push([processEvent,(node.parentNode)]);
-								
-							} else if ((node.parentNode.parentNode.dataset.testSelector == "user-notice-line") || node.parentNode.parentNode.classList.contains("user-notice-line")) {
-								if (node.parentNode.parentNode.dataset.ignore){
-									continue;
-								}
-								checkMessage(node.parentNode.parentNode);
-								checkList.push([processEvent,(node.parentNode.parentNode)]);
-							} else {
-								checkMessage(node);
+						// Always capture stream events (resubs, etc.)
+						nextElement = node.querySelector('.user-notice-line, [data-test-selector="user-notice-line"]');
+						if (nextElement){
+							if (nextElement.dataset.ignore) {
+								continue;
 							}
+							checkMessage(node);
+							checkList.push([processEvent,(nextElement)]);
+
+						} else if ((node.dataset.testSelector == "user-notice-line") || node.classList.contains("user-notice-line")) {
+							checkMessage(node);
+							checkList.push([processEvent,(node)]);
+
+						} else if ((node.parentNode.dataset.testSelector == "user-notice-line") || node.parentNode.classList.contains("user-notice-line")) {
+							if (node.parentNode.dataset.ignore){
+								continue;
+							}
+							checkMessage(node.parentNode);
+							checkList.push([processEvent,(node.parentNode)]);
+
+						} else if ((node.parentNode.parentNode.dataset.testSelector == "user-notice-line") || node.parentNode.parentNode.classList.contains("user-notice-line")) {
+							if (node.parentNode.parentNode.dataset.ignore){
+								continue;
+							}
+							checkMessage(node.parentNode.parentNode);
+							checkList.push([processEvent,(node.parentNode.parentNode)]);
 						} else {
 							checkMessage(node);
 						}
