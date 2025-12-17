@@ -4561,8 +4561,10 @@ class EventFlowEditor {
 						<div class="property-help">Skips to the next track in the current playlist or queue.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>`;
 				break;
 
@@ -4572,8 +4574,10 @@ class EventFlowEditor {
 						<div class="property-help">Goes back to the previous track.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>`;
 				break;
 
@@ -4583,8 +4587,10 @@ class EventFlowEditor {
 						<div class="property-help">Pauses the current playback.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>`;
 				break;
 
@@ -4594,8 +4600,10 @@ class EventFlowEditor {
 						<div class="property-help">Resumes playback if paused.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>`;
 				break;
 
@@ -4612,8 +4620,10 @@ class EventFlowEditor {
 						<div class="property-help">Set the playback volume (0-100%)</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>`;
 				break;
 
@@ -4634,8 +4644,10 @@ class EventFlowEditor {
 						<div class="property-help">If checked, the triggering chat message will be used as the song search query instead of the text above.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Combine with a "Message Starts With" trigger (e.g., "!sr") to let viewers request songs!
@@ -4648,8 +4660,10 @@ class EventFlowEditor {
 						<div class="property-help">Toggles between play and pause based on current playback state.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Great for a "!pause" command that toggles playback!
@@ -4675,8 +4689,9 @@ class EventFlowEditor {
 						<div class="property-help">Sends the announcement to the dock as a chat message.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Connected in Social Stream settings<br>
+						• Works when Spotify is playing (reads current track info)
 					</div>
 					<div class="property-group" style="background: #2196F3; color: #fff; padding: 10px; border-radius: 4px;">
 						<strong>💡 Tip:</strong> Create a custom "!song" response with your own format!
@@ -4695,8 +4710,10 @@ class EventFlowEditor {
 						<div class="property-help">Choose whether to toggle, enable, or disable shuffle mode.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>`;
 				break;
 
@@ -4712,8 +4729,10 @@ class EventFlowEditor {
 						<div class="property-help">Set the repeat mode for playback.</div>
 					</div>
 					<div class="property-group" style="background: #1DB954; padding: 10px; border-radius: 4px; color: white;">
-						<strong>🎵 Spotify Integration:</strong><br>
-						Requires Spotify to be connected in Social Stream settings with playback permissions.
+						<strong>🎵 Spotify Requirements:</strong><br>
+						• Spotify Premium account required<br>
+						• Spotify must be open and playing on a device<br>
+						• Connected in Social Stream settings
 					</div>`;
 				break;
 

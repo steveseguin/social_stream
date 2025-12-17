@@ -1,29 +1,26 @@
 (function () {
-	 
-	var isExtensionOn = true;
-	
-	function toDataURL(url, callback) {
-	  var xhr = new XMLHttpRequest();
-	  xhr.onload = function() {
-		  
-		var blob = xhr.response;
-    
-		if (blob.size > (25 * 1024)) {
-		  callback(url); // Image size is larger than 25kb.
-		  return;
-		}
 
-		var reader = new FileReader();
-		
-		
-		reader.onloadend = function() {
-		  callback(reader.result);
-		}
-		reader.readAsDataURL(xhr.response);
-	  };
-	  xhr.open('GET', url);
-	  xhr.responseType = 'blob';
-	  xhr.send();
+	var isExtensionOn = true;
+
+	function toDataURL(url, callback) {
+		var xhr = new XMLHttpRequest();
+		xhr.onload = function () {
+			var blob = xhr.response;
+
+			if (blob.size > 25 * 1024) {
+				callback(url); // Image size is larger than 25kb.
+				return;
+			}
+
+			var reader = new FileReader();
+			reader.onloadend = function () {
+				callback(reader.result);
+			};
+			reader.readAsDataURL(xhr.response);
+		};
+		xhr.open("GET", url);
+		xhr.responseType = "blob";
+		xhr.send();
 	}
 	
 	function escapeHtml(unsafe) {
@@ -46,7 +43,7 @@
 	}
 
 
-	function getAllContentNodes(element, textonly=settings.textonlymode) { // takes an element.
+	function getAllContentNodes(element, textonly = settings.textonlymode) { // takes an element.
 		var resp = "";
 
 		if (!element) {
@@ -63,7 +60,7 @@
 
 		element.childNodes.forEach(node => {
 			if (node.childNodes.length) {
-				resp += getAllContentNodes(node, textonly)
+				resp += getAllContentNodes(node, textonly);
 			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)) {
 				resp += escapeHtml(node.textContent) + "";
 			} else if (node.nodeType === 1) {
@@ -82,11 +79,11 @@
 		return resp;
 	}
 
- 	function getTranslation(key, value = false) {
+	function getTranslation(key, value = false) {
 		if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
 			// these are the proper translations
 			return settings.translation.innerHTML[key];
-		} else if (settings.translation && settings.translation.miscellaneous && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
+		} else if (settings.translation && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
 			return settings.translation.miscellaneous[key];
 		} else if (value !== false) {
 			return value;
@@ -97,112 +94,135 @@
 
 	var lastMessage = "";
 	var textSettingsArray = [];
-	
-	function processMessage(ele){
-		
-		var mid = ele.id.split("chat-messages-");
-		if (mid.length==2){
-			mid = mid[1];
-		} else {
-			return;;
+
+	function parseTextSettingList(textSetting) {
+		if (!textSetting) {
+			return [];
 		}
-		
+
+		return textSetting
+			.split(",")
+			.map(value => {
+				value = value.trim();
+				return value.split("/").pop();
+			})
+			.filter(value => value);
+	}
+
+	function isChannelAllowed() {
+		if (!textSettingsArray.length) {
+			return true;
+		}
+
+		var channel = document.location.pathname.split("/").pop();
+		return textSettingsArray.includes(channel);
+	}
+
+	function processMessage(ele){
+		var rawIdParts = ele.id.split("chat-messages-");
+		if (rawIdParts.length !== 2) {
+			return;
+		}
+
 		if (!settings.discord && !(window.ninjafy || window.electronApi)){
 			console.log("FAIL");
 			// discord isn't allowed via settings
 			return;
 		}
-		
-		if (textSettingsArray.length) {
-			var channel = document.location.pathname.split("/").pop();
-			if (!textSettingsArray.includes(channel)) {
-				return;
-			}
+
+		if (!isChannelAllowed()) {
+			return;
 		}
-		
-		mid = mid.split("-");
-		if (mid.length==2){
-			mid = mid[1];
-		} else {
-			mid = mid[0];
-		}
+
+		var midParts = rawIdParts[1].split("-");
+		var mid = midParts.length === 2 ? midParts[1] : midParts[0];
+
 		var nameColor = "";
 		var chatimg = "";
-		try{
-		   chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src+"";
-		} catch(e){
+		var avatar = ele.querySelector("img[class*='avatar'][src]");
+		if (avatar?.src) {
+			chatimg = avatar.src + "";
 		}
+
 		var bot = false;
-		var name="";
-		try {
-			let ntt = ele.querySelector("#message-username-"+mid+" [class^='username']");
-			if (ntt){
-				name = getAllContentNodes(ntt, true).trim();
-				nameColor = ntt?.style?.color || "";
-			}
-			
-			if (ele.querySelector("#message-username-"+mid+" [class^='botTag_']")){
-				bot = true;
-			}
-		} catch(e){
+		var name = "";
+
+		var usernameSelector = "#message-username-" + mid + " [class*='username']";
+		var botTagSelector = "#message-username-" + mid + " [class^='botTag_']";
+
+		var usernameNode = ele.querySelector(usernameSelector);
+		if (usernameNode){
+			name = getAllContentNodes(usernameNode, true).trim();
+			nameColor = usernameNode?.style?.color || "";
 		}
-		
-		
-		var msg = "";
-		
-		try {
-			msg = getAllContentNodes(ele.querySelector("#message-content-"+mid)).trim();
-		} catch(e){}
-		
+
+		if (ele.querySelector(botTagSelector)){
+			bot = true;
+		}
+
+		var msg = getAllContentNodes(ele.querySelector("#message-content-"+mid)).trim();
+
 		if (!msg){
-			try {
-				msg = getAllContentNodes(ele.querySelector("#message-accessories-"+mid+" [class^='embedDescription']")).trim();
-			} catch(e){}
+			msg = getAllContentNodes(
+				ele.querySelector("#message-accessories-"+mid+" [class^='embedDescription']")
+			).trim();
 		}
-		
+
 		var contentimg = "";
-		try {
-			contentimg = ele.querySelector("div[class^='imageContent'] img[src], div[class^='imageContent'] video[src]").src+"";
-		} catch(e){
-			try {
-				contentimg = ele.querySelector("img[data-type='sticker']").src+"";
-			} catch(e){
+
+		// 1. normal images / video posters
+		var media = ele.querySelector(
+			"div[id^='message-accessories'] a div img[alt][src], " +
+				"div[class^='imageContent'] img[src], " +
+				"div[class^='imageContent'] video[src]"
+		);
+
+		if (media?.src) {
+			contentimg = media.src;
+		} else {
+			// 2. sticker image
+			var stickerImg = ele.querySelector("img[data-type='sticker']");
+			if (stickerImg?.src) {
+				contentimg = stickerImg.src;
+			} else {
+				// 3. sticker canvas fallback
+				var canvas = ele.querySelector("canvas[data-type='sticker']");
+				if (canvas) {
+					contentimg = canvas.toDataURL("image/png");
+				}
 			}
 		}
-		
-		
-		
+
 		if (!name && !chatimg){
+			var cursor = ele;
 			for (var i=0; i<50;i++){
-				try {
-					ele = ele.previousElementSibling;
-				} catch(e){
+				if (!cursor || !cursor.previousElementSibling) {
 					break;
 				}
-				try {
-					if (!name){
-						let ntt = ele.querySelector("[id^='message-username-'] [class^='username']");
-						if (ntt){
-							name = getAllContentNodes(ntt, true).trim();
-							nameColor = ntt?.style?.color || "";
-						}
+				cursor = cursor.previousElementSibling;
+
+				if (!name){
+					var previousNameNode = cursor.querySelector("[id^='message-username-'] [class*='username']");
+					if (previousNameNode){
+						name = getAllContentNodes(previousNameNode, true).trim();
+						nameColor = previousNameNode?.style?.color || "";
 					}
-				} catch(e){
 				}
-				try {
-					if (!chatimg){
-						chatimg = ele.querySelector("img[class*='avatar-'],img[class*='avatar_']").src +"";
+
+				if (!chatimg){
+					var previousAvatar = cursor.querySelector("img[class*='avatar']");
+					if (previousAvatar?.src){
+						chatimg = previousAvatar.src + "";
 					}
-				} catch(e){
 				}
+
 				if (name){break;}
 			}
 		}
-		
+
 		if (name.includes(" @ ")){ // this is s relayed webhook that we can likely ignore.
 			return;
 		}
-		
 
 		var data = {};
 		data.id = mid;
@@ -220,20 +240,21 @@
 		data.chatimg = chatimg;
 		data.nameColor = nameColor;
 		data.hasDonation = "";
-		data.membership = "";;
+		data.membership = "";
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
 		data.type = "discord";
-		
+
 		if (nameColor && settings.discordmemberships){
 			data.membership = getTranslation("membership", "MEMBERSHIP");
 		}
-		
-		
-		if (lastMessage === JSON.stringify(data)){ // prevent duplicates, as zoom is prone to it.
+
+		var serialized = JSON.stringify(data);
+		if (lastMessage === serialized){ // prevent duplicates, as zoom is prone to it.
 			return;
 		}
-		lastMessage = JSON.stringify(data);
+		lastMessage = serialized;
+
 		if (data.contentimg){
 			toDataURL(data.contentimg, function(dataUrl) {
 				data.contentimg = dataUrl;
@@ -246,17 +267,18 @@
 					pushMessage(data);
 				}
 			});
-		} else {
-			if (data.chatimg){
-				toDataURL(data.chatimg, function(dataUrl) {
-					data.chatimg = dataUrl;
-					pushMessage(data);
-				});
-			} else {
-				pushMessage(data);
-			}
+			return;
 		}
-		
+
+		if (data.chatimg){
+			toDataURL(data.chatimg, function(dataUrl) {
+				data.chatimg = dataUrl;
+				pushMessage(data);
+			});
+			return;
+		}
+
+		pushMessage(data);
 	}
 
 	function pushMessage(data){
@@ -277,13 +299,7 @@
 		if ("settings" in response){
 			settings = response.settings;
 			if (settings?.customdiscordchannel?.textsetting) {
-				textSettingsArray = settings.customdiscordchannel.textsetting
-					.split(",")
-					.map(value => {
-						value = value.trim();
-						return value.split("/").pop();
-					})
-					.filter(value => value);
+				textSettingsArray = parseTextSettingList(settings.customdiscordchannel.textsetting);
 			} else {
 				textSettingsArray = [];
 			}
@@ -333,7 +349,7 @@
 		});
 
 		// MutationObserver to handle dynamically added elements
-		var observer = new MutationObserver(function(mutationsList) {
+		var visibilityObserver = new MutationObserver(function(mutationsList) {
 			for (const mutation of mutationsList) {
 				if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
 					toggleVisibility(document.querySelector('.hidden123') !== null);
@@ -342,7 +358,7 @@
 		});
 
 		// Observe the entire body for changes
-		observer.observe(document.body, { childList: true, subtree: true });
+		visibilityObserver.observe(document.body, { childList: true, subtree: true });
 
 	})();
 
@@ -351,36 +367,27 @@
 			try{
 				if ("getSource" == request){sendResponse("discord");	return;	}
 				if ("focusChat" == request){ // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
-				
-					if (textSettingsArray.length) {
-						var channel = document.location.pathname.split("/").pop();
-						if (!textSettingsArray.includes(channel)) {
-							sendResponse(false);
-							return;
-						}
+
+					if (!isChannelAllowed()) {
+						sendResponse(false);
+						return;
 					}
-				
+
 					document.querySelector('div[class*="slateTextArea"]').focus();
 					sendResponse(true);
 					return;
 				}
-				
+
 				if (typeof request === "object"){
 					if ("settings" in request){
 						settings = request.settings;
 						sendResponse(true);
 						if (settings.customdiscordchannel.textsetting) {
-							textSettingsArray = settings.customdiscordchannel.textsetting
-								.split(",")
-								.map(value => {
-									value = value.trim();
-									return value.split("/").pop();
-								})
-								.filter(value => value);
+							textSettingsArray = parseTextSettingList(settings.customdiscordchannel.textsetting);
 						} else {
 							textSettingsArray = [];
 						}
-						
+
 						return;
 					}
 				}
@@ -389,7 +396,7 @@
 		}
 	);
 
-	var lastURL =  "";
+	var lastURL = "";
 	var lastMessageID = 0;
 	var observer = null;
 	
@@ -433,10 +440,11 @@
 							}
 							setTimeout(function(id){
 								try{
-									if (document.getElementById(id).skip){return;}
-									document.getElementById(id).skip = true;
-									if (!document.getElementById(id).childNodes.length){return;}
-									processMessage(document.getElementById(id));
+									var targetEle = document.getElementById(id);
+									if (!targetEle || targetEle.skip){return;}
+									targetEle.skip = true;
+									if (!targetEle.childNodes.length){return;}
+									processMessage(targetEle);
 								} catch(e){}
 							},500, mutation.addedNodes[i].id);
 						}
@@ -455,17 +463,21 @@
 		observer = new MutationObserver(onMutationsObserved);
 		observer.observe(target, config);
 	}
-	
+		
 	console.log("social stream injected -- MUST BE ENABLED VIA SETTING TOGGLE AS WELL TO USE!!!");
+
+	var chatListSelector = '[data-list-id="chat-messages"]';
 
 	setInterval(function(){
 		if (!window.location.href.includes("/channels/")){return;}
-		if (document.querySelector('[data-list-id="chat-messages"]')){
-			if (!document.querySelector('[data-list-id="chat-messages"]').marked){
-				document.querySelector('[data-list-id="chat-messages"]').marked=true;
-				onElementInserted('[data-list-id="chat-messages"]');
-			}
+
+		var chatList = document.querySelector(chatListSelector);
+		if (!chatList || chatList.marked){
+			return;
 		}
+
+		chatList.marked=true;
+		onElementInserted(chatListSelector);
 	},1000);
 
 })();
