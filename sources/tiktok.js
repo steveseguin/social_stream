@@ -1074,12 +1074,22 @@
 			chatmessage = "";
 		}
 		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.parentElement?.parentElement) {
-			ital = "gift";
-			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").parentElement.parentElement);
+			const fallbackContainer = ele.querySelector("[data-e2e='message-owner-name']").parentElement.parentElement;
+			chatmessage = getAllContentNodes(fallbackContainer);
 			if (chatmessage) {
 				chatmessage = chatmessage.trim();
 				if (chatname && chatmessage.startsWith(chatname))
 					chatmessage = chatmessage.slice(chatname.length + 1);
+			}
+			if (
+				fallbackContainer.classList.contains("DivGiftMessage") ||
+				fallbackContainer.querySelector("[class*='SpanGiftCount']") ||
+				fallbackContainer.querySelector("img[src*='tiktokcdn.com/img/']") ||
+				(chatmessage && chatmessage.includes(".tiktokcdn.com/img/"))
+			) {
+				ital = "gift";
+			} else {
+				ital = true;
 			}
 		}
 		var hasdonation = "";
