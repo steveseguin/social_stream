@@ -480,22 +480,91 @@
 
 				<div class="guide-card" id="extension-webhooks">
 					<h3>Webhooks & Integrations</h3>
-					<p>Connect external services and receive events from donation platforms.</p>
+					<p>Connect external donation platforms to display tips and purchases in your stream overlay.</p>
 
-					<h4>Supported Integrations:</h4>
-					<ul class="guide-list">
-						<li><strong>Stripe:</strong> Payment processing events</li>
-						<li><strong>Ko-Fi:</strong> Donation and supporter alerts</li>
-						<li><strong>Buy Me A Coffee:</strong> Tip notifications</li>
-						<li><strong>Custom Webhooks:</strong> Any service that sends HTTP POST</li>
-					</ul>
-
-					<h4>Setting Up Webhook Integration:</h4>
+					<h4>Prerequisites:</h4>
 					<ol class="guide-steps">
-						<li>Find your webhook relay URL in the Social Stream Ninja popup</li>
-						<li>Copy the URL to your donation platform's webhook settings</li>
-						<li>Events will automatically appear in your dashboard and flows</li>
+						<li>Note your Session ID from the extension popup</li>
+						<li><strong>Choose ONE of these options</strong> (not both):
+							<ul>
+								<li><strong>Option A:</strong> Add <code>&server</code> to your dock.html URL (e.g., <code>dock.html?session=XXXX&server</code>)</li>
+								<li><strong>Option B:</strong> Enable <strong>"Enable remote API control of extension"</strong> in the extension popup under <code>Global settings and tools</code> &rarr; <code>Mechanics</code></li>
+							</ul>
+						</li>
 					</ol>
+					<div class="warning-box" style="background:#fff3cd; border:1px solid #ffc107; padding:1em; border-radius:4px; margin:1em 0;">
+						<strong>Warning:</strong> Do not enable both options. If you add <code>&server</code> to the dock AND enable remote API control in the extension, webhooks will be received by both, causing duplicate donation alerts.
+					</div>
+
+					<h4>Supported Platforms:</h4>
+					<table class="guide-table" style="width:100%; border-collapse:collapse; margin:1em 0;">
+						<tr style="background:#f5f5f5;">
+							<th style="padding:8px; text-align:left; border:1px solid #ddd;">Platform</th>
+							<th style="padding:8px; text-align:left; border:1px solid #ddd;">Webhook URL</th>
+							<th style="padding:8px; text-align:left; border:1px solid #ddd;">Event Type</th>
+						</tr>
+						<tr>
+							<td style="padding:8px; border:1px solid #ddd;"><strong>Stripe</strong></td>
+							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/stripe</code></td>
+							<td style="padding:8px; border:1px solid #ddd;"><code>checkout.session.completed</code></td>
+						</tr>
+						<tr>
+							<td style="padding:8px; border:1px solid #ddd;"><strong>Ko-Fi</strong></td>
+							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/kofi</code></td>
+							<td style="padding:8px; border:1px solid #ddd;">Donations (public only)</td>
+						</tr>
+						<tr>
+							<td style="padding:8px; border:1px solid #ddd;"><strong>Buy Me A Coffee</strong></td>
+							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/bmac</code></td>
+							<td style="padding:8px; border:1px solid #ddd;"><code>donation.created</code>, <code>membership.started</code></td>
+						</tr>
+						<tr>
+							<td style="padding:8px; border:1px solid #ddd;"><strong>Fourthwall</strong></td>
+							<td style="padding:8px; border:1px solid #ddd;"><code>https://io.socialstream.ninja/{sessionID}/fourthwall</code></td>
+							<td style="padding:8px; border:1px solid #ddd;"><code>ORDER_PLACED</code></td>
+						</tr>
+					</table>
+
+					<h4>Stripe Setup:</h4>
+					<ol class="guide-steps">
+						<li>Create a <a href="https://dashboard.stripe.com/payment-links" target="_blank">Stripe Payment Link</a></li>
+						<li><strong>Important:</strong> Add custom fields to your payment link:
+							<ul>
+								<li><strong>Display Name</strong> or <strong>Username</strong> (required) - without this field, donations will be rejected</li>
+								<li><strong>Message</strong> (optional) - allows donors to leave a message</li>
+							</ul>
+						</li>
+						<li>Go to <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Webhooks</a> and create a new endpoint</li>
+						<li>Set URL to: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/stripe</code></li>
+						<li>Select event: <code>checkout.session.completed</code></li>
+						<li>No signature verification needed (keep your session ID private instead)</li>
+					</ol>
+					<p><strong>Testing:</strong> Use Stripe's Test Mode with card <code>4242 4242 4242 4242</code>, any future expiry, any CVC.</p>
+
+					<h4>Ko-Fi Setup:</h4>
+					<ol class="guide-steps">
+						<li>Sign in to <a href="https://ko-fi.com/manage/webhooks" target="_blank">Ko-Fi Webhook Settings</a></li>
+						<li>Add webhook URL: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/kofi</code></li>
+						<li>Only public donations will appear (private donations are filtered out)</li>
+					</ol>
+
+					<h4>Buy Me A Coffee Setup:</h4>
+					<ol class="guide-steps">
+						<li>Sign in to Buy Me A Coffee and navigate to Settings &rarr; Webhooks</li>
+						<li>Add webhook URL: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/bmac</code></li>
+						<li>Both one-time donations and new memberships are supported</li>
+					</ol>
+
+					<h4>Fourthwall Setup:</h4>
+					<ol class="guide-steps">
+						<li>Go to your Fourthwall admin: Settings &rarr; For Developers &rarr; Webhooks</li>
+						<li>Create webhook with URL: <code>https://io.socialstream.ninja/YOUR_SESSION_ID/fourthwall</code></li>
+						<li>Subscribe to <code>ORDER_PLACED</code> events</li>
+					</ol>
+
+					<div class="warning-box" style="background:#fff3cd; border:1px solid #ffc107; padding:1em; border-radius:4px; margin:1em 0;">
+						<strong>Security Note:</strong> Keep your session ID private. Anyone with your session ID can send fake donation events to your overlay.
+					</div>
 
 					<h4>Exporting Chat via Webhook:</h4>
 					<p>You can also export chat data to external services:</p>
