@@ -17,7 +17,24 @@ async function startFlowSystem() {
             pointsSystem: window.pointsSystem || null,
             fetchWithTimeout: window.fetchWithTimeout || null,
             sanitizeRelay: window.sanitizeRelay || null,
-            checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null
+            checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
+            // Check for handleSpotifyAction dynamically at call time (not construction time)
+            // so it works even if background.js finishes loading after this EventFlowSystem is created
+            sendMessageToBackground: async (msg) => {
+                if (!msg || typeof msg !== 'object') return;
+                if (msg.spotifyAction) {
+                    if (window.handleSpotifyAction) {
+                        try {
+                            const result = await window.handleSpotifyAction(msg);
+                            console.log('[interface.js EventFlow Spotify Action]', msg.spotifyAction, result);
+                        } catch (error) {
+                            console.error('[interface.js EventFlow Spotify Action Error]', error);
+                        }
+                    } else {
+                        console.warn('[interface.js] Spotify action requested but handleSpotifyAction not available yet');
+                    }
+                }
+            }
         });
 
         // Wait for the database and initial flows to load

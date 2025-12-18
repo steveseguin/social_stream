@@ -4923,75 +4923,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			// Respond immediately - tokens are already cleared in memory
 			sendResponse({success: true});
 		} else if (request.spotifyAction) {
-			// Handle Spotify actions from Event Flow
-			if (spotify && settings.spotifyEnabled) {
-				(async () => {
-					try {
-						let result;
-						switch (request.spotifyAction) {
-							case 'skip':
-								result = await spotify.skip();
-								break;
-							case 'previous':
-								result = await spotify.previous();
-								break;
-							case 'pause':
-								result = await spotify.pause();
-								break;
-							case 'resume':
-								result = await spotify.resume();
-								break;
-							case 'volume':
-								result = await spotify.setVolume(request.volume);
-								break;
-							case 'queue':
-								result = await spotify.addToQueue(request.query);
-								break;
-							case 'toggle':
-								result = await spotify.toggle();
-								break;
-							case 'shuffle':
-								result = await spotify.shuffle(request.state);
-								break;
-							case 'repeat':
-								result = await spotify.setRepeat(request.mode);
-								break;
-							case 'nowPlaying':
-								result = await spotify.getNowPlaying();
-								// Format the message if track info available
-								if (result.success && result.track) {
-									const format = request.format || '🎵 Now playing: {song} by {artist}';
-									const formattedMsg = format
-										.replace(/{song}/gi, result.track.name || '')
-										.replace(/{artist}/gi, result.track.artist || '')
-										.replace(/{album}/gi, result.track.album || '');
-									result.message = formattedMsg;
-
-									// Send to dock if configured
-									if (request.sendToDock !== false) {
-										sendTargetP2P({
-											chatname: 'Spotify',
-											chatmessage: formattedMsg,
-											type: 'spotify',
-											chatimg: result.track.albumArt || ''
-										}, 'dock');
-									}
-								}
-								break;
-							default:
-								result = { success: false, message: 'Unknown Spotify action' };
-						}
-						console.log('[Spotify Action]', request.spotifyAction, result);
-						sendResponse({ success: result?.success, message: result?.message });
-					} catch (error) {
-						console.error('[Spotify Action Error]', error);
-						sendResponse({ success: false, error: error.message });
-					}
-				})();
-				return true; // Keep message channel open for async response
-			} else {
-				sendResponse({ success: false, error: 'Spotify not enabled or not connected' });
-			}
+			// Handle Spotify actions from Event Flow (uses shared handleSpotifyAction helper)
+			(async () => {
+				try {
+					const result = await handleSpotifyAction(request);
+					console.log('[Spotify Action]', request.spotifyAction, result);
+					sendResponse({ success: result?.success, message: result?.message });
+				} catch (error) {
+					console.error('[Spotify Action Error]', error);
+					sendResponse({ success: false, error: error.message });
+				}
+			})();
+			return true; // Keep message channel open for async response
 		} else if (request.cmd && request.target){
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P(request, request.target);
@@ -8583,6 +8526,75 @@ function sendTargetP2P(data, target) {
     
     }
 }
+
+// Shared helper for Spotify actions - used by both message listener and EventFlowSystem
+async function handleSpotifyAction(msg) {
+	if (!msg || typeof msg !== 'object' || !msg.spotifyAction) {
+		return { success: false, message: 'Invalid Spotify action request' };
+	}
+
+	// Guard: ensure Spotify is initialized and enabled
+	if (!spotify || !settings.spotifyEnabled) {
+		return { success: false, message: 'Spotify not enabled or not connected' };
+	}
+
+	let result;
+	switch (msg.spotifyAction) {
+		case 'skip':
+			result = await spotify.skip();
+			break;
+		case 'previous':
+			result = await spotify.previous();
+			break;
+		case 'pause':
+			result = await spotify.pause();
+			break;
+		case 'resume':
+			result = await spotify.resume();
+			break;
+		case 'volume':
+			result = await spotify.setVolume(msg.volume);
+			break;
+		case 'queue':
+			result = await spotify.addToQueue(msg.query);
+			break;
+		case 'toggle':
+			result = await spotify.toggle();
+			break;
+		case 'shuffle':
+			result = await spotify.shuffle(msg.state);
+			break;
+		case 'repeat':
+			result = await spotify.setRepeat(msg.mode);
+			break;
+		case 'nowPlaying':
+			result = await spotify.getNowPlaying();
+			// Format the message if track info available
+			if (result.success && result.track) {
+				const format = msg.format || '🎵 Now playing: {song} by {artist}';
+				const formattedMsg = format
+					.replace(/{song}/gi, result.track.name || '')
+					.replace(/{artist}/gi, result.track.artist || '')
+					.replace(/{album}/gi, result.track.album || '');
+				result.message = formattedMsg;
+
+				// Send to dock if configured
+				if (msg.sendToDock !== false) {
+					sendTargetP2P({
+						chatname: 'Spotify',
+						chatmessage: formattedMsg,
+						type: 'spotify',
+						chatimg: result.track.albumArt || ''
+					}, 'dock');
+				}
+			}
+			break;
+		default:
+			result = { success: false, message: 'Unknown Spotify action' };
+	}
+	return result;
+}
+
 function sendTickerP2P(data, uid = null) {
     // function to send data to the DOCk via the VDO.Ninja API
 
@@ -13503,6 +13515,8 @@ window.checkExactDuplicateAlreadyRelayed = checkExactDuplicateAlreadyRelayed;
 window.handleMessageStore = handleMessageStore;
 // Expose P2P targeting helper so EventFlowSystem can reach specific overlay pages (e.g., actions)
 window.sendTargetP2P = sendTargetP2P;
+// Expose Spotify action handler for EventFlowSystem fallback paths
+window.handleSpotifyAction = handleSpotifyAction;
 
 
 let tmp = new EventFlowSystem({
@@ -13514,7 +13528,19 @@ let tmp = new EventFlowSystem({
 	checkExactDuplicateAlreadyRelayed: window.checkExactDuplicateAlreadyRelayed || null,
 	messageStore: messageStore || {},  // Share the message store for duplicate detection
 	handleMessageStore: handleMessageStore || null,  // Share the message store handler
-	sendTargetP2P: window.sendTargetP2P || null  // Add sendTargetP2P for OBS and other actions
+	sendTargetP2P: window.sendTargetP2P || null,  // Add sendTargetP2P for OBS and other actions
+	// Handle Spotify actions locally since we're already in background.js
+	sendMessageToBackground: async (msg) => {
+		if (!msg || typeof msg !== 'object') return;
+		if (msg.spotifyAction) {
+			try {
+				const result = await handleSpotifyAction(msg);
+				console.log('[EventFlow Spotify Action]', msg.spotifyAction, result);
+			} catch (error) {
+				console.error('[EventFlow Spotify Action Error]', error);
+			}
+		}
+	}
 });
 
 
