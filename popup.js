@@ -3289,11 +3289,33 @@ function handleElementParam(ele, targetId, paramType, sync, value = null) {
             }
         }
 
+        // Handle related number settings (e.g., rotate checkbox with rotatecount/rotatetime)
+        const relatedSettingsAttr = `relatedSettings${paramNum}`;
+        const relatedSettings = ele.dataset[relatedSettingsAttr];
+        if (relatedSettings) {
+            const numSuffix = paramNum === '1' ? '' : paramNum;
+            relatedSettings.split(',').forEach(settingName => {
+                const relatedInput = document.querySelector(`[data-numbersetting${numSuffix}='${settingName}']`);
+                if (relatedInput && relatedInput.value) {
+                    targetElement.raw = updateURL(`${settingName}=${encodeURIComponent(relatedInput.value)}`, targetElement.raw);
+                }
+            });
+        }
+
         // Handle special case exclusions
         handleExclusiveCases(ele, paramType, paramValue, sync);
     } else { // ele.checked is false
         // If checkbox is unchecked, remove the parameter from URL based on the key part
         targetElement.raw = removeQueryParamWithValue(targetElement.raw, effectiveKey);
+
+        // Remove related settings when checkbox is unchecked
+        const relatedSettingsAttr = `relatedSettings${paramNum}`;
+        const relatedSettings = ele.dataset[relatedSettingsAttr];
+        if (relatedSettings) {
+            relatedSettings.split(',').forEach(settingName => {
+                targetElement.raw = removeQueryParamWithValue(targetElement.raw, settingName);
+            });
+        }
         
         // Special handling for language parameters - also remove associated voice parameter
         if (keyOnly === 'googlelang') {
@@ -3942,9 +3964,16 @@ function handleNumberSetting(ele, sync) {
         if (!targetId) continue;
         
         const paramAttr = `data-param${i}`;
-        
+
         // Update URL parameter if corresponding checkbox is checked
-        const checkbox = document.querySelector(`input[${paramAttr}='${settingValue}']`);
+        let checkbox = document.querySelector(`input[${paramAttr}='${settingValue}']`);
+
+        // If no direct checkbox, check for a parent checkbox that has this as a related setting
+        if (!checkbox) {
+            const relatedAttr = `data-related-settings${i}`;
+            checkbox = document.querySelector(`input[${relatedAttr}*='${settingValue}']`);
+        }
+
         if (checkbox && checkbox.checked) {
             const targetElement = document.getElementById(targetId);
             const effectiveKey = normalizeParamKey(settingValue);
