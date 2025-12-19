@@ -1338,6 +1338,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "spotify_configuration",
     description: "Enable to spotify integration"
   },
+  "spotifyManagedQueue": {
+    type: "boolean",
+    category: "spotify_configuration",
+    description: "Use managed queue for Spotify chat requests (enables !revoke; queues one request at a time)."
+  },
   "spotifyPollingInterval": {
     type: "number",
     category: "now_playing_features",
