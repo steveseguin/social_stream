@@ -103,7 +103,7 @@
 		
 		var name="";
 		try {
-			name = escapeHtml(ele.querySelector(".user-name").textContent);
+			name = escapeHtml(ele.querySelector(".user-name, [class*='_username_']").textContent);
 		} catch(e){
 		}
 		
@@ -119,8 +119,14 @@
 
 		var msg="";
 		try {
-			msg = getAllContentNodes(ele.querySelector(".message-content")).trim();
+			if (ele.querySelector(".message-content")){
+				msg = getAllContentNodes(ele.querySelector(".message-content")).trim();
+			} else {
+				msg = getAllContentNodes(ele).trim();
+				msg = msg.replace(name,"").trim();
+			}
 		} catch(e){
+			
 		}
 		
 		
@@ -306,7 +312,8 @@
 		
 		checking = setInterval(function(){
 			try {
-				var container = document.querySelector("#chatting-container") || document.querySelector('iframe')?.contentWindow?.document?.body.querySelector("#chatting-container");
+				var container = document.querySelector("#chatting-container, [data-testid='chat-messages-container']");
+				console.log(container);
 				if (!container.marked){
 					container.marked=true;
 
@@ -317,6 +324,11 @@
 						onElementInserted(container);
 					},2000);
 				}
+				if (!container){
+					
+				}
+				
+				
 				checkViewers();
 			} catch(e){}
 		},2000);
