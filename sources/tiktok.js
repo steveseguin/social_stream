@@ -1073,13 +1073,31 @@
 		if (chatmessage == "Moderator") {
 			chatmessage = "";
 		}
-		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.parentElement?.parentElement) {
-			const fallbackContainer = ele.querySelector("[data-e2e='message-owner-name']").parentElement.parentElement;
-			chatmessage = getAllContentNodes(fallbackContainer);
-			if (chatmessage) {
-				chatmessage = chatmessage.trim();
-				if (chatname && chatmessage.startsWith(chatname))
-					chatmessage = chatmessage.slice(chatname.length + 1);
+		const ownerNameEleForFallback = ele.querySelector("[data-e2e='message-owner-name']");
+		if (!chatmessage && ownerNameEleForFallback?.parentElement?.parentElement) {
+			const ownerBlock = ownerNameEleForFallback.parentElement;
+			const fallbackContainer = ownerNameEleForFallback.parentElement.parentElement;
+			try {
+				const parts = [];
+				let sibling = ownerBlock.nextSibling;
+				while (sibling) {
+					const part = getAllContentNodes(sibling);
+					if (part) {
+						parts.push(part);
+					}
+					sibling = sibling.nextSibling;
+				}
+				if (parts.length) {
+					chatmessage = parts.join(" ").trim();
+				}
+			} catch (e) {}
+			if (!chatmessage) {
+				chatmessage = getAllContentNodes(fallbackContainer);
+				if (chatmessage) {
+					chatmessage = chatmessage.trim();
+					if (chatname && chatmessage.startsWith(chatname))
+						chatmessage = chatmessage.slice(chatname.length + 1);
+				}
 			}
 			if (
 				fallbackContainer.classList.contains("DivGiftMessage") ||
@@ -1312,9 +1330,26 @@
 		ele.dataset.skip = ++msgCount;
 		var chatmessage = "";
 		const eventHints = deriveEventHints(ele);
-		let try1 = ele.querySelector("[data-e2e='message-owner-name']");
-		if (try1) {
-			try1 = try1?.nextElementSibling || try1.nextSibling;
+		const ownerNameEleForFallback = ele.querySelector("[data-e2e='message-owner-name']");
+		if (ownerNameEleForFallback?.parentElement) {
+			const ownerBlock = ownerNameEleForFallback.parentElement;
+			try {
+				const parts = [];
+				let sibling = ownerBlock.nextSibling;
+				while (sibling) {
+					const part = getAllContentNodes(sibling);
+					if (part) {
+						parts.push(part);
+					}
+					sibling = sibling.nextSibling;
+				}
+				if (parts.length) {
+					chatmessage = parts.join(" ").trim();
+				}
+			} catch (e) {}
+		}
+		if (!chatmessage && ownerNameEleForFallback) {
+			let try1 = ownerNameEleForFallback?.nextElementSibling || ownerNameEleForFallback.nextSibling;
 			if (try1) {
 				chatmessage = getAllContentNodes(try1);
 			}
