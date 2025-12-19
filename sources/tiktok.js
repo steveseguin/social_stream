@@ -74,10 +74,10 @@
 				}
 			}
 		},
-		isDuplicate(name, message) {
+		isDuplicate(name, message, contextKey = "") {
 			if (!name && !message) return true;
 			const currentTime = Date.now();
-			const messageKey = `${name}:${message}`;
+			const messageKey = contextKey ? `${contextKey}:${name}:${message}` : `${name}:${message}`;
 			const existing = this._entries.get(messageKey);
 			if (existing) {
 				if (!this._timeWindow || (currentTime - existing.time) <= this._timeWindow) {
@@ -1249,7 +1249,24 @@
 			return;
 		}
 		
-		if (messageLog?.isDuplicate(chatname, chatmessage)) {
+		if (chatmessage && chatmessage.startsWith("Welcome to TikTok LIVE!")){
+			return;
+		}
+		
+		
+		const isGiftMessage =
+			ital === "gift" ||
+			(!!chatmessage && chatmessage.includes(".tiktokcdn.com/img/") && chatmessage.includes("×"));
+		let giftIndexKey = "";
+		if (isGiftMessage) {
+			try {
+				const indexValue = ele?.dataset?.index || ele?.closest?.("[data-index]")?.dataset?.index || "";
+				if (indexValue) {
+					giftIndexKey = `idx=${indexValue}`;
+				}
+			} catch (e) {}
+		}
+		if ((!isGiftMessage || giftIndexKey) && messageLog?.isDuplicate(chatname, chatmessage, giftIndexKey)) {
 			////console.log("duplicate message; skipping",chatname, chatmessage);
 			return;
 		}
