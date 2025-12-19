@@ -580,7 +580,7 @@ class SpotifyIntegration {
                 await this.refreshAccessToken();
                 return this.skip();
             } else if (response.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to skip track" };
             }
@@ -609,7 +609,7 @@ class SpotifyIntegration {
                 await this.refreshAccessToken();
                 return this.previous();
             } else if (response.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to go to previous track" };
             }
@@ -638,7 +638,7 @@ class SpotifyIntegration {
                 await this.refreshAccessToken();
                 return this.pause();
             } else if (response.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to pause playback" };
             }
@@ -667,7 +667,7 @@ class SpotifyIntegration {
                 await this.refreshAccessToken();
                 return this.resume();
             } else if (response.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to resume playback" };
             }
@@ -698,7 +698,7 @@ class SpotifyIntegration {
                 await this.refreshAccessToken();
                 return this.setVolume(percent);
             } else if (response.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to set volume" };
             }
@@ -727,7 +727,7 @@ class SpotifyIntegration {
             }
 
             if (stateResponse.status === 204 || stateResponse.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             }
 
             const state = await stateResponse.json();
@@ -765,7 +765,7 @@ class SpotifyIntegration {
                 }
 
                 if (stateResponse.status === 204 || stateResponse.status === 404) {
-                    return { success: false, message: "No active Spotify device found" };
+                    return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
                 }
 
                 const playerState = await stateResponse.json();
@@ -785,7 +785,7 @@ class SpotifyIntegration {
                 await this.refreshAccessToken();
                 return this.shuffle(state);
             } else if (response.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to set shuffle" };
             }
@@ -822,7 +822,7 @@ class SpotifyIntegration {
                 await this.refreshAccessToken();
                 return this.setRepeat(mode);
             } else if (response.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to set repeat mode" };
             }
@@ -904,7 +904,7 @@ class SpotifyIntegration {
             if (queueResponse.status === 204 || queueResponse.ok) {
                 return { success: true, message: `📋 Added to queue: ${trackName} by ${trackArtist}` };
             } else if (queueResponse.status === 404) {
-                return { success: false, message: "No active Spotify device found" };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 return { success: false, message: "Failed to add track to queue" };
             }
@@ -1079,7 +1079,7 @@ class SpotifyIntegration {
                 return this.pushNextToSpotify();
             } else if (queueResponse.status === 404) {
                 console.warn(`[Spotify] No active device found`);
-                return { success: false, message: "No active Spotify device found. Open Spotify and play something first." };
+                return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 console.warn(`[Spotify] Failed to push to queue: ${queueResponse.status}`);
                 return { success: false, message: "Failed to add to Spotify queue" };

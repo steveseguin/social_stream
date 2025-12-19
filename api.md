@@ -26,6 +26,15 @@ There is an easy to use sandbox to play with some of the common API commands and
     - [How it works](#how-it-works)
     - [Use Cases](#use-cases)
   - [Best Practices](#best-practices)
+  - [Inbound Donation Webhooks](#inbound-donation-webhooks)
+    - [Prerequisites](#prerequisites)
+    - [Supported Platforms](#supported-platforms)
+    - [Stripe Setup](#stripe-setup)
+    - [Ko-Fi Setup](#ko-fi-setup)
+    - [Buy Me A Coffee Setup](#buy-me-a-coffee-setup)
+    - [Fourthwall Setup](#fourthwall-setup)
+    - [Security Note](#security-note)
+    - [Donation Message Format](#donation-message-format)
 - [Featured Page (featured.html)](#featured-page-featuredhtml)
     - [Connection Options](#connection-options)
     - [Content Filtering Options](#content-filtering-options)
@@ -460,6 +469,82 @@ This targeting system allows for more flexible and powerful setups, especially i
 2. Use appropriate channels for different types of messages to keep your communication organized.
 3. Leverage the targeting system when working with multiple instances to ensure messages reach the intended recipients.
 4. Regularly check for updates to the API as new features may be added over time.
+
+## Inbound Donation Webhooks
+
+Social Stream Ninja can receive donation events from external platforms via webhooks. These donations appear in your dock and overlays alongside regular chat messages.
+
+### Prerequisites
+
+1. **Note Your Session ID**: Find it in the extension popup or in your URL after `?session=`
+2. **Choose ONE of these options** (not both):
+   - **Option A**: Add `&server` to your dock.html URL (e.g., `dock.html?session=XXXX&server`)
+   - **Option B**: Enable **"Enable remote API control of extension"** in the extension popup under `Global settings and tools` → `Mechanics`
+
+> ⚠️ **Warning**: Do not enable both options. If you add `&server` to the dock AND enable remote API control in the extension, webhooks will be received by both, causing duplicate donation alerts.
+
+### Supported Platforms
+
+| Platform | Webhook URL | Event Type |
+|----------|-------------|------------|
+| **Stripe** | `https://io.socialstream.ninja/{sessionID}/stripe` | `checkout.session.completed` |
+| **Ko-Fi** | `https://io.socialstream.ninja/{sessionID}/kofi` | Donations (public only) |
+| **Buy Me A Coffee** | `https://io.socialstream.ninja/{sessionID}/bmac` | `donation.created`, `membership.started` |
+| **Fourthwall** | `https://io.socialstream.ninja/{sessionID}/fourthwall` | `ORDER_PLACED` |
+
+### Stripe Setup
+
+1. Create a [Stripe Payment Link](https://dashboard.stripe.com/payment-links)
+2. **Important**: Add custom fields to your payment link:
+   - **Display Name** or **Username** (required) - donations without this field are rejected
+   - **Message** (optional) - allows donors to leave a message
+3. Go to [Stripe Webhooks](https://dashboard.stripe.com/webhooks) and create a new endpoint
+4. Set the URL to: `https://io.socialstream.ninja/YOUR_SESSION_ID/stripe`
+5. Select event: `checkout.session.completed`
+6. No signature verification is needed (keep your session ID private instead)
+
+**Testing**: Use Stripe's Test Mode with card number `4242 4242 4242 4242`, any future expiry date, and any CVC.
+
+### Ko-Fi Setup
+
+1. Sign in to [Ko-Fi Webhook Settings](https://ko-fi.com/manage/webhooks)
+2. Add webhook URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/kofi`
+3. Only public donations appear (private donations are filtered out)
+
+### Buy Me A Coffee Setup
+
+1. Sign in to Buy Me A Coffee and navigate to Settings → Webhooks
+2. Add webhook URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/bmac`
+3. Both one-time donations (`donation.created`) and new memberships (`membership.started`) are supported
+
+### Fourthwall Setup
+
+1. Go to your Fourthwall admin: Settings → For Developers → Webhooks
+2. Create a webhook with URL: `https://io.socialstream.ninja/YOUR_SESSION_ID/fourthwall`
+3. Subscribe to `ORDER_PLACED` events
+
+### Security Note
+
+Keep your session ID private. Anyone with your session ID can send fake donation events to your overlay. The webhook URLs do not use signature verification, so security relies on the secrecy of your session ID.
+
+### Donation Message Format
+
+When a donation webhook is received, it is normalized into a standard SSN message format:
+
+```json
+{
+  "chatname": "Donor Name",
+  "chatmessage": "Optional message from donor",
+  "hasDonation": "$50.00 USD",
+  "type": "stripe",
+  "id": "unique_id",
+  "chatbadges": "",
+  "chatimg": "",
+  "membership": ""
+}
+```
+
+The `hasDonation` field contains the formatted amount and currency. This allows donations to be filtered, featured, and displayed using the same mechanisms as platform-native donations (Super Chats, Bits, etc.).
 
 # Featured Page (featured.html)
 

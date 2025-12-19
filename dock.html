@@ -8622,6 +8622,35 @@
 				}
 			}
 
+			function horizontalWaitForImages(node) {
+				var images = node.querySelectorAll("img");
+				if (!images.length) {
+					return Promise.resolve();
+				}
+				var promises = [];
+				for (var i = 0; i < images.length; i++) {
+					var img = images[i];
+					if (img.complete && img.naturalWidth > 0) {
+						continue;
+					}
+					promises.push(new Promise(function(resolve) {
+						var currentImg = img;
+						var resolved = false;
+						var done = function() {
+							if (!resolved) {
+								resolved = true;
+								resolve();
+							}
+						};
+						currentImg.addEventListener("load", done, { once: true });
+						currentImg.addEventListener("error", done, { once: true });
+						// Timeout fallback in case image load events don't fire
+						setTimeout(done, 500);
+					}));
+				}
+				return Promise.all(promises);
+			}
+
 			function horizontalAddNodeToTicker(node) {
 				if (!horizontalTickerState) {
 					initializeHorizontalTicker();
@@ -8638,14 +8667,10 @@
 
 				var track = horizontalTickerState.track;
 				var direction = horizontalTickerState.direction;
+
+				// Add to DOM first so images can start loading
 				if (direction === "rtl") {
 					track.appendChild(node);
-					var current = horizontalCaptureCurrentTranslate();
-					var target = horizontalCalculateTarget();
-					horizontalSetImmediateTransform(current);
-					requestAnimationFrame(function () {
-						horizontalAnimateTo(target);
-					});
 				} else {
 					var firstChild = track.firstChild;
 					if (firstChild) {
@@ -8653,27 +8678,45 @@
 					} else {
 						track.appendChild(node);
 					}
-					var current = horizontalCaptureCurrentTranslate();
-					var gap = horizontalGetGap();
-					var width = node.getBoundingClientRect().width;
-					if (!width) {
-						width = node.offsetWidth || node.scrollWidth || 0;
-					}
-					var hasSibling = track.children.length > 1;
-					var shift = width + (hasSibling ? gap : 0);
-					var target = horizontalCalculateTarget();
-					horizontalSetImmediateTransform(current - shift);
-					requestAnimationFrame(function () {
-						horizontalAnimateTo(target);
-					});
 				}
 
-				requestAnimationFrame(function () {
-					node.classList.remove("horizontal-ticker-pending");
-					node.style.opacity = "";
-				});
+				// Wait for images to load before calculating layout
+				horizontalWaitForImages(node).then(function() {
+					if (!node.parentNode) {
+						// Node was removed while waiting
+						return;
+					}
 
-				horizontalPruneMessages();
+					if (direction === "rtl") {
+						var current = horizontalCaptureCurrentTranslate();
+						var target = horizontalCalculateTarget();
+						horizontalSetImmediateTransform(current);
+						requestAnimationFrame(function () {
+							horizontalAnimateTo(target);
+						});
+					} else {
+						var current = horizontalCaptureCurrentTranslate();
+						var gap = horizontalGetGap();
+						var width = node.getBoundingClientRect().width;
+						if (!width) {
+							width = node.offsetWidth || node.scrollWidth || 0;
+						}
+						var hasSibling = track.children.length > 1;
+						var shift = width + (hasSibling ? gap : 0);
+						var target = horizontalCalculateTarget();
+						horizontalSetImmediateTransform(current - shift);
+						requestAnimationFrame(function () {
+							horizontalAnimateTo(target);
+						});
+					}
+
+					requestAnimationFrame(function () {
+						node.classList.remove("horizontal-ticker-pending");
+						node.style.opacity = "";
+					});
+
+					horizontalPruneMessages();
+				});
 			}
 
 			function processSmoothMessageBuffer() {

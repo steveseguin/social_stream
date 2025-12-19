@@ -74,10 +74,10 @@
 				}
 			}
 		},
-		isDuplicate(name, message) {
+		isDuplicate(name, message, contextKey = "") {
 			if (!name && !message) return true;
 			const currentTime = Date.now();
-			const messageKey = `${name}:${message}`;
+			const messageKey = contextKey ? `${contextKey}:${name}:${message}` : `${name}:${message}`;
 			const existing = this._entries.get(messageKey);
 			if (existing) {
 				if (!this._timeWindow || (currentTime - existing.time) <= this._timeWindow) {
@@ -1073,13 +1073,41 @@
 		if (chatmessage == "Moderator") {
 			chatmessage = "";
 		}
-		if (!chatmessage && ele.querySelector("[data-e2e='message-owner-name']")?.parentElement?.parentElement) {
-			ital = "gift";
-			chatmessage = getAllContentNodes(ele.querySelector("[data-e2e='message-owner-name']").parentElement.parentElement);
-			if (chatmessage) {
-				chatmessage = chatmessage.trim();
-				if (chatname && chatmessage.startsWith(chatname))
-					chatmessage = chatmessage.slice(chatname.length + 1);
+		const ownerNameEleForFallback = ele.querySelector("[data-e2e='message-owner-name']");
+		if (!chatmessage && ownerNameEleForFallback?.parentElement?.parentElement) {
+			const ownerBlock = ownerNameEleForFallback.parentElement;
+			const fallbackContainer = ownerNameEleForFallback.parentElement.parentElement;
+			try {
+				const parts = [];
+				let sibling = ownerBlock.nextSibling;
+				while (sibling) {
+					const part = getAllContentNodes(sibling);
+					if (part) {
+						parts.push(part);
+					}
+					sibling = sibling.nextSibling;
+				}
+				if (parts.length) {
+					chatmessage = parts.join(" ").trim();
+				}
+			} catch (e) {}
+			if (!chatmessage) {
+				chatmessage = getAllContentNodes(fallbackContainer);
+				if (chatmessage) {
+					chatmessage = chatmessage.trim();
+					if (chatname && chatmessage.startsWith(chatname))
+						chatmessage = chatmessage.slice(chatname.length + 1);
+				}
+			}
+			if (
+				fallbackContainer.classList.contains("DivGiftMessage") ||
+				fallbackContainer.querySelector("[class*='SpanGiftCount']") ||
+				fallbackContainer.querySelector("img[src*='tiktokcdn.com/img/']") ||
+				(chatmessage && chatmessage.includes(".tiktokcdn.com/img/"))
+			) {
+				ital = "gift";
+			} else {
+				ital = true;
 			}
 		}
 		var hasdonation = "";
@@ -1221,7 +1249,24 @@
 			return;
 		}
 		
-		if (messageLog?.isDuplicate(chatname, chatmessage)) {
+		if (chatmessage && chatmessage.startsWith("Welcome to TikTok LIVE!")){
+			return;
+		}
+		
+		
+		const isGiftMessage =
+			ital === "gift" ||
+			(!!chatmessage && chatmessage.includes(".tiktokcdn.com/img/") && chatmessage.includes("×"));
+		let giftIndexKey = "";
+		if (isGiftMessage) {
+			try {
+				const indexValue = ele?.dataset?.index || ele?.closest?.("[data-index]")?.dataset?.index || "";
+				if (indexValue) {
+					giftIndexKey = `idx=${indexValue}`;
+				}
+			} catch (e) {}
+		}
+		if ((!isGiftMessage || giftIndexKey) && messageLog?.isDuplicate(chatname, chatmessage, giftIndexKey)) {
 			////console.log("duplicate message; skipping",chatname, chatmessage);
 			return;
 		}
@@ -1302,9 +1347,26 @@
 		ele.dataset.skip = ++msgCount;
 		var chatmessage = "";
 		const eventHints = deriveEventHints(ele);
-		let try1 = ele.querySelector("[data-e2e='message-owner-name']");
-		if (try1) {
-			try1 = try1?.nextElementSibling || try1.nextSibling;
+		const ownerNameEleForFallback = ele.querySelector("[data-e2e='message-owner-name']");
+		if (ownerNameEleForFallback?.parentElement) {
+			const ownerBlock = ownerNameEleForFallback.parentElement;
+			try {
+				const parts = [];
+				let sibling = ownerBlock.nextSibling;
+				while (sibling) {
+					const part = getAllContentNodes(sibling);
+					if (part) {
+						parts.push(part);
+					}
+					sibling = sibling.nextSibling;
+				}
+				if (parts.length) {
+					chatmessage = parts.join(" ").trim();
+				}
+			} catch (e) {}
+		}
+		if (!chatmessage && ownerNameEleForFallback) {
+			let try1 = ownerNameEleForFallback?.nextElementSibling || ownerNameEleForFallback.nextSibling;
 			if (try1) {
 				chatmessage = getAllContentNodes(try1);
 			}
