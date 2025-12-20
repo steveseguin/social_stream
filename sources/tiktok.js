@@ -1536,6 +1536,17 @@
 		}
 		counter+=1;
 		
+		if (counter > 2 && document.querySelector("div[contenteditable='plaintext-only'][disabled][placeholder]")){
+			const lastReload = sessionStorage.getItem('lastReload');
+			const now = Date.now();
+
+			if (!lastReload || (now - parseInt(lastReload, 10)) > 30000) {
+				sessionStorage.setItem('lastReload', now);
+				location.reload();
+				return;
+			}
+		}
+		
 		// Health check: If no messages for over 2 minutes and observers exist, force restart
 		if (observer && (Date.now() - lastMessageTime > 120000) && counter % 30 === 0) {
 			console.log("[TikTok] No messages for 2+ minutes, forcing observer restart");
