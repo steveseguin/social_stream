@@ -1536,11 +1536,11 @@
 		}
 		counter+=1;
 		
-		if (counter > 2 && document.querySelector("div[contenteditable='plaintext-only'][disabled][placeholder]")){
+		if (counter > 3  && counter < 15 && document.querySelector("div[contenteditable='plaintext-only'][disabled][placeholder]")){
 			const lastReload = sessionStorage.getItem('lastReload');
 			const now = Date.now();
 
-			if (!lastReload || (now - parseInt(lastReload, 10)) > 30000) {
+			if (!lastReload || (now - parseInt(lastReload, 10)) > 60000) {
 				sessionStorage.setItem('lastReload', now);
 				location.reload();
 				return;
