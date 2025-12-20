@@ -4097,6 +4097,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "customkickstate") {
 				pushSettingChange();
 			}
+			if (request.setting == "hidecertainbadges") {
+				pushSettingChange();
+			}
 			if (request.setting == "customriversidestate") {
 				pushSettingChange();
 			}
