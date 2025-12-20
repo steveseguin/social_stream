@@ -7576,6 +7576,9 @@ socketserver.addEventListener("message", async function (event) {
 						} else if (xx.key == "messagetchat") {
 							message.chatmessage = xx.text.value;
 							
+						} else if (xx.key == "leaveamessage") {
+							message.chatmessage = xx.text.value;
+							
 						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "display name") {
 							message.chatname = xx.text.value;
 							foundCustomField = true;
