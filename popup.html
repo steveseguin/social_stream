@@ -6295,6 +6295,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="lightencolorname">☀️ Lighten and desaturat name colors</span>
                                 </div>
+								<div title="Makes it easier to see names on darker backgrounds.">
+                                    <label class="switch"> 
+                                        <input type="checkbox" data-setting="hidecertainbadges" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span data-translate="hidecertainbadges">📛 Remove commonly unwanted badges</span>
+                                </div>
 								
 								<div class="textInputContainer" style="width: 95%;" title="Trivial events can be highlighted in the dock using &trivialevents">
                                     <input type="text" id="highlightword" class="textInput" autocomplete="off" placeholder="Mark as trivial event if body contains" data-textsetting="highlightword" />
@@ -11323,6 +11330,16 @@ input:checked + .slider:before {
                                 <h4>Spotify Chat Commands</h4>
                                 <p style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 15px;">
                                     Configure which Spotify commands are available and who can use them.
+                                </p>
+                                <div style="margin: 0 0 8px 0;">
+                                    <label class="switch" title="Enable managed queue for !revoke support">
+                                        <input type="checkbox" id="spotifyManagedQueue" data-setting="spotifyManagedQueue" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>Use managed queue for song requests (enables !revoke)</span>
+                                </div>
+                                <p style="font-size: 0.85em; color: var(--text-secondary); margin: 0 0 12px;">
+                                    Spotify does not allow removing items from its queue. Managed queue keeps only one request inside Spotify at a time so !revoke can work on pending requests.
                                 </p>
 
                                 <div id="spotifyCommandsList" style="display: flex; flex-direction: column; gap: 10px;">

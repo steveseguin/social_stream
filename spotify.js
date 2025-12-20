@@ -25,12 +25,13 @@ class SpotifyIntegration {
 			entries: [],           // Array of QueueEntry objects
 			currentlyPlaying: null // Currently playing track from our queue
 		};
-		this.managedQueueEnabled = true;
+		this.managedQueueEnabled = false;
 	}
 
     async initialize(settings, callbacks = {}) {
         this.settings = settings;
         this.callbacks = { ...this.callbacks, ...callbacks };
+        this.managedQueueEnabled = !!(this.settings?.spotifyManagedQueue?.setting ?? this.settings?.spotifyManagedQueue);
         
         if (!this.settings.spotifyEnabled) {
             return;
@@ -450,6 +451,7 @@ class SpotifyIntegration {
     }
 
     async getCurrentTrack() {
+        this.managedQueueEnabled = !!(this.settings?.spotifyManagedQueue?.setting ?? this.settings?.spotifyManagedQueue);
         if (!this.accessToken) {
             return null;
         }
@@ -1353,16 +1355,26 @@ class SpotifyIntegration {
                 return "Usage: !queue <song name or artist>";
             }
 
-            // Use managed queue for requester tracking and !revoke support
-            const result = await this.addToManagedQueue(args, {
-                requesterName: data.userid || data.chatname,
-                requesterKey: `${data.type}:${data.userid || data.chatname}`
-            });
+            this.managedQueueEnabled = !!(this.settings?.spotifyManagedQueue?.setting ?? this.settings?.spotifyManagedQueue);
+            let result;
+            if (this.managedQueueEnabled) {
+                // Use managed queue for requester tracking and !revoke support
+                result = await this.addToManagedQueue(args, {
+                    requesterName: data.userid || data.chatname,
+                    requesterKey: `${data.type}:${data.userid || data.chatname}`
+                });
+            } else {
+                result = await this.addToQueue(args);
+            }
             return result.message;
         }
 
         // !revoke - Remove user's last song from queue
         if (cmd === "!revoke") {
+            this.managedQueueEnabled = !!(this.settings?.spotifyManagedQueue?.setting ?? this.settings?.spotifyManagedQueue);
+            if (!this.managedQueueEnabled) {
+                return "Queue revoke is disabled. Enable managed queue in Spotify settings to use !revoke.";
+            }
             if (!this.hasPermission(data, permissions['!revoke'])) {
                 return null;
             }
