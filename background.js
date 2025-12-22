@@ -4367,7 +4367,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if ("pokeMe" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-			pokeSite(sender.tab.url, sender.tab.id);
+			if (!settings.disabletiktokpoke) {
+				pokeSite(sender.tab.url, sender.tab.id);
+			}
 		} else if ("keepAlive" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			var action = {};
