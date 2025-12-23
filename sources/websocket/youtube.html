@@ -1,0 +1,3575 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>Social Stream - YouTube</title>
+    <link rel="icon" href="https://www.youtube.com/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" type="text/css" href="youtube.css" /> 
+</head>
+<body>
+    <div class="container">
+        <div id="quota-warning" class="quota-warning hidden">
+            <span id="quota-warning-text">We've hit the default YouTube API quota. You can use your own Google API project to continue without interruptions.</span>
+            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My Credentials</button>
+        </div>
+        <div class="main-content">
+            <div class="auth">
+                <div class="landing-container">
+                    <div class="youtube-logo"></div>
+                    <h1 class="landing-title">Social Stream for YouTube</h1>
+                    <p class="landing-subtitle">Connect to YouTube Live Chat</p>
+                    
+            <div class="auth-section">
+                <a id="auth-link" class="auth-button">Sign in with YouTube</a>
+                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
+            </div>
+                    
+                    <div class="landing-description">
+                        <p>This tool requires OAuth sign-in to access YouTube's data APIs.</p>
+                        <p><strong>Note:</strong> The YouTube Data API only provides aggregate subscriber totals (polled roughly every 30 minutes). It does not emit real-time “new follower” events, so you will not see Twitch-style follow pings here.</p>
+                        <p>Membership-related events and subscriber counts remain limited to channels you own; chat functionality will work across most public channels.</p>
+                    </div>
+
+                    <details id="credentials-details" class="credentials-details">
+                        <summary>Advanced: Use your own Google API credentials</summary>
+                        <div class="credentials-form">
+                            <label for="custom-client-id">OAuth Client ID</label>
+                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" />
+                            <label for="custom-api-key">API Key (optional)</label>
+                            <input id="custom-api-key" type="text" placeholder="AIza... (optional)" />
+                            <div class="credentials-actions">
+                                <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
+                                <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
+                            </div>
+                            <div class="credentials-help">
+                                <p><strong>How to set up in Google Cloud:</strong></p>
+                                <ul>
+                                    <li>Create or select a project at console.cloud.google.com</li>
+                                    <li>Enable the “YouTube Data API v3” in APIs & Services</li>
+                                    <li>Configure OAuth consent screen (External), add yourself as a test user or publish</li>
+                                    <li>Create Credentials → OAuth client ID → Web application</li>
+                                    <li>Add the following to Authorized redirect URIs:</li>
+                                </ul>
+                                <code id="redirect-uri-hint"></code>
+                                <p>Save and copy your Client ID (ends with .apps.googleusercontent.com) into the field above. API Key is optional.</p>
+                                <p>After saving, sign out and sign in again to use your credentials.</p>
+                            </div>
+                        </div>
+                    </details>
+                </div>
+            </div>
+            
+            <div class="hidden socket">
+               <div class="channel-header">
+					<div class="header-top">
+						<div class="user-info">
+							<div id="user-avatar"></div>
+							<div class="user-info-text">
+								<div class="header-item">
+									<span>User:</span>
+									<span id="current-user">Not signed in</span>
+									<div class="header-target">
+										<span>Target:</span>
+										<span id="current-channel" class="target-text">No target</span>
+									</div>
+								</div>
+							</div>
+						</div>
+						
+					</div>
+					
+					<div class="header-bottom">
+						<div class="header-info">
+							<div class="channel-input-container">
+								<input type="text" id="channel-input" class="channel-input" placeholder="Enter channel name">
+								<input type="text" id="video-input" class="channel-input" placeholder="Enter video ID">
+								<button id="connect-button" class="connect-button" style="background-color: #2255dd;">Connect</button>
+								<button id="change-button" class="connect-button" style="background-color: #882244;">Reset</button>
+								<button id="sign-out-button" class="sign-out-button">Sign Out</button>
+							</div>
+						</div>
+					</div>
+				</div>
+
+                <div class="stats-container">
+                    <h3>Channel Statistics</h3>
+                    <div class="stats-grid">
+                        <div class="stat-box">
+                            <div class="stat-value" id="subscriber-count">-</div>
+                            <div class="stat-label">Subscribers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="viewer-count">-</div>
+                            <div class="stat-label">Live Viewers</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value" id="likes-count">-</div>
+                            <div class="stat-label">Likes</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-container">
+                    <h3>Chat Messages</h3>
+                    <div id="textarea" class="ws-output"></div>
+                    <div class="chat-input">
+                        <input type="text" id="input-text" placeholder="Send Message">
+                        <button id="sendmessage" class="auth-button">Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar hidden socket">
+            <div class="permissions-container" id="permissions-info"></div>
+            <div class="credentials-container" id="credentials-container-signedin">
+                <div class="permissions-header">Use Your Own Credentials</div>
+                <div class="credentials-form inline">
+                    <label for="custom-client-id-2">OAuth Client ID</label>
+                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com" />
+                    <label for="custom-api-key-2">API Key (optional)</label>
+                    <input id="custom-api-key-2" type="text" placeholder="AIza... (optional)" />
+                    <div class="credentials-actions">
+                        <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
+                        <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
+                    </div>
+                    <div class="credentials-note">Changes take effect next sign-in. Use Reset to return to defaults.</div>
+                    <div class="credentials-help" style="margin-top:8px;">
+                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add this Authorized redirect URI:</p>
+                        <code id="redirect-uri-hint-2"></code>
+                    </div>
+                </div>
+            </div>
+            <div class="recent-events">
+                <h4>Recent Events</h4>
+                <div id="events-list"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="policy-footer hidden">
+        <a href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a>
+        |
+        <a href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a>
+        |
+        <a href="https://www.youtube.com/t/terms" target="_blank">YouTube's Terms of Service</a>
+    </div>
+    
+<script>
+
+
+try {
+    /*
+     * YouTube API Integration Note:
+     * This integration uses the YouTube Data API which has limitations compared to scraping the live chat directly.
+     * 
+     * Key Limitations:
+     * - Badge images (member badges, moderator badges, etc.) are not available through the API
+     * - We use text emoji fallbacks: 👑 (owner), 🛡️ (moderator), ⭐ (member)
+     * - Channel-specific emotes (like :_ted2:, :_ted:, etc.) are not available through the API
+     * - Super sticker images are not available, only the alt text description
+     * - For actual badge images, custom emotes, and sticker images, use the YouTube scraping mode in Social Stream instead
+     * 
+     * The badge format matches youtube.js for consistency:
+     * {"type": "img", "src": badgeUrl} when images are available
+     * {"type": "text", "text": emoji} as fallback
+     */
+    var YT_SCOPES = [
+        'https://www.googleapis.com/auth/youtube.readonly',
+        'https://www.googleapis.com/auth/youtube',
+        'https://www.googleapis.com/auth/youtube.force-ssl',
+        'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
+    ];
+    var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var apiKeyOverride = '';
+    try {
+        // Allow overrides via localStorage or URL for advanced users
+        const storedId = localStorage.getItem('ytClientIdOverride');
+        const storedKey = localStorage.getItem('ytApiKeyOverride');
+        const qp = new URLSearchParams(window.location.search);
+        const hp = new URLSearchParams(window.location.hash.slice(1));
+        const urlClient = qp.get('client_id') || hp.get('client_id');
+        const urlKey = qp.get('api_key') || hp.get('api_key');
+        if (storedId) clientId = storedId;
+        if (storedKey) apiKeyOverride = storedKey;
+        if (urlClient) { clientId = urlClient; }
+        if (urlKey) { apiKeyOverride = urlKey; }
+    } catch {}
+    var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
+    var username = "";
+    var channel = '';
+    var videoId = '';
+    let pollInterval;
+    let channelStatsInterval; // Separate interval for channel stats
+    let subscriberAlertInterval; // Interval for checking new subscribers
+    let fetchTimeout; // Track fetch timeout to clear on disconnect
+    var lastMessageTime = null;
+    var liveChatId = null;
+    var nextPageToken = null;
+    var isPolling = false;
+    var userDetails = {};
+	var currentStream = null;
+	var messageQueue = [];
+	var queueDrainTimeout = null;
+    var pendingRelayMessages = [];
+    const MAX_CACHED_CHAT_MESSAGES = 500;
+    var messageContextCache = new Map();
+    var messageCacheOrder = [];
+    var channelNameCache = new Map();
+	var emojiAssetsReady = false;
+	var displayInterval;
+	var quickPollCount = 0
+    var urlParams = new URLSearchParams(window.location.search);
+    var hashParams = new URLSearchParams(window.location.hash.slice(1));
+	var slowerPollingMode = false; // Flag for slower polling mode (1.5x slower)
+	
+	// Check for slower polling mode from URL parameters
+	if (urlParams.has('slowerpoll') || hashParams.has('slowerpoll')) {
+		slowerPollingMode = true;
+		console.log('Slower polling mode enabled (1.5x slower)');
+	}
+	
+	var consecutiveMaxMessages = 0; // Track consecutive polls with max messages
+	
+	var initialBacklogProcessing = true;
+	var initialBacklogTimestamp = null;
+	var lastPollingTime = Date.now();
+	var lastDisconnectTime = 0;
+	var lastConnectedVideoId = null;
+	var activeTimeouts = new Set(); // Track all active timeouts
+	var lastSuccessfulPollTime = 0;
+	var youtubeRecommendedInterval = 5000; // Default, will be updated by API
+	var isPageVisible = true;
+	var lastVisibilityChange = Date.now();
+	var backgroundPollingInterval = 10000; // 10 seconds when in background
+	var foregroundPollingInterval;
+	var tokenRefreshPromise = null;
+	
+
+	var emojiData = [];
+	var customEmoteData = [];
+	var shortcutMap = new Map(); // For :word: patterns
+	var unicodeMap = new Map();  // For Unicode emoji characters
+	
+	
+	// BTTV/7TV/FFZ emote support
+	var settings = {};
+	var BTTV = false;
+	var SEVENTV = false;
+	var FFZ = false;
+	var EMOTELIST = false;
+
+	function flushPendingRelayMessages() {
+		if (!pendingRelayMessages.length || !liveChatId) {
+			pendingRelayMessages.length = 0;
+			return;
+		}
+		var pending = pendingRelayMessages.slice();
+		pendingRelayMessages.length = 0;
+		pending.forEach(function(message) {
+			try {
+				processMessage(message);
+			} catch (error) {
+				console.error('Error processing deferred message:', error);
+			}
+		});
+	}
+
+	function markEmojiAssetsReady() {
+		if (emojiAssetsReady) {
+			return;
+		}
+		emojiAssetsReady = true;
+		flushPendingRelayMessages();
+	}
+
+	// Request emotes from extension
+	function requestEmotesFromExtension() {
+		if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.id) {
+			// Get video ID from current connection
+			if (videoId) {
+				console.log("Requesting emotes for video:", videoId);
+				
+				// Request BTTV emotes
+				chrome.runtime.sendMessage(chrome.runtime.id, { 
+					getBTTV: true,
+					url: "https://youtube.com/?v=" + videoId,
+					videoId: videoId,
+					type: "youtube"
+				}, function (response) {
+					if (chrome.runtime.lastError) {
+						console.log('BTTV request error:', chrome.runtime.lastError.message);
+					}
+				});
+				
+				// Request 7TV emotes if enabled
+				if (settings.seventv) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { 
+						getSEVENTV: true,
+						url: "https://youtube.com/?v=" + videoId,
+						videoId: videoId,
+						type: "youtube"
+					}, function (response) {
+						if (chrome.runtime.lastError) {
+							console.log('7TV request error:', chrome.runtime.lastError.message);
+						}
+					});
+				}
+				
+				// Request FFZ emotes if enabled
+				if (settings.ffz) {
+					chrome.runtime.sendMessage(chrome.runtime.id, { 
+						getFFZ: true,
+						url: "https://youtube.com/?v=" + videoId,
+						videoId: videoId,
+						type: "youtube"
+					}, function (response) {
+						if (chrome.runtime.lastError) {
+							console.log('FFZ request error:', chrome.runtime.lastError.message);
+						}
+					});
+				}
+			}
+		}
+	}
+	function processEmojiData(data) {
+	  emojiData = data;
+	  // Clear existing data if any
+	  shortcutMap.clear();
+	  unicodeMap.clear();
+	  
+	  data.forEach(emoji => {
+		// Skip if essential data is missing
+		if (!emoji.emojiId || !emoji.image || !emoji.image.thumbnails || !emoji.image.thumbnails[0] || !emoji.image.thumbnails[0].url) {
+		  console.warn('Skipping emoji with incomplete data:', emoji);
+		  return;
+		}
+
+		const altText = buildEmojiAltText(emoji);
+		
+		// Map the Unicode emoji with its data
+		unicodeMap.set(emoji.emojiId, {
+		  url: emoji.image.thumbnails[0].url,
+		  id: emoji.emojiId,
+		  alt: altText
+		});
+		
+		// Map all shortcuts to a separate map
+		if (emoji.shortcuts && emoji.shortcuts.length) {
+		  emoji.shortcuts.forEach(shortcut => {
+			shortcutMap.set(shortcut, {
+			  url: emoji.image.thumbnails[0].url,
+			  id: emoji.emojiId,
+			  alt: altText
+			});
+		  });
+		}
+	  });
+	}
+function setTrackedTimeout(callback, delay, isBackground = false) {
+	const timeoutHandle = setTimeout(() => {
+		activeTimeouts.delete(timeoutHandle);  // Remove from tracking when timeout fires
+		callback();
+	}, delay);
+	activeTimeouts.add(timeoutHandle);
+	return timeoutHandle;
+}
+
+function isElectronEnvironment() {
+	try {
+		if (window.electron && window.electron.ipcRenderer) return true;
+		if (navigator.userAgent && navigator.userAgent.indexOf('Electron') !== -1) return true;
+	} catch (_) {}
+	return false;
+}
+
+let keepAliveInitialized = false;
+function enableBackgroundKeepAlive() {
+	if (keepAliveInitialized) return;
+	keepAliveInitialized = true;
+
+	try {
+		const receiveChannelCallback = function (event) {
+			const channel = event.channel;
+			if (!channel) return;
+			channel.onmessage = function () {};
+			channel.onopen = function () {};
+			channel.onclose = function () {};
+			setInterval(function () {
+				try { channel.send("KEEPALIVE"); } catch (_) {}
+			}, 1000);
+		};
+		const errorHandle = function () {};
+		const localConnection = new RTCPeerConnection();
+		const remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function () {
+			try { localConnection.sendChannel.send("CONNECTED"); } catch (_) {}
+		};
+		localConnection.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => localConnection.setRemoteDescription(remoteConnection.localDescription))
+			.then(() => {
+				console.log("YouTube keep-alive channel established");
+			})
+			.catch(errorHandle);
+	} catch (e) {
+		console.log("YouTube keep-alive setup failed:", e);
+	}
+
+	const preventBackgroundThrottling = function () {
+		try {
+			window.onblur = null;
+			window.blurred = false;
+			document.hasFocus = () => true;
+			Object.defineProperties(document, {
+				hidden: { value: false, configurable: true },
+				mozHidden: { value: false, configurable: true },
+				msHidden: { value: false, configurable: true },
+				webkitHidden: { value: false, configurable: true },
+				visibilityState: {
+					get: () => "visible",
+					configurable: true
+				}
+			});
+		} catch (_) {}
+	};
+
+	const visibilityEvents = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"mozvisibilitychange",
+		"msvisibilitychange",
+		"blur"
+	];
+	visibilityEvents.forEach(eventName => {
+		window.addEventListener(eventName, (event) => {
+			try {
+				event.stopImmediatePropagation();
+				event.preventDefault();
+			} catch (_) {}
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
+}
+	function processCustomEmoteData(data) {
+	  customEmoteData = data;
+	  // Map custom emotes by their name (only in shortcut map)
+	  data.forEach(emote => {
+		const emoteName = `:${emote[0]}:`;
+		const customLabel = getAsciiLabel(emote[0]) || 'custom emoji';
+		shortcutMap.set(emoteName, {
+		  url: emote[1],
+		  id: "", // Empty alt for custom emotes
+		  isCustom: true,
+		  alt: `custom ${customLabel}`
+		});
+	  });
+	}
+	
+	function getTranslation(key, value = false) {
+		try {
+			if (settings.translation && settings.translation.innerHTML && key in settings.translation.innerHTML) {
+				return settings.translation.innerHTML[key];
+			} else if (settings.translation && settings.translation.miscellaneous && key in settings.translation.miscellaneous) {
+				return settings.translation.miscellaneous[key];
+			}
+		} catch (e) {}
+		if (value !== false) {
+			return value;
+		}
+		if (typeof key === "string") {
+			return key.replace(/-/g, " ");
+		}
+		return "";
+	}
+
+	var currentSourceName = "";
+	var currentSourceImage = "";
+
+	function setSourceIdentity(name, imageUrl) {
+		currentSourceName = name || "";
+		currentSourceImage = imageUrl || "";
+	}
+
+	function clearSourceIdentity() {
+		currentSourceName = "";
+		currentSourceImage = "";
+	}
+
+	function applySourceIdentity(payload) {
+		if (currentSourceName) {
+			payload.sourceName = currentSourceName;
+		}
+		if (currentSourceImage) {
+			payload.sourceImg = currentSourceImage;
+		}
+		return payload;
+	}
+
+	function rememberChannelName(channelId, displayName) {
+		if (!channelId || !displayName) {
+			return;
+		}
+		channelNameCache.set(String(channelId), displayName);
+	}
+
+	function lookupChannelName(channelId) {
+		if (!channelId) {
+			return null;
+		}
+		return channelNameCache.get(String(channelId)) || null;
+	}
+
+	function stripHtmlContent(value) {
+		if (!value) {
+			return '';
+		}
+		const temp = document.createElement('div');
+		temp.innerHTML = value;
+		return (temp.textContent || temp.innerText || '').trim();
+	}
+
+	function truncatePreviewText(text, maxLength) {
+		if (!text || typeof text !== 'string') {
+			return '';
+		}
+		const normalized = text.trim();
+		if (normalized.length <= maxLength) {
+			return normalized;
+		}
+		return normalized.slice(0, Math.max(0, maxLength - 1)).trimEnd() + '…';
+	}
+
+	function rememberChatMessage(messageId, context) {
+		if (messageId === undefined || messageId === null) {
+			return;
+		}
+		const id = String(messageId);
+		if (messageContextCache.has(id)) {
+			messageContextCache.set(id, context);
+			const existingIndex = messageCacheOrder.indexOf(id);
+			if (existingIndex > -1) {
+				messageCacheOrder.splice(existingIndex, 1);
+			}
+		} else if (messageCacheOrder.length >= MAX_CACHED_CHAT_MESSAGES) {
+			const expired = messageCacheOrder.shift();
+			if (expired !== undefined) {
+				messageContextCache.delete(expired);
+			}
+		}
+		messageCacheOrder.push(id);
+		messageContextCache.set(id, context);
+	}
+
+	function lookupChatMessage(messageId) {
+		if (messageId === undefined || messageId === null) {
+			return null;
+		}
+		return messageContextCache.get(String(messageId)) || null;
+	}
+
+	// Treat the presence of the excludeReplyingTo key as an opt-out toggle, regardless of its stored value.
+	function repliesAreExcluded() {
+		return Object.prototype.hasOwnProperty.call(settings, 'excludeReplyingTo');
+	}
+
+	function resolveReplyContext(messageData) {
+		if (!messageData) {
+			return null;
+		}
+
+		const explicitMeta =
+			messageData.meta &&
+			typeof messageData.meta === 'object' &&
+			messageData.meta.reply &&
+			typeof messageData.meta.reply === 'object'
+				? messageData.meta.reply
+				: null;
+		const rawReplyDetails = messageData.replyDetails || null;
+
+		const candidateIds = [];
+		const candidateChannelIds = [];
+		const rawSources = [];
+
+		if (messageData.replyMessageId) {
+			candidateIds.push(messageData.replyMessageId);
+		}
+		if (messageData.replyToId) {
+			candidateIds.push(messageData.replyToId);
+		}
+		if (messageData.messageReplyId) {
+			candidateIds.push(messageData.messageReplyId);
+		}
+		if (rawReplyDetails && rawReplyDetails.messageId) {
+			candidateIds.push(rawReplyDetails.messageId);
+		}
+		if (explicitMeta && explicitMeta.messageId) {
+			candidateIds.push(explicitMeta.messageId);
+		}
+
+		if (messageData.replyChannelId) {
+			candidateChannelIds.push(messageData.replyChannelId);
+		}
+		if (rawReplyDetails && rawReplyDetails.channelId) {
+			candidateChannelIds.push(rawReplyDetails.channelId);
+		}
+		if (explicitMeta && explicitMeta.channelId) {
+			candidateChannelIds.push(explicitMeta.channelId);
+		}
+
+		if (rawReplyDetails && rawReplyDetails.raw) {
+			rawSources.push(rawReplyDetails.raw);
+		}
+		if (explicitMeta && explicitMeta.raw) {
+			rawSources.push(explicitMeta.raw);
+		}
+
+		let cachedContext = null;
+		let resolvedMessageId = null;
+
+		for (const id of candidateIds) {
+			if (id === undefined || id === null || id === '') {
+				continue;
+			}
+			const context = lookupChatMessage(id);
+			if (context) {
+				cachedContext = context;
+				resolvedMessageId = String(id);
+				break;
+			}
+		}
+
+		let author =
+			(cachedContext && cachedContext.authorName) ||
+			(explicitMeta && typeof explicitMeta.author === 'string' && explicitMeta.author) ||
+			null;
+
+		if ((!author || !author.trim()) && candidateChannelIds.length) {
+			for (const candidateChannelId of candidateChannelIds) {
+				if (candidateChannelId === undefined || candidateChannelId === null || candidateChannelId === '') {
+					continue;
+				}
+				const cachedName = lookupChannelName(candidateChannelId);
+				if (cachedName) {
+					author = cachedName;
+					break;
+				}
+			}
+		}
+
+		let originalText = '';
+		if (cachedContext && typeof cachedContext.plainText === 'string') {
+			originalText = cachedContext.plainText;
+		} else if (explicitMeta && typeof explicitMeta.text === 'string') {
+			originalText = explicitMeta.text;
+		} else if (typeof messageData.replyText === 'string') {
+			originalText = messageData.replyText;
+		}
+		originalText = typeof originalText === 'string' ? originalText.trim() : '';
+		if (!originalText && cachedContext && cachedContext.html) {
+			originalText = stripHtmlContent(cachedContext.html);
+		}
+
+		const trimmedAuthor = author ? author.trim() : '';
+		const trimmedText = originalText ? originalText.replace(/\s+/g, ' ').trim() : '';
+
+		const labelParts = [];
+		if (trimmedAuthor) {
+			labelParts.push(trimmedAuthor);
+		}
+		if (trimmedText) {
+			labelParts.push(truncatePreviewText(trimmedText, 140));
+		}
+
+		if (!labelParts.length && !candidateIds.length && !candidateChannelIds.length) {
+			return null;
+		}
+
+		let label = labelParts.join(': ');
+		if (!label) {
+			if (trimmedAuthor) {
+				label = `${getTranslation("replying-to", "Replying to")} ${trimmedAuthor}`;
+			} else {
+				label = getTranslation("replying-to", "Replying to");
+			}
+		}
+
+		const meta = {
+			messageId: resolvedMessageId || (candidateIds.length ? String(candidateIds[0]) : null),
+			channelId: candidateChannelIds.length ? String(candidateChannelIds[0]) : null,
+			commentId:
+				(rawReplyDetails && rawReplyDetails.commentId) ||
+				(explicitMeta && explicitMeta.commentId) ||
+				null,
+			author: trimmedAuthor || null,
+			text: trimmedText || null
+		};
+
+		if (!meta.channelId && cachedContext && cachedContext.channelId) {
+			meta.channelId = String(cachedContext.channelId);
+		}
+
+		if (rawSources.length) {
+			meta.raw = rawSources.length === 1 ? rawSources[0] : rawSources;
+		} else if (rawReplyDetails && !meta.raw) {
+			meta.raw = rawReplyDetails;
+		}
+
+		const replyHtml = cachedContext ? cachedContext.html : null;
+		const replyPlain = trimmedText || (replyHtml ? stripHtmlContent(replyHtml) : '');
+
+		return {
+			label,
+			replyHtml,
+			replyPlain,
+			meta
+		};
+	}
+
+	function resolveThumbnailUrl(thumbnails) {
+		if (!thumbnails) {
+			return "";
+		}
+		if (thumbnails.high && thumbnails.high.url) {
+			return thumbnails.high.url;
+		}
+		if (thumbnails.medium && thumbnails.medium.url) {
+			return thumbnails.medium.url;
+		}
+		if (thumbnails.default && thumbnails.default.url) {
+			return thumbnails.default.url;
+		}
+		return "";
+	}
+	
+	
+	function escapeHtml(unsafe) {
+		try {
+			if (settings.textonlymode || false) {
+				return unsafe;
+			}
+			return unsafe.replace(/[&<>"']/g, function(m) {
+				return {
+					'&': '&amp;',
+					'<': '&lt;',
+					'>': '&gt;',
+					'"': '&quot;',
+					"'": '&#039;'
+				}[m];
+			}) || "";
+		} catch (e) {
+			return "";
+		}
+	}
+	
+	function strictEscapeHtml(value) {
+		if (value === undefined || value === null) {
+			return '';
+		}
+		return String(value).replace(/[&<>"']/g, function(m) {
+			return {
+				'&': '&amp;',
+				'<': '&lt;',
+				'>': '&gt;',
+				'"': '&quot;',
+				"'": '&#039;'
+			}[m];
+		});
+	}
+
+	function describeEmojiCodepoints(emojiString) {
+		if (!emojiString) {
+			return 'emoji';
+		}
+		try {
+			const codepoints = Array.from(emojiString).map(char => {
+				const code = char.codePointAt(0);
+				return code !== undefined ? `U+${code.toString(16).toUpperCase()}` : '';
+			}).filter(Boolean);
+			return codepoints.length ? `emoji ${codepoints.join(' ')}` : 'emoji';
+		} catch (e) {
+			return 'emoji';
+		}
+	}
+
+	function getAsciiLabel(value) {
+		if (!value || typeof value !== 'string') {
+			return '';
+		}
+		// Strip non-printable or non-ASCII characters to avoid reintroducing emoji glyphs
+		return value.replace(/[^\x20-\x7E]/g, '').trim();
+	}
+
+	function buildEmojiAltText(emoji) {
+		if (!emoji) {
+			return 'emoji';
+		}
+		const shortcutLabel = Array.isArray(emoji.shortcuts)
+			? emoji.shortcuts.map(getAsciiLabel).find(Boolean)
+			: '';
+		if (shortcutLabel) {
+			return shortcutLabel;
+		}
+		const searchTermLabel = Array.isArray(emoji.searchTerms)
+			? emoji.searchTerms.map(getAsciiLabel).find(Boolean)
+			: '';
+		if (searchTermLabel) {
+			return searchTermLabel;
+		}
+		return describeEmojiCodepoints(emoji.emojiId || '');
+	}
+
+	function resolveEmojiAltAttribute(emojiInfo, fallback) {
+		const candidate =
+			(emojiInfo && getAsciiLabel(emojiInfo.alt)) ||
+			(emojiInfo && emojiInfo.id ? describeEmojiCodepoints(emojiInfo.id) : '') ||
+			getAsciiLabel(fallback) ||
+			'emoji';
+		return strictEscapeHtml(candidate);
+	}
+
+	function shouldStickToBottom(element, threshold = 120) {
+		if (!element) {
+			return false;
+		}
+		return (element.scrollHeight - element.scrollTop - element.clientHeight) <= threshold;
+	}
+	
+	function replaceEmotesWithImages(text) {
+		if (!text || typeof text !== 'string') {
+			return text || '';
+		}
+		if (!EMOTELIST) {
+			return text;
+		}
+		
+		let replacedCount = 0;
+		const result = text.replace(/(?<=^|\s)(\S+?)(?=$|\s)/g, (match, emoteMatch) => {
+			const emote = EMOTELIST[emoteMatch];
+			if (emote) {
+				replacedCount++;
+				const escapedMatch = strictEscapeHtml(emoteMatch);
+				const isZeroWidth = typeof emote !== "string" && emote.zw;
+				return `<img src="${typeof emote === 'string' ? emote : emote.url}" alt="${escapedMatch}" title="${escapedMatch}" class="${isZeroWidth ? 'zero-width-emote-centered' : 'regular-emote'}"/>`;
+			}
+			return match;
+		});
+		
+		if (replacedCount > 0) {
+			console.log(`Replaced ${replacedCount} emotes in message: "${text}"`);
+		}
+		
+		return result;
+	}
+
+
+	function loadEmojiData() {
+	  // Try to get cached data first with expiration check
+	  const CACHE_DURATION = 7 * 24 * 60 * 60 * 1000; // 7 days
+	  const now = Date.now();
+	  
+	  const cachedDataStr = localStorage.getItem('emojiData');
+	  const cachedDataTime = localStorage.getItem('emojiDataTime');
+	  const cachedData = (cachedDataStr && cachedDataTime && (now - parseInt(cachedDataTime)) < CACHE_DURATION) ? cachedDataStr : null;
+	  
+	  const cachedCustomDataStr = localStorage.getItem('customEmoteData');
+	  const cachedCustomDataTime = localStorage.getItem('customEmoteDataTime');
+	  const cachedCustomData = (cachedCustomDataStr && cachedCustomDataTime && (now - parseInt(cachedCustomDataTime)) < CACHE_DURATION) ? cachedCustomDataStr : null;
+	  
+	  const promises = [];
+	  
+	  // Handle standard emojis
+	  const standardEmojiPromise = 
+		fetch('emotes.json', {
+		  mode: 'cors',
+		  headers: { 'Accept': 'application/json' }
+		})
+		.then(response => {
+		  if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+		  return response.json();
+		})
+		.then(data => {
+		  try {
+			localStorage.setItem('emojiData', JSON.stringify(data));
+			localStorage.setItem('emojiDataTime', Date.now().toString());
+		  } catch (error) {
+			console.warn('Failed to cache emoji data:', error);
+		  }
+		  return data;
+		})
+		.catch(error => {
+		  console.error('Error loading standard emoji data:', error);
+		  if (cachedData) {
+			try {
+			  return JSON.parse(cachedData);
+			} catch (parseError) {
+			  console.error('Failed to parse cached emoji data:', parseError);
+			  return [];
+			}
+		  }
+		  return [];
+		});
+	  
+	  promises.push(standardEmojiPromise.then(data => {
+		processEmojiData(data);
+		return data;
+	  }));
+
+	  // Handle custom emotes
+	  const customEmotePromise = fetch('custom_emotes.json', {
+		mode: 'cors',
+		headers: { 'Accept': 'application/json' }
+	  })
+	  .then(response => {
+		if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+		return response.json();
+	  })
+	  .then(data => {
+		try {
+		  localStorage.setItem('customEmoteData', JSON.stringify(data));
+		  localStorage.setItem('customEmoteDataTime', Date.now().toString());
+		} catch (error) {
+		  console.warn('Failed to cache custom emote data:', error);
+		}
+		return data;
+	  })
+	  .catch(error => {
+		console.error('Error loading custom emote data:', error);
+		if (cachedCustomData) {
+		  try {
+			return JSON.parse(cachedCustomData);
+		  } catch (parseError) {
+			console.error('Failed to parse cached custom emote data:', parseError);
+			return [];
+		  }
+		}
+		return [];
+	  });
+	  
+		  promises.push(customEmotePromise.then(data => {
+			processCustomEmoteData(data);
+			return data;
+		  }));
+	
+		  return Promise.all(promises).finally(markEmojiAssetsReady);
+		}
+
+	function replaceEmojis(message) {
+		if (!message || typeof message !== 'string') {
+			return message || '';
+		}
+	let result = strictEscapeHtml(message);
+		
+		// Process BTTV/7TV/FFZ emotes first
+		if (EMOTELIST) {
+			result = replaceEmotesWithImages(result);
+		}
+		
+		if (!shortcutMap.size && !unicodeMap.size) return result;
+		
+		// Process shortcut emotes
+		const shortcutRegex = /:([\w_-]+):/g;
+		result = result.replace(shortcutRegex, (match) => {
+			const emojiInfo = shortcutMap.get(match);
+			if (!emojiInfo) return match;
+			
+			if (settings.textonlymode || false) {
+				if (emojiInfo.isCustom) return '';
+				return emojiInfo.id;
+			} else {
+				const altText = resolveEmojiAltAttribute(emojiInfo, match);
+				return `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
+			}
+		});
+	  
+		if (!settings.textonlymode || false) {
+		// Helper function to convert emoji sequences to their combined URLs
+			function processEmojiSequence(text) {
+			  // Match emoji followed by skin tone modifier
+			  const emojiWithSkinToneRegex = /([\u{1F000}-\u{1FFFF}])([\u{1F3FB}-\u{1F3FF}])/gu;
+			  
+			  return text.replace(emojiWithSkinToneRegex, (match, baseEmoji, skinTone) => {
+				// Check if base emoji exists in our map
+				if (unicodeMap.has(baseEmoji)) {
+				  // Generate the combined emoji URL
+				  const baseUrl = unicodeMap.get(baseEmoji).url;
+				  
+				  // Format: baseUrl is in format like "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f/72.png"
+				  // Combined URL would be "https://fonts.gstatic.com/s/e/notoemoji/15.1/1f64f_1f3ff/72.png"
+				  
+				  // Extract the emoji code from the URL
+				  const emojiCodeMatch = baseUrl.match(/\/([^\/]+)\/\d+\.png$/);
+				  if (emojiCodeMatch) {
+					const baseCode = emojiCodeMatch[1];
+					const skinToneCode = skinTone.codePointAt(0).toString(16);
+					const combinedUrl = baseUrl.replace(
+					  `/${baseCode}/`,
+					  `/${baseCode}_${skinToneCode}/`
+					);
+					
+					const baseInfo = unicodeMap.get(baseEmoji);
+					const altText = resolveEmojiAltAttribute(baseInfo, describeEmojiCodepoints(match));
+					return `<img class="regular-emote" src="${combinedUrl}" alt="${altText}" title="${altText}" />`;
+				  }
+				}
+				
+				return match; // Return original if not found
+			  });
+			}
+
+			// Process emoji sequences first
+			result = processEmojiSequence(result);
+
+			// Then handle remaining standalone Unicode emoji characters
+			for (const [unicodeChar, emojiInfo] of unicodeMap.entries()) {
+			  if (result.includes(unicodeChar)) {
+				const altText = resolveEmojiAltAttribute(emojiInfo, describeEmojiCodepoints(unicodeChar));
+				const imgTag = `<img src="${emojiInfo.url}" alt="${altText}" class="chat-emoji" title="${altText}" />`;
+				result = result.replace(new RegExp(unicodeChar, 'g'), imgTag);
+			  }
+			}
+		}
+
+		return result;
+	}
+	function getStoredToken() {
+		const storedToken = localStorage.getItem('youtubeOAuthToken');
+		const tokenExpiry = localStorage.getItem('youtubeOAuthExpiry');
+		const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
+		const now = Date.now();
+		if (storedToken && tokenExpiry && now < parseInt(tokenExpiry, 10)) {
+			return storedToken;
+		}
+		if (storedRefreshToken) {
+			refreshToken();
+		} else {
+			clearStoredToken();
+		}
+		return null;
+	}
+	function setStoredToken(token, expiresIn = 3600, refresh = null) {
+		const expiryTime = new Date().getTime() + (expiresIn * 1000);
+		localStorage.setItem('youtubeOAuthToken', token);
+		localStorage.setItem('youtubeOAuthExpiry', expiryTime.toString());
+		if (refresh) {
+			localStorage.setItem('youtubeRefreshToken', refresh);
+		}
+	}function clearStoredToken() {
+		localStorage.removeItem('youtubeOAuthToken');
+		localStorage.removeItem('youtubeOAuthExpiry');
+		localStorage.removeItem('youtubeRefreshToken');
+		localStorage.removeItem('youtubeChannel');
+        localStorage.removeItem('youtubeVideoId');
+	}
+    function showAuthButton() {
+        const authElement = document.querySelector('.auth');
+        if (authElement) authElement.classList.remove("hidden");
+        document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
+        const policyFooter = document.querySelector('.policy-footer');
+        if (policyFooter) policyFooter.classList.remove('hidden');
+        const signedInCreds = document.getElementById('credentials-container-signedin');
+        if (signedInCreds) signedInCreds.classList.remove('hidden');
+    }
+    function showSocketInterface() {
+        const authElement = document.querySelector('.auth');
+        document.querySelectorAll('.socket').forEach(ele=>ele.classList.remove('hidden'));
+        if (authElement) authElement.classList.add("hidden");
+        const policyFooter = document.querySelector('.policy-footer');
+        if (policyFooter) policyFooter.classList.add('hidden');
+        const signedInCreds = document.getElementById('credentials-container-signedin');
+        if (signedInCreds) signedInCreds.classList.add('hidden');
+    }
+	function handleVisibilityChange() {
+		const wasVisible = isPageVisible;
+		isPageVisible = document.visibilityState === 'visible';
+		lastVisibilityChange = Date.now();
+		
+		if (isPageVisible && !wasVisible) {
+			console.log('Page is now visible - checking polling state');
+			
+			// Process any queued messages
+			if (messageQueue.length > 0) {
+				console.log(`Processing ${messageQueue.length} queued messages`);
+				processQueuedMessages();
+			}
+			
+			// Only resume if we have an active connection and aren't already polling
+			if (liveChatId && !isPolling && !fetchTimeout) {
+				const timeSinceLastPoll = Date.now() - lastPollingTime;
+				const timeSinceLastSuccess = Date.now() - lastSuccessfulPollTime;
+				const requiredInterval = Math.max(
+					youtubeRecommendedInterval,
+					foregroundPollingInterval || 5000
+				);
+				
+				// Additional safety check for rapid visibility changes
+				if (timeSinceLastSuccess < requiredInterval) {
+					const remainingTime = requiredInterval - timeSinceLastSuccess;
+					console.log(`Waiting ${remainingTime}ms before resuming (respecting YouTube interval)`);
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, remainingTime);
+				} else if (timeSinceLastPoll < requiredInterval) {
+					const remainingTime = requiredInterval - timeSinceLastPoll;
+					console.log(`Waiting ${remainingTime}ms before resuming polling`);
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, remainingTime);
+				} else {
+					console.log('Safe to resume polling');
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, 1000); // Small delay to be safe
+				}
+			}
+		} else if (!isPageVisible && wasVisible) {
+			console.log('Page is now hidden - switching to background mode');
+			
+			// When going to background, trim queue to 200 messages
+			if (messageQueue.length > 200) {
+				messageQueue = messageQueue.slice(-200);
+				console.log(`Trimmed message queue to 200 messages (was ${messageQueue.length})`);
+			}
+			
+			// Keep next poll scheduled while hidden so we don't stall
+			if (fetchTimeout && !isPolling) {
+				const elapsed = Date.now() - lastPollingTime;
+				const baseInterval = youtubeRecommendedInterval || 5000;
+				const remaining = Math.max(0, baseInterval - elapsed);
+				try {
+					if (typeof fetchTimeout.clear === 'function') {
+						fetchTimeout.clear();
+					} else {
+						clearTimeout(fetchTimeout);
+					}
+				} catch (_) {}
+				fetchTimeout = setTrackedTimeout(fetchChatMessages, remaining || baseInterval, true);
+			}
+			
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+				queueDrainTimeout = null;
+			}
+			
+		if (!foregroundPollingInterval && pollInterval) {
+			foregroundPollingInterval = pollInterval;
+		}
+		
+		}
+	}
+	function scheduleAuthRetry(delayOverride) {
+		const resumeDelay = typeof delayOverride === 'number'
+			? delayOverride
+			: Math.max(2000, youtubeRecommendedInterval || 5000);
+		if (fetchTimeout) {
+			try {
+				clearTimeout(fetchTimeout);
+			} catch (_) {}
+			fetchTimeout = null;
+		}
+		console.log(`Waiting ${resumeDelay}ms for token refresh before retrying polling`);
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, resumeDelay, !isPageVisible);
+		return resumeDelay;
+	}
+	async function fetchChatMessages() {
+		if (!liveChatId || isPolling) return;
+		
+		// Double-check we're not polling too soon
+		const timeSinceLastPoll = Date.now() - lastPollingTime;
+		if (timeSinceLastPoll < youtubeRecommendedInterval) {
+			console.warn(`Attempted to poll too soon. Waiting ${youtubeRecommendedInterval - timeSinceLastPoll}ms`);
+			fetchTimeout = setTrackedTimeout(fetchChatMessages, youtubeRecommendedInterval - timeSinceLastPoll, !isPageVisible);
+			return;
+		}
+		
+		isPolling = true;
+		lastPollingTime = Date.now();
+		const token = getStoredToken();
+		if (!token) {
+			isPolling = false;
+			const refreshed = await refreshToken();
+			if (refreshed) {
+				scheduleAuthRetry();
+			}
+			return;
+		}
+		
+		let response;
+		try {
+			let url = `https://www.googleapis.com/youtube/v3/liveChat/messages?liveChatId=${liveChatId}&part=snippet,authorDetails&maxResults=200`;
+			if (nextPageToken) url += `&pageToken=${nextPageToken}`;
+			
+			response = await fetchWithTimeout(url, 5000, {
+				'Authorization': `Bearer ${token}`,
+				'Content-Type': 'application/json'
+			});
+			
+			if (!response.ok) {
+				const status = response.status;
+				if (status === 401) {
+					isPolling = false;
+					await refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+					scheduleAuthRetry();
+					return;
+				} else if (status === 403) {
+					// Check if it's a quota error
+					try {
+						const errorData = await response.json();
+							if (errorData.error && errorData.error.errors && errorData.error.errors[0].reason === 'quotaExceeded') {
+								console.error('YouTube API quota exceeded');
+								showQuotaBanner();
+								isPolling = false;
+							// Show quota error in chat with alternative
+							const textarea = document.querySelector("#textarea");
+							if (textarea) {
+								var span = document.createElement("div");
+								span.style.color = "red";
+								span.innerHTML = "YouTube API quota limit hit. You can switch to standard YouTube scraping mode in Social Stream Ninja as an alternative until the quota resets.";
+								textarea.appendChild(span);
+							}
+							// Update header to show quota exceeded
+							updateHeaderInfo(username, 'Quota Exceeded');
+							// Try again in 5 minutes in case it's temporary
+							fetchTimeout = setTrackedTimeout(fetchChatMessages, 300000, !isPageVisible);
+							return;
+						}
+					} catch (e) {
+						// If we can't parse the error, treat as regular 403
+					}
+					console.warn('Access forbidden - chat may be disabled or restricted');
+					isPolling = false;
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, 30000, !isPageVisible);
+					return;
+				} else if (status === 429) {
+					console.warn('Rate limited by YouTube API');
+					showQuotaBanner();
+					isPolling = false;
+					// Use exponential backoff for rate limits
+					const backoffTime = Math.min(60000 * Math.pow(2, quickPollCount), 300000); // Max 5 minutes
+					quickPollCount++;
+					
+					fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
+					return;
+				}
+				throw new Error(`HTTP error! status: ${status}`);
+			}
+			
+			const data = await response.json();
+			
+			// ALWAYS respect YouTube's polling interval
+			const recommendedInterval = data.pollingIntervalMillis || 5000;
+			youtubeRecommendedInterval = recommendedInterval; // Store for future reference
+			lastSuccessfulPollTime = Date.now(); // Track successful poll time
+			
+			if (data.items && data.items.length > 0) {
+				// Process initial backlog timestamp
+				if (initialBacklogProcessing && !initialBacklogTimestamp && data.items.length > 0) {
+					const timestamps = data.items.map(item => new Date(item.snippet.publishedAt).getTime());
+					initialBacklogTimestamp = Math.max(...timestamps);
+					console.log('Initial backlog cutoff timestamp set:', new Date(initialBacklogTimestamp));
+				}
+				
+				
+				// Process all message types in a single loop
+				data.items.forEach(item => {
+				
+					const publishedAt = new Date(item.snippet.publishedAt);
+					const messageTime = publishedAt.getTime();
+					if (!lastMessageTime || publishedAt > lastMessageTime) {
+						const isBacklogMessage = initialBacklogProcessing && (messageTime <= initialBacklogTimestamp);
+						
+						// Check if this is a special event type that should not be processed as a regular message
+						const isSpecialEvent = item.snippet.type === 'giftMembershipReceivedEvent' ||
+											  item.snippet.type === 'newSponsorEvent' ||
+											  item.snippet.type === 'membershipGiftingEvent' ||
+											  item.snippet.type === 'memberMilestoneChatEvent' ||
+											  item.snippet.type === 'superStickerEvent';
+						
+						// Process regular messages (skip if it's a special event)
+							if (!isBacklogMessage && !isSpecialEvent) {
+								const textMessageDetails = item.snippet.textMessageDetails || {};
+								const messageReplyDetails = textMessageDetails.messageReplyDetails || null;
+								const normalizedReplyDetails = messageReplyDetails
+									? {
+										messageId: messageReplyDetails.messageId || null,
+										channelId: messageReplyDetails.channelId || null,
+										commentId: messageReplyDetails.commentId || null,
+										raw: messageReplyDetails
+									}
+									: null;
+								queueMessage({
+									messageId: item.id,
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									message: item.snippet.displayMessage || item.snippet.textMessageDetails?.messageText || '',
+									plainTextMessage: textMessageDetails.messageText || '',
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									isChatOwner: item.authorDetails.isChatOwner,
+									isChatSponsor: item.authorDetails.isChatSponsor,
+									isChatModerator: item.authorDetails.isChatModerator,
+									authorChannelId: item.authorDetails.channelId,
+									publishedAt,
+									skipEvent: isBacklogMessage,
+									isMembershipMessage: false, // Regular messages are not membership messages
+									replyDetails: normalizedReplyDetails,
+									replyMessageId: normalizedReplyDetails ? normalizedReplyDetails.messageId : null,
+									replyChannelId: normalizedReplyDetails ? normalizedReplyDetails.channelId : null
+								});
+							}
+						
+						// Process special message types
+						
+						// Handle gift membership received events
+						if (item.snippet.type === 'giftMembershipReceivedEvent' && item.snippet.giftMembershipReceivedDetails) {
+							const giftDetails = item.snippet.giftMembershipReceivedDetails;
+							if (!isBacklogMessage) {
+								processGiftRedemption({
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									gifterChannelId: giftDetails.gifterChannelId,
+									memberLevelName: giftDetails.memberLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage
+								});
+							}
+						}
+						
+						// Handle new sponsor events (new memberships)
+						if (item.snippet.type === 'newSponsorEvent' && item.snippet.newSponsorDetails) {
+							if (!isBacklogMessage) {
+								processNewSponsorship({
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									memberLevelName: item.snippet.newSponsorDetails.memberLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage
+								});
+							}
+						}
+						
+						// Handle membership gift purchase events
+						if (item.snippet.type === 'membershipGiftingEvent' && item.snippet.membershipGiftingDetails) {
+							const giftingDetails = item.snippet.membershipGiftingDetails;
+							if (!isBacklogMessage) {
+								processGiftPurchase({
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									giftCount: giftingDetails.giftMembershipsCount || 1,
+									memberLevelName: giftingDetails.giftMembershipsLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage
+								});
+							}
+						}
+						
+						// Handle member milestone events
+						if (item.snippet.type === 'memberMilestoneChatEvent' && item.snippet.memberMilestoneChatDetails) {
+							const milestoneDetails = item.snippet.memberMilestoneChatDetails;
+							if (!isBacklogMessage) {
+								processMemberMilestone({
+									authorName: item.authorDetails.displayName.replace(/^@/, ''),
+									memberMonth: milestoneDetails.memberMonth,
+									memberLevelName: milestoneDetails.memberLevelName,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									displayMessage: item.snippet.displayMessage,
+									isChatOwner: item.authorDetails.isChatOwner,
+									isChatModerator: item.authorDetails.isChatModerator,
+									isChatSponsor: item.authorDetails.isChatSponsor
+								});
+							}
+						}
+						
+						// Handle super sticker events
+						if (item.snippet.type === 'superStickerEvent' && item.snippet.superStickerDetails) {
+							const stickerDetails = item.snippet.superStickerDetails;
+							if (!isBacklogMessage) {
+								// Build badges for super sticker author
+								let stickerBadges = [];
+								if (item.authorDetails.isChatOwner) stickerBadges.push({"type": "text", "text": "👑"});
+								if (item.authorDetails.isChatModerator) stickerBadges.push({"type": "text", "text": "🛡️"});
+								if (item.authorDetails.isChatSponsor) stickerBadges.push({"type": "text", "text": "⭐"});
+								
+								processSuperSticker({
+									authorName: item.authorDetails.displayName.replace(/^@/, ''), // Remove @ prefix if present
+									amount: stickerDetails.amountDisplayString,
+									stickerId: stickerDetails.superStickerMetadata?.stickerId,
+									altText: stickerDetails.superStickerMetadata?.altText,
+									profileImageUrl: item.authorDetails.profileImageUrl,
+									authorChannelId: item.authorDetails.channelId,
+									badges: stickerBadges.length > 0 ? stickerBadges : "",
+									displayMessage: item.snippet.displayMessage
+								});
+							}
+						}
+						
+						if (item.snippet.superChatDetails) {
+							// Build badges for super chat author
+							let superChatBadges = [];
+							if (item.authorDetails.isChatOwner) superChatBadges.push({"type": "text", "text": "👑"});
+							if (item.authorDetails.isChatModerator) superChatBadges.push({"type": "text", "text": "🛡️"});
+							if (item.authorDetails.isChatSponsor) superChatBadges.push({"type": "text", "text": "⭐"});
+							
+							processSuperChat({
+								authorName: item.authorDetails.displayName.replace(/^@/, ''),
+								amount: item.snippet.superChatDetails.amountDisplayString,
+								message: item.snippet.superChatDetails.userComment,
+								tier: item.snippet.superChatDetails.tier,
+								profileImageUrl: item.authorDetails.profileImageUrl,
+								authorChannelId: item.authorDetails.channelId,
+								badges: superChatBadges.length > 0 ? superChatBadges : ""
+							});
+						}
+						if (item.snippet.membershipDetails) {
+							const membershipEventInfo = deriveMembershipEventContext(item.snippet, item.snippet.membershipDetails);
+							if (!isBacklogMessage) {
+								// Process membership events with the isMembershipMessage flag
+								const membershipMessage = item.snippet.displayMessage || '';
+								if (membershipMessage) {
+									const membershipDetailsCopy = item.snippet.membershipDetails ? { ...item.snippet.membershipDetails } : null;
+										// This is a monthly featured message from a member
+											const membershipPayload = {
+												messageId: item.id,
+												authorName: item.authorDetails.displayName.replace(/^@/, ''),
+												message: membershipMessage,
+												plainTextMessage: membershipMessage,
+												profileImageUrl: item.authorDetails.profileImageUrl,
+												isChatOwner: item.authorDetails.isChatOwner,
+												isChatSponsor: item.authorDetails.isChatSponsor,
+												isChatModerator: item.authorDetails.isChatModerator,
+												authorChannelId: item.authorDetails.channelId,
+											publishedAt,
+											skipEvent: isBacklogMessage,
+											isMembershipMessage: true // This is a special membership message
+										};
+										if (membershipDetailsCopy) {
+											membershipPayload.meta = {
+												membershipDetails: membershipDetailsCopy,
+												snippetType: item.snippet.type
+											};
+										}
+										queueMessage(membershipPayload);
+									} else {
+										// Build badges for membership author
+										let membershipBadges = [];
+										if (item.authorDetails.isChatOwner) membershipBadges.push({"type": "text", "text": "👑"});
+										if (item.authorDetails.isChatModerator) membershipBadges.push({"type": "text", "text": "🛡️"});
+										membershipBadges.push({"type": "text", "text": "⭐"}); // Always add member badge
+										
+										// New membership, renewal, or upgrade without a message
+										processMembership({
+												authorName: item.authorDetails.displayName.replace(/^@/, ''),
+												level: item.snippet.membershipDetails.memberLevelName,
+												profileImageUrl: item.authorDetails.profileImageUrl,
+												authorChannelId: item.authorDetails.channelId,
+												badges: membershipBadges,
+												membershipDetails: item.snippet.membershipDetails,
+												rawSnippetType: item.snippet.type,
+												eventType: membershipEventInfo.eventType
+										});
+									}
+								}
+							}
+						
+						// Update timestamp once for all message types
+						lastMessageTime = publishedAt;
+					}
+				});
+			}
+			
+			// Update pagination token
+			nextPageToken = data.nextPageToken;
+			
+			// Handle completion of initial backlog
+			if (initialBacklogProcessing && data.items.length < 200) {
+				initialBacklogProcessing = false;
+				console.log('Initial backlog processing complete');
+			}
+			
+			// Track consecutive max message polls
+			if (data.items && data.items.length >= 200) {
+				consecutiveMaxMessages++;
+				if (consecutiveMaxMessages >= 3 && slowerPollingMode) {
+					slowerPollingMode = false;
+					console.log('High chat activity detected - disabling slower polling mode');
+				}
+			} else {
+				consecutiveMaxMessages = 0; // Reset counter if not maxed
+			}
+			
+			// Reset quick poll count on successful request
+			quickPollCount = 0;
+			
+			// Calculate next poll interval
+			let nextPollInterval = recommendedInterval;
+			
+			// Apply slower polling mode if enabled (1.5x slower)
+			if (slowerPollingMode) {
+				nextPollInterval = Math.floor(nextPollInterval * 1.5);
+			}
+			
+			// Only adjust for background, never go below recommended interval
+			if (!isPageVisible) {
+				nextPollInterval = Math.max(backgroundPollingInterval, recommendedInterval);
+			}
+			
+			// Clear any existing timeout before setting new one
+			if (fetchTimeout) {
+				clearTimeout(fetchTimeout);
+				fetchTimeout = null;
+			}
+			
+			// Update spinner to show actual polling interval
+			updatePollSpinner(nextPollInterval);
+			
+			// Schedule next poll
+			fetchTimeout = setTrackedTimeout(fetchChatMessages, nextPollInterval, !isPageVisible);
+			
+	} catch (error) {
+		if (error && error.ytReason === 'liveChatEnded') {
+			console.log('YouTube reported live chat ended; stopping polling.');
+			handleLiveChatEnded();
+			return;
+		}
+		console.error('Error fetching chat messages:', error);
+		// Use exponential backoff for errors
+		const backoffTime = Math.min(10000 * Math.pow(2, quickPollCount), 60000); // Max 1 minute
+		quickPollCount++;
+		
+		// Clear any existing timeout before setting new one
+		if (fetchTimeout) {
+			clearTimeout(fetchTimeout);
+			fetchTimeout = null;
+		}
+		
+		fetchTimeout = setTrackedTimeout(fetchChatMessages, backoffTime, !isPageVisible);
+		} finally {
+			isPolling = false;
+		}
+	}
+	
+
+	function verifyAndUseToken(token) {
+		try {
+			getUserInfo(token).then(async userInfo => {
+				if (userInfo && userInfo.items && userInfo.items.length > 0) {
+					const userItem = userInfo.items[0];
+					username = userItem.snippet.title;
+					if (userItem.snippet.thumbnails && userItem.snippet.thumbnails.default) {
+						const avatarContainer = document.getElementById('user-avatar');
+						if (avatarContainer) {
+							avatarContainer.innerHTML = '';
+							const userImage = document.createElement('img');
+							userImage.src = userItem.snippet.thumbnails.default.url;
+							userImage.className = 'header-avatar';
+							userImage.alt = username || 'YouTube user avatar';
+							userImage.onerror = function handleAvatarError() {
+								this.onerror = null; // prevent infinite loops
+								this.style.display = 'none';
+							};
+							avatarContainer.appendChild(userImage);
+						}
+					}
+					const redirectVideoId = sessionStorage.getItem("youtubeRedirectVideoId");
+					const redirectChannel = sessionStorage.getItem("youtubeRedirectChannel");
+					if (redirectVideoId) {
+						videoId = redirectVideoId;
+						channel = '';
+						await connect(videoId);
+						sessionStorage.removeItem("youtubeRedirectVideoId");
+						sessionStorage.removeItem("youtubeRedirectChannel");
+					} else if (redirectChannel) {
+						channel = redirectChannel;
+						videoId = '';
+						document.getElementById('channel-input').value = channel;
+						await connect();
+						sessionStorage.removeItem("youtubeRedirectVideoId");
+						sessionStorage.removeItem("youtubeRedirectChannel");
+					} else if (videoId) {
+						connect(videoId);
+					} else if (channel) {
+						document.getElementById('channel-input').value = channel;
+						await connect();
+					} else {
+						updateHeaderInfo(username, 'No target specified');
+						document.getElementById('textarea').innerHTML = '<div>Welcome! Please enter a YouTube channel name or video ID to connect.</div>';
+						document.getElementById('viewer-count').textContent = '-';
+						document.getElementById('subscriber-count').textContent = '-';
+						document.getElementById('likes-count').textContent = '-';
+					}
+					showSocketInterface();
+				} else {
+					refreshToken();
+				}
+			}).catch(error => {
+				if (error.message && error.message.includes('401')) {
+					refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
+				} else {
+					console.error('Error validating token:', error);
+					clearStoredToken();
+					showAuthButton();
+				}
+			});
+		} catch (error) {
+			console.error('Error in verifyAndUseToken:', error);
+			clearStoredToken();
+			showAuthButton();
+		}
+	}
+	function parseFragment(hash) {
+		const tokens = {};
+		hash.replace('#', '').split('&').forEach(param => {
+			const [key, value] = param.split('=');
+			tokens[key] = value;
+		});
+		if (tokens.access_token) {
+			const expiresIn = tokens.expires_in ? parseInt(tokens.expires_in) : 3600;
+			setStoredToken(tokens.access_token, expiresIn);
+            window.history.replaceState({}, document.title, redirectURI);
+			verifyAndUseToken(tokens.access_token);
+		} else {
+			console.error('No access token found in URL fragment');
+			showAuthButton();
+		}
+	}
+	async function refreshToken() {
+		if (tokenRefreshPromise) {
+			return tokenRefreshPromise;
+		}
+		tokenRefreshPromise = (async () => {
+			console.log('Attempting to refresh token or re-authenticate.');
+			const storedRefreshToken = localStorage.getItem('youtubeRefreshToken');
+			if (storedRefreshToken) {
+				const refreshed = await refreshAccessToken(storedRefreshToken);
+				if (refreshed) {
+					return true;
+				}
+			}
+			clearStoredToken();
+			showAuthButton();
+			return false;
+		})().finally(() => {
+			tokenRefreshPromise = null;
+		});
+		return tokenRefreshPromise;
+	}
+	function authUrl() {
+		const state = nonce(15);
+		sessionStorage.youtubeOAuthState = state;
+		return 'https://ytauth.socialstream.ninja/auth' +
+			'?client_id=' + clientId +
+			'&redirect_uri=' + encodeURIComponent(redirectURI) +
+			'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
+			'&state=' + state;
+	}
+	async function refreshAccessToken(refreshTokenValue) {
+		if (!refreshTokenValue) {
+            console.log('No refresh token available for refreshAccessToken.');
+            clearStoredToken();
+            showAuthButton();
+            return false;
+        }
+		try {
+			const response = await fetch('https://ytauth.socialstream.ninja/refresh', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ refresh_token: refreshTokenValue })
+			});
+			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+			const data = await response.json();
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue);
+			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
+			return true;
+		} catch (error) {
+			console.error('Error refreshing token:', error);
+			clearStoredToken();
+			showAuthButton();
+			return false;
+		}
+	}
+	async function handleAuthCallback() {
+		const urlParams = new URLSearchParams(window.location.search);
+		const code = urlParams.get('code');
+		const state = urlParams.get('state');
+		if (state !== sessionStorage.youtubeOAuthState) {
+			console.error('State mismatch - possible CSRF attack');
+			showAuthButton(); return;
+		}
+		if (code) {
+			try {
+				const response = await fetch('https://ytauth.socialstream.ninja/token', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ code: code, redirect_uri: redirectURI })
+				});
+				if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+				const data = await response.json();
+				setStoredToken(data.access_token, data.expires_in, data.refresh_token);
+				window.history.replaceState({}, document.title, redirectURI);
+				verifyAndUseToken(data.access_token);
+			} catch (error) {
+				console.error('Error exchanging code for tokens:', error);
+				showAuthButton();
+			}
+		}
+	}
+    function nonce(length) {
+        var text = "";
+        var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (var i = 0; i < length; i++) {
+            text += possible.charAt(Math.floor(Math.random() * possible.length));
+        }
+        return text;
+    }
+    function signOut() {
+        clearPolling();
+        clearStoredToken();
+        username = "";
+        channel = '';
+        videoId = '';
+        updateHeaderInfo(null, null);
+        document.querySelectorAll('.socket').forEach(ele=>ele.classList.add('hidden'));
+        document.querySelector('.auth').classList.remove('hidden');
+        document.querySelector('#textarea').innerHTML = '';
+        document.getElementById('viewer-count').textContent = '-';
+        document.getElementById('subscriber-count').textContent = '-';
+        document.getElementById('likes-count').textContent = '-';
+        document.getElementById('events-list').innerHTML = '';
+        document.getElementById('permissions-info').innerHTML = '';
+        document.getElementById('channel-input').value = '';
+        console.log('Signed out successfully');
+    }
+    function handleEnterKey(event) {
+        if (event.key === 'Enter') handleSendMessage(event);
+    }
+	function handleSendMessage(event) {
+		event.preventDefault();
+		if (handleSendMessage.isSending) return;
+		const inputElement = document.querySelector('#input-text');
+		if (!inputElement) return;
+		var msg = inputElement.value.trim();
+		if (!msg || !liveChatId) {
+			return;
+		}
+		handleSendMessage.isSending = true;
+		const originalMsg = msg;
+		inputElement.value = "";
+		sendChatMessage(originalMsg).then(response => {
+			// YouTube API returns the message object on success, not a success field
+			if (response && response.id) {
+				<!-- const authorDetails = response.authorDetails || {}; -->
+				<!-- processMessage({ -->
+					<!-- authorName: authorDetails.displayName || username, -->
+					<!-- message: originalMsg, -->
+					<!-- profileImageUrl: authorDetails.profileImageUrl || '', -->
+					<!-- isChatOwner: authorDetails.isChatOwner || false, -->
+					<!-- isChatSponsor: authorDetails.isChatSponsor || false, -->
+					<!-- isChatModerator: authorDetails.isChatModerator || false, -->
+					<!-- authorChannelId: authorDetails.channelId || '' -->
+				<!-- }); -->
+			} else {
+				console.warn('Message was sent but not dispatched as event. Response:', response);
+			}
+			setTimeout(() => { handleSendMessage.isSending = false; }, 500);
+		}).catch((error) => {
+			console.error('Failed to send message:', error);
+			setTimeout(() => { handleSendMessage.isSending = false; }, 500);
+		});
+	}
+	async function handleConnect() {
+		const connectButton = document.getElementById('connect-button');
+		const channelInput = document.getElementById('channel-input');
+		const videoInput = document.getElementById('video-input');
+		
+		// If already connected, disconnect
+		if (liveChatId || pollInterval) {
+			clearPolling();
+			updateHeaderInfo(username, 'Disconnected');
+			document.getElementById('textarea').innerHTML = '<div>Disconnected from chat.</div>';
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			document.getElementById('events-list').innerHTML = '';
+			connectButton.textContent = 'Connect';
+			connectButton.style.backgroundColor = '#2255dd';
+			return;
+		}
+		
+		const channelNameFromInput = channelInput.value.trim();
+		const videoIdFromInput = videoInput.value.trim();
+		clearPolling();
+		if (videoIdFromInput) {
+			localStorage.setItem('youtubeVideoId', videoIdFromInput);
+			localStorage.removeItem('youtubeChannel');
+			videoId = videoIdFromInput;
+			channel = '';
+			updateHeaderInfo(username, "Loading video: " + videoId);
+			await connect(videoId);
+			videoInput.value = '';
+		} else if (channelNameFromInput) {
+			localStorage.setItem('youtubeChannel', channelNameFromInput);
+			localStorage.removeItem('youtubeVideoId');
+			channel = channelNameFromInput;
+			videoId = '';
+			updateHeaderInfo(username, "Channel: " + channel);
+			await connect();
+			channelInput.value = '';
+		}
+	}
+    async function getUserInfo(token) {
+        try {
+            const response = await fetchWithTimeout('https://www.googleapis.com/youtube/v3/channels?part=snippet&mine=true', 5000,
+                { 'Authorization': `Bearer ${token}` }
+            );
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching user info:', error);
+            if (error.message && error.message.includes('401')) throw error;
+            return null;
+        }
+    }
+    async function getChannelInfo(channelIdentifier) {
+		const token = getStoredToken();
+		if (!token) return null;
+		if (userDetails[channelIdentifier]) return userDetails[channelIdentifier];
+		try {
+			// First try: direct channel ID lookup
+			let response = await fetchWithTimeout(
+				`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdentifier}`, 5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			let data = await response.json();
+			
+			// Second try: username lookup if first try failed and not a channel ID
+			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+				response = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forUsername=${channelIdentifier}`, 5000,
+					{ 'Authorization': `Bearer ${token}` }
+				);
+				data = await response.json();
+			}
+			
+			// Third try: handle @username format using forHandle parameter
+			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+				// Try with @handle format
+				const handleToTry = channelIdentifier.startsWith('@') ? 
+					channelIdentifier : '@' + channelIdentifier;
+					
+				response = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&forHandle=${handleToTry}`, 5000,
+					{ 'Authorization': `Bearer ${token}` }
+				);
+				data = await response.json();
+			}
+			
+			// Fourth try: search query as last resort (uses 100 quota units)
+			if ((!data.items || data.items.length === 0) && !channelIdentifier.startsWith('UC')) {
+				// Handle @username format by removing @ if present
+				const searchQuery = channelIdentifier.startsWith('@') ? 
+					channelIdentifier.substring(1) : channelIdentifier;
+					
+				console.warn('Using search API as fallback - this costs 100 quota units');
+				response = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/search?part=snippet&q=${searchQuery}&type=channel&maxResults=1`, 5000,
+					{ 'Authorization': `Bearer ${token}` }
+				);
+				const searchData = await response.json();
+				if (searchData.items && searchData.items.length > 0) {
+					const channelIdFromResult = searchData.items[0].id.channelId;
+					response = await fetchWithTimeout(
+						`https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics&id=${channelIdFromResult}`, 5000,
+						{ 'Authorization': `Bearer ${token}` }
+					);
+					data = await response.json();
+				}
+			}
+			
+			if (data.items && data.items.length > 0) {
+				userDetails[channelIdentifier] = data.items[0];
+				userDetails[data.items[0].id] = data.items[0];
+				return data.items[0];
+			}
+			return null;
+		} catch (error) {
+			console.error('Error fetching channel info:', error);
+			return null;
+		}
+	}
+    async function getLiveStreamInfo(channelId) {
+        const token = getStoredToken();
+        if (!token) return null;
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${channelId}&eventType=live&type=video&maxResults=1`, 5000,
+                { 'Authorization': `Bearer ${token}` }
+            );
+            const data = await response.json();
+            if (data.items && data.items.length > 0) {
+                const videoIdFromResult = data.items[0].id.videoId;
+                const detailsResponse = await fetchWithTimeout(
+                    `https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdFromResult}`, 5000,
+                    { 'Authorization': `Bearer ${token}` }
+                );
+                const detailsData = await detailsResponse.json();
+                if (detailsData.items && detailsData.items.length > 0) {
+                    return detailsData.items[0];
+                }
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching live stream info:', error);
+            return null;
+        }
+    }
+    async function getLiveChatId(videoIdForChat) {
+        const token = getStoredToken();
+        if (!token) return null;
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/videos?part=liveStreamingDetails&id=${videoIdForChat}`, 5000,
+                { 'Authorization': `Bearer ${token}` }
+            );
+            const data = await response.json();
+            if (data.items && data.items.length > 0 && data.items[0].liveStreamingDetails) {
+                return data.items[0].liveStreamingDetails.activeLiveChatId;
+            }
+            return null;
+        } catch (error) {
+            console.error('Error fetching live chat ID:', error);
+            return null;
+        }
+    }
+	function updatePollSpinner(interval) {
+	  const spinner = document.getElementById('poll-spinner');
+	  if (spinner) {
+		interval -= 300;
+		if (interval<100){interval=100};
+		const seconds = (interval / 1000).toFixed(1);
+		spinner.style.animation = 'none';
+		void spinner.offsetWidth;
+		spinner.style.animation = `spinner-rotation ${interval}ms ease-in-out 1`;
+		document.getElementById('poll-time').textContent = `${seconds}s`;
+	  }
+	}
+	function initializeSpinner() {
+	  const chatHeader = document.querySelector('.chat-container h3');
+	  if (!chatHeader) return;
+	  chatHeader.className = 'chat-header';
+	  chatHeader.innerHTML = `
+		<span>Chat Messages</span>
+		<div class="poll-spinner-container">
+		  <div id="poll-spinner" class="poll-spinner"></div>
+		  <span id="poll-time">5.0s</span>
+		</div>
+	  `;
+	  updatePollSpinner(5000);
+	}
+		function queueMessage(messageData) {
+			if (emojiAssetsReady) {
+				processMessage(messageData);
+			} else {
+				pendingRelayMessages.push(messageData);
+			}
+
+			// If page isn't visible, queue for later DOM rendering
+			if (!isPageVisible) {
+				if (messageQueue.length >= 200) {
+					messageQueue.splice(0, messageQueue.length - 199);
+				}
+				messageQueue.push(messageData);
+			}
+		}
+	
+	function processQueuedMessages() {
+		// Only process queued messages while page is visible
+		if (!isPageVisible || messageQueue.length === 0) {
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+				queueDrainTimeout = null;
+			}
+			return;
+		}
+		
+		// Process messages in batches to avoid blocking UI
+		const batchSize = Math.min(20, messageQueue.length);
+		const batch = messageQueue.splice(0, batchSize);
+		
+		batch.forEach(message => processMessage(message, { suppressRelay: true }));
+		
+		// If more messages remain, process them after a short delay
+		if (messageQueue.length > 0 && isPageVisible) {
+			if (queueDrainTimeout) {
+				clearTimeout(queueDrainTimeout);
+			}
+			queueDrainTimeout = setTimeout(() => {
+				queueDrainTimeout = null;
+				processQueuedMessages();
+			}, 50);
+		} else {
+			queueDrainTimeout = null;
+		}
+	}
+		
+	
+    async function sendChatMessage(message) {
+		const token = getStoredToken();
+		if (!token || !liveChatId) return null;
+		try {
+			const baseUrl = 'https://www.googleapis.com/youtube/v3/liveChat/messages';
+			const url = `${baseUrl}?part=snippet,authorDetails`;
+			const response = await fetch(url, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': `Bearer ${token}`
+				},
+				body: JSON.stringify({
+					snippet: {
+						liveChatId: liveChatId,
+						type: 'textMessageEvent',
+						textMessageDetails: { messageText: message }
+					}
+				})
+			});
+			
+			if (!response.ok) {
+				const errorData = await response.json();
+				console.error('YouTube API error response:', errorData);
+				return null;
+			}
+			
+			const data = await response.json();
+			console.log('Chat message API response:', data);
+			
+			// Check if the response has an error
+			if (data.error) {
+				console.error('YouTube API error:', data.error);
+				return null;
+			}
+			
+			return data;
+		} catch (error) {
+			console.error('Error sending chat message:', error);
+			return null;
+		}
+	}
+
+	function notifyVideoChange(videoId, channelId) {
+		window.dispatchEvent(new CustomEvent('youtubeVideoChanged', {
+			detail: {
+				videoId: videoId || null,
+				channelId: channelId || null
+			},
+			bubbles: true
+		}));
+		
+		// Also request emotes for this video
+		if (videoId) {
+			requestEmotesFromExtension();
+		}
+	}
+	
+
+    async function getStreamStats() {
+        if (!currentStream || !currentStream.id) return;
+        const token = getStoredToken();
+        if (!token) return;
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/videos?part=statistics,liveStreamingDetails&id=${currentStream.id}`, 5000,
+                { 'Authorization': `Bearer ${token}` }
+            );
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            if (data.items && data.items.length > 0) {
+                const stats = data.items[0];
+                if (stats.liveStreamingDetails && stats.liveStreamingDetails.concurrentViewers) {
+                    updateStats('viewer_update', { meta: stats.liveStreamingDetails.concurrentViewers });
+                }
+                if (stats.statistics && stats.statistics.likeCount) {
+                    updateStats('likes_update', { meta: stats.statistics.likeCount });
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching stream stats:', error);
+        }
+    }
+    async function getSubscriberCount(channelIdForSubs) {
+        const token = getStoredToken();
+        if (!token) return;
+        try {
+            const response = await fetchWithTimeout(
+                `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIdForSubs}`, 5000,
+                { 'Authorization': `Bearer ${token}` }
+            );
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const data = await response.json();
+            if (data.items && data.items.length > 0 && data.items[0].statistics) {
+                updateStats('subscriber_update', { meta: data.items[0].statistics.subscriberCount });
+            }
+        } catch (error) {
+            console.error('Error fetching subscriber count:', error);
+        }
+    }
+
+    // Subscriber alerts - fetch recent subscribers and emit new_follower events
+    const SEEN_SUBSCRIBERS_KEY = 'yt_seen_subscribers';
+    const MAX_SEEN_SUBSCRIBERS = 2000; // Limit stored IDs to prevent localStorage bloat
+
+    function getSeenSubscribers() {
+        try {
+            const stored = localStorage.getItem(SEEN_SUBSCRIBERS_KEY);
+            return stored ? JSON.parse(stored) : [];
+        } catch (e) {
+            console.error('Error reading seen subscribers:', e);
+            return [];
+        }
+    }
+
+    function saveSeenSubscribers(subscriberIds) {
+        try {
+            // Keep only the most recent entries to prevent unbounded growth
+            const trimmed = subscriberIds.slice(-MAX_SEEN_SUBSCRIBERS);
+            localStorage.setItem(SEEN_SUBSCRIBERS_KEY, JSON.stringify(trimmed));
+        } catch (e) {
+            console.error('Error saving seen subscribers:', e);
+        }
+    }
+
+    async function fetchRecentSubscribers() {
+        const token = getStoredToken();
+        if (!token) return;
+
+        try {
+            const response = await fetchWithTimeout(
+                'https://www.googleapis.com/youtube/v3/subscriptions?part=snippet,subscriberSnippet&myRecentSubscribers=true&maxResults=50',
+                10000,
+                { 'Authorization': `Bearer ${token}` }
+            );
+
+            if (!response.ok) {
+                if (response.status === 403) {
+                    console.log('Subscriber alerts: Insufficient permissions or quota exceeded');
+                } else {
+                    console.error('Error fetching recent subscribers:', response.status);
+                }
+                return;
+            }
+
+            const data = await response.json();
+            if (!data.items || data.items.length === 0) return;
+
+            const seenSubscribers = getSeenSubscribers();
+            const seenSet = new Set(seenSubscribers);
+            const newSubscribers = [];
+
+            // Process subscribers - API returns newest first
+            for (const item of data.items) {
+                const subscriberId = item.subscriberSnippet?.channelId || item.snippet?.channelId;
+                if (!subscriberId) continue;
+
+                if (!seenSet.has(subscriberId)) {
+                    seenSet.add(subscriberId);
+                    newSubscribers.push({
+                        channelId: subscriberId,
+                        title: item.subscriberSnippet?.title || item.snippet?.title || 'New Subscriber',
+                        description: item.subscriberSnippet?.description || '',
+                        thumbnails: item.subscriberSnippet?.thumbnails || item.snippet?.thumbnails || {},
+                        publishedAt: item.snippet?.publishedAt
+                    });
+                }
+            }
+
+            // Save updated seen list
+            if (newSubscribers.length > 0) {
+                saveSeenSubscribers(Array.from(seenSet));
+
+                // Emit events for new subscribers (oldest first for chronological order)
+                for (const subscriber of newSubscribers.reverse()) {
+                    const subscriberLabel = getTranslation('new-subscriber-event', 'New Subscriber');
+                    const chatimg = subscriber.thumbnails?.default?.url ||
+                                   subscriber.thumbnails?.medium?.url || '';
+
+                    addEvent(`${subscriberLabel}: ${subscriber.title}`);
+
+                    pushMessage(applySourceIdentity({
+                        type: youtubeShorts ? "youtubeshorts" : "youtube",
+                        event: 'new_follower',
+                        chatname: subscriber.title,
+                        chatmessage: getTranslation('subscribed-message', 'subscribed to the channel'),
+                        chatimg: chatimg,
+                        userid: subscriber.channelId,
+                        timestamp: subscriber.publishedAt,
+                        meta: {
+                            channelId: subscriber.channelId,
+                            title: subscriber.title,
+                            subscribedAt: subscriber.publishedAt
+                        },
+                        textonly: settings.textonlymode || false
+                    }));
+
+                    console.log('New subscriber detected:', subscriber.title);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching recent subscribers:', error);
+        }
+    }
+
+	function clearPolling() {
+		// Clear all tracked timeouts
+		activeTimeouts.forEach(timeout => {
+			try {
+				clearTimeout(timeout);
+			} catch (e) {
+				// Ignore errors from already cleared timeouts
+			}
+		});
+		activeTimeouts.clear();
+		
+		if (pollInterval) clearInterval(pollInterval);
+		if (channelStatsInterval) clearInterval(channelStatsInterval);
+		if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
+		if (fetchTimeout) {
+			clearTimeout(fetchTimeout);
+		}
+		if (queueDrainTimeout) {
+			clearTimeout(queueDrainTimeout);
+			queueDrainTimeout = null;
+		}
+		
+		foregroundPollingInterval = null;
+		pollInterval = null;
+		channelStatsInterval = null;
+		subscriberAlertInterval = null;
+		fetchTimeout = null;
+		
+		// Track disconnection time and video ID
+		if (liveChatId && currentStream) {
+			lastDisconnectTime = Date.now();
+			lastConnectedVideoId = currentStream.id;
+		}
+		
+		liveChatId = null;
+		nextPageToken = null;
+		lastMessageTime = null;
+		isPolling = false;
+		currentStream = null;
+		clearSourceIdentity();
+		messageQueue = [];
+		pendingRelayMessages = [];
+		quickPollCount = 0;
+		consecutiveMaxMessages = 0; // Reset consecutive max message counter
+		lastSuccessfulPollTime = 0;
+		youtubeRecommendedInterval = 5000; // Reset to default
+		
+		const chatHeader = document.querySelector('.chat-container h3');
+		if (chatHeader) {
+			chatHeader.className = '';
+			chatHeader.textContent = 'Chat Messages';
+		}
+	}
+	function handleLiveChatEnded() {
+		const endedSourceName = currentSourceName;
+		const endedSourceImage = currentSourceImage;
+		const endedStreamTitle = currentStream && currentStream.title ? currentStream.title : '';
+		console.log('Live chat ended for current YouTube stream.');
+		clearPolling();
+		if (endedSourceName || endedSourceImage) {
+			setSourceIdentity(endedSourceName, endedSourceImage);
+		}
+		const textarea = document.getElementById('textarea');
+		if (textarea) {
+			textarea.innerHTML = '<div>Live chat is no longer available for this stream.</div>';
+		}
+		const connectButton = document.getElementById('connect-button');
+		if (connectButton) {
+			connectButton.textContent = 'Connect';
+			connectButton.style.backgroundColor = '#2255dd';
+		}
+		updateHeaderInfo(username, (endedSourceName || 'YouTube') + ' (Stream ended)');
+		const viewerCount = document.getElementById('viewer-count');
+		if (viewerCount) viewerCount.textContent = '-';
+		const subscriberCount = document.getElementById('subscriber-count');
+		if (subscriberCount) subscriberCount.textContent = '-';
+		const likesCount = document.getElementById('likes-count');
+		if (likesCount) likesCount.textContent = '-';
+		addEvent('Live chat ended');
+		const endedPayload = {
+			type: youtubeShorts ? "youtubeshorts" : "youtube",
+			event: 'live_chat_ended'
+		};
+		if (endedStreamTitle) {
+			endedPayload.meta = { streamTitle: endedStreamTitle };
+		}
+		pushMessage(applySourceIdentity(endedPayload));
+	}
+	async function getChannelStats(channelIdForStats) {
+		const token = getStoredToken();
+		if (!token) return;
+		try {
+			const response = await fetchWithTimeout(
+				`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelIdForStats}`, 5000,
+				{ 'Authorization': `Bearer ${token}` }
+			);
+			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+			const data = await response.json();
+			if (data.items && data.items.length > 0 && data.items[0].statistics) {
+				const stats = data.items[0].statistics;
+				if (stats.subscriberCount) {
+					updateStats('subscriber_update', { meta: stats.subscriberCount });
+					if (settings.showsubscount !== false) { // Only skip if explicitly false
+						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'subscriber_update', meta: stats.subscriberCount }));
+					}
+				}
+				if (stats.viewCount) {
+					if (settings.showviewcount || settings.hypemode) {
+						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount }));
+					}
+				}
+			}
+		} catch (error) {
+			console.error('Error fetching channel stats:', error);
+		}
+	}
+	async function connect(directVideoIdParam = null) {
+		// Prevent double connections
+		if (liveChatId || pollInterval) {
+			console.warn('Already connected. Call clearPolling() first to disconnect.');
+			return;
+		}
+		clearPolling();
+		initialBacklogProcessing = true;
+		initialBacklogTimestamp = null;
+		const token = getStoredToken();
+		if (!token) {
+			console.error('No token available for connect');
+			showAuthButton();
+			return;
+		}
+		const channelToUse = channel;
+		const videoIdToUse = directVideoIdParam || videoId;
+		if (!videoIdToUse && !channelToUse) {
+			updateHeaderInfo(username, 'No target specified');
+			document.getElementById('viewer-count').textContent = '-';
+			document.getElementById('subscriber-count').textContent = '-';
+			document.getElementById('likes-count').textContent = '-';
+			document.getElementById('textarea').innerHTML = '<div>Please enter a YouTube channel name or video ID to connect.</div>';
+			return;
+		}
+		document.getElementById('textarea').innerHTML = '<div>Attempting to connect...</div>';
+		try {
+			let streamInfoToUse;
+			let channelInfoForHeaderAndStats;
+			let effectiveChannelIdToUse;
+			let streamTitleToUse;
+			let channelDisplayNameToUse;
+			if (videoIdToUse) {
+				const videoDetailsResponse = await fetchWithTimeout(
+					`https://www.googleapis.com/youtube/v3/videos?part=snippet,liveStreamingDetails,statistics&id=${videoIdToUse}`,
+					5000, { 'Authorization': `Bearer ${token}` }
+				);
+				if (!videoDetailsResponse.ok) throw new Error(`Failed to fetch video details for ${videoIdToUse}: ${videoDetailsResponse.status}`);
+				const videoDetailsData = await videoDetailsResponse.json();
+				if (!videoDetailsData.items || videoDetailsData.items.length === 0) {
+					throw new Error(`Video not found or not accessible: ${videoIdToUse}`);
+				}
+				streamInfoToUse = videoDetailsData.items[0];
+				const isVideoLive = streamInfoToUse.snippet.liveBroadcastContent === 'live';
+				const isVideoUpcoming = streamInfoToUse.snippet.liveBroadcastContent === 'upcoming';
+				const isVideoEnded = (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.actualEndTime) ||
+									 streamInfoToUse.snippet.liveBroadcastContent === 'none';
+				if (isVideoEnded) {
+					liveChatId = null;
+					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
+					streamTitleToUse = streamInfoToUse.snippet.title;
+					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
+					updateHeaderInfo(username, `${channelDisplayNameToUse} (Video: ${streamTitleToUse.substring(0,20)}...)`);
+					document.getElementById('textarea').innerHTML = `<div>This video is not currently live. Showing stats for: ${streamTitleToUse}</div>`;
+					if (streamInfoToUse.statistics) {
+						document.getElementById('viewer-count').textContent = streamInfoToUse.statistics.viewCount || '-';
+						document.getElementById('likes-count').textContent = streamInfoToUse.statistics.likeCount || '-';
+					}
+					if (channelInfoForHeaderAndStats && channelInfoForHeaderAndStats.statistics) {
+						updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
+					} else if (effectiveChannelIdToUse) {
+						await getSubscriberCount(effectiveChannelIdToUse);
+					}
+					const endedSourceImage = channelInfoForHeaderAndStats
+						? resolveThumbnailUrl(channelInfoForHeaderAndStats?.snippet?.thumbnails)
+						: resolveThumbnailUrl(streamInfoToUse?.snippet?.thumbnails);
+					setSourceIdentity(channelDisplayNameToUse || "", endedSourceImage);
+					currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+					notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
+
+					return;
+				} else if (isVideoUpcoming) {
+					liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId;
+					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
+					streamTitleToUse = streamInfoToUse.snippet.title;
+					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
+					updateHeaderInfo(username, `${channelDisplayNameToUse} (Upcoming: ${streamTitleToUse.substring(0,20)}...)`);
+					if (!liveChatId) {
+						document.getElementById('textarea').innerHTML = `<div>This is an upcoming stream. Chat may not be available yet.</div>`;
+						document.getElementById('viewer-count').textContent = 'N/A';
+						document.getElementById('likes-count').textContent = streamInfoToUse.statistics?.likeCount || '-';
+					}
+				} else if (!streamInfoToUse.liveStreamingDetails || !streamInfoToUse.liveStreamingDetails.activeLiveChatId) {
+					throw new Error(`Video is not live or chat is not enabled: ${streamInfoToUse.snippet.title}`);
+				} else {
+					liveChatId = streamInfoToUse.liveStreamingDetails.activeLiveChatId;
+					effectiveChannelIdToUse = streamInfoToUse.snippet.channelId;
+					streamTitleToUse = streamInfoToUse.snippet.title;
+					channelInfoForHeaderAndStats = await getChannelInfo(effectiveChannelIdToUse);
+					channelDisplayNameToUse = channelInfoForHeaderAndStats ? channelInfoForHeaderAndStats.snippet.title : streamInfoToUse.snippet.channelTitle;
+					updateHeaderInfo(username, `${channelDisplayNameToUse} (Live: ${streamTitleToUse.substring(0,20)}...)`);
+				}
+				currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+				notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
+
+			} else if (channelToUse) {
+                channelInfoForHeaderAndStats = await getChannelInfo(channelToUse);
+                if (!channelInfoForHeaderAndStats) {
+                    throw new Error(`Channel not found: ${channelToUse}`);
+                }
+                channelDisplayNameToUse = channelInfoForHeaderAndStats.snippet.title;
+                effectiveChannelIdToUse = channelInfoForHeaderAndStats.id;
+                updateHeaderInfo(username, channelDisplayNameToUse);
+                streamInfoToUse = await getLiveStreamInfo(effectiveChannelIdToUse);
+                if (!streamInfoToUse) {
+                    if (channelInfoForHeaderAndStats.statistics && channelInfoForHeaderAndStats.statistics.subscriberCount) {
+                        updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
+                    }
+                    throw new Error(`No active live stream found for channel: ${channelDisplayNameToUse}`);
+                }
+                streamTitleToUse = streamInfoToUse.snippet.title;
+                liveChatId = streamInfoToUse.liveStreamingDetails?.activeLiveChatId || await getLiveChatId(streamInfoToUse.id);
+                 if (!liveChatId && streamInfoToUse.snippet.liveBroadcastContent === 'upcoming') {
+                    console.log(`Stream "${streamTitleToUse}" is upcoming. Chat may not be available yet.`);
+                } else if (!liveChatId) {
+                    throw new Error(`No live chat available for stream: ${streamTitleToUse}`);
+                }
+                currentStream = { id: streamInfoToUse.id, title: streamTitleToUse, channelId: effectiveChannelIdToUse };
+				notifyVideoChange(streamInfoToUse.id, effectiveChannelIdToUse);
+
+                updateHeaderInfo(username, channelDisplayNameToUse + (liveChatId ? ` (Live: ${streamTitleToUse.substring(0,20)}...)` : ` (Upcoming Stream)`));
+            }
+			const resolvedSourceImage = channelInfoForHeaderAndStats
+				? resolveThumbnailUrl(channelInfoForHeaderAndStats?.snippet?.thumbnails)
+				: resolveThumbnailUrl(streamInfoToUse?.snippet?.thumbnails);
+			setSourceIdentity(channelDisplayNameToUse || "", resolvedSourceImage);
+            document.getElementById('textarea').innerHTML = '';
+            const connectMessageDiv = document.createElement("div");
+            connectMessageDiv.innerText = `Target: ${channelDisplayNameToUse} - Stream: ${streamTitleToUse || 'N/A'}`;
+            document.getElementById('textarea').appendChild(connectMessageDiv);
+            if (streamInfoToUse) {
+                if (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.concurrentViewers) {
+                    updateStats('viewer_update', { meta: streamInfoToUse.liveStreamingDetails.concurrentViewers });
+                } else {
+                     document.getElementById('viewer-count').textContent = 'N/A';
+                }
+                if (streamInfoToUse.statistics && streamInfoToUse.statistics.likeCount) {
+                    updateStats('likes_update', { meta: streamInfoToUse.statistics.likeCount });
+                } else {
+                     document.getElementById('likes-count').textContent = 'N/A';
+                }
+            }
+            if (channelInfoForHeaderAndStats && channelInfoForHeaderAndStats.statistics && channelInfoForHeaderAndStats.statistics.subscriberCount) {
+                updateStats('subscriber_update', { meta: channelInfoForHeaderAndStats.statistics.subscriberCount });
+            } else if (effectiveChannelIdToUse) {
+                await getSubscriberCount(effectiveChannelIdToUse);
+            }
+           if (liveChatId) {
+				const chatAvailableMessage = document.createElement("div");
+				chatAvailableMessage.innerText = "Connected to live chat.";
+				document.getElementById('textarea').appendChild(chatAvailableMessage);
+				// Update connect button to show disconnect
+				const connectButton = document.getElementById('connect-button');
+				if (connectButton) {
+					connectButton.textContent = 'Disconnect';
+					connectButton.style.backgroundColor = '#f44336';
+				}
+				initializeSpinner();
+				// Calculate delay based on reconnection timing
+				let initialFetchDelay = 2000; // Default 2 second delay
+				
+				// If reconnecting to the same video within 10 seconds, use longer delay
+				if (currentStream && lastConnectedVideoId === currentStream.id) {
+					const timeSinceDisconnect = Date.now() - lastDisconnectTime;
+					if (timeSinceDisconnect < 10000) {
+						initialFetchDelay = Math.max(5000, 10000 - timeSinceDisconnect);
+						console.log(`Reconnecting to same video after ${timeSinceDisconnect}ms, using ${initialFetchDelay}ms delay`);
+					}
+				}
+				
+				fetchTimeout = setTimeout(fetchChatMessages, initialFetchDelay);
+			} else {
+                 const noChatMessage = document.createElement("div");
+                 noChatMessage.style.color = "orange";
+                 noChatMessage.innerText = "Live chat is not currently active for this stream.";
+                 document.getElementById('textarea').appendChild(noChatMessage);
+            }
+            // Clear existing intervals
+            if (pollInterval) clearInterval(pollInterval);
+            if (channelStatsInterval) clearInterval(channelStatsInterval);
+            
+            // Stream stats (viewers & likes) - interval based on settings
+            if (currentStream && currentStream.id && liveChatId) {
+                // Get stream stats immediately
+                getStreamStats();
+                // Update interval: 30 seconds if showing viewer count, 2 minutes otherwise
+                const statsInterval = (settings.showviewercount || settings.hypemode) ? 30000 : 120000;
+                pollInterval = setInterval(() => {
+                    getStreamStats();
+                }, statsInterval);
+            }
+            
+            // Channel stats (subscribers) - every 30 minutes
+            if (effectiveChannelIdToUse) {
+                // Get channel stats immediately
+                getChannelStats(effectiveChannelIdToUse);
+                // Then update every 30 minutes
+                channelStatsInterval = setInterval(() => {
+                    getChannelStats(effectiveChannelIdToUse);
+                }, 30 * 60 * 1000); // 30 minutes
+            }
+
+            // Subscriber alerts - check for new subscribers every 5 minutes
+            // Note: YouTube API has up to 4-hour delay for subscriber data, same as Streamlabs
+            if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
+            fetchRecentSubscribers(); // Initial fetch
+            subscriberAlertInterval = setInterval(() => {
+                fetchRecentSubscribers();
+            }, 5 * 60 * 1000); // 5 minutes (quota cost: 1 unit per call = 288 units/day if running 24h)
+
+            console.log('Connection process complete for target:', channelDisplayNameToUse);
+			const channelInput = document.getElementById('channel-input');
+            if (channelInput.value && channelToUse) channelInput.value = '';
+        } catch (error) {
+            console.error('Error connecting to YouTube:', error);
+            updateHeaderInfo(username, 'Connection failed');
+            const textarea = document.querySelector("#textarea");
+            if (textarea) {
+                textarea.innerHTML = '';
+                var span = document.createElement("div");
+                span.style.color = "red";
+                span.innerText = `Error: ${error.message}`;
+                textarea.appendChild(span);
+            }
+            document.getElementById('viewer-count').textContent = '-';
+            document.getElementById('subscriber-count').textContent = '-';
+            document.getElementById('likes-count').textContent = '-';
+        }
+    }
+	
+	function pushMessage(data) {
+		window.dispatchEvent(new CustomEvent('youtubeMessage', { 
+			detail: data, 
+			bubbles: true 
+		}));
+	}
+	
+
+	function containsShorts(url) {
+		const urlObj = new URL(url);
+		const searchParams = new URLSearchParams(urlObj.search);
+		const hasShortsParam = searchParams.has('shorts');
+		const hasShortsPath = urlObj.pathname.includes('/shorts');
+		return hasShortsParam || hasShortsPath;
+	}
+	
+	var youtubeShorts = false;
+	if (containsShorts(window.location.href)){
+		youtubeShorts = true;
+	}
+
+	function processMessage(messageData, options = {}) {
+		const { suppressRelay = false } = options;
+		try {
+			// Apply member chat only filter if enabled
+			if (settings.memberchatonly && !messageData.isChatSponsor && !messageData.membership && !messageData.event) {
+				return; // Skip non-member messages
+			}
+			
+			let chatbadges = [];
+			let nameColor = '';
+			
+			// Build badges array - order matters (owner > mod > member)
+			if (messageData.isChatOwner) { 
+				// Note: YouTube API doesn't provide badge images, using text emoji as fallback
+				chatbadges.push({"type": "text", "text": "👑"}); // Crown for owner
+			}
+			if (messageData.isChatModerator) { 
+				// Note: YouTube API doesn't provide badge images, using text emoji as fallback
+				chatbadges.push({"type": "text", "text": "🛡️"}); // Shield for moderator
+				if (!settings.nosubcolor) {
+					nameColor = "#5e84f1";
+				}
+			}
+			if (messageData.isChatSponsor) { 
+				// Note: YouTube API doesn't provide member badge images
+				// In the future, if we can get badge URLs, use: {"type": "img", "src": badgeUrl}
+				chatbadges.push({"type": "text", "text": "⭐"}); // Star for member/sponsor
+				if (!settings.nosubcolor && !nameColor) { // Don't override mod color
+					nameColor = "#107516";
+				}
+			}
+
+			//console.log("Processing message:", messageData.message, "EMOTELIST available:", !!EMOTELIST);
+			if (!messageData.message && messageData.message !== '') {
+				console.warn('Message data missing message property:', messageData);
+			}
+				const messageText = messageData.message || '';
+				const messageWithEmojis = replaceEmojis(messageText);
+				const textOnlyMode = Boolean(settings.textonlymode);
+				let basePlainText = (typeof messageData.plainTextMessage === 'string' && messageData.plainTextMessage.trim())
+					? messageData.plainTextMessage
+					: stripHtmlContent(messageWithEmojis || messageText);
+				if (!basePlainText && messageText) {
+					basePlainText = messageText;
+				}
+				const safeAuthorName = strictEscapeHtml(messageData.authorName || '');
+
+				rememberChannelName(messageData.authorChannelId, messageData.authorName);
+				if (messageData.messageId) {
+					rememberChatMessage(messageData.messageId, {
+						messageId: messageData.messageId,
+						authorName: messageData.authorName || '',
+						channelId: messageData.authorChannelId || null,
+						html: messageWithEmojis,
+						plainText: basePlainText
+					});
+				}
+
+				const replyContext = repliesAreExcluded() ? null : resolveReplyContext(messageData);
+				let finalChatMessage = textOnlyMode ? basePlainText : messageWithEmojis;
+				if (replyContext) {
+					if (textOnlyMode) {
+						const prefix = replyContext.label ? `${replyContext.label}: ` : '';
+						const combinedText = `${prefix}${basePlainText || ''}`.trim();
+						finalChatMessage = combinedText || basePlainText || replyContext.label || '';
+					} else {
+						const safeLabel = strictEscapeHtml(replyContext.label);
+						finalChatMessage = `<i><small>${safeLabel}:&nbsp;</small></i> ${messageWithEmojis}`;
+					}
+				}
+
+				// Only update DOM if page is visible
+				if (isPageVisible) {
+					const textarea = document.querySelector("#textarea");
+					if (textarea) {
+						const shouldStick = shouldStickToBottom(textarea);
+						var span = document.createElement("div");
+						let badgeHtml = '';
+						// Display badges in the same order as they're sent
+						if (messageData.isChatOwner) { badgeHtml += '<span class="chat-badge" title="Channel Owner">👑</span>'; }
+						if (messageData.isChatModerator) { badgeHtml += '<span class="chat-badge" title="Moderator">🛡️</span>'; }
+						if (messageData.isChatSponsor) { badgeHtml += '<span class="chat-badge" title="Member">⭐</span>'; }
+						
+						const renderedMessage = textOnlyMode ? strictEscapeHtml(finalChatMessage) : finalChatMessage;
+						span.innerHTML = `${badgeHtml}<strong>${safeAuthorName}</strong>: ${renderedMessage}`;
+						textarea.appendChild(span);
+						// More aggressive cleanup to prevent memory buildup
+						const maxMessages = 50;
+						while (textarea.childNodes.length > maxMessages) {
+							textarea.removeChild(textarea.firstChild);
+						}
+						// Only auto-scroll if user was near bottom
+						if (shouldStick) {
+							textarea.scrollTop = textarea.scrollHeight;
+						}
+					}
+				}
+				const renderableMessage = finalChatMessage;
+				if (!suppressRelay && !messageData.skipEvent && renderableMessage) {
+					// Determine membership status based on settings
+					let membershipStatus = "";
+					if (messageData.isChatSponsor) {
+						// If limitedyoutubememberchat is enabled, only mark as member if it's a special membership message
+						if (!settings.limitedyoutubememberchat || messageData.isMembershipMessage) {
+						membershipStatus = "member";
+					}
+				}
+				
+				// Chat messages must never carry an event flag; reserve event usage for system-level notifications only.
+					const outgoingMessage = {
+						chatname: messageData.authorName,
+						chatbadges: chatbadges.length > 0 ? chatbadges : "",
+						userid: messageData.authorChannelId,
+						nameColor: nameColor,
+						backgroundColor: "",
+						textColor: "",
+						chatmessage: finalChatMessage,
+						chatimg: messageData.profileImageUrl || "",
+						hasDonation: "",
+						videoid: videoId,
+						membership: membershipStatus,
+						mod: messageData.isChatModerator || false,
+						type: youtubeShorts ? "youtubeshorts" : "youtube",
+						textonly: textOnlyMode // Pass the setting to the extension
+					};
+					if (replyContext) {
+						outgoingMessage.initial = replyContext.label;
+						outgoingMessage.reply = textOnlyMode ? basePlainText : messageWithEmojis;
+					}
+					if (messageData.meta && typeof messageData.meta === 'object') {
+						const { raw: _raw, reply: _reply, ...safeMeta } = messageData.meta;
+						if (Object.keys(safeMeta).length > 0) {
+							outgoingMessage.meta = safeMeta;
+						}
+					}
+					pushMessage(applySourceIdentity(outgoingMessage));
+				}
+		} catch (e) {
+			console.error('Error processing message:', e);
+		}
+	}
+	
+    function processSuperChat(superChatData) {
+		try {
+			const superChatLabel = getTranslation("super-chat-label", "Super Chat");
+			addEvent(`${superChatLabel}: ${superChatData.authorName} - ${superChatData.amount}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
+					var span = document.createElement("div");
+					const safeAuthor = strictEscapeHtml(superChatData.authorName || '');
+					const safeAmount = strictEscapeHtml(superChatData.amount || '');
+					const safeMessage = strictEscapeHtml(superChatData.message || '');
+					span.innerHTML = `<strong>${safeAuthor}</strong> <span>${safeAmount}</span>: ${safeMessage}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			pushMessage(applySourceIdentity({
+				chatname: superChatData.authorName,
+				chatbadges: superChatData.badges || "", // Use any badges passed in
+				userid: superChatData.authorChannelId,
+				backgroundColor: "",
+				textColor: "#111",
+				chatmessage: superChatData.message || '',
+				chatimg: superChatData.profileImageUrl || "",
+				hasDonation: superChatData.amount,
+				membership: "",
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "donation",
+				textonly: settings.textonlymode || false
+			}));
+		} catch (e) {
+			console.error('Error processing super chat:', e);
+		}
+	}
+	function deriveMembershipEventContext(snippet, membershipDetails) {
+		const mapping = {};
+		const rawType = typeof snippet?.type === "string" ? snippet.type : "";
+		const normalizedType = rawType.toLowerCase();
+		if (rawType) {
+			mapping.snippetType = rawType;
+		}
+		const newSponsorDetails = snippet?.newSponsorDetails;
+		if (newSponsorDetails && typeof newSponsorDetails.isUpgrade === "boolean") {
+			mapping.isUpgrade = newSponsorDetails.isUpgrade;
+		}
+		const totalDuration = Number(membershipDetails?.membershipsDuration?.memberTotalDurationMonths);
+		if (Number.isFinite(totalDuration)) {
+			mapping.totalDurationMonths = totalDuration;
+		}
+		const levelDuration = Number(membershipDetails?.membershipsDurationAtLevel?.memberTotalDurationMonths);
+		if (Number.isFinite(levelDuration)) {
+			mapping.levelDurationMonths = levelDuration;
+		}
+		const memberSince = membershipDetails?.membershipsDuration?.memberSince;
+		if (memberSince) {
+			mapping.memberSince = memberSince;
+		}
+
+		let eventType = "new_member";
+		if (normalizedType === "newsponsorevent") {
+			if (newSponsorDetails?.isUpgrade) {
+				eventType = "upgrade";
+			} else if (Number.isFinite(totalDuration) && totalDuration > 1) {
+				eventType = "renewal";
+			}
+		} else if (normalizedType === "membermilestonechatevent" || normalizedType === "membershipsupdateevent") {
+			eventType = "renewal";
+		}
+
+		mapping.derivedEventType = eventType;
+		return { eventType, mapping };
+	}
+	
+		function processMembership(membershipData) {
+			try {
+				const membershipDetails = membershipData.membershipDetails || null;
+				const resolvedLevel = membershipData.level || membershipDetails?.memberLevelName || "";
+				const providedEventType = membershipData.eventType || "";
+				let eventType = providedEventType || "new_member";
+				let displayMessage = "";
+				let nameColor = !settings.nosubcolor ? "#107516" : "";
+				let eventName = "sponsorship";
+				const membershipMeta = {};
+
+				if (providedEventType) {
+					membershipMeta.originalEventType = providedEventType;
+				}
+				if (membershipData.rawSnippetType) {
+					membershipMeta.snippetType = membershipData.rawSnippetType;
+				}
+				if (resolvedLevel) {
+					membershipMeta.level = resolvedLevel;
+				}
+				if (membershipDetails) {
+					membershipMeta.membershipDetails = { ...membershipDetails };
+				}
+				const genericMembershipLabel = getTranslation("membership-generic", "Membership");
+
+				if (eventType === "renewal") {
+					const renewalMessage = getTranslation("membership-renewed-message", "renewed membership");
+					displayMessage = resolvedLevel ? `${renewalMessage} (${resolvedLevel})` : renewalMessage;
+					const renewalEventLabel = getTranslation("membership-renewal-event", "Member Renewal");
+					addEvent(`${renewalEventLabel}: ${membershipData.authorName} - ${resolvedLevel || genericMembershipLabel}`);
+					eventName = "resub";
+				} else if (eventType === "upgrade") {
+					const upgradeMessage = getTranslation("membership-upgraded-message", "upgraded membership");
+					const toLabel = getTranslation("membership-to-word", "to");
+					displayMessage = resolvedLevel ? `${upgradeMessage} ${toLabel} ${resolvedLevel}` : upgradeMessage;
+					const upgradeEventLabel = getTranslation("membership-upgrade-event", "Member Upgrade");
+					addEvent(`${upgradeEventLabel}: ${membershipData.authorName} - ${resolvedLevel || genericMembershipLabel}`);
+					eventName = "resub";
+				} else {
+					const joinMessage = getTranslation("membership-joined-message", "joined as a member");
+					displayMessage = resolvedLevel ? `${joinMessage} (${resolvedLevel})` : joinMessage;
+					const newMemberEventLabel = getTranslation("membership-new-event", "New Member");
+					addEvent(`${newMemberEventLabel}: ${membershipData.authorName} - ${resolvedLevel || genericMembershipLabel}`);
+				}
+				membershipMeta.eventType = eventType;
+				
+				// Only update DOM if page is visible
+				if (isPageVisible) {
+					const textarea = document.querySelector("#textarea");
+					if (textarea) {
+						const shouldStick = shouldStickToBottom(textarea);
+						var span = document.createElement("div");
+						span.innerHTML = `<strong>${strictEscapeHtml(membershipData.authorName || '')}</strong> <span>${strictEscapeHtml(displayMessage)}</span>`;
+						textarea.appendChild(span);
+						
+						// Use same cleanup limit as regular messages
+						const maxMessages = 50;
+						while (textarea.childNodes.length > maxMessages) {
+							textarea.removeChild(textarea.firstChild);
+						}
+						// Only auto-scroll if user was near bottom
+						if (shouldStick) {
+							textarea.scrollTop = textarea.scrollHeight;
+						}
+					}
+				}
+			
+			pushMessage(applySourceIdentity({
+				chatname: escapeHtml(membershipData.authorName),
+				chatbadges: membershipData.badges || [{"type":"text", "text": "⭐"}], // Use passed badges or default to star
+				userid: membershipData.authorChannelId,
+				nameColor: nameColor,
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: displayMessage,
+				chatimg: membershipData.profileImageUrl || "",
+				hasDonation: "",
+				membership: eventType === "renewal" ? "renewed_member" : eventType === "upgrade" ? "upgraded_member" : "new_member",
+				subtitle: resolvedLevel,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: eventName,
+				textonly: settings.textonlymode || false,
+				meta: membershipMeta
+			}));
+			} catch (e) {
+				console.error('Error processing membership:', e);
+			}
+		}
+	
+	function processGiftRedemption(giftData) {
+		try {
+			const fallbackMessage = getTranslation("membership-gift-received-message", "received a gift membership");
+			const displayMessage = giftData.displayMessage || fallbackMessage;
+			const redemptionLabel = getTranslation("membership-gift-redeemed-event", "Gift Redeemed");
+			const membershipLabel = giftData.memberLevelName || getTranslation("membership-generic", "Membership");
+			addEvent(`${redemptionLabel}: ${giftData.authorName} - ${membershipLabel}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage(applySourceIdentity({
+				chatname: escapeHtml(giftData.authorName),
+				chatbadges: [{"type": "text", "text": "🎁"}], // Gift emoji for received gifts
+				userid: giftData.authorChannelId,
+				nameColor: !settings.nosubcolor ? "#107516" : "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: giftData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "gift_recipient",
+				subtitle: giftData.memberLevelName,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "giftredemption",
+				textonly: settings.textonlymode || false
+			}));
+		} catch (e) {
+			console.error('Error processing gift redemption:', e);
+		}
+	}
+	
+	function processGiftPurchase(giftData) {
+		try {
+			const giftCount = giftData.giftCount || 1;
+			const giftVerb = getTranslation("membership-gifted-verb", "gifted");
+			const singularMembership = getTranslation("membership-singular", "membership");
+			const pluralMembership = getTranslation("membership-plural", "memberships");
+			const membershipWord = giftCount === 1 ? singularMembership : pluralMembership;
+			const levelSuffix = giftData.memberLevelName ? ` (${giftData.memberLevelName})` : "";
+			const defaultMessage = `${giftVerb} ${giftCount} ${membershipWord}${levelSuffix}`;
+			const displayMessage = giftData.displayMessage || defaultMessage;
+			const purchaseLabel = getTranslation("membership-gift-purchase-event", "Gift Purchase");
+			const levelDescriptor = giftData.memberLevelName ? `${giftCount} x ${giftData.memberLevelName}` : `${giftCount} ${membershipWord}`;
+			addEvent(`${purchaseLabel}: ${giftData.authorName} - ${levelDescriptor}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${strictEscapeHtml(giftData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage(applySourceIdentity({
+				chatname: escapeHtml(giftData.authorName),
+				chatbadges: [{"type": "text", "text": "💝"}], // Gift giving emoji
+				userid: giftData.authorChannelId,
+				nameColor: "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: giftData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "gift_giver",
+				subtitle: levelDescriptor,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "giftpurchase",
+				textonly: settings.textonlymode || false
+			}));
+		} catch (e) {
+			console.error('Error processing gift purchase:', e);
+		}
+	}
+	
+	function processNewSponsorship(sponsorData) {
+		try {
+			const fallbackMessage = getTranslation("membership-new-member-message", "just became a member!");
+			const displayMessage = sponsorData.displayMessage || fallbackMessage;
+			const sponsorLabel = getTranslation("membership-new-sponsor-event", "New Sponsor");
+			const membershipLabel = sponsorData.memberLevelName || getTranslation("membership-generic", "Membership");
+			addEvent(`${sponsorLabel}: ${sponsorData.authorName} - ${membershipLabel}`);
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${strictEscapeHtml(sponsorData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage(applySourceIdentity({
+				chatname: escapeHtml(sponsorData.authorName),
+				chatbadges: [{"type": "text", "text": "⭐"}], // Star for new members
+				userid: sponsorData.authorChannelId,
+				nameColor: !settings.nosubcolor ? "#107516" : "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: sponsorData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "new_sponsor",
+				subtitle: sponsorData.memberLevelName,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "sponsorship",
+				textonly: settings.textonlymode || false
+			}));
+		} catch (e) {
+			console.error('Error processing new sponsorship:', e);
+		}
+	}
+	
+	function processMemberMilestone(milestoneData) {
+		try {
+			const months = Number(milestoneData.memberMonth) || 0;
+			const singularMonth = getTranslation("membership-month-singular", "month");
+			const pluralMonth = getTranslation("membership-month-plural", "months");
+			const monthWord = months === 1 ? singularMonth : pluralMonth;
+			const ofWord = getTranslation("membership-of-word", "of");
+			const membershipWord = getTranslation("membership-generic", "membership");
+			const celebratesWord = getTranslation("membership-milestone-celebrates", "celebrates");
+			const genericMilestone = getTranslation("membership-milestone-generic", "membership milestone");
+			let fallbackMessage = `${celebratesWord} ${genericMilestone}`;
+			if (months > 0) {
+				fallbackMessage = `${celebratesWord} ${months} ${monthWord} ${ofWord} ${membershipWord}`;
+			}
+			const displayMessage = milestoneData.displayMessage || fallbackMessage;
+			const milestoneLabel = getTranslation("membership-milestone-event", "Member Milestone");
+			const monthsDescriptor = months > 0 ? `${months} ${monthWord}` : genericMilestone;
+			const levelDescriptor = milestoneData.memberLevelName ? `${monthsDescriptor} - ${milestoneData.memberLevelName}` : monthsDescriptor;
+			addEvent(`${milestoneLabel}: ${milestoneData.authorName} - ${levelDescriptor}`);
+			
+			// Build badges for milestone author
+			let milestoneBadges = [];
+			if (milestoneData.isChatOwner) milestoneBadges.push({"type": "text", "text": "👑"});
+			if (milestoneData.isChatModerator) milestoneBadges.push({"type": "text", "text": "🛡️"});
+			milestoneBadges.push({"type": "text", "text": "🏅"}); // Medal for milestone
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
+					var span = document.createElement("div");
+					span.innerHTML = `<strong>${strictEscapeHtml(milestoneData.authorName || '')}</strong> ${strictEscapeHtml(displayMessage)}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			pushMessage(applySourceIdentity({
+				chatname: escapeHtml(milestoneData.authorName),
+				chatbadges: milestoneBadges,
+				userid: milestoneData.authorChannelId,
+				nameColor: !settings.nosubcolor ? "#107516" : "",
+				backgroundColor: "",
+				textColor: "",
+				chatmessage: escapeHtml(displayMessage),
+				chatimg: milestoneData.profileImageUrl || "",
+				hasDonation: "",
+				membership: "member_milestone",
+				subtitle: levelDescriptor,
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "membermilestone",
+				textonly: settings.textonlymode || false
+			}));
+		} catch (e) {
+			console.error('Error processing member milestone:', e);
+		}
+	}
+	
+	function processSuperSticker(stickerData) {
+		try {
+			const stickerLabel = getTranslation("super-sticker-label", "Super Sticker");
+			addEvent(`${stickerLabel}: ${stickerData.authorName} - ${stickerData.amount}`);
+			
+			// Extract the actual message from displayMessage
+			// Format is typically: "£10.00 from @username: "actual message""
+			let actualMessage = stickerData.displayMessage || "";
+			const messageMatch = actualMessage.match(/:\s*"(.+)"$/);
+			if (messageMatch) {
+				actualMessage = messageMatch[1];
+			}
+			
+			// Only update DOM if page is visible
+			if (isPageVisible) {
+				const textarea = document.querySelector("#textarea");
+				if (textarea) {
+					const shouldStick = shouldStickToBottom(textarea);
+					var span = document.createElement("div");
+					// Use the actual message or alt text for display
+					const stickerText = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
+					const safeStickerAuthor = strictEscapeHtml(stickerData.authorName || '');
+					const safeAmount = strictEscapeHtml(stickerData.amount || '');
+					const safeStickerText = strictEscapeHtml(stickerText);
+					span.innerHTML = `<strong>${safeStickerAuthor}</strong> <span>${safeAmount}</span>: 🎨 ${safeStickerText}`;
+					textarea.appendChild(span);
+					// Use same cleanup limit as regular messages
+					const maxMessages = 50;
+					while (textarea.childNodes.length > maxMessages) {
+						textarea.removeChild(textarea.firstChild);
+					}
+					// Only auto-scroll if user was near bottom
+					if (shouldStick) {
+						textarea.scrollTop = textarea.scrollHeight;
+					}
+				}
+			}
+			
+			// Note: YouTube API doesn't provide sticker image URLs
+			// In youtube.js, sticker images are captured from the rendered chat
+			const stickerMessage = actualMessage || stickerData.altText || getTranslation("super-sticker-text", "Super Sticker");
+			
+			pushMessage(applySourceIdentity({
+				chatname: escapeHtml(stickerData.authorName),
+				chatbadges: stickerData.badges || "",
+				userid: stickerData.authorChannelId,
+				backgroundColor: "",
+				textColor: "#111",
+				chatmessage: escapeHtml(stickerMessage), // Just the message, no emoji prefix
+				chatimg: stickerData.profileImageUrl || "",
+				hasDonation: stickerData.amount,
+				membership: "",
+				type: youtubeShorts ? "youtubeshorts" : "youtube",
+				event: "supersticker",
+				textonly: settings.textonlymode || false
+			}));
+		} catch (e) {
+			console.error('Error processing super sticker:', e);
+		}
+	}
+	
+	function updateStats(type, data) {
+		switch(type) {
+			case 'viewer_update':
+				document.getElementById('viewer-count').textContent = data.meta;
+				if (settings.showviewercount || settings.hypemode){
+					pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'viewer_update', meta: data.meta }));
+				}
+				break;
+			case 'subscriber_update':
+				document.getElementById('subscriber-count').textContent = data.meta;
+				break;
+			case 'likes_update':
+				document.getElementById('likes-count').textContent = data.meta;
+				//pushMessage({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'likes_update', meta: data.meta });
+				break;
+		}
+	}
+    function addEvent(text) {
+        const eventslist = document.getElementById('events-list');
+        const event = document.createElement('div');
+        event.className = 'event-item'; event.textContent = text;
+        eventslist.insertBefore(event, eventslist.firstChild);
+        while (eventslist.children.length > 10) eventslist.removeChild(eventslist.lastChild);
+    }
+    function updateHeaderInfo(currentUsername, targetName) {
+        const currentUserElement = document.getElementById('current-user');
+        const currentChannelElement = document.getElementById('current-channel');
+        if (currentUserElement) currentUserElement.textContent = currentUsername || 'Not signed in';
+        if (currentChannelElement) currentChannelElement.textContent = targetName || 'No target';
+    }
+	
+	// Cleanup function to remove all event listeners and clear resources
+	let cleanupFunctions = [];
+	function registerCleanup(fn) {
+		cleanupFunctions.push(fn);
+	}
+	
+	function cleanupResources() {
+		console.log('Cleaning up resources...');
+		
+		// Clear all intervals
+		if (pollInterval) clearInterval(pollInterval);
+		if (channelStatsInterval) clearInterval(channelStatsInterval);
+		if (subscriberAlertInterval) clearInterval(subscriberAlertInterval);
+		if (displayInterval) clearInterval(displayInterval);
+
+		// Clear all timeouts
+		if (fetchTimeout) clearTimeout(fetchTimeout);
+		activeTimeouts.forEach(timeout => clearTimeout(timeout));
+		activeTimeouts.clear();
+		
+		
+		// Run all registered cleanup functions
+		cleanupFunctions.forEach(fn => {
+			try { fn(); } catch(e) { console.error('Cleanup error:', e); }
+		});
+		cleanupFunctions = [];
+		
+		// Clear polling resources
+		clearPolling();
+		
+		// Clear message queue
+		messageQueue = [];
+		
+		// Limit userDetails cache size
+		const userDetailsKeys = Object.keys(userDetails);
+		if (userDetailsKeys.length > 100) {
+			// Keep only the most recent 100 users
+			const toRemove = userDetailsKeys.slice(0, userDetailsKeys.length - 100);
+			toRemove.forEach(key => delete userDetails[key]);
+		}
+	}
+	
+	function initializePage() {
+		// Initialize credentials UI and indicators
+		initCredentialsUI();
+		
+		urlParams = new URLSearchParams(window.location.search);
+		hashParams = new URLSearchParams(window.location.hash.slice(1));
+		
+		// Re-check slower polling mode on page init
+		if (urlParams.has('slowerpoll') || hashParams.has('slowerpoll')) {
+			slowerPollingMode = true;
+			console.log('Slower polling mode enabled (1.5x slower)');
+		}
+		
+		const urlVideoIdParam = urlParams.get("videoId") || urlParams.get("video_id") || urlParams.get("v") || hashParams.get("videoId");
+		const urlChannelParam = urlParams.get("channel") || urlParams.get("username") || urlParams.get("c") || hashParams.get("channel");
+		if (urlVideoIdParam || urlChannelParam) {
+			sessionStorage.setItem("youtubeRedirectVideoId", urlVideoIdParam || "");
+			sessionStorage.setItem("youtubeRedirectChannel", urlChannelParam || "");
+		}
+		if (urlVideoIdParam) {
+			videoId = urlVideoIdParam;
+			channel = '';
+			localStorage.setItem("youtubeVideoId", videoId);
+			localStorage.removeItem("youtubeChannel");
+		} else if (urlChannelParam) {
+			channel = urlChannelParam;
+			videoId = '';
+			localStorage.setItem("youtubeChannel", channel);
+			localStorage.removeItem("youtubeVideoId");
+		} else {
+			videoId = localStorage.getItem("youtubeVideoId") || "";
+			if (videoId) {
+				channel = '';
+				localStorage.removeItem("youtubeChannel");
+			} else {
+				channel = localStorage.getItem("youtubeChannel") || "";
+			}
+		}
+		const signOutButton = document.getElementById('sign-out-button');
+		if (signOutButton) {
+			signOutButton.addEventListener('click', signOut);
+			registerCleanup(() => signOutButton.removeEventListener('click', signOut));
+		}
+		const authLink = document.getElementById('auth-link');
+		if (authLink) {
+			const authHandler = function(e) {
+				e.preventDefault();
+				window.location.href = authUrl();
+			};
+			authLink.addEventListener('click', authHandler);
+			registerCleanup(() => authLink.removeEventListener('click', authHandler));
+		}
+		const quotaBtn = document.getElementById('quota-open-credentials');
+		if (quotaBtn) {
+			const openCreds = function() {
+				const details = document.getElementById('credentials-details');
+				if (details) details.open = true;
+				const warn = document.getElementById('quota-warning');
+				if (warn) warn.classList.add('hidden');
+				window.scrollTo({ top: 0, behavior: 'smooth' });
+			};
+			quotaBtn.addEventListener('click', openCreds);
+			registerCleanup(() => quotaBtn.removeEventListener('click', openCreds));
+		}
+		document.addEventListener('visibilitychange', handleVisibilityChange);
+		registerCleanup(() => document.removeEventListener('visibilitychange', handleVisibilityChange));
+		isPageVisible = document.visibilityState === 'visible';
+		if (!isElectronEnvironment()) {
+			enableBackgroundKeepAlive();
+		}
+		const sendButton = document.querySelector('#sendmessage');
+		if (sendButton) sendButton.onclick = handleSendMessage;
+		const inputText = document.querySelector('#input-text');
+		if (inputText) {
+			inputText.addEventListener('keypress', handleEnterKey);
+			registerCleanup(() => inputText.removeEventListener('keypress', handleEnterKey));
+		}
+		const connectButton = document.getElementById('connect-button');
+		if (connectButton) {
+			connectButton.addEventListener('click', handleConnect);
+			registerCleanup(() => connectButton.removeEventListener('click', handleConnect));
+		}
+		const changeButton = document.getElementById('change-button');
+		if (changeButton) {
+			const changeHandler = function() {
+				clearPolling();
+				updateHeaderInfo(username, 'No target (Ready to connect)');
+				document.getElementById('textarea').innerHTML = '<div>Connection cleared. Enter new channel name or video ID and click Connect.</div>';
+				document.getElementById('viewer-count').textContent = '-';
+				document.getElementById('subscriber-count').textContent = '-';
+				document.getElementById('likes-count').textContent = '-';
+				document.getElementById('events-list').innerHTML = '';
+				channel = '';
+				videoId = '';
+				localStorage.removeItem('youtubeChannel');
+				localStorage.removeItem('youtubeVideoId');
+				// Reset connect button
+				const connectButton = document.getElementById('connect-button');
+				if (connectButton) {
+					connectButton.textContent = 'Connect';
+					connectButton.style.backgroundColor = '#2255dd';
+				}
+			};
+			changeButton.addEventListener('click', changeHandler);
+			registerCleanup(() => changeButton.removeEventListener('click', changeHandler));
+		}
+		const channelInput = document.getElementById('channel-input');
+		const videoInput = document.getElementById('video-input');
+		if (channelInput) {
+			const channelHandler = function(event) {
+				if (event.key === 'Enter') handleConnect();
+			};
+			channelInput.addEventListener('keypress', channelHandler);
+			registerCleanup(() => channelInput.removeEventListener('keypress', channelHandler));
+		}
+		if (videoInput) {
+			const videoHandler = function(event) {
+				if (event.key === 'Enter') handleConnect();
+			};
+			videoInput.addEventListener('keypress', videoHandler);
+			registerCleanup(() => videoInput.removeEventListener('keypress', videoHandler));
+		}
+		if (urlParams.has('code')) {
+			handleAuthCallback();
+			return;
+		}
+		setupSettingsListener();
+		const storedToken = getStoredToken();
+		if (storedToken) {
+			verifyAndUseToken(storedToken);
+		} else if (window.location.hash && window.location.hash.includes('access_token')) {
+			parseFragment(window.location.hash);
+		} else {
+			showAuthButton();
+		}
+		
+		loadEmojiData().catch(error => {
+		  console.error('Failed to load emoji data:', error);
+		});
+		
+		// Add cleanup on page unload
+		window.addEventListener('beforeunload', cleanupResources);
+		registerCleanup(() => window.removeEventListener('beforeunload', cleanupResources));
+	}
+	
+	function setupSettingsListener() {
+		const settingsHandler = function(e) {
+			if (e.detail) {
+				if ("EMOTELIST" in e.detail) {
+					EMOTELIST = e.detail.EMOTELIST;
+					console.log('EMOTELIST updated:', EMOTELIST);
+				}
+				if ("settings" in e.detail) {
+					settings = e.detail.settings;
+					console.log('settings updated:', settings);
+				}
+			}
+		};
+		window.addEventListener('settingsChanged', settingsHandler);
+		registerCleanup(() => window.removeEventListener('settingsChanged', settingsHandler));
+	}
+	
+	
+	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
+		const controller = new AbortController();
+		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${URL}`;
+		const abortReason = (typeof DOMException === 'function')
+			? new DOMException(friendlyTimeoutMessage, 'AbortError')
+			: new Error(friendlyTimeoutMessage);
+		const timeout_id = setTimeout(() => {
+			try {
+				if (!controller.signal.aborted) controller.abort(abortReason);
+			} catch (_) {
+				controller.abort();
+			}
+		}, timeout);
+		try {
+			const options = { signal: controller.signal };
+			if (headers) {
+				options.headers = new Headers();
+				if (typeof headers === 'object') {
+					if (headers.method) {
+						options.method = headers.method;
+						delete headers.method;
+					}
+					if (headers.body !== undefined) {
+						options.body = headers.body;
+						delete headers.body;
+					}
+					Object.entries(headers).forEach(([key, value]) => {
+						if (value !== undefined) options.headers.set(key, value);
+					});
+				}
+			}
+			//console.log('Fetching:', URL, options);
+			const response = await fetch(URL, options);
+			clearTimeout(timeout_id);
+			//console.log('Response status:', response.status, response.statusText);
+			if (!response.ok) {
+				// Try to parse error for quota/rate limit signals
+				let errorText = '';
+				let quotaHit = false;
+				let reason = '';
+				let message = '';
+				let fullPayload = null;
+				try {
+					const cloned = response.clone();
+					const json = await cloned.json();
+					fullPayload = json;
+					reason = json?.error?.errors?.[0]?.reason || '';
+					message = json?.error?.message || '';
+					errorText = JSON.stringify(json);
+					if (response.status === 403 || response.status === 429) {
+						if (/quota|rateLimit|dailyLimit/i.test(reason) || /quota|rate/i.test(message)) quotaHit = true;
+					}
+				} catch(e) {
+					try { errorText = await response.text(); } catch(_) {}
+				}
+				if (quotaHit) showQuotaBanner();
+				console.error('API error response:', errorText || (response.status + ' ' + response.statusText));
+				const err = new Error(`API error: ${response.status} ${response.statusText || reason || ''}`);
+				err.ytStatus = response.status;
+				if (reason) err.ytReason = reason;
+				if (message) err.ytMessage = message;
+				if (fullPayload) err.ytPayload = fullPayload;
+				throw err;
+			}
+			return response;
+		} catch (e) {
+			clearTimeout(timeout_id);
+			if (e && e.name === 'AbortError') {
+				const err = new Error(friendlyTimeoutMessage);
+				err.name = 'AbortError';
+				err.code = 'SSAPP_YT_TIMEOUT';
+				console.error(err.message);
+				throw err;
+			}
+			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', URL);
+			throw e;
+		} finally {
+			clearTimeout(timeout_id);
+		}
+	}
+
+	function showQuotaBanner() {
+		try {
+			const el = document.getElementById('quota-warning');
+			if (!el) return;
+			el.classList.remove('hidden');
+		} catch(_){}
+	}
+
+	function hideQuotaBanner() {
+		try {
+			const el = document.getElementById('quota-warning');
+			if (el) el.classList.add('hidden');
+		} catch(_){}
+	}
+
+	function initCredentialsUI() {
+		try {
+			const redirectValue = window.location.href.split('/youtube')[0] + '/youtube.html';
+			const redirectEl = document.getElementById('redirect-uri-hint');
+			if (redirectEl) redirectEl.textContent = redirectValue;
+			const redirectEl2 = document.getElementById('redirect-uri-hint-2');
+			if (redirectEl2) redirectEl2.textContent = redirectValue;
+			const storedId = localStorage.getItem('ytClientIdOverride') || '';
+			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
+			const useCustom = !!storedId;
+			// Populate both forms
+			['custom-client-id','custom-client-id-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedId; });
+			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
+			const indicator = document.getElementById('custom-cred-indicator');
+			if (indicator) indicator.classList.toggle('hidden', !useCustom);
+			if (useCustom) hideQuotaBanner();
+			// Wire buttons
+			const save = async function(primary=true){
+				const cid = (document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '';
+				const akey = (document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '';
+				if (cid && !/\.apps\.googleusercontent\.com$/.test(cid)) {
+					alert('That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com');
+					return;
+				}
+				if (cid) localStorage.setItem('ytClientIdOverride', cid); else localStorage.removeItem('ytClientIdOverride');
+				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
+				alert('Saved. Please sign out and sign in again to apply your credentials.');
+				hideQuotaBanner();
+				initCredentialsUI();
+			};
+			const clear = function(){
+				localStorage.removeItem('ytClientIdOverride');
+				localStorage.removeItem('ytApiKeyOverride');
+				alert('Custom credentials cleared. Default project will be used.');
+				initCredentialsUI();
+			};
+			const s1 = document.getElementById('save-credentials'); if (s1) s1.onclick = () => save(true);
+			const r1 = document.getElementById('clear-credentials'); if (r1) r1.onclick = clear;
+			const s2 = document.getElementById('save-credentials-2'); if (s2) s2.onclick = () => save(false);
+			const r2 = document.getElementById('clear-credentials-2'); if (r2) r2.onclick = clear;
+		} catch(_){}
+	}
+    document.addEventListener('DOMContentLoaded', initializePage);
+} catch(e) {
+    console.error('YouTube integration error:', e);
+    const body = document.querySelector('body');
+    if (body) {
+        const errorDiv = document.createElement('div');
+        errorDiv.style.color = 'red';
+        errorDiv.style.padding = '20px';
+        errorDiv.textContent = 'A critical error occurred with the YouTube integration. Please check the console for details.';
+    }
+}
+</script>
+</body>
+</html>
