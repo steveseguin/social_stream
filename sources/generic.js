@@ -16,7 +16,7 @@
     // Maximum number of messages to keep in history per user
     maxMessagesPerUser: 10,
     // Time window in milliseconds to consider for duplication (default: 5 minutes)
-    timeWindow: 31 * 60 * 1000,
+    timeWindow: 11 * 1000,
     // Map to store user's message history
     userMessageHistory: new Map(),
     // Enable/disable deduplication

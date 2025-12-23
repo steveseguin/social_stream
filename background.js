@@ -4367,7 +4367,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 		} else if ("pokeMe" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
-			pokeSite(sender.tab.url, sender.tab.id);
+			if (!settings.disabletiktokpoke) {
+				pokeSite(sender.tab.url, sender.tab.id);
+			}
 		} else if ("keepAlive" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			var action = {};
@@ -7552,8 +7554,36 @@ socketserver.addEventListener("message", async function (event) {
 					message.chatmessage = "";
 					
 					var foundCustomField = false;
+					var messageFieldValue = null;
+					var messageFieldPriority = -1;
+					var messageFieldHasValue = -1;
+					var messageFieldSortKey = "";
+
+					function considerStripeMessageField(field, priority, sortKey) {
+						if (!field || !field.text || typeof field.text.value !== "string") {
+							return;
+						}
+
+						var value = field.text.value;
+						var hasValue = value.trim() ? 1 : 0;
+						var normalizedSortKey = typeof sortKey === "string" ? sortKey.toLowerCase() : "";
+
+						if (
+							priority > messageFieldPriority ||
+							(priority === messageFieldPriority && hasValue > messageFieldHasValue) ||
+							(priority === messageFieldPriority && hasValue === messageFieldHasValue && normalizedSortKey && (!messageFieldSortKey || normalizedSortKey < messageFieldSortKey))
+						) {
+							messageFieldValue = value;
+							messageFieldPriority = priority;
+							messageFieldHasValue = hasValue;
+							messageFieldSortKey = normalizedSortKey;
+						}
+					}
 
 					data.stripe.data.object.custom_fields.forEach(xx => {
+						var keyLower = typeof xx.key === "string" ? xx.key.toLowerCase() : "";
+						var labelLower = typeof xx.label === "string" ? xx.label.toLowerCase() : "";
+
 						if (xx.key == "displayname") {
 							message.chatname = xx.text.value;
 							foundCustomField = true;
@@ -7569,15 +7599,6 @@ socketserver.addEventListener("message", async function (event) {
 						} else if (xx.key == "username") {
 							message.chatname = xx.text.value;
 							foundCustomField = true;
-							
-						} else if (xx.key == "message") {
-							message.chatmessage = xx.text.value;
-							
-						} else if (xx.key == "messagetchat") {
-							message.chatmessage = xx.text.value;
-							
-						} else if (xx.key == "leaveamessage") {
-							message.chatmessage = xx.text.value;
 							
 						} else if (!message.chatname && xx.label && typeof xx.label === 'string' && xx.label.toLowerCase() == "display name") {
 							message.chatname = xx.text.value;
@@ -7600,7 +7621,25 @@ socketserver.addEventListener("message", async function (event) {
 								message.chatname = xx.text.value;
 							}
 						}
+
+						if (keyLower === "message") {
+							considerStripeMessageField(xx, 4, "key:message");
+						} else if (keyLower === "messagetchat") {
+							considerStripeMessageField(xx, 4, "key:messagetchat");
+						} else if (keyLower === "leaveamessage") {
+							considerStripeMessageField(xx, 3, "key:leaveamessage");
+						} else if (labelLower === "message") {
+							considerStripeMessageField(xx, 2, "label:message");
+						} else if (keyLower && keyLower.includes("message")) {
+							considerStripeMessageField(xx, 1, "key:" + keyLower);
+						} else if (labelLower && labelLower.includes("message")) {
+							considerStripeMessageField(xx, 0, "label:" + labelLower);
+						}
 					});
+
+					if (messageFieldValue !== null) {
+						message.chatmessage = messageFieldValue;
+					}
 					
 					if (!foundCustomField){
 						console.warn("No custom name / custom display-name field found. We will skip this incoming stripe api webhook");
