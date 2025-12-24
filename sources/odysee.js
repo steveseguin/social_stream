@@ -54,12 +54,51 @@ function toDataURL(url, callback) {
 				return "";
 			}
 		}
+
+		function appendSpaceIfNeeded() {
+			if (resp && !/\s$/.test(resp)) {
+				resp += " ";
+			}
+		}
+
+		function getLinkLabel(node) {
+			try {
+				var label = (node.textContent || "").trim();
+				if (!label){
+					label = node.getAttribute("aria-label") || node.getAttribute("title") || node.href || "";
+				}
+				return (label || "").trim();
+			} catch (e) {
+				return "";
+			}
+		}
 		
 		element.childNodes.forEach(node=>{
-			if (node.childNodes.length){
-				resp += getAllContentNodes(node)
-			} else if ((node.nodeType === 3) && node.textContent && (node.textContent.trim().length > 0)){
-				resp += escapeHtml(node.textContent);
+			if (node.nodeType === 3 && node.textContent !== undefined){
+				var text = node.textContent || "";
+				if (!text.trim()){
+					appendSpaceIfNeeded();
+					return;
+				}
+				resp += escapeHtml(text);
+				return;
+			}
+			
+			if (node.nodeType === 1){
+				if (node.nodeName === "A"){
+					var linkLabel = getLinkLabel(node);
+					if (linkLabel){
+						resp += escapeHtml(linkLabel);
+					}
+					return;
+				}
+				if (node.nodeName === "SVG" || node.nodeName === "PATH" || node.nodeName === "G"){
+					return;
+				}
+			}
+			
+			if (node.childNodes && node.childNodes.length){
+				resp += getAllContentNodes(node);
 			} else if (node.nodeType === 1){
 				if (!settings.textonlymode){
 					if ((node.nodeName == "IMG") && node.src){
@@ -87,15 +126,13 @@ function toDataURL(url, callback) {
 		var chatimg = '';
 		
 		var msg = "";
-		ele.querySelector(".livestreamComment__text, .livestream-comment__text").querySelector("p").childNodes.forEach(ee=>{
-			if (ee.nodeType == Node.TEXT_NODE){
-				msg += escapeHtml(ee.textContent);
-				msg = msg.trim();
-			} else if (!settings.textonlymode && (ee.nodeName  == "IMG")){
-				msg += "<img src='"+ee.src+"' />";
-				msg = msg.trim();
-			} 
-		});
+		try {
+			const textContainer = ele.querySelector(".livestreamComment__text, .livestream-comment__text");
+			const messageNode = textContainer ? (textContainer.querySelector("p") || textContainer) : null;
+			msg = getAllContentNodes(messageNode).trim();
+		} catch (e) {
+			msg = "";
+		}
 		
 		if (!msg.length){return;}
 		
