@@ -947,7 +947,7 @@
 	  
 	  
 	  try {
-		 console.log(signedInUser);
+		 //console.log(signedInUser);
 		if (signedInUser && signedInUser==chatname){
 			const content = ele.textContent || "";
 			const imgSrcs = Array.from(ele.querySelectorAll('img')).map(img => img.src).join(' ');
@@ -1024,10 +1024,33 @@
 		chatmessage = chatmessage.trim();
 	  }
 	  
+	  var contentImg = "";
+	  var hasDonation = '';
+	  
+	  if (!chatmessage && chatname && ele.querySelector("img[alt='sticker'][src]")){
+		  try {
+			  chatmessage = getAllContentNodes(ele.querySelector("div.flex-shrink-0.break-normal"));
+			  chatmessage = chatmessage.replace(chatname,"").trim();
+			  contentImg = ele.querySelector("img[alt='sticker'][src]").src;
+			  
+			  hasDonation = parseInt(ele.querySelector("svg path[d^='M7.67318 0.0611465L3.07733 1.75287C2.86614']").parentNode.nextElementSibling.textContent);
+			  if (hasDonation===1){
+				  hasDonation = hasDonation + " KICK";
+			  } else if (hasDonation){
+				  hasDonation = hasDonation + " KICKs";
+			  } else {
+				  hasDonation = "";
+			  }
+			  eventName = "gift";
+		  } catch(e){
+		  }
+	  }
+	  
 	  if (!chatmessage){return;}
 	  
 	  var originalMessage = "";
 	  var replyMessage = "";
+	  
 	  
 	  if (!settings.excludeReplyingTo){
 		  let reply = ele.querySelector(".text-xs button");
@@ -1073,7 +1096,7 @@
 	  });
 
 
-	  var hasDonation = '';
+	 
 	  
 	  chatname = chatname.replace("Channel Host", "");
 	  chatname = chatname.replace(":", "");
@@ -1106,6 +1129,9 @@
 	  data.chatmessage = chatmessage;
 	  data.chatimg = chatimg;
 	  data.hasDonation = hasDonation;
+	  if (contentImg){
+		data.contentimg = contentImg;
+	  }
 	  if (member){
 		data.membership = member;
 	  }

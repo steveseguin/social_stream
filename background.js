@@ -6038,7 +6038,7 @@ function sendToS10(data, fakechat=false, relayed=false) {
 
 // Social Stream Chat integration - send messages to chat.socialstream.ninja
 function sendToSSC(data, fakechat=false, relayed=false) {
-	if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting && settings.sscroomid && settings.sscroomid.textsetting) {
+	if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting) {
 		try {
 			// Skip messages from our own chat to avoid loops
 			if (data.type && data.type === "socialstreamchat") {
@@ -6187,16 +6187,16 @@ function sendToSSC(data, fakechat=false, relayed=false) {
 			if (data.meta) {
 				payload.meta = data.meta;
 			}
-
-			const roomId = settings.sscroomid.textsetting.trim();
+			
 			const apiKey = settings.sscapikey.textsetting.trim();
 			const apiBase = (settings.sscapibase && settings.sscapibase.textsetting)
-				? settings.sscapibase.textsetting.trim()
-				: "https://api.ninjachatter.com";
+			  ? settings.sscapibase.textsetting.trim()
+			  : "https://api.ninjachatter.com";
 
 			try {
 				let xhr = new XMLHttpRequest();
-				xhr.open("POST", apiBase + "/rooms/" + roomId + "/ingress");
+				xhr.open("POST", apiBase + "/ssn");
+
 				xhr.setRequestHeader("Content-Type", "application/json");
 				xhr.setRequestHeader("Authorization", "Bearer " + apiKey);
 				xhr.onload = function () {
@@ -12022,7 +12022,7 @@ async function applyBotActions(data, tab = false) {
 		}
 
 		// Social Stream Chat relay - send all messages to chat.socialstream.ninja
-		if (settings.sscrelay && !data.bot && data.chatmessage && data.chatname && !data.event){
+		if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting && !data.bot && data.chatmessage && data.chatname && !data.event){
 			sendToSSC(data, false, true);
 		}
 		//console.logdata);
