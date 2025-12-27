@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 10px; font-family: Roboto, Arial, sans-serif">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Social Stream - YouTube Streaming</title>
+    <link rel="icon" href="https://www.youtube.com/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" type="text/css" href="youtube.css" />
+</head>
+<body>
+    <div class="container">
+        <div class="auth" id="auth-section">
+            <div class="landing-container">
+                <div class="youtube-logo"></div>
+                <h1 class="landing-title">YouTube Streaming (Preview)</h1>
+                <p class="landing-subtitle">Connect to YouTube Live Chat using the Streaming API</p>
+                <div class="landing-description">
+                    <p>This prototype uses the YouTube Data API streaming endpoint for lower latency than the legacy polling bridge.</p>
+                    <p>Provide a valid OAuth token and live chat context to begin streaming messages.</p>
+                </div>
+                <div class="auth-section auth-section--compact">
+                    <button id="connect-button" class="auth-button">Connect</button>
+                    <button id="disconnect-button" class="auth-button secondary" disabled>Disconnect</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="socket hidden" id="stream-section">
+            <div class="channel-header">
+                <div class="header-top">
+                    <div class="user-info">
+                        <div id="user-avatar"></div>
+                        <div class="user-info-text">
+                            <div class="header-item">
+                                <span>User:</span>
+                                <span id="current-user">Not signed in</span>
+                                <div class="header-target">
+                                    <span>Target:</span>
+                                    <span id="current-channel" class="target-text">No target</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="header-actions">
+                        <button id="sign-out-button" class="connect-button">Sign out</button>
+                    </div>
+                </div>
+                <div class="header-bottom">
+                    <div class="header-info">
+                        <div class="channel-input-container">
+                            <label for="channel-input">Channel / Video / Live Chat ID</label>
+                            <input type="text" id="channel-input" placeholder="Channel handle, video ID, or live chat ID" />
+                        </div>
+                        <button id="channel-resolve-button" class="connect-button">Resolve</button>
+                    </div>
+                    <div class="header-status">
+                        <div class="status-indicator" id="stream-status-indicator"></div>
+                        <div class="status-text" id="stream-status-text">Disconnected</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="main-content">
+                <div class="chat-display">
+                    <div class="chat-header">
+                        <h2>Live Chat (Streaming)</h2>
+                        <div id="latency-indicator" class="latency-indicator hidden"></div>
+                    </div>
+                    <div id="chat-log" class="chat-log"></div>
+                </div>
+                <div class="chat-controls">
+                    <textarea id="input-text" placeholder="Send a message..." disabled></textarea>
+                    <div class="chat-control-buttons">
+                        <button id="sendmessage" class="connect-button" disabled>Send</button>
+                        <button id="clear-chat" class="connect-button secondary">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="youtube_streaming.js"></script>
+</body>
+</html>
