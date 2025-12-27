@@ -618,6 +618,18 @@
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#039;");
     }
+    function sanitizeHTML(str) {
+      if (str === undefined || str === null) return "";
+      // Remove dangerous tags and event handlers, but allow img/svg for emotes
+      return String(str)
+        .replace(/<script[\s\S]*?<\/script>/gi, "")
+        .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
+        .replace(/<object[\s\S]*?<\/object>/gi, "")
+        .replace(/<embed[\s\S]*?>/gi, "")
+        .replace(/<link[\s\S]*?>/gi, "")
+        .replace(/<style[\s\S]*?<\/style>/gi, "")
+        .replace(/\bon\w+\s*=/gi, "data-blocked=");
+    }
     function normalizePlatform(type) {
       const t = safeText(type).toLowerCase().trim();
       if (!t) return "";
@@ -659,7 +671,7 @@
             </div>
           </div>
 
-          <div class="message">${escapeHTML(msg)}</div>
+          <div class="message">${sanitizeHTML(msg)}</div>
 
           ${data.contentimg ? `
             <div class="media">
