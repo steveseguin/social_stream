@@ -12299,7 +12299,7 @@ async function applyBotActions(data, tab = false) {
 				if (settings.randomgif) {
 					order = parseInt(Math.random() * 15) + 1;
 				}
-				var gurl = await fetch("https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(searchGif) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
+				var gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(searchGif) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
 					.then(response => response.json())
 					.then(response => {
 						try {
@@ -12365,7 +12365,7 @@ async function applyBotActions(data, tab = false) {
 					if (order > 40) {
 						order = 40;
 					}
-					var gurl = await fetch("https://tenor.googleapis.com/v2/search?&searchfilter=sticker&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
+					var gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&searchfilter=sticker&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
 						.then(response => response.json())
 						.then(response => {
 							try {
@@ -12433,7 +12433,7 @@ async function applyBotActions(data, tab = false) {
 					if (order > 40) {
 						order = 40;
 					}
-					var gurl = await fetch("https://tenor.googleapis.com/v2/search?media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
+					var gurl = await fetch("https://tenor.googleapis.com/v2/search?contentfilter=high&media_filter=tinygif,tinywebp_transparent&q=" + encodeURIComponent(search_word) + "&key=" + settings.tenorKey.textsetting + "&limit=" + order)
 						.then(response => response.json())
 						.then(response => {
 							try {
