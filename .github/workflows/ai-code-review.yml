@@ -122,12 +122,12 @@ jobs:
           REVIEW=$(cat /tmp/review.txt)
 
           # Create the comment with header
-          COMMENT="## 🤖 AI Code Review (GLM-4.7)
+          COMMENT="## 🤖 AI Code Review
 
           $REVIEW
 
           ---
-          <sub>This review was generated automatically by [Z.AI GLM-4.7](https://z.ai). It may not catch all issues - human review is still recommended.</sub>"
+          <sub>Powered by [Z.AI GLM-4.7](https://z.ai/subscribe?ic=W4IQQ89PNZ) (affiliate link). Human review still recommended.</sub>"
 
           # Post comment to PR
           gh pr comment ${{ github.event.pull_request.number }} \
