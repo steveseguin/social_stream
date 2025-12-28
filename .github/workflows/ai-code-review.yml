@@ -97,8 +97,8 @@ jobs:
               stream: false
             }' > /tmp/request.json
 
-          # Call Z.AI API
-          RESPONSE=$(curl -s -X POST "https://api.z.ai/api/paas/v4/chat/completions" \
+          # Call Z.AI Coding API (uses Coding Plan quota)
+          RESPONSE=$(curl -s -X POST "https://api.z.ai/api/coding/paas/v4/chat/completions" \
             -H "Content-Type: application/json" \
             -H "Authorization: Bearer $ZAI_API_KEY" \
             -d @/tmp/request.json)
