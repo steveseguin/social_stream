@@ -37,7 +37,9 @@ const updateList = [
     "tr",
     "cs",
     "uk",
-    "ar"
+    "ar",
+    "zh-CN",
+    "zh-TW"
 ];
 
 // Initialize DOM selectors and defaults

@@ -3869,6 +3869,23 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				settings[pattern] = findExistingEvents(pattern,{ settings });
 			})
 
+			// For language changes, wait for storage AND translation file load to complete
+			// This prevents race conditions where popup reloads before translation is ready
+			if (request.setting === "translationlanguage") {
+				chrome.storage.local.set({ settings: settings }, async () => {
+					chrome.runtime.lastError;
+					// Wait for changeLg to complete - it fetches the translation file
+					// and saves settings.translation to storage
+					if (settings.translationlanguage && settings.translationlanguage.optionsetting) {
+						await changeLg(settings.translationlanguage.optionsetting);
+					} else {
+						await changeLg(request.value);
+					}
+					sendResponse({ state: isExtensionOn, saved: true });
+				});
+				return true; // Keep message channel open for async response
+			}
+
 			chrome.storage.local.set({
 				settings: settings
 			});
@@ -4201,14 +4218,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 				sendWaitlistConfig(null, true); // stop hype and clear old hype
 			}
 
-			if (request.setting == "translationlanguage") {
-				// After saving, the value is stored in settings[translationlanguage].optionsetting
-				if (settings.translationlanguage && settings.translationlanguage.optionsetting) {
-					changeLg(settings.translationlanguage.optionsetting);
-				} else {
-					changeLg(request.value);
-				}
-			}
+			// Note: translationlanguage is handled earlier with storage callback to prevent race condition
 
 			if (request.setting.startsWith("timemessage")) {
 				if (request.setting.startsWith("timemessageevent")) {

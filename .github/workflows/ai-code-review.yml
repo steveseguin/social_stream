@@ -1,0 +1,135 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  ai-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff
+        id: diff
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the diff between base and head
+          DIFF=$(gh pr diff ${{ github.event.pull_request.number }} --repo ${{ github.repository }})
+
+          # Truncate if too large (API has token limits)
+          MAX_CHARS=30000
+          if [ ${#DIFF} -gt $MAX_CHARS ]; then
+            DIFF="${DIFF:0:$MAX_CHARS}
+
+          ... [diff truncated due to size]"
+          fi
+
+          # Save to file to handle special characters
+          echo "$DIFF" > /tmp/pr_diff.txt
+
+      - name: Get PR info
+        id: pr_info
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_TITLE=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json title -q '.title')
+          PR_BODY=$(gh pr view ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --json body -q '.body')
+          echo "title=$PR_TITLE" >> $GITHUB_OUTPUT
+          echo "$PR_BODY" > /tmp/pr_body.txt
+
+      - name: Run AI Code Review
+        id: review
+        env:
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+        run: |
+          DIFF=$(cat /tmp/pr_diff.txt)
+          PR_BODY=$(cat /tmp/pr_body.txt)
+
+          # Prepare the prompt
+          SYSTEM_PROMPT="You are an expert code reviewer. Analyze the provided pull request diff and provide a helpful, constructive review. Be concise but thorough.
+
+          Your review should include:
+          1. **Overview**: A brief summary of what this PR does (2-3 sentences)
+          2. **Potential Issues**: Any bugs, security concerns, or logical errors you spot
+          3. **Suggestions**: Improvements for code quality, performance, or maintainability
+          4. **Positive Notes**: Things done well (keep brief)
+
+          Guidelines:
+          - Focus on significant issues, not nitpicks
+          - Be constructive and helpful
+          - If the changes look good, say so
+          - Use code snippets when referencing specific lines
+          - Format your response in markdown"
+
+          USER_PROMPT="Please review this pull request:
+
+          **Title:** ${{ steps.pr_info.outputs.title }}
+
+          **Description:**
+          ${PR_BODY}
+
+          **Diff:**
+          \`\`\`diff
+          ${DIFF}
+          \`\`\`"
+
+          # Create JSON payload
+          jq -n \
+            --arg system "$SYSTEM_PROMPT" \
+            --arg user "$USER_PROMPT" \
+            '{
+              model: "glm-4.7",
+              messages: [
+                {role: "system", content: $system},
+                {role: "user", content: $user}
+              ],
+              temperature: 0.7,
+              stream: false
+            }' > /tmp/request.json
+
+          # Call Z.AI API
+          RESPONSE=$(curl -s -X POST "https://api.z.ai/api/paas/v4/chat/completions" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $ZAI_API_KEY" \
+            -d @/tmp/request.json)
+
+          # Extract the review content
+          REVIEW=$(echo "$RESPONSE" | jq -r '.choices[0].message.content // empty')
+
+          if [ -z "$REVIEW" ]; then
+            echo "Error: Failed to get AI review"
+            echo "Response: $RESPONSE"
+            REVIEW="⚠️ AI review failed to generate. Please check the workflow logs."
+          fi
+
+          # Save review to file
+          echo "$REVIEW" > /tmp/review.txt
+
+      - name: Post review comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REVIEW=$(cat /tmp/review.txt)
+
+          # Create the comment with header
+          COMMENT="## 🤖 AI Code Review (GLM-4.7)
+
+          $REVIEW
+
+          ---
+          <sub>This review was generated automatically by [Z.AI GLM-4.7](https://z.ai). It may not catch all issues - human review is still recommended.</sub>"
+
+          # Post comment to PR
+          gh pr comment ${{ github.event.pull_request.number }} \
+            --repo ${{ github.repository }} \
+            --body "$COMMENT"
