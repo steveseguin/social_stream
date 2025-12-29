@@ -1504,12 +1504,12 @@
 			document.querySelector("#trigger").click()
 			document.querySelector('[slot="dropdown-content"] [tabindex="0"]').click()
 			var waitTilClear = setInterval(function(){
-				if (document.querySelectorAll('#menu > a').length==2){
+				if (document.querySelectorAll('#menu > a').length>=2){
 					clearInterval(waitTilClear);
 					document.querySelectorAll('#menu > a')[1].click()
 					document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "10px";
 				}
-			},100)
+			},500)
 	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
 		  document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "unset";
 		  marked = false;
