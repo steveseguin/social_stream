@@ -1509,7 +1509,7 @@
 					document.querySelectorAll('#menu > a')[1].click()
 					document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "10px";
 				}
-			},500)
+			},100)
 	  } else if (document.querySelector("#trigger") && !settings.autoLiveYoutube && marked){
 		  document.querySelector("yt-live-chat-header-renderer").style.maxHeight = "unset";
 		  marked = false;

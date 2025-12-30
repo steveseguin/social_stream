@@ -25,6 +25,10 @@
     --new-version-banner-border: 1px solid #7eff7e;
     --new-version-link-color: green;
     --new-version-installed-color: #3a413a;
+    --important-changes-background: #fff3cd;
+    --important-changes-text: #856404;
+    --important-changes-border: 1px solid #ffc107;
+    --important-changes-link: #0056b3;
     --options-group-background-color: #f6f8fa;
     --options-group-text-color: #362e26;
     --extension-enabled-background-color: rgb(153, 255, 153);
@@ -70,6 +74,10 @@
         --new-version-banner-border: 1px solid #7eff7e;
         --new-version-link-color: #90f190;
         --new-version-installed-color: #bebebe;
+        --important-changes-background: #664d03;
+        --important-changes-text: #fff3cd;
+        --important-changes-border: 1px solid #997404;
+        --important-changes-link: #6ea8fe;
         --options-group-background-color: #161b22;
         --options-group-text-color: #c9d1d9;
         --extension-enabled-background-color: rgb(153, 255, 153);
@@ -604,6 +612,48 @@ p a {
 
 #newVersion.show {
     display: block;
+}
+
+#importantChanges {
+    padding: 1em;
+    background: var(--important-changes-background);
+    color: var(--important-changes-text);
+    border-bottom: var(--important-changes-border);
+    display: none;
+    position: relative;
+}
+
+#importantChanges.show {
+    display: block;
+}
+
+#importantChanges a {
+    color: var(--important-changes-link);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#importantChanges .important-change {
+    position: relative;
+    padding-bottom: 0.5em;
+}
+
+#importantChanges .dismiss-btn {
+    position: absolute;
+    bottom: 0.3em;
+    right: 0;
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: var(--important-changes-text);
+    opacity: 0.7;
+    line-height: 1;
+    padding: 0.2em 0.5em;
+}
+
+#importantChanges .dismiss-btn:hover {
+    opacity: 1;
 }
 
 .container {
@@ -1658,6 +1708,7 @@ input:checked + .slider:before {
             </button>
         </div>
         <div id="newVersion"></div>
+        <div id="importantChanges"></div>
         <input type="text" id="searchInput" placeholder="Search all options by keyword..." data-translate="placeholder-search-options" />
         <div id="searchIcon" title="Search all options by keyword">🔍</div>
 		<div id="activeIcon" title="Show only enabled options">🔰</div>
@@ -5337,12 +5388,12 @@ input:checked + .slider:before {
                     <div class="collapsible-text">
                         <div class="options">
                             <div class="options_group">
-                                <div title="Capture likes, subs, and other available event data.">
+                                <div title="Block stream events (follows, likes, subs) from appearing anywhere. Note: Also blocks events.html and Event Flow Editor.">
                                     <label class="switch">
-                                        <input type="checkbox" data-setting="captureevents" />
+                                        <input type="checkbox" data-setting="hideevents" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <span data-translate="capture-stream-events-and-actions"> Capture stream events and actions </span>
+                                    <span data-translate="hide-stream-events"> Hide stream events (follows, likes, subs) </span>
                                 </div>
                                 <div title="By default all inbound messages are saved to a local database for later look-up reference">
                                     <label class="switch">
