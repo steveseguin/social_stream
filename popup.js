@@ -3088,7 +3088,140 @@ function processManifestData(data, manifestData) {
     }
 }
 
+// Important Changes Notification System
+const importantChanges = [
+    {
+        id: "events-always-on-v3.40",
+        minVersion: "3.40.0",  // Only show to users with this version or newer
+        title: "Heads up! Stream events now show by default",
+        message: "Follows, likes, and subs now appear in your overlay. Want to turn them off?",
+        actionText: "Disable stream events",
+        targetSection: "wrapper-global-mechanics-options",
+        targetSetting: "hideevents"
+    }
+];
 
+function checkImportantChanges() {
+    const container = document.getElementById("importantChanges");
+    if (!container) return;
+
+    // Get current extension version
+    let currentVersion = "0.0.0";
+    try {
+        const manifestData = chrome.runtime.getManifest();
+        if (manifestData && manifestData.version) {
+            currentVersion = manifestData.version;
+        }
+    } catch (e) {
+        console.error("Error getting extension version:", e);
+        return; // Can't determine version, don't show notifications
+    }
+
+    // Get dismissed changes from localStorage
+    let dismissedChanges = [];
+    try {
+        const stored = localStorage.getItem('dismissedImportantChanges');
+        if (stored) {
+            dismissedChanges = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error("Error loading dismissed changes:", e);
+    }
+
+    // Filter changes: not dismissed AND user's version >= minVersion
+    const activeChanges = importantChanges.filter(change => {
+        if (dismissedChanges.includes(change.id)) return false;
+        if (change.minVersion && compareVersions(currentVersion, change.minVersion) < 0) return false;
+        return true;
+    });
+
+    if (activeChanges.length === 0) {
+        container.classList.remove('show');
+        container.innerHTML = '';
+        return;
+    }
+
+    // Build notification HTML (dismiss button now at bottom right)
+    let html = '';
+    activeChanges.forEach(change => {
+        html += `
+            <div class="important-change" data-change-id="${change.id}">
+                <strong>${change.title}</strong><br>
+                <small>${change.message}</small><br>
+                <a href="#" class="change-action-link" data-target-section="${change.targetSection}" data-target-setting="${change.targetSetting}">${change.actionText}</a>
+                <button class="dismiss-btn" data-change-id="${change.id}" title="Dismiss">&times;</button>
+            </div>
+        `;
+    });
+
+    container.innerHTML = html;
+    container.classList.add('show');
+
+    // Add event listeners for dismiss buttons
+    container.querySelectorAll('.dismiss-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const changeId = this.dataset.changeId;
+            dismissImportantChange(changeId);
+        });
+    });
+
+    // Add event listeners for action links
+    container.querySelectorAll('.change-action-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            const targetSection = this.dataset.targetSection;
+            const targetSetting = this.dataset.targetSetting;
+            scrollToSetting(targetSection, targetSetting);
+        });
+    });
+}
+
+function dismissImportantChange(changeId) {
+    let dismissedChanges = [];
+    try {
+        const stored = localStorage.getItem('dismissedImportantChanges');
+        if (stored) {
+            dismissedChanges = JSON.parse(stored);
+        }
+    } catch (e) {
+        console.error("Error loading dismissed changes:", e);
+    }
+
+    if (!dismissedChanges.includes(changeId)) {
+        dismissedChanges.push(changeId);
+        localStorage.setItem('dismissedImportantChanges', JSON.stringify(dismissedChanges));
+    }
+
+    // Re-check to update the display
+    checkImportantChanges();
+}
+
+function scrollToSetting(targetSection, targetSetting) {
+    // Find the collapsible section
+    const sectionCheckbox = document.getElementById(targetSection);
+    if (sectionCheckbox) {
+        // Expand the collapsible if collapsed
+        sectionCheckbox.checked = true;
+    }
+
+    // Find the setting element
+    const settingElement = document.querySelector(`[data-setting="${targetSetting}"]`);
+    if (settingElement) {
+        // Scroll to the setting
+        settingElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Add a brief highlight effect
+        const parentDiv = settingElement.closest('div');
+        if (parentDiv) {
+            parentDiv.style.transition = 'background-color 0.3s';
+            parentDiv.style.backgroundColor = 'rgba(255, 193, 7, 0.3)';
+            setTimeout(() => {
+                parentDiv.style.backgroundColor = '';
+            }, 2000);
+        }
+    }
+}
 
 // Language parameter handling removed - use the translation dropdown instead
 
@@ -7303,8 +7436,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	};
 
-	checkVersion(); 
-	
+	checkVersion();
+	checkImportantChanges();
+
 	let hideLinks = false;
 	document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
 		if (x.checked){

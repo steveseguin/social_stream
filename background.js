@@ -10090,6 +10090,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 		// console.log('[RELAY DEBUG - sendMessageToTabs] Early return - No response in data');
 		return false;
 	}
+
+	// Block events if global hideevents setting is enabled
+	if (settings.hideevents && data.response && data.response.event) {
+		return false;
+	}
+
     if (antispam && settings["dynamictiming"] && lastAntiSpam + 10 > messageCounter) {
         return false;
     }

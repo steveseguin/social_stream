@@ -188,6 +188,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "custom_injection",
     description: "Capture likes, subs, and other available event data."
   },
+  "hideevents": {
+    type: "boolean",
+    category: "custom_injection",
+    description: "Block stream events (follows, likes, subs) from appearing anywhere."
+  },
   "capturejoinedevent": {
     type: "boolean",
     category: "custom_injection",
