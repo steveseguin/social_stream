@@ -3661,20 +3661,23 @@
 			}
 
 			async function playtone(tonename = "testtone") {
-				if (timeoutTone) {
-					return;
-				}
-				timeoutTone = true;
+				// Skip throttle if overlap mode enabled
+				if (!overlapBeep) {
+					if (timeoutTone) {
+						return;
+					}
+					timeoutTone = true;
 
-				setTimeout(function () {
-					timeoutTone = false;
-				}, 500);
+					setTimeout(function () {
+						timeoutTone = false;
+					}, 500);
+				}
 
 				// Initialize audio context on first use
 				if (!audioContext) {
 					initAudioContext();
 				}
-				
+
 				if (audioContext && audioContext.state == "suspended") {
 					try {
 						await audioContext.resume();
@@ -3691,17 +3694,50 @@
 				if (!audioContext || audioContext.state == "suspended") {
 					return;
 				}
-				var toneEle = document.getElementById(tonename);
-				if (toneEle) {
-					toneEle
-						.play()
-						.then(() => {
-							// beep
-						})
-						.catch(e => {
-							console.error(e);
-						});
+
+				if (overlapBeep) {
+					playOverlappingTone(tonename);
+				} else {
+					var toneEle = document.getElementById(tonename);
+					if (toneEle) {
+						toneEle
+							.play()
+							.then(() => {
+								// beep
+							})
+							.catch(e => {
+								console.error(e);
+							});
+					}
 				}
+			}
+
+			function playOverlappingTone(tonename) {
+				var sourceEle = document.getElementById(tonename);
+				if (!sourceEle) return;
+
+				var sources = sourceEle.getElementsByTagName("source");
+				var audioSrc = sources.length > 0 ? sources[0].src : sourceEle.src;
+				if (!audioSrc) return;
+
+				var tempAudio = new Audio(audioSrc);
+				tempAudio.volume = sourceEle.volume;
+
+				// Cleanup after playback
+				tempAudio.addEventListener('ended', function() {
+					tempAudio.src = '';
+					tempAudio = null;
+				});
+				tempAudio.addEventListener('error', function() {
+					tempAudio.src = '';
+					tempAudio = null;
+				});
+
+				tempAudio.play().catch(e => {
+					console.error('Overlapping tone error:', e);
+					tempAudio.src = '';
+					tempAudio = null;
+				});
 			}
 
 			if (urlParams.has("css")) {
@@ -4000,7 +4036,12 @@
 			if (urlParams.has("nobeepmod")) {
 				nobeepmod = true;
 			}
-			
+
+			var overlapBeep = false;
+			if (urlParams.has("overlapbeep")) {
+				overlapBeep = true;
+			}
+
 			var stylizeEmoji = false;
 			if (urlParams.has("emoji") || urlParams.has("emojis")) {
 				stylizeEmoji = urlParams.get("emoji") || urlParams.get("emojis") || "140";
