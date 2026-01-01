@@ -1658,6 +1658,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Custom sound file URL for notifications"
           },
           {
+            "key": "overlapbeep",
+            "displayName": "overlapbeep",
+            "aliases": [
+              "overlapbeep"
+            ],
+            "values": "boolean",
+            "description": "Enables overlapping beep sounds for rapid messages (experimental)"
+          },
+          {
             "key": "beepwords",
             "displayName": "beepwords",
             "aliases": [
