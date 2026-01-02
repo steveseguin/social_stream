@@ -1160,42 +1160,13 @@ function applyExtensionSettings(newSettings) {
 }
 
 function notifyApp(payload) {
-    let sent = false;
-
-    // Try chrome.runtime.sendMessage first if available
-    if (extension.available && typeof chrome.runtime.sendMessage === 'function') {
-        try {
-            chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {});
-            sent = true;
-        } catch (chromeErr) {
-            console.warn('chrome.runtime.sendMessage failed in notifyApp, trying fallback:', chromeErr);
-        }
-    }
-
-    // Fallback to ninjafy.sendMessage
-    if (!sent && window.ninjafy && window.ninjafy.sendMessage) {
-        try {
-            window.ninjafy.sendMessage(null, payload, null, extension.tabId);
-            sent = true;
-        } catch (ninjafyErr) {
-            console.warn('ninjafy.sendMessage failed in notifyApp, trying postMessage:', ninjafyErr);
-        }
-    }
-
-    // Final fallback to postMessage
-    if (!sent && typeof window !== 'undefined' && window.parent) {
-        try {
-            let data = payload;
-            if (payload && typeof payload === 'object') {
-                data = { ...payload };
-                if (extension.tabId != null) {
-                    data.__tabID__ = extension.tabId;
-                }
-            }
-            window.parent.postMessage(data, '*');
-        } catch (postErr) {
-            console.error('Failed to notify app via postMessage', postErr);
-        }
+    try {
+        // Send message to Chrome extension (same approach as Twitch)
+        chrome.runtime.sendMessage(chrome.runtime.id, payload, function(response) {
+            // Handle response if needed
+        });
+    } catch(e) {
+        console.error('Error notifying app:', e);
     }
 }
 
@@ -3572,39 +3543,15 @@ async function sendChatMessage() {
 }
 
 function pushMessage(data) {
-    let sent = false;
-
-    // Try chrome.runtime.sendMessage first if available
-    if (extension.available && typeof chrome.runtime.sendMessage === 'function') {
-        try {
-            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
-            sent = true;
-        } catch (chromeErr) {
-            console.warn('chrome.runtime.sendMessage failed, trying fallback:', chromeErr);
-        }
-    }
-
-    // Fallback to ninjafy.sendMessage
-    if (!sent && window.ninjafy && window.ninjafy.sendMessage) {
-        try {
-            window.ninjafy.sendMessage(null, { message: data }, null, extension.tabId);
-            sent = true;
-        } catch (ninjafyErr) {
-            console.warn('ninjafy.sendMessage failed, trying postMessage:', ninjafyErr);
-        }
-    }
-
-    // Final fallback to postMessage
-    if (!sent && typeof window !== 'undefined' && window.parent) {
-        try {
-            const envelope = { source: 'socialstream', payload: data };
-            if (extension.tabId != null) {
-                envelope.__tabID__ = extension.tabId;
-            }
-            window.parent.postMessage(envelope, '*');
-        } catch (postErr) {
-            console.error('Failed to push message via postMessage', postErr);
-        }
+    try {
+        // Send message to Chrome extension (same approach as Twitch)
+        chrome.runtime.sendMessage(chrome.runtime.id, {
+            "message": data
+        }, function(response) {
+            // Handle response if needed
+        });
+    } catch(e) {
+        console.error('Error sending message to socialstream:', e);
     }
 }
 
