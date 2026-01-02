@@ -1981,9 +1981,9 @@ function applyAuthenticatedProfile(profile, idsHint = null) {
         ],
         ''
     );
-    if (slug) {
-        setChannelSlug(slug, { source: 'profile' });
-    }
+    if (slug && !state.channelSlug) {
+		setChannelSlug(slug, { source: 'profile' });
+	}
     return profile;
 }
 
