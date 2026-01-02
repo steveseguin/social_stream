@@ -109,15 +109,21 @@ let cachedEventTypes = null;
 let cachedEventTypesFetchedAt = 0;
 let eventTypesUnavailableUntil = 0;
 
-const TAB_ID = typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
-    ? window.__SSAPP_TAB_ID__
-    : null;
+function getTabId() {
+    return typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
+        ? window.__SSAPP_TAB_ID__
+        : null;
+}
 
 const extension = {
-    available: typeof chrome !== 'undefined' && !!(chrome && chrome.runtime && chrome.runtime.id),
+    get available() {
+        return typeof chrome !== 'undefined' && !!(chrome && chrome.runtime && chrome.runtime.id);
+    },
     enabled: true,
     settings: {},
-    tabId: TAB_ID
+    get tabId() {
+        return getTabId();
+    }
 };
 
 const WSS_PLATFORM = 'kick';
