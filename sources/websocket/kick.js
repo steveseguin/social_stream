@@ -102,7 +102,6 @@ const EVENT_TYPES_CACHE_KEY = 'kickEventTypesCache';
 const EVENT_TYPES_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const EVENT_TYPES_UNAVAILABLE_COOLDOWN_MS = 60 * 60 * 1000;
 
-let viewerCountInterval = null;
 let cachedEventTypes = null;
 let cachedEventTypesFetchedAt = 0;
 let eventTypesUnavailableUntil = 0;
@@ -338,75 +337,6 @@ function resetThirdPartyEmoteCache() {
     FFZ = false;
     EMOTELIST = false;
     lastEmoteRequestKey = null;
-}
-
-function shouldPollViewerCount() {
-    if (!extension.enabled) {
-        return false;
-    }
-    return isSettingEnabled('showviewercount') || isSettingEnabled('hypemode');
-}
-
-function updateViewerCountDisplay(count) {
-    if (!els.viewerCount) return;
-    const label = count == null ? '—' : String(count);
-    const text = `Viewers: ${label}`;
-    if (els.viewerCount.textContent !== text) {
-        els.viewerCount.textContent = text;
-    }
-}
-
-function resetViewerCountDisplay() {
-    updateViewerCountDisplay(null);
-}
-
-async function fetchKickViewerCount(slug) {
-    const response = await fetch(`https://kick.com/api/v2/channels/${slug}`);
-    if (!response.ok) {
-        throw new Error(`Kick viewer count request failed: ${response.status}`);
-    }
-    const data = await response.json();
-    if (data && data.livestream) {
-        return data.livestream.viewer_count || 0;
-    }
-    return 0;
-}
-
-async function pollViewerCount() {
-    const slug = state.channelSlug && state.channelSlug.trim();
-    if (!slug || !shouldPollViewerCount()) {
-        updateViewerCountDisplay(null);
-        return;
-    }
-
-    try {
-        const normalizedSlug = normalizeChannel(slug) || slug;
-        const viewers = await fetchKickViewerCount(normalizedSlug);
-        updateViewerCountDisplay(viewers);
-        if (shouldPollViewerCount()) {
-            pushMessage({
-                type: 'kick',
-                event: 'viewer_update',
-                meta: viewers
-            });
-        }
-    } catch (err) {
-        console.error('Error fetching Kick viewer count:', err);
-        updateViewerCountDisplay(0);
-        if (shouldPollViewerCount()) {
-            pushMessage({
-                type: 'kick',
-                event: 'viewer_update',
-                meta: 0
-            });
-        }
-    }
-}
-
-function startViewerCountPolling() {
-    if (viewerCountInterval) return;
-    setTimeout(pollViewerCount, 2500);
-    viewerCountInterval = setInterval(pollViewerCount, 30000);
 }
 
 function escapeAttribute(value) {
@@ -1327,7 +1257,6 @@ function initElements() {
         authState: q('auth-state'),
         startAuth: q('start-auth'),
         channelLabel: q('channel-label'),
-        viewerCount: q('viewer-count'),
         eventLog: q('event-log'),
         chatFeed: q('chat-feed'),
         chatFeedEmpty: q('chat-feed-empty'),
@@ -1372,7 +1301,6 @@ function setChannelSlug(value, options = {}) {
         state.autoStart.lastSlug = '';
         resetThirdPartyEmoteCache();
         resetChatFeed();
-        resetViewerCountDisplay();
     } else {
         state.channelSlug = slug; // Preserve original casing.
     }
@@ -1560,9 +1488,6 @@ function updateInputsFromState() {
             }
         }
     }
-    if (!state.channelSlug) {
-        resetViewerCountDisplay();
-    }
     if (els.chatType) {
         els.chatType.value = state.chat?.type || 'user';
     }
@@ -1672,7 +1597,16 @@ function getBridgeBaseUrl() {
     }
 }
 
+function isElectronEnvironment() {
+    return !!(window.ninjafy && typeof window.ninjafy.startKickOAuth === 'function');
+}
+
 async function startAuthFlow() {
+    // Use external browser auth if in Electron
+    if (isElectronEnvironment()) {
+        return startExternalAuthFlow();
+    }
+
     if (!state.clientId) {
         log('Missing Kick client ID. Please refresh this page and try again.', 'error');
         return;
@@ -1701,6 +1635,55 @@ async function startAuthFlow() {
     const authorizeUrl = `https://id.kick.com/oauth/authorize?${params.toString()}`;
     window.location.href = authorizeUrl;
 }
+
+async function startExternalAuthFlow() {
+    if (!state.clientId) {
+        log('Missing Kick client ID. Please refresh this page and try again.', 'error');
+        return;
+    }
+
+    try {
+        const result = await window.ninjafy.startKickOAuth({
+            clientId: state.clientId,
+            scopes: ['user:read', 'channel:read', 'chat:write', 'events:subscribe']
+        });
+
+        if (!result || !result.success || !result.code) {
+            log('Kick OAuth did not return an authorization code.', 'error');
+            return;
+        }
+
+        // The handler returns the code and codeVerifier - exchange for tokens
+        const code = result.code;
+        const verifier = result.codeVerifier;
+        const redirectUri = result.redirectUri;
+
+        // Store the redirect URI for token exchange
+        if (redirectUri) {
+            state.redirectUri = redirectUri;
+            persistConfig();
+        }
+
+        try {
+            await exchangeCodeForToken(code, verifier);
+            updateAuthStatus();
+            await loadAuthenticatedProfile();
+            await listSubscriptions();
+            await maybeAutoStart(true);
+        } catch (err) {
+            console.error(err);
+            log(`Token exchange failed: ${err.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('External Kick OAuth failed:', error);
+        log(`Kick sign-in failed: ${error.message}`, 'error');
+    }
+}
+
+// Expose external auth for Electron trigger
+try {
+    window.__SSAPP_START_KICK_AUTH__ = startExternalAuthFlow;
+} catch (_) {}
 
 async function handleAuthCallback() {
     const url = new URL(window.location.href);
@@ -3913,7 +3896,6 @@ async function bootstrap() {
     updateInputsFromState();
     updateAuthStatus();
     bindEvents();
-    startViewerCountPolling();
     if (state.tokens?.access_token) {
         scheduleTokenRefresh();
         await loadAuthenticatedProfile();

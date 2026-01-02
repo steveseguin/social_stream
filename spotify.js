@@ -562,6 +562,39 @@ class SpotifyIntegration {
         return null;
     }
 
+    /**
+     * Parse Spotify API error responses into user-friendly messages
+     */
+    async parsePlaybackError(response, fallback) {
+        let payload = null;
+        try { payload = await response.json(); } catch {}
+        const msg = payload?.error?.message || '';
+        const lower = msg.toLowerCase();
+
+        if (response.status === 403) {
+            if (lower.includes('premium')) {
+                return "Spotify Premium required for playback control.";
+            }
+            if (lower.includes('restricted')) {
+                return "This device doesn't support remote control.";
+            }
+            return "Spotify permissions issue. Try disconnecting and reconnecting Spotify.";
+        }
+
+        if (response.status === 429) {
+            const retry = response.headers.get('Retry-After');
+            return retry
+                ? `Spotify rate limited. Try again in ${retry}s.`
+                : "Spotify rate limited. Try again shortly.";
+        }
+
+        if (response.status >= 500) {
+            return "Spotify is having issues. Try again later.";
+        }
+
+        return fallback;
+    }
+
     // Playback control methods
     async skip() {
         if (!this.accessToken) {
@@ -584,7 +617,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to skip track" };
+                const message = await this.parsePlaybackError(response, "Failed to skip track");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify skip error:', error);
@@ -613,7 +647,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to go to previous track" };
+                const message = await this.parsePlaybackError(response, "Failed to go to previous track");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify previous error:', error);
@@ -642,7 +677,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to pause playback" };
+                const message = await this.parsePlaybackError(response, "Failed to pause playback");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify pause error:', error);
@@ -671,7 +707,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to resume playback" };
+                const message = await this.parsePlaybackError(response, "Failed to resume playback");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify resume error:', error);
@@ -702,7 +739,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to set volume" };
+                const message = await this.parsePlaybackError(response, "Failed to set volume");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify volume error:', error);
@@ -789,7 +827,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to set shuffle" };
+                const message = await this.parsePlaybackError(response, "Failed to set shuffle");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify shuffle error:', error);
@@ -826,7 +865,8 @@ class SpotifyIntegration {
             } else if (response.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to set repeat mode" };
+                const message = await this.parsePlaybackError(response, "Failed to set repeat mode");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify repeat error:', error);
@@ -908,7 +948,8 @@ class SpotifyIntegration {
             } else if (queueResponse.status === 404) {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
-                return { success: false, message: "Failed to add track to queue" };
+                const message = await this.parsePlaybackError(queueResponse, "Failed to add track to queue");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('Spotify queue error:', error);
@@ -1084,7 +1125,8 @@ class SpotifyIntegration {
                 return { success: false, message: "No active Spotify device found. Open Spotify and start playing something first." };
             } else {
                 console.warn(`[Spotify] Failed to push to queue: ${queueResponse.status}`);
-                return { success: false, message: "Failed to add to Spotify queue" };
+                const message = await this.parsePlaybackError(queueResponse, "Failed to add to Spotify queue");
+                return { success: false, message };
             }
         } catch (error) {
             console.warn('[Spotify] Error pushing to queue:', error);

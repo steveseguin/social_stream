@@ -434,8 +434,11 @@ try{
 		if (authLink) {
 			authLink.addEventListener('click', function(e) {
 				e.preventDefault();
-				const authURL = authUrl();
-				window.location.href = authURL;
+				if (isElectronEnvironment()) {
+					startExternalTwitchAuthFlow();
+				} else {
+					window.location.href = authUrl();
+				}
 			});
 		}
 
@@ -1007,12 +1010,15 @@ async function ensureChatClientInstance() {
 			});
 			return;
 		}
+		if (!settings.captureevents) {
+			return;
+		}
 		const notice = convertMembershipPayloadToUserNotice(payload);
 		await processUserNotice(notice);
 	}
 
 	async function handleNormalizedRaid(payload) {
-		if (!payload) {
+		if (!payload || !settings.captureevents) {
 			return;
 		}
 		const tags = {
@@ -1351,6 +1357,43 @@ async function ensureChatClientInstance() {
 		}
 		return text;
 	}
+
+	function isElectronEnvironment() {
+		return !!(window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function');
+	}
+
+	async function startExternalTwitchAuthFlow() {
+		if (!isElectronEnvironment()) {
+			window.location.href = authUrl();
+			return;
+		}
+		const state = nonce(15) + "@" + (username || "");
+		sessionStorage.twitchOAuthState = state.split("@")[0];
+		try {
+			const result = await window.ninjafy.startTwitchOAuth({
+				clientId,
+				scopes: scope.split('+'),
+				state
+			});
+			if (!result || !result.access_token) {
+				console.error('Twitch OAuth did not return an access_token.');
+				showAuthButton();
+				return;
+			}
+			// Process the token as if it came from the hash fragment
+			localStorage.setItem('twitchOAuthToken', result.access_token);
+			sessionStorage.setItem('twitchOAuthToken', result.access_token);
+			verifyAndUseToken(result.access_token);
+		} catch (error) {
+			console.error('External Twitch OAuth failed:', error);
+			showAuthButton();
+		}
+	}
+
+	// Expose for remote control trigger
+	try {
+		window.__SSAPP_START_TWITCH_AUTH__ = startExternalTwitchAuthFlow;
+	} catch (_) {}
 
 	async function sendMessage(message) {
 		await modulesReady;
@@ -2132,9 +2175,6 @@ async function ensureChatClientInstance() {
 
 	// Function to fetch current viewer count
 	async function getViewerCount(channelName) {
-		if (!isExtensionOn || !(settings.showviewercount || settings.hypemode)) {
-			return;
-		}
 		const token = getStoredToken();
 		if (!token) return;
 		
@@ -2153,26 +2193,22 @@ async function ensureChatClientInstance() {
 			
 			const data = await response.json();
 			console.log(data);
-			const currentViewers = data.data && data.data[0] ? data.data[0].viewer_count : 0;
-			lastKnownViewers = currentViewers;
-			console.log({
-				type: 'twitch',
-				event: 'viewer_update',
-				meta: lastKnownViewers
-			});
-			pushMessage({
-				type: 'twitch',
-				event: 'viewer_update',
-				meta: lastKnownViewers
-			});
+			if (data.data && data.data[0]) {
+				const currentViewers = data.data[0].viewer_count;
+				lastKnownViewers = currentViewers;
+				console.log({
+					type: 'twitch',
+					event: 'viewer_update',
+					meta: lastKnownViewers
+				});
+				pushMessage({
+					type: 'twitch',
+					event: 'viewer_update',
+					meta: lastKnownViewers
+				});
+			}
 		} catch (error) {
 			console.error('Error fetching viewer count:', error);
-			lastKnownViewers = 0;
-			pushMessage({
-				type: 'twitch',
-				event: 'viewer_update',
-				meta: lastKnownViewers
-			});
 		}
 	}
 
@@ -2593,6 +2629,11 @@ async function cleanupCurrentConnection() {
 	function handleEventSubNotification(payload) {
 		const event = payload.event;
 		const subscription = payload.subscription;
+		
+		// Skip if captureevents is disabled
+		if (!settings.captureevents) {
+			return;
+		}
 
 		switch (subscription.type) {
 		case 'channel.follow':
