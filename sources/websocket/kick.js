@@ -1151,16 +1151,31 @@ function applyExtensionSettings(newSettings) {
 }
 
 function notifyApp(payload) {
-    try {
-        if (extension.available) {
+    let sent = false;
+
+    // Try chrome.runtime.sendMessage first if available
+    if (extension.available && typeof chrome.runtime.sendMessage === 'function') {
+        try {
             chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {});
-            return;
+            sent = true;
+        } catch (chromeErr) {
+            console.warn('chrome.runtime.sendMessage failed in notifyApp, trying fallback:', chromeErr);
         }
-        if (window.ninjafy && window.ninjafy.sendMessage) {
+    }
+
+    // Fallback to ninjafy.sendMessage
+    if (!sent && window.ninjafy && window.ninjafy.sendMessage) {
+        try {
             window.ninjafy.sendMessage(null, payload, null, extension.tabId);
-            return;
+            sent = true;
+        } catch (ninjafyErr) {
+            console.warn('ninjafy.sendMessage failed in notifyApp, trying postMessage:', ninjafyErr);
         }
-        if (typeof window !== 'undefined' && window.parent) {
+    }
+
+    // Final fallback to postMessage
+    if (!sent && typeof window !== 'undefined' && window.parent) {
+        try {
             let data = payload;
             if (payload && typeof payload === 'object') {
                 data = { ...payload };
@@ -1169,9 +1184,9 @@ function notifyApp(payload) {
                 }
             }
             window.parent.postMessage(data, '*');
+        } catch (postErr) {
+            console.error('Failed to notify app via postMessage', postErr);
         }
-    } catch (err) {
-        console.error('Failed to notify app', err);
     }
 }
 
@@ -3543,24 +3558,39 @@ async function sendChatMessage() {
 }
 
 function pushMessage(data) {
-    try {
-        if (extension.available) {
+    let sent = false;
+
+    // Try chrome.runtime.sendMessage first if available
+    if (extension.available && typeof chrome.runtime.sendMessage === 'function') {
+        try {
             chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
-            return;
+            sent = true;
+        } catch (chromeErr) {
+            console.warn('chrome.runtime.sendMessage failed, trying fallback:', chromeErr);
         }
-        if (window.ninjafy && window.ninjafy.sendMessage) {
+    }
+
+    // Fallback to ninjafy.sendMessage
+    if (!sent && window.ninjafy && window.ninjafy.sendMessage) {
+        try {
             window.ninjafy.sendMessage(null, { message: data }, null, extension.tabId);
-            return;
+            sent = true;
+        } catch (ninjafyErr) {
+            console.warn('ninjafy.sendMessage failed, trying postMessage:', ninjafyErr);
         }
-        if (typeof window !== 'undefined' && window.parent) {
+    }
+
+    // Final fallback to postMessage
+    if (!sent && typeof window !== 'undefined' && window.parent) {
+        try {
             const envelope = { source: 'socialstream', payload: data };
             if (extension.tabId != null) {
                 envelope.__tabID__ = extension.tabId;
             }
             window.parent.postMessage(envelope, '*');
+        } catch (postErr) {
+            console.error('Failed to push message via postMessage', postErr);
         }
-    } catch (err) {
-        console.error('Failed to push message', err);
     }
 }
 
