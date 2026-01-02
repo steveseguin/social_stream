@@ -18,7 +18,10 @@ async function importWithFallback(extensionPath, relativePath) {
     ) {
         try {
             const specifier = chrome.runtime.getURL(extensionPath);
-            return await import(specifier);
+            // Only try import if the URL has a valid scheme (http, https, file, chrome-extension)
+            if (specifier && /^(https?|file|chrome-extension):/.test(specifier)) {
+                return await import(specifier);
+            }
         } catch (error) {
             console.warn(`Failed to import ${extensionPath} via chrome.runtime.getURL`, error);
         }
@@ -2263,20 +2266,24 @@ async function resolveChannelId(force = false) {
     if (!slugInput) throw new Error('Channel slug required.');
     const slugLower = normalizeChannel(slugInput);
     if (!force && state.channelId && state.lastResolvedSlug === slugLower) {
+        log(`Using cached channel ID: ${state.channelId} for slug: ${slugLower}`);
         return state.channelId;
     }
     const previousId = state.channelId;
     const previousSlug = state.lastResolvedSlug;
     const params = new URLSearchParams({ slug: slugLower });
+    log(`Resolving channel ID for slug: ${slugLower}`);
     const data = await apiFetch(`/public/v1/channels?${params.toString()}`);
     const entries = Array.isArray(data?.data) ? data.data : [];
     const channel = entries.find(item => normalizeChannel(item.slug) === slugLower) || entries[0];
     if (!channel?.broadcaster_user_id) {
+        log(`Channel API response: ${JSON.stringify(data)}`, 'warning');
         throw new Error('Unable to resolve channel user id.');
     }
     state.channelId = channel.broadcaster_user_id;
     state.channelName = channel.slug || channel.channel_description || slugInput;
     state.lastResolvedSlug = slugLower;
+    log(`Resolved channel: ${state.channelName} (ID: ${state.channelId})`);
     updateInputsFromState();
     if (force || state.channelId !== previousId || previousSlug !== slugLower) {
         requestThirdPartyEmotes({ force: true });
@@ -2743,6 +2750,7 @@ function handleBridgeEvent(packet) {
     const body = packet.body || {};
     const type = packet.type || body?.event || 'unknown';
     const bridgeMeta = createBridgeMeta(packet);
+    log(`Bridge event received: ${type} (channelId: ${state.channelId}, slug: ${state.channelSlug})`);
     const challenge = packet.challenge || body?.challenge;
     if (challenge) {
         const level = bridgeMeta?.verified === false ? 'warning' : 'info';
@@ -2759,7 +2767,7 @@ function handleBridgeEvent(packet) {
     if (!bridgeEventMatchesCurrentChannel(packet)) {
         if (!ignoredEventTypesLogged.has(type)) {
             ignoredEventTypesLogged.add(type);
-            log(`Ignoring ${type} for a different Kick channel.`, 'info');
+            log(`Ignoring ${type} for a different Kick channel (expected: ${state.channelId}/${state.channelSlug}).`, 'info');
         }
         return;
     }
