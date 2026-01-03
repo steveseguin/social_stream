@@ -153,6 +153,9 @@
 		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun, img.chat-badge[src]",
 		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
+
+	const KNOCK_PRIMARY_PATTERNS = [/wants to collaborate/i];
+	const KNOCK_FALLBACK_PATTERNS = [/stream together/i, /co-?stream/i];
 	
 	const emoteRegex = /(?<=^|\s)(\S+?)(?=$|\s)/g;
 	
@@ -369,6 +372,135 @@
 		return textArray;
 	}
 
+	function findKnockMessageNode(root, patterns) {
+		if (!root || !root.querySelectorAll) {
+			return null;
+		}
+		const nodes = root.querySelectorAll("p, span");
+		for (const node of nodes) {
+			const text = node.textContent ? node.textContent.trim() : "";
+			if (!text) {
+				continue;
+			}
+			for (const pattern of patterns) {
+				if (pattern.test(text)) {
+					return node;
+				}
+			}
+		}
+		return null;
+	}
+
+	function extractKnockMessage(root) {
+		const primaryNode = findKnockMessageNode(root, KNOCK_PRIMARY_PATTERNS);
+		if (primaryNode) {
+			return { node: primaryNode, text: primaryNode.textContent.trim() };
+		}
+		const fallbackNode = findKnockMessageNode(root, KNOCK_FALLBACK_PATTERNS);
+		if (fallbackNode) {
+			return { node: fallbackNode, text: fallbackNode.textContent.trim() };
+		}
+		return null;
+	}
+
+	function findKnockAlertContainer(node) {
+		if (!node || node.nodeType !== 1) {
+			return null;
+		}
+		let anchor = null;
+		let current = node;
+		for (let depth = 0; depth < 3 && current; depth++) {
+			const messageMatch = extractKnockMessage(current);
+			const openCallNode = current.matches?.("[class*='openCallingAlert']") ? current : current.querySelector?.("[class*='openCallingAlert']");
+			anchor = messageMatch?.node || openCallNode;
+			if (anchor) {
+				break;
+			}
+			current = current.parentNode;
+		}
+		if (!anchor) {
+			return null;
+		}
+		const queueRoot = anchor.closest?.("[data-a-target='chat-alert-queue']");
+		if (!queueRoot) {
+			return null;
+		}
+		const container = anchor.closest("[class*='engagement--']") || anchor.closest("[class*='expanded--']") || anchor;
+		if (!container || container.dataset.ignore) {
+			return null;
+		}
+		return container;
+	}
+
+	function processKnockAlert(container) {
+		if (!container || container.dataset.ignore) {
+			return;
+		}
+		container.dataset.ignore = true;
+
+		const messageMatch = extractKnockMessage(container);
+		if (!messageMatch || !messageMatch.text) {
+			return;
+		}
+		const messageText = messageMatch.text.trim();
+		if (!messageText) {
+			return;
+		}
+
+		const now = Date.now();
+		if (messageText === lastKnockMessage && now - lastKnockAt < 5000) {
+			return;
+		}
+		lastKnockMessage = messageText;
+		lastKnockAt = now;
+
+		let chatname = "";
+		const nameMatch = messageText.match(/^(.+?)\s+wants to collaborate/i);
+		if (nameMatch && nameMatch[1]) {
+			chatname = nameMatch[1].trim();
+		}
+
+		let avatarSrc = "";
+		const avatarImg = container.querySelector("img[alt]");
+		if (avatarImg) {
+			if (!chatname) {
+				chatname = avatarImg.getAttribute("alt") || "";
+			}
+			avatarSrc = avatarImg.getAttribute("src") || "";
+		}
+
+		var data = {};
+		data.chatname = escapeHtml(chatname);
+		data.chatbadges = [];
+		data.nameColor = "";
+		data.chatmessage = escapeHtml(messageText);
+		data.chatimg = avatarSrc;
+		data.hasDonation = "";
+		data.membership = "";
+		data.type = "twitch";
+		data.textonly = settings.textonlymode || false;
+		data.event = "knock";
+
+		if (brandedImageURL) {
+			data.sourceImg = brandedImageURL;
+		}
+		if (channelName){
+			data.sourceName = channelName;
+		}
+
+		try {
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				{
+					message: data
+				},
+				function (e) {}
+			);
+		} catch (e) {
+			//
+		}
+	}
+
 	const SUBSCRIBER_PATTERNS = [
 		{ keyword: "subscriber", label: "Subscriber" },
 		{ keyword: "suscriptor", label: "Suscriptor" },
@@ -504,6 +636,8 @@
 	var lastMessage = "";
 	var lastUser = "";
 	var lastEle = null;
+	var lastKnockMessage = "";
+	var lastKnockAt = 0;
 	//var midList = [];
 	
 	function sleep(ms) {
@@ -1325,6 +1459,12 @@
 						if ((node.dataset?.aTarget === "chat-deleted-message-placeholder") || 
 							node.querySelector('[data-a-target="chat-deleted-message-placeholder"]')) {
 							deleteThis(node);
+							continue;
+						}
+
+						const knockElement = findKnockAlertContainer(node);
+						if (knockElement){
+							checkList.push([processKnockAlert,(knockElement)]);
 							continue;
 						}
 
