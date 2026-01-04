@@ -261,7 +261,10 @@ body, html {
     }
     var password = "false";
     var featuredMode = false;
-    
+
+    // showtime: if set, messages will fade out and be removed after this many milliseconds (default: 0 = no auto-removal)
+    var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
+
     // Simple URL parameters for customization
     var hideBadges = urlParams.has("hidebadges") || urlParams.has("nobadges");
     var hideAvatars = urlParams.has("hideavatars") || urlParams.has("noavatars");
@@ -296,14 +299,14 @@ body, html {
         const messages = Array.from(messageListWrapper.children).filter(
             child => child.id !== 'spacer' && child.classList.contains('message')
         );
-        
+
         messages.forEach(message => {
             const timestamp = messageTimestamps.get(message.id);
             if (timestamp) {
                 const age = now - timestamp;
-                
-                // After 30 seconds, start fading
-                if (age > 30000 && !message.classList.contains('fading')) {
+
+                // If showtime is set, start fading after that time
+                if (showtime > 0 && age > showtime && !message.classList.contains('fading')) {
                     message.classList.add('fading');
                 }
             }

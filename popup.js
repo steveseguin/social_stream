@@ -7098,30 +7098,40 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	let retryCount = 0;
+	const MAX_RETRIES = 60; // 30 seconds at 500ms intervals
+
 	let initialSetup = setInterval(()=>{
+		if (retryCount++ > MAX_RETRIES) {
+			clearInterval(initialSetup);
+			log("getSettings gave up after max retries");
+			return;
+		}
 		log("pop up asking main for settings yet again..");
-		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-			chrome.runtime.lastError;
+		sendMessageToBackground({cmd: "getSettings"}).then(response => {
 			log("getSettings response",response);
 			if ((response == undefined) || (!response.streamID)){
-				
+				// keep polling
 			} else {
 				clearInterval(initialSetup);
 				update(response, false); // we dont want to sync things
 			}
+		}).catch(err => {
+			log("getSettings error", err);
 		});
 	}, 500);
-	
+
 	log("pop up asking main for settings");
-	chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
-		chrome.runtime.lastError;
+	sendMessageToBackground({cmd: "getSettings"}).then(response => {
 		log("getSettings response",response);
 		if ((response == undefined) || (!response.streamID)){
-			
+			// keep polling
 		} else {
 			clearInterval(initialSetup);
 			update(response, false); // we dont want to sync things
 		}
+	}).catch(err => {
+		log("getSettings error", err);
 	});
 
 	//botReplyAll
