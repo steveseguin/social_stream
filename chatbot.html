@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LLM Chat Bot</title>
+	<link rel="icon" href="./icons/bot.png" />
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+			max-height: 100vh;
+			overflow: hidden;
+        }
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background: rgba(40, 40, 40, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            color: #f0f0f0;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            font-size: min(200%, 10vh);
+        }
+        #chat-container {
+            height: max(400px, 70vh);
+            border: 1px solid #4a4a4a;
+            border-radius: 15px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(30, 30, 30, 0.6);
+            max-height: calc(100vh - 215px);
+        }
+        #input-container {
+            display: flex;
+            gap: 10px;
+        }
+        #user-input {
+            flex-grow: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            background: rgba(60, 60, 60, 0.8);
+            color: #f0f0f0;
+            font-size: 16px;
+            min-width: 0;
+        }
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(45deg, #6a5acd, #4b0082);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            white-space: nowrap;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(75, 0, 130, 0.4);
+        }
+        .message {
+            margin-bottom: 15px;
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            word-wrap: break-word;
+        }
+        .user {
+            background: linear-gradient(45deg, #4a4a4a, #5a5a5a);
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+        }
+        .assistant {
+            background: linear-gradient(45deg, #3a3a3a, #4a4a4a);
+            margin-right: auto;
+            border-bottom-left-radius: 5px;
+        }
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 30, 30, 0.6);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(80, 80, 80, 0.8);
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 100, 100, 0.8);
+        }
+        .waiting {
+            font-style: italic;
+            color: #888;
+            display: flex;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #888;
+            border-top: 2px solid #fff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            body {
+                align-items: flex-start;
+                padding: 20px 0;
+            }
+            .container {
+                width: 100%;
+                height: calc(100vh - 50px);
+                border-radius: 0;
+                padding: 20px;
+                display: flex;
+                flex-direction: column;
+            }
+            h1 {
+                font-size: 1.2em;
+                margin-bottom: 10px;
+            }
+            #chat-container {
+                flex-grow: 1;
+                height: 0;
+                margin-bottom: 10px;
+            }
+            #input-container {
+                flex-wrap: wrap;
+            }
+            #user-input {
+                width: 100%;
+                order: -1;
+            }
+            button {
+                flex-grow: 1;
+                padding: 10px;
+                font-size: 14px;
+            }
+        }
+        #mic-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin: auto auto;
+			top: 1px;
+			position: relative;
+        }
+        #mic-icon {
+            width: 24px;
+            height: 24px;
+            fill: #6a5acd;
+            transition: fill 0.3s ease;
+        }
+        #mic-button:hover #mic-icon {
+            fill: #4b0082;
+        }
+        #mic-button.active #mic-icon {
+            fill: #ff0000;
+        }
+		.image-preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 0;
+        }
+        
+        .image-preview {
+            max-height: 30px;
+            border-radius: 10px;
+            border: 2px solid rgba(74, 74, 74, 1);
+        }
+        
+        .remove-image {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4444;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            padding: 0;
+            line-height: 1;
+        }
+        
+        .remove-image:hover {
+            background: #ff0000;
+        }
+        
+        .image-upload-button {
+            background: rgba(60, 60, 60, 0.8);
+            border: none;
+            border-radius: 25px;
+            padding: 8px 15px;
+            color: #f0f0f0;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+        
+        .image-upload-button:hover {
+            background: rgba(80, 80, 80, 0.8);
+        }
+        
+        #image-input {
+            display: none;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 2px;
+            align-items: center;
+        }
+		.thinking {
+			font-style: italic;
+		}
+		.thinking:empty{
+			display:none;
+		}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ask me anything! I'm a LLM Chat Bot</h1>
+        <div id="chat-container"></div>
+        <div id="input-container">
+            <input type="text" id="user-input" placeholder="Type your message or question here...">
+            <button onclick="sendMessage()">Send</button>
+            <button id="mic-button" onclick="toggleSpeechRecognition()" title="Use your default mic to talk to the bot instead of by typing">
+                <svg id="mic-icon" viewBox="0 0 24 24">
+                    <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1 1.93c-3.94-.49-7-3.85-7-7.93h2c0 3.31 2.69 6 6 6s6-2.69 6-6h2c0 4.08-3.06 7.44-7 7.93V22h-2v-6.07z"/>
+                </svg>
+            </button>
+            <button onclick="newConversation()" title="Clear the current chat and start a fresh new one">New Chat</button>
+        </div>
+    </div>
+	<script type="text/javascript" src="tts.js"></script>
+    <script>
+
+		var iframe = null;
+		var urlParams = new URLSearchParams(window.location.search);
+		var roomID = false;
+		var password = "false";
+		var conversationHistory = [];
+		let currentImage = null;
+		let imageSupport = false;
+		if (urlParams.has("img")){
+			imageSupport = true;
+		}
+
+		if (urlParams.has("session")) {
+			roomID = urlParams.get("session");
+		} else {
+			roomID = prompt("Enter you session ID");
+			if (!roomID){
+				alert("you need to have a session ID for this page to work..");
+			}
+		}
+			
+		if (urlParams.has("password")) {
+			password = urlParams.get("password");
+		}
+		let currentID = 0
+		
+		const inputContainer = document.getElementById('input-container');
+		const chatContainer = document.getElementById('chat-container');
+		const userInput = document.getElementById('user-input');
+		userInput.focus(); 
+		window.onload = ()=> {
+			userInput.focus();
+		};
+		// Create new elements
+		const imageInput = document.createElement('input');
+		imageInput.type = 'file';
+		imageInput.id = 'image-input';
+		imageInput.accept = 'image/*';
+		
+		const imagePreviewContainer = document.createElement('div');
+		imagePreviewContainer.className = 'image-preview-container';
+		imagePreviewContainer.style.display = 'none';
+		
+		const imagePreview = document.createElement('img');
+		imagePreview.className = 'image-preview';
+		
+		const removeButton = document.createElement('button');
+		removeButton.className = 'remove-image';
+		removeButton.innerHTML = '×';
+		
+		const uploadButton = document.createElement('button');
+		uploadButton.className = 'image-upload-button';
+		uploadButton.innerHTML = `
+			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+				<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+				<circle cx="12" cy="13" r="4"/>
+			</svg>
+		`;
+		uploadButton.title = "Requires an LLM model that supports images; llama3.2-vision, for example";
+		
+		if (!imageSupport){
+			uploadButton.style.display = "none";
+		}
+		
+		//Restructure the input container for image input
+		const inputRow = document.createElement('div');
+		inputRow.className = 'input-row';
+		
+		//Move existing elements to the new structure
+		inputContainer.insertBefore(imageInput, inputContainer.firstChild);
+		imagePreviewContainer.appendChild(imagePreview);
+		imagePreviewContainer.appendChild(removeButton);
+		inputContainer.insertBefore(imagePreviewContainer, inputContainer.firstChild);
+		
+		//Rearrange elements
+		inputRow.appendChild(uploadButton);
+		const existingButtons = Array.from(inputContainer.children).filter(
+			child => child.tagName === 'BUTTON'
+		);
+		existingButtons.forEach(button => inputRow.appendChild(button));
+		
+		//Insert the input row after the user input
+		userInput.parentNode.insertBefore(inputRow, userInput.nextSibling);
+		
+		async function sendMessage() {
+			const message = finalTranscript || userInput.value.trim();
+			if (!message && !currentImageFile) return;
+			
+			try {
+				let messageID = parseInt(Math.random()*99999999);
+				
+				// Process image if one is selected
+				if (currentImageFile) {
+					try {
+						currentImage = await processImageForWebRTC(currentImageFile, 262144, 1120, message);
+					} catch (error) {
+						alert('Error processing image. The image may be too large with the current message. Try a smaller image or shorter message.');
+						return;
+					}
+				}
+
+				finalTranscript = '';
+				addMessageToChat('user', message, messageID);
+				addWaitingMessage(messageID);
+				userInput.value = '';
+
+				// Add the user's message to the conversation history
+				conversationHistory.push({ role: 'user', content: message });
+
+				var data = {};
+				data.value = formatConversationForLlama(conversationHistory);
+				data.target = messageID;
+				data.action = "chatbot";
+				data.turbo = false;
+				
+				if (currentImage) {
+					data.images = [currentImage];
+					// Clear the image after sending
+					imagePreviewContainer.style.display = 'none';
+					imageInput.value = '';
+					currentImageFile = null;
+					currentImage = null;
+					// data.model = "x/llama3.2-vision:latest";
+				}
+				
+				iframe.contentWindow.postMessage({ sendData: { overlayNinja: data }, type: "rpcs" }, "*");
+			} catch (error) {
+				console.error('Error sending message:', error);
+				alert('Error sending message. Please try again.');
+			}
+		}
+
+		function formatConversationForLlama(history) {
+			return history.map(msg => `${msg.role}: ${msg.content}`).join('\n') + '\nassistant:';
+		}
+
+		function addMessageToChat(role, content, id) {
+			const messageDiv = document.createElement('div');
+			messageDiv.classList.add('message', role);
+			messageDiv.setAttribute('data-message-id', id);
+			messageDiv.textContent = content;
+			chatContainer.appendChild(messageDiv);
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+		}
+		
+		var messageChunks = {};
+
+		function addWaitingMessage(id) {
+			const waitingDiv = document.createElement('div');
+			waitingDiv.classList.add('message', 'assistant', 'waiting');
+			waitingDiv.setAttribute('data-response-id', id);
+			waitingDiv.innerHTML = '<div class="spinner"></div>Waiting for response...';
+			chatContainer.appendChild(waitingDiv);
+			if (currentID in messageChunks){
+				conversationHistory.push({ role: 'assistant', content: messageChunks[currentID].join("") });
+				messageChunks = {};
+			}
+			currentID = id;
+			messageChunks[id] = [];
+			chatContainer.scrollTop = chatContainer.scrollHeight;
+			
+			setTimeout(()=>{
+				if (waitingDiv.classList.contains("waiting")){
+					waitingDiv.innerHTML = '⚠️ The bot may be unavailable right now. Keep waiting or try again.';
+				}
+			},10000);
+		}
+
+		function updateWaitingMessage(id, content, chunk=false) {
+			const waitingMessage = document.querySelector(`[data-response-id="${id}"]`);
+			if (waitingMessage) {
+				waitingMessage.classList.remove('waiting');
+				
+				let processedContent = content;
+				
+				if (chunk) {
+					if (messageChunks[id]) {
+						messageChunks[id].push(content);
+						processedContent = messageChunks[id].join("");
+					}
+				} else {
+					if (messageChunks[id]) {
+						delete messageChunks[id];
+					}
+					processedContent = content;
+					conversationHistory.push({ role: 'assistant', content: content });
+				}
+
+				// Function to count occurrences of a substring
+				const countOccurrences = (str, subStr) => {
+					return (str.match(new RegExp(subStr, 'g')) || []).length;
+				};
+
+				// Count tags
+				const startThinkCount = countOccurrences(processedContent, '<think>');
+				const endThinkCount = countOccurrences(processedContent, '</think>');
+				const startThinkingCount = countOccurrences(processedContent, '<thinking>');
+				const endThinkingCount = countOccurrences(processedContent, '</thinking>');
+
+				// Add missing closing tags
+				if (startThinkCount > endThinkCount) {
+					const missingTags = startThinkCount - endThinkCount;
+					processedContent = processedContent + '</think>'.repeat(missingTags);
+				}
+				if (startThinkingCount > endThinkingCount) {
+					const missingTags = startThinkingCount - endThinkingCount;
+					processedContent = processedContent + '</thinking>'.repeat(missingTags);
+				}
+
+				// Add missing opening tags (only if we have closing tags without opening ones)
+				if (endThinkCount > startThinkCount) {
+					const missingTags = endThinkCount - startThinkCount;
+					processedContent = '<think>'.repeat(missingTags) + processedContent;
+				}
+				if (endThinkingCount > startThinkingCount) {
+					const missingTags = endThinkingCount - startThinkingCount;
+					processedContent = '<thinking>'.repeat(missingTags) + processedContent;
+				}
+				
+				const processThinkingTags = (content) => {
+					let result = content;
+					while (result.match(/<think>([^\n\s][\s\S]*?)<\/think>/) || result.match(/<thinking>([^\n\s][\s\S]*?)<\/thinking>/)) {
+						result = result
+							.replace(/<think>([^\n\s][\s\S]*?)<\/think>/g, '<span class="thinking">$1</span>')
+							.replace(/<thinking>([^\n\s][\s\S]*?)<\/thinking>/g, '<span class="thinking">$1</span>');
+					}
+					// Clean up any remaining empty think tags
+					result = result
+						.replace(/<think>[\s\n]*<\/think>/g, '')
+						.replace(/<thinking>[\s\n]*<\/thinking>/g, '');
+					return result;
+				};
+
+				processedContent = processThinkingTags(processedContent);
+				
+				processedContent = processedContent.replace(/^[\n\s]+/, ''); // remove \n and white spaces from start
+				
+				waitingMessage.innerHTML = processedContent.replaceAll("\n","<br>");
+				chatContainer.scrollTop = chatContainer.scrollHeight;
+			}
+		}
+
+		function newConversation() {
+			chatContainer.innerHTML = '';
+			messageID = 0;
+			currentID = 0;
+			messageChunks = {};
+			conversationHistory = []; // Clear the conversation history
+		}
+
+		userInput.addEventListener('keypress', function(e) {
+			if (e.key === 'Enter') {
+				sendMessage();
+			}
+		});
+
+		document.addEventListener('DOMContentLoaded', () => {
+			iframe = document.createElement("iframe");
+			iframe.src = `https://vdo.socialstream.ninja/?ln&password=${password}&salt=vdo.ninja&label=chatbot&view=${roomID}&scene&novideo&noaudio&cleanoutput&room=${roomID}`;
+			
+			iframe.style.cssText = "width: 0px; height: 0px; position: fixed; left: -100px; top: -100px;";
+			document.body.appendChild(iframe);
+			window.addEventListener("message", function (e) {
+				if (e.source != iframe.contentWindow) return;
+				if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotChunk && ("value" in e.data.dataReceived.overlayNinja.chatbotChunk)) {
+					const response = e.data.dataReceived.overlayNinja.chatbotChunk;
+					updateWaitingMessage(response.target, response.value || "", true);
+				} else if (e.data.dataReceived && e.data.dataReceived.overlayNinja && e.data.dataReceived.overlayNinja.chatbotResponse && ("value" in e.data.dataReceived.overlayNinja.chatbotResponse)) {
+					const response = e.data.dataReceived.overlayNinja.chatbotResponse;
+					updateWaitingMessage(response.target, response.value || "");
+				}
+			});
+			
+			// Event Listeners
+			uploadButton.addEventListener('click', () => imageInput.click());
+			
+			imageInput.addEventListener('change', function(event) {
+				const file = event.target.files[0];
+				if (file && file.type.startsWith('image/')) {
+					currentImageFile = file;
+					const reader = new FileReader();
+					reader.onloadend = function() {
+						imagePreview.src = reader.result;
+						imagePreviewContainer.style.display = 'inline-block';
+					};
+					reader.readAsDataURL(file);
+				}
+			});
+			
+			removeButton.addEventListener('click', function() {
+				imagePreviewContainer.style.display = 'none';
+				imageInput.value = '';
+				currentImage = null;
+			});
+			
+		});
+		
+		// Helper function to estimate final message size including base64 overhead
+		function estimateMessageSize(base64Image, userMessage = '') {
+			// base64 encoding increases size by roughly 4/3
+			const base64Overhead = Math.ceil(base64Image.length * (4/3));
+			// Account for the rest of the message structure
+			return base64Overhead + (userMessage?.length || 0) + 100; // 100 bytes buffer for json structure
+		}
+
+		async function processImageForWebRTC(file, maxMessageSize = 262144, maxDimension = 1120, userMessage = '') {
+			return new Promise((resolve, reject) => {
+				const img = new Image();
+				const reader = new FileReader();
+
+				reader.onload = function(e) {
+					img.src = e.target.result;
+				};
+
+				img.onload = async function() {
+					let quality = 0.9; // Start with high quality
+					let width = img.width;
+					let height = img.height;
+
+					// Scale dimensions while maintaining aspect ratio
+					if (width > maxDimension || height > maxDimension) {
+						const ratio = Math.min(maxDimension / width, maxDimension / height);
+						width = Math.floor(width * ratio);
+						height = Math.floor(height * ratio);
+					}
+
+					const canvas = document.createElement('canvas');
+					canvas.width = width;
+					canvas.height = height;
+					const ctx = canvas.getContext('2d');
+					ctx.drawImage(img, 0, 0, width, height);
+
+					// Binary search for optimal quality
+					let minQuality = 0.1;
+					let maxQuality = 0.9;
+					let bestResult = null;
+					let attempts = 0;
+					const maxAttempts = 8; // Prevent infinite loops
+
+					while (attempts < maxAttempts) {
+						try {
+							const blob = await new Promise(resolve => {
+								canvas.toBlob(resolve, 'image/jpeg', quality);
+							});
+
+							const base64 = await new Promise((resolve) => {
+								const reader = new FileReader();
+								reader.onloadend = () => resolve(reader.result.split(',')[1]);
+								reader.readAsDataURL(blob);
+							});
+
+							const totalSize = estimateMessageSize(base64, userMessage);
+
+							if (totalSize <= maxMessageSize) {
+								bestResult = base64;
+								if (maxQuality - minQuality < 0.05) break; // Sufficient precision reached
+								minQuality = quality;
+							} else {
+								maxQuality = quality;
+							}
+
+							quality = (minQuality + maxQuality) / 2;
+						} catch (error) {
+							reject(error);
+							return;
+						}
+						attempts++;
+					}
+
+					if (bestResult) {
+						resolve(bestResult);
+					} else {
+						reject(new Error('Could not compress image to target size'));
+					}
+				};
+
+				img.onerror = () => reject(new Error('Failed to load image'));
+				reader.readAsDataURL(file);
+			});
+		}
+
+		// Store the original image file for later processing
+		let currentImageFile = null;
+		
+		let recognition;
+		const micButton = document.getElementById('mic-button');
+		let finalTranscript = '';
+
+		function toggleSpeechRecognition() {
+			if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+				alert("Speech recognition is not supported by your browser.\n\nPlease use a supported browser like Chrome or Edge.");
+				return;
+			}
+
+			if (!recognition) {
+				startSpeechRecognition();
+			} else {
+				stopSpeechRecognition();
+			}
+		}
+
+		function startSpeechRecognition() {
+			recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+			recognition.lang = 'en-US';
+			recognition.interimResults = true;
+			recognition.continuous = true;
+
+			recognition.onstart = () => {
+				micButton.classList.add('active');
+				finalTranscript = '';
+				userInput.value = '';
+			};
+
+			recognition.onresult = (event) => {
+				let interimTranscript = '';
+				for (let i = event.resultIndex; i < event.results.length; ++i) {
+					if (event.results[i].isFinal) {
+						finalTranscript += event.results[i][0].transcript;
+						sendMessage();
+					} else {
+						interimTranscript += event.results[i][0].transcript;
+					}
+				}
+				userInput.value = finalTranscript + interimTranscript;
+			};
+
+			recognition.onend = () => {
+				micButton.classList.remove('active');
+				if (finalTranscript) {
+					sendMessage();
+				}
+			};
+
+			recognition.onerror = (event) => {
+				console.error('Speech recognition error', event.error);
+				stopSpeechRecognition();
+				alert("There was an error with speech recognition.\n\nClose other browser tabs and then try again.");
+			};
+
+			recognition.start();
+		}
+
+		function stopSpeechRecognition() {
+			if (recognition) {
+				recognition.stop();
+				recognition = null;
+			}
+			micButton.classList.remove('active');
+		}
+    </script>
+</body>
+</html>

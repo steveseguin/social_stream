@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - Event Flow Editor</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Loading Modal -->
+    <div id="loading-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+        <div style="background: #2d3142; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);">
+            <h2 style="margin: 0 0 20px 0; color: #e0e0e0;">Loading Event Flow Editor</h2>
+            <div style="margin: 20px 0;">
+                <div style="display: inline-block; width: 40px; height: 40px; border: 4px solid #4a5568; border-top: 4px solid #2a9d8f; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+            </div>
+            <p style="color: #a0a0a0; margin: 10px 0 0 0;">Initializing system...</p>
+        </div>
+    </div>
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+    
+    <div class="editor-container">
+        <div class="editor-header">
+            <div class="editor-title">Event Flow Editor</div>
+			<div style="font-size:66%;max-width:50%;">The Flow Editor lets you create custom and complex triggers and action workflows. Have fun with your stream!<br>
+			<span style="margin-top: 5px; display: inline-block;">⚡ For media playback and OBS actions, add the Actions Overlay to your stream (available via settings menu)</span></div>
+            <div class="editor-actions">
+                <button id="open-test-panel" class="btn">🧪 Test Flow</button>
+            </div>
+        </div>
+        
+        <div class="editor-body">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <!-- Test Panel -->
+    <div class="test-overlay" style="display:none;" id="test-overlay"></div>
+    <div class="test-panel" style="display:none;" id="test-panel">
+        <div class="test-panel-header">
+            <h3>Test Flow</h3>
+        </div>
+        <div class="test-panel-content">
+        <div class="test-group">
+            <label for="test-source">Source Platform:</label>
+            <select id="test-source">
+                <option value="twitch">Twitch</option>
+                <option value="youtube">YouTube</option>
+                <option value="facebook">Facebook</option>
+                <option value="kick">Kick</option>
+                <option value="tiktok">TikTok</option>
+                <option value="instagram">Instagram</option>
+                <option value="discord">Discord</option>
+                <option value="slack">Slack</option>
+            </select>
+        </div>
+        
+        <div class="test-group">
+            <label for="test-username">Username:</label>
+            <input type="text" id="test-username" value="TestUser">
+        </div>
+        
+        <div class="test-group">
+            <label for="test-message">Message:</label>
+            <textarea id="test-message" rows="3">Hello, world!</textarea>
+        </div>
+        
+        <div class="test-options">
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-mod">
+                Moderator
+            </label>
+            
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-vip">
+                VIP
+            </label>
+            
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-admin">
+                Admin
+            </label>
+            
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-donation">
+                Has Donation
+            </label>
+        </div>
+        
+        <div id="donation-amount" class="test-group" style="display: none;">
+            <label for="test-donation-amount">Donation Amount:</label>
+            <input type="text" id="test-donation-amount" value="$5.00">
+        </div>
+
+        <div class="test-options">
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-firsttime">
+                First-time chatter
+            </label>
+
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-lastactivity">
+                Set last activity
+            </label>
+        </div>
+
+        <div id="lastactivity-controls" class="test-group" style="display: none;">
+            <label for="test-lastactivity-value">Last activity</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="number" id="test-lastactivity-value" value="60" min="0" style="width: 110px;">
+                <select id="test-lastactivity-unit">
+                    <option value="minutes" selected>Minutes ago</option>
+                    <option value="hours">Hours ago</option>
+                    <option value="days">Days ago</option>
+                </select>
+            </div>
+            <p class="test-help" style="color: #a0a0a0; font-size: 13px; margin: 6px 0 0 0;">Applies to message-properties “last activity” filters using the current time as reference.</p>
+        </div>
+        
+        <div class="test-options">
+            <label class="test-checkbox">
+                <input type="checkbox" id="test-all-active-flows">
+                Test against all active flows (not just current flow)
+            </label>
+        </div>
+
+        <div class="test-warning" id="unsaved-flow-warning" style="display: none; color: #e76f51; margin: 10px 0;">
+            <strong>Warning:</strong> The current flow has unsaved changes. Test results may not reflect the latest changes.
+        </div>
+        
+        <div class="test-results" id="test-results">
+            <p>Test results will appear here after running a test.</p>
+        </div>
+        </div>
+        
+        <div class="test-buttons">
+            <button id="close-test-btn" class="btn">Close</button>
+            <button id="run-test-btn" class="btn btn-primary">Run Test</button>
+        </div>
+    </div>
+    
+	<script type="text/javascript" src="./loader.js"></script>
+	
+</body>
+</html>
