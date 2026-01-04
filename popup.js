@@ -7098,13 +7098,21 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		});
 	}
 
+	let retryCount = 0;
+	const MAX_RETRIES = 60; // 30 seconds at 500ms intervals
+
 	let initialSetup = setInterval(()=>{
+		if (retryCount++ > MAX_RETRIES) {
+			clearInterval(initialSetup);
+			log("getSettings gave up after max retries");
+			return;
+		}
 		log("pop up asking main for settings yet again..");
 		chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
 			chrome.runtime.lastError;
 			log("getSettings response",response);
 			if ((response == undefined) || (!response.streamID)){
-				
+				// keep polling
 			} else {
 				clearInterval(initialSetup);
 				update(response, false); // we dont want to sync things
