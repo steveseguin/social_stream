@@ -3262,8 +3262,8 @@ function enableBackgroundKeepAlive() {
 		if (sendButton) sendButton.onclick = handleSendMessage;
 		const inputText = document.querySelector('#input-text');
 		if (inputText) {
-			inputText.addEventListener('keypress', handleEnterKey);
-			registerCleanup(() => inputText.removeEventListener('keypress', handleEnterKey));
+			inputText.addEventListener('keydown', handleEnterKey);
+			registerCleanup(() => inputText.removeEventListener('keydown', handleEnterKey));
 		}
 		const connectButton = document.getElementById('connect-button');
 		if (connectButton) {
