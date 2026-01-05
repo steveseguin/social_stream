@@ -3349,8 +3349,24 @@ function enableBackgroundKeepAlive() {
 		window.addEventListener('settingsChanged', settingsHandler);
 		registerCleanup(() => window.removeEventListener('settingsChanged', settingsHandler));
 	}
-	
-	
+
+	// Handle messages from extension/dock via content script
+	{
+		const extensionMessageHandler = function(e) {
+			if (e.detail && e.detail.message && liveChatId) {
+				sendChatMessage(e.detail.message).then(response => {
+					if (response && response.id) {
+						console.log('Extension message sent successfully');
+					}
+				}).catch(error => {
+					console.error('Failed to send extension message:', error);
+				});
+			}
+		};
+		window.addEventListener('sendExtensionMessage', extensionMessageHandler);
+		registerCleanup(() => window.removeEventListener('sendExtensionMessage', extensionMessageHandler));
+	}
+
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
 		const controller = new AbortController();
 		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${URL}`;

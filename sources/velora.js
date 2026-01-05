@@ -108,11 +108,7 @@
 		try {
 			ele.querySelectorAll("img[src^='https://assets.velora.tv/badges'], img[src*='/velora-badges/']").forEach(badge=>{
 				badge.src = badge.src + "";
-				if (!chatimg){
-					chatimg = badge.src;
-				} else {
-					badges.push(badge.src);
-				}
+				badges.push(badge.src);
 			});
 			
 			
