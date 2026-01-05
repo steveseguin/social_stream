@@ -93,8 +93,8 @@
 			return;
 		}
 
-		
 		var chatimg = ""
+		
 
 		var name="";
 		try {
@@ -107,8 +107,15 @@
 		var badges=[];
 		try {
 			ele.querySelectorAll("img[src^='https://assets.velora.tv/badges'], img[src*='/velora-badges/']").forEach(badge=>{
-				badges.push(badge.src);
+				badge.src = badge.src + "";
+				if (!chatimg){
+					chatimg = badge.src;
+				} else {
+					badges.push(badge.src);
+				}
 			});
+			
+			
 		} catch(e){
 		} 
 
