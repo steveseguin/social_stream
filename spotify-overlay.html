@@ -148,7 +148,7 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, rgba(29, 185, 84, 0.9), rgba(56, 249, 123, 0.8));
+  background: var(--accent);
   width: var(--progress, 0%);
   transition: width 150ms linear;
 }
@@ -337,11 +337,11 @@ body {
 	const tickerTrack = document.getElementById('tickerTrack');
 	const ariaStatus = document.getElementById('ariaStatus');
 
-	if (accent) {
-		document.documentElement.style.setProperty('--accent', accent);
-	}
 	document.body.classList.toggle('compact', compact);
 	document.body.classList.add(`theme-${theme}`);
+	if (accent) {
+		document.body.style.setProperty('--accent', accent);
+	}
 	if (tickerMode) {
 		tickerLine.hidden = false;
 		progressRow.style.display = 'none';
