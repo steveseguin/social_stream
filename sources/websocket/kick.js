@@ -121,7 +121,7 @@ const CODE_VERIFIER_KEY = 'kickPkceVerifier';
 const STATE_KEY = 'kickOAuthState';
 
 const DEFAULT_CONFIG = {
-    clientId: '01K7MXFQ9C39VAQ50DCQ2DXSDJ',
+    clientId: '01KDYJ7WYZB2NMHZBE4ZZX61XR',
     bridgeUrl: 'https://kick-bridge.socialstream.ninja/events'
 };
 
