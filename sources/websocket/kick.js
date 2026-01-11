@@ -11,6 +11,8 @@ let mergeProfileDetails;
 let mapBadges;
 let eventNameForType;
 
+// Fallback implementations when providers/kick/core.js fails to load.
+// These mirror the core.js exports to ensure kick.js works standalone.
 function applyKickCoreFallbacks() {
     if (typeof normalizeChannel !== 'function') {
         normalizeChannel = (value) => {
@@ -441,8 +443,8 @@ function escapeAttribute(value) {
         .replace(/>/g, '&gt;');
 }
 
-function delay(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
+function delay(ms, value = undefined) {
+    return new Promise(resolve => setTimeout(() => resolve(value), ms));
 }
 
 function resolveProfileIdentifiers(...sources) {
@@ -3384,6 +3386,9 @@ async function forwardChatMessage(evt, bridgeMeta) {
             ''
         );
         if (!chatimg && lookupUsername) {
+            // Avatar lookup with timeout: don't block message delivery waiting for avatar.
+            // If timeout wins, message is sent without avatar; queueAvatarLookup continues
+            // in background and will call updateChatFeedAvatar to backfill when ready.
             const avatarPromise = queueAvatarLookup(ids, lookupUsername, resolvedId);
             if (avatarPromise) {
                 try {
@@ -4543,6 +4548,7 @@ async function bootstrap() {
         });
     } catch (error) {
         console.error('[Kick] Kick websocket bootstrap failed.', error);
+        logKickWs(`Bootstrap failed: ${error?.message || error}`, 'error');
     }
 }
 
