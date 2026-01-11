@@ -1464,7 +1464,7 @@
 
 						const knockElement = findKnockAlertContainer(node);
 						if (knockElement){
-							checkList.push([processKnockAlert,(knockElement)]);
+							checkList.push([processKnockAlert, knockElement]);
 							continue;
 						}
 
