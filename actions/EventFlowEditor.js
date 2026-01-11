@@ -2842,7 +2842,7 @@ class EventFlowEditor {
 				break;
 			case 'userRole':
 				html += `<div class="property-group"><label class="property-label">User Role</label><select class="property-input" id="prop-role">
-						   ${['mod', 'vip', 'admin', 'subscriber', 'follower'].map(r => `<option value="${r}" ${node.config.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`).join('')}
+						   ${['mod', 'vip', 'admin', 'subscriber', 'member', 'follower'].map(r => `<option value="${r}" ${node.config.role === r ? 'selected' : ''}>${r.charAt(0).toUpperCase() + r.slice(1)}</option>`).join('')}
 						 </select></div>`;
 				break;
 			case 'hasDonation': // Trigger type

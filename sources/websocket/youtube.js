@@ -391,6 +391,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 				mergeEmotes();
 				return;
 			}
+			if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+				window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
+					detail: { message: request.message },
+					bubbles: true
+				}));
+				sendResponse(true);
+				return;
+			}
 		}
 	} catch(e) {
 		console.error('Error handling Chrome message:', e);

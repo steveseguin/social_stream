@@ -277,6 +277,11 @@ opacity: 1;
 }
 }
 
+.msg.fading {
+opacity: 0;
+transition: opacity 1s ease-out;
+}
+
 /* Inner glow frame on all four sides */
 .msg .bar {
 position: absolute;
@@ -638,6 +643,9 @@ max-width: 55%;
 <script>
 const urlParams = new URLSearchParams(window.location.search);
 
+// showtime: if set, messages will fade out and be removed after this many milliseconds (default: 0 = no auto-removal)
+const showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 0;
+
 const SHOW_PLATFORM_PILL = true;
 const SHOW_DONATION_PILL = true;
 
@@ -913,6 +921,18 @@ const node = createMessageNode(data);
 chat.appendChild(node);
 // baseline-fix unicode emoji after sanitize/insert
 fixEmojiBaseline(node.querySelector('.message'));
+
+// If showtime is set, fade out and remove the message after the specified time
+if (showtime > 0) {
+setTimeout(() => {
+node.classList.add('fading');
+setTimeout(() => {
+if (node.parentNode) {
+node.parentNode.removeChild(node);
+}
+}, 1000); // Remove after fade animation completes
+}, showtime);
+}
 }
 
 function processData(data) {

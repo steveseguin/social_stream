@@ -1434,6 +1434,198 @@ document.addEventListener('DOMContentLoaded', function() {
 					<li>Pop out not supported</li>
 				</ul>
 			`
+		},
+		{
+			name: 'Retake.tv',
+			icon: 'retake.png',
+			description: 'Web3 live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://retake.tv/live/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'BoltPlus.tv',
+			icon: 'boltplus.png',
+			description: 'Live streaming platform.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>URL: https://boltplus.tv/chatpopout*</li>
+					<li>Use the chat popout</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Velora.tv',
+			icon: 'velora.png',
+			description: 'Live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://velora.tv/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'RokFin',
+			icon: 'rokfin.png',
+			description: 'Creator-focused content platform.',
+			type: 'popout',
+			instructions: `
+				<ul>
+					<li>URL: https://rokfin.com/popout/chat/*</li>
+					<li>Use the chat popout</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Stream.place',
+			icon: 'streamplace.png',
+			description: 'Live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://stream.place/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'TradingView Streams',
+			icon: 'tradingview.png',
+			description: 'Financial charting platform with live streams.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://www.tradingview.com/streams/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'SharePlay.tv',
+			icon: 'shareplay.png',
+			description: 'Live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://shareplay.tv/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'CloutHub',
+			icon: 'cloudhub.png',
+			description: 'Social media and community platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://app.clouthub.com/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Slido',
+			icon: 'slido.png',
+			description: 'Audience interaction and Q&A platform for webinars.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://admin.sli.do/event/*, https://app.sli.do/event/*, or https://wall.sli.do/event/*</li>
+					<li>Works with admin, app, and wall views</li>
+				</ul>
+			`
+		},
+		{
+			name: 'YouNow',
+			icon: 'younow.png',
+			description: 'Live broadcasting platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://www.younow.com/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Rozy.tv',
+			icon: 'generic.png',
+			description: 'Live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://play.rozy.tv/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'QuickChannel',
+			icon: 'quickchannel.png',
+			description: 'Live streaming and video platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://play.quickchannel.com/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Instafeed',
+			icon: 'generic.png',
+			description: 'Instagram feed aggregation service.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://instafeed.me/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Patreon',
+			icon: 'patreon.png',
+			description: 'Creator subscription and membership platform.',
+			type: 'toggle',
+			instructions: `
+				<ul>
+					<li>REQUIRES the TOGGLE in menu to enable it</li>
+					<li>URL: https://patreon.com/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Minnit Chat',
+			icon: 'minnit.png',
+			description: 'Embeddable chat service.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://minnit.chat/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
+		},
+		{
+			name: 'LFG.tv',
+			icon: 'lfg.png',
+			description: 'Gaming and esports streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>URL: https://lfg.tv/*</li>
+					<li>No pop out needed</li>
+				</ul>
+			`
 		}
     ];
     

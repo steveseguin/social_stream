@@ -464,7 +464,11 @@
 					
 					var viewerCount = document.querySelector("[data-instancekey] [role='img'][aria-label]>span[dir='auto']:not([hidden]):not(:has([hidden])):not(:is([hidden] *))");
 					
-					if (viewerCount && viewerCount.textContent){
+					if (!viewerCount){
+						viewerCount = document.querySelector("svg [d='M4.5 6a1.5 1.5 0 1 1 3 0 1.5 1.5 0 0 1-3 0z'").parentNode.parentNode.parentNode.parentNode.nextSibling.querySelector("div div span")
+					}
+					
+					if (viewerCount && viewerCount.textContent.trim().length){
 						if (viewerCount.textContent == parseInt(viewerCount.textContent)){
 							
 							chrome.runtime.sendMessage(

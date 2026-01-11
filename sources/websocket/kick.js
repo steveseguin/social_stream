@@ -9,6 +9,68 @@ let storeProfileCacheEntry;
 let mergeBadges;
 let mergeProfileDetails;
 let mapBadges;
+let eventNameForType;
+
+// Fallback implementations when providers/kick/core.js fails to load.
+// These mirror the core.js exports to ensure kick.js works standalone.
+function applyKickCoreFallbacks() {
+    if (typeof normalizeChannel !== 'function') {
+        normalizeChannel = (value) => {
+            if (!value) return '';
+            return String(value).trim().replace(/^@+/, '').toLowerCase();
+        };
+    }
+    if (typeof normalizeImage !== 'function') {
+        normalizeImage = (value) => (value ? String(value) : '');
+    }
+    if (typeof formatBadgesForDisplay !== 'function') {
+        formatBadgesForDisplay = (badges) => Array.isArray(badges) ? badges : [];
+    }
+    if (typeof getProfileCacheEntry !== 'function') {
+        getProfileCacheEntry = () => null;
+    }
+    if (typeof storeProfileCacheEntry !== 'function') {
+        storeProfileCacheEntry = () => {};
+    }
+    if (typeof mergeBadges !== 'function') {
+        mergeBadges = (primary, secondary) => {
+            const a = Array.isArray(primary) ? primary : [];
+            const b = Array.isArray(secondary) ? secondary : [];
+            return a.concat(b);
+        };
+    }
+    if (typeof mergeProfileDetails !== 'function') {
+        mergeProfileDetails = (base, extra) => ({
+            ...(base && typeof base === 'object' ? base : {}),
+            ...(extra && typeof extra === 'object' ? extra : {})
+        });
+    }
+    if (typeof mapBadges !== 'function') {
+        mapBadges = (badges) => Array.isArray(badges) ? badges : [];
+    }
+    if (typeof eventNameForType !== 'function') {
+        eventNameForType = (type) => {
+            if (!type) return 'message';
+            const lower = String(type).toLowerCase();
+            if (lower === 'chat' || lower === 'message' || lower === 'chatroom_message') {
+                return 'message';
+            }
+            if (lower.includes('gift')) {
+                return 'gift';
+            }
+            if (lower.includes('tip') || lower.includes('donation')) {
+                return 'donation';
+            }
+            if (lower.includes('sub')) {
+                return 'subscription';
+            }
+            if (lower.includes('ban') || lower.includes('moderation')) {
+                return 'moderation';
+            }
+            return lower;
+        };
+    }
+}
 
 async function importWithFallback(extensionPath, relativePath) {
     if (
@@ -18,7 +80,10 @@ async function importWithFallback(extensionPath, relativePath) {
     ) {
         try {
             const specifier = chrome.runtime.getURL(extensionPath);
-            return await import(specifier);
+            // Only try import if the URL has a valid scheme (http, https, file, chrome-extension)
+            if (specifier && /^(https?|file|chrome-extension):/.test(specifier)) {
+                return await import(specifier);
+            }
         } catch (error) {
             console.warn(`Failed to import ${extensionPath} via chrome.runtime.getURL`, error);
         }
@@ -36,13 +101,19 @@ const kickCoreReady = (async () => {
         storeProfileCacheEntry,
         mergeBadges,
         mergeProfileDetails,
-        mapBadges
+        mapBadges,
+        eventNameForType
     } = kickModule);
 })();
 
 kickCoreReady.catch((error) => {
     console.error('Failed to load Kick shared core module', error);
+    applyKickCoreFallbacks();
 });
+
+try {
+    console.log('[KickWs] kick.js loaded.');
+} catch (_) {}
 
 const STORAGE_KEY = 'kickApiConfig';
 const TOKEN_KEY = 'kickApiTokens';
@@ -50,13 +121,14 @@ const CODE_VERIFIER_KEY = 'kickPkceVerifier';
 const STATE_KEY = 'kickOAuthState';
 
 const DEFAULT_CONFIG = {
-    clientId: '01K7MXFQ9C39VAQ50DCQ2DXSDJ',
+    clientId: '01KDYJ7WYZB2NMHZBE4ZZX61XR',
     bridgeUrl: 'https://kick-bridge.socialstream.ninja/events'
 };
 
 const SUBSCRIPTION_RETRY_DELAY_MS = 10000;
 const CHAT_FEED_LIMIT = 200;
 const CHAT_SCROLL_THRESHOLD_PX = 48;
+const AVATAR_LOOKUP_TIMEOUT_MS = 650;
 
 const state = {
     clientId: '',
@@ -91,6 +163,18 @@ const state = {
         status: 'disconnected',
         lastErrorLoggedAt: 0
     },
+    socket: {
+        status: 'disconnected',
+        connectionId: null,
+        chatroomId: null,
+        channelId: null,
+        userId: null,
+        siteApiBase: '',
+        siteApiProxyBase: '',
+        allowProxy: true,
+        lastError: '',
+        connecting: false
+    },
     chat: {
         sending: false,
         type: 'user'
@@ -102,26 +186,35 @@ const EVENT_TYPES_CACHE_KEY = 'kickEventTypesCache';
 const EVENT_TYPES_CACHE_TTL_MS = 6 * 60 * 60 * 1000;
 const EVENT_TYPES_UNAVAILABLE_COOLDOWN_MS = 60 * 60 * 1000;
 
-let viewerCountInterval = null;
 let cachedEventTypes = null;
 let cachedEventTypesFetchedAt = 0;
 let eventTypesUnavailableUntil = 0;
 
-const TAB_ID = typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
-    ? window.__SSAPP_TAB_ID__
-    : null;
+function getTabId() {
+    return typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
+        ? window.__SSAPP_TAB_ID__
+        : null;
+}
 
 const extension = {
-    available: typeof chrome !== 'undefined' && !!(chrome && chrome.runtime && chrome.runtime.id),
+    get available() {
+        return typeof chrome !== 'undefined' && !!(chrome && chrome.runtime && chrome.runtime.id);
+    },
     enabled: true,
     settings: {},
-    tabId: TAB_ID
+    get tabId() {
+        return getTabId();
+    }
 };
 
 const WSS_PLATFORM = 'kick';
 let extensionInitialized = false;
 let lastBridgeNotifyStatus = null;
 let lastAuthNotifyStatus = null;
+let lastSocketNotifyStatus = null;
+let socketBridgeInitialized = false;
+let kickWsEventLogCount = 0;
+let kickWsLastEventLogAt = 0;
 const ignoredEventTypesLogged = new Set();
 
 const LITE_MESSAGE_PREFIX = 'kick-lite-';
@@ -340,75 +433,6 @@ function resetThirdPartyEmoteCache() {
     lastEmoteRequestKey = null;
 }
 
-function shouldPollViewerCount() {
-    if (!extension.enabled) {
-        return false;
-    }
-    return isSettingEnabled('showviewercount') || isSettingEnabled('hypemode');
-}
-
-function updateViewerCountDisplay(count) {
-    if (!els.viewerCount) return;
-    const label = count == null ? '—' : String(count);
-    const text = `Viewers: ${label}`;
-    if (els.viewerCount.textContent !== text) {
-        els.viewerCount.textContent = text;
-    }
-}
-
-function resetViewerCountDisplay() {
-    updateViewerCountDisplay(null);
-}
-
-async function fetchKickViewerCount(slug) {
-    const response = await fetch(`https://kick.com/api/v2/channels/${slug}`);
-    if (!response.ok) {
-        throw new Error(`Kick viewer count request failed: ${response.status}`);
-    }
-    const data = await response.json();
-    if (data && data.livestream) {
-        return data.livestream.viewer_count || 0;
-    }
-    return 0;
-}
-
-async function pollViewerCount() {
-    const slug = state.channelSlug && state.channelSlug.trim();
-    if (!slug || !shouldPollViewerCount()) {
-        updateViewerCountDisplay(null);
-        return;
-    }
-
-    try {
-        const normalizedSlug = normalizeChannel(slug) || slug;
-        const viewers = await fetchKickViewerCount(normalizedSlug);
-        updateViewerCountDisplay(viewers);
-        if (shouldPollViewerCount()) {
-            pushMessage({
-                type: 'kick',
-                event: 'viewer_update',
-                meta: viewers
-            });
-        }
-    } catch (err) {
-        console.error('Error fetching Kick viewer count:', err);
-        updateViewerCountDisplay(0);
-        if (shouldPollViewerCount()) {
-            pushMessage({
-                type: 'kick',
-                event: 'viewer_update',
-                meta: 0
-            });
-        }
-    }
-}
-
-function startViewerCountPolling() {
-    if (viewerCountInterval) return;
-    setTimeout(pollViewerCount, 2500);
-    viewerCountInterval = setInterval(pollViewerCount, 30000);
-}
-
 function escapeAttribute(value) {
     if (value == null) return '';
     return String(value)
@@ -417,6 +441,10 @@ function escapeAttribute(value) {
         .replace(/'/g, '&#39;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+}
+
+function delay(ms, value = undefined) {
+    return new Promise(resolve => setTimeout(() => resolve(value), ms));
 }
 
 function resolveProfileIdentifiers(...sources) {
@@ -517,6 +545,185 @@ function rememberProfileMiss(...sources) {
         return;
     }
     storeProfileCacheEntry(state.profileCache, ids, null);
+}
+
+function normalizeKickSiteBase(value) {
+    if (!value || typeof value !== 'string') return '';
+    return value.replace(/\/api\/v2\/?$/i, '').replace(/\/+$/, '');
+}
+
+function getKickSiteBase(preferProxy = false) {
+    const allowProxy = state.socket?.allowProxy !== false;
+    const rawProxy = normalizeKickSiteBase(state.socket?.siteApiProxyBase);
+    const rawDirect = normalizeKickSiteBase(state.socket?.siteApiBase);
+    if (preferProxy && allowProxy) {
+        return rawProxy || 'https://r.jina.ai/http://kick.com';
+    }
+    return rawDirect || 'https://kick.com';
+}
+
+function parseKickProfilePayload(text) {
+    if (typeof text !== 'string' || !text.trim()) {
+        return null;
+    }
+    try {
+        const parsed = JSON.parse(text);
+        if (parsed && parsed.data && typeof parsed.data.content === 'string') {
+            const embedded = parsed.data.content.trim();
+            if (embedded) {
+                return JSON.parse(embedded);
+            }
+        }
+        return parsed;
+    } catch (_) {}
+    const marker = 'Markdown Content:';
+    const idx = text.indexOf(marker);
+    if (idx >= 0) {
+        const payload = text.slice(idx + marker.length).trim();
+        if (payload) {
+            try {
+                return JSON.parse(payload);
+            } catch (_) {}
+        }
+    }
+    return null;
+}
+
+function extractKickAvatar(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return '';
+    }
+    const candidates = [
+        payload.profilepic,
+        payload.profile_pic,
+        payload.profile_picture,
+        payload.profilePicture,
+        payload.user?.profilepic,
+        payload.user?.profile_pic,
+        payload.user?.profile_picture,
+        payload.user?.profilePicture
+    ];
+    return pickFirstString(candidates, '');
+}
+
+async function fetchKickProfile(username) {
+    const channelSlug = state.channelSlug ? String(state.channelSlug).trim() : '';
+    const viewer = username ? String(username).trim() : '';
+    if (!channelSlug || !viewer) {
+        return null;
+    }
+
+    const requestProfile = async (base) => {
+        const url = `${base}/channels/${encodeURIComponent(channelSlug)}/${encodeURIComponent(viewer)}`;
+        const response = await fetch(url, {
+            headers: { 'Accept': 'application/json' }
+        });
+        const text = await response.text();
+        if (!response.ok) {
+            const error = new Error(`Kick profile lookup ${response.status}: ${text}`);
+            error.status = response.status;
+            error.body = text;
+            throw error;
+        }
+        return parseKickProfilePayload(text);
+    };
+
+    const directBase = getKickSiteBase(false);
+    try {
+        return await requestProfile(directBase);
+    } catch (err) {
+        if (state.socket?.allowProxy !== false) {
+            const proxyBase = getKickSiteBase(true);
+            if (proxyBase && proxyBase !== directBase) {
+                return await requestProfile(proxyBase);
+            }
+        }
+        throw err;
+    }
+}
+
+function updateChatAvatarElement(line, avatarUrl) {
+    if (!line || !avatarUrl) {
+        return;
+    }
+    const avatar = line.querySelector('.chat-avatar');
+    if (!avatar || avatar.querySelector('img')) {
+        return;
+    }
+    avatar.textContent = '';
+    const img = document.createElement('img');
+    img.src = avatarUrl;
+    const name = line.querySelector('.chat-name')?.textContent || '';
+    img.alt = name ? `${name} avatar` : '';
+    avatar.appendChild(img);
+}
+
+function updateChatFeedAvatar({ messageIds, userId, username }, avatarUrl) {
+    if (!els.chatFeed || !avatarUrl) {
+        return;
+    }
+    const normalizedUser = username ? normalizeChannel(username) : '';
+    const lines = els.chatFeed.querySelectorAll('.chat-line');
+    lines.forEach((line) => {
+        if (!line) return;
+        const matchesMessage =
+            messageIds && messageIds.size && line.dataset.messageId && messageIds.has(line.dataset.messageId);
+        const matchesUser =
+            !matchesMessage &&
+            ((userId && line.dataset.userId === String(userId)) ||
+                (normalizedUser && line.dataset.username === normalizedUser));
+        if (matchesMessage || matchesUser) {
+            updateChatAvatarElement(line, avatarUrl);
+        }
+    });
+}
+
+function queueAvatarLookup(ids, username, messageId) {
+    const userKey = ids?.userId ? `id:${ids.userId}` : (username ? `name:${normalizeChannel(username)}` : '');
+    if (!userKey || !username) {
+        return null;
+    }
+    const existing = state.profileFetches.get(userKey);
+    if (existing) {
+        if (messageId) {
+            existing.pendingMessageIds.add(String(messageId));
+        }
+        return existing.promise;
+    }
+
+    const pendingMessageIds = new Set();
+    if (messageId) {
+        pendingMessageIds.add(String(messageId));
+    }
+
+    const promise = fetchKickProfile(username)
+        .then((profile) => {
+            const avatar = extractKickAvatar(profile);
+            if (avatar) {
+                const normalizedAvatar = normalizeImage(avatar);
+                rememberProfile({ avatar: normalizedAvatar }, ids, { username });
+                updateChatFeedAvatar(
+                    { messageIds: pendingMessageIds, userId: ids?.userId, username },
+                    normalizedAvatar
+                );
+                return normalizedAvatar;
+            }
+            rememberProfileMiss(ids, { username });
+            return '';
+        })
+        .catch(() => {
+            rememberProfileMiss(ids, { username });
+            return '';
+        })
+        .finally(() => {
+            state.profileFetches.delete(userKey);
+        });
+
+    state.profileFetches.set(userKey, {
+        promise,
+        pendingMessageIds
+    });
+    return promise;
 }
 
 function extractProfileFromSource(source) {
@@ -1221,27 +1428,30 @@ function applyExtensionSettings(newSettings) {
 }
 
 function notifyApp(payload) {
-    try {
-        if (extension.available) {
-            chrome.runtime.sendMessage(chrome.runtime.id, payload, function () {});
+    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
+    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+        try {
+            chrome.runtime.sendMessage(chrome.runtime.id, payload, function() {});
             return;
+        } catch (e) {
+            // Fall through to ninjafy
         }
-        if (window.ninjafy && window.ninjafy.sendMessage) {
-            window.ninjafy.sendMessage(null, payload, null, extension.tabId);
+    }
+    // Fallback to ninjafy.sendMessage for Electron
+    if (window.ninjafy && window.ninjafy.sendMessage) {
+        try {
+            window.ninjafy.sendMessage(null, payload, null, window.__SSAPP_TAB_ID__);
             return;
+        } catch (e) {
+            console.error('Error notifying app:', e);
         }
-        if (typeof window !== 'undefined' && window.parent) {
-            let data = payload;
-            if (payload && typeof payload === 'object') {
-                data = { ...payload };
-                if (extension.tabId != null) {
-                    data.__tabID__ = extension.tabId;
-                }
-            }
-            window.parent.postMessage(data, '*');
+    }
+    if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+        try {
+            window.parent.postMessage(payload, '*');
+        } catch (e) {
+            console.error('Error notifying host:', e);
         }
-    } catch (err) {
-        console.error('Failed to notify app', err);
     }
 }
 
@@ -1327,10 +1537,10 @@ function initElements() {
         authState: q('auth-state'),
         startAuth: q('start-auth'),
         channelLabel: q('channel-label'),
-        viewerCount: q('viewer-count'),
         eventLog: q('event-log'),
         chatFeed: q('chat-feed'),
         chatFeedEmpty: q('chat-feed-empty'),
+        socketState: q('socket-state'),
         bridgeState: q('bridge-state'),
         subscriptionSummary: q('subscription-summary'),
         chatMessage: q('chat-message'),
@@ -1372,7 +1582,6 @@ function setChannelSlug(value, options = {}) {
         state.autoStart.lastSlug = '';
         resetThirdPartyEmoteCache();
         resetChatFeed();
-        resetViewerCountDisplay();
     } else {
         state.channelSlug = slug; // Preserve original casing.
     }
@@ -1389,6 +1598,11 @@ function setChannelSlug(value, options = {}) {
     }
     updateInputsFromState();
     maybeAutoStart();
+    if (changed) {
+        disconnectLocalSocket();
+    }
+    initLocalSocketBridge();
+    connectLocalSocket();
     notifyLiteStatus('channel');
 }
 
@@ -1408,6 +1622,15 @@ function loadConfig() {
         }
         state.bridgeUrl = cfg.bridgeUrl || '';
         state.customEvents = cfg.customEvents || '';
+        if (cfg.siteApiBase) {
+            state.socket.siteApiBase = cfg.siteApiBase;
+        }
+        if (cfg.siteApiProxyBase) {
+            state.socket.siteApiProxyBase = cfg.siteApiProxyBase;
+        }
+        if (typeof cfg.allowProxy === 'boolean') {
+            state.socket.allowProxy = cfg.allowProxy;
+        }
         if (cfg.chatType) {
             state.chat.type = cfg.chatType;
         }
@@ -1419,10 +1642,17 @@ function loadConfig() {
 function loadTokens() {
     try {
         const stored = localStorage.getItem(TOKEN_KEY);
-        if (!stored) return;
+        if (!stored) {
+            logKickWs('No stored Kick OAuth tokens found.');
+            return;
+        }
         const tokens = JSON.parse(stored);
-        if (!tokens || !tokens.access_token) return;
+        if (!tokens || !tokens.access_token) {
+            logKickWs('Stored Kick OAuth tokens missing access token.', 'warning');
+            return;
+        }
         state.tokens = tokens;
+        logKickWs('Loaded Kick OAuth tokens from storage.');
     } catch (err) {
         console.error('Failed to load Kick tokens', err);
     }
@@ -1438,6 +1668,45 @@ function applyUrlParams() {
             params.get('channel_slug');
         if (slug) {
             setChannelSlug(slug, { source: 'query', force: true });
+        }
+        const chatroomId =
+            params.get('chatroom_id') ||
+            params.get('chatroomid') ||
+            params.get('chatroom');
+        if (chatroomId) {
+            state.socket.chatroomId = String(chatroomId).trim();
+        }
+        const channelId =
+            params.get('channel_id') ||
+            params.get('channelid');
+        if (channelId) {
+            state.socket.channelId = String(channelId).trim();
+        }
+        const userId =
+            params.get('user_id') ||
+            params.get('userid');
+        if (userId) {
+            state.socket.userId = String(userId).trim();
+        }
+        const siteApiBase =
+            params.get('kick_api_base') ||
+            params.get('kickapibase') ||
+            params.get('kick_site_api');
+        if (siteApiBase) {
+            state.socket.siteApiBase = String(siteApiBase).trim();
+        }
+        const siteApiProxyBase =
+            params.get('kick_api_proxy') ||
+            params.get('kick_proxy_base') ||
+            params.get('kick_proxy');
+        if (siteApiProxyBase) {
+            state.socket.siteApiProxyBase = String(siteApiProxyBase).trim();
+        }
+        const allowProxy =
+            params.get('kick_allow_proxy') ||
+            params.get('allow_proxy');
+        if (allowProxy !== null) {
+            state.socket.allowProxy = !/^(0|false|no|off)$/i.test(String(allowProxy).trim());
         }
     } catch (err) {
         console.error('Failed to parse Kick URL parameters', err);
@@ -1464,7 +1733,10 @@ function persistConfig() {
         channelSlug: state.channelSlug,
         bridgeUrl: state.bridgeUrl,
         customEvents: state.customEvents,
-        chatType: state.chat?.type || 'user'
+        chatType: state.chat?.type || 'user',
+        siteApiBase: state.socket.siteApiBase || '',
+        siteApiProxyBase: state.socket.siteApiProxyBase || '',
+        allowProxy: state.socket.allowProxy !== false
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cfg));
 }
@@ -1472,9 +1744,11 @@ function persistConfig() {
 function persistTokens() {
     if (!state.tokens) {
         localStorage.removeItem(TOKEN_KEY);
+        logKickWs('Cleared Kick OAuth tokens from storage.');
         return;
     }
     localStorage.setItem(TOKEN_KEY, JSON.stringify(state.tokens));
+    logKickWs('Saved Kick OAuth tokens to storage.');
 }
 
 function persistEventTypesCache() {
@@ -1560,9 +1834,6 @@ function updateInputsFromState() {
             }
         }
     }
-    if (!state.channelSlug) {
-        resetViewerCountDisplay();
-    }
     if (els.chatType) {
         els.chatType.value = state.chat?.type || 'user';
     }
@@ -1645,7 +1916,13 @@ function updateAuthStatus() {
 
 function bindEvents() {
     if (els.startAuth) {
-        els.startAuth.addEventListener('click', startAuthFlow);
+        logKickWs('Binding sign-in click handler.');
+        els.startAuth.addEventListener('click', () => {
+            logKickWs('Sign-in click event captured.');
+            startAuthFlow();
+        });
+    } else {
+        logKickWs('Sign-in button not found in DOM.', 'warning');
     }
     if (els.chatType) {
         els.chatType.addEventListener('change', () => {
@@ -1672,7 +1949,193 @@ function getBridgeBaseUrl() {
     }
 }
 
+function isElectronEnvironment() {
+    return !!(window.ninjafy && typeof window.ninjafy.startKickOAuth === 'function');
+}
+
+function supportsLocalSocket() {
+    return !!(window.ninjafy && typeof window.ninjafy.startKickWebSocket === 'function');
+}
+
+function updateSocketState(payload = {}) {
+    if (!els.socketState) return;
+    if (!supportsLocalSocket()) {
+        els.socketState.textContent = 'Chat socket unavailable';
+        els.socketState.className = 'status-chip warning';
+        return;
+    }
+    const status = state.socket?.status || 'disconnected';
+    let label = 'Chat socket disconnected';
+    let className = 'status-chip danger';
+    if (status === 'connected') {
+        label = 'Chat socket connected';
+        className = 'status-chip';
+    } else if (status === 'connecting') {
+        label = 'Chat socket connecting';
+        className = 'status-chip warning';
+    } else if (status === 'error') {
+        const detail = payload.error || state.socket?.lastError || '';
+        label = detail ? `Chat socket error` : 'Chat socket error';
+        className = 'status-chip danger';
+    } else if (status === 'disconnected') {
+        label = 'Chat socket disconnected';
+        className = 'status-chip danger';
+    }
+    els.socketState.textContent = label;
+    els.socketState.className = className;
+
+    if (status !== lastSocketNotifyStatus) {
+        lastSocketNotifyStatus = status;
+        if (status === 'error') {
+            log(`Chat socket error: ${payload.error || state.socket?.lastError || 'Unknown error'}`, 'error');
+        } else {
+            log(`Chat socket ${status}.`);
+        }
+    }
+}
+
+function handleLocalSocketStatus(payload) {
+    if (!payload || typeof payload !== 'object') return;
+    const previousStatus = state.socket.status;
+    const previousError = state.socket.lastError;
+    if (state.socket.connectionId && payload.connectionId && payload.connectionId !== state.socket.connectionId) {
+        return;
+    }
+    if (payload.connectionId && !state.socket.connectionId) {
+        state.socket.connectionId = payload.connectionId;
+    }
+    state.socket.status = payload.status || state.socket.status || 'disconnected';
+    const rawError = payload.error || payload.reason || state.socket.lastError || '';
+    const errorText = (rawError && typeof rawError === 'object')
+        ? (rawError.message || JSON.stringify(rawError))
+        : rawError;
+    state.socket.lastError = errorText;
+    if (payload.chatroomId != null) state.socket.chatroomId = payload.chatroomId;
+    if (payload.channelId != null) state.socket.channelId = payload.channelId;
+    if (payload.userId != null) state.socket.userId = payload.userId;
+    const detail = errorText || '';
+    if (state.socket.status !== previousStatus || (detail && detail !== previousError)) {
+        const suffix = detail ? `: ${detail}` : '';
+        const level = state.socket.status === 'error' ? 'error' : (detail ? 'warning' : 'info');
+        logKickWs(`Status ${state.socket.status}${suffix}`, level);
+    }
+    updateSocketState(payload);
+}
+
+function handleLocalSocketEvent(packet) {
+    if (!packet || typeof packet !== 'object') return;
+    if (state.socket.connectionId && packet.connectionId && packet.connectionId !== state.socket.connectionId) {
+        return;
+    }
+    const now = Date.now();
+    const type = packet.type || packet.body?.event || 'event';
+    if (kickWsEventLogCount < 5 || now - kickWsLastEventLogAt > 15000) {
+        kickWsEventLogCount += 1;
+        kickWsLastEventLogAt = now;
+        logKickWs(`Event received: ${type}.`);
+    }
+    handleBridgeEvent(packet);
+}
+
+function initLocalSocketBridge() {
+    if (socketBridgeInitialized) return;
+    socketBridgeInitialized = true;
+    if (!supportsLocalSocket()) {
+        logKickWs('Local socket bridge unavailable (ninjafy missing).', 'warning');
+        return;
+    }
+    logKickWs('Local socket bridge initialized.');
+
+    try {
+        if (typeof window.ninjafy.onKickWsStatus === 'function') {
+            window.ninjafy.onKickWsStatus(handleLocalSocketStatus);
+        }
+        if (typeof window.ninjafy.onKickWsEvent === 'function') {
+            window.ninjafy.onKickWsEvent(handleLocalSocketEvent);
+        }
+    } catch (err) {
+        console.error('Failed to initialize Kick socket bridge', err);
+    }
+}
+
+async function connectLocalSocket(force = false) {
+    if (!supportsLocalSocket()) return;
+    if (!state.channelSlug) return;
+    if (!force && state.socket.status === 'connected') return;
+    if (state.socket.connecting) return;
+
+    if (!state.tokens?.access_token && !state.socket.chatroomId) {
+        logKickWs('Chat socket requires Kick sign-in to resolve chatroom ID.', 'warning');
+        state.socket.status = 'disconnected';
+        updateSocketState({ status: 'disconnected' });
+        return;
+    }
+
+    state.socket.connecting = true;
+    state.socket.status = 'connecting';
+    updateSocketState({ status: 'connecting' });
+    if (!state.tokens?.access_token) {
+        logKickWs('No Kick access token found for socket lookup.', 'warning');
+    }
+    logKickWs(`Connecting chat socket for ${state.channelSlug}.`);
+    try {
+        const payload = {
+            slug: state.channelSlug,
+            chatroomId: state.socket.chatroomId || null,
+            channelId: state.socket.channelId || null,
+            userId: state.socket.userId || null,
+            accessToken: state.tokens?.access_token || null,
+            clientId: state.clientId || null,
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
+            tabId: typeof window !== 'undefined' ? window.__SSAPP_TAB_ID__ : null,
+            force: force === true,
+            siteApiBase: state.socket.siteApiBase || null,
+            siteApiProxyBase: state.socket.siteApiProxyBase || null,
+            allowProxy: state.socket.allowProxy !== false
+        };
+        const result = await window.ninjafy.startKickWebSocket(payload);
+        if (result && result.ok) {
+            if (result.connectionId) state.socket.connectionId = result.connectionId;
+            if (result.chatroomId) state.socket.chatroomId = result.chatroomId;
+            if (result.channelId) state.socket.channelId = result.channelId;
+            if (result.userId) state.socket.userId = result.userId;
+            if (result.slug && !state.channelSlug) state.channelSlug = result.slug;
+            logKickWs(`Chat socket connected (id: ${result.connectionId || 'unknown'}).`);
+        } else {
+            handleLocalSocketStatus({
+                status: 'error',
+                error: result?.error || 'Kick socket connection failed.'
+            });
+        }
+    } catch (err) {
+        handleLocalSocketStatus({ status: 'error', error: err?.message || String(err) });
+    } finally {
+        state.socket.connecting = false;
+    }
+}
+
+async function disconnectLocalSocket() {
+    if (!supportsLocalSocket()) return;
+    const connectionId = state.socket.connectionId;
+    state.socket.connectionId = null;
+    state.socket.status = 'disconnected';
+    state.socket.lastError = '';
+    kickWsEventLogCount = 0;
+    kickWsLastEventLogAt = 0;
+    logKickWs('Chat socket disconnected.');
+    updateSocketState({ status: 'disconnected' });
+    try {
+        await window.ninjafy.stopKickWebSocket({ connectionId });
+    } catch (_) {}
+}
+
 async function startAuthFlow() {
+    logKickWs('Sign-in clicked.');
+    // Use external browser auth if in Electron
+    if (isElectronEnvironment()) {
+        return startExternalAuthFlow();
+    }
+
     if (!state.clientId) {
         log('Missing Kick client ID. Please refresh this page and try again.', 'error');
         return;
@@ -1701,6 +2164,58 @@ async function startAuthFlow() {
     const authorizeUrl = `https://id.kick.com/oauth/authorize?${params.toString()}`;
     window.location.href = authorizeUrl;
 }
+
+async function startExternalAuthFlow() {
+    if (!state.clientId) {
+        log('Missing Kick client ID. Please refresh this page and try again.', 'error');
+        return;
+    }
+
+    try {
+        logKickWs('Starting external Kick OAuth flow.');
+        const result = await window.ninjafy.startKickOAuth({
+            clientId: state.clientId,
+            scopes: ['user:read', 'channel:read', 'chat:write', 'events:subscribe']
+        });
+
+        if (!result || !result.success || !result.code) {
+            log('Kick OAuth did not return an authorization code.', 'error');
+            logKickWs('Kick OAuth did not return a code.', 'warning');
+            return;
+        }
+
+        // The handler returns the code and codeVerifier - exchange for tokens
+        const code = result.code;
+        const verifier = result.codeVerifier;
+        const redirectUri = result.redirectUri;
+
+        // Store the redirect URI for token exchange
+        if (redirectUri) {
+            state.redirectUri = redirectUri;
+            persistConfig();
+        }
+
+        try {
+            await exchangeCodeForToken(code, verifier);
+            updateAuthStatus();
+            await loadAuthenticatedProfile();
+            await listSubscriptions();
+            await maybeAutoStart(true);
+            connectLocalSocket(true);
+        } catch (err) {
+            console.error(err);
+            log(`Token exchange failed: ${err.message}`, 'error');
+        }
+    } catch (error) {
+        console.error('External Kick OAuth failed:', error);
+        log(`Kick sign-in failed: ${error.message}`, 'error');
+    }
+}
+
+// Expose external auth for Electron trigger
+try {
+    window.__SSAPP_START_KICK_AUTH__ = startExternalAuthFlow;
+} catch (_) {}
 
 async function handleAuthCallback() {
     const url = new URL(window.location.href);
@@ -1732,6 +2247,7 @@ async function handleAuthCallback() {
         await loadAuthenticatedProfile();
         await listSubscriptions();
         await maybeAutoStart(true);
+        connectLocalSocket(true);
     } catch (err) {
         console.error(err);
         log(`Token exchange failed: ${err.message}`, 'error');
@@ -1795,6 +2311,7 @@ async function exchangeCodeForToken(code, verifier) {
     persistTokens();
     scheduleTokenRefresh();
     log('Kick OAuth tokens obtained.');
+    logKickWs('Kick OAuth tokens obtained.');
 }
 
 function scheduleTokenRefresh() {
@@ -1998,9 +2515,9 @@ function applyAuthenticatedProfile(profile, idsHint = null) {
         ],
         ''
     );
-    if (slug) {
-        setChannelSlug(slug, { source: 'profile' });
-    }
+    if (slug && !state.channelSlug) {
+		setChannelSlug(slug, { source: 'profile' });
+	}
     return profile;
 }
 
@@ -2265,20 +2782,41 @@ async function resolveChannelId(force = false) {
     if (!slugInput) throw new Error('Channel slug required.');
     const slugLower = normalizeChannel(slugInput);
     if (!force && state.channelId && state.lastResolvedSlug === slugLower) {
+        log(`Using cached channel ID: ${state.channelId} for slug: ${slugLower}`);
         return state.channelId;
     }
     const previousId = state.channelId;
     const previousSlug = state.lastResolvedSlug;
     const params = new URLSearchParams({ slug: slugLower });
+    log(`Resolving channel ID for slug: ${slugLower}`);
     const data = await apiFetch(`/public/v1/channels?${params.toString()}`);
     const entries = Array.isArray(data?.data) ? data.data : [];
     const channel = entries.find(item => normalizeChannel(item.slug) === slugLower) || entries[0];
     if (!channel?.broadcaster_user_id) {
+        log(`Channel API response: ${JSON.stringify(data)}`, 'warning');
         throw new Error('Unable to resolve channel user id.');
     }
+    const resolvedChatroomId =
+        channel?.chatroom_id ??
+        channel?.chatroom?.id ??
+        channel?.chatroomId ??
+        null;
+    const resolvedSocketChannelId =
+        channel?.channel_id ??
+        channel?.chatroom?.channel_id ??
+        channel?.channelId ??
+        channel?.id ??
+        null;
     state.channelId = channel.broadcaster_user_id;
     state.channelName = channel.slug || channel.channel_description || slugInput;
     state.lastResolvedSlug = slugLower;
+    if (resolvedChatroomId != null) {
+        state.socket.chatroomId = String(resolvedChatroomId);
+    }
+    if (resolvedSocketChannelId != null) {
+        state.socket.channelId = String(resolvedSocketChannelId);
+    }
+    log(`Resolved channel: ${state.channelName} (ID: ${state.channelId})`);
     updateInputsFromState();
     if (force || state.channelId !== previousId || previousSlug !== slugLower) {
         requestThirdPartyEmotes({ force: true });
@@ -2745,6 +3283,8 @@ function handleBridgeEvent(packet) {
     const body = packet.body || {};
     const type = packet.type || body?.event || 'unknown';
     const bridgeMeta = createBridgeMeta(packet);
+    const sourceLabel = packet.source === 'socket' ? 'Socket' : 'Bridge';
+    log(`${sourceLabel} event received: ${type} (channelId: ${state.channelId}, slug: ${state.channelSlug})`);
     const challenge = packet.challenge || body?.challenge;
     if (challenge) {
         const level = bridgeMeta?.verified === false ? 'warning' : 'info';
@@ -2761,12 +3301,12 @@ function handleBridgeEvent(packet) {
     if (!bridgeEventMatchesCurrentChannel(packet)) {
         if (!ignoredEventTypesLogged.has(type)) {
             ignoredEventTypesLogged.add(type);
-            log(`Ignoring ${type} for a different Kick channel.`, 'info');
+            log(`Ignoring ${type} for a different Kick channel (expected: ${state.channelId}/${state.channelSlug}).`, 'info');
         }
         return;
     }
     if (type === 'chat.message.sent') {
-        forwardChatMessage(body, bridgeMeta);
+        void forwardChatMessage(body, bridgeMeta);
         return;
     }
     if (type === 'channel.followed') {
@@ -2788,136 +3328,176 @@ function handleBridgeEvent(packet) {
     log(`Unhandled event: ${type}`);
 }
 
-function forwardChatMessage(evt, bridgeMeta) {
-    const payload = evt || {};
-    const message = payload.message || payload.data?.message || payload.payload?.message || payload;
-    const sender = payload.sender || payload.user || message?.sender || payload.profile || {};
-    if (!message) {
-        log('Chat event missing message payload.', 'warning');
-        return;
-    }
-    const profileSources = [
-        sender,
-        message?.sender,
-        payload.profile,
-        payload.user,
-        evt?.sender
-    ];
-    const { profile: actorProfile } = gatherProfileState(...profileSources);
-    const chatname =
-        actorProfile.displayName ||
-        pickDisplayName([
-            sender?.display_name,
-            sender?.username,
-            sender?.name,
-            message?.sender?.display_name,
-            message?.sender?.username,
-            payload.username
-        ]);
-    const content = extractMessageContent(message) || extractMessageContent(payload) || '';
-    const badgeCandidates = collectBadgesFromSources(...profileSources);
-    const rawBadges = (actorProfile.badges && actorProfile.badges.length) ? actorProfile.badges : badgeCandidates;
-    const badges = formatBadgesForDisplay(rawBadges);
-    const chatimg =
-        actorProfile.avatar ||
-        pickImage(
-            sender?.profile_picture,
-            sender?.profilePicture,
-            sender?.avatar,
-            message?.sender?.profile_picture,
-            message?.sender?.profilePicture,
-            message?.sender?.avatar
-        );
-    const fallbackColor = collectNameColorFromSources(...profileSources);
-    const nameColor = actorProfile.nameColor || fallbackColor || '';
-    const rawEventType =
-        message?.type ||
-        payload.event ||
-        payload.type ||
-        message?.event ||
-        message?.message_type ||
-        payload.message_type ||
-        payload.event_type ||
-        'chat';
-    const normalizedEvent = eventNameForType(rawEventType);
-    const messageId = message?.id || payload.message_id || payload.id || null;
-    const bridgeMessageId = bridgeMeta?.messageId || null;
-    const resolvedId = messageId ?? bridgeMessageId;
-    const chatmessageHtml = renderKickMessageHtml(message, content);
-    const membership = actorProfile.membership || pickFirstString(
-        [
-            sender?.membership,
-            sender?.membership_name,
-            sender?.membership?.name,
-            sender?.membership?.display_name,
-            sender?.subscription?.name,
-            payload?.membership,
-            payload?.membership_name,
-            message?.membership,
-            message?.membership_name
-        ],
-        ''
-    );
-    const isModerator =
-        actorProfile.isMod === true ||
-        sender?.is_moderator === true ||
-        sender?.moderator === true ||
-        (Array.isArray(sender?.roles) && sender.roles.some(
-            role => typeof role === 'string' && role.toLowerCase().includes('mod')
-        ));
-    const channelBranding = resolveChannelBranding();
-    const donationLabel = extractChatDonationLabel(message, payload);
-    const replyDetails = extractReplyDetails(message, payload);
-    const textOnlyMode = Boolean(isTextOnlyMode());
-    const allowReplies = !settings.excludeReplyingTo && (chatmessageHtml || content);
-    const messagePayload = {
-        type: 'kick',
-        chatname,
-        chatmessage: chatmessageHtml,
-        chatimg: chatimg || '',
-        chatbadges: badges,
-        nameColor: nameColor || '',
-        membership: membership || '',
-        hasDonation: donationLabel,
-        textonly: textOnlyMode
-    };
-    if (resolvedId != null) {
-        const normalizedId = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
-        messagePayload.id = normalizedId;
-    }
-    if (isModerator) {
-        messagePayload.mod = true;
-    }
-    if (actorProfile.isVip) {
-        messagePayload.vip = true;
-    }
-    if (channelBranding.sourceName) {
-        messagePayload.sourceName = channelBranding.sourceName;
-    }
-    if (channelBranding.sourceImg) {
-        messagePayload.sourceImg = channelBranding.sourceImg;
-    }
-    if (allowReplies && replyDetails) {
-        messagePayload.initial = replyDetails.label;
-        messagePayload.reply = chatmessageHtml;
-        if (textOnlyMode) {
-            const prefix = replyDetails.label ? `${replyDetails.label}: ` : '';
-            const baseText = content || '';
-            const combined = `${prefix}${baseText}`.trim();
-            messagePayload.chatmessage = combined || baseText || replyDetails.label || '';
-        } else if (replyDetails.label) {
-            const safeReply = escapeHtml(replyDetails.label);
-            messagePayload.chatmessage = `<i><small>${safeReply}:&nbsp;</small></i> ${chatmessageHtml}`;
+async function forwardChatMessage(evt, bridgeMeta) {
+    try {
+        const payload = evt || {};
+        const message = payload.message || payload.data?.message || payload.payload?.message || payload;
+        const sender = payload.sender || payload.user || message?.sender || payload.profile || {};
+        if (!message) {
+            log('Chat event missing message payload.', 'warning');
+            return;
         }
+        const rawMessageId = message?.id || payload.message_id || payload.id || null;
+        const bridgeMessageId = bridgeMeta?.messageId || null;
+        const resolvedId = rawMessageId ?? bridgeMessageId;
+        const profileSources = [
+            sender,
+            message?.sender,
+            payload.profile,
+            payload.user,
+            evt?.sender
+        ];
+        const { profile: actorProfile, ids } = gatherProfileState(...profileSources);
+        const chatname =
+            actorProfile.displayName ||
+            pickDisplayName([
+                sender?.display_name,
+                sender?.username,
+                sender?.name,
+                message?.sender?.display_name,
+                message?.sender?.username,
+                payload.username
+            ]);
+        const content = extractMessageContent(message) || extractMessageContent(payload) || '';
+        const badgeCandidates = collectBadgesFromSources(...profileSources);
+        const rawBadges = (actorProfile.badges && actorProfile.badges.length) ? actorProfile.badges : badgeCandidates;
+        const badges = formatBadgesForDisplay(rawBadges);
+        let chatimg =
+            actorProfile.avatar ||
+            pickImage(
+                sender?.profile_picture,
+                sender?.profilePicture,
+                sender?.avatar,
+                message?.sender?.profile_picture,
+                message?.sender?.profilePicture,
+                message?.sender?.avatar
+            );
+        const lookupUsername = pickFirstString(
+            [
+                sender?.username,
+                sender?.slug,
+                message?.sender?.username,
+                message?.sender?.slug,
+                payload?.username,
+                payload?.user?.username,
+                payload?.profile?.username,
+                ids?.username
+            ],
+            ''
+        );
+        if (!chatimg && lookupUsername) {
+            // Avatar lookup with timeout: don't block message delivery waiting for avatar.
+            // If timeout wins, message is sent without avatar; queueAvatarLookup continues
+            // in background and will call updateChatFeedAvatar to backfill when ready.
+            const avatarPromise = queueAvatarLookup(ids, lookupUsername, resolvedId);
+            if (avatarPromise) {
+                try {
+                    const resolvedAvatar = await Promise.race([
+                        avatarPromise,
+                        delay(AVATAR_LOOKUP_TIMEOUT_MS)
+                    ]);
+                    if (typeof resolvedAvatar === 'string' && resolvedAvatar.trim()) {
+                        chatimg = resolvedAvatar;
+                    }
+                } catch (_) {}
+            }
+        }
+        const fallbackColor = collectNameColorFromSources(...profileSources);
+        const nameColor = actorProfile.nameColor || fallbackColor || '';
+        const rawEventType =
+            message?.type ||
+            payload.event ||
+            payload.type ||
+            message?.event ||
+            message?.message_type ||
+            payload.message_type ||
+            payload.event_type ||
+            'chat';
+        const normalizedEvent = eventNameForType(rawEventType);
+        const chatmessageHtml = renderKickMessageHtml(message, content);
+        const membership = actorProfile.membership || pickFirstString(
+            [
+                sender?.membership,
+                sender?.membership_name,
+                sender?.membership?.name,
+                sender?.membership?.display_name,
+                sender?.subscription?.name,
+                payload?.membership,
+                payload?.membership_name,
+                message?.membership,
+                message?.membership_name
+            ],
+            ''
+        );
+        const isModerator =
+            actorProfile.isMod === true ||
+            sender?.is_moderator === true ||
+            sender?.moderator === true ||
+            (Array.isArray(sender?.roles) && sender.roles.some(
+                role => typeof role === 'string' && role.toLowerCase().includes('mod')
+            ));
+        const channelBranding = resolveChannelBranding();
+        const donationLabel = extractChatDonationLabel(message, payload);
+        const replyDetails = extractReplyDetails(message, payload);
+        const textOnlyMode = Boolean(isTextOnlyMode());
+        const allowReplies = !settings.excludeReplyingTo && (chatmessageHtml || content);
+        const messagePayload = {
+            type: 'kick',
+            chatname,
+            chatmessage: chatmessageHtml,
+            chatimg: chatimg || '',
+            chatbadges: badges,
+            nameColor: nameColor || '',
+            membership: membership || '',
+            hasDonation: donationLabel,
+            textonly: textOnlyMode
+        };
+        if (resolvedId != null) {
+            const normalizedId = typeof resolvedId === 'string' ? resolvedId : String(resolvedId);
+            messagePayload.id = normalizedId;
+        }
+        if (ids?.userId) {
+            messagePayload.userId = ids.userId;
+        }
+        if (lookupUsername) {
+            messagePayload.username = lookupUsername;
+        }
+        if (isModerator) {
+            messagePayload.mod = true;
+        }
+        if (actorProfile.isVip) {
+            messagePayload.vip = true;
+        }
+        if (channelBranding.sourceName) {
+            messagePayload.sourceName = channelBranding.sourceName;
+        }
+        if (channelBranding.sourceImg) {
+            messagePayload.sourceImg = channelBranding.sourceImg;
+        }
+        if (allowReplies && replyDetails) {
+            messagePayload.initial = replyDetails.label;
+            messagePayload.reply = chatmessageHtml;
+            if (textOnlyMode) {
+                const prefix = replyDetails.label ? `${replyDetails.label}: ` : '';
+                const baseText = content || '';
+                const combined = `${prefix}${baseText}`.trim();
+                messagePayload.chatmessage = combined || baseText || replyDetails.label || '';
+            } else if (replyDetails.label) {
+                const safeReply = escapeHtml(replyDetails.label);
+                messagePayload.chatmessage = `<i><small>${safeReply}:&nbsp;</small></i> ${chatmessageHtml}`;
+            }
+        }
+        // Chat messages should not be flagged as events; only propagate data.event for actual system-level items.
+        if (normalizedEvent && normalizedEvent !== 'message') {
+            messagePayload.event = normalizedEvent;
+        }
+        pushMessage(messagePayload);
+        appendChatFeedMessage(messagePayload, content);
+        const prefix = bridgeMeta?.verified === false ? '[CHAT ⚠]' : '[CHAT]';
+        log(`${prefix} ${chatname}: ${content || '[no text]'}`);
+    } catch (err) {
+        console.error('Failed to handle Kick chat message', err);
     }
-    // Chat messages should not be flagged as events; only propagate data.event for actual system-level items.
-    if (normalizedEvent && normalizedEvent !== 'message') {
-        messagePayload.event = normalizedEvent;
-    }
-    pushMessage(messagePayload);
-    appendChatFeedMessage(messagePayload, content);
-    const prefix = bridgeMeta?.verified === false ? '[CHAT ⚠]' : '[CHAT]';
-    log(`${prefix} ${chatname}: ${content || '[no text]'}`);
 }
 
 function resolveChannelBranding() {
@@ -3560,24 +4140,30 @@ async function sendChatMessage() {
 }
 
 function pushMessage(data) {
-    try {
-        if (extension.available) {
-            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function () {});
+    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
+    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+        try {
+            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function() {});
             return;
+        } catch (e) {
+            // Fall through to ninjafy
         }
-        if (window.ninjafy && window.ninjafy.sendMessage) {
-            window.ninjafy.sendMessage(null, { message: data }, null, extension.tabId);
+    }
+    // Fallback to ninjafy.sendMessage for Electron
+    if (window.ninjafy && window.ninjafy.sendMessage) {
+        try {
+            window.ninjafy.sendMessage(null, { message: data }, null, window.__SSAPP_TAB_ID__);
             return;
+        } catch (e) {
+            console.error('Error sending message:', e);
         }
-        if (typeof window !== 'undefined' && window.parent) {
-            const envelope = { source: 'socialstream', payload: data };
-            if (extension.tabId != null) {
-                envelope.__tabID__ = extension.tabId;
-            }
-            window.parent.postMessage(envelope, '*');
+    }
+    if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
+        try {
+            window.parent.postMessage({ message: data }, '*');
+        } catch (e) {
+            console.error('Error sending message to host:', e);
         }
-    } catch (err) {
-        console.error('Failed to push message', err);
     }
 }
 
@@ -3598,6 +4184,20 @@ function log(msg, level = 'info') {
     line.appendChild(span);
     els.eventLog.appendChild(line);
     els.eventLog.scrollTop = els.eventLog.scrollHeight;
+}
+
+function logKickWs(message, level = 'info') {
+    const text = `[KickWs] ${message}`;
+    log(text, level);
+    try {
+        if (level === 'error') {
+            console.error(text);
+        } else if (level === 'warning') {
+            console.warn(text);
+        } else {
+            console.log(text);
+        }
+    } catch (_) {}
 }
 
 function shouldStickChatFeed() {
@@ -3732,6 +4332,15 @@ function appendChatFeedMessage(message, plainText = '') {
 
     const line = document.createElement('div');
     line.className = 'chat-line';
+    if (message.id != null) {
+        line.dataset.messageId = String(message.id);
+    }
+    if (message.userId != null) {
+        line.dataset.userId = String(message.userId);
+    }
+    if (message.username) {
+        line.dataset.username = normalizeChannel(message.username);
+    }
 
     const avatar = document.createElement('div');
     avatar.className = 'chat-avatar';
@@ -3901,30 +4510,50 @@ async function createCodeChallenge(verifier) {
 }
 
 async function bootstrap() {
-    await kickCoreReady;
-    initElements();
-    initExtensionBridge();
-    updateBridgeState();
-    loadConfig();
-    applyDefaultConfig();
-    loadTokens();
-    loadEventTypesCache();
-    applyUrlParams();
-    updateInputsFromState();
-    updateAuthStatus();
-    bindEvents();
-    startViewerCountPolling();
-    if (state.tokens?.access_token) {
-        scheduleTokenRefresh();
-        await loadAuthenticatedProfile();
-        await maybeAutoStart();
-        await listSubscriptions();
+    logKickWs('Bootstrap start.');
+    try {
+        await kickCoreReady;
+    } catch (error) {
+        console.warn('[Kick] Kick core failed to load. Continuing with fallbacks.', error);
     }
-    await handleAuthCallback();
-    notifyLiteStatus('ready');
-    if (isLiteEmbedded()) {
-        sendLiteMessage('kick-lite-ready', { status: getLiteStatusSnapshot() });
+    applyKickCoreFallbacks();
+    try {
+        initElements();
+        initExtensionBridge();
+        updateBridgeState();
+        loadConfig();
+        applyDefaultConfig();
+        loadTokens();
+        loadEventTypesCache();
+        applyUrlParams();
+        updateInputsFromState();
+        updateAuthStatus();
+        bindEvents();
+        initLocalSocketBridge();
+        updateSocketState();
+        connectLocalSocket();
+        if (state.tokens?.access_token) {
+            scheduleTokenRefresh();
+            await loadAuthenticatedProfile();
+            await maybeAutoStart();
+            await listSubscriptions();
+        }
+        await handleAuthCallback();
+        notifyLiteStatus('ready');
+        if (isLiteEmbedded()) {
+            sendLiteMessage('kick-lite-ready', { status: getLiteStatusSnapshot() });
+        }
+        window.addEventListener('beforeunload', () => {
+            disconnectLocalSocket();
+        });
+    } catch (error) {
+        console.error('[Kick] Kick websocket bootstrap failed.', error);
+        logKickWs(`Bootstrap failed: ${error?.message || error}`, 'error');
     }
 }
 
-document.addEventListener('DOMContentLoaded', bootstrap);
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bootstrap);
+} else {
+    bootstrap();
+}

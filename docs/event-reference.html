@@ -448,6 +448,11 @@
                                 <td>Elements inside Twitch’s “Community Highlight” widget.</td>
                                 <td><code>meta</code> is the extracted highlight text for automation hooks.</td>
                             </tr>
+                            <tr>
+                                <td class="status-event"><code>knock</code></td>
+                                <td>Stream Together collaboration invites displayed above chat.</td>
+                                <td><code>chatmessage</code> contains the invite text; <code>chatname</code> is derived from the alert user when available.</td>
+                            </tr>
                         </tbody>
                     </table>
                     <p class="field-highlights">Bits/Cheers populate <code>hasDonation</code> (for example “500 bits”) even though <code>data.event</code> remains empty; rely on that field when rendering donation widgets. Subscriber streak information appears in <code>subtitle</code> when badges expose months.</p>

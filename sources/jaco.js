@@ -77,7 +77,7 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	  console.log(ele);
 	  try {
 		  try {
-			var chatname = escapeHtml(ele.childNodes[0].textContent.trim())
+			var chatname = escapeHtml(ele.querySelector(".comment-nickname").textContent.trim())
 			chatname = chatname.trim();
 		  } catch(e){
 			 return;
@@ -87,9 +87,8 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	  }
 	 
 	  if (!chatname){return;}
-	  
 	  try {
-		chatmessage = getAllContentNodes(ele.childNodes[1]);
+		chatmessage = getAllContentNodes(ele.querySelector(".comment-desc-con"));
 		chatmessage = chatmessage.trim();
 	  } catch(e){
 		  
@@ -111,6 +110,12 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	  var hasDonation = '';
 	  var chatimg = "";
 	  var chatbadges= [];
+	  
+	  try {
+		  chatimg = ele.querySelector(".comment-avatar img[src]").src
+	  } catch(e){
+		  
+	  }
 	 
 	  var data = {};
 	  data.chatname = chatname;
@@ -176,10 +181,12 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 					console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							if (mutation.addedNodes[i].nodeName.toLowerCase() !== "p"){continue;}
 							if (mutation.addedNodes[i].ignore){continue;}
 							mutation.addedNodes[i].ignore=true;
-							processMessage(mutation.addedNodes[i]);
+							
+							setTimeout(function(x){
+								processMessage(x);
+							},300, mutation.addedNodes[i]);
 								
 						} catch(e){}
 					}
@@ -197,13 +204,13 @@ async function fetchWithTimeout(URL, timeout=8000){ // ref: https://dmitripavlut
 	
 	var checkReady = setInterval(function(){
 		
-		var mainChat = document.querySelector(".chat-box");
+		var mainChat = document.querySelector(".chat-box .item-box");
 		if (mainChat){ // just in case 
 			console.log("Social Stream Start");
 			clearInterval(checkReady);
 			
 			setTimeout(function(){
-				var clear = document.querySelectorAll(".chat-box>p");
+				var clear = document.querySelectorAll(".chat-box .item-box");
 				for (var i = 0;i<clear.length;i++){
 					clear[i].ignore = true; // don't let already loaded messages to re-load.
 				}

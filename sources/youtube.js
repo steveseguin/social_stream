@@ -1094,6 +1094,9 @@
 		if (mod){
 			data.mod = mod;
 		}
+		if (member){
+			data.member = member;
+		}
 		data.subtitle = subtitle;
 		if (videoId){
 			data.videoid = videoId;

@@ -93,8 +93,8 @@
 			return;
 		}
 
-		
 		var chatimg = ""
+		
 
 		var name="";
 		try {
@@ -105,12 +105,15 @@
 		var namecolor="";
 		
 		var badges=[];
-		/* try {
-			ele.querySelectorAll("img[class^='ChatBadge_image_'][src]").forEach(badge=>{
+		try {
+			ele.querySelectorAll("img[src^='https://assets.velora.tv/badges'], img[src*='/velora-badges/']").forEach(badge=>{
+				badge.src = badge.src + "";
 				badges.push(badge.src);
 			});
+			
+			
 		} catch(e){
-		} */
+		} 
 
 		var msg="";
 		try {
@@ -278,7 +281,7 @@
 							if (addedNode.skip){continue;}
 
 							setTimeout(()=>{
-									processMessage(addedNode);
+								processMessage(addedNode);
 							},300);
 
 						} catch(e){
@@ -310,7 +313,7 @@
 		checking = setInterval(function(){
 			try {
 				var container = document.querySelector(".duration-300.rounded-none > .flex-1.overflow-y-auto.p-4.space-y-3.min-h-0");
-				if (!container && window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat"){
+				if (!container && window.location.href.startsWith("https://velora.tv/dashboard/stream/popout?")){
 					container = document.querySelector("body");
 				} 
 				
@@ -321,7 +324,7 @@
 
 					setTimeout(function(){
 						dataIndex = 0;
-						if (window.location.href === "https://velora.tv/dashboard/stream/popout?panels=chat"){
+						if (window.location.href.startsWith("https://velora.tv/dashboard/stream/popout?")){
 							onElementInserted(container, true);
 						} else {
 							onElementInserted(container);

@@ -220,14 +220,9 @@ export class KickPlugin extends BasePlugin {
     });
     apiRow.append(apiLabel, apiInput);
 
-    const bridgeHelper = document.createElement('p');
-    bridgeHelper.className = 'field__hint';
-    const bridgeLink = document.createElement('a');
-    bridgeLink.href = '../../sources/websocket/kick.html';
-    bridgeLink.target = '_blank';
-    bridgeLink.rel = 'noopener noreferrer';
-    bridgeLink.textContent = 'Open Kick webhook manager';
-    bridgeHelper.append('Sign in with Kick and manage webhook subscriptions using the ', bridgeLink, ' page.');
+    const connectionHelper = document.createElement('p');
+    connectionHelper.className = 'field__hint';
+    connectionHelper.textContent = 'Chat and events received via direct WebSocket. No sign-in required.';
 
     const chatroomRow = document.createElement('label');
     chatroomRow.className = 'field';
@@ -288,7 +283,7 @@ export class KickPlugin extends BasePlugin {
       storage.set(ADVANCED_VISIBLE_KEY, nextVisible ? '1' : '0');
     });
 
-    container.append(channelRow, bridgeHelper, advancedToggle, advancedGroup);
+    container.append(channelRow, connectionHelper, advancedToggle, advancedGroup);
     // Advanced inputs live inside the group so append after we set up toggle
     this.channelInput = channelInput;
     this.apiBaseInput = apiInput;
@@ -703,8 +698,8 @@ export class KickPlugin extends BasePlugin {
         this.detailsLabel.textContent = `Chatroom ID: ${chatroomDisplay}${sourceLabel}`;
       } else {
         this.detailsLabel.hidden = false;
-        const bridgeStatus = this.bridgeStatus || 'disconnected';
-        this.detailsLabel.textContent = `Bridge status: ${bridgeStatus}`;
+        const wsStatus = this.ws ? (this.ws.readyState === WebSocket.OPEN ? 'connected' : 'connecting') : 'disconnected';
+        this.detailsLabel.textContent = `WebSocket: ${wsStatus}`;
       }
     }
   }
@@ -815,14 +810,14 @@ export class KickPlugin extends BasePlugin {
       this.refreshStatus();
 
       await this.prepareEmotesForChannel(channel);
-      await this.ensureBridge();
       this.setState('connecting');
-      this.bridgeStatus = 'connecting';
       this.refreshStatus();
-      this.postBridgeMessage('kick-lite-set-config', { chatType: 'user' });
-      this.postBridgeMessage('kick-lite-set-channel', { slug: channel, force: true });
-      this.postBridgeMessage('kick-lite-connect', { force: true });
-      this.log(`Connecting to Kick channel ${channel} via webhook bridge.`);
+      this.connectWebsocket({
+        wsBase: DEFAULT_WS_BASE,
+        chatroomId: this.chatroomId,
+        channelId: this.channelNumericId
+      });
+      this.log(`Connecting to Kick channel ${channel} via direct WebSocket.`);
     } catch (err) {
       this.resetConnectionState();
       const error = err instanceof Error ? err : new Error(err?.message || String(err));
@@ -1807,7 +1802,7 @@ export class KickPlugin extends BasePlugin {
   }
 
   resetConnectionState() {
-    this.disconnectBridge();
+    this.disconnectWebsocket();
     this.chatroomId = null;
     this.channelNumericId = null;
     this.channelUserId = null;
