@@ -7511,6 +7511,34 @@ socketserver.addEventListener("message", async function (event) {
 				} else {
 					resp = selectRandomWaitlist();
 				}
+			} else if (data.action && data.action === "drawmode") {
+				const currentState = !!settings.drawmode;
+				let enable;
+
+				if (typeof data.value === "string") {
+					const normalized = data.value.toLowerCase();
+					if (normalized === "toggle") {
+						enable = !currentState;
+					} else if (["true", "1", "on", "yes", "enable", "enabled"].includes(normalized)) {
+						enable = true;
+					} else if (["false", "0", "off", "no", "disable", "disabled"].includes(normalized)) {
+						enable = false;
+					}
+				} else if (typeof data.value === "boolean") {
+					enable = data.value;
+				} else if (data.value == null) {
+					enable = !currentState;
+				} else {
+					enable = Boolean(data.value);
+				}
+				if (enable === undefined) {
+					enable = currentState;
+				}
+
+				settings.drawmode = enable;
+				chrome.storage.local.set({ settings: settings });
+				sendWaitlistConfig(null, true);
+				resp = { drawmode: enable };
 			} else if (data.action && data.action === "emoteonly") {
 				const currentState = !!(settings.emoteonlymode && (settings.emoteonlymode.setting ?? settings.emoteonlymode));
 				let enable;

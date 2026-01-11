@@ -129,6 +129,7 @@ For controlling SSN from StreamDeck, Bitfocus Companion, or similar tools, you o
 https://io.socialstream.ninja/SESSION_ID/nextInQueue
 https://io.socialstream.ninja/SESSION_ID/clearOverlay
 https://io.socialstream.ninja/SESSION_ID/sendEncodedChat/null/Hello%20World
+https://io.socialstream.ninja/SESSION_ID/drawmode/null/toggle
 ```
 
 **WebSocket commands:**
@@ -319,6 +320,7 @@ When a message is sent, it goes to the specified output channel. Those who have 
 
 14. **Draw Mode**
     - `{"action": "drawmode", "value": true}`
+    - `{"action": "drawmode", "value": "toggle"}`
 
 15. **Emote-only Filter**
     - Toggle or set the global emote-only mode that keeps only emotes/emoji from chat messages. Messages that become empty (and have no donation/content image) after filtering are dropped.
@@ -354,6 +356,12 @@ The server also supports HTTP GET, POST, and PUT requests for the same actions. 
 - GET: `https://io.socialstream.ninja/SESSION_ID/ACTION/TARGET/VALUE`
 - POST/PUT: `https://io.socialstream.ninja/SESSION_ID` (with JSON body)
 - POST/PUT: `https://io.socialstream.ninja/SESSION_ID/ACTION` (with JSON body)
+
+If your action needs a value but no target, use `null` as the target placeholder:
+```
+https://io.socialstream.ninja/SESSION_ID/drawmode/null/true
+https://io.socialstream.ninja/SESSION_ID/drawmode/null/toggle
+```
 
 ### Channel Parameter
 
@@ -815,6 +823,7 @@ The extension processes various API actions, including:
 8. `stopentries`: Stops accepting new entries.
 9. `downloadwaitlist`: Initiates a download of the waitlist.
 10. `selectwinner`: Selects a random winner from the waitlist.
+11. `drawmode`: Toggles draw mode for giveaways/waitlists.
 
 .. and most actions that targets the dock can be sent via the extension API or other overlays.
 
