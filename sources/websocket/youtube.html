@@ -24,6 +24,19 @@
             <div class="auth-section">
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
                 <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
+                <div id="auth-method-selector" class="auth-method-selector hidden">
+                    <label class="auth-method-label">Sign-in method:</label>
+                    <div class="auth-method-options">
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-auth-method" value="external" checked>
+                            <span>External browser</span>
+                        </label>
+                        <label class="auth-method-option">
+                            <input type="radio" name="yt-auth-method" value="local">
+                            <span>Local app</span>
+                        </label>
+                    </div>
+                </div>
             </div>
                     
                     <div class="landing-description">
@@ -3227,12 +3240,33 @@ function enableBackgroundKeepAlive() {
 			signOutButton.addEventListener('click', signOut);
 			registerCleanup(() => signOutButton.removeEventListener('click', signOut));
 		}
+		// Auth method selector setup
+		const authMethodSelector = document.getElementById('auth-method-selector');
+		const isElectron = isElectronEnvironment() && window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function';
+		if (authMethodSelector && isElectron) {
+			authMethodSelector.classList.remove('hidden');
+			// Load saved preference
+			const savedMethod = localStorage.getItem('ytAuthMethod') || 'external';
+			const radios = authMethodSelector.querySelectorAll('input[name="yt-auth-method"]');
+			radios.forEach(radio => {
+				radio.checked = radio.value === savedMethod;
+				radio.addEventListener('change', function() {
+					localStorage.setItem('ytAuthMethod', this.value);
+				});
+			});
+		}
+
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
 			const authHandler = function(e) {
 				e.preventDefault();
-				if (isElectronEnvironment() && window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function') {
-					startExternalAuthFlow();
+				if (isElectron) {
+					const authMethod = localStorage.getItem('ytAuthMethod') || 'external';
+					if (authMethod === 'external') {
+						startExternalAuthFlow();
+					} else {
+						window.location.href = authUrl();
+					}
 				} else {
 					window.location.href = authUrl();
 				}

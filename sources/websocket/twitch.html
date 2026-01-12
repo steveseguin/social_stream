@@ -33,6 +33,39 @@
         .sign-out-button:hover {
             background-color: #d32f2f;
         }
+        .auth-method-selector {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: rgba(0, 0, 0, 0.04);
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .auth-method-label {
+            display: block;
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        .auth-method-options {
+            display: flex;
+            gap: 16px;
+        }
+        .auth-method-option {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #333;
+        }
+        .auth-method-option input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+        }
+        .auth-method-option span {
+            user-select: none;
+        }
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -246,6 +279,19 @@
         <div class="main-content">
             <div class="auth text-center">
                 <a id="auth-link" class="auth-button">Sign in to Twitch</a>
+                <div id="auth-method-selector" class="auth-method-selector hidden">
+                    <label class="auth-method-label">Sign-in method:</label>
+                    <div class="auth-method-options">
+                        <label class="auth-method-option">
+                            <input type="radio" name="twitch-auth-method" value="external" checked>
+                            <span>External browser</span>
+                        </label>
+                        <label class="auth-method-option">
+                            <input type="radio" name="twitch-auth-method" value="local">
+                            <span>Local app</span>
+                        </label>
+                    </div>
+                </div>
             </div>
             
             <div class="hidden socket">

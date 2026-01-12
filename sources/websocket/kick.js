@@ -1945,6 +1945,22 @@ function updateAuthStatus() {
 }
 
 function bindEvents() {
+    // Auth method selector setup
+    const authMethodSelector = document.getElementById('auth-method-selector');
+    const isElectron = isElectronEnvironment();
+    if (authMethodSelector && isElectron) {
+        authMethodSelector.classList.remove('hidden');
+        // Load saved preference
+        const savedMethod = localStorage.getItem('kickAuthMethod') || 'external';
+        const radios = authMethodSelector.querySelectorAll('input[name="kick-auth-method"]');
+        radios.forEach(radio => {
+            radio.checked = radio.value === savedMethod;
+            radio.addEventListener('change', function() {
+                localStorage.setItem('kickAuthMethod', this.value);
+            });
+        });
+    }
+
     if (els.startAuth) {
         logKickWs('Binding sign-in click handler.');
         els.startAuth.addEventListener('click', () => {
@@ -2165,9 +2181,13 @@ async function disconnectLocalSocket() {
 
 async function startAuthFlow() {
     logKickWs('Sign-in clicked.');
-    // Use external browser auth if in Electron
+    // Use external browser auth if in Electron and user prefers it
     if (isElectronEnvironment()) {
-        return startExternalAuthFlow();
+        const authMethod = localStorage.getItem('kickAuthMethod') || 'external';
+        if (authMethod === 'external') {
+            return startExternalAuthFlow();
+        }
+        // Fall through to local redirect auth
     }
 
     if (!state.clientId) {
