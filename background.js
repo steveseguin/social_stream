@@ -8375,10 +8375,7 @@ function processHype(data) { // data here should be a chat message
         users[sourceType] = site;
         hype[sourceType] = 1;
 		newSource = true;
-    } else if (!(sourceType in hype)){
-		hype[sourceType] = 0;
-		newSource = true;
-	}
+    }
     
 	if (newSource){
 		const combinedData = combineHypeData();
@@ -10254,6 +10251,14 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 	                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, zoomFakeChat, throttleProfile, throttleOptions);
 	                markAutoForTabIfNeeded();
 	                return;
+				} else if (tab.url.startsWith("https://x.com/home")) {
+	                storeMessageForTab(data.response);
+	                // X.com requires Ctrl+Enter (Windows/Linux) or Cmd+Enter (Mac) to post
+	                // Also needs a priming Enter to activate the editor on first interaction
+	                const xModifier = getPlatformSubmitModifier();
+	                await attachAndChat(tab.id, data.response, false, true, false, false, overrideTimeout, undefined, throttleProfile, throttleOptions, xModifier, true);
+	                markAutoForTabIfNeeded();
+	                return;
 	            } else {
 	                // Generic handler
 	                if (tab.url.includes("youtube.com/live_chat")) {
@@ -10568,7 +10573,9 @@ async function attachAndChat(
   overrideTimeout,
   chatFunction = generalFakeChat,
   throttleProfile = null,
-  throttleOptions = null
+  throttleOptions = null,
+  modifierKey = null,  // 'ctrl', 'meta', or null - used for platforms requiring Ctrl+Enter or Cmd+Enter
+  primingEnter = false // Send plain Enter before text to activate/prime the editor (e.g., for X.com)
 ) {
     await new Promise((resolve, reject) => {
         safeDebuggerAttach(tabId, "1.3", (error) => {
@@ -10591,7 +10598,9 @@ async function attachAndChat(
         delayedPress,
         overrideTimeout,
         throttleProfile,
-        throttleOptions
+        throttleOptions,
+        modifierKey,
+        primingEnter
       )
     );
 }
@@ -11030,6 +11039,22 @@ const KEY_EVENTS = {
   }
 };
 
+// Chrome DevTools Protocol modifier bit flags
+const MODIFIER_KEYS = {
+  alt: 1,
+  ctrl: 2,
+  meta: 4,  // Cmd on Mac
+  shift: 8
+};
+
+// Detect platform and return appropriate submit modifier key
+function getPlatformSubmitModifier() {
+  const isMac = (typeof navigator !== 'undefined') && 
+                (navigator.platform?.toLowerCase().includes('mac') || 
+                 navigator.userAgent?.toLowerCase().includes('mac'));
+  return isMac ? 'meta' : 'ctrl';
+}
+
 async function sendKeyEvent(tabId, type, keyConfig) {
   await chrome.debugger.sendCommand(
     { tabId },
@@ -11106,7 +11131,9 @@ async function generalFakeChat(
   delayedPress = false,
   overrideTimeout = false,
   throttleProfile = null,
-  throttleOptions = null
+  throttleOptions = null,
+  modifierKey = null,  // 'ctrl', 'meta', or null - used for platforms requiring Ctrl+Enter or Cmd+Enter
+  primingEnter = false // Send plain Enter before text to activate/prime the editor (e.g., for X.com)
 ) {
   const normalizedTimeout = typeof overrideTimeout === "number" ? overrideTimeout : 0;
   const resolvedProfile = resolveThrottleProfile(tabId, throttleProfile, normalizedTimeout);
@@ -11135,7 +11162,9 @@ async function generalFakeChat(
         middle,
         keypress,
         backspace,
-        delayedPress
+        delayedPress,
+        modifierKey,
+        primingEnter
       },
       queueOptions
     );
@@ -11146,13 +11175,15 @@ async function generalFakeChat(
     middle,
     keypress,
     backspace,
-    delayedPress
+    delayedPress,
+    modifierKey,
+    primingEnter
   });
 }
 
 async function performGeneralFakeChatSend(
   tabId,
-  { message, middle = true, keypress = true, backspace = false, delayedPress = false }
+  { message, middle = true, keypress = true, backspace = false, delayedPress = false, modifierKey = null, primingEnter = false }
 ) {
   try {
     await new Promise((resolve, reject) => {
@@ -11213,26 +11244,40 @@ async function performGeneralFakeChatSend(
 
     await insertText(tabId, message);
 
+    // Build Enter key event with optional modifier (e.g., Ctrl+Enter for X.com)
+    const enterKeyEvent = modifierKey && MODIFIER_KEYS[modifierKey]
+      ? { ...KEY_EVENTS.ENTER, modifiers: MODIFIER_KEYS[modifierKey] }
+      : KEY_EVENTS.ENTER;
+
+    // For platforms like X.com that need activation, send the submit key twice
+    // First press activates/primes the editor, second press actually submits
+    if (primingEnter) {
+      await sendKeyEvent(tabId, "keyDown", enterKeyEvent);
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      await sendKeyEvent(tabId, "keyUp", enterKeyEvent);
+      await new Promise((resolve) => setTimeout(resolve, 100)); // Delay before second press
+    }
+
     if (keypress) {
-      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+      await sendKeyEvent(tabId, "keyDown", enterKeyEvent);
       await new Promise((resolve) => setTimeout(resolve, 10));
     }
 
     if (middle) {
-      await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+      await sendKeyEvent(tabId, "char", { ...enterKeyEvent, text: "\r" });
     }
 
     if (keypress) {
-      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+      await sendKeyEvent(tabId, "keyUp", enterKeyEvent);
     }
 
     if (delayedPress) {
-      await sendKeyEvent(tabId, "keyDown", KEY_EVENTS.ENTER);
+      await sendKeyEvent(tabId, "keyDown", enterKeyEvent);
       await new Promise((resolve) => setTimeout(resolve, 500));
       if (middle) {
-        await sendKeyEvent(tabId, "char", { ...KEY_EVENTS.ENTER, text: "\r" });
+        await sendKeyEvent(tabId, "char", { ...enterKeyEvent, text: "\r" });
       }
-      await sendKeyEvent(tabId, "keyUp", KEY_EVENTS.ENTER);
+      await sendKeyEvent(tabId, "keyUp", enterKeyEvent);
     }
 
     await delayedDetach(tabId);

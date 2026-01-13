@@ -2997,6 +2997,7 @@
 			var html = document.documentElement;
 			var mainOutputWindow = getById("output");
 			var fileStream, writer; // streaming message writer
+			var electronSavePath = null; // Electron-specific save path for immediate prompting
 			var newFileHandle = false; // single message writer
 			var singlewriter = false;
 			var odd = false;
@@ -4573,7 +4574,11 @@
 
 			if (urlParams.has("save")) {
 				encode = TextEncoder.prototype.encode.bind(new TextEncoder());
-				setupSaveToDisk();
+				if (window.ninjafy && window.ninjafy.showSaveDialog) {
+					setupElectronSave(); // Prompt immediately in Electron
+				} else {
+					setupSaveToDisk(); // Use StreamSaver in browser
+				}
 			}
 
 			if (urlParams.has("savesingle")) {
@@ -9044,17 +9049,18 @@
 						data.chatmessage = "";
 					}
 
-					if (writer && isStreamSetup) {
+					if (electronSavePath && isStreamSetup) {
+						// Electron: use IPC to append to file
 						try {
-							const date = new Date().toLocaleString("en-US", { 
-								hour: "numeric", 
-								minute: "numeric", 
-								second: "numeric", 
-								hour12: true 
+							const date = new Date().toLocaleString("en-US", {
+								hour: "numeric",
+								minute: "numeric",
+								second: "numeric",
+								hour12: true
 							});
-							
+
 							const extra = saveimg ? `\t${data.chatimg || ""}` : "";
-							
+
 							let text;
 							if ("sentiment" in data) {
 								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\t${data.sentiment || ""}\n`;
@@ -9063,7 +9069,32 @@
 							} else {
 								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\n`;
 							}
-							
+
+							window.ninjafy.appendToFile(electronSavePath, text);
+						} catch (err) {
+							console.error("Electron write failed:", err);
+						}
+					} else if (writer && isStreamSetup) {
+						// Browser: use StreamSaver
+						try {
+							const date = new Date().toLocaleString("en-US", {
+								hour: "numeric",
+								minute: "numeric",
+								second: "numeric",
+								hour12: true
+							});
+
+							const extra = saveimg ? `\t${data.chatimg || ""}` : "";
+
+							let text;
+							if ("sentiment" in data) {
+								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\t${data.sentiment || ""}\n`;
+							} else if ("karma" in data) {
+								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\t${data.karma || ""}\n`;
+							} else {
+								text = `${data.chatname || ""}\t${data.chatmessage || ""}\t${showType || ""}\t${date}${extra}\n`;
+							}
+
 							writer.write(encode(text));
 						} catch (err) {
 							console.error("Write failed:", err);
@@ -10250,15 +10281,32 @@
 			
 			function setupSaveToDisk() {
 				if (isStreamSetup) return;
-				
+
 				const script = document.createElement("script");
 				script.onload = initializeStream;
 				script.onerror = () => console.error("Failed to load StreamSaver");
 				script.src = "./thirdparty/StreamSaver.js";
 				document.head.appendChild(script);
 			}
-			
-			
+
+			async function setupElectronSave() {
+				if (isStreamSetup) return;
+				try {
+					const filePath = await window.ninjafy.showSaveDialog({
+						title: 'Save Chat Messages',
+						defaultPath: `chat_${Date.now()}.tsv`,
+						filters: [{ name: 'TSV Files', extensions: ['tsv'] }]
+					});
+					if (filePath) {
+						electronSavePath = filePath;
+						isStreamSetup = true;
+					}
+				} catch (err) {
+					console.error("Failed to setup Electron save:", err);
+				}
+			}
+
+
 			function initializeStream() {
 				try {
 					if (!fileStream) {
