@@ -74,12 +74,20 @@
     console.log("enabledSSN :" + enabledSSN);
 
     if (enabledSSN) {
-        var autoGrabTweets = localStorage.getItem('autoGrabTweets') === 'true';
+        var allowposting = localStorage.getItem('allowposting') === 'true';
+        console.log("allowposting :" + allowposting);
+		
+		var autoGrabTweets = localStorage.getItem('autoGrabTweets') === 'true';
         console.log("autoGrabTweets :" + autoGrabTweets);
     } else {
         var autoGrabTweets = false;
         localStorage.setItem('autoGrabTweets', "false");
+		
+		var allowposting = false;
+        localStorage.setItem('allowposting', "false");
+		
     }
+	
 
     var blockingAds = localStorage.getItem('blockingAds') === 'true';
 
@@ -100,6 +108,10 @@
 					
 				}
 				if ("focusChat" == request) { // if (prev.querySelector('[id^="message-username-"]')){ //slateTextArea-
+					if (allowposting){
+						document.querySelector('[contenteditable="true"][tabindex="0"]').focus();
+						sendResponse(true);
+					}
                     return;
                 }
                 if (typeof request === "object") {
@@ -661,9 +673,50 @@
             if (!isExtensionOn || !enabledSSN || !settings.xcapture) {
                 button3.style.display = "none";
             }
+			
+			button.parentNode.insertBefore(button3, button.nextSibling);
+			document.getElementById("grabmodebutton").style.backgroundColor = "#6254af";
+			
+			var button4 = button.cloneNode(true);
+            button4.onclick = function() {
+                event.preventDefault();
+                allowposting = !allowposting;
+                console.log("switch to allow posting: " + allowposting.toString());
 
-            button.parentNode.insertBefore(button3, button.nextSibling);
-            document.getElementById("grabmodebutton").style.backgroundColor = "#6254af";
+                localStorage.setItem('allowposting', allowposting.toString());
+                if (!allowposting) {
+                    this.querySelector("div").innerText = "Allow posting";
+                    document.querySelectorAll(".btn-push-twitter").forEach(ele => {
+                        ele.style.display = "inline-block";
+                    });
+
+
+                } else {
+
+                    this.querySelector("div").innerText = "Read-only";
+
+                    document.querySelectorAll(".btn-push-twitter").forEach(ele => {
+                        ele.click();
+                        ele.style.display = "none";
+                    });
+
+                }
+                return false;
+            };
+
+            button4.id = "allowpostingbutton";
+            if (!allowposting) {
+                button4.querySelector("a > div").innerHTML = "Allow posting";
+            } else {
+                button4.querySelector("a > div").innerHTML = "Read-only";
+            }
+
+            if (!isExtensionOn || !enabledSSN || !settings.xcapture) {
+                button4.style.display = "none";
+            }
+
+            button.parentNode.insertBefore(button4, button.nextSibling);
+            document.getElementById("allowpostingbutton").style.backgroundColor = "#54af62";
             var button2 = button.cloneNode(true);
             button2.onclick = function() {
                 event.preventDefault();

@@ -430,12 +430,33 @@ try{
 			signOutButton.addEventListener('click', signOut);
 		}
 
+		// Auth method selector setup
+		const authMethodSelector = document.getElementById('auth-method-selector');
+		const isElectron = isElectronEnvironment();
+		if (authMethodSelector && isElectron) {
+			authMethodSelector.classList.remove('hidden');
+			// Load saved preference
+			const savedMethod = localStorage.getItem('twitchAuthMethod') || 'external';
+			const radios = authMethodSelector.querySelectorAll('input[name="twitch-auth-method"]');
+			radios.forEach(radio => {
+				radio.checked = radio.value === savedMethod;
+				radio.addEventListener('change', function() {
+					localStorage.setItem('twitchAuthMethod', this.value);
+				});
+			});
+		}
+
 		const authLink = document.getElementById('auth-link');
 		if (authLink) {
 			authLink.addEventListener('click', function(e) {
 				e.preventDefault();
-				if (isElectronEnvironment()) {
-					startExternalTwitchAuthFlow();
+				if (isElectron) {
+					const authMethod = localStorage.getItem('twitchAuthMethod') || 'external';
+					if (authMethod === 'external') {
+						startExternalTwitchAuthFlow();
+					} else {
+						window.location.href = authUrl();
+					}
 				} else {
 					window.location.href = authUrl();
 				}

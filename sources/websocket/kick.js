@@ -190,6 +190,10 @@ let cachedEventTypes = null;
 let cachedEventTypesFetchedAt = 0;
 let eventTypesUnavailableUntil = 0;
 
+// Queue for events that arrive before channelId is resolved
+const pendingBridgeEvents = [];
+const MAX_PENDING_EVENTS = 50;
+
 function getTabId() {
     return typeof window !== 'undefined' && typeof window.__SSAPP_TAB_ID__ !== 'undefined'
         ? window.__SSAPP_TAB_ID__
@@ -1536,6 +1540,7 @@ function initElements() {
     Object.assign(els, {
         authState: q('auth-state'),
         startAuth: q('start-auth'),
+        signOut: q('sign-out'),
         channelLabel: q('channel-label'),
         eventLog: q('event-log'),
         chatFeed: q('chat-feed'),
@@ -1751,6 +1756,24 @@ function persistTokens() {
     logKickWs('Saved Kick OAuth tokens to storage.');
 }
 
+function signOut() {
+    // Clear tokens
+    state.tokens = null;
+    state.authUser = null;
+    if (state.refreshTimer) {
+        clearTimeout(state.refreshTimer);
+        state.refreshTimer = null;
+    }
+    persistTokens();
+    // Update UI
+    updateAuthStatus();
+    if (els.subscriptionSummary) {
+        els.subscriptionSummary.textContent = 'Subscriptions pending';
+        els.subscriptionSummary.className = 'status-chip warning';
+    }
+    log('Signed out of Kick.');
+}
+
 function persistEventTypesCache() {
     try {
         const payload = {
@@ -1900,6 +1923,13 @@ function updateAuthStatus() {
         els.authState.textContent = authed ? 'Signed in' : 'Not signed in';
     }
     els.authState.className = authed ? 'status-chip' : 'status-chip warning';
+    // Show/hide sign in and sign out buttons based on auth state
+    if (els.startAuth) {
+        els.startAuth.style.display = authed ? 'none' : '';
+    }
+    if (els.signOut) {
+        els.signOut.style.display = authed ? '' : 'none';
+    }
     const status = authed ? 'authorized' : 'signin_required';
     if (status !== lastAuthNotifyStatus) {
         lastAuthNotifyStatus = status;
@@ -1915,6 +1945,22 @@ function updateAuthStatus() {
 }
 
 function bindEvents() {
+    // Auth method selector setup
+    const authMethodSelector = document.getElementById('auth-method-selector');
+    const isElectron = isElectronEnvironment();
+    if (authMethodSelector && isElectron) {
+        authMethodSelector.classList.remove('hidden');
+        // Load saved preference
+        const savedMethod = localStorage.getItem('kickAuthMethod') || 'external';
+        const radios = authMethodSelector.querySelectorAll('input[name="kick-auth-method"]');
+        radios.forEach(radio => {
+            radio.checked = radio.value === savedMethod;
+            radio.addEventListener('change', function() {
+                localStorage.setItem('kickAuthMethod', this.value);
+            });
+        });
+    }
+
     if (els.startAuth) {
         logKickWs('Binding sign-in click handler.');
         els.startAuth.addEventListener('click', () => {
@@ -1923,6 +1969,9 @@ function bindEvents() {
         });
     } else {
         logKickWs('Sign-in button not found in DOM.', 'warning');
+    }
+    if (els.signOut) {
+        els.signOut.addEventListener('click', signOut);
     }
     if (els.chatType) {
         els.chatType.addEventListener('change', () => {
@@ -1960,10 +2009,11 @@ function supportsLocalSocket() {
 function updateSocketState(payload = {}) {
     if (!els.socketState) return;
     if (!supportsLocalSocket()) {
-        els.socketState.textContent = 'Chat socket unavailable';
-        els.socketState.className = 'status-chip warning';
+        // Hide socket status in browser - it's only relevant for desktop app
+        els.socketState.style.display = 'none';
         return;
     }
+    els.socketState.style.display = '';
     const status = state.socket?.status || 'disconnected';
     let label = 'Chat socket disconnected';
     let className = 'status-chip danger';
@@ -2131,9 +2181,13 @@ async function disconnectLocalSocket() {
 
 async function startAuthFlow() {
     logKickWs('Sign-in clicked.');
-    // Use external browser auth if in Electron
+    // Use external browser auth if in Electron and user prefers it
     if (isElectronEnvironment()) {
-        return startExternalAuthFlow();
+        const authMethod = localStorage.getItem('kickAuthMethod') || 'external';
+        if (authMethod === 'external') {
+            return startExternalAuthFlow();
+        }
+        // Fall through to local redirect auth
     }
 
     if (!state.clientId) {
@@ -2673,7 +2727,8 @@ function getSubscriptionEventName(entry) {
         }
         return '';
     };
-    return (
+    // Try direct fields first
+    let result = (
         tryValue(entry.event) ||
         tryValue(entry.name) ||
         tryValue(entry.event_name) ||
@@ -2686,6 +2741,11 @@ function getSubscriptionEventName(entry) {
         tryValue(entry.subscription) ||
         ''
     );
+    // Try nested events array (Kick may return events as array)
+    if (!result && Array.isArray(entry.events) && entry.events.length > 0) {
+        result = tryValue(entry.events[0]);
+    }
+    return result;
 }
 
 function formatEventLabel(name) {
@@ -2821,6 +2881,8 @@ async function resolveChannelId(force = false) {
     if (force || state.channelId !== previousId || previousSlug !== slugLower) {
         requestThirdPartyEmotes({ force: true });
     }
+    // Replay any events that were queued before channel resolution
+    replayPendingBridgeEvents();
     return state.channelId;
 }
 
@@ -2899,9 +2961,16 @@ function renderSubscriptions(items) {
     }
 
     if (!eventNames.length) {
+        // Even if we can't parse event names, show count of relevant subscriptions
+        if (relevant.length > 0) {
+            summary.textContent = `Subscriptions active (${relevant.length})`;
+            summary.className = 'status-chip';
+            summary.title = `${relevant.length} subscription(s) registered for this channel.`;
+            return;
+        }
         summary.textContent = 'Waiting for Kick';
         summary.className = 'status-chip warning';
-        summary.title = 'Kick returned webhooks, but none are tied to this channel yet. This usually resolves once Kick finishes provisioning. Remove old Kick webhooks if the message persists.';
+        summary.title = 'Kick returned webhooks, but none are tied to this channel yet. This usually resolves once Kick finishes provisioning.';
         return;
     }
 
@@ -3278,13 +3347,15 @@ function updateBridgeState() {
     notifyLiteStatus('bridge');
 }
 
-function handleBridgeEvent(packet) {
+function processBridgeEvent(packet, isReplay = false) {
     if (!packet) return;
     const body = packet.body || {};
     const type = packet.type || body?.event || 'unknown';
     const bridgeMeta = createBridgeMeta(packet);
     const sourceLabel = packet.source === 'socket' ? 'Socket' : 'Bridge';
-    log(`${sourceLabel} event received: ${type} (channelId: ${state.channelId}, slug: ${state.channelSlug})`);
+    if (!isReplay) {
+        log(`${sourceLabel} event received: ${type} (channelId: ${state.channelId}, slug: ${state.channelSlug})`);
+    }
     const challenge = packet.challenge || body?.challenge;
     if (challenge) {
         const level = bridgeMeta?.verified === false ? 'warning' : 'info';
@@ -3295,7 +3366,7 @@ function handleBridgeEvent(packet) {
         log('Bridge event missing type field.', 'warning');
         return;
     }
-    if (bridgeMeta?.verified === false) {
+    if (bridgeMeta?.verified === false && !isReplay) {
         log(`Received unverified webhook event: ${type}`, 'warning');
     }
     if (!bridgeEventMatchesCurrentChannel(packet)) {
@@ -3326,6 +3397,30 @@ function handleBridgeEvent(packet) {
         return;
     }
     log(`Unhandled event: ${type}`);
+}
+
+function handleBridgeEvent(packet) {
+    if (!packet) return;
+    // If channelId is not yet resolved and we have a slug, queue the event
+    if (state.channelId == null && state.channelSlug) {
+        const type = packet.type || packet.body?.event || 'unknown';
+        if (pendingBridgeEvents.length < MAX_PENDING_EVENTS) {
+            pendingBridgeEvents.push(packet);
+            log(`Queued ${type} event (waiting for channel resolution)`);
+        }
+        return;
+    }
+    processBridgeEvent(packet, false);
+}
+
+function replayPendingBridgeEvents() {
+    if (!pendingBridgeEvents.length) return;
+    const count = pendingBridgeEvents.length;
+    log(`Replaying ${count} queued event(s) after channel resolution`);
+    while (pendingBridgeEvents.length > 0) {
+        const packet = pendingBridgeEvents.shift();
+        processBridgeEvent(packet, true);
+    }
 }
 
 async function forwardChatMessage(evt, bridgeMeta) {

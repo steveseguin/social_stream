@@ -67,6 +67,36 @@
             align-items: center;
             gap: 14px;
         }
+        .auth-method-selector {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 14px;
+            background: rgba(78, 242, 135, 0.08);
+            border: 1px solid rgba(78, 242, 135, 0.2);
+            border-radius: 8px;
+        }
+        .auth-method-label {
+            font-size: 12px;
+            color: rgba(244, 244, 244, 0.7);
+            font-weight: 500;
+        }
+        .auth-method-option {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #f4f4f4;
+        }
+        .auth-method-option input[type="radio"] {
+            margin: 0;
+            cursor: pointer;
+            accent-color: var(--kick-green);
+        }
+        .auth-method-option span {
+            user-select: none;
+        }
         .hero-status {
             display: flex;
             flex-wrap: wrap;
@@ -350,7 +380,19 @@
                 <p>Sign in with Kick to enable webhook alerts (subs/follows/tips). In the desktop app, chat can also connect directly through Kick’s realtime socket.</p>
                 <div class="hero-actions">
                     <button id="start-auth">Sign in with Kick</button>
+                    <button id="sign-out" class="button-secondary">Sign out</button>
                     <span id="auth-state" class="status-chip warning">Not signed in</span>
+                    <div id="auth-method-selector" class="auth-method-selector hidden">
+                        <span class="auth-method-label">Sign-in method:</span>
+                        <label class="auth-method-option">
+                            <input type="radio" name="kick-auth-method" value="external" checked>
+                            <span>External browser</span>
+                        </label>
+                        <label class="auth-method-option">
+                            <input type="radio" name="kick-auth-method" value="local">
+                            <span>Local app</span>
+                        </label>
+                    </div>
                 </div>
                 <div class="hero-status">
                     <span id="channel-label" class="status-note">Channel: <span class="status-subtle">—</span></span>
