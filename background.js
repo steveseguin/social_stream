@@ -438,9 +438,14 @@ if (typeof chrome.runtime == "undefined") {
 	};
 	chrome.storage = {};
 	chrome.storage.sync = {};
-	chrome.storage.sync.set = function (data) {
+	chrome.storage.sync.set = function (data, callback) {
 		ipcRenderer.sendSync("storageSave", data);
 		log("ipcRenderer.sendSync('storageSave',data);");
+		if (typeof callback === "function") {
+			try {
+				setTimeout(() => callback(), 0);
+			} catch (_) { }
+		}
 	};
 	chrome.storage.sync.get = function (arg, callback) {
 		// Support both callback and promise-based usage
