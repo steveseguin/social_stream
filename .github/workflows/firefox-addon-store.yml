@@ -80,8 +80,7 @@ jobs:
             --api-secret "$AMO_JWT_SECRET" \
             --channel "$WEB_EXT_CHANNEL" \
             --source-dir "$FIREFOX_BUILD_DIR" \
-            --artifacts-dir "$ARTIFACTS_DIR" \
-            --use-submission-api; do
+            --artifacts-dir "$ARTIFACTS_DIR"; do
             if (( attempt >= max_attempts )); then
               echo "web-ext sign failed after ${attempt} attempts" >&2
               break
