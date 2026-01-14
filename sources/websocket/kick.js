@@ -1999,7 +1999,15 @@ function getBridgeBaseUrl() {
 }
 
 function isElectronEnvironment() {
-    return !!(window.ninjafy && typeof window.ninjafy.startKickOAuth === 'function');
+    // Check for ssapp URL parameter (set by ssapp when creating WSS windows)
+    // This is backwards compatible - older ssapp versions won't set the param,
+    // but will still work via the ninjafy check for full preload scenarios
+    const urlParams = new URLSearchParams(window.location.search);
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const isSsappViaParam = urlParams.has('ssapp') || hashParams.has('ssapp');
+    const hasNinjafyOAuth = window.ninjafy && typeof window.ninjafy.startKickOAuth === 'function';
+    const hasSsappOAuth = window.__ssapp && typeof window.__ssapp.startKickOAuth === 'function';
+    return isSsappViaParam || hasNinjafyOAuth || hasSsappOAuth;
 }
 
 function supportsLocalSocket() {
@@ -2225,9 +2233,21 @@ async function startExternalAuthFlow() {
         return;
     }
 
+    // Try ninjafy first (full preload), then __ssapp (mock preload)
+    const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startKickOAuth === 'function')
+        ? window.ninjafy.startKickOAuth
+        : (window.__ssapp && typeof window.__ssapp.startKickOAuth === 'function')
+            ? window.__ssapp.startKickOAuth
+            : null;
+
+    if (!startOAuthFn) {
+        log('OAuth not available. Please ensure you are running in the desktop app.', 'error');
+        return;
+    }
+
     try {
         logKickWs('Starting external Kick OAuth flow.');
-        const result = await window.ninjafy.startKickOAuth({
+        const result = await startOAuthFn({
             clientId: state.clientId,
             scopes: ['user:read', 'channel:read', 'chat:write', 'events:subscribe']
         });

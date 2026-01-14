@@ -1380,18 +1380,33 @@ async function ensureChatClientInstance() {
 	}
 
 	function isElectronEnvironment() {
-		return !!(window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function');
+		// Check for ssapp URL parameter (set by ssapp when creating WSS windows)
+		// This is backwards compatible - older ssapp versions won't set the param,
+		// but will still work via the ninjafy check for full preload scenarios
+		const urlParams = new URLSearchParams(window.location.search);
+		const hashParams = new URLSearchParams(window.location.hash.slice(1));
+		const isSsappViaParam = urlParams.has('ssapp') || hashParams.has('ssapp');
+		const hasNinjafyOAuth = window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function';
+		const hasSsappOAuth = window.__ssapp && typeof window.__ssapp.startTwitchOAuth === 'function';
+		return isSsappViaParam || hasNinjafyOAuth || hasSsappOAuth;
 	}
 
 	async function startExternalTwitchAuthFlow() {
-		if (!isElectronEnvironment()) {
+		// Try ninjafy first (full preload), then __ssapp (mock preload), then fallback to redirect
+		const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startTwitchOAuth === 'function')
+			? window.ninjafy.startTwitchOAuth
+			: (window.__ssapp && typeof window.__ssapp.startTwitchOAuth === 'function')
+				? window.__ssapp.startTwitchOAuth
+				: null;
+		
+		if (!startOAuthFn) {
 			window.location.href = authUrl();
 			return;
 		}
 		const state = nonce(15) + "@" + (username || "");
 		sessionStorage.twitchOAuthState = state.split("@")[0];
 		try {
-			const result = await window.ninjafy.startTwitchOAuth({
+			const result = await startOAuthFn({
 				clientId,
 				scopes: scope.split('+'),
 				state
