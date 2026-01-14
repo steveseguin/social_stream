@@ -23,7 +23,7 @@ env:
 
 jobs:
   submit-firefox-addon:
-    if: "!contains(github.event.head_commit.message, '[skip firefox]')"
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip firefox]')
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
