@@ -1745,14 +1745,21 @@ function enableBackgroundKeepAlive() {
 		await exchangeCodeForTokens(code, state, redirectURI);
 	}
 	async function startExternalAuthFlow() {
-		if (!window.ninjafy || typeof window.ninjafy.startYouTubeOAuth !== 'function') {
+		// Try ninjafy first (full preload), then __ssapp (mock preload), then fallback to redirect
+		const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function')
+			? window.ninjafy.startYouTubeOAuth
+			: (window.__ssapp && typeof window.__ssapp.startYouTubeOAuth === 'function')
+				? window.__ssapp.startYouTubeOAuth
+				: null;
+		
+		if (!startOAuthFn) {
 			window.location.href = authUrl();
 			return;
 		}
 		const state = nonce(15);
 		sessionStorage.youtubeOAuthState = state;
 		try {
-			const result = await window.ninjafy.startYouTubeOAuth({
+			const result = await startOAuthFn({
 				clientId,
 				scopes: YT_SCOPES,
 				state,
@@ -3242,7 +3249,13 @@ function enableBackgroundKeepAlive() {
 		}
 		// Auth method selector setup
 		const authMethodSelector = document.getElementById('auth-method-selector');
-		const isElectron = isElectronEnvironment() && window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function';
+		// Check for ssapp URL parameter (set by ssapp when creating WSS windows)
+		// This is backwards compatible - older ssapp versions won't set the param,
+		// but will still work via the ninjafy check for full preload scenarios
+		const isSsappViaParam = urlParams.has('ssapp') || hashParams.has('ssapp');
+		const hasNinjafyOAuth = window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function';
+		const hasSsappOAuth = window.__ssapp && typeof window.__ssapp.startYouTubeOAuth === 'function';
+		const isElectron = isSsappViaParam || isElectronEnvironment() || hasNinjafyOAuth || hasSsappOAuth;
 		if (authMethodSelector && isElectron) {
 			authMethodSelector.classList.remove('hidden');
 			// Load saved preference

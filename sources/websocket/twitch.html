@@ -272,6 +272,71 @@
 			position: relative;
 			z-index: 1;
 		}
+
+        /* Dark mode styles */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #18181b;
+                color: #efeff1;
+            }
+            .channel-header,
+            .stats-container,
+            .chat-container,
+            .permissions-container,
+            .recent-events,
+            .moderation-controls {
+                background: #1f1f23 !important;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            }
+            .stat-box {
+                background: #2d2d32;
+            }
+            .stat-label {
+                color: #adadb8;
+            }
+            .channel-input,
+            .chat-input input,
+            #mod-username,
+            #mod-seconds,
+            #mod-reason {
+                background: #2d2d32;
+                border-color: #3d3d42;
+                color: #efeff1;
+            }
+            .channel-input::placeholder,
+            .chat-input input::placeholder,
+            #mod-username::placeholder,
+            #mod-seconds::placeholder,
+            #mod-reason::placeholder {
+                color: #808086;
+            }
+            .event-item {
+                border-bottom-color: #3d3d42;
+            }
+            .auth-method-selector {
+                background: rgba(255, 255, 255, 0.08);
+            }
+            .auth-method-label {
+                color: #adadb8;
+            }
+            .auth-method-option {
+                color: #efeff1;
+            }
+            .header-item span:last-child,
+            #current-user,
+            #current-channel {
+                color: #efeff1;
+            }
+            .stats-container h3,
+            .chat-container h3,
+            .recent-events h4,
+            .moderation-controls h4 {
+                color: #efeff1;
+            }
+            #textarea div {
+                color: #efeff1;
+            }
+        }
     </style>
 </head>
 <body>
