@@ -639,3 +639,101 @@ body:has(.auth:not(.hidden)) {
 		margin-top: 20px;
 	}
 }
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #181818;
+        color: #f1f1f1;
+    }
+    .channel-header,
+    .stats-container,
+    .chat-container,
+    .permissions-container,
+    .recent-events,
+    .credentials-container,
+    .landing-container {
+        background: #212121 !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+    .stat-box {
+        background: #303030;
+    }
+    .stat-label {
+        color: #aaaaaa;
+    }
+    .channel-input,
+    .chat-input input,
+    .credentials-form input {
+        background: #303030;
+        border-color: #404040;
+        color: #f1f1f1;
+    }
+    .channel-input::placeholder,
+    .chat-input input::placeholder,
+    .credentials-form input::placeholder {
+        color: #888888;
+    }
+    .event-item {
+        border-bottom-color: #404040;
+    }
+    .auth-method-selector {
+        background: rgba(255, 255, 255, 0.08);
+    }
+    .auth-method-label,
+    .credentials-form label,
+    .credentials-help {
+        color: #aaaaaa;
+    }
+    .auth-method-option {
+        color: #f1f1f1;
+    }
+    .header-item span:last-child,
+    #current-user,
+    #current-channel,
+    .target-text {
+        color: #f1f1f1;
+    }
+    .stats-container h3,
+    .chat-container h3,
+    .recent-events h4,
+    .permissions-header {
+        color: #f1f1f1;
+    }
+    #textarea div {
+        color: #f1f1f1;
+    }
+    .landing-title {
+        color: #f1f1f1;
+    }
+    .landing-subtitle,
+    .landing-description {
+        color: #aaaaaa;
+    }
+    .quota-warning {
+        background: #3d3200;
+        border-color: #665500;
+        color: #f1f1f1;
+    }
+    .custom-cred-indicator {
+        color: #8ab4f8;
+    }
+    .credentials-help code {
+        background: #303030;
+        color: #f1f1f1;
+    }
+    .policy-footer {
+        background: #212121;
+        border-top-color: #404040;
+    }
+    .policy-footer a {
+        color: #8ab4f8;
+    }
+    .poll-spinner {
+        border-color: rgba(255, 0, 0, 0.2);
+        border-top-color: #FF0000;
+    }
+    .poll-spinner-container {
+        color: #aaaaaa;
+    }
+}
