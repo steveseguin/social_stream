@@ -42,11 +42,11 @@ jq '
     "scripts": [.background.service_worker]
 } |
 
-# Add data_collection_permissions (required for Firefox)
+# Add data_collection_permissions (required for Firefox 140+)
+# "none" means the extension does not collect/transmit personal data
 .browser_specific_settings.gecko.data_collection_permissions = {
-    "telemetry_data_collection": false,
-    "telemetry_data_retention": false,
-    "user_data_collection": false
+    "required": ["none"],
+    "optional": []
 } |
 
 # Remove permissions not supported by Firefox

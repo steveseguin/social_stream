@@ -136,6 +136,38 @@ jobs:
           echo "Published to branch '$FIREFOX_BRANCH'"
           echo "Direct link: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${FIREFOX_BRANCH}/${FIREFOX_FILE_NAME}"
 
+      - name: Upload XPI to GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ steps.manifest.outputs.version }}"
+          XPI_PATH=$(ls "$GITHUB_WORKSPACE/${ARTIFACTS_DIR}"/*.xpi | head -n 1)
+          XPI_NAME="socialstreamninja_firefox_v${VERSION}.xpi"
+
+          # Check if a release exists for this version (try with and without 'v' prefix)
+          RELEASE_TAG=""
+          if gh release view "${VERSION}" &>/dev/null; then
+            RELEASE_TAG="${VERSION}"
+          elif gh release view "v${VERSION}" &>/dev/null; then
+            RELEASE_TAG="v${VERSION}"
+          elif gh release view "0.${VERSION#*.}" &>/dev/null; then
+            RELEASE_TAG="0.${VERSION#*.}"
+          fi
+
+          if [[ -n "$RELEASE_TAG" ]]; then
+            echo "Found release: $RELEASE_TAG"
+            # Remove existing Firefox XPI if present
+            gh release delete-asset "$RELEASE_TAG" "$XPI_NAME" --yes 2>/dev/null || true
+            # Upload new XPI
+            gh release upload "$RELEASE_TAG" "$XPI_PATH#$XPI_NAME"
+            echo "Uploaded $XPI_NAME to release $RELEASE_TAG"
+          else
+            echo "No release found for version ${VERSION}, skipping release upload"
+            echo "XPI is available in the firefox branch and as a workflow artifact"
+          fi
+
       - name: Upload submission logs
         if: always()
         uses: actions/upload-artifact@v4
