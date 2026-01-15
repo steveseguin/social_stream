@@ -2332,6 +2332,20 @@ class EventFlowSystem {
                 };
                 result.modified = true;
                 break;
+
+            case 'featureMessage': {
+                const currentMeta = (message && typeof message.meta === 'object' && message.meta !== null && !Array.isArray(message.meta))
+                    ? { ...message.meta }
+                    : (message && message.meta !== undefined ? { value: message.meta } : {});
+
+                currentMeta.featured = true;
+                result.message = {
+                    ...(message || {}),
+                    meta: currentMeta
+                };
+                result.modified = true;
+                break;
+            }
                 
             case 'addPrefix':
                 if (config.prefix && message && message.chatmessage) {

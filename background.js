@@ -2188,7 +2188,7 @@ async function resetSettings(item = false) {
 		}
 		
 		// Save the empty settings to storage first
-		chrome.storage.local.set({ settings: {} }, function() {
+		chrome.storage.local.set({ settings: {}, allowEmptySettings: true }, function() {
 			// Then load default settings
 			loadSettings(item, true);
 		});

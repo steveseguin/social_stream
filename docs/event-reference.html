@@ -206,6 +206,7 @@
                     <li>Donation-style events include a descriptive object: for example <code>{ amount, currency, supporter }</code> for Kick, <code>{ bits }</code> for Twitch cheers, <code>{ supporter, eventType }</code> for YouTube memberships.</li>
                     <li>Raids and hosts pass <code>{ fromId, fromLogin, viewers }</code> so overlays can display both streamer name and audience size.</li>
                     <li>Channel point redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
+                    <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
                 </ul>
             </section>
