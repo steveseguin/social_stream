@@ -65,6 +65,39 @@ if [[ -f "$BUILD_DIR/sources/bilibilicom.js" ]]; then
     echo "  Fixed: sources/bilibilicom.js (invalid assignment)"
 fi
 
+echo "Adding Firefox messaging compatibility shim to background.js..."
+# Firefox MV3 handles async message responses differently than Chrome.
+# In Chrome, 'return true' keeps the message channel open for async sendResponse.
+# In Firefox MV3 with background scripts, we need to return a Promise instead.
+# This shim wraps chrome.runtime.onMessage.addListener to handle this difference.
+FIREFOX_SHIM='// Firefox MV3 messaging compatibility shim
+(function() {
+    if (typeof browser !== "undefined" && browser.runtime) {
+        // We are in Firefox - wrap the message listener to handle async responses properly
+        const originalAddListener = chrome.runtime.onMessage.addListener.bind(chrome.runtime.onMessage);
+        chrome.runtime.onMessage.addListener = function(listener) {
+            originalAddListener(function(request, sender, sendResponse) {
+                const result = listener(request, sender, sendResponse);
+                // If the listener returns a Promise, Firefox needs us to return it
+                // If it returns true (Chrome pattern), convert to a Promise that never resolves
+                // (the actual response goes through sendResponse)
+                if (result === true) {
+                    return new Promise(() => {}); // Keep channel open
+                }
+                return result;
+            });
+        };
+    }
+})();
+'
+
+# Prepend the shim to background.js
+if [[ -f "$BUILD_DIR/background.js" ]]; then
+    echo "$FIREFOX_SHIM" | cat - "$BUILD_DIR/background.js" > "$BUILD_DIR/background.js.tmp"
+    mv "$BUILD_DIR/background.js.tmp" "$BUILD_DIR/background.js"
+    echo "  Fixed: background.js (Firefox messaging compatibility)"
+fi
+
 echo "Validating transformed manifest.json..."
 if ! jq empty "$BUILD_DIR/manifest.json" 2>/dev/null; then
     echo "ERROR: Generated manifest.json is invalid!" >&2
