@@ -45,7 +45,7 @@ Much more than just an overlay - Social Stream Ninja is a complete chat ecosyste
   - [Important Notice](#important-notice)
   - [Manually install extension](#manually-install-extension)
     - [Seeing an error message about Manifest Version 2?](#seeing-an-error-message-about-manifest-version-2)
-  - [Chrome Web Store version](#chrome-web-store-version)
+  - [Browser Extension Stores](#browser-extension-stores)
     - [Updating](#updating)
     - [Firefox support](#firefox-support)
   - [Standalone version of the app](#standalone-version-of-the-app)
@@ -276,7 +276,7 @@ Additionally, using timed commands, bots, or automated messaging in chats increa
 
 ### Manually install extension
 
-This extension should work with Chromium-based browser on systems that support webRTC. This includes Chrome, Edge, and Brave. [Firefox users see here](https://github.com/steveseguin/social_stream#firefox-support).
+This extension works with Chromium-based browsers (Chrome, Edge, Brave) and Firefox. See [Browser Extension Stores](#browser-extension-stores) for easy installation, or [Firefox support](#firefox-support) for Firefox-specific details.
 
 The link to download newest main version is here: https://github.com/steveseguin/social_stream/archive/refs/heads/main.zip
 
@@ -298,13 +298,19 @@ If you see the browser say there is an "Error", specifically a manifest v2 warni
 
 While Google will eventually kill manifest version 2 extensions, it's possible to keep them alive until at least June 2025, as noted in <a href="https://www.reddit.com/r/chrome/comments/1dln9ev/tutorial_extend_manifest_v2/">this guide here</a>. I will depreciate version 2 when the times come, and while manifest version 3 is more restrictive, it should still work. If you download the v3 version from the Webstore, please note that I will only update it every couple weeks, due to review restrictions by Google. You can download version 3 all directly from Github, under the v3 branch.
 
-### Chrome Web Store version
+### Browser Extension Stores
 
-You can install Social Stream Ninja via the Chrome Web Store, however it only gets updated every few weeks, due to the lengthly review process involved in updating it.
+You can install Social Stream Ninja from the official browser extension stores:
 
+**Chrome Web Store** (Chrome, Edge, Brave):
 https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg
 
-It's based on Chrome Manifest v3, and will require you to leave a small browser tab open to use it.
+**Firefox Add-ons**:
+https://addons.mozilla.org/en-US/firefox/addon/71c9e650a4eb454aae9b/
+
+Note: Store versions are updated every few weeks due to the review process. For the latest features, you can [manually install from GitHub](#manually-install-extension) or download from [GitHub Releases](https://github.com/steveseguin/social_stream/releases).
+
+The Chrome version is based on Manifest v3, and will require you to leave a small browser tab open to use it.
 
 #### Updating
 
@@ -322,17 +328,27 @@ And for a video that covers two ways to update the extension: https://youtu.be/Z
 
 #### Firefox support
 
-I no longer offer official Firefox support, but you can still try to get it going with the steps below:
+Social Stream Ninja is available for Firefox via the Firefox Add-ons store:
+
+https://addons.mozilla.org/en-US/firefox/addon/71c9e650a4eb454aae9b/
+
+You can also download the signed XPI directly from [GitHub Releases](https://github.com/steveseguin/social_stream/releases) for manual installation.
+
+**Note:** The Firefox version has some limitations compared to Chrome:
+- TTS voice models are not included (uses system voices only)
+- Tab capture and debugger features are not available
+
+<details>
+<summary>Manual installation (for development/testing)</summary>
+
+If you prefer to load the extension manually for development:
 
  - Download+extract or clone the SocialStream code somewhere.
-
- - Go to `about:debugging#/runtime/this-firefox` in Firefox and select Load Temporary Add-on. 
-
+ - Go to `about:debugging#/runtime/this-firefox` in Firefox and select Load Temporary Add-on.
  - Select any file inside the SocialStream folder.
+ - This is a temporary install and settings will not persist.
 
- - You're done.  This is a temporary install and none of the settings made will be persist, including your session ID.
-
-You will still need to manually redo these steps to update when needed, but you can use the newest version of the code.
+</details>
 
 ### Standalone version of the app
 
@@ -1035,7 +1051,7 @@ There is a toggle that lets you show the source of the chat messages.
 
 If the auto responder doesn't work -- you see a blue bar, but nothing happens, there's a couple things to do.
 - make sure if using Youtube/Twitch that the pop out window is open
-- Avoid Firefox, as it will only work with Chromium-based apps (or the standalone app)
+- The auto-responder feature requires the debugger API, which is only available in Chromium-based browsers (not Firefox). Use Chrome/Edge or the standalone app for this feature.
 - go to `chrome://apps` and remove the Youtube(s) apps that might appear.  You can remove them all really if none are required.
 - Make sure you have permission to post into the chat first -- sometimes you need to be a subscriber for example to send chat messages.
 
