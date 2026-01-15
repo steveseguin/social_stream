@@ -42,6 +42,9 @@ jq '
     "scripts": [.background.service_worker]
 } |
 
+# Fix typo in content_scripts (runs_at -> run_at)
+.content_scripts = (.content_scripts | map(if has("runs_at") then .run_at = .runs_at | del(.runs_at) else . end)) |
+
 # Add data_collection_permissions (required for Firefox 140+)
 # "none" means the extension does not collect/transmit personal data
 .browser_specific_settings.gecko.data_collection_permissions = {
@@ -75,37 +78,48 @@ FIREFOX_SHIM='// Firefox MV3 messaging compatibility shim
 // This shim ensures async responses work correctly
 (function() {
     const isFirefox = typeof browser !== "undefined" && browser.runtime && browser.runtime.id;
-    if (isFirefox) {
-        console.log("[Firefox Shim] Applying messaging compatibility fix");
-        // Wrap both browser and chrome onMessage since code might use either
-        const wrapAddListener = function(target) {
-            const original = target.onMessage.addListener.bind(target.onMessage);
-            target.onMessage.addListener = function(listener) {
-                original(function(request, sender, sendResponse) {
-                    let responded = false;
-                    const wrappedSendResponse = function(response) {
-                        responded = true;
-                        sendResponse(response);
-                    };
-                    const result = listener(request, sender, wrappedSendResponse);
-                    // If result is a Promise, return it for Firefox async handling
-                    if (result && typeof result.then === "function") {
-                        return result.then(function(val) {
-                            // If sendResponse was called, return undefined to let it handle response
-                            // Otherwise return the resolved value
-                            return responded ? undefined : val;
-                        });
-                    }
-                    // Keep channel open if sendResponse might be called later
-                    if (result === true) {
-                        return new Promise(function() {});
-                    }
-                    return result;
-                });
-            };
+    if (!isFirefox) {
+        return;
+    }
+
+    console.log("[Firefox Shim] Applying messaging compatibility fix");
+    const wrapAddListener = function(target) {
+        if (!target || !target.onMessage || !target.onMessage.addListener) {
+            console.warn("[Firefox Shim] onMessage not available", target);
+            return;
+        }
+
+        const original = target.onMessage.addListener.bind(target.onMessage);
+        target.onMessage.addListener = function(listener) {
+            original(function(request, sender, sendResponse) {
+                let responded = false;
+                const wrappedSendResponse = function(response) {
+                    responded = true;
+                    sendResponse(response);
+                };
+                const result = listener(request, sender, wrappedSendResponse);
+                // If result is a Promise, return it for Firefox async handling
+                if (result && typeof result.then === "function") {
+                    return result.then(function(val) {
+                        // If sendResponse was called, return undefined to let it handle response
+                        // Otherwise return the resolved value
+                        return responded ? undefined : val;
+                    });
+                }
+                // Keep channel open if sendResponse might be called later
+                if (result === true) {
+                    return new Promise(function() {});
+                }
+                return result;
+            });
         };
-        if (typeof browser !== "undefined" && browser.runtime) wrapAddListener(browser);
-        if (typeof chrome !== "undefined" && chrome.runtime && chrome !== browser) wrapAddListener(chrome);
+    };
+
+    if (typeof browser !== "undefined" && browser.runtime) {
+        wrapAddListener(browser.runtime);
+    }
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome !== browser) {
+        wrapAddListener(chrome.runtime);
     }
 })();
 '
