@@ -53,6 +53,7 @@ jobs:
         run: npm install --global web-ext@8
 
       - name: Submit to Firefox Add-ons Store
+        id: submit
         env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
@@ -73,19 +74,23 @@ jobs:
           attempt=1
           max_attempts=4
           backoff=30
-          success=false
 
-          until web-ext sign \
-            --api-key "$AMO_JWT_ISSUER" \
-            --api-secret "$AMO_JWT_SECRET" \
-            --channel "$WEB_EXT_CHANNEL" \
-            --source-dir "$FIREFOX_BUILD_DIR" \
-            --artifacts-dir "$ARTIFACTS_DIR" \
-            --amo-metadata "scripts/amo-metadata.json" \
-            --approval-timeout 0; do
+          while true; do
+            if web-ext sign \
+              --api-key "$AMO_JWT_ISSUER" \
+              --api-secret "$AMO_JWT_SECRET" \
+              --channel "$WEB_EXT_CHANNEL" \
+              --source-dir "$FIREFOX_BUILD_DIR" \
+              --artifacts-dir "$ARTIFACTS_DIR" \
+              --amo-metadata "scripts/amo-metadata.json" \
+              --approval-timeout 0; then
+              echo "Submission to AMO succeeded!"
+              break
+            fi
+
             if (( attempt >= max_attempts )); then
               echo "web-ext sign failed after ${attempt} attempts" >&2
-              break
+              exit 1
             fi
             echo "web-ext sign failed (attempt ${attempt}/${max_attempts}). Retrying in ${backoff}s..." >&2
             sleep "$backoff"
@@ -93,24 +98,25 @@ jobs:
             backoff=$((backoff * 2))
           done
 
+          # Check if we got a signed XPI (unlisted channel gives immediate XPI, listed does not)
           if ls "${ARTIFACTS_DIR}"/*.xpi >/dev/null 2>&1; then
-            echo "Submission successful!"
-            success=true
-          fi
-
-          if [[ "${success}" != "true" ]]; then
-            echo "Submission failed after all attempts." >&2
-            exit 1
+            echo "Signed XPI available!"
+            echo "has_xpi=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No XPI yet (listed channel - pending review)"
+            echo "has_xpi=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Upload signed XPI artifact
+        if: steps.submit.outputs.has_xpi == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: firefox-addon-${{ steps.manifest.outputs.version }}
           path: ${{ env.ARTIFACTS_DIR }}/*.xpi
-          if-no-files-found: error
+          if-no-files-found: warn
 
       - name: Publish XPI to firefox branch
+        if: steps.submit.outputs.has_xpi == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
