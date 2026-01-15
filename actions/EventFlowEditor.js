@@ -343,6 +343,7 @@ class EventFlowEditor {
                     { id: 'findReplace', name: '🔄 Find & Replace' },
                     { id: 'removeText', name: '✂️ Remove Text' },
                     { id: 'setProperty', name: '🎨 Set Property' },
+                    { id: 'featureMessage', name: '🌟 Feature Message' },
                     { id: 'sendMessage', name: '💬 Send Message' },
                     { id: 'relay', name: '📢 Relay Chat' },
                     { id: 'reflectionFilter', name: '🪞 Reflection Filter' }
@@ -1868,6 +1869,7 @@ class EventFlowEditor {
                     const shortValue = value.length > 15 ? value.substring(0, 15) + '...' : value;
                     return `${prop} = ${shortValue}`;
                 }
+                case 'featureMessage': return 'Feature in dock/overlay';
                 case 'sendMessage': return `Send to: ${node.config.destination || 'All'}`;
                 case 'relay': return `Relay to: ${node.config.destination || 'All'}`;
                 case 'reflectionFilter': {
@@ -2378,9 +2380,11 @@ class EventFlowEditor {
 					node.config = { removeType: 'removeCommand' }; break;
                 case 'setProperty':
 					node.config = { property: 'nameColor', value: '#FF0000' }; break;
-            case 'sendMessage':
+                case 'featureMessage':
+                    node.config = {}; break;
+                case 'sendMessage':
 					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0 }; break;
-            case 'relay':
+                case 'relay':
 					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
 					node.config = { url: 'https://example.com/hook', method: 'POST', body: '{}', includeMessage: true, syncMode: false, blockOnFailure: false }; break;
@@ -3638,154 +3642,141 @@ class EventFlowEditor {
 							</div>`;
 				}
 				break;
-			case 'setProperty': {
-				const commonProperties = [
-					{ value: 'custom', label: '-- Custom Property --' },
-					// Styling
-					{ value: 'nameColor', label: 'Name Color', type: 'color' },
-					{ value: 'backgroundColor', label: 'Background Color', type: 'color' },
-					{ value: 'textColor', label: 'Text Color', type: 'color' },
-					// Message basics
-					{ value: 'chatmessage', label: 'Chat Message', type: 'text' },
-					{ value: 'chatname', label: 'Username (chatname)', type: 'text' },
-					{ value: 'type', label: 'Source Type (platform)', type: 'text' },
-					{ value: 'sourceName', label: 'Source / Channel Name', type: 'text' },
-					{ value: 'userid', label: 'User ID', type: 'text' },
-					// Media
-					{ value: 'chatimg', label: 'Avatar URL (chatimg)', type: 'url' },
-					{ value: 'contentimg', label: 'Content Image / Video (contentimg)', type: 'url' },
-					{ value: 'sourceImg', label: 'Source Icon URL', type: 'url' },
-					// Event & metadata
-					{ value: 'title', label: 'Event Title', type: 'text' },
-					{ value: 'subtitle', label: 'Event Subtitle', type: 'text' },
-					{ value: 'membership', label: 'Membership Details', type: 'text' },
-					{ value: 'hasDonation', label: 'Donation Amount (hasDonation)', type: 'text' },
-					{ value: 'event', label: 'Event Flag / Name', type: 'text' },
-					// Status flags
-					{ value: 'mod', label: 'Is Moderator', type: 'boolean' },
-					{ value: 'vip', label: 'Is VIP', type: 'boolean' },
-					{ value: 'verified', label: 'Is Verified', type: 'boolean' },
-					{ value: 'bot', label: 'Is Bot', type: 'boolean' },
-					{ value: 'host', label: 'Is Host', type: 'boolean' },
-					{ value: 'admin', label: 'Is Admin', type: 'boolean' },
-					{ value: 'question', label: 'Is Question', type: 'boolean' },
-					{ value: 'private', label: 'Is Private / DM', type: 'boolean' },
-					{ value: 'textonly', label: 'Text-only Message', type: 'boolean' }
-				];
-				
-				const selectedProp = commonProperties.find(p => p.value === node.config.property);
-				const isCustom = !selectedProp || node.config.property === 'custom';
-				const propType = selectedProp?.type || 'text';
-				
-				html += `
-					<div class="property-group">
-						<label class="property-label">Property to Set</label>
-						<select class="property-input" id="prop-property-select">
-							${commonProperties.map(prop => 
-								`<option value="${prop.value}" ${node.config.property === prop.value ? 'selected' : ''}>
-									${prop.label}
-								</option>`
-							).join('')}
-						</select>
-					</div>
-					
-					<div class="property-group" id="custom-property-name" style="${isCustom ? '' : 'display: none;'}">
-						<label class="property-label">Custom Property Name</label>
-						<input type="text" class="property-input" id="prop-property" 
-							value="${isCustom ? (node.config.property || '') : ''}" 
-							placeholder="e.g., customBadge, priority">
-						<div class="property-help">Enter the exact property name</div>
-					</div>
-					
-					<div class="property-group">
-						<label class="property-label">Value</label>`;
-				
-				// Different input types based on property type
-				if (propType === 'color' && node.config.property !== 'custom') {
-					const colorPresets = [
-						{ color: '#FF0000', name: 'Red' },
-						{ color: '#00FF00', name: 'Green' },
-						{ color: '#0000FF', name: 'Blue' },
-						{ color: '#FFFF00', name: 'Yellow' },
-						{ color: '#FF00FF', name: 'Magenta' },
-						{ color: '#00FFFF', name: 'Cyan' },
-						{ color: '#FFA500', name: 'Orange' },
-						{ color: '#800080', name: 'Purple' },
-						{ color: '#FFC0CB', name: 'Pink' },
-						{ color: '#FFFFFF', name: 'White' },
-						{ color: '#000000', name: 'Black' },
-						{ color: '#808080', name: 'Gray' }
-					];
-					
-					html += `
-						<div style="display: flex; gap: 10px; align-items: center;">
-							<input type="color" class="property-input" id="prop-value-color" 
-								value="${node.config.value?.startsWith('#') ? node.config.value : '#FF0000'}" 
-								style="width: 60px; height: 35px;">
-							<input type="text" class="property-input" id="prop-value" 
-								value="${node.config.value || '#FF0000'}" 
-								placeholder="#FF0000 or red or {source}_color"
-								style="flex: 1;">
-						</div>
-						<div class="property-help">Pick a color, use hex code, color name, or template like "{source}_color"</div>
-						<div style="margin-top: 10px;">
-							<label class="property-label">Quick Colors:</label>
-							<div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
-								${colorPresets.map(preset => 
-									`<button type="button" class="color-preset-btn" 
-										data-color="${preset.color}" 
-										style="background: ${preset.color}; width: 30px; height: 30px; border: 1px solid #555; cursor: pointer; border-radius: 4px;"
-										title="${preset.name}"></button>`
-								).join('')}
-							</div>
-						</div>`;
-				} else if (propType === 'boolean') {
-					html += `
-						<select class="property-input" id="prop-value">
-							<option value="true" ${node.config.value === true || node.config.value === 'true' ? 'selected' : ''}>True</option>
-							<option value="false" ${node.config.value === false || node.config.value === 'false' ? 'selected' : ''}>False</option>
-						</select>
-						<div class="property-help">Set boolean flag</div>`;
-				} else {
-					html += `
-						<input type="text" class="property-input" id="prop-value" 
-							value="${node.config.value || ''}" 
-							placeholder="${propType === 'url' ? 'https://example.com/image.png' : 'Enter value or use {username}, {source}, etc.'}">
-						<div class="property-help">Can use template variables: {username}, {source}, {message}, {type}</div>`;
-				}
-				
-				html += `</div>
-					
-					<details style="margin-top: 10px;">
-						<summary style="cursor: pointer; color: #888;">Examples & Use Cases</summary>
-						<div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
-							<strong>Platform Colors:</strong><br>
-							• YouTube → nameColor: #FF0000<br>
-							• Twitch → nameColor: #9146FF<br>
-							• Discord → nameColor: #5865F2<br><br>
-							
-							<strong>Role-based Colors:</strong><br>
-							• Moderators → backgroundColor: #FFD700<br>
-							• VIPs → nameColor: #FF69B4<br>
-							• Donors → textColor: #00FF00<br><br>
-							
-						<strong>Dynamic Values:</strong><br>
-						• Property: chatimg<br>
-						• Value: https://api.example.com/avatar/{username}.png<br><br>
-						
-						<strong>Event Metadata:</strong><br>
-						• Property: event → Value: raid_start<br>
-						• Property: membership → Value: gifted-5<br>
-						• Property: contentimg → Value: https://cdn.example.com/alerts/{userid}.png<br><br>
-						
-						<strong>Conditional Styling:</strong><br>
-						• Use with "From Source" trigger<br>
-						• Set different colors per platform
-					</div>
-					</details>`;
-				break;
-			}
-			case 'sendMessage':
+            case 'setProperty': {
+                const commonProperties = [
+                    { value: 'custom', label: '-- Custom Property --' },
+                    // Styling
+                    { value: 'nameColor', label: 'Name Color', type: 'color' },
+                    { value: 'backgroundColor', label: 'Background Color', type: 'color' },
+                    { value: 'textColor', label: 'Text Color', type: 'color' },
+                    // Message basics
+                    { value: 'chatmessage', label: 'Chat Message', type: 'text' },
+                    { value: 'chatname', label: 'Username (chatname)', type: 'text' },
+                    { value: 'type', label: 'Source Type (platform)', type: 'text' },
+                    { value: 'sourceName', label: 'Source / Channel Name', type: 'text' },
+                    { value: 'userid', label: 'User ID', type: 'text' },
+                    // Media
+                    { value: 'chatimg', label: 'Avatar URL (chatimg)', type: 'url' },
+                    { value: 'contentimg', label: 'Content Image / Video (contentimg)', type: 'url' },
+                    { value: 'sourceImg', label: 'Source Icon URL', type: 'url' },
+                    // Event & metadata
+                    { value: 'title', label: 'Event Title', type: 'text' },
+                    { value: 'subtitle', label: 'Event Subtitle', type: 'text' },
+                    { value: 'membership', label: 'Membership Details', type: 'text' },
+                    { value: 'hasDonation', label: 'Donation Amount (hasDonation)', type: 'text' },
+                    { value: 'event', label: 'Event Flag / Name', type: 'text' },
+                    // Status flags
+                    { value: 'mod', label: 'Is Moderator', type: 'boolean' },
+                    { value: 'vip', label: 'Is VIP', type: 'boolean' },
+                    { value: 'verified', label: 'Is Verified', type: 'boolean' },
+                    { value: 'bot', label: 'Is Bot', type: 'boolean' },
+                    { value: 'host', label: 'Is Host', type: 'boolean' },
+                    { value: 'admin', label: 'Is Admin', type: 'boolean' },
+                    { value: 'question', label: 'Is Question', type: 'boolean' },
+                    { value: 'private', label: 'Is Private / DM', type: 'boolean' },
+                    { value: 'textonly', label: 'Text-only Message', type: 'boolean' }
+                ];
+                
+                const selectedProp = commonProperties.find(p => p.value === node.config.property);
+                const isCustom = !selectedProp || node.config.property === 'custom';
+                const propType = selectedProp?.type || 'text';
+                
+                html += `
+                    <div class="property-group">
+                        <label class="property-label">Property to Set</label>
+                        <select class="property-input" id="prop-property-select">
+                            ${commonProperties.map(prop => 
+                                `<option value="${prop.value}" ${node.config.property === prop.value ? 'selected' : ''}>
+                                    ${prop.label}
+                                </option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                    
+                    <div class="property-group" id="custom-property-name" style="${isCustom ? '' : 'display: none;'}">
+                        <label class="property-label">Custom Property Name</label>
+                        <input type="text" class="property-input" id="prop-property" 
+                            value="${isCustom ? (node.config.property || '') : ''}" 
+                            placeholder="e.g., customBadge, priority">
+                        <div class="property-help">Enter the exact property name</div>
+                    </div>
+                    
+                    <div class="property-group">
+                        <label class="property-label">Value</label>`;
+                
+                // Different input types based on property type
+                if (propType === 'color' && node.config.property !== 'custom') {
+                    const colorPresets = [
+                        { color: '#FF0000', name: 'Red' },
+                        { color: '#00FF00', name: 'Green' },
+                        { color: '#0000FF', name: 'Blue' },
+                        { color: '#FFFF00', name: 'Yellow' },
+                        { color: '#FF00FF', name: 'Magenta' },
+                        { color: '#00FFFF', name: 'Cyan' },
+                        { color: '#FFA500', name: 'Orange' },
+                        { color: '#800080', name: 'Purple' },
+                        { color: '#FFC0CB', name: 'Pink' },
+                        { color: '#FFFFFF', name: 'White' },
+                        { color: '#000000', name: 'Black' },
+                        { color: '#808080', name: 'Gray' }
+                    ];
+                    
+                    html += `
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="color" class="property-input" id="prop-value-color" 
+                                value="${node.config.value?.startsWith('#') ? node.config.value : '#FF0000'}" 
+                                style="width: 60px; height: 35px;">
+                            <input type="text" class="property-input" id="prop-value" 
+                                value="${node.config.value || '#FF0000'}" 
+                                placeholder="#FF0000 or red or {source}_color"
+                                style="flex: 1;">
+                        </div>
+                        <div class="property-help">Pick a color, use hex code, color name, or template like "{source}_color"</div>
+                        <div style="margin-top: 10px;">
+                            <label class="property-label">Quick Colors:</label>
+                            <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 5px;">
+                                ${colorPresets.map(preset => 
+                                    `<button type="button" class="color-preset-btn" 
+                                        data-color="${preset.color}" 
+                                        style="background: ${preset.color}; width: 30px; height: 30px; border: 1px solid #555; cursor: pointer; border-radius: 4px;"
+                                        title="${preset.name}"></button>`
+                                ).join('')}
+                            </div>
+                        </div>`;
+                } else if (propType === 'boolean') {
+                    html += `
+                        <select class="property-input" id="prop-value">
+                            <option value="true" ${node.config.value === true || node.config.value === 'true' ? 'selected' : ''}>True</option>
+                            <option value="false" ${node.config.value === false || node.config.value === 'false' ? 'selected' : ''}>False</option>
+                        </select>
+                        <div class="property-help">Set boolean flag</div>`;
+                } else {
+                    html += `
+                        <input type="text" class="property-input" id="prop-value" 
+                            value="${node.config.value || ''}" 
+                            placeholder="${propType === 'url' ? 'https://example.com/image.png' : 'Enter value or use {username}, {source}, etc.'}">
+                        <div class="property-help">Can use template variables: {username}, {source}, {message}, {type}</div>`;
+                }
+                
+                html += `</div>
+                    
+                    <details style="margin-top: 10px;">
+                        <summary style="cursor: pointer; color: #888;">Examples & Use Cases</summary>
+                        <div style="margin-top: 10px; padding: 10px; background: #2a2a2a; border-radius: 4px;">
+                            <strong>Conditional Styling:</strong><br>
+                            • Use with "From Source" trigger<br>
+                            • Set different colors per platform
+                    </div>
+                    </details>`;
+                break;
+            }
+            case 'featureMessage':
+                html += `<div class="property-group">
+                    <p class="property-help">Immediately features the triggering message in the dock and featured overlay, matching a manual click in the chat list.</p>
+                    <div class="property-help">Use with a trigger like “Message Starts With” or “Channel Points” to auto-feature specific messages.</div>
+                </div>`;
+                break;
+            case 'sendMessage':
 				// Send Message allows sending generated messages (e.g., thank you messages, announcements)
 				const sendDestinations = [
 					{ value: 'reply', label: '↩️ Reply to Source' },

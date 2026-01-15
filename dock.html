@@ -9805,8 +9805,17 @@
 					}
 
 					node.rawContents = data;
+					
+					const metaFeatured = data.meta && data.meta.featured;
 
-					if (autoyoutubememberchat && (data.type == "youtube") && data.membership){
+					if (metaFeatured) {
+						if (autoTimeoutEnabled) {
+							autoShowQueue.push(node);
+							checkAutoShow();
+						} else {
+							selectedMessage(false, node);
+						}
+					} else if (autoyoutubememberchat && (data.type == "youtube") && data.membership){
 						if (autoTimeoutEnabled) {
 							autoShowQueue.push(node);
 							checkAutoShow();
