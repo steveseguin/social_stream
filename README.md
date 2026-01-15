@@ -300,15 +300,13 @@ While Google will eventually kill manifest version 2 extensions, it's possible t
 
 ### Browser Extension Stores
 
-You can install Social Stream Ninja from the official browser extension stores:
-
 **Chrome Web Store** (Chrome, Edge, Brave):
 https://chromewebstore.google.com/detail/social-stream-ninja/cppibjhfemifednoimlblfcmjgfhfjeg
 
-**Firefox Add-ons**:
-https://addons.mozilla.org/en-US/firefox/addon/71c9e650a4eb454aae9b/
+**Firefox** (direct XPI download):
+https://raw.githubusercontent.com/steveseguin/social_stream/firefox/social-stream-ninja.xpi
 
-Note: Store versions are updated every few weeks due to the review process. For the latest features, you can [manually install from GitHub](#manually-install-extension) or download from [GitHub Releases](https://github.com/steveseguin/social_stream/releases).
+Note: The Chrome Web Store version is updated every few weeks due to the review process. For the latest features, you can [manually install from GitHub](#manually-install-extension).
 
 The Chrome version is based on Manifest v3, and will require you to leave a small browser tab open to use it.
 
@@ -328,27 +326,15 @@ And for a video that covers two ways to update the extension: https://youtu.be/Z
 
 #### Firefox support
 
-Social Stream Ninja is available for Firefox via the Firefox Add-ons store:
+Download the signed Firefox extension (XPI):
+https://raw.githubusercontent.com/steveseguin/social_stream/firefox/social-stream-ninja.xpi
 
-https://addons.mozilla.org/en-US/firefox/addon/71c9e650a4eb454aae9b/
-
-You can also download the signed XPI directly from [GitHub Releases](https://github.com/steveseguin/social_stream/releases) for manual installation.
+To install: Open Firefox, go to `about:addons`, click the gear icon, select "Install Add-on From File...", and choose the downloaded XPI.
 
 **Note:** The Firefox version has some limitations compared to Chrome:
 - TTS voice models are not included (uses system voices only)
 - Tab capture and debugger features are not available
-
-<details>
-<summary>Manual installation (for development/testing)</summary>
-
-If you prefer to load the extension manually for development:
-
- - Download+extract or clone the SocialStream code somewhere.
- - Go to `about:debugging#/runtime/this-firefox` in Firefox and select Load Temporary Add-on.
- - Select any file inside the SocialStream folder.
- - This is a temporary install and settings will not persist.
-
-</details>
+- Auto-responder feature is not supported
 
 ### Standalone version of the app
 
