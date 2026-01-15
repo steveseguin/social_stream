@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: AMO channel (listed = store, unlisted = self-hosting)
+        description: AMO channel (unlisted = immediate signing, listed = store review)
         type: choice
         options: [listed, unlisted]
         default: listed
@@ -81,7 +81,8 @@ jobs:
             --channel "$WEB_EXT_CHANNEL" \
             --source-dir "$FIREFOX_BUILD_DIR" \
             --artifacts-dir "$ARTIFACTS_DIR" \
-            --amo-metadata "scripts/amo-metadata.json"; do
+            --amo-metadata "scripts/amo-metadata.json" \
+            --approval-timeout 0; do
             if (( attempt >= max_attempts )); then
               echo "web-ext sign failed after ${attempt} attempts" >&2
               break
