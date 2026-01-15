@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Nostr - Social Stream Ninja</title>
+    <style>
+        body { 
+            font-family: sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #9b59b6;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        h1 img {
+            width: 40px;
+            height: 40px;
+        }
+        #messageArea {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #333;
+            margin: 10px 0;
+            padding: 10px;
+            background: #2a2a2a;
+        }
+        .message { 
+            margin: 8px 0;
+            padding: 8px;
+            background: #333;
+            border-radius: 4px;
+        }
+        .message.zap {
+            background: linear-gradient(135deg, #3d2c0a, #2a2a2a);
+            border-left: 3px solid #f7931a;
+        }
+        .timestamp { color: #888; font-size: 0.85em; }
+        .nickname { font-weight: bold; color: #9b59b6; }
+        .zap-amount { color: #f7931a; font-weight: bold; }
+        input, select { 
+            margin: 5px 0;
+            padding: 8px;
+            width: 100%;
+            background: #333;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px 5px 5px 0;
+            cursor: pointer;
+            background: #9b59b6;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        button:hover {
+            background: #8e44ad;
+        }
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+        button.secondary {
+            background: #555;
+        }
+        button.secondary:hover {
+            background: #666;
+        }
+        #connectionForm {
+            border-bottom: 1px solid #333;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #6bff6b; }
+        .status { 
+            font-style: italic;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background: #333;
+        }
+        .relay-status {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        .relay-badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            background: #444;
+        }
+        .relay-badge.connected { background: #27ae60; }
+        .relay-badge.connecting { background: #f39c12; color: #000; }
+        .relay-badge.disconnected { background: #c0392b; }
+        .stream-info {
+            background: #2d2d44;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        .stream-info h3 {
+            margin: 0 0 8px 0;
+            color: #9b59b6;
+        }
+        .hidden { display: none; }
+        .help-text {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 4px;
+        }
+        a { color: #9b59b6; }
+    </style>
+</head>
+<body>
+    <h1>
+        <img src="../images/nostr.png" alt="Nostr">
+        Nostr Live Stream
+    </h1>
+    
+    <div id="connectionForm">
+        <h2>Connection Settings</h2>
+        
+        <label for="npubInput">Streamer's npub or hex pubkey</label>
+        <input type="text" id="npubInput" placeholder="npub1... or hex pubkey" />
+        <div class="help-text">Enter the npub of the streamer - will auto-detect their live stream</div>
+        
+        <label for="naddrInput">Or stream naddr/nevent (optional)</label>
+        <input type="text" id="naddrInput" placeholder="naddr1... or nevent1..." />
+        <div class="help-text">If auto-detect fails, paste the specific stream naddr or nevent</div>
+        
+        <label for="relayInput">Relays (comma-separated)</label>
+        <input type="text" id="relayInput" value="wss://nos.lol,wss://relay.damus.io,wss://relay.snort.social" />
+        <div class="help-text">Default relays work for most streams. Add wss://relay.zap.stream for zap.stream</div>
+        
+        <div style="margin-top: 15px;">
+            <button onclick="connect()" id="connectBtn">Connect</button>
+            <button onclick="disconnect()" id="disconnectBtn" class="secondary" disabled>Disconnect</button>
+        </div>
+        
+        <div id="status" class="status hidden"></div>
+        <div id="relayStatus" class="relay-status"></div>
+    </div>
+    
+    <div id="streamInfo" class="stream-info hidden">
+        <h3>&#128250; Live Stream Found</h3>
+        <div id="streamTitle"></div>
+        <div id="streamId" style="font-size:0.85em;color:#888;"></div>
+    </div>
+
+    <div id="messageArea">
+        <p style="color:#666;text-align:center;margin-top:150px;">Messages will appear here when connected...</p>
+    </div>
+
+    <script>
+        // ============================================================================
+        // Nostr WebSocket Client for Social Stream Ninja
+        // ============================================================================
+        
+        const BECH32_ALPHABET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
+        
+        var websockets = [];
+        var seenEvents = new Set();
+        var profileCache = new Map();
+        var pendingProfileCallbacks = new Map();
+        var liveStreamInfo = null;
+        var messageCount = 0;
+        
+        // Message buffer for sorting before sending to extension
+        var messageBuffer = [];
+        var bufferFlushTimer = null;
+        var isInitialLoad = true;
+        var initialLoadTimer = null;
+        
+        var config = {
+            relays: [],
+            npub: '',
+            pubkey: '',
+            streamId: '',
+            aTag: '',
+            kinds: [9735, 1311],
+            limit: 100
+        };
+        
+        // --- Helper Functions ---
+        
+        function bech32Decode(str) {
+            str = str.toLowerCase();
+            var sepPos = str.lastIndexOf('1');
+            var hrp = str.substring(0, sepPos);
+            var data = str.substring(sepPos + 1, str.length - 6); // exclude checksum
+            var decoded = [];
+            for (var i = 0; i < data.length; i++) {
+                decoded.push(BECH32_ALPHABET.indexOf(data[i]));
+            }
+            var bytes = [];
+            var acc = 0, bits = 0;
+            for (var i = 0; i < decoded.length; i++) {
+                acc = (acc << 5) | decoded[i];
+                bits += 5;
+                while (bits >= 8) {
+                    bits -= 8;
+                    bytes.push((acc >> bits) & 0xff);
+                }
+            }
+            return { hrp: hrp, bytes: bytes };
+        }
+        
+        function npubToHex(npub) {
+            if (!npub || !npub.startsWith('npub1')) return npub;
+            try {
+                var result = bech32Decode(npub);
+                return result.bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+            } catch(e) {
+                setStatus('Error decoding npub: ' + e.message, true);
+                return '';
+            }
+        }
+        
+        // Decode naddr (NIP-19) - TLV format: 0=d-tag, 1=relay, 2=author, 3=kind
+        function decodeNaddr(naddr) {
+            try {
+                var result = bech32Decode(naddr);
+                var bytes = result.bytes;
+                var data = { d: '', pubkey: '', kind: 30311, relays: [] };
+                var i = 0;
+                while (i < bytes.length) {
+                    var type = bytes[i++];
+                    var len = bytes[i++];
+                    var value = bytes.slice(i, i + len);
+                    i += len;
+                    switch(type) {
+                        case 0: // d-tag (identifier)
+                            data.d = String.fromCharCode.apply(null, value);
+                            break;
+                        case 1: // relay
+                            data.relays.push(String.fromCharCode.apply(null, value));
+                            break;
+                        case 2: // author pubkey
+                            data.pubkey = value.map(b => b.toString(16).padStart(2, '0')).join('');
+                            break;
+                        case 3: // kind
+                            data.kind = value.reduce((acc, b) => (acc << 8) | b, 0);
+                            break;
+                    }
+                }
+                return data;
+            } catch(e) {
+                console.log('Error decoding naddr:', e);
+                return null;
+            }
+        }
+        
+        // Decode nevent (NIP-19) - TLV format: 0=event id, 1=relay, 2=author
+        function decodeNevent(nevent) {
+            try {
+                var result = bech32Decode(nevent);
+                var bytes = result.bytes;
+                var data = { id: '', pubkey: '', relays: [] };
+                var i = 0;
+                while (i < bytes.length) {
+                    var type = bytes[i++];
+                    var len = bytes[i++];
+                    var value = bytes.slice(i, i + len);
+                    i += len;
+                    switch(type) {
+                        case 0: // event id
+                            data.id = value.map(b => b.toString(16).padStart(2, '0')).join('');
+                            break;
+                        case 1: // relay
+                            data.relays.push(String.fromCharCode.apply(null, value));
+                            break;
+                        case 2: // author pubkey
+                            data.pubkey = value.map(b => b.toString(16).padStart(2, '0')).join('');
+                            break;
+                    }
+                }
+                return data;
+            } catch(e) {
+                console.log('Error decoding nevent:', e);
+                return null;
+            }
+        }
+        
+        function hexToNpub(hex) {
+            if (!hex || hex.length !== 64) return hex;
+            return hex.substring(0, 8) + '...';
+        }
+        
+        function escapeHtml(unsafe) {
+            if (!unsafe) return "";
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        function setStatus(message, isError) {
+            var statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = 'status ' + (isError ? 'error' : 'success');
+            statusEl.classList.remove('hidden');
+        }
+        
+        function updateRelayStatus() {
+            var statusDiv = document.getElementById('relayStatus');
+            statusDiv.innerHTML = websockets.map(ws => {
+                var status = 'disconnected';
+                if (ws.readyState === WebSocket.OPEN) status = 'connected';
+                else if (ws.readyState === WebSocket.CONNECTING) status = 'connecting';
+                return '<span class="relay-badge ' + status + '">' + 
+                    ws.url.replace('wss://', '') + '</span>';
+            }).join('');
+        }
+        
+        function addMessage(data) {
+            var area = document.getElementById('messageArea');
+            if (messageCount === 0) {
+                area.innerHTML = '';
+            }
+            messageCount++;
+            
+            // Use event timestamp (created_at) if available, otherwise current time
+            var timestamp = data.timestamp || Math.floor(Date.now() / 1000);
+            var time = new Date(timestamp * 1000).toLocaleTimeString();
+            var msgClass = data.hasDonation ? 'message zap' : 'message';
+            var zapHtml = data.hasDonation ? 
+                '<span class="zap-amount">&#9889; ' + data.hasDonation + '</span> ' : '';
+            
+            var msgDiv = document.createElement('div');
+            msgDiv.className = msgClass;
+            msgDiv.dataset.timestamp = timestamp;
+            msgDiv.innerHTML = '<span class="timestamp">[' + time + ']</span> ' +
+                '<span class="nickname">' + escapeHtml(data.chatname) + '</span>: ' +
+                zapHtml +
+                '<span class="text">' + data.chatmessage + '</span>';
+            
+            // Insert in chronological order based on timestamp
+            var inserted = false;
+            var messages = area.querySelectorAll('.message');
+            for (var i = messages.length - 1; i >= 0; i--) {
+                var existingTs = parseInt(messages[i].dataset.timestamp) || 0;
+                if (timestamp >= existingTs) {
+                    messages[i].after(msgDiv);
+                    inserted = true;
+                    break;
+                }
+            }
+            if (!inserted) {
+                area.insertBefore(msgDiv, area.firstChild);
+            }
+            
+            area.scrollTop = area.scrollHeight;
+        }
+        
+        // --- Profile Handling ---
+        
+        function fetchProfile(pubkey, callback) {
+            if (profileCache.has(pubkey)) {
+                callback(profileCache.get(pubkey));
+                return;
+            }
+            
+            if (!pendingProfileCallbacks.has(pubkey)) {
+                pendingProfileCallbacks.set(pubkey, []);
+            }
+            pendingProfileCallbacks.get(pubkey).push(callback);
+            
+            // Only send request if this is the first callback for this pubkey
+            if (pendingProfileCallbacks.get(pubkey).length === 1) {
+                var requestSent = false;
+                
+                // Send request to ALL connected relays (not just the first one)
+                for (var ws of websockets) {
+                    if (ws.readyState === WebSocket.OPEN) {
+                        var filter = { kinds: [0], authors: [pubkey], limit: 1 };
+                        ws.send(JSON.stringify(['REQ', 'profile_' + pubkey.substring(0, 8), filter]));
+                        requestSent = true;
+                    }
+                }
+                
+                if (requestSent) {
+                    // Timeout fallback - use default profile if no response
+                    setTimeout(function() {
+                        if (!profileCache.has(pubkey) && pendingProfileCallbacks.has(pubkey)) {
+                            var defaultProfile = { name: hexToNpub(pubkey), picture: '' };
+                            profileCache.set(pubkey, defaultProfile);
+                            var callbacks = pendingProfileCallbacks.get(pubkey) || [];
+                            pendingProfileCallbacks.delete(pubkey);
+                            callbacks.forEach(function(cb) { cb(defaultProfile); });
+                        }
+                    }, 3000);
+                    return;
+                }
+            } else {
+                return;
+            }
+            
+            // No websockets available - use default immediately
+            var defaultProfile = { name: hexToNpub(pubkey), picture: '' };
+            var callbacks = pendingProfileCallbacks.get(pubkey) || [];
+            pendingProfileCallbacks.delete(pubkey);
+            callbacks.forEach(function(cb) { cb(defaultProfile); });
+        }
+        
+        // --- Zap Parsing ---
+        
+        function parseZapReceipt(event) {
+            var zapInfo = { amount: 0, message: '', zapper: '', zappee: '' };
+            try {
+                console.log('[Nostr] Parsing Zap receipt:', event.id);
+                
+                var bolt11Tag = event.tags.find(t => t[0] === 'bolt11');
+                if (bolt11Tag && bolt11Tag[1]) {
+                    var bolt11 = bolt11Tag[1].toLowerCase();
+                    console.log('[Nostr] BOLT11:', bolt11.substring(0, 50) + '...');
+                    
+                    // Try different BOLT11 patterns
+                    var amountMatch = bolt11.match(/lnbc(\d+)([munp]?)/);
+                    if (amountMatch) {
+                        var num = parseInt(amountMatch[1], 10);
+                        var unit = amountMatch[2] || '';
+                        console.log('[Nostr] Amount match:', num, unit);
+                        
+                        // Convert to millisatoshis first
+                        var msats = 0;
+                        switch(unit) {
+                            case 'm': msats = num * 100000000; break;  // milli-bitcoin = 100,000,000 msats
+                            case 'u': msats = num * 100000; break;     // micro-bitcoin = 100,000 msats
+                            case 'n': msats = num * 100; break;        // nano-bitcoin = 100 msats
+                            case 'p': msats = num / 10; break;         // pico-bitcoin = 0.1 msats
+                            default: msats = num * 100000000000; break; // BTC = 100,000,000,000 msats
+                        }
+                        zapInfo.amount = Math.round(msats / 1000); // Convert to sats
+                        console.log('[Nostr] Parsed amount:', zapInfo.amount, 'sats');
+                    }
+                } else {
+                    console.log('[Nostr] No bolt11 tag found in Zap');
+                }
+                
+                var descTag = event.tags.find(t => t[0] === 'description');
+                if (descTag && descTag[1]) {
+                    try {
+                        var zapRequest = JSON.parse(descTag[1]);
+                        zapInfo.zapper = zapRequest.pubkey || '';
+                        zapInfo.message = zapRequest.content || '';
+                        console.log('[Nostr] Zap from:', zapInfo.zapper?.substring(0, 16), 'message:', zapInfo.message);
+                    } catch(e) {
+                        console.log('[Nostr] Error parsing description tag:', e);
+                    }
+                }
+            } catch(e) {
+                console.log('[Nostr] Error parsing zap receipt:', e);
+            }
+            return zapInfo;
+        }
+        
+        // --- Event Processing ---
+        
+        function processEvent(event) {
+            if (!event || !event.id) return;
+            if (seenEvents.has(event.id)) return;
+            seenEvents.add(event.id);
+            
+            if (seenEvents.size > 1000) {
+                var iterator = seenEvents.values();
+                seenEvents.delete(iterator.next().value);
+            }
+            
+            var data = { chatname: '', chatimg: '', chatmessage: '', hasDonation: '' };
+            
+            switch(event.kind) {
+                case 0: // Profile
+                    try {
+                        var profile = JSON.parse(event.content);
+                        var profileData = {
+                            name: profile.name || profile.display_name || hexToNpub(event.pubkey),
+                            picture: profile.picture || ''
+                        };
+                        profileCache.set(event.pubkey, profileData);
+                        
+                        if (pendingProfileCallbacks.has(event.pubkey)) {
+                            var callbacks = pendingProfileCallbacks.get(event.pubkey);
+                            pendingProfileCallbacks.delete(event.pubkey);
+                            callbacks.forEach(function(cb) { cb(profileData); });
+                        }
+                    } catch(e) {}
+                    return;
+                    
+                case 30311: // Live stream
+                    handleLiveStreamEvent(event);
+                    return;
+                    
+                case 1311: // Live chat
+                    data.chatmessage = escapeHtml(event.content);
+                    break;
+                    
+                case 9735: // Zap
+                    var zap = parseZapReceipt(event);
+                    // Show zaps even with 0 amount (some zaps might not have parseable bolt11)
+                    if (zap.amount > 0) {
+                        data.hasDonation = zap.amount.toLocaleString() + ' sats';
+                    } else {
+                        // Still show zap but indicate unknown amount
+                        data.hasDonation = 'Zap';
+                    }
+                    data.chatmessage = zap.message ? escapeHtml(zap.message) : 'Zap!';
+                    if (zap.zapper) {
+                        event.pubkey = zap.zapper;
+                    }
+                    break;
+                    
+                default:
+                    return;
+            }
+            
+            // Store the event timestamp for ordering
+            var eventTimestamp = event.created_at || Math.floor(Date.now() / 1000);
+            
+            fetchProfile(event.pubkey, function(profile) {
+                data.chatname = profile.name || hexToNpub(event.pubkey);
+                data.chatimg = profile.picture || '';
+                data.timestamp = eventTimestamp;
+                
+                if (data.chatmessage || data.hasDonation) {
+                    addMessage(data);
+                    queueForExtension(data);
+                }
+            });
+        }
+        
+        // --- Message Queue for sorted sending to extension ---
+        
+        function queueForExtension(data) {
+            messageBuffer.push(data);
+            
+            // During initial load, wait for batch of messages
+            if (isInitialLoad) {
+                if (initialLoadTimer) clearTimeout(initialLoadTimer);
+                initialLoadTimer = setTimeout(function() {
+                    isInitialLoad = false;
+                    flushMessageBuffer();
+                }, 1500); // Wait 1.5s after last message during initial load
+            } else {
+                // After initial load, send with small delay to batch nearby messages
+                if (bufferFlushTimer) clearTimeout(bufferFlushTimer);
+                bufferFlushTimer = setTimeout(flushMessageBuffer, 100);
+            }
+        }
+        
+        function flushMessageBuffer() {
+            if (messageBuffer.length === 0) return;
+            
+            // Sort by timestamp (oldest first)
+            messageBuffer.sort(function(a, b) {
+                return (a.timestamp || 0) - (b.timestamp || 0);
+            });
+            
+            // Send all buffered messages in order
+            messageBuffer.forEach(function(data) {
+                pushToExtension(data);
+            });
+            
+            messageBuffer = [];
+        }
+        
+        // Buffer for finding newest live stream
+        var pendingStreamEvents = [];
+        var streamSearchTimer = null;
+        
+        function handleLiveStreamEvent(event) {
+            // If already connected to a live stream, ignore
+            if (liveStreamInfo && liveStreamInfo.status === 'live') return;
+            
+            var dTag = event.tags.find(t => t[0] === 'd');
+            if (!dTag || !dTag[1]) return;
+            
+            var status = '', title = '';
+            event.tags.forEach(function(tag) {
+                if (tag[0] === 'status') status = tag[1];
+                if (tag[0] === 'title') title = tag[1];
+            });
+            
+            // Add to pending and wait for more events
+            pendingStreamEvents.push(event);
+            
+            if (streamSearchTimer) clearTimeout(streamSearchTimer);
+            streamSearchTimer = setTimeout(selectNewestStream, 500);
+        }
+        
+        function selectNewestStream() {
+            if (pendingStreamEvents.length === 0) return;
+            
+            // Sort by created_at descending (newest first)
+            pendingStreamEvents.sort(function(a, b) {
+                return (b.created_at || 0) - (a.created_at || 0);
+            });
+            
+            var event = pendingStreamEvents[0];
+            pendingStreamEvents = [];
+            
+            var dTag = event.tags.find(t => t[0] === 'd');
+            var streamId = dTag[1];
+            var title = '';
+            var status = '';
+            
+            event.tags.forEach(function(tag) {
+                if (tag[0] === 'status') status = tag[1];
+                if (tag[0] === 'title') title = tag[1];
+            });
+
+            // Only consider live streams
+            if (status !== 'live') {
+                setStatus('Found stream "' + title + '" but status is: ' + status, true);
+                return;
+            }
+            
+            liveStreamInfo = {
+                id: streamId,
+                pubkey: event.pubkey,
+                title: title,
+                status: status,
+                aTag: '30311:' + event.pubkey + ':' + streamId
+            };
+            
+            config.streamId = streamId;
+            config.aTag = liveStreamInfo.aTag;
+
+
+            // Show stream info
+            document.getElementById('streamInfo').classList.remove('hidden');
+            document.getElementById('streamTitle').textContent = title || 'Untitled Stream';
+            document.getElementById('streamId').textContent = 'ID: ' + streamId;
+            
+
+            setStatus('Connected to live stream: ' + (title || streamId), false);
+            subscribeToLiveChat();
+        }
+        
+        function subscribeToLiveChat() {
+            if (!config.aTag) return;
+            
+            for (var ws of websockets) {
+                if (ws.readyState === WebSocket.OPEN) {
+                    var filter = {
+                        kinds: config.kinds,
+                        '#a': [config.aTag],
+                        limit: config.limit
+                    };
+                    ws.send(JSON.stringify(['REQ', 'live_' + config.streamId, filter]));
+                }
+            }
+        }
+        
+        // --- Push to Extension via CustomEvent (picked up by nostr.js content script) ---
+        
+        function pushToExtension(data) {
+            var msg = {
+                chatname: data.chatname,
+                chatbadges: '',
+                backgroundColor: '',
+                textColor: '',
+                chatmessage: data.chatmessage,
+                chatimg: data.chatimg,
+                hasDonation: data.hasDonation,
+                membership: '',
+                contentimg: '',
+                textonly: false,
+                type: 'nostr',
+                timestamp: data.timestamp ? data.timestamp * 1000 : Date.now()
+            };
+            
+            if (data.hasDonation) {
+                msg.event = 'donation';
+                msg.title = 'ZAP';
+            }
+            
+            // Dispatch CustomEvent for content script (nostr.js) to pick up
+            var event = new CustomEvent('NostrMessage', {
+                detail: msg,
+                bubbles: true
+            });
+            window.dispatchEvent(event);
+        }
+        
+        // --- WebSocket Connection ---
+        
+        var reconnectAttempts = new Map(); // Track reconnect attempts per relay
+        var maxReconnectAttempts = 3;
+        var reconnectDelay = 3000; // 3 seconds
+        
+        function connectRelay(url, isReconnect) {
+            try {
+                var ws = new WebSocket(url);
+                ws.url = url;
+                
+                ws.onopen = function() {
+                    // Reset reconnect attempts on successful connection
+                    reconnectAttempts.set(url, 0);
+                    
+                    setStatus('Connected to ' + url, false);
+                    updateRelayStatus();
+                    
+                    if (config.pubkey && !config.aTag) {
+                        var filter = {
+                            kinds: [30311],
+                            '#p': [config.pubkey],
+                            limit: 10,
+                        };
+                        ws.send(JSON.stringify(['REQ', 'find_stream', filter]));
+                    } else if (config.aTag) {
+                        subscribeToLiveChat();
+                    }
+                };
+                
+                ws.onmessage = function(e) {
+                    try {
+                        var msg = JSON.parse(e.data);
+                        if (msg[0] === 'EVENT' && msg[2]) {
+                            processEvent(msg[2]);
+                        } else if (msg[0] === 'EOSE') {
+                            // End of stored events
+                        } else if (msg[0] === 'NOTICE') {
+                            console.log('Relay notice:', msg[1]);
+                        }
+                    } catch(err) {}
+                };
+                
+                ws.onerror = function(e) {
+                    console.log('[Nostr] WebSocket error for ' + url);
+                    updateRelayStatus();
+                };
+                
+                ws.onclose = function(e) {
+                    updateRelayStatus();
+                    var idx = websockets.indexOf(ws);
+                    if (idx > -1) websockets.splice(idx, 1);
+                    
+                    // Auto-reconnect if not manually disconnected
+                    if (liveStreamInfo || config.pubkey) {
+                        var attempts = reconnectAttempts.get(url) || 0;
+                        if (attempts < maxReconnectAttempts) {
+                            reconnectAttempts.set(url, attempts + 1);
+                            var delay = reconnectDelay * Math.pow(1.5, attempts); // Exponential backoff
+                            console.log('[Nostr] Reconnecting to ' + url + ' in ' + Math.round(delay/1000) + 's (attempt ' + (attempts + 1) + ')');
+                            setTimeout(function() {
+                                if (liveStreamInfo || config.pubkey) {
+                                    connectRelay(url, true);
+                                }
+                            }, delay);
+                        } else {
+                            console.log('[Nostr] Max reconnect attempts reached for ' + url);
+                        }
+                    }
+                };
+                
+                websockets.push(ws);
+                updateRelayStatus();
+            } catch(e) {
+                setStatus('Error connecting to ' + url + ': ' + e.message, true);
+            }
+        }
+        
+        // --- UI Functions ---
+        
+        function connect() {
+            disconnect();
+            
+            var naddr = document.getElementById('naddrInput').value.trim();
+            var npub = document.getElementById('npubInput').value.trim();
+            var relays = document.getElementById('relayInput').value.trim();
+            
+            config.relays = relays.split(',').map(r => r.trim()).filter(r => r);
+            
+            // Try npub first (auto-detect stream)
+            if (npub) {
+                config.npub = npub;
+                config.pubkey = npubToHex(npub);
+                config.streamId = '';
+                config.aTag = '';
+                
+                if (!config.pubkey) {
+                    setStatus('Invalid npub format', true);
+                    return;
+                }
+            }
+            // Try naddr if no npub
+            else if (naddr && naddr.startsWith('naddr1')) {
+                var decoded = decodeNaddr(naddr);
+                if (decoded && decoded.pubkey && decoded.d) {
+                    config.pubkey = decoded.pubkey;
+                    config.streamId = decoded.d;
+                    config.aTag = decoded.kind + ':' + decoded.pubkey + ':' + decoded.d;
+                    // Add relays from naddr if present
+                    if (decoded.relays.length > 0) {
+                        config.relays = [...new Set([...decoded.relays, ...config.relays])];
+                        document.getElementById('relayInput').value = config.relays.join(',');
+                    }
+                    setStatus('Decoded naddr: ' + decoded.d, false);
+                } else {
+                    setStatus('Invalid naddr format', true);
+                    return;
+                }
+            }
+            // Try nevent 
+            else if (naddr && naddr.startsWith('nevent1')) {
+                var decoded = decodeNevent(naddr);
+                if (decoded && decoded.id) {
+                    config.eventId = decoded.id;
+                    config.pubkey = decoded.pubkey || '';
+                    // Add relays from nevent if present
+                    if (decoded.relays.length > 0) {
+                        config.relays = [...new Set([...decoded.relays, ...config.relays])];
+                        document.getElementById('relayInput').value = config.relays.join(',');
+                    }
+                    setStatus('Decoded nevent: ' + decoded.id.substring(0, 16) + '...', false);
+                } else {
+                    setStatus('Invalid nevent format', true);
+                    return;
+                }
+            } else {
+                setStatus('Please enter an npub, naddr, or nevent', true);
+                return;
+            }
+            
+            setStatus('Connecting...', false);
+            document.getElementById('connectBtn').disabled = true;
+            document.getElementById('disconnectBtn').disabled = false;
+            
+            config.relays.forEach(function(relay) {
+                connectRelay(relay);
+            });
+        }
+        
+        function disconnect() {
+            // Clear reconnect state first to prevent auto-reconnect
+            liveStreamInfo = null;
+            config.pubkey = '';
+            reconnectAttempts.clear();
+            
+            websockets.forEach(ws => {
+                try { ws.close(); } catch(e) {}
+            });
+            websockets = [];
+            seenEvents.clear();
+            profileCache.clear();
+            pendingProfileCallbacks.clear();
+            messageCount = 0;
+            
+            // Reset buffer state
+            messageBuffer = [];
+            if (bufferFlushTimer) clearTimeout(bufferFlushTimer);
+            if (initialLoadTimer) clearTimeout(initialLoadTimer);
+            isInitialLoad = true;
+            
+            document.getElementById('connectBtn').disabled = false;
+            document.getElementById('disconnectBtn').disabled = true;
+            document.getElementById('streamInfo').classList.add('hidden');
+            document.getElementById('relayStatus').innerHTML = '';
+            document.getElementById('messageArea').innerHTML = 
+                '<p style="color:#666;text-align:center;margin-top:150px;">Messages will appear here when connected...</p>';
+            
+            setStatus('Disconnected', false);
+        }
+        
+        // Check URL params for auto-connect
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var naddr = params.get('naddr') || params.get('nevent');
+            var npub = params.get('npub') || params.get('pubkey');
+            var relay = params.get('relay');
+            var relays = params.get('relays');
+            
+            if (naddr) {
+                document.getElementById('naddrInput').value = naddr;
+            }
+            if (npub) {
+                document.getElementById('npubInput').value = npub;
+            }
+            if (relay) {
+                document.getElementById('relayInput').value = relay;
+            }
+            if (relays) {
+                document.getElementById('relayInput').value = relays;
+            }
+            
+            // Auto-connect if naddr or npub provided
+            if (naddr || npub) {
+                setTimeout(connect, 500);
+            }
+        })();
+    </script>
+</body>
+</html>
