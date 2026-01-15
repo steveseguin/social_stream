@@ -75,6 +75,14 @@ jobs:
           max_attempts=4
           backoff=30
 
+          # For unlisted: wait up to 15 min for signed XPI
+          # For listed: don't wait (review takes days)
+          if [[ "$WEB_EXT_CHANNEL" == "unlisted" ]]; then
+            TIMEOUT_ARG=""
+          else
+            TIMEOUT_ARG="--approval-timeout 0"
+          fi
+
           while true; do
             if web-ext sign \
               --api-key "$AMO_JWT_ISSUER" \
@@ -83,7 +91,7 @@ jobs:
               --source-dir "$FIREFOX_BUILD_DIR" \
               --artifacts-dir "$ARTIFACTS_DIR" \
               --amo-metadata "scripts/amo-metadata.json" \
-              --approval-timeout 0; then
+              $TIMEOUT_ARG; then
               echo "Submission to AMO succeeded!"
               break
             fi
