@@ -9,8 +9,8 @@ on:
       channel:
         description: AMO channel (unlisted = immediate signing, listed = store review)
         type: choice
-        options: [listed, unlisted]
-        default: listed
+        options: [unlisted, listed]
+        default: unlisted
 
 permissions:
   contents: write
@@ -57,7 +57,7 @@ jobs:
         env:
           AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
           AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
-          WEB_EXT_CHANNEL: ${{ github.event.inputs.channel || 'listed' }}
+          WEB_EXT_CHANNEL: ${{ github.event.inputs.channel || 'unlisted' }}
         run: |
           set -euo pipefail
 
