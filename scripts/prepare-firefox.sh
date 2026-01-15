@@ -71,22 +71,41 @@ echo "Adding Firefox messaging compatibility shim to background.js..."
 # In Firefox MV3 with background scripts, we need to return a Promise instead.
 # This shim wraps chrome.runtime.onMessage.addListener to handle this difference.
 FIREFOX_SHIM='// Firefox MV3 messaging compatibility shim
+// Firefox returns the raw return value (true/Promise) to the caller instead of waiting for sendResponse
+// This shim ensures async responses work correctly
 (function() {
-    if (typeof browser !== "undefined" && browser.runtime) {
-        // We are in Firefox - wrap the message listener to handle async responses properly
-        const originalAddListener = chrome.runtime.onMessage.addListener.bind(chrome.runtime.onMessage);
-        chrome.runtime.onMessage.addListener = function(listener) {
-            originalAddListener(function(request, sender, sendResponse) {
-                const result = listener(request, sender, sendResponse);
-                // If the listener returns a Promise, Firefox needs us to return it
-                // If it returns true (Chrome pattern), convert to a Promise that never resolves
-                // (the actual response goes through sendResponse)
-                if (result === true) {
-                    return new Promise(() => {}); // Keep channel open
-                }
-                return result;
-            });
+    const isFirefox = typeof browser !== "undefined" && browser.runtime && browser.runtime.id;
+    if (isFirefox) {
+        console.log("[Firefox Shim] Applying messaging compatibility fix");
+        // Wrap both browser and chrome onMessage since code might use either
+        const wrapAddListener = function(target) {
+            const original = target.onMessage.addListener.bind(target.onMessage);
+            target.onMessage.addListener = function(listener) {
+                original(function(request, sender, sendResponse) {
+                    let responded = false;
+                    const wrappedSendResponse = function(response) {
+                        responded = true;
+                        sendResponse(response);
+                    };
+                    const result = listener(request, sender, wrappedSendResponse);
+                    // If result is a Promise, return it for Firefox async handling
+                    if (result && typeof result.then === "function") {
+                        return result.then(function(val) {
+                            // If sendResponse was called, return undefined to let it handle response
+                            // Otherwise return the resolved value
+                            return responded ? undefined : val;
+                        });
+                    }
+                    // Keep channel open if sendResponse might be called later
+                    if (result === true) {
+                        return new Promise(function() {});
+                    }
+                    return result;
+                });
+            };
         };
+        if (typeof browser !== "undefined" && browser.runtime) wrapAddListener(browser);
+        if (typeof chrome !== "undefined" && chrome.runtime && chrome !== browser) wrapAddListener(chrome);
     }
 })();
 '
