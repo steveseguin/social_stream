@@ -6708,24 +6708,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]');
 				const triggerInput = row.querySelector('.spotify-cmd-trigger');
 
-				// Apply saved enabled state
-				if (enabledCheckbox && disabledCommands.includes(command)) {
-					enabledCheckbox.checked = false;
+				// Apply enabled state (default enabled unless explicitly disabled)
+				if (enabledCheckbox) {
+					enabledCheckbox.checked = !disabledCommands.includes(command);
 				}
 
-				// Apply saved role permissions
-				if (permissions[command] && permissions[command].length > 0) {
-					const savedRoles = permissions[command];
-					roleCheckboxes.forEach(cb => {
-						cb.checked = savedRoles.includes(cb.value);
-					});
-				}
+				// Apply role permissions (defaults from data attribute when not saved)
+				const savedRoles = permissions[command] && permissions[command].length > 0 ? permissions[command] : null;
+				const defaultRoles = row.dataset.defaultRoles ? row.dataset.defaultRoles.split(',') : [];
+				const rolesToApply = savedRoles || defaultRoles;
+				roleCheckboxes.forEach(cb => {
+					cb.checked = rolesToApply.includes(cb.value);
+				});
 
-				// Apply saved custom triggers
-				if (triggerInput && customTriggers[command]) {
-					triggerInput.value = customTriggers[command];
+				// Apply custom triggers (fallback to default command)
+				if (triggerInput) {
+					triggerInput.value = customTriggers[command] || triggerInput.value || command;
 				}
 			});
+
 		});
 
 		// Save on change
