@@ -1345,8 +1345,6 @@
 		} else {
 		  callback(ele);
 		}
-	  } else if (ele.tagName == "yt-live-chat-donation-announcement-renderer".toUpperCase()) {
-		callback(ele);
 	  } else if (ele.tagName == "yt-live-chat-paid-sticker-renderer".toUpperCase()) {
 		callback(ele);
 	  } else if (ele.tagName == "ytd-sponsorships-live-chat-gift-redemption-announcement-renderer".toUpperCase()) {

@@ -1023,6 +1023,22 @@ async function ensureChatClientInstance() {
 		if (!payload) {
 			return;
 		}
+
+		// Skip events that EventSub is already handling to prevent duplicates
+		if (payload.event === 'cheer' && activeSubscriptions.has('channel.cheer')) {
+			return;
+		}
+		if (payload.event === 'sub' && activeSubscriptions.has('channel.subscribe')) {
+			return;
+		}
+		if ((payload.event === 'subgift' || payload.event === 'anonsubgift')
+			&& activeSubscriptions.has('channel.subscription.gift')) {
+			return;
+		}
+		if (payload.event === 'resub' && activeSubscriptions.has('channel.subscription.message')) {
+			return;
+		}
+
 		if (payload.event === 'cheer') {
 			await handleNormalizedChatMessage({
 				...payload,
@@ -1201,19 +1217,7 @@ async function ensureChatClientInstance() {
 				const sent = await sendMessage(msg);
 				if (sent) {
 					inputElement.value = "";
-					let builtmsg = {};
-					builtmsg.command = "PRIVMSG";
-					builtmsg.params = [username];
-					builtmsg.prefix = username+"!"+username+"@"+username+".tmi.twitch.tv";
-					builtmsg.trailing = msg;
-					
-					// Get user's specific badges from localStorage
-					const userBadges = localStorage.getItem('userBadges');
-					builtmsg.tags = {
-						badges: userBadges || '',
-						color: localStorage.getItem('userColor') || ''
-					};
-					await processMessage(builtmsg);
+					// Server echo will display the message via handleNormalizedChatMessage
 				}
 			}
 		}
