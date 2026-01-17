@@ -378,12 +378,18 @@
                 layer.innerHTML = '';
             }
 
-            // Process text with placeholder replacement
+            // Process text with generic placeholder replacement
+            // Supports all variables from messageData: {username}, {message}, {source}, {donation},
+            // {event}, {membership}, {hasDonation}, {subtitle}, {meta}, etc.
             var text = config.text || '';
-            text = text.replace(/\{username\}/gi, messageData.username || messageData.chatname || 'User');
-            text = text.replace(/\{message\}/gi, messageData.message || messageData.chatmessage || '');
-            text = text.replace(/\{source\}/gi, messageData.source || messageData.type || '');
-            text = text.replace(/\{donation\}/gi, messageData.donation || messageData.hasDonation || '');
+            text = text.replace(/\{(\w+)\}/gi, function(match, key) {
+                var val = messageData[key.toLowerCase()];
+                if (val === undefined || val === null) return '';
+                if (typeof val === 'object') {
+                    try { return JSON.stringify(val); } catch (e) { return ''; }
+                }
+                return String(val);
+            });
 
             if (!text) {
                 console.warn('[showOverlayText] No text to display');
