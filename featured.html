@@ -910,11 +910,9 @@
 					};
 			})(window);
 			var urlParams = new URLSearchParams(window.location.search);
-			var devmode = urlParams.has("devmode");
 			
 			function log(msg) {
 				if (urlParams.has("debug")) {
-
 					console.log(msg);
 				}
 			}
@@ -2289,97 +2287,7 @@
 			// TTS provider functions are now handled by tts.js
 
 
-			let featuredBridge = null;
-			let featuredHandleSDKData = null;
-			let featuredBridgeLoader = null;
-
-			function useIframeTransport() {
-				return !!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"));
-			}
-
-			async function loadFeaturedSDK() {
-				if (window.NinjaBridge) {
-					return;
-				}
-				if (featuredBridgeLoader) {
-					return featuredBridgeLoader;
-				}
-				featuredBridgeLoader = new Promise((resolve, reject) => {
-					try {
-						const ninjaScript = document.createElement("script");
-						ninjaScript.src = "./thirdparty/vdoninja-sdk.js";
-						ninjaScript.onload = () => {
-							const bridgeScript = document.createElement("script");
-							bridgeScript.src = "./js/ninja-transport.js";
-							bridgeScript.onload = () => resolve();
-							bridgeScript.onerror = (e) => reject(e);
-							document.body.appendChild(bridgeScript);
-						};
-						ninjaScript.onerror = (e) => reject(e);
-						document.body.appendChild(ninjaScript);
-					} catch (e) {
-						reject(e);
-					}
-				});
-				return featuredBridgeLoader;
-			}
-
-			async function RecvDataWindow() {
-				if (!useIframeTransport()) {
-					try {
-						await loadFeaturedSDK();
-					} catch (e) {
-						console.warn('NinjaBridge loader failed', e);
-					}
-				}
-
-				if (!useIframeTransport() && window.NinjaBridge) {
-					try {
-						if (featuredBridge) {
-							try {
-								if (featuredHandleSDKData) {
-									featuredBridge.removeEventListener('data', featuredHandleSDKData);
-									if (featuredBridge.vdo) {
-										featuredBridge.vdo.removeEventListener('data', featuredHandleSDKData);
-										featuredBridge.vdo.removeEventListener('dataReceived', featuredHandleSDKData);
-									}
-								}
-							} catch (e) {}
-							await featuredBridge.destroy();
-						}
-						featuredBridge = new NinjaBridge({ debug: devmode, label: pseudodock ? "dock" : "overlay" });
-
-						featuredHandleSDKData = (ev) => {
-							try {
-								const pkt = ev.detail && (ev.detail.data || ev.detail);
-								const data = pkt && (pkt.detail?.data || pkt.data || pkt);
-								if (data && data.overlayNinja) {
-									if (applyCustomFeatureActions) {
-										applyCustomFeatureActions(data.overlayNinja);
-									}
-									if (data.overlayNinja && "response" in data.overlayNinja) {
-										return;
-									}
-									processData({ contents: data.overlayNinja });
-								}
-							} catch (e) {
-								console.warn(e);
-							}
-						};
-
-						featuredBridge.addEventListener('data', featuredHandleSDKData);
-						if (featuredBridge.vdo) {
-							featuredBridge.vdo.addEventListener('data', featuredHandleSDKData);
-							featuredBridge.vdo.addEventListener('dataReceived', featuredHandleSDKData);
-						}
-
-						await featuredBridge.init({ room: roomID, password: password, streamID: roomID });
-						return;
-					} catch (e) {
-						console.warn('NinjaBridge init failed, falling back to iframe', e);
-					}
-				}
-
+			function RecvDataWindow() {
 				var iframe = document.createElement("iframe");
 
 				if (pseudodock) {
@@ -2413,21 +2321,20 @@
 								if (applyCustomFeatureActions) {
 									applyCustomFeatureActions(e.data.dataReceived.overlayNinja);
 								}
-
-								//console.log(e.data.dataReceived.overlayNinja);
-								if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
-									// pass
-								} else {
-									processData({ contents: e.data.dataReceived.overlayNinja });
-								}
 							} catch (e) {
 								console.error(e);
+							}
+
+							//console.log(e.data.dataReceived.overlayNinja);
+							if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
+								// pass
+							} else {
+								processData({ contents: e.data.dataReceived.overlayNinja });
 							}
 						}
 					}
 				});
 			}
-
 
 			if (!socketserver) {
 				RecvDataWindow(); // only load the iframe if not connecting via wss
