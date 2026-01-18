@@ -1223,6 +1223,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "management",
     description: "When enabled, relay all messages (!NOT RECOMMENDED!)."
   },
+  "blockChannelPointRelays": {
+    type: "boolean",
+    category: "management",
+    description: "When enabled, channel point redemptions are not relayed."
+  },
   "relaydonos": {
     type: "boolean",
     category: "management",

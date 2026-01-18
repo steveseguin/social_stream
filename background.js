@@ -5915,6 +5915,16 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, ty
 function sendToS10(data, fakechat=false, relayed=false) {
 	//console.log"sendToS10",data);
 	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
+		if (settings.blockChannelPointRelays && data && (
+			data.event === "channel_points"
+			|| data.event === "reward"
+			|| (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title))
+			|| (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points"))
+		)) {
+			return null;
+		}
+
+
 		try {
 			// msg =  '{
 				// "userId": "my-external-id",
@@ -6054,6 +6064,16 @@ function sendToS10(data, fakechat=false, relayed=false) {
 // Social Stream Chat integration - send messages to chat.socialstream.ninja
 function sendToSSC(data, fakechat=false, relayed=false) {
 	if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting) {
+		if (settings.blockChannelPointRelays && data && (
+			data.event === "channel_points"
+			|| data.event === "reward"
+			|| (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title))
+			|| (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points"))
+		)) {
+			return null;
+		}
+
+
 		try {
 			// Skip messages from our own chat to avoid loops
 			if (data.type && data.type === "socialstreamchat") {
@@ -12071,11 +12091,17 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		const messageToCheck = data.textContent || data.chatmessage;
+		const blockChannelPointRelay = settings.blockChannelPointRelays && (
+			data.event === "channel_points"
+			|| data.event === "reward"
+			|| (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title))
+			|| (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points"))
+		);
 		if (settings.relayall && data.chatmessage && !data.event && tab && messageToCheck.includes(miscTranslations.said)){
 			//console.log("1");
 			return null;
 			
-		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab) {
+		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab && !blockChannelPointRelay) {
 			//console.log("2");
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
@@ -12111,12 +12137,12 @@ async function applyBotActions(data, tab = false) {
 				sendToDestinations(data);
 				return null;
 			}
-		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
+		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event && !blockChannelPointRelay){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
 
 		// Social Stream Chat relay - send all messages to chat.socialstream.ninja
-		if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting && !data.bot && data.chatmessage && data.chatname && !data.event){
+		if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting && !data.bot && data.chatmessage && data.chatname && !data.event && !blockChannelPointRelay){
 			sendToSSC(data, false, true);
 		}
 		//console.logdata);
