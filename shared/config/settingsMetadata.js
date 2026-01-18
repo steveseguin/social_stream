@@ -1273,10 +1273,10 @@ const SETTINGS_METADATA = Object.freeze({
     category: "streaming_chat_dock_overlay",
     description: "Set emoji scale 1.00x."
   },
-  "sdk": {
+  "disablesdk": {
     type: "boolean",
     category: "global_settings_and_tools",
-    description: "When enabled, use SDK transport (beta)."
+    description: "Disable SDK transport (fallback to iframe)."
   },
   "seventv": {
     type: "boolean",

@@ -2970,9 +2970,16 @@
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
+			var devmode = urlParams.has("devmode");
 			var treatTikTokFansAsMembers = urlParams.has("tiktokfans");
+
 			var channel = null;
 			var iframes = [];
+			var ninjaBridge = null;
+			var ninjaBridgesByRoom = {};
+			var ninjaBridgeHandlersByRoom = {};
+			var ninjaBridgeLoader = null;
+
 			var queue = [];
 			var selectedQueue = [];
 			var datestamp = true;
@@ -4332,6 +4339,11 @@
 			if (urlParams.has("openchat")) {
 				openChatAutomatically = true;
 			}
+
+			function useIframeTransport() {
+				return !!(urlParams.has("server") || urlParams.has("server2") || urlParams.has("server3"));
+			}
+
 
 			if (urlParams.has("scale")) {
 				scale = urlParams.get("scale") || 1.0;
@@ -6983,7 +6995,102 @@
 				return false;
 			}
 			
-			function RecvDataWindow(room) {
+			async function loadNinjaSDK() {
+				if (window.NinjaBridge) {
+					return;
+				}
+				if (ninjaBridgeLoader) {
+					return ninjaBridgeLoader;
+				}
+				ninjaBridgeLoader = new Promise((resolve, reject) => {
+					try {
+						const ninjaScript = document.createElement("script");
+						ninjaScript.src = "./thirdparty/vdoninja-sdk.js";
+						ninjaScript.onload = () => {
+							const bridgeScript = document.createElement("script");
+							bridgeScript.src = "./js/ninja-transport.js";
+							bridgeScript.onload = () => resolve();
+							bridgeScript.onerror = (e) => reject(e);
+							document.body.appendChild(bridgeScript);
+						};
+						ninjaScript.onerror = (e) => reject(e);
+						document.body.appendChild(ninjaScript);
+					} catch (e) {
+						reject(e);
+					}
+				});
+				return ninjaBridgeLoader;
+			}
+
+			async function RecvDataWindow(room) {
+				if (!useIframeTransport()) {
+					try {
+						await loadNinjaSDK();
+					} catch (e) {
+						console.warn('NinjaBridge loader failed', e);
+					}
+				}
+
+				if (!useIframeTransport() && window.NinjaBridge) {
+					try {
+						let bridge = ninjaBridgesByRoom[room];
+						if (bridge) {
+							try {
+								const existingHandlers = ninjaBridgeHandlersByRoom[room];
+								if (existingHandlers) {
+									bridge.removeEventListener('data', existingHandlers.data);
+									bridge.removeEventListener('peerLabel', existingHandlers.peerLabel);
+									if (bridge.vdo) {
+										bridge.vdo.removeEventListener('data', existingHandlers.data);
+										bridge.vdo.removeEventListener('dataReceived', existingHandlers.data);
+									}
+								}
+							} catch (e) {}
+							await bridge.destroy();
+						}
+
+						bridge = new NinjaBridge({ debug: devmode, label: "dock" });
+						ninjaBridgesByRoom[room] = bridge;
+						ninjaBridge = bridge;
+
+						const dataHandler = (ev) => {
+							try {
+								const pkt = ev.detail && (ev.detail.data || ev.detail);
+								const data = pkt && (pkt.detail?.data || pkt.data || pkt);
+								if (data && data.overlayNinja) {
+									processInput(data.overlayNinja);
+								}
+							} catch (e) { console.warn(e); }
+						};
+
+						const labelHandler = (ev) => {
+							try {
+								const { uuid, label } = ev.detail || {};
+								if (!uuid || !label) return;
+								if (label === "dock") {
+									syncDockAll(uuid);
+								}
+								if (label === "SocialStream" && openChatAutomatically) {
+									send2Extension({ action: "openChat", value: null }, uuid);
+								}
+							} catch (e) { console.warn(e); }
+						};
+
+						bridge.addEventListener('data', dataHandler);
+						bridge.addEventListener('peerLabel', labelHandler);
+						if (bridge.vdo) {
+							bridge.vdo.addEventListener('data', dataHandler);
+							bridge.vdo.addEventListener('dataReceived', dataHandler);
+						}
+						ninjaBridgeHandlersByRoom[room] = { data: dataHandler, peerLabel: labelHandler };
+
+						await bridge.init({ room: room, password: password, streamID: room });
+						return;
+					} catch (e) {
+						console.warn('NinjaBridge init failed, falling back to iframe', e);
+					}
+				}
+
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
 				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
@@ -7074,6 +7181,7 @@
 					}
 				});
 			}
+
 			///////////
 			let obsState = {};
 			const modal = document.getElementById('obsControlModal');
@@ -10082,6 +10190,29 @@
 					}
 				}
 
+				if (!useIframeTransport() && ninjaBridge && ninjaBridge.isReady()) {
+					try {
+						if (uid) {
+							ninjaBridge.send(data, uid);
+							return;
+						}
+						var peers = ninjaBridge.getPeers();
+						var hasTarget = false;
+						for (var key in peers) {
+							if (peers[key] === "SocialStream") {
+								ninjaBridge.send(data, key);
+								hasTarget = true;
+							}
+						}
+						if (!hasTarget) {
+							ninjaBridge.send(data);
+						}
+						return;
+					} catch (e) {
+						console.warn(e);
+					}
+				}
+
 				iframes.forEach(iframe => {
 					if (!uid) {
 						var keys = Object.keys(iframe.connectedPeers);
@@ -10102,6 +10233,7 @@
 					}
 				});
 			}
+
 			
 			function syncDataAny(data, UUID = false, force = false) {
 				if (socketserver) {
@@ -10114,6 +10246,23 @@
 			function syncDataP2P(data, UUID = false, force = false) {
 				if (blockMessageSelecting || blockMessageSelecting2) {
 					return;
+				}
+				if (!useIframeTransport() && ninjaBridge && ninjaBridge.isReady() && (syncDocks || force)) {
+					try {
+						if (UUID) {
+							ninjaBridge.send(data, UUID);
+							return;
+						}
+						var peers = ninjaBridge.getPeers();
+						for (var key in peers) {
+							if (peers[key] === "dock") {
+								ninjaBridge.send(data, key);
+							}
+						}
+						return;
+					} catch (e) {
+						console.warn(e);
+					}
 				}
 				iframes.forEach(iframe => {
 					if (syncDocks || force) {
@@ -10135,10 +10284,102 @@
 				});
 			}
 
+
 			function sendDataP2P(data, force=false) {
 				if (blockMessageSelecting || blockMessageSelecting2 || blockMessageSelecting3) {
 					return;
 				}
+
+				if (singlefeaturedwriter) {
+					data.timestamp = new Date().getTime();
+					if (data) {
+						overwriteFile(JSON.stringify(data));
+					} else {
+						overwriteFile(false);
+					}
+				}
+
+				if (!data) {
+					document.querySelectorAll("." + lastMessageClass).forEach(ele => {
+						// last message sent was to clear the overlay
+						ele.classList.remove(lastMessageClass); // no overlay is now active.
+					});
+				}
+				try {
+					if (socketserver) {
+						// send a copy to the remote API
+						if (data.out){
+							delete data.out;
+						}
+						socketserver.send(JSON.stringify(data));
+					}
+					if (!useIframeTransport() && ninjaBridge && ninjaBridge.isReady()) {
+						try {
+							if ((syncDocks || force)) {
+								var peers = ninjaBridge.getPeers();
+								for (var key in peers) {
+									var label = peers[key];
+									if (label === "dock") {
+										if (data && data.id) {
+											ninjaBridge.send({ mid: data.id }, key);
+										} else {
+											ninjaBridge.send({ mid: false }, key);
+										}
+									} else if (label === "overlay" || label === false) {
+										ninjaBridge.send(data, key);
+									}
+								}
+							} else {
+								var peers = ninjaBridge.getPeers();
+								for (var key in peers) {
+									var label = peers[key];
+									if (label !== "dock") {
+										ninjaBridge.send(data, key);
+									}
+								}
+							}
+							return;
+						} catch (e) {
+							console.warn(e);
+						}
+					}
+					iframes.forEach(iframe => {
+						var msg = {};
+						msg.overlayNinja = {};
+						msg.overlayNinja = data;
+						if ((syncDocks || force)) {
+							var keys = Object.keys(iframe.connectedPeers);
+							for (var i = 0; i < keys.length; i++) {
+								var UUID = keys[i];
+								var label = iframe.connectedPeers[keys[i]];
+								if (label === "dock") {
+									if (data && data.id) {
+										iframe.contentWindow.postMessage({ sendData: { overlayNinja: { mid: data.id } }, type: "pcs", UUID: UUID }, "*");
+									} else {
+										iframe.contentWindow.postMessage({ sendData: { overlayNinja: { mid: false } }, type: "pcs", UUID: UUID }, "*");
+									}
+								} else if (label === "overlay") {
+									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension..
+								} else if (label === false) {
+									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension.. legacy?
+								}
+							}
+						} else {
+							var keys = Object.keys(iframe.connectedPeers);
+							for (var i = 0; i < keys.length; i++) {
+								var UUID = keys[i];
+								var label = iframe.connectedPeers[keys[i]];
+								if (label !== "dock") {
+									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension.. legacy?
+								}
+							}
+						}
+					});
+				} catch (e) {
+					console.error(e);
+				}
+			}
+
 
 				if (singlefeaturedwriter) {
 					data.timestamp = new Date().getTime();
