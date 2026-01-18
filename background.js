@@ -11,7 +11,7 @@ var isExtensionOn = false;
 var iframe = null;
 // Optional: Use VDONinjaSDK instead of iframe transport to reduce memory
 var ninjaBridge = null;
-var useNinjaSDK = true; // default to SDK unless disabled via settings/params
+var useNinjaSDK = false; // toggled via URL param &sdk, or can be wired to settings in future
 
 var settings = {};
 var messageTimeout = {};
@@ -1331,10 +1331,8 @@ function loadSettings(item, resave = false) {
 	}
     // Recompute effective SDK usage on settings load
     try {
-        const hasDisableSetting = settings && settings.disablesdk !== undefined;
-        const rawDisable = settings?.disablesdk;
-        const parsedDisable = (rawDisable?.setting === true) || (rawDisable === true) || (rawDisable?.setting === 'true');
-        const effective = hasDisableSetting ? !parsedDisable : true;
+        const settingsSDK = (settings?.sdk?.setting === true) || (settings?.sdk === true) || (settings?.usesdk?.setting === true);
+        const effective = !!settingsSDK;
         if (lastUseNinjaSDK === undefined) {
             lastUseNinjaSDK = effective;
         } else if (effective !== lastUseNinjaSDK) {
@@ -3900,7 +3898,7 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 
 			// If SDK setting changed, reinitialize transport if extension is ON
 			try {
-				if (request.setting === 'disablesdk' && isExtensionOn && streamID) {
+				if (request.setting === 'sdk' && isExtensionOn && streamID) {
 					initTransport(streamID, password);
 				}
 			} catch(e) { console.warn(e); }
@@ -9246,25 +9244,21 @@ async function initTransport(streamID, pass = false) {
 
     // Re-evaluate effective SDK flag each init, based on flexible truthy parsing
     try {
-        const rawDisable = settings?.disablesdk;
-        let flag = true;
-        if (rawDisable !== undefined) {
-            let disabled = false;
-            if (typeof rawDisable === 'boolean') {
-                disabled = rawDisable;
-            } else if (rawDisable && typeof rawDisable === 'object') {
-                // supports { setting: true/"true"/1 }
-                const v = rawDisable.setting;
-                disabled = (v === true) || (v === 1) || (typeof v === 'string' && /^(1|true|on|yes)$/i.test(v));
-            } else if (typeof rawDisable === 'string') {
-                disabled = /^(1|true|on|yes)$/i.test(rawDisable);
-            } else if (rawDisable === 1) {
-                disabled = true;
-            }
-            flag = !disabled;
+        const raw = (settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk));
+        let flag = false;
+        if (typeof raw === 'boolean') {
+            flag = raw;
+        } else if (raw && typeof raw === 'object') {
+            // supports { setting: true/"true"/1 }
+            const v = raw.setting;
+            flag = (v === true) || (v === 1) || (typeof v === 'string' && /^(1|true|on|yes)$/i.test(v));
+        } else if (typeof raw === 'string') {
+            flag = /^(1|true|on|yes)$/i.test(raw);
+        } else if (raw === 1) {
+            flag = true;
         }
         useNinjaSDK = !!flag;
-    } catch(e) { useNinjaSDK = true; }
+    } catch(e) { useNinjaSDK = false; }
 
 	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
 
