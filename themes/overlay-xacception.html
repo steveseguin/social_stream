@@ -262,6 +262,10 @@ body, html {
     var password = "false";
     var featuredMode = false;
 
+    // showtime: if set via URL, override default. Otherwise keep current default (30000ms)
+    // Use showtime=0 to disable auto-hiding
+    var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 30000;
+
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = 20; // Adjust as needed
@@ -295,7 +299,8 @@ body, html {
 			if (timestamp) {
 				const age = now - timestamp;
 				
-				if (age > 30000 && !message.classList.contains('fading')) {
+				// After showtime ms, start fading (showtime=0 disables auto-hiding)
+				if (showtime > 0 && age > showtime && !message.classList.contains('fading')) {
 					message.classList.add('fading');
 				}
 			}
