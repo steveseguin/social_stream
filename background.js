@@ -10319,7 +10319,23 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 	                    markAutoForTabIfNeeded();
 	                    return;
 	                }
-	                
+
+	                // Handle websocket source pages (socialstream.ninja/sources/websocket/* and beta/sources/websocket/*)
+	                if (tab.url.includes("socialstream.ninja") && tab.url.includes("/sources/websocket/")) {
+	                    try {
+	                        chrome.tabs.sendMessage(tab.id, {
+	                            type: 'SEND_MESSAGE',
+	                            message: data.response
+	                        }, function(response) {
+	                            chrome.runtime.lastError; // Clear any error
+	                        });
+	                        markAutoForTabIfNeeded();
+	                        return;
+	                    } catch(e) {
+	                        console.error('Failed to send to websocket source:', e);
+	                    }
+	                }
+
 	                if (tab.url.includes("tiktok.com")) {
 	                    let tiktokMessage = data.response;
 
@@ -10393,7 +10409,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     if (tab.url.startsWith("chrome://")) return false;
                     if (tab.url.startsWith("chrome-extension")) return false;
                 }
-                if (tab.url.startsWith("https://socialstream.ninja/")) return false;
+                if (tab.url.startsWith("https://socialstream.ninja/")) {
+                    // Allow websocket source pages to receive messages (production and beta)
+                    if (!tab.url.includes("/sources/websocket/")) {
+                        return false;
+                    }
+                }
                 if (tab.url in published) return false;
                 if (!checkIfAllowed(tab.url)) return false;
 
@@ -10441,10 +10462,15 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         if (tab.url.startsWith("chrome://")) return false;
         if (tab.url.startsWith("chrome-extension")) return false;
     }
-    if (tab.url.startsWith("https://socialstream.ninja/")) return false;
+    if (tab.url.startsWith("https://socialstream.ninja/")) {
+        // Allow websocket source pages to receive messages (production and beta)
+        if (!tab.url.includes("/sources/websocket/")) {
+            return false;
+        }
+    }
     if (tab.url in published) return false;
     if (!checkIfAllowed(tab.url)) return false;
-    
+
     // Check TID conditions
     if ("tid" in data && data.tid !== false && data.tid !== null) {
         if (typeof data.tid == "object") {
