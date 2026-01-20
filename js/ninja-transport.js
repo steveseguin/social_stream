@@ -12,9 +12,10 @@
       this.opts = Object.assign(
         {
           debug: false,
-          // Prefer SSN's signaling host for consistency with vdo.socialstream.ninja
+          // Use VDO.Ninja's signaling server (same as vdo.socialstream.ninja iframe)
           wss: 'wss://wss.socialstream.ninja',
           label: 'SocialStream',
+          announce: true,
         },
         opts
       );
@@ -57,20 +58,28 @@
       // Join the room
       await this.vdo.joinRoom({ room, password: this.password || false });
 
-      // Publish a data-only stream whose streamID equals the room's ID
-      // so overlays can subscribe to it, mirroring the iframe's &push=room behavior.
-      try {
-        await this.vdo.announce({
-          streamID: this.streamID || room,
-          label: this.opts.label || 'SocialStream',
-          // Keep metadata minimal; data-channel only
-          allowchunked: true,
-          iframe: false,
-          widget: false,
-        });
-      } catch (e) {
-        // If publish fails (older SDK), continue with DC-only viewer below
-        if (this.opts.debug) console.warn('NinjaBridge: publish failed; continuing', e);
+      if (this.opts.announce) {
+        // Publish a data-only stream. If streamID provided, use it (for main extension).
+        // If not provided, SDK will generate a random one (for dock/overlays).
+        try {
+          const announceOpts = {
+            label: this.opts.label || 'SocialStream',
+            allowchunked: true,
+            iframe: false,
+            widget: false,
+          };
+          if (this.streamID) {
+            announceOpts.streamID = this.streamID;
+          }
+          const actualStreamID = await this.vdo.announce(announceOpts);
+          // Track the actual streamID (important for random IDs so we don't auto-view ourselves)
+          if (!this.streamID && actualStreamID) {
+            this.streamID = actualStreamID;
+          }
+        } catch (e) {
+          // If publish fails (older SDK), continue with DC-only viewer below
+          if (this.opts.debug) console.warn('NinjaBridge: publish failed; continuing', e);
+        }
       }
 
       // Auto-view handlers already enabled above
@@ -138,21 +147,19 @@
         this.connected = false;
       });
 
-      // Route data payloads from peers to background.js
+      // Route data payloads from peers
       const dataHandler = (ev) => {
         try {
+          if (this.opts.debug) console.log('NinjaBridge: raw data event', ev);
           const pkt = ev.detail && (ev.detail.data || ev.detail);
           const uuid = ev.detail && (ev.detail.uuid || ev.detail.peer || ev.detail.id);
           const data = pkt && (pkt.detail?.data || pkt.data || pkt);
+          if (this.opts.debug) console.log('NinjaBridge: parsed data', { uuid, data });
           if (!data) return;
-          if (data.overlayNinja) {
-            // Mirror iframe event shape by dispatching a custom DOM event
-            // background.js already binds directly to vdo in initTransport(),
-            // but we keep this here for completeness.
-            this.dispatchEvent(
-              new CustomEvent('data', { detail: { uuid, data: data.overlayNinja } })
-            );
-          }
+          // Pass through data as-is; let handlers check for overlayNinja
+          this.dispatchEvent(
+            new CustomEvent('data', { detail: { uuid, data } })
+          );
         } catch (e) {
           if (this.opts.debug) console.warn('NinjaBridge: data handler error', e);
         }
@@ -167,9 +174,12 @@
         try {
           if (!streamID) return;
           // Don't view our own published stream
-          if ((this.streamID || this.room) && streamID === (this.streamID || this.room)) return;
+          if (this.streamID && streamID === this.streamID) return;
+          // Also check SDK's internal streamID (in case it was set after init)
+          if (this.vdo && this.vdo.state && this.vdo.state.streamID === streamID) return;
           if (this._viewedStreams.has(streamID)) return;
           this._viewedStreams.add(streamID);
+          if (this.opts.debug) console.log('NinjaBridge: auto-viewing stream', streamID);
           this.vdo.view(streamID, { audio: false, video: false, label: this.opts.label || 'SocialStream' }).catch((e) => {
             if (this.opts.debug) console.warn('NinjaBridge: auto-view failed', streamID, e);
             // Allow retry later by removing from set
@@ -208,12 +218,14 @@
         if (typeof window !== 'undefined' && window.connectedPeers) {
           // Overwrite keys without replacing the object reference
           const target = window.connectedPeers;
+          const selfUUID = (this.vdo && this.vdo.state && this.vdo.state.uuid) ? this.vdo.state.uuid : null;
           // Remove missing
           for (const k of Object.keys(target)) {
             if (!(k in this.labelsByUUID)) delete target[k];
           }
           // Add/update
           for (const [k, v] of Object.entries(this.labelsByUUID)) {
+            if (selfUUID && k === selfUUID) continue;
             target[k] = v;
           }
         }
@@ -236,7 +248,7 @@
       const payload = { overlayNinja: data };
       if (uuid) {
         try {
-          await this.vdo.sendData(payload, uuid);
+          await this.vdo.sendData(payload, { uuid, preference: 'all', allowFallback: true });
           return true;
         } catch (e) {
           console.warn('NinjaBridge send error (uuid)', e);
@@ -246,7 +258,7 @@
 
       // Default broadcast to all peers
       try {
-        await this.vdo.sendData(payload);
+        await this.vdo.sendData(payload, { preference: 'all', allowFallback: true });
         return true;
       } catch (e) {
         console.warn('NinjaBridge broadcast error', e);
@@ -263,7 +275,7 @@
       let ok = true;
       for (const uuid of targets) {
         try {
-          await this.vdo.sendData(payload, uuid);
+          await this.vdo.sendData(payload, { uuid, preference: 'all', allowFallback: true });
         } catch (e) {
           console.warn('NinjaBridge sendToLabel error', label, uuid, e);
           ok = false;

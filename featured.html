@@ -910,7 +910,12 @@
 					};
 			})(window);
 			var urlParams = new URLSearchParams(window.location.search);
-			
+			var devmode = urlParams.has("devmode");
+			var forceIframe = urlParams.has("iframe") || urlParams.has("disablesdk");
+			var ninjaBridge = null;
+			var sdkLoadPromise = null;
+			var sdkLoadFailed = false;
+
 			function log(msg) {
 				if (urlParams.has("debug")) {
 					console.log(msg);
@@ -2287,14 +2292,41 @@
 			// TTS provider functions are now handled by tts.js
 
 
-			function RecvDataWindow() {
+			function loadNinjaSDK() {
+				if (sdkLoadPromise) return sdkLoadPromise;
+				if (window.NinjaBridge) return Promise.resolve(true);
+
+				sdkLoadPromise = new Promise((resolve) => {
+					const sdkScript = document.createElement("script");
+					sdkScript.src = "./thirdparty/vdoninja-sdk.js";
+					sdkScript.onload = () => {
+						const bridgeScript = document.createElement("script");
+						bridgeScript.src = "./js/ninja-transport.js";
+						bridgeScript.onload = () => resolve(true);
+						bridgeScript.onerror = () => {
+							console.warn("Failed to load ninja-transport.js");
+							sdkLoadFailed = true;
+							resolve(false);
+						};
+						document.body.appendChild(bridgeScript);
+					};
+					sdkScript.onerror = () => {
+						console.warn("Failed to load vdoninja-sdk.js");
+						sdkLoadFailed = true;
+						resolve(false);
+					};
+					document.body.appendChild(sdkScript);
+				});
+				return sdkLoadPromise;
+			}
+
+			function createIframeTransport() {
 				var iframe = document.createElement("iframe");
 
 				if (pseudodock) {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID; // push and view, as we will connect with other docks also.
-					// iframe.src = "https://vdo.socialstream.ninja/?ln&password="+password+"&notmobile&salt=vdo.ninja&label=overlay&exclude="+roomID+"&scene&novideo&noaudio&cleanoutput&room="+roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + roomID;
 				} else {
-					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID; // exclude raw feed; we only want selected inputs.
+					iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + lanonly + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
 				}
 
 				iframe.style.width = "0px";
@@ -2303,7 +2335,7 @@
 				iframe.style.left = "-100px";
 				iframe.style.top = "-100px";
 				iframe.id = "frame1";
-				iframe.allow = "midi;geolocation;microphone;"; // microphone is needed for Safari webRTC P2P connections
+				iframe.allow = "midi;geolocation;microphone;";
 				document.body.appendChild(iframe);
 
 				var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
@@ -2313,9 +2345,8 @@
 				eventer(messageEvent, function (e) {
 					if (e.source != iframe.contentWindow) {
 						return;
-					} // reject messages send from other iframes
+					}
 					if ("dataReceived" in e.data) {
-						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
 							try {
 								if (applyCustomFeatureActions) {
@@ -2325,7 +2356,6 @@
 								console.error(e);
 							}
 
-							//console.log(e.data.dataReceived.overlayNinja);
 							if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
 								// pass
 							} else {
@@ -2336,8 +2366,75 @@
 				});
 			}
 
+			async function RecvDataWindow() {
+				// Use iframe if explicitly requested or SDK previously failed
+				if (forceIframe || sdkLoadFailed) {
+					createIframeTransport();
+					return;
+				}
+
+				// Try to load and use SDK
+				try {
+					const loaded = await loadNinjaSDK();
+					if (!loaded || !window.NinjaBridge) {
+						console.warn("SDK not available, using iframe");
+						createIframeTransport();
+						return;
+					}
+
+					// Destroy existing bridge if any
+					if (ninjaBridge) {
+						try { await ninjaBridge.destroy(); } catch(e) {}
+					}
+
+					const label = pseudodock ? "dock" : "overlay";
+					ninjaBridge = new NinjaBridge({ debug: devmode, label: label, announce: false });
+
+
+					ninjaBridge.addEventListener('data', (ev) => {
+						try {
+							const detail = ev.detail || {};
+							const data = detail.data || detail;
+							if (data && data.overlayNinja) {
+								try {
+									if (applyCustomFeatureActions) {
+										applyCustomFeatureActions(data.overlayNinja);
+									}
+								} catch (e) {
+									console.error(e);
+								}
+
+								if (data.overlayNinja && "response" in data.overlayNinja) {
+									// pass
+								} else {
+									processData({ contents: data.overlayNinja });
+								}
+							} else if (data) {
+								processData({ contents: data });
+							}
+						} catch (e) {
+							if (devmode) console.warn('SDK data handler error', e);
+						}
+					});
+
+					await ninjaBridge.init({ room: roomID, password: password });
+					try {
+						await ninjaBridge.vdo.view(roomID, { audio: false, video: false, label: label });
+					} catch (e) {
+						if (devmode) console.warn("SDK view failed:", e);
+					}
+					if (devmode) console.log("SDK transport initialized for featured overlay");
+
+
+				} catch (e) {
+					console.warn("SDK init failed, falling back to iframe:", e);
+					sdkLoadFailed = true;
+					createIframeTransport();
+				}
+			}
+
 			if (!socketserver) {
-				RecvDataWindow(); // only load the iframe if not connecting via wss
+				RecvDataWindow(); // only load if not connecting via wss
 			}
 
 			try {

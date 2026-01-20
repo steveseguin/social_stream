@@ -37,24 +37,44 @@ function updateConnectionStatus() {
     }
 
     // Signaling (VDO.Ninja) and WebRTC peers
-    const signalingReady = !!(
-        (window.ninjaBridge && window.ninjaBridge.vdo && window.ninjaBridge.vdo.state && window.ninjaBridge.vdo.state.connected) ||
-        (window.iframe)
-    );
     const transportReady = (!!window.iframe) || (window.ninjaBridge && typeof window.ninjaBridge.isReady === 'function' && window.ninjaBridge.isReady());
-    const peerCount = Object.keys(window.connectedPeers || {}).length;
-    const webrtcConnected = transportReady && peerCount > 0;
+    const usingSDK = !window.iframe && window.ninjaBridge && typeof window.ninjaBridge.isReady === 'function' && window.ninjaBridge.isReady();
+    const usingIframe = !!window.iframe;
+    const iframePeers = (window.iframe && window.iframe.connectedPeers) ? window.iframe.connectedPeers : null;
+    const connectedPeers = window.connectedPeers || iframePeers || {};
+    const peerCount = Object.keys(connectedPeers).length;
+    const dataChannelReady = transportReady && peerCount > 0;
+    const webrtcConnected = dataChannelReady;
 
-    // Signaling row
+    // Signaling row (show data channel readiness)
     const sigStatusEl = document.getElementById('signaling-status');
     const sigTextEl = document.getElementById('signaling-status-text');
     if (sigStatusEl && sigTextEl) {
-        if (signalingReady) {
+        if (dataChannelReady) {
             sigStatusEl.className = 'status-indicator status-active';
-            sigTextEl.textContent = window.iframe ? 'Active (iframe)' : 'Connected';
+            sigTextEl.textContent = 'Data channels connected';
+        } else if (transportReady) {
+            sigStatusEl.className = 'status-indicator status-warning';
+            sigTextEl.textContent = 'Waiting for data channels';
         } else {
             sigStatusEl.className = 'status-indicator status-inactive';
             sigTextEl.textContent = 'Inactive';
+        }
+    }
+
+    // Transport row
+    const transportStatus = document.getElementById('transport-status');
+    const transportText = document.getElementById('transport-status-text');
+    if (transportStatus && transportText) {
+        if (usingSDK) {
+            transportStatus.className = 'status-indicator status-active';
+            transportText.textContent = 'SDK (P2P)';
+        } else if (usingIframe) {
+            transportStatus.className = 'status-indicator status-warning';
+            transportText.textContent = 'Legacy iframe';
+        } else {
+            transportStatus.className = 'status-indicator status-inactive';
+            transportText.textContent = 'Not initialized';
         }
     }
 
@@ -66,7 +86,7 @@ function updateConnectionStatus() {
             rtcStatus.className = 'status-indicator status-active';
             // Summarize peer labels
             const peerLabels = {};
-            Object.values(window.connectedPeers || {}).forEach(label => { if (label) peerLabels[label] = (peerLabels[label] || 0) + 1; });
+            Object.values(connectedPeers).forEach(label => { if (label) peerLabels[label] = (peerLabels[label] || 0) + 1; });
             let peerInfo = '';
             if (Object.keys(peerLabels).length > 0) {
                 peerInfo = ' (' + Object.entries(peerLabels).map(([l,c]) => `${l}: ${c}`).join(', ') + ')';
@@ -74,9 +94,12 @@ function updateConnectionStatus() {
                 peerInfo = ` (${peerCount} unlabeled peers)`;
             }
             rtcText.textContent = 'Connected' + peerInfo;
+        } else if (usingIframe && transportReady) {
+            rtcStatus.className = 'status-indicator status-active';
+            rtcText.textContent = 'Connected (legacy iframe)';
         } else {
             rtcStatus.className = 'status-indicator status-warning';
-            rtcText.textContent = signalingReady ? 'Signaling connected; waiting for peers' : 'Waiting for transport';
+            rtcText.textContent = transportReady ? 'Waiting for data channels' : 'Waiting for transport';
         }
     } else {
         rtcStatus.className = 'status-indicator status-inactive';
@@ -181,7 +204,8 @@ function updatePeerList() {
     const peerListContent = document.getElementById('peer-list-content');
     if (!peerListContent) return;
 
-    const connectedPeers = window.connectedPeers || {};
+    const iframePeers = (window.iframe && window.iframe.connectedPeers) ? window.iframe.connectedPeers : null;
+    const connectedPeers = window.connectedPeers || iframePeers || {};
     const peerCount = Object.keys(connectedPeers).length;
     
     if (peerCount === 0) {

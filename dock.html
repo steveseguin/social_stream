@@ -2970,9 +2970,15 @@
 			var tainted = false;
 
 			var urlParams = new URLSearchParams(window.location.search);
+			var devmode = urlParams.has("devmode");
 			var treatTikTokFansAsMembers = urlParams.has("tiktokfans");
+			var forceIframe = urlParams.has("iframe") || urlParams.has("disablesdk");
+
 			var channel = null;
 			var iframes = [];
+			var ninjaBridge = null;
+			var sdkLoadPromise = null;
+			var sdkLoadFailed = false;
 			var queue = [];
 			var selectedQueue = [];
 			var datestamp = true;
@@ -6983,18 +6989,45 @@
 				return false;
 			}
 			
-			function RecvDataWindow(room) {
+			function loadNinjaSDK() {
+				if (sdkLoadPromise) return sdkLoadPromise;
+				if (window.NinjaBridge) return Promise.resolve(true);
+
+				sdkLoadPromise = new Promise((resolve) => {
+					const sdkScript = document.createElement("script");
+					sdkScript.src = "./thirdparty/vdoninja-sdk.js";
+					sdkScript.onload = () => {
+						const bridgeScript = document.createElement("script");
+						bridgeScript.src = "./js/ninja-transport.js";
+						bridgeScript.onload = () => resolve(true);
+						bridgeScript.onerror = () => {
+							console.warn("Failed to load ninja-transport.js");
+							sdkLoadFailed = true;
+							resolve(false);
+						};
+						document.body.appendChild(bridgeScript);
+					};
+					sdkScript.onerror = () => {
+						console.warn("Failed to load vdoninja-sdk.js");
+						sdkLoadFailed = true;
+						resolve(false);
+					};
+					document.body.appendChild(sdkScript);
+				});
+				return sdkLoadPromise;
+			}
+
+			function createIframeTransport(room) {
 				var iframe = document.createElement("iframe");
 				iframe.connectedPeers = {};
 				iframe.src = "https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=" + password + lanonly + obsremote + "&push&notmobile&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=" + room;
-				// push and view, as we will connect with other docks also. I suppose I can have it only do this if &sync is enabled?
 				iframe.style.width = "0px";
 				iframe.style.height = "0px";
 				iframe.style.position = "fixed";
 				iframe.style.left = "-100px";
 				iframe.style.top = "-100px";
 				iframe.id = "frame_" + room;
-				iframe.allow = "midi;geolocation;microphone;"; // microphone is needed for Safari webRTC P2P connections
+				iframe.allow = "midi;geolocation;microphone;";
 
 				if (!iframes) {
 					iframes = [iframe];
@@ -7010,48 +7043,42 @@
 				eventer(messageEvent, function (e) {
 					if (e.source != iframe.contentWindow) {
 						return;
-					} // reject messages send from other iframes
+					}
 
 					if ("action" in e.data && e.data.action == "view-stats-updated") {
 						return;
 					}
 					if ("action" in e.data && e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
-						// flip this
 						if ("label" in e.data.value) {
 							iframe.connectedPeers[e.data.UUID] = e.data.value.label;
 							if (iframe.connectedPeers[e.data.UUID] === "dock") {
-								// this is a dock that wants to be synced with
 								syncDockAll(e.data.UUID);
 							}
 						}
 					} else if ("action" in e.data && e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
-						// flip this
 						if ("label" in e.data.value) {
 							iframe.connectedPeers[e.data.UUID] = e.data.value.label;
 							if (openChatAutomatically) {
 								send2Extension({ action: "openChat", value: null }, e.data.UUID);
 							}
 						}
-						
+
 						if (urlParams.has("loadlast") && e.data.streamID==roomID) {
 							getRecentHistory(parseInt(urlParams.get("loadlast")) || 30);
 						}
 					}
 
 					if ("action" in e.data && e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "push-connection") {
-						// flip this
 						if (e.data.UUID in iframe.connectedPeers) {
 							delete iframe.connectedPeers[e.data.UUID];
 						}
-						//console.log(iframe.connectedPeers);
 					} else if ("action" in e.data && e.data.UUID && "value" in e.data && !e.data.value && e.data.action == "view-connection") {
-						// flip this
 						if (e.data.UUID in iframe.connectedPeers) {
 							delete iframe.connectedPeers[e.data.UUID];
 						}
-					} else if (obsremote && "action" in e.data && "value" in e.data && e.data.action == "obs-state") { 
+					} else if (obsremote && "action" in e.data && "value" in e.data && e.data.action == "obs-state") {
 						if (e.data.value.details && e.data.value.details.currentScene && e.data.value.details.currentScene.name){
-						
+
 							let ele = topBarElement.querySelector("#currentScene");
 							if (!ele){
 								ele = document.createElement("div");
@@ -7062,17 +7089,97 @@
 							ele.style.backgroundColor = getColorFromString( e.data.value.details.currentScene.name);
 							ele.innerText = e.data.value.details.currentScene.name;
 						}
-						//console.log(e.data);
 						updateOBSState(e.data);
 					}
 
 					if ("dataReceived" in e.data) {
-						// raw data
 						if ("overlayNinja" in e.data.dataReceived) {
 							processInput(e.data.dataReceived.overlayNinja);
 						}
 					}
 				});
+			}
+
+			async function RecvDataWindow(room) {
+				// Use iframe if explicitly requested or SDK previously failed
+				if (forceIframe || sdkLoadFailed) {
+					createIframeTransport(room);
+					return;
+				}
+
+					// Try to load and use SDK
+					try {
+						const loaded = await loadNinjaSDK();
+						if (!loaded || !window.NinjaBridge) {
+							console.warn("SDK not available, using iframe");
+							createIframeTransport(room);
+							return;
+						}
+
+
+					// Destroy existing bridge if any
+					if (ninjaBridge) {
+						try { await ninjaBridge.destroy(); } catch(e) {}
+					}
+
+					ninjaBridge = new NinjaBridge({ debug: devmode, label: "dock", announce: false });
+					if (devmode && ninjaBridge.vdo && !ninjaBridge.vdo._ssnLogged) {
+						const originalEmit = ninjaBridge.vdo._emit.bind(ninjaBridge.vdo);
+						ninjaBridge.vdo._emit = (eventName, detail) => {
+							try {
+								console.log("[SDK emit]", eventName, detail);
+							} catch (e) {}
+							return originalEmit(eventName, detail);
+						};
+						ninjaBridge.vdo._ssnLogged = true;
+					}
+
+
+					ninjaBridge.addEventListener('data', (ev) => {
+						try {
+							if (devmode) console.log('[SDK bridge data]', ev.detail || ev);
+							const detail = ev.detail || {};
+							const data = detail.data || detail;
+							if (data && data.overlayNinja) {
+								processInput(data.overlayNinja);
+							} else if (data) {
+								processInput(data);
+							}
+						} catch (e) {
+							if (devmode) console.warn('SDK data handler error', e);
+						}
+					});
+
+
+					ninjaBridge.addEventListener('peerLabel', (ev) => {
+						try {
+							const { uuid, label } = ev.detail || {};
+							if (!uuid || !label) return;
+							if (label === "dock") {
+								syncDockAll(uuid);
+							}
+							if (label === "SocialStream" && openChatAutomatically) {
+								send2Extension({ action: "openChat", value: null }, uuid);
+							}
+						} catch (e) {
+							if (devmode) console.warn('SDK peerLabel handler error', e);
+						}
+					});
+
+					await ninjaBridge.init({ room: room, password: password });
+					try {
+						await ninjaBridge.vdo.view(room, { audio: false, video: false, label: "dock" });
+					} catch (e) {
+						if (devmode) console.warn("SDK view failed:", e);
+					}
+					if (devmode) console.log("SDK transport initialized for room:", room);
+
+
+				} catch (e) {
+					console.warn("SDK init failed, falling back to iframe:", e);
+					sdkLoadFailed = true;
+					createIframeTransport(room);
+				}
 			}
 			///////////
 			let obsState = {};
@@ -10082,6 +10189,21 @@
 					}
 				}
 
+				// Use SDK if available
+				if (ninjaBridge && ninjaBridge.isReady()) {
+					try {
+						if (uid) {
+							ninjaBridge.send(data, uid);
+						} else {
+							ninjaBridge.sendToLabel(data, "SocialStream");
+						}
+						return;
+					} catch (e) {
+						if (devmode) console.warn("SDK send failed:", e);
+					}
+				}
+
+				// Fallback to iframe
 				iframes.forEach(iframe => {
 					if (!uid) {
 						var keys = Object.keys(iframe.connectedPeers);
@@ -10115,6 +10237,22 @@
 				if (blockMessageSelecting || blockMessageSelecting2) {
 					return;
 				}
+
+				// Use SDK if available
+				if (ninjaBridge && ninjaBridge.isReady() && (syncDocks || force)) {
+					try {
+						if (UUID) {
+							ninjaBridge.send(data, UUID);
+						} else {
+							ninjaBridge.sendToLabel(data, "dock");
+						}
+						return;
+					} catch (e) {
+						if (devmode) console.warn("SDK sync failed:", e);
+					}
+				}
+
+				// Fallback to iframe
 				iframes.forEach(iframe => {
 					if (syncDocks || force) {
 						if (UUID) {
@@ -10151,18 +10289,41 @@
 
 				if (!data) {
 					document.querySelectorAll("." + lastMessageClass).forEach(ele => {
-						// last message sent was to clear the overlay
-						ele.classList.remove(lastMessageClass); // no overlay is now active.
+						ele.classList.remove(lastMessageClass);
 					});
 				}
 				try {
 					if (socketserver) {
-						// send a copy to the remote API
 						if (data.out){
 							delete data.out;
 						}
 						socketserver.send(JSON.stringify(data));
 					}
+
+					// Use SDK if available
+					if (ninjaBridge && ninjaBridge.isReady()) {
+						var msg = { overlayNinja: data };
+						if (syncDocks || force) {
+							// Send mid to docks, full data to overlays
+							if (data && data.id) {
+								ninjaBridge.sendToLabel({ mid: data.id }, "dock");
+							} else {
+								ninjaBridge.sendToLabel({ mid: false }, "dock");
+							}
+							ninjaBridge.sendToLabel(data, "overlay");
+						} else {
+							// Send to all except docks
+							var peers = ninjaBridge.getPeers();
+							for (var uuid in peers) {
+								if (peers[uuid] !== "dock") {
+									ninjaBridge.send(data, uuid);
+								}
+							}
+						}
+						return;
+					}
+
+					// Fallback to iframe
 					iframes.forEach(iframe => {
 						var msg = {};
 						msg.overlayNinja = {};
@@ -10179,9 +10340,9 @@
 										iframe.contentWindow.postMessage({ sendData: { overlayNinja: { mid: false } }, type: "pcs", UUID: UUID }, "*");
 									}
 								} else if (label === "overlay") {
-									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension..
+									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*");
 								} else if (label === false) {
-									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension..
+									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*");
 								}
 							}
 						} else {
@@ -10190,7 +10351,7 @@
 								var UUID = keys[i];
 								var label = iframe.connectedPeers[keys[i]];
 								if (label !== "dock") {
-									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*"); // send only to viewers of this stream; not back to the chrome extension.. legacy?
+									iframe.contentWindow.postMessage({ sendData: msg, type: "pcs", UUID: UUID }, "*");
 								}
 							}
 						}
@@ -11146,6 +11307,9 @@
 			}
 
 			function initHotkeys() {
+				if (typeof chrome === 'undefined' || !chrome.storage || !chrome.storage.sync) {
+					return; // Not in extension context
+				}
 				chrome.storage.sync.get(['hotkeys'], (result) => {
 					const hotkeys = result.hotkeys || DEFAULT_HOTKEYS;
 

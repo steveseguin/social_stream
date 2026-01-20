@@ -1276,7 +1276,7 @@ const SETTINGS_METADATA = Object.freeze({
   "sdk": {
     type: "boolean",
     category: "global_settings_and_tools",
-    description: "When enabled, use SDK transport (beta)."
+    description: "When enabled, use legacy iframe transport (compatibility mode)."
   },
   "seventv": {
     type: "boolean",

@@ -37,6 +37,7 @@ const RETURNING_BEEP_COOLDOWN_MS = 400;
 let returningBeepHintShown = false;
 
 var connectedPeers = {};
+
 var isSSAPP = false;
 
 const HANDLE_DB_NAME = "ssn-file-handles";
@@ -1329,10 +1330,13 @@ function loadSettings(item, resave = false) {
 		reloadNeeded = true;
 		persistSession({ state: isExtensionOn });
 	}
-    // Recompute effective SDK usage on settings load
+    // Recompute effective transport usage on settings load
     try {
-        const settingsSDK = (settings?.sdk?.setting === true) || (settings?.sdk === true) || (settings?.usesdk?.setting === true);
-        const effective = !!settingsSDK;
+        const settingsLegacy = (settings?.sdk?.setting === true) || (settings?.sdk === true) || (settings?.usesdk?.setting === true);
+        let effective = !settingsLegacy;
+        if (settings && (settings.server2 || settings.server3)) {
+            effective = false;
+        }
         if (lastUseNinjaSDK === undefined) {
             lastUseNinjaSDK = effective;
         } else if (effective !== lastUseNinjaSDK) {
@@ -8290,7 +8294,7 @@ async function openchat(target = null, force = false) {
 function sendDataP2P(data, UUID = false) {
     // function to send data to the DOCk via the VDO.Ninja API
 
-    if (!UUID && settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
+    if (!UUID && !useNinjaSDK && settings.server2 && socketserverDock && (socketserverDock.readyState===1)) {
 		try {
 			if (data.out){
 				delete data.out;
@@ -8309,25 +8313,41 @@ function sendDataP2P(data, UUID = false) {
     // Prefer SDK transport if active
     if (ninjaBridge && ninjaBridge.isReady()) {
         try {
+            const logResult = (promise, target) => {
+                if (!devmode || !promise || typeof promise.then !== 'function') return;
+                promise.then((ok) => {
+                    console.log('[SDK send]', target, ok);
+                }).catch((err) => {
+                    console.warn('[SDK send]', target, err);
+                });
+            };
             if (UUID) {
-                ninjaBridge.send(data, UUID);
+                const sendPromise = ninjaBridge.send(data, UUID);
+                if (devmode) console.log('[SDK send] uuid', UUID);
+                logResult(sendPromise, { uuid: UUID });
                 return;
             }
             // Prefer sending to docks; if none known yet, broadcast
             var hasDock = false;
+            var peers = {};
             try {
-                var peers = ninjaBridge.getPeers();
+                peers = ninjaBridge.getPeers();
                 for (var k in peers) { if (peers[k] === 'dock') { hasDock = true; break; } }
             } catch(e){}
+            if (devmode) console.log('[SDK send] peers', peers, 'hasDock', hasDock);
             if (hasDock) {
-                ninjaBridge.sendToLabel(data, 'dock');
+                const sendPromise = ninjaBridge.sendToLabel(data, 'dock');
+                logResult(sendPromise, { label: 'dock' });
             } else {
-                ninjaBridge.send(data); // broadcast
+                const sendPromise = ninjaBridge.send(data); // broadcast
+                logResult(sendPromise, { broadcast: true });
             }
             return;
         } catch (e) {
             console.warn('SDK sendDataP2P failed; falling back to iframe', e);
         }
+    } else if (devmode) {
+        console.log('[SDK send] bridge not ready', !!ninjaBridge);
     }
 
     if (iframe) {
@@ -9242,22 +9262,26 @@ function sendToDisk(data) {
 async function initTransport(streamID, pass = false) {
 	// this is pretty important if you want to avoid camera permission popup problems.  You can also call it automatically via: <body onload=>loadIframe();"> , but don't call it before the page loads.
 
-    // Re-evaluate effective SDK flag each init, based on flexible truthy parsing
+    // Re-evaluate effective transport each init (sdk toggle now means legacy iframe)
     try {
         const raw = (settings && (settings.sdk !== undefined ? settings.sdk : settings.usesdk));
-        let flag = false;
+        let legacyFlag = false;
         if (typeof raw === 'boolean') {
-            flag = raw;
+            legacyFlag = raw;
         } else if (raw && typeof raw === 'object') {
             // supports { setting: true/"true"/1 }
             const v = raw.setting;
-            flag = (v === true) || (v === 1) || (typeof v === 'string' && /^(1|true|on|yes)$/i.test(v));
+            legacyFlag = (v === true) || (v === 1) || (typeof v === 'string' && /^(1|true|on|yes)$/i.test(v));
         } else if (typeof raw === 'string') {
-            flag = /^(1|true|on|yes)$/i.test(raw);
+            legacyFlag = /^(1|true|on|yes)$/i.test(raw);
         } else if (raw === 1) {
-            flag = true;
+            legacyFlag = true;
         }
-        useNinjaSDK = !!flag;
+        // Disable SDK when server mode is enabled
+        if (settings && (settings.server2 || settings.server3)) {
+            legacyFlag = true;
+        }
+        useNinjaSDK = !legacyFlag;
     } catch(e) { useNinjaSDK = false; }
 
 	log("Init transport for VDO", useNinjaSDK ? "SDK" : "IFRAME");
@@ -9746,6 +9770,13 @@ function blockUser(data){
 	return true;
 }
 
+function extractPeerLabel(value) {
+	if (!value || typeof value !== "object") {
+		return null;
+	}
+	return value.label || (value.info && value.info.label) || (value.details && value.details.label) || (value.meta && value.meta.label) || null;
+}
+
 eventer(messageEvent, async function (e) {
 	// iframe wno't be enabled if isExtensionOn is off, so allow this.
 	if (!iframe) {
@@ -9762,8 +9793,9 @@ eventer(messageEvent, async function (e) {
 				return;
 			} else if (e.data.UUID && e.data.value && e.data.action == "push-connection-info") {
 				// flip this
-				if ("label" in e.data.value) {
-					connectedPeers[e.data.UUID] = e.data.value.label;
+				const peerLabel = extractPeerLabel(e.data.value);
+				if (peerLabel) {
+					connectedPeers[e.data.UUID] = peerLabel;
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
 					} else if (connectedPeers[e.data.UUID] == "ticker") {
@@ -9785,8 +9817,9 @@ eventer(messageEvent, async function (e) {
 				}
 			} else if (e.data.UUID && e.data.value && e.data.action == "view-connection-info") {
 				// flip this
-				if ("label" in e.data.value) {
-					connectedPeers[e.data.UUID] = e.data.value.label;
+				const peerLabel = extractPeerLabel(e.data.value);
+				if (peerLabel) {
+					connectedPeers[e.data.UUID] = peerLabel;
 					if (connectedPeers[e.data.UUID] == "hype") {
 						processHype2();
 					} else if (connectedPeers[e.data.UUID] == "ticker") {
