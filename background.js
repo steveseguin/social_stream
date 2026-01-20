@@ -7856,25 +7856,32 @@ socketserver.addEventListener("message", async function (event) {
 						relayIncomingWebhook("bmac", data.bmac);
 						var message = {};
 						if (bmac.type === "membership.started") {
-							message.chatname = bmac.data.supporter_name || "Anonymous"; 
-							message.chatmessage = bmac.data.support_note.trim(); 
+							message.chatname = bmac.data.supporter_name || "Anonymous";
+							message.chatmessage = (bmac.data.support_note || "").trim();
 							//We use the donation badge from Kofi to feature the membership level name
-							message.hasDonation = bmac.data.membership_level_name; 
-					
+							message.hasDonation = bmac.data.membership_level_name || "";
 						}
 						if (bmac.type === "donation.created") {
+							message.chatname = bmac.data.supporter_name || "Anonymous";
 							var currency = "";
 							try {
-								currency = kofi.currency.toLowerCase() || "";
+								currency = bmac.data.currency.toLowerCase() || "";
 							} catch (e) {}
 
 							var symbol = {};
 							if (currency && currency in Currencies) {
 								symbol = Currencies[currency];
-							}		
-							message.chatmessage = (bmac.data.message + " - " + "<em>" + bmac.data.support_note + "</em>").trim();
+							}
+							var msgParts = [];
+							if (bmac.data.message) {
+								msgParts.push(bmac.data.message);
+							}
+							if (bmac.data.support_note) {
+								msgParts.push("<em>" + bmac.data.support_note + "</em>");
+							}
+							message.chatmessage = msgParts.join(" - ").trim();
 							message.hasDonation = (symbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
-							message.hasDonation = message.hasDonation.trim();			
+							message.hasDonation = message.hasDonation.trim();
 						}
 						message.contentimg = "";
 						message.id = parseInt(Math.random() * 100000 + 1000000);
@@ -7966,8 +7973,26 @@ socketserver.addEventListener("message", async function (event) {
 				message.membership = "";
 				message.contentimg = "";
 				message.type = "fourthwall";
-				
+
 				data = message; // replace inbound fourthwall message with new message
+
+				try {
+					data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+
+					if (data){
+						try {
+							data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+						} catch (e) {
+							console.warn(e);
+						}
+
+						if (data) {
+							resp = await sendToDestinations(data);
+						}
+					}
+				} catch (e) {
+					console.error(e);
+				}
 			  } catch (e) {
 				console.error(e);
 				return;
