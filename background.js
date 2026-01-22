@@ -5795,6 +5795,26 @@ function isEmoji(char) {
     return emojiRegex.test(trimmed);
 }
 
+// Helper to preserve emoji from img alt attributes before stripping HTML
+// Used by reflection filter to properly compare messages with emoji
+function preserveEmojiFromImgAlt(html) {
+    if (!html || typeof html !== 'string') return html;
+    try {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const imgElements = tempDiv.querySelectorAll('img');
+        imgElements.forEach((img) => {
+            const altText = img.getAttribute('alt');
+            if (altText && isEmoji(altText)) {
+                img.outerHTML = altText;
+            }
+        });
+        return tempDiv.innerHTML;
+    } catch (e) {
+        return html;
+    }
+}
+
 const messageStore = {};
 function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true) { // FOR RELAY PURPOSES ONLY.
 
@@ -5804,7 +5824,10 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, sav
 			return false;
 		}
 	}
-	
+
+	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
+	msg = preserveEmojiFromImgAlt(msg);
+
 	if (!sanitized){
 		var textArea = document.createElement('textarea');
 		textArea.innerHTML = msg;
@@ -5842,11 +5865,14 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, ty
 	if (!msg){
 		return false;
 	}
-	
+
 	const now = Date.now();
 	if (now - lastSentTimestamp > 10000) {// 10 seconds has passed; assume good.
 		return false;
 	}
+
+	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
+	msg = preserveEmojiFromImgAlt(msg);
 
 	if (!sanitized){
 		var textArea = document.createElement('textarea');
@@ -10458,6 +10484,17 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     return true;
 }
 
+// Helper function to match destination in URL with proper word boundaries
+// Prevents partial matches like "deerstreams" matching "deerstreamslive"
+function urlMatchesDestination(url, destination) {
+    if (!url || !destination) return false;
+    // Escape regex special characters in destination
+    const escaped = destination.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Match destination after path separator (/ or @) and before end of segment or query/fragment
+    const pattern = new RegExp(`[/@]${escaped}(?:[/?#]|$)`, 'i');
+    return pattern.test(url);
+}
+
 // Helper function to check if a tab is valid for processing
 async function isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) {
     // First check URLs that we can't or shouldn't process
@@ -10494,8 +10531,8 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         // Ensure tab.id exists before trying to get source type
         if (!tab.id) {
             // console.log('[RELAY DEBUG - isValidTab] No tab.id available, cannot check source type');
-            // Fall back to URL matching if we have a URL
-            if (tab.url && !tab.url.includes(data.destination)) {
+            // Fall back to URL matching if we have a URL (use strict matching to avoid partial matches)
+            if (tab.url && !urlMatchesDestination(tab.url, data.destination)) {
                 return false;
             }
             return true; // If no tab.id and no URL, allow it through
@@ -10506,8 +10543,8 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         
         // If we couldn't get the source type, fall back to URL matching for custom destinations
         if (!sourceType) {
-            // For custom destinations like channel names, still use URL matching
-            if (!tab.url.includes(data.destination)) {
+            // For custom destinations like channel names, still use URL matching (strict to avoid partial matches)
+            if (!urlMatchesDestination(tab.url, data.destination)) {
                 // console.log('[RELAY DEBUG - isValidTab] No source type, URL check failed');
                 return false;
             }
@@ -10564,6 +10601,10 @@ function sanitizeMessageForTracking(msg, sanitized = true) {
         if (!msg) {
             return '';
         }
+
+        // Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
+        msg = preserveEmojiFromImgAlt(msg);
+
         let normalized;
         if (!sanitized) {
             const textArea = document.createElement('textarea');
@@ -11812,7 +11853,17 @@ async function applyBotActions(data, tab = false) {
 		if (data.host && data.chatname && settings.hidehostnamesext) {
 			data.chatname = "";
 		}
-		
+
+		// Strip @ from display names if enabled
+		if (settings.stripatext && data.chatname && data.chatname.startsWith("@")) {
+			// Preserve original @username in userid if userid is blank
+			if (!data.userid) {
+				data.userid = data.chatname;
+			}
+			// Remove the leading @
+			data.chatname = data.chatname.substring(1);
+		}
+
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();

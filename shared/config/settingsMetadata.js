@@ -758,6 +758,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "assign_roles_classes_to_certain_users",
     description: "When enabled, filter out messages for listed bots."
   },
+  "stripatext": {
+    type: "boolean",
+    category: "streaming_chat_dock_overlay",
+    description: "Remove @ from the start of display names."
+  },
   "hidegiphytrigger": {
     type: "boolean",
     category: "giphy_tenor_support",
