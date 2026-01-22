@@ -1061,6 +1061,7 @@
 	}
 
 	const triggerMode = urlParams.get('triggermode') || 'auto';
+	const loopCredits = urlParams.has('loop');
 
 	// Build instructions content based on environment and mode
 	function buildInstructionsContent() {
@@ -1171,6 +1172,15 @@
 
 	// Handle animation end
 	document.querySelector('.text-container').addEventListener('animationend', function() {
+		// If loop is enabled, restart the animation
+		if (loopCredits) {
+			// Update content with any new users that joined during the animation
+			creditsContent.innerHTML = generateCreditsContent();
+			applyAdaptiveOffsets();
+			restartScrollAnimation();
+			return;
+		}
+
 		// Clear collected names when animation completes (unless in preview mode)
 		if (!previewMode) {
 			users.clear();
