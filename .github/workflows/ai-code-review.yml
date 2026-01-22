@@ -58,16 +58,16 @@ jobs:
           # Prepare the prompt
           SYSTEM_PROMPT="You are an expert code reviewer. Analyze the provided pull request diff and provide a helpful, constructive review. Be concise but thorough.
 
-          Your review should include:
+          IMPORTANT: If the code looks good with no significant issues, bugs, or concerns, respond with ONLY the text: NO_ISSUES_FOUND
+
+          Otherwise, your review should include:
           1. **Overview**: A brief summary of what this PR does (2-3 sentences)
           2. **Potential Issues**: Any bugs, security concerns, or logical errors you spot
           3. **Suggestions**: Improvements for code quality, performance, or maintainability
-          4. **Positive Notes**: Things done well (keep brief)
 
           Guidelines:
           - Focus on significant issues, not nitpicks
           - Be constructive and helpful
-          - If the changes look good, say so
           - Use code snippets when referencing specific lines
           - Format your response in markdown"
 
@@ -120,6 +120,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REVIEW=$(cat /tmp/review.txt)
+
+          # Skip posting if no issues found
+          if echo "$REVIEW" | grep -q "NO_ISSUES_FOUND"; then
+            echo "No issues found - skipping comment"
+            exit 0
+          fi
 
           # Create the comment with header
           COMMENT="## 🤖 AI Code Review
