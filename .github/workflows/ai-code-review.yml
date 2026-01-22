@@ -13,12 +13,28 @@ jobs:
   ai-review:
     runs-on: ubuntu-latest
     steps:
+      - name: Check for auto-enhanced commit
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Get the latest commit message
+          COMMIT_MSG=$(gh api repos/${{ github.repository }}/commits/${{ github.event.pull_request.head.sha }} --jq '.commit.message')
+          if echo "$COMMIT_MSG" | grep -q "\[auto-enhanced\]"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Skipping - commit was auto-enhanced"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout repository
+        if: steps.check.outputs.skip != 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Get PR diff
+        if: steps.check.outputs.skip != 'true'
         id: diff
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -38,6 +54,7 @@ jobs:
           echo "$DIFF" > /tmp/pr_diff.txt
 
       - name: Get PR info
+        if: steps.check.outputs.skip != 'true'
         id: pr_info
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,6 +65,7 @@ jobs:
           echo "$PR_BODY" > /tmp/pr_body.txt
 
       - name: Run AI Code Review
+        if: steps.check.outputs.skip != 'true'
         id: review
         env:
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
@@ -116,6 +134,7 @@ jobs:
           echo "$REVIEW" > /tmp/review.txt
 
       - name: Post review comment
+        if: steps.check.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
