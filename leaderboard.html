@@ -1066,7 +1066,8 @@
             { category: 'combined', period: 'day', label: 'Top Contributors Today' },
             { category: 'combined', period: 'week', label: 'Top Contributors This Week' },
             { category: 'gifts', period: 'day', label: 'Top Gifters Today' },
-            { category: 'donations', period: 'day', label: 'Top Donors Today' }
+            { category: 'donations', period: 'day', label: 'Top Donors Today' },
+            { category: 'engagement', period: 'day', label: 'Most Active Today' }
         ];
         
         // Filter rotation views based on URL parameters
@@ -1087,6 +1088,7 @@
             // Add gifts and donations daily views
             activeRotationViews.push({ category: 'gifts', period: 'day', label: 'Top Gifters Today' });
             activeRotationViews.push({ category: 'donations', period: 'day', label: 'Top Donors Today' });
+            activeRotationViews.push({ category: 'engagement', period: 'day', label: 'Most Active Today' });
             
             // If we built rotation views, set category to rotate
             if (activeRotationViews.length > 0) {
@@ -1333,14 +1335,15 @@
                         case 'combined':
                         default:
                             // Combined score for all activities
+                            const engagementScore = this.messageCount + (this.eventCount * 10) + (this.bitsOrCoins * 0.1);
                             const giftVal = showGiftValue ? this.giftValue : (this.giftsGiven * 50);
                             if (period === 'day') {
-                                return (this.dailyDonations * 100) + (this.dailyGifts * 50);
+                                return (this.dailyDonations * 100) + (this.dailyGifts * 50) + engagementScore;
                             }
                             if (period === 'week') {
-                                return (this.weeklyDonations * 100) + (this.weeklyGifts * 50);
+                                return (this.weeklyDonations * 100) + (this.weeklyGifts * 50) + engagementScore;
                             }
-                            return (this.donations * 100) + giftVal + (this.messageCount * 1);
+                            return (this.donations * 100) + giftVal + engagementScore;
                     }
                 }
                 
@@ -1524,6 +1527,38 @@
                     return 'points';
                 default:
                     return 'points';
+            }
+        }
+
+        function getEmptyStateMessage() {
+            if (layout === 'topbar') {
+                switch (category) {
+                    case 'gifts':
+                        return 'No gifts yet';
+                    case 'donations':
+                        return 'No donations yet';
+                    case 'recent_gifts':
+                        return 'No recent gifts';
+                    case 'recent_donations':
+                        return 'No recent donations';
+                    case 'engagement':
+                        return 'No chat activity yet';
+                    case 'combined':
+                    default:
+                        return 'No contributions yet';
+                }
+            }
+
+            switch (rankingType) {
+                case 'donations':
+                    return 'No donations yet';
+                case 'messages':
+                    return 'No chat activity yet';
+                case 'loyalty':
+                    return 'No points yet';
+                case 'combined':
+                default:
+                    return 'No activity yet';
             }
         }
 
@@ -1712,14 +1747,14 @@
                                 case 'combined':
                                     // Show users who have donated OR given gifts
                                     if (period === 'day') {
-                                        return user.dailyDonations > 0 || user.dailyGifts > 0;
+                                        return user.dailyDonations > 0 || user.dailyGifts > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                     } else if (period === 'week') {
-                                        return user.weeklyDonations > 0 || user.weeklyGifts > 0;
+                                        return user.weeklyDonations > 0 || user.weeklyGifts > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                     }
-                                    return user.donations > 0 || user.giftsGiven > 0;
+                                    return user.donations > 0 || user.giftsGiven > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                 case 'engagement':
                                     // For engagement, show active users
-                                    return user.messageCount > 0 || user.eventCount > 0;
+                                    return user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                 default:
                                     return user.score > 0;
                             }
@@ -1747,7 +1782,7 @@
                     container.classList.remove('visible');
                 } else {
                     if (!leaderboardContent.querySelector('.empty-state')) {
-                        leaderboardContent.innerHTML = '<div class="empty-state">No activity yet</div>';
+                        leaderboardContent.innerHTML = `<div class="empty-state">${getEmptyStateMessage()}</div>`;
                     }
                     container.classList.add('visible');
                 }
