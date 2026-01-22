@@ -27,7 +27,7 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm install @google/generative-ai axios
+        run: npm install axios
 
       - name: Configure Git
         run: |
@@ -37,6 +37,6 @@ jobs:
       - name: Enhance commit messages
         id: enhance
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.COMMIT_ENHANCER_PAT }} # This is used by the script for PR updates
         run: node .github/scripts/enhance-commits.js
