@@ -335,6 +335,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			sendResponse(true);
 			return;
 		}
+		if (request && request.__ssappSendToTab) {
+			request = request.__ssappSendToTab;
+		}
 		if (typeof request === "object") {
 			if ("state" in request) {
 				isExtensionOn = request.state;

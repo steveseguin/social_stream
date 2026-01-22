@@ -1484,6 +1484,9 @@ function initExtensionBridge() {
                     }
                     return false;
                 }
+                if (request && request.__ssappSendToTab) {
+                    request = request.__ssappSendToTab;
+                }
                 if (request && typeof request === 'object') {
                     if (Object.prototype.hasOwnProperty.call(request, 'state')) {
                         extension.enabled = Boolean(request.state);
@@ -1508,7 +1511,7 @@ function initExtensionBridge() {
                     }
                 }
             } catch (err) {
-                console.error('Kick extension message handling failed', err);
+                console.error('Kick extension message handler failed', err);
             }
             sendResponse(false);
             return false;
@@ -1727,6 +1730,16 @@ function applyDefaultConfig() {
     }
     if (!state.bridgeUrl) {
         state.bridgeUrl = DEFAULT_CONFIG.bridgeUrl;
+    }
+}
+
+function appendBridgeParam(url, key, value) {
+    try {
+        const parsed = new URL(url, window.location.href);
+        parsed.searchParams.set(key, value);
+        return parsed.toString();
+    } catch (err) {
+        return url;
     }
 }
 
@@ -1981,6 +1994,17 @@ function bindEvents() {
     }
     if (els.sendChat) {
         els.sendChat.addEventListener('click', sendChatMessage);
+    }
+    if (els.chatMessage) {
+        const handleChatKeydown = (event) => {
+            if (event.key !== 'Enter') return;
+            if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) {
+                return;
+            }
+            event.preventDefault();
+            sendChatMessage();
+        };
+        els.chatMessage.addEventListener('keydown', handleChatKeydown);
     }
 }
 
@@ -3078,7 +3102,10 @@ function connectBridge() {
     }
     disconnectBridge();
     try {
-        const source = new EventSource(state.bridgeUrl, { withCredentials: false });
+        const bridgeUrl = isElectronEnvironment()
+            ? appendBridgeParam(state.bridgeUrl, 'noChat', '1')
+            : state.bridgeUrl;
+        const source = new EventSource(bridgeUrl, { withCredentials: false });
         state.bridge.source = source;
         state.bridge.status = 'connecting';
         updateBridgeState();
@@ -3430,6 +3457,10 @@ function handleBridgeEvent(packet) {
         }
         return;
     }
+    const packetType = packet.type || packet.body?.event || '';
+    if (packetType === 'chat.message.sent' && shouldIgnoreBridgeChatEvent(packet)) {
+        return;
+    }
     processBridgeEvent(packet, false);
 }
 
@@ -3441,6 +3472,14 @@ function replayPendingBridgeEvents() {
         const packet = pendingBridgeEvents.shift();
         processBridgeEvent(packet, true);
     }
+}
+
+function shouldIgnoreBridgeChatEvent(packet) {
+    const type = packet?.type || packet?.body?.event || '';
+    if (type !== 'chat.message.sent') return false;
+    if (!supportsLocalSocket()) return false;
+    if (state.socket?.status !== 'connected') return false;
+    return true;
 }
 
 async function forwardChatMessage(evt, bridgeMeta) {

@@ -10320,21 +10320,22 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 	                    return;
 	                }
 
-	                // Handle websocket source pages (socialstream.ninja/sources/websocket/* and beta/sources/websocket/*)
-	                if (tab.url.includes("socialstream.ninja") && tab.url.includes("/sources/websocket/")) {
-	                    try {
-	                        chrome.tabs.sendMessage(tab.id, {
-	                            type: 'SEND_MESSAGE',
-	                            message: data.response
-	                        }, function(response) {
-	                            chrome.runtime.lastError; // Clear any error
-	                        });
-	                        markAutoForTabIfNeeded();
-	                        return;
-	                    } catch(e) {
-	                        console.error('Failed to send to websocket source:', e);
-	                    }
-	                }
+                // Handle websocket source pages (socialstream.ninja/sources/websocket/* or local file:// sources/websocket/*)
+                if (tab.url && tab.url.includes("/sources/websocket/") && (tab.url.includes("socialstream.ninja") || tab.url.startsWith("file://"))) {
+                    try {
+                        chrome.tabs.sendMessage(tab.id, {
+                            type: 'SEND_MESSAGE',
+                            message: data.response
+                        }, function(response) {
+                            chrome.runtime.lastError; // Clear any error
+                        });
+                        markAutoForTabIfNeeded();
+                        return;
+                    } catch(e) {
+                        console.error('Failed to send to websocket source:', e);
+                    }
+                }
+
 
 	                if (tab.url.includes("tiktok.com")) {
 	                    let tiktokMessage = data.response;
@@ -10368,7 +10369,19 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         const needsValidation = data.destination || relayMode;
 
         // First pass: try with source type matching - PARALLEL processing
-        await Promise.allSettled(tabs.map(async (tab) => {
+        // Pre-filter to mark URLs synchronously before async processing to prevent race conditions
+        const tabsToProcess = [];
+        for (const tab of tabs) {
+            if (tab.url) {
+                if (tab.url in published) {
+                    continue; // Already claimed by another tab
+                }
+                published[tab.url] = true;
+            }
+            tabsToProcess.push(tab);
+        }
+
+        await Promise.allSettled(tabsToProcess.map(async (tab) => {
             try {
                 // Skip validation if we already filtered by tid and don't need destination/relay checks
                 if (!hasSpecificTids || needsValidation) {
@@ -10376,14 +10389,6 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     if (!isValid) {
                         return;
                     }
-                }
-                // Set published flag immediately after validation to prevent duplicate processing
-                // of tabs with the same URL during parallel execution
-                if (tab.url) {
-                    if (tab.url in published) {
-                        return; // Another tab with this URL already claimed it
-                    }
-                    published[tab.url] = true;
                 }
                 await processTab(tab);
             } catch (e) {

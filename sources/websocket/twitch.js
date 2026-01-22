@@ -1310,10 +1310,22 @@ async function ensureChatClientInstance() {
 				document.querySelector('#sendmessage').focus();
 				sendResponse(true);
 				return;
-			} 
+			}
+			if (request && request.__ssappSendToTab) {
+				request = request.__ssappSendToTab;
+			}
 			if (typeof request === "object") {
 				if ("state" in request) {
 					isExtensionOn = request.state;
+				}
+				if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+					sendMessage(request.message)
+						.then(() => sendResponse(true))
+						.catch((err) => {
+							console.error('Twitch extension SEND_MESSAGE failed', err);
+							sendResponse(false);
+						});
+					return true;
 				}
 				if ("settings" in request) {
 					settings = request.settings;
@@ -1354,11 +1366,13 @@ async function ensureChatClientInstance() {
 					return;
 				}
 			}
+
 		} catch(e) {
 			console.error('Error handling Chrome message:', e);
 		}
 		sendResponse(false);
 	});
+
 
 	function authUrl() {
 		sessionStorage.twitchOAuthState = nonce(15);
@@ -2153,14 +2167,14 @@ async function ensureChatClientInstance() {
 			if (data.event === 'viewer_update' && !(settings.showviewercount || settings.hypemode)) {
 				return; // Skip viewer updates if not enabled
 			}
-			
+
 			if (data.type && data.event) {
 				updateStats(data.event, data);
 			}
-					
+
 			// Send message to Chrome extension
-			chrome.runtime.sendMessage(chrome.runtime.id, { 
-				"message": data 
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				"message": data
 			}, function(response) {
 				// Handle response if needed
 			});
