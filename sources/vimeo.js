@@ -84,7 +84,7 @@ function toDataURL(url, callback) {
 			return;
 		}
 		
-		name = escapeHtml(ele.querySelector("[class^='interaction-chat-message-author-name']").textContent);
+		name = escapeHtml(ele.querySelector(".chat-message-author-name, [class^='interaction-chat-message-author-name'] p").textContent);
 		
 		if (name){
 			
@@ -92,7 +92,7 @@ function toDataURL(url, callback) {
 			name = name.trim();
 		} 
 		
-		msg = getAllContentNodes(ele.querySelector(".interaction-chat-message-content, .interaction-qna-item-preview-text"));
+		msg = getAllContentNodes(ele.querySelector(".interaction-chat-message-content, .interaction-qna-item-preview-text, .chat-message-content"));
 		
 		if (msg){
 			msg = msg.trim();
@@ -120,7 +120,7 @@ function toDataURL(url, callback) {
 		data.textonly = settings.textonlymode || false;
 		data.type = "vimeo";
 		
-		if (ele.querySelector(".interaction-qna-item-preview")){
+		if (ele.querySelector(".interaction-qna-item-preview, .qna-item-preview")){
 			ele.marked = true;
 			data.question = true;
 		} else if (initial || ele.marked){
