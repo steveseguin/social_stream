@@ -10395,19 +10395,7 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
         const needsValidation = data.destination || relayMode;
 
         // First pass: try with source type matching - PARALLEL processing
-        // Pre-filter to mark URLs synchronously before async processing to prevent race conditions
-        const tabsToProcess = [];
-        for (const tab of tabs) {
-            if (tab.url) {
-                if (tab.url in published) {
-                    continue; // Already claimed by another tab
-                }
-                published[tab.url] = true;
-            }
-            tabsToProcess.push(tab);
-        }
-
-        await Promise.allSettled(tabsToProcess.map(async (tab) => {
+        await Promise.allSettled(tabs.map(async (tab) => {
             try {
                 // Skip validation if we already filtered by tid and don't need destination/relay checks
                 if (!hasSpecificTids || needsValidation) {
@@ -10415,6 +10403,15 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     if (!isValid) {
                         return;
                     }
+                }
+                if (tab.url) {
+                    if (tab.url in published) {
+                        return; // Another tab with this URL already claimed it
+                    }
+                    // NOTE: If Electron starts double-sending again from dock.html,
+                    // revisit this block and consider a targeted pre-claim for
+                    // file:// sources only instead of global prefiltering.
+                    published[tab.url] = true;
                 }
                 await processTab(tab);
             } catch (e) {
@@ -13831,4 +13828,3 @@ window.addEventListener('beforeunload', async function() {
 window.addEventListener('unload', async function() {
   document.title = "Close me - Social Stream Ninja";
 });
-
