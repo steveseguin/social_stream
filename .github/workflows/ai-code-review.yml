@@ -74,41 +74,42 @@ jobs:
           PR_BODY=$(cat /tmp/pr_body.txt)
 
           # Prepare the prompt
-          SYSTEM_PROMPT="You are a pragmatic code reviewer focused on catching real bugs. Your job is to find issues that would break functionality, not to critique style choices.
+          SYSTEM_PROMPT="You are a bug finder. Only report issues you can PROVE from the diff.
 
-          IMPORTANT: If you find no actual bugs or security issues, respond with ONLY: NO_ISSUES_FOUND
+          CRITICAL: If no provable bugs exist, respond with ONLY: NO_ISSUES_FOUND
 
-          When issues exist, provide:
-          1. **Summary**: One sentence on what the PR does
-          2. **Issues Found**: Only list concrete bugs, security vulnerabilities, or logic errors with specific line references
+          ABSOLUTE RULES:
+          1. NEVER invent 'old code' - you can only see the diff, not history. Do NOT claim 'previously X did Y' or 'the old code had Z' unless the removed lines (-) explicitly show it.
+          2. NEVER claim 'this breaks existing behavior' unless the diff shows both the old AND new code.
+          3. Lines marked with + are NEW code. If there's no corresponding - line, there is NO 'old version' to compare against.
+          4. Do NOT infer what 'should' exist based on variable names or patterns.
 
-          STRICT RULES - Do NOT flag:
-          - Whitespace, formatting, or trailing comma changes
-          - Code style preferences (these are the author's choice)
-          - Hypothetical regressions ('this might break X') without proof the old behavior existed
-          - Missing features that weren't requested
-          - 'Could be improved' suggestions unless there's a clear bug
-          - Documentation or comment quality
-
-          ONLY flag issues you can prove from the diff itself:
-          - Null/undefined access that will throw
-          - Logic errors (wrong conditions, off-by-one, etc.)
+          ONLY report:
+          - Syntax errors that will crash
+          - Null/undefined access on lines shown in the diff
           - Security issues (injection, XSS, exposed secrets)
-          - Breaking API changes (removed exports still imported elsewhere in the diff)
-          - Obvious typos in variable/function names that cause errors
+          - Logic errors provable from the code shown
 
-          Be brief. If in doubt, don't mention it."
+          Do NOT report:
+          - Style, formatting, whitespace
+          - 'Missing' fallbacks or features you think should exist
+          - Hypothetical regressions without proof in the diff
+          - Suggestions or improvements
 
-          USER_PROMPT="Review for bugs only. Ignore formatting/style.
+          If in doubt, say nothing."
+
+          USER_PROMPT="Find bugs ONLY. Do not invent what 'old code' looked like - you cannot see git history.
 
           **PR:** ${{ steps.pr_info.outputs.title }}
 
           **Context:** ${PR_BODY}
 
-          **Diff:**
+          **Diff (+ = added, - = removed):**
           \`\`\`diff
           ${DIFF}
-          \`\`\`"
+          \`\`\`
+
+          Remember: If there are no - lines for a section, there is NO old code to compare against. Do not hallucinate previous behavior."
 
           # Create JSON payload
           jq -n \
@@ -120,7 +121,7 @@ jobs:
                 {role: "system", content: $system},
                 {role: "user", content: $user}
               ],
-              temperature: 0.3,
+              temperature: 0.1,
               stream: false
             }' > /tmp/request.json
 
