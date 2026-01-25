@@ -2164,13 +2164,14 @@ class EventFlowSystem {
 		});
 	}
 
-	sanitizeSendMessage(text, textonly = false, alt = false) {
+	sanitizeSendMessage(text, textonly = false, alt = false, mode = 'safe') {
 		if (!text || !text.trim()) {
 			return alt || text;
 		}
 
 		// Prefer the shared relay sanitizer (from background.js) so editor + background behave identically
-		if (typeof this.sanitizeRelay === 'function') {
+		// Only use it in 'safe' mode since it applies full sanitization
+		if (typeof this.sanitizeRelay === 'function' && mode === 'safe') {
 			try {
 				const cleaned = this.sanitizeRelay(text, textonly, alt);
 				if (cleaned || !alt) {
@@ -2220,18 +2221,28 @@ class EventFlowSystem {
 			text = textArea.value;
 		}
 
+		// HTML stripping always runs (XSS prevention)
 		text = text.replace(/(<([^>]+)>)/gi, "");
-		text = text.replace(/[!#@]/g, "");
-		text = text.replace(/cheer\d+/gi, " ");
 
-		text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
-			const prev = offset > 0 ? str[offset - 1] : "";
-			const next = str[offset + 1] || "";
-			if (/\S/.test(prev) && /\S/.test(next)) {
-				return ".";
-			}
-			return " ";
-		});
+		if (mode === 'safe') {
+			// Full sanitization (current behavior)
+			text = text.replace(/[!#@]/g, "");
+			text = text.replace(/cheer\d+/gi, " ");
+			text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
+				const prev = offset > 0 ? str[offset - 1] : "";
+				const next = str[offset + 1] || "";
+				if (/\S/.test(prev) && /\S/.test(next)) {
+					return ".";
+				}
+				return " ";
+			});
+		} else if (mode === 'preserveUrls') {
+			// Strip commands but preserve dots for URLs
+			text = text.replace(/[!#@]/g, "");
+			text = text.replace(/cheer\d+/gi, " ");
+			// Dots preserved - no replacement
+		}
+		// 'raw' mode: Only HTML stripped above
 
 		emojiMap.forEach((emoji, placeholder) => {
 			text = text.replace(placeholder, emoji);
@@ -2475,9 +2486,10 @@ class EventFlowSystem {
                 
                 // Process template using the shared replacement utility
                 let processedTemplate = this.replaceTemplateVars(config.template || 'Hello from {source}!', message);
-                
-                // Sanitize the message
-                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, false).trim();
+
+                // Sanitize the message based on configured mode
+                const sanitizeMode = config.sanitizeMode || 'safe';
+                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, false, false, sanitizeMode).trim();
                 
                 // Check if sanitized message is empty
                 if (!sanitizedSendMessage) {
