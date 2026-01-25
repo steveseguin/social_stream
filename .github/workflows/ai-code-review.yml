@@ -74,27 +74,36 @@ jobs:
           PR_BODY=$(cat /tmp/pr_body.txt)
 
           # Prepare the prompt
-          SYSTEM_PROMPT="You are an expert code reviewer. Analyze the provided pull request diff and provide a helpful, constructive review. Be concise but thorough.
+          SYSTEM_PROMPT="You are a pragmatic code reviewer focused on catching real bugs. Your job is to find issues that would break functionality, not to critique style choices.
 
-          IMPORTANT: If the code looks good with no significant issues, bugs, or concerns, respond with ONLY the text: NO_ISSUES_FOUND
+          IMPORTANT: If you find no actual bugs or security issues, respond with ONLY: NO_ISSUES_FOUND
 
-          Otherwise, your review should include:
-          1. **Overview**: A brief summary of what this PR does (2-3 sentences)
-          2. **Potential Issues**: Any bugs, security concerns, or logical errors you spot
-          3. **Suggestions**: Improvements for code quality, performance, or maintainability
+          When issues exist, provide:
+          1. **Summary**: One sentence on what the PR does
+          2. **Issues Found**: Only list concrete bugs, security vulnerabilities, or logic errors with specific line references
 
-          Guidelines:
-          - Focus on significant issues, not nitpicks
-          - Be constructive and helpful
-          - Use code snippets when referencing specific lines
-          - Format your response in markdown"
+          STRICT RULES - Do NOT flag:
+          - Whitespace, formatting, or trailing comma changes
+          - Code style preferences (these are the author's choice)
+          - Hypothetical regressions ('this might break X') without proof the old behavior existed
+          - Missing features that weren't requested
+          - 'Could be improved' suggestions unless there's a clear bug
+          - Documentation or comment quality
 
-          USER_PROMPT="Please review this pull request:
+          ONLY flag issues you can prove from the diff itself:
+          - Null/undefined access that will throw
+          - Logic errors (wrong conditions, off-by-one, etc.)
+          - Security issues (injection, XSS, exposed secrets)
+          - Breaking API changes (removed exports still imported elsewhere in the diff)
+          - Obvious typos in variable/function names that cause errors
 
-          **Title:** ${{ steps.pr_info.outputs.title }}
+          Be brief. If in doubt, don't mention it."
 
-          **Description:**
-          ${PR_BODY}
+          USER_PROMPT="Review for bugs only. Ignore formatting/style.
+
+          **PR:** ${{ steps.pr_info.outputs.title }}
+
+          **Context:** ${PR_BODY}
 
           **Diff:**
           \`\`\`diff
@@ -111,7 +120,7 @@ jobs:
                 {role: "system", content: $system},
                 {role: "user", content: $user}
               ],
-              temperature: 0.7,
+              temperature: 0.3,
               stream: false
             }' > /tmp/request.json
 
@@ -147,12 +156,12 @@ jobs:
           fi
 
           # Create the comment with header
-          COMMENT="## 🤖 AI Code Review
+          COMMENT="## 🤖 AI Bug Check
 
           $REVIEW
 
           ---
-          <sub>Powered by [Z.AI GLM-4.7](https://z.ai/subscribe?ic=W4IQQ89PNZ) (affiliate link). Human review still recommended.</sub>"
+          <sub>Auto-check by [Z.AI GLM-4.7](https://z.ai/subscribe?ic=W4IQQ89PNZ) · Style/formatting ignored · Verify findings before acting</sub>"
 
           # Post comment to PR
           gh pr comment ${{ github.event.pull_request.number }} \
