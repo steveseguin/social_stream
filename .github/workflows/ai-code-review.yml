@@ -1,9 +1,12 @@
 name: AI Code Review
 
+# Disabled - GLM model produces too many false positives
+# on:
+#   pull_request:
+#     branches: [main]
+#     types: [opened, synchronize]
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize]
+  workflow_dispatch:  # Manual trigger only
 
 permissions:
   contents: read
