@@ -178,6 +178,12 @@ function toDataURL(url, callback) {
 				}
 			} else {
 				return;
+				try{
+					chatname = escapeHtml(document.querySelector('#main header [role="button"][data-tab] span').textContent);
+				}catch(e){
+					return;
+				}
+
 			}
 			// console.log("1");
 		}
@@ -203,7 +209,7 @@ function toDataURL(url, callback) {
 		}
 		
 		try {
-			chatmessage = ele.querySelector(".selectable-text.copyable-text");
+			chatmessage = ele.querySelector(".selectable-text.copyable-text, [data-testid='selectable-text'].copyable-text");
 			chatmessage = getAllContentNodes(chatmessage);
 		} catch(e){
 			chatmessage = "";
