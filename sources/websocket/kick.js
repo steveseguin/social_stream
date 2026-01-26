@@ -3482,6 +3482,8 @@ function replayPendingBridgeEvents() {
 function shouldIgnoreBridgeChatEvent(packet) {
     const type = packet?.type || packet?.body?.event || '';
     if (type !== 'chat.message.sent') return false;
+    // Don't ignore events that came from the socket itself
+    if (packet?.source === 'socket') return false;
     if (!supportsLocalSocket()) return false;
     if (state.socket?.status !== 'connected') return false;
     return true;
