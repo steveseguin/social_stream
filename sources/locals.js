@@ -215,6 +215,7 @@ function toDataURL(url, callback) {
 		observer.observe(target, config);
 	}
 	
+	var counter = 0;
 	console.log("social stream injected");
 
 	setInterval(function(){
@@ -232,7 +233,36 @@ function toDataURL(url, callback) {
 					onElementInserted(chatContainer);
 				},3000);
 			}
+			
+			
+			if (isExtensionOn && (settings.showviewercount || settings.hypemode)){
+			
+				if (counter%10==0){
+					try {
+						
+						var viewerCount = document.querySelector(".pcountusersnum");
+						
+						if (viewerCount && viewerCount.textContent.trim().length){
+							if (viewerCount.textContent == parseInt(viewerCount.textContent)){
+								
+								chrome.runtime.sendMessage(
+									chrome.runtime.id,
+									({message:{
+											type: 'locals',
+											event: 'viewer_update',
+											meta: parseInt(viewerCount.textContent)
+										}
+									}),
+									function (e) {}
+								);
+							}
+						}
+					} catch(e){}
+				}
+				counter+=1;
+			}
+			
 		}
-	},1000);
+	},2000);
 
 })();
