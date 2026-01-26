@@ -143,7 +143,13 @@ function toDataURL(url, callback) {
 		
 		if (!chatimg){
 			try {
-				var avatar = ele.querySelector(".chat-message-content-wrapper img[alt='User'][src]") || ele.querySelector(".chat-message-content-wrapper img[src]");
+				var avatar = ele.querySelector(".chat-message-content-wrapper .w_28px img[src]") || ele.querySelector(".chat-message-content-wrapper img[alt='User'][src]") || ele.querySelector(".chat-message-content-wrapper img[class*='bdr_50%'][src]");
+				if (!avatar){
+					var fallbackAvatar = ele.querySelector(".chat-message-content-wrapper img[src]");
+					if (fallbackAvatar && (!fallbackAvatar.closest || (!fallbackAvatar.closest(".wb_break-word") && !fallbackAvatar.closest(".message-photo")))){
+						avatar = fallbackAvatar;
+					}
+				}
 				if (avatar){
 					chatimg = avatar.src;
 				}
