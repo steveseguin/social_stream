@@ -2031,6 +2031,7 @@ function isElectronEnvironment() {
     const isSsappViaParam = urlParams.has('ssapp') || hashParams.has('ssapp');
     const hasNinjafyOAuth = window.ninjafy && typeof window.ninjafy.startKickOAuth === 'function';
     const hasSsappOAuth = window.__ssapp && typeof window.__ssapp.startKickOAuth === 'function';
+
     return isSsappViaParam || hasNinjafyOAuth || hasSsappOAuth;
 }
 
@@ -2213,9 +2214,13 @@ async function disconnectLocalSocket() {
 
 async function startAuthFlow() {
     logKickWs('Sign-in clicked.');
+
+    // DIAGNOSTIC LOGGING - remove after debugging
+    const isElectron = isElectronEnvironment();
+    const authMethod = localStorage.getItem('kickAuthMethod') || 'external';
+
     // Use external browser auth if in Electron and user prefers it
-    if (isElectronEnvironment()) {
-        const authMethod = localStorage.getItem('kickAuthMethod') || 'external';
+    if (isElectron) {
         if (authMethod === 'external') {
             return startExternalAuthFlow();
         }
@@ -4711,3 +4716,17 @@ if (document.readyState === 'loading') {
 } else {
     bootstrap();
 }
+
+// Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
+// This is needed when chrome.runtime is deleted for Kasada bypass
+window.addEventListener('message', function(event) {
+    if (!event.data || typeof event.data !== 'object') return;
+    if (!event.data.__ssappSendToTab) return;
+
+    var request = event.data.__ssappSendToTab;
+    if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+        sendChatFromExtension(request.message).catch(function(err) {
+            console.error('Kick SEND_MESSAGE via postMessage failed', err);
+        });
+    }
+});

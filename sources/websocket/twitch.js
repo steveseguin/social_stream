@@ -2217,6 +2217,19 @@ async function ensureChatClientInstance() {
 
 	console.log("INJECTED WEBSOCKETS");
 
+	// Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
+	// This is needed when chrome.runtime is deleted for Kasada bypass
+	window.addEventListener('message', function(event) {
+		if (!event.data || typeof event.data !== 'object') return;
+		if (!event.data.__ssappSendToTab) return;
+
+		var request = event.data.__ssappSendToTab;
+		if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+			sendMessage(request.message).catch(function(err) {
+				console.error('Twitch SEND_MESSAGE via postMessage failed', err);
+			});
+		}
+	});
 
 	//////////////
 

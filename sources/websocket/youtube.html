@@ -3401,11 +3401,7 @@ function enableBackgroundKeepAlive() {
 	{
 		const extensionMessageHandler = function(e) {
 			if (e.detail && e.detail.message && liveChatId) {
-				sendChatMessage(e.detail.message).then(response => {
-					if (response && response.id) {
-						console.log('Extension message sent successfully');
-					}
-				}).catch(error => {
+				sendChatMessage(e.detail.message).catch(error => {
 					console.error('Failed to send extension message:', error);
 				});
 			}
