@@ -82,25 +82,48 @@ function toDataURL(url, callback) {
 		}
 		
 		if (!name){
+			try {
+				var nameNode = ele.querySelector("a[href*='username=']");
+				if (nameNode && nameNode.textContent){
+					name = nameNode.textContent.trim();
+				}
+			} catch(e){}
+		}
+		
+		if (!name){
 			name = escapeHtml(document.querySelector(".nameContainer > .name").innerText);
 		}
 		
+		name = name.replace(/^@/, "").trim();
+		
 		var msg = "";
 		try {
-			ele.querySelector('.msg-text, .mchat__chatmessage').childNodes.forEach(ee=>{
-				if (ee.nodeType == Node.TEXT_NODE){
-					msg += escapeHtml(ee.textContent);
-				} else if (settings.textonlymode && ee.alt && (ee.nodeName  == "IMG")){
-					//msg += ee.alt;
-				} else if (!settings.textonlymode&& (ee.nodeName  == "IMG")){
-					msg += "<img src='"+ee.src+"' />";
-				}  else {
-					msg += escapeHtml(ee.textContent);
-				}
-			});
+			var msgNode = ele.querySelector('.msg-text, .mchat__chatmessage');
+			if (msgNode && msgNode.childNodes){
+				msgNode.childNodes.forEach(ee=>{
+					if (ee.nodeType == Node.TEXT_NODE){
+						msg += escapeHtml(ee.textContent);
+					} else if (settings.textonlymode && ee.alt && (ee.nodeName  == "IMG")){
+						//msg += ee.alt;
+					} else if (!settings.textonlymode&& (ee.nodeName  == "IMG")){
+						msg += "<img src='"+ee.src+"' />";
+					}  else {
+						msg += escapeHtml(ee.textContent);
+					}
+				});
+			}
 		}catch(e){msg = "";}
 		
 		msg = msg.trim();
+		
+		if (!msg){
+			try {
+				var msgNodeNew = ele.querySelector(".chat-message-content-wrapper .wb_break-word");
+				if (msgNodeNew){
+					msg = getAllContentNodes(msgNodeNew).trim();
+				}
+			} catch(e){msg = "";}
+		}
 		
 		var chatimg = '';
 		try {
@@ -118,11 +141,41 @@ function toDataURL(url, callback) {
 			chatimg = "";
 		}
 		
+		if (!chatimg){
+			try {
+				var avatar = ele.querySelector(".chat-message-content-wrapper img[alt='User'][src]") || ele.querySelector(".chat-message-content-wrapper img[src]");
+				if (avatar){
+					chatimg = avatar.src;
+				}
+			} catch(e){
+				chatimg = "";
+			}
+		}
+		
 		var contentimg = "";
 		try {
 			contentimg =  ele.querySelector(".message-photo img[src]").src;
 		} catch(e){
 			contentimg = "";
+		}
+		
+		var hasDonation = "";
+		try {
+			var donationPath = ele.querySelector("svg path[d^='M1.36193 6.26802']");
+			if (donationPath){
+				var donationSvg = donationPath.closest("svg");
+				var donationSpan = "";
+				if (donationSvg && donationSvg.nextElementSibling){
+					donationSpan = donationSvg.nextElementSibling;
+				} else if (donationSvg && donationSvg.parentNode){
+					donationSpan = donationSvg.parentNode.querySelector("span");
+				}
+				if (donationSpan && donationSpan.textContent){
+					hasDonation = escapeHtml(donationSpan.textContent.trim());
+				}
+			}
+		} catch(e){
+			hasDonation = "";
 		}
 		
 		
@@ -134,7 +187,7 @@ function toDataURL(url, callback) {
 		data.textColor = "";
 		data.chatmessage = msg;
 		data.chatimg = chatimg;
-		data.hasDonation = "";
+		data.hasDonation = hasDonation;
 		data.membership = "";;
 		data.contentimg = contentimg;
 		data.textonly = settings.textonlymode || false;
@@ -142,7 +195,7 @@ function toDataURL(url, callback) {
 		
 		console.log(data);
 		
-		if (!contentimg && !msg){return;}
+		if (!contentimg && !msg && !hasDonation){return;}
 		
 		pushMessage(data);
 		
