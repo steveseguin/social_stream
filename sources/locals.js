@@ -302,14 +302,24 @@ function toDataURL(url, callback) {
 						var viewerCount = document.querySelector(".pcountusersnum");
 						
 						if (viewerCount && viewerCount.textContent.trim().length){
-							if (viewerCount.textContent == parseInt(viewerCount.textContent)){
-								
+							let views = viewerCount.textContent.trim().toUpperCase();
+							let multiplier = 1;
+							if (views.includes("K")){
+								multiplier = 1000;
+								views = views.replace("K", "");
+							} else if (views.includes("M")){
+								multiplier = 1000000;
+								views = views.replace("M", "");
+							}
+							views = views.split(" ")[0];
+							if (views == parseFloat(views)){
+								views = parseFloat(views) * multiplier;
 								chrome.runtime.sendMessage(
 									chrome.runtime.id,
 									({message:{
 											type: 'locals',
 											event: 'viewer_update',
-											meta: parseInt(viewerCount.textContent)
+											meta: views
 										}
 									}),
 									function (e) {}
