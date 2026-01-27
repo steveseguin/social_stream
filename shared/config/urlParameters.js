@@ -1561,6 +1561,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Hides names of hosts"
           },
           {
+            "key": "stripat",
+            "displayName": "stripat",
+            "aliases": [
+              "stripat"
+            ],
+            "values": "boolean",
+            "description": "Removes @ from the start of display names"
+          },
+          {
             "key": "nobeepbot",
             "displayName": "nobeepbot",
             "aliases": [

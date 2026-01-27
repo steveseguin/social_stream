@@ -797,6 +797,7 @@ class EventFlowEditor {
                 <div class="node-help-buttons">
                     <button class="btn btn-ghost" data-guide-link="event-flow">📘 Event Flow Guide</button>
                     <button class="btn btn-ghost" data-guide-link="state-nodes">🎮 State Nodes Guide</button>
+                    <button class="btn btn-ghost" data-guide-link="event-reference">📖 Event Reference</button>
                 </div>
             </div>
         `;
@@ -2383,7 +2384,7 @@ class EventFlowEditor {
                 case 'featureMessage':
                     node.config = {}; break;
                 case 'sendMessage':
-					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0 }; break;
+					node.config = { destination: 'reply', template: 'Thank you {username}!', timeout: 0, sanitizeMode: 'safe' }; break;
                 case 'relay':
 					node.config = { destination: '', template: '[{source}] {username}: {message}', timeout: 0 }; break;
                 case 'webhook':
@@ -3828,6 +3829,18 @@ class EventFlowEditor {
                 </div>
                 <div class="property-group"><label class="property-label">Message Template</label><textarea class="property-input" id="prop-template" rows="3">${node.config.template || 'Thank you {username}!'}</textarea><div class="property-help">Use {username}, {message}, {source} placeholders</div></div>
                 <div class="property-group"><label class="property-label">Timeout (ms)</label><input type="number" class="property-input" id="prop-timeout" value="${node.config.timeout || 0}"><div class="property-help">Delay before sending (0 for immediate).</div></div>
+                <div class="property-group">
+                    <label class="property-label">Sanitization Mode</label>
+                    <select class="property-input" id="prop-sanitizeMode">
+                        <option value="safe" ${(node.config.sanitizeMode || 'safe') === 'safe' ? 'selected' : ''}>Safe - Full sanitization (default)</option>
+                        <option value="preserveUrls" ${node.config.sanitizeMode === 'preserveUrls' ? 'selected' : ''}>Preserve URLs - Keep dots</option>
+                        <option value="raw" ${node.config.sanitizeMode === 'raw' ? 'selected' : ''}>Raw - HTML stripping only</option>
+                    </select>
+                    <div class="property-help">Safe strips dots/commands to prevent loops. Preserve URLs keeps dots intact. Raw only removes HTML tags.</div>
+                </div>
+                <div id="sanitize-warning" style="display:${(node.config.sanitizeMode || 'safe') !== 'safe' ? 'block' : 'none'}; color: #ff6b6b; padding: 5px 0; font-size: 12px;">
+                    ⚠️ Non-safe modes may cause reflection mismatches if platforms modify your message (URL shortening, etc.)
+                </div>
                 <div class="property-help">Destinations: <strong>Reply to Source</strong> posts back only to the originating tab; <strong>All</strong> includes the source; <strong>All (Excluding Source)</strong> prevents posting back to the origin.</div>
                 <div class="property-help">Reflections: Sent messages are tagged as reflections when they re‑enter via the extension (to avoid loops). Add a <strong>Reflection Filter</strong> node in this flow to control whether those reflected posts appear in the dock/overlays: <em>Block All</em> hides them, <em>Allow First</em> lets only the first show within the window, <em>Allow All</em> shows all. The filter does not change sending; it only controls display on re‑ingest.</div>`;
 				break;
@@ -5076,6 +5089,22 @@ class EventFlowEditor {
                 // ensure config refresh
                 if (nodeData && nodeData.config) {
                     nodeData.config.policy = e.target.value;
+                }
+                this.markUnsavedChanges(true);
+                this.renderNodeOnCanvas(nodeData.id);
+            });
+        }
+
+        // Special handling for sanitizeMode dropdown (Send Message node)
+        const sanitizeModeSelect = document.getElementById('prop-sanitizeMode');
+        if (sanitizeModeSelect) {
+            sanitizeModeSelect.addEventListener('change', (e) => {
+                const warning = document.getElementById('sanitize-warning');
+                if (warning) {
+                    warning.style.display = e.target.value === 'safe' ? 'none' : 'block';
+                }
+                if (nodeData && nodeData.config) {
+                    nodeData.config.sanitizeMode = e.target.value;
                 }
                 this.markUnsavedChanges(true);
                 this.renderNodeOnCanvas(nodeData.id);

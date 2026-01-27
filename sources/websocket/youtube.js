@@ -335,6 +335,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 			sendResponse(true);
 			return;
 		}
+		if (request && request.__ssappSendToTab) {
+			request = request.__ssappSendToTab;
+		}
 		if (typeof request === "object") {
 			if ("state" in request) {
 				isExtensionOn = request.state;
@@ -457,3 +460,18 @@ try {
 }
 
 console.log("INJECTED YOUTUBE INTEGRATION");
+
+// Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
+// This is needed when chrome.runtime is deleted for Kasada bypass
+window.addEventListener('message', function(event) {
+	if (!event.data || typeof event.data !== 'object') return;
+	if (!event.data.__ssappSendToTab) return;
+
+	var request = event.data.__ssappSendToTab;
+	if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+		window.dispatchEvent(new CustomEvent('sendExtensionMessage', {
+			detail: { message: request.message },
+			bubbles: true
+		}));
+	}
+});

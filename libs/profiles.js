@@ -43,73 +43,24 @@ const ProfileManager = {
     const profileName = await prompt("Enter a name for this profile:", "My Profile");
     if (!profileName) return;
 
-    // Get current settings
-    const currentSettings = {};
-    
-    // Gather all settings from checkbox inputs
-    document.querySelectorAll('input[type="checkbox"][data-setting]').forEach(input => {
-      const settingName = input.dataset.setting;
-      currentSettings[settingName] = { setting: input.checked };
-    });
-    
-    // Gather all settings from text inputs
-    document.querySelectorAll('input[type="text"][data-textsetting], textarea[data-textsetting]').forEach(input => {
-      const settingName = input.dataset.textsetting;
-      currentSettings[settingName] = { textsetting: input.value };
-    });
-    
-    // Gather all settings from select inputs
-    document.querySelectorAll('select[data-optionsetting]').forEach(select => {
-      const settingName = select.dataset.optionsetting;
-      currentSettings[settingName] = { optionsetting: select.value };
-    });
-    
-    // Gather all settings from number inputs
-    document.querySelectorAll('input[type="number"][data-numbersetting]').forEach(input => {
-      const settingName = input.dataset.numbersetting;
-      currentSettings[settingName] = { numbersetting: input.value };
-    });
-    
-    // Gather param settings
-    for (let i = 1; i <= 18; i++) {
-      document.querySelectorAll(`input[data-param${i}]`).forEach(input => {
-        const settingName = input.dataset[`param${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`param${i}`] = input.checked;
-      });
-      
-      document.querySelectorAll(`input[data-textparam${i}], textarea[data-textparam${i}]`).forEach(input => {
-        const settingName = input.dataset[`textparam${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`textparam${i}`] = input.value;
-      });
-      
-      document.querySelectorAll(`select[data-optionparam${i}]`).forEach(select => {
-        const settingName = select.dataset[`optionparam${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`optionparam${i}`] = select.value;
-      });
-      
-      document.querySelectorAll(`input[data-numbersetting${i}]`).forEach(input => {
-        const settingName = input.dataset[`numbersetting${i}`];
-        if (!currentSettings[settingName]) currentSettings[settingName] = {};
-        currentSettings[settingName][`numbersetting${i}`] = input.value;
-      });
-    }
+    chrome.runtime.sendMessage({cmd: "getSettings"}, (response) => {
+      const currentSettings = (response && response.settings) ? response.settings : {};
 
-    const newProfile = {
-      id: Date.now().toString(),
-      name: profileName,
-      dateCreated: new Date().toISOString(),
-      settings: currentSettings
-    };
+      const newProfile = {
+        id: Date.now().toString(),
+        name: profileName,
+        dateCreated: new Date().toISOString(),
+        settings: currentSettings
+      };
 
-    this.profiles.push(newProfile);
-    this.currentProfileId = newProfile.id;
-    this.updateProfilesList();
-    this.saveProfilesToStorage();
-    
-    alert(`Profile "${profileName}" saved successfully!`);
+      this.profiles.push(newProfile);
+      this.currentProfileId = newProfile.id;
+      this.updateProfilesList();
+      this.saveProfilesToStorage();
+
+      alert(`Profile "${profileName}" saved successfully!`);
+    });
+
   },
 
   loadProfile(profileId) {
@@ -141,6 +92,8 @@ const ProfileManager = {
     });
     
     alert(`Profile "${profile.name}" loaded successfully!`);
+    window.location.reload();
+
   },
 
   updateProfilesList() {

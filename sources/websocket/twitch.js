@@ -1023,6 +1023,22 @@ async function ensureChatClientInstance() {
 		if (!payload) {
 			return;
 		}
+
+		// Skip events that EventSub is already handling to prevent duplicates
+		if (payload.event === 'cheer' && activeSubscriptions.has('channel.cheer')) {
+			return;
+		}
+		if (payload.event === 'sub' && activeSubscriptions.has('channel.subscribe')) {
+			return;
+		}
+		if ((payload.event === 'subgift' || payload.event === 'anonsubgift')
+			&& activeSubscriptions.has('channel.subscription.gift')) {
+			return;
+		}
+		if (payload.event === 'resub' && activeSubscriptions.has('channel.subscription.message')) {
+			return;
+		}
+
 		if (payload.event === 'cheer') {
 			await handleNormalizedChatMessage({
 				...payload,
@@ -1201,19 +1217,7 @@ async function ensureChatClientInstance() {
 				const sent = await sendMessage(msg);
 				if (sent) {
 					inputElement.value = "";
-					let builtmsg = {};
-					builtmsg.command = "PRIVMSG";
-					builtmsg.params = [username];
-					builtmsg.prefix = username+"!"+username+"@"+username+".tmi.twitch.tv";
-					builtmsg.trailing = msg;
-					
-					// Get user's specific badges from localStorage
-					const userBadges = localStorage.getItem('userBadges');
-					builtmsg.tags = {
-						badges: userBadges || '',
-						color: localStorage.getItem('userColor') || ''
-					};
-					await processMessage(builtmsg);
+					// Server echo will display the message via handleNormalizedChatMessage
 				}
 			}
 		}
@@ -1306,10 +1310,22 @@ async function ensureChatClientInstance() {
 				document.querySelector('#sendmessage').focus();
 				sendResponse(true);
 				return;
-			} 
+			}
+			if (request && request.__ssappSendToTab) {
+				request = request.__ssappSendToTab;
+			}
 			if (typeof request === "object") {
 				if ("state" in request) {
 					isExtensionOn = request.state;
+				}
+				if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+					sendMessage(request.message)
+						.then(() => sendResponse(true))
+						.catch((err) => {
+							console.error('Twitch extension SEND_MESSAGE failed', err);
+							sendResponse(false);
+						});
+					return true;
 				}
 				if ("settings" in request) {
 					settings = request.settings;
@@ -1350,11 +1366,13 @@ async function ensureChatClientInstance() {
 					return;
 				}
 			}
+
 		} catch(e) {
 			console.error('Error handling Chrome message:', e);
 		}
 		sendResponse(false);
 	});
+
 
 	function authUrl() {
 		sessionStorage.twitchOAuthState = nonce(15);
@@ -2149,14 +2167,14 @@ async function ensureChatClientInstance() {
 			if (data.event === 'viewer_update' && !(settings.showviewercount || settings.hypemode)) {
 				return; // Skip viewer updates if not enabled
 			}
-			
+
 			if (data.type && data.event) {
 				updateStats(data.event, data);
 			}
-					
+
 			// Send message to Chrome extension
-			chrome.runtime.sendMessage(chrome.runtime.id, { 
-				"message": data 
+			chrome.runtime.sendMessage(chrome.runtime.id, {
+				"message": data
 			}, function(response) {
 				// Handle response if needed
 			});
@@ -2199,6 +2217,19 @@ async function ensureChatClientInstance() {
 
 	console.log("INJECTED WEBSOCKETS");
 
+	// Handle messages from preload-mock.js which uses window.postMessage instead of chrome.runtime
+	// This is needed when chrome.runtime is deleted for Kasada bypass
+	window.addEventListener('message', function(event) {
+		if (!event.data || typeof event.data !== 'object') return;
+		if (!event.data.__ssappSendToTab) return;
+
+		var request = event.data.__ssappSendToTab;
+		if (request.type === 'SEND_MESSAGE' && typeof request.message === 'string') {
+			sendMessage(request.message).catch(function(err) {
+				console.error('Twitch SEND_MESSAGE via postMessage failed', err);
+			});
+		}
+	});
 
 	//////////////
 

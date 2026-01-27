@@ -2113,14 +2113,65 @@ class EventFlowSystem {
             blocked
         };
     }
-	
-	sanitizeSendMessage(text, textonly = false, alt = false) {
+
+	/**
+	 * Replace template variables in text with values from the message object.
+	 * Supports core aliases ({username}, {message}, {source}, {donation}) plus
+	 * extended fields ({event}, {membership}, {hasDonation}, {meta}, etc.).
+	 * @param {string} text - Template text containing {variable} placeholders
+	 * @param {Object} message - Message object with field values
+	 * @returns {string} Text with placeholders replaced
+	 */
+	replaceTemplateVars(text, message) {
+		if (!text) return text || '';
+		if (!message) return text;
+
+		// Build lookup map with all supported variables (lowercase keys for case-insensitive matching)
+		const messageData = {
+			// Core aliases for backward compatibility
+			username: message.chatname || message.displayname || '',
+			message: message.chatmessage || '',
+			source: (message.type || '').charAt(0).toUpperCase() + (message.type || '').slice(1),
+			donation: message.hasDonation || '',
+			// Direct field mappings
+			chatname: message.chatname || '',
+			displayname: message.displayname || '',
+			chatmessage: message.chatmessage || '',
+			type: message.type || '',
+			hasdonation: message.hasDonation || '',
+			donationamount: message.donationAmount || '',
+			event: message.event || '',
+			membership: message.membership || '',
+			subtitle: message.subtitle || '',
+			userid: message.userid || '',
+			chatimg: message.chatimg || '',
+			contentimg: message.contentimg || '',
+			rewardtitle: message.rewardTitle || '',
+			meta: message.meta || ''
+		};
+
+		return text.replace(/\{(\w+)\}/gi, (match, key) => {
+			const val = messageData[key.toLowerCase()];
+			if (val === undefined || val === null) return '';
+			if (typeof val === 'object') {
+				try {
+					return JSON.stringify(val);
+				} catch (e) {
+					return '';
+				}
+			}
+			return String(val);
+		});
+	}
+
+	sanitizeSendMessage(text, textonly = false, alt = false, mode = 'safe') {
 		if (!text || !text.trim()) {
 			return alt || text;
 		}
 
 		// Prefer the shared relay sanitizer (from background.js) so editor + background behave identically
-		if (typeof this.sanitizeRelay === 'function') {
+		// Only use it in 'safe' mode since it applies full sanitization
+		if (typeof this.sanitizeRelay === 'function' && mode === 'safe') {
 			try {
 				const cleaned = this.sanitizeRelay(text, textonly, alt);
 				if (cleaned || !alt) {
@@ -2170,18 +2221,28 @@ class EventFlowSystem {
 			text = textArea.value;
 		}
 
+		// HTML stripping always runs (XSS prevention)
 		text = text.replace(/(<([^>]+)>)/gi, "");
-		text = text.replace(/[!#@]/g, "");
-		text = text.replace(/cheer\d+/gi, " ");
 
-		text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
-			const prev = offset > 0 ? str[offset - 1] : "";
-			const next = str[offset + 1] || "";
-			if (/\S/.test(prev) && /\S/.test(next)) {
-				return ".";
-			}
-			return " ";
-		});
+		if (mode === 'safe') {
+			// Full sanitization (current behavior)
+			text = text.replace(/[!#@]/g, "");
+			text = text.replace(/cheer\d+/gi, " ");
+			text = text.replace(/\.(?=\S)/g, (match, offset, str) => {
+				const prev = offset > 0 ? str[offset - 1] : "";
+				const next = str[offset + 1] || "";
+				if (/\S/.test(prev) && /\S/.test(next)) {
+					return ".";
+				}
+				return " ";
+			});
+		} else if (mode === 'preserveUrls') {
+			// Strip commands but preserve dots for URLs
+			text = text.replace(/[!#@]/g, "");
+			text = text.replace(/cheer\d+/gi, " ");
+			// Dots preserved - no replacement
+		}
+		// 'raw' mode: Only HTML stripped above
 
 		emojiMap.forEach((emoji, placeholder) => {
 			text = text.replace(placeholder, emoji);
@@ -2423,23 +2484,12 @@ class EventFlowSystem {
                     break;
                 }
                 
-                // Process template - this can use any message properties, not just chatmessage
-                let processedTemplate = config.template || 'Hello from {source}!';
-                
-                // Replace all occurrences of template variables
-                const _srcRaw = (message && message.type) || '';
-                const _src = _srcRaw ? _srcRaw.charAt(0).toUpperCase() + _srcRaw.slice(1) : '';
-                const _uname = (message && message.chatname) || '';
-                const _msg = (message && message.chatmessage) || '';
-                processedTemplate = processedTemplate.replace(/\{source\}/g, _src);
-                processedTemplate = processedTemplate.replace(/\{type\}/g, _srcRaw);
-                processedTemplate = processedTemplate.replace(/\{username\}/g, _uname);
-                processedTemplate = processedTemplate.replace(/\{chatname\}/g, _uname);
-                processedTemplate = processedTemplate.replace(/\{message\}/g, _msg);
-                processedTemplate = processedTemplate.replace(/\{chatmessage\}/g, _msg);
-                
-                // Sanitize the message
-                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, false).trim();
+                // Process template using the shared replacement utility
+                let processedTemplate = this.replaceTemplateVars(config.template || 'Hello from {source}!', message);
+
+                // Sanitize the message based on configured mode
+                const sanitizeMode = config.sanitizeMode || 'safe';
+                let sanitizedSendMessage = this.sanitizeSendMessage(processedTemplate, false, false, sanitizeMode).trim();
                 
                 // Check if sanitized message is empty
                 if (!sanitizedSendMessage) {
@@ -2529,18 +2579,8 @@ class EventFlowSystem {
                     break;
                 }
                 
-                // Process relay template - focused on forwarding the chat message
-                let relayTemplate = config.template || '[{source}] {username}: {message}';
-                
-                // Replace all occurrences of template variables
-                const relaySourceRaw = message.type || '';
-                const relaySource = relaySourceRaw ? relaySourceRaw.charAt(0).toUpperCase() + relaySourceRaw.slice(1) : '';
-                relayTemplate = relayTemplate.replace(/\{source\}/g, relaySource);
-                relayTemplate = relayTemplate.replace(/\{type\}/g, relaySourceRaw);
-                relayTemplate = relayTemplate.replace(/\{username\}/g, message.chatname || '');
-                relayTemplate = relayTemplate.replace(/\{chatname\}/g, message.chatname || '');
-                relayTemplate = relayTemplate.replace(/\{message\}/g, message.chatmessage || '');
-                relayTemplate = relayTemplate.replace(/\{chatmessage\}/g, message.chatmessage || '');
+                // Process relay template using the shared replacement utility
+                let relayTemplate = this.replaceTemplateVars(config.template || '[{source}] {username}: {message}', message);
                 
                 // Sanitize the message
                 let sanitizedRelayMessage = this.sanitizeRelay ? this.sanitizeRelay(relayTemplate, false).trim() : relayTemplate.trim();
@@ -2827,10 +2867,26 @@ class EventFlowSystem {
 						duration: config.duration || 5000,
 						clearFirst: !!config.clearFirst,
 						messageData: {
+							// Core aliases for backward compatibility
 							username: message.chatname || message.displayname || '',
 							message: message.chatmessage || '',
-							source: message.type || '',
-							donation: message.hasDonation ? (message.donationAmount || message.donation || 'yes') : ''
+							source: (message.type || '').charAt(0).toUpperCase() + (message.type || '').slice(1),
+							donation: message.hasDonation || '',
+							// Extended fields
+							chatname: message.chatname || '',
+							displayname: message.displayname || '',
+							chatmessage: message.chatmessage || '',
+							type: message.type || '',
+							hasdonation: message.hasDonation || '',
+							donationamount: message.donationAmount || '',
+							event: message.event || '',
+							membership: message.membership || '',
+							subtitle: message.subtitle || '',
+							userid: message.userid || '',
+							chatimg: message.chatimg || '',
+							contentimg: message.contentimg || '',
+							rewardtitle: message.rewardTitle || '',
+							meta: message.meta || ''
 						}
 					};
 					if (this.sendTargetP2P && typeof this.sendTargetP2P === 'function') {

@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.41.8",
+  "version": "3.43.1",
   "homepage_url": "http://socialstream.ninja/",
   "browser_specific_settings": {
     "gecko": {
@@ -59,6 +59,7 @@
   ],
   "host_permissions": [
     "http://localhost:8080/*",
+    "http://localhost:8181/*",
     "http://localhost:11434/api/generate",
     "http://127.0.0.1:11434/api/generate",
     "https://xeenon.xyz/*",
@@ -171,9 +172,7 @@
     "https://piczel.tv/chat/*",
     "https://*.roll20.net/*",
     "https://roll20.net/*",
-    "https://*.stageten.tv/*",
     "https://rumble.com/chat/popup/*",
-    "https://stageten.tv/*",
     "https://*.workplace.com/*",
     "https://multichat.livepush.io/*",
     "https://minnit.chat/*&popout",
@@ -938,7 +937,8 @@
         "https://beta.socialstream.ninja/sources/websocket/youtube*",
         "https://socialstream.ninja/beta/sources/websocket/youtube*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/youtube.html*",
-        "http://localhost:8080/*/youtube.html*"
+        "http://localhost:8080/*/youtube.html*",
+        "http://localhost:8181/*/youtube.html*"
       ]
     },
     {
@@ -950,7 +950,8 @@
         "https://beta.socialstream.ninja/sources/websocket/youtube_streaming*",
         "https://socialstream.ninja/beta/sources/websocket/youtube_streaming*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/youtube_streaming.html*",
-        "http://localhost:8080/*/youtube_streaming.html*"
+        "http://localhost:8080/*/youtube_streaming.html*",
+        "http://localhost:8181/*/youtube_streaming.html*"
       ]
     },
     {
@@ -1059,7 +1060,8 @@
         "https://socialstream.ninja/beta/sources/websocket/bilibili*",
         "https://beta.socialstream.ninja/sources/websocket/bilibili*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/bilibili.html*",
-        "http://localhost:8080/*/bilibili.html*"
+        "http://localhost:8080/*/bilibili.html*",
+        "http://localhost:8181/*/bilibili.html*"
       ]
     },
     {
@@ -1114,7 +1116,8 @@
         "https://beta.socialstream.ninja/sources/websocket/twitch*",
         "https://socialstream.ninja/beta/sources/websocket/twitch*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/twitch.html*",
-        "http://localhost:8080/*/twitch.html*"
+        "http://localhost:8080/*/twitch.html*",
+        "http://localhost:8181/*/twitch.html*"
       ]
     },
     {
@@ -1126,7 +1129,8 @@
         "https://beta.socialstream.ninja/sources/websocket/kick*",
         "https://socialstream.ninja/beta/sources/websocket/kick*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*",
-        "http://localhost:8080/*/kick.html*"
+        "http://localhost:8080/*/kick.html*",
+        "http://localhost:8181/*/kick.html*"
       ]
     },
     {
@@ -1138,7 +1142,8 @@
         "https://socialstream.ninja/beta/sources/websocket/irc*",
         "https://beta.socialstream.ninja/sources/websocket/irc*",
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/irc.html*",
-        "http://localhost:8080/*/irc.html*"
+        "http://localhost:8080/*/irc.html*",
+        "http://localhost:8181/*/irc.html*"
       ]
     },
     {
@@ -1149,19 +1154,8 @@
         "https://socialstream.ninja/sources/websocket/nostr*",
         "https://socialstream.ninja/beta/sources/websocket/nostr*",
         "https://beta.socialstream.ninja/sources/websocket/nostr*",
-        "http://localhost:8080/*/nostr.html*"
-      ]
-    },
-    {
-      "js": [
-        "./sources/websocket/stageten.js"
-      ],
-      "matches": [
-        "https://socialstream.ninja/sources/websocket/stageten*",
-        "https://socialstream.ninja/beta/sources/websocket/stageten*",
-        "https://beta.socialstream.ninja/sources/websocket/stageten*",
-        "file:///C:/Users/steve/Code/social_stream/sources/websocket/stageten.html*",
-        "http://localhost:8080/*/stageten.html*"
+        "http://localhost:8080/*/nostr.html*",
+        "http://localhost:8181/*/nostr.html*"
       ]
     },
     {
@@ -1181,16 +1175,6 @@
       ],
       "matches": [
         "https://chatroll.com/embed/chat/*"
-      ],
-      "all_frames": true
-    },
-    {
-      "js": [
-        "./sources/stageten.js"
-      ],
-      "matches": [
-        "https://*.stageten.tv/*",
-        "https://stageten.tv/*"
       ],
       "all_frames": true
     },
@@ -1452,7 +1436,8 @@
       "matches": [
         "https://www.tiktok.com/*live*",
         "https://livecenter.tiktok.com/*",
-        "http://localhost:8080/*/fav.html"
+        "http://localhost:8080/*/fav.html",
+        "http://localhost:8181/*/fav.html"
       ]
     },
     {

@@ -987,6 +987,24 @@
             }
             return 0;
         }
+
+        function getEngagementScore(user) {
+            if (!user) return 0;
+            return user.messageCount + (user.eventCount * 10) + (user.bitsOrCoins * 0.1);
+        }
+
+        function getCombinedScore(user, period) {
+            const engagementScore = getEngagementScore(user);
+            const giftVal = showGiftValue ? user.giftValue : (user.giftsGiven * 50);
+
+            if (period === 'day') {
+                return (user.dailyDonations * 100) + (user.dailyGifts * 50) + engagementScore;
+            }
+            if (period === 'week') {
+                return (user.weeklyDonations * 100) + (user.weeklyGifts * 50) + engagementScore;
+            }
+            return (user.donations * 100) + giftVal + engagementScore;
+        }
         
         function handleGiftEvent(user, data, normalizedEvent) {
             const giftQuantity = extractGiftQuantity(data);
@@ -1066,7 +1084,8 @@
             { category: 'combined', period: 'day', label: 'Top Contributors Today' },
             { category: 'combined', period: 'week', label: 'Top Contributors This Week' },
             { category: 'gifts', period: 'day', label: 'Top Gifters Today' },
-            { category: 'donations', period: 'day', label: 'Top Donors Today' }
+            { category: 'donations', period: 'day', label: 'Top Donors Today' },
+            { category: 'engagement', period: 'day', label: 'Most Active Today' }
         ];
         
         // Filter rotation views based on URL parameters
@@ -1087,6 +1106,7 @@
             // Add gifts and donations daily views
             activeRotationViews.push({ category: 'gifts', period: 'day', label: 'Top Gifters Today' });
             activeRotationViews.push({ category: 'donations', period: 'day', label: 'Top Donors Today' });
+            activeRotationViews.push({ category: 'engagement', period: 'day', label: 'Most Active Today' });
             
             // If we built rotation views, set category to rotate
             if (activeRotationViews.length > 0) {
@@ -1333,14 +1353,7 @@
                         case 'combined':
                         default:
                             // Combined score for all activities
-                            const giftVal = showGiftValue ? this.giftValue : (this.giftsGiven * 50);
-                            if (period === 'day') {
-                                return (this.dailyDonations * 100) + (this.dailyGifts * 50);
-                            }
-                            if (period === 'week') {
-                                return (this.weeklyDonations * 100) + (this.weeklyGifts * 50);
-                            }
-                            return (this.donations * 100) + giftVal + (this.messageCount * 1);
+                            return getCombinedScore(this, period);
                     }
                 }
                 
@@ -1524,6 +1537,38 @@
                     return 'points';
                 default:
                     return 'points';
+            }
+        }
+
+        function getEmptyStateMessage() {
+            if (layout === 'topbar') {
+                switch (category) {
+                    case 'gifts':
+                        return 'No gifts yet';
+                    case 'donations':
+                        return 'No donations yet';
+                    case 'recent_gifts':
+                        return 'No recent gifts';
+                    case 'recent_donations':
+                        return 'No recent donations';
+                    case 'engagement':
+                        return 'No chat activity yet';
+                    case 'combined':
+                    default:
+                        return 'No contributions yet';
+                }
+            }
+
+            switch (rankingType) {
+                case 'donations':
+                    return 'No donations yet';
+                case 'messages':
+                    return 'No chat activity yet';
+                case 'loyalty':
+                    return 'No points yet';
+                case 'combined':
+                default:
+                    return 'No activity yet';
             }
         }
 
@@ -1712,14 +1757,14 @@
                                 case 'combined':
                                     // Show users who have donated OR given gifts
                                     if (period === 'day') {
-                                        return user.dailyDonations > 0 || user.dailyGifts > 0;
+                                        return user.dailyDonations > 0 || user.dailyGifts > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                     } else if (period === 'week') {
-                                        return user.weeklyDonations > 0 || user.weeklyGifts > 0;
+                                        return user.weeklyDonations > 0 || user.weeklyGifts > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                     }
-                                    return user.donations > 0 || user.giftsGiven > 0;
+                                    return user.donations > 0 || user.giftsGiven > 0 || user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                 case 'engagement':
                                     // For engagement, show active users
-                                    return user.messageCount > 0 || user.eventCount > 0;
+                                    return user.messageCount > 0 || user.eventCount > 0 || user.bitsOrCoins > 0;
                                 default:
                                     return user.score > 0;
                             }
@@ -1747,7 +1792,7 @@
                     container.classList.remove('visible');
                 } else {
                     if (!leaderboardContent.querySelector('.empty-state')) {
-                        leaderboardContent.innerHTML = '<div class="empty-state">No activity yet</div>';
+                        leaderboardContent.innerHTML = `<div class="empty-state">${getEmptyStateMessage()}</div>`;
                     }
                     container.classList.add('visible');
                 }
@@ -1939,7 +1984,7 @@
                 }
                 
                 // Helper function to create a view segment
-                function createViewSegment(viewUsers, label) {
+                function createViewSegment(viewUsers, label, scoreType, scorePeriod) {
                     if (viewUsers.length === 0) return null;
                     
                     const segment = document.createElement('div');
@@ -1958,14 +2003,44 @@
                         userItem.className = 'ticker-item';
                         
                         let scoreDisplay = '';
-                        if (label.includes('Donations') || label.includes('Today') || label.includes('Week')) {
-                            const amount = label.includes('Week') ? 
-                                (user.weeklyDonations + user.weeklyGiftValue) : 
-                                (user.dailyDonations + user.dailyGiftValue);
-                            scoreDisplay = `$${amount.toFixed(2)}`;
-                        } else if (label.includes('Gifts')) {
-                            const gifts = label.includes('Week') ? user.weeklyGifts : user.dailyGifts;
-                            scoreDisplay = `${gifts} gifts`;
+                        switch (scoreType) {
+                            case 'donations': {
+                                const amount = scorePeriod === 'week'
+                                    ? user.weeklyDonations
+                                    : scorePeriod === 'day'
+                                        ? user.dailyDonations
+                                        : user.donations;
+                                scoreDisplay = `$${amount.toFixed(2)}`;
+                                break;
+                            }
+                            case 'gifts': {
+                                if (showGiftValue) {
+                                    const giftAmount = scorePeriod === 'week'
+                                        ? user.weeklyGiftValue
+                                        : scorePeriod === 'day'
+                                            ? user.dailyGiftValue
+                                            : user.giftValue;
+                                    scoreDisplay = `$${giftAmount.toFixed(2)}`;
+                                } else {
+                                    const gifts = scorePeriod === 'week'
+                                        ? user.weeklyGifts
+                                        : scorePeriod === 'day'
+                                            ? user.dailyGifts
+                                            : user.giftsGiven;
+                                    scoreDisplay = `${gifts} gifts`;
+                                }
+                                break;
+                            }
+                            case 'engagement': {
+                                scoreDisplay = `${Math.round(getEngagementScore(user))} activity`;
+                                break;
+                            }
+                            case 'combined':
+                            default: {
+                                const combinedScore = getCombinedScore(user, scorePeriod);
+                                scoreDisplay = `$${combinedScore.toFixed(2)}`;
+                                break;
+                            }
                         }
                         
                         userItem.innerHTML = `
@@ -1987,14 +2062,14 @@
                 
                 // Today's combined top contributors
                 const todayUsers = allUsers
-                    .filter(u => u.dailyDonations > 0 || u.dailyGifts > 0)
-                    .sort((a, b) => (b.dailyDonations + b.dailyGiftValue) - (a.dailyDonations + a.dailyGiftValue))
+                    .filter(u => u.dailyDonations > 0 || u.dailyGifts > 0 || getEngagementScore(u) > 0)
+                    .sort((a, b) => getCombinedScore(b, 'day') - getCombinedScore(a, 'day'))
                     .slice(0, topCount);
                     
                 // This week's combined top contributors
                 const weekUsers = includeWeekly ? allUsers
-                    .filter(u => u.weeklyDonations > 0 || u.weeklyGifts > 0)
-                    .sort((a, b) => (b.weeklyDonations + b.weeklyGiftValue) - (a.weeklyDonations + a.weeklyGiftValue))
+                    .filter(u => u.weeklyDonations > 0 || u.weeklyGifts > 0 || getEngagementScore(u) > 0)
+                    .sort((a, b) => getCombinedScore(b, 'week') - getCombinedScore(a, 'week'))
                     .slice(0, topCount) : [];
                     
                 // Today's top donors
@@ -2008,6 +2083,11 @@
                     .filter(u => u.dailyGifts > 0)
                     .sort((a, b) => b.dailyGifts - a.dailyGifts)
                     .slice(0, topCount);
+
+                const todayEngagement = allUsers
+                    .filter(u => getEngagementScore(u) > 0)
+                    .sort((a, b) => getEngagementScore(b) - getEngagementScore(a))
+                    .slice(0, topCount);
                 
                 // Debug logging for ticker entries
                 console.log('Ticker Debug - maxentries:', topCount);
@@ -2015,13 +2095,15 @@
                 console.log('Ticker Debug - Today users:', todayUsers.length, todayUsers.map(u => u.name));
                 console.log('Ticker Debug - Today donors:', todayDonors.length, todayDonors.map(u => u.name));
                 console.log('Ticker Debug - Today gifters:', todayGifters.length, todayGifters.map(u => u.name));
+                console.log('Ticker Debug - Today engagement:', todayEngagement.length, todayEngagement.map(u => u.name));
                 
                 // Create segments
                 const segments = [
-                    createViewSegment(todayUsers, 'Top Today'),
-                    includeWeekly ? createViewSegment(weekUsers, 'Top This Week') : null,
-                    createViewSegment(todayDonors, 'Donations Today'),
-                    createViewSegment(todayGifters, 'Gifts Today')
+                    createViewSegment(todayUsers, 'Top Today', 'combined', 'day'),
+                    includeWeekly ? createViewSegment(weekUsers, 'Top This Week', 'combined', 'week') : null,
+                    createViewSegment(todayDonors, 'Donations Today', 'donations', 'day'),
+                    createViewSegment(todayGifters, 'Gifts Today', 'gifts', 'day'),
+                    createViewSegment(todayEngagement, 'Most Active', 'engagement', 'day')
                 ].filter(Boolean);
                 
                 // Create new ticker segments

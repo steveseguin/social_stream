@@ -134,10 +134,35 @@
             padding: 4px 10px;
             border-radius: 999px;
         }
+        .var-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 18px 0;
+            font-size: 0.95rem;
+        }
+        .var-table th, .var-table td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(67,56,202,0.12);
+        }
+        .var-table th {
+            background: #f7f7fb;
+            color: #312e81;
+            font-weight: 600;
+        }
+        .var-table tr:hover {
+            background: rgba(99,102,241,0.04);
+        }
+        .var-table code {
+            background: rgba(99,102,241,0.1);
+            color: #4338ca;
+        }
         @media (max-width: 700px) {
             header, .content { padding: 35px 20px; }
             h1 { font-size: 2rem; }
             .diagram { font-size: 0.85rem; }
+            .var-table { font-size: 0.85rem; }
+            .var-table th, .var-table td { padding: 8px 10px; }
         }
     </style>
 </head>
@@ -355,8 +380,62 @@ Event Payload ─▶ State Check (isAlertMuted)
                 </ul>
             </section>
 
+            <section id="template-variables">
+                <h2>6. Template Variables Reference</h2>
+                <p>Several action nodes (Show Text, Send Message, Relay Chat, TTS Speak) support <strong>template variables</strong> that get replaced with event data at runtime. Wrap variable names in curly braces like <code>{username}</code>.</p>
+
+                <h3>Core Variables (backward compatible)</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Variable</th><th>Alias</th><th>Description</th><th>Example</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{username}</code></td><td><code>{chatname}</code></td><td>Display name of the user</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{message}</code></td><td><code>{chatmessage}</code></td><td>Chat message text</td><td>Hello everyone!</td></tr>
+                        <tr><td><code>{source}</code></td><td>—</td><td>Platform name (capitalized)</td><td>Twitch, YouTube</td></tr>
+                        <tr><td><code>{type}</code></td><td>—</td><td>Platform name (raw)</td><td>twitch, youtube</td></tr>
+                        <tr><td><code>{donation}</code></td><td><code>{hasDonation}</code></td><td>Donation/tip amount</td><td>$5.00, 500 bits</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>Extended Variables</h3>
+                <table class="var-table">
+                    <thead>
+                        <tr><th>Variable</th><th>Description</th><th>Example</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>{displayname}</code></td><td>Display name (alternate field)</td><td>CoolViewer123</td></tr>
+                        <tr><td><code>{donationAmount}</code></td><td>Numeric donation value</td><td>5.00</td></tr>
+                        <tr><td><code>{event}</code></td><td>Event type identifier</td><td>cheer, raid, new_follower</td></tr>
+                        <tr><td><code>{membership}</code></td><td>Membership state</td><td>MEMBERSHIP, new_sponsor</td></tr>
+                        <tr><td><code>{subtitle}</code></td><td>Additional context</td><td>Member for 3 months</td></tr>
+                        <tr><td><code>{userid}</code></td><td>User's platform ID</td><td>12345678</td></tr>
+                        <tr><td><code>{chatimg}</code></td><td>User avatar URL</td><td>https://...</td></tr>
+                        <tr><td><code>{contentimg}</code></td><td>Attached image URL</td><td>https://...</td></tr>
+                        <tr><td><code>{rewardTitle}</code></td><td>Channel point reward name</td><td>Highlight My Message</td></tr>
+                        <tr><td><code>{meta}</code></td><td>Structured event data (JSON)</td><td>{"viewers":100}</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="panel">
+                    <strong>Variable matching is case-insensitive.</strong> <code>{USERNAME}</code>, <code>{Username}</code>, and <code>{username}</code> all work the same way.
+                </div>
+
+                <h3>Example Templates</h3>
+                <ul>
+                    <li><strong>Show Text:</strong> <code>{username} just cheered {hasDonation}!</code></li>
+                    <li><strong>Relay Chat:</strong> <code>[{source}] {username}: {message}</code></li>
+                    <li><strong>TTS:</strong> <code>{username} says {message}</code></li>
+                    <li><strong>Donation Alert:</strong> <code>{username} donated {donation} - {subtitle}</code></li>
+                </ul>
+
+                <div class="callout.tip">
+                    <strong>Missing variables become empty strings.</strong> If an event does not have a particular field (e.g., <code>{donation}</code> on a regular chat message), the placeholder is replaced with an empty string rather than showing the literal <code>{donation}</code> text.
+                </div>
+            </section>
+
             <section>
-                <h2>6. Best Practices Checklist</h2>
+                <h2>7. Best Practices Checklist</h2>
                 <ul>
                     <li><strong>Name &amp; color</strong> your nodes so future-you knows which branch is which.</li>
                     <li><strong>Test with the built-in simulator</strong> (Send Test Event) before pushing a flow live.</li>
@@ -370,12 +449,13 @@ Event Payload ─▶ State Check (isAlertMuted)
             </section>
 
             <section>
-                <h2>7. Further Exploration</h2>
+                <h2>8. Further Exploration</h2>
                 <p>Ready for more depth?</p>
                 <ul>
                     <li>Use <strong>State Nodes</strong> (counters, toggles, timers) to track context between events.</li>
                     <li>Combine <strong>Variables + Logic</strong> to build queue systems, raffles, or scoring engines.</li>
                     <li>Hook into the <strong>Points &amp; Rewards</strong> system so viewers can intentionally trigger flows.</li>
+                    <li>Check the <a href="../docs/event-reference.html"><strong>Event Reference</strong></a> for detailed payload documentation across all platforms.</li>
                 </ul>
                 <p>This guide is intentionally standalone—copy it locally, adapt it for your team, and keep experimenting inside the editor.</p>
             </section>

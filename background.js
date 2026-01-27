@@ -5795,6 +5795,26 @@ function isEmoji(char) {
     return emojiRegex.test(trimmed);
 }
 
+// Helper to preserve emoji from img alt attributes before stripping HTML
+// Used by reflection filter to properly compare messages with emoji
+function preserveEmojiFromImgAlt(html) {
+    if (!html || typeof html !== 'string') return html;
+    try {
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        const imgElements = tempDiv.querySelectorAll('img');
+        imgElements.forEach((img) => {
+            const altText = img.getAttribute('alt');
+            if (altText && isEmoji(altText)) {
+                img.outerHTML = altText;
+            }
+        });
+        return tempDiv.innerHTML;
+    } catch (e) {
+        return html;
+    }
+}
+
 const messageStore = {};
 function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, save=true) { // FOR RELAY PURPOSES ONLY.
 
@@ -5804,7 +5824,10 @@ function checkExactDuplicateAlreadyRelayed(msg, sanitized=true, tabid=false, sav
 			return false;
 		}
 	}
-	
+
+	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
+	msg = preserveEmojiFromImgAlt(msg);
+
 	if (!sanitized){
 		var textArea = document.createElement('textarea');
 		textArea.innerHTML = msg;
@@ -5842,11 +5865,14 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, ty
 	if (!msg){
 		return false;
 	}
-	
+
 	const now = Date.now();
 	if (now - lastSentTimestamp > 10000) {// 10 seconds has passed; assume good.
 		return false;
 	}
+
+	// Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
+	msg = preserveEmojiFromImgAlt(msg);
 
 	if (!sanitized){
 		var textArea = document.createElement('textarea');
@@ -5915,6 +5941,16 @@ function checkExactDuplicateAlreadyReceived(msg, sanitized=true, tabid=false, ty
 function sendToS10(data, fakechat=false, relayed=false) {
 	//console.log"sendToS10",data);
 	if (settings.s10 && settings.s10apikey && settings.s10apikey.textsetting) {
+		if (settings.blockChannelPointRelays && data && (
+			data.event === "channel_points"
+			|| data.event === "reward"
+			|| (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title))
+			|| (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points"))
+		)) {
+			return null;
+		}
+
+
 		try {
 			// msg =  '{
 				// "userId": "my-external-id",
@@ -6054,6 +6090,16 @@ function sendToS10(data, fakechat=false, relayed=false) {
 // Social Stream Chat integration - send messages to chat.socialstream.ninja
 function sendToSSC(data, fakechat=false, relayed=false) {
 	if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting) {
+		if (settings.blockChannelPointRelays && data && (
+			data.event === "channel_points"
+			|| data.event === "reward"
+			|| (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title))
+			|| (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points"))
+		)) {
+			return null;
+		}
+
+
 		try {
 			// Skip messages from our own chat to avoid loops
 			if (data.type && data.type === "socialstreamchat") {
@@ -7836,25 +7882,32 @@ socketserver.addEventListener("message", async function (event) {
 						relayIncomingWebhook("bmac", data.bmac);
 						var message = {};
 						if (bmac.type === "membership.started") {
-							message.chatname = bmac.data.supporter_name || "Anonymous"; 
-							message.chatmessage = bmac.data.support_note.trim(); 
+							message.chatname = bmac.data.supporter_name || "Anonymous";
+							message.chatmessage = (bmac.data.support_note || "").trim();
 							//We use the donation badge from Kofi to feature the membership level name
-							message.hasDonation = bmac.data.membership_level_name; 
-					
+							message.hasDonation = bmac.data.membership_level_name || "";
 						}
 						if (bmac.type === "donation.created") {
+							message.chatname = bmac.data.supporter_name || "Anonymous";
 							var currency = "";
 							try {
-								currency = kofi.currency.toLowerCase() || "";
+								currency = bmac.data.currency.toLowerCase() || "";
 							} catch (e) {}
 
 							var symbol = {};
 							if (currency && currency in Currencies) {
 								symbol = Currencies[currency];
-							}		
-							message.chatmessage = (bmac.data.message + " - " + "<em>" + bmac.data.support_note + "</em>").trim();
+							}
+							var msgParts = [];
+							if (bmac.data.message) {
+								msgParts.push(bmac.data.message);
+							}
+							if (bmac.data.support_note) {
+								msgParts.push("<em>" + bmac.data.support_note + "</em>");
+							}
+							message.chatmessage = msgParts.join(" - ").trim();
 							message.hasDonation = (symbol.s || "") + (bmac.data.amount || "") + " " + (bmac.data.currency.toUpperCase() || "");
-							message.hasDonation = message.hasDonation.trim();			
+							message.hasDonation = message.hasDonation.trim();
 						}
 						message.contentimg = "";
 						message.id = parseInt(Math.random() * 100000 + 1000000);
@@ -7946,8 +7999,26 @@ socketserver.addEventListener("message", async function (event) {
 				message.membership = "";
 				message.contentimg = "";
 				message.type = "fourthwall";
-				
+
 				data = message; // replace inbound fourthwall message with new message
+
+				try {
+					data = await applyBotActions(data); // perform any immediate actions, including modifying the message before sending it out
+
+					if (data){
+						try {
+							data = await window.eventFlowSystem.processMessage(data); // perform any immediate actions
+						} catch (e) {
+							console.warn(e);
+						}
+
+						if (data) {
+							resp = await sendToDestinations(data);
+						}
+					}
+				} catch (e) {
+					console.error(e);
+				}
 			  } catch (e) {
 				console.error(e);
 				return;
@@ -10274,7 +10345,24 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
 	                    markAutoForTabIfNeeded();
 	                    return;
 	                }
-	                
+
+                // Handle websocket source pages (socialstream.ninja/sources/websocket/* or local file:// sources/websocket/*)
+                if (tab.url && tab.url.includes("/sources/websocket/") && (tab.url.includes("socialstream.ninja") || tab.url.startsWith("file://"))) {
+                    try {
+                        chrome.tabs.sendMessage(tab.id, {
+                            type: 'SEND_MESSAGE',
+                            message: data.response
+                        }, function(response) {
+                            chrome.runtime.lastError; // Clear any error
+                        });
+                        markAutoForTabIfNeeded();
+                        return;
+                    } catch(e) {
+                        console.error('Failed to send to websocket source:', e);
+                    }
+                }
+
+
 	                if (tab.url.includes("tiktok.com")) {
 	                    let tiktokMessage = data.response;
 
@@ -10316,12 +10404,13 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                         return;
                     }
                 }
-                // Set published flag immediately after validation to prevent duplicate processing
-                // of tabs with the same URL during parallel execution
                 if (tab.url) {
                     if (tab.url in published) {
                         return; // Another tab with this URL already claimed it
                     }
+                    // NOTE: If Electron starts double-sending again from dock.html,
+                    // revisit this block and consider a targeted pre-claim for
+                    // file:// sources only instead of global prefiltering.
                     published[tab.url] = true;
                 }
                 await processTab(tab);
@@ -10348,7 +10437,12 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
                     if (tab.url.startsWith("chrome://")) return false;
                     if (tab.url.startsWith("chrome-extension")) return false;
                 }
-                if (tab.url.startsWith("https://socialstream.ninja/")) return false;
+                if (tab.url.startsWith("https://socialstream.ninja/")) {
+                    // Allow websocket source pages to receive messages (production and beta)
+                    if (!tab.url.includes("/sources/websocket/")) {
+                        return false;
+                    }
+                }
                 if (tab.url in published) return false;
                 if (!checkIfAllowed(tab.url)) return false;
 
@@ -10387,6 +10481,17 @@ async function sendMessageToTabs(data, reverse = false, metadata = null, relayMo
     return true;
 }
 
+// Helper function to match destination in URL with proper word boundaries
+// Prevents partial matches like "deerstreams" matching "deerstreamslive"
+function urlMatchesDestination(url, destination) {
+    if (!url || !destination) return false;
+    // Escape regex special characters in destination
+    const escaped = destination.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Match destination after path separator (/ or @) and before end of segment or query/fragment
+    const pattern = new RegExp(`[/@]${escaped}(?:[/?#]|$)`, 'i');
+    return pattern.test(url);
+}
+
 // Helper function to check if a tab is valid for processing
 async function isValidTab(tab, data, reverse, published, now, overrideTimeout, relayMode) {
     // First check URLs that we can't or shouldn't process
@@ -10396,10 +10501,15 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         if (tab.url.startsWith("chrome://")) return false;
         if (tab.url.startsWith("chrome-extension")) return false;
     }
-    if (tab.url.startsWith("https://socialstream.ninja/")) return false;
+    if (tab.url.startsWith("https://socialstream.ninja/")) {
+        // Allow websocket source pages to receive messages (production and beta)
+        if (!tab.url.includes("/sources/websocket/")) {
+            return false;
+        }
+    }
     if (tab.url in published) return false;
     if (!checkIfAllowed(tab.url)) return false;
-    
+
     // Check TID conditions
     if ("tid" in data && data.tid !== false && data.tid !== null) {
         if (typeof data.tid == "object") {
@@ -10418,8 +10528,8 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         // Ensure tab.id exists before trying to get source type
         if (!tab.id) {
             // console.log('[RELAY DEBUG - isValidTab] No tab.id available, cannot check source type');
-            // Fall back to URL matching if we have a URL
-            if (tab.url && !tab.url.includes(data.destination)) {
+            // Fall back to URL matching if we have a URL (use strict matching to avoid partial matches)
+            if (tab.url && !urlMatchesDestination(tab.url, data.destination)) {
                 return false;
             }
             return true; // If no tab.id and no URL, allow it through
@@ -10430,8 +10540,8 @@ async function isValidTab(tab, data, reverse, published, now, overrideTimeout, r
         
         // If we couldn't get the source type, fall back to URL matching for custom destinations
         if (!sourceType) {
-            // For custom destinations like channel names, still use URL matching
-            if (!tab.url.includes(data.destination)) {
+            // For custom destinations like channel names, still use URL matching (strict to avoid partial matches)
+            if (!urlMatchesDestination(tab.url, data.destination)) {
                 // console.log('[RELAY DEBUG - isValidTab] No source type, URL check failed');
                 return false;
             }
@@ -10488,6 +10598,10 @@ function sanitizeMessageForTracking(msg, sanitized = true) {
         if (!msg) {
             return '';
         }
+
+        // Preserve emoji from img alt attributes before processing (fixes reflection filter for emoji)
+        msg = preserveEmojiFromImgAlt(msg);
+
         let normalized;
         if (!sanitized) {
             const textArea = document.createElement('textarea');
@@ -11736,7 +11850,17 @@ async function applyBotActions(data, tab = false) {
 		if (data.host && data.chatname && settings.hidehostnamesext) {
 			data.chatname = "";
 		}
-		
+
+		// Strip @ from display names if enabled
+		if (settings.stripatext && data.chatname && data.chatname.startsWith("@")) {
+			// Preserve original @username in userid if userid is blank
+			if (!data.userid) {
+				data.userid = data.chatname;
+			}
+			// Remove the leading @
+			data.chatname = data.chatname.substring(1);
+		}
+
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
 				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
@@ -12071,11 +12195,17 @@ async function applyBotActions(data, tab = false) {
 		}
 		
 		const messageToCheck = data.textContent || data.chatmessage;
+		const blockChannelPointRelay = settings.blockChannelPointRelays && (
+			data.event === "channel_points"
+			|| data.event === "reward"
+			|| (data.reward && (data.reward.redemptionId || data.reward.cost || data.reward.title))
+			|| (data.hasDonation && typeof data.hasDonation === "string" && data.hasDonation.includes("points"))
+		);
 		if (settings.relayall && data.chatmessage && !data.event && tab && messageToCheck.includes(miscTranslations.said)){
 			//console.log("1");
 			return null;
 			
-		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab) {
+		} else if (settings.relayall && !data.reflection && !skipRelay && data.chatmessage && !data.event && tab && !blockChannelPointRelay) {
 			//console.log("2");
 			if (checkExactDuplicateAlreadyRelayed(data.chatmessage, data.textonly, tab.id, false)) { 
 				return null;
@@ -12111,12 +12241,12 @@ async function applyBotActions(data, tab = false) {
 				sendToDestinations(data);
 				return null;
 			}
-		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event){
+		} else if (settings.s10relay && !data.bot && data.chatmessage && data.chatname && !data.event && !blockChannelPointRelay){
 			sendToS10(data, false, true); // we'll handle the relay logic here instead
 		}
 
 		// Social Stream Chat relay - send all messages to chat.socialstream.ninja
-		if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting && !data.bot && data.chatmessage && data.chatname && !data.event){
+		if (settings.ssc && settings.sscapikey && settings.sscapikey.textsetting && !data.bot && data.chatmessage && data.chatname && !data.event && !blockChannelPointRelay){
 			sendToSSC(data, false, true);
 		}
 		//console.logdata);
@@ -13698,4 +13828,3 @@ window.addEventListener('beforeunload', async function() {
 window.addEventListener('unload', async function() {
   document.title = "Close me - Social Stream Ninja";
 });
-

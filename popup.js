@@ -1031,6 +1031,126 @@ function updateSourceTypeList(type) {
     `).join('');
 }
 
+function normalizeCommaValues(value) {
+    return value
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item);
+}
+
+function updateCommaTagList(inputId) {
+    let input = document.getElementById(inputId);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${inputId}"]`);
+    }
+    const list = document.getElementById(`${inputId}List`);
+    if (!input || !list) return;
+
+    const values = normalizeCommaValues(input.value);
+    list.style.display = values.length ? '' : 'none';
+    list.innerHTML = values.map(value => `
+        <div class="username-tag">
+            <span>${escapeHtml(value)}</span>
+            <button class="remove-source" data-value="${escapeHtml(value)}">×</button>
+        </div>
+    `).join('');
+}
+
+function addCommaTagValue(inputId, value) {
+    let input = document.getElementById(inputId);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${inputId}"]`);
+    }
+    if (!input || !value) return;
+
+    const trimmedValue = value.trim();
+    if (!trimmedValue) return;
+
+    const values = normalizeCommaValues(input.value);
+    if (values.some(existing => existing.toLowerCase() === trimmedValue.toLowerCase())) {
+        return;
+    }
+
+    values.push(trimmedValue);
+    input.value = values.join(', ');
+    updateCommaTagList(inputId);
+    updateSettings(input);
+}
+
+function removeCommaTagValue(inputId, value) {
+    let input = document.getElementById(inputId);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${inputId}"]`);
+    }
+    if (!input || !value) return;
+
+    const values = normalizeCommaValues(input.value);
+    const updated = values.filter(existing => existing.toLowerCase() !== value.toLowerCase());
+    input.value = updated.join(', ');
+    updateCommaTagList(inputId);
+    updateSettings(input);
+}
+
+function setupCommaTagInput(inputId) {
+    let input = document.getElementById(inputId);
+    if (!input) {
+        input = document.querySelector(`[data-textsetting="${inputId}"]`);
+    }
+    if (!input) return;
+
+    const container = input.closest('.textInputContainer');
+    if (!container) return;
+
+    container.classList.add('tag-input-container');
+
+    if (document.getElementById(`${inputId}List`)) {
+        updateCommaTagList(inputId);
+        return;
+    }
+
+    input.classList.add('hidden');
+
+    const listContainer = document.createElement('div');
+    listContainer.className = 'source-list-container';
+    listContainer.id = `${inputId}List`;
+
+    const addContainer = document.createElement('div');
+    addContainer.className = 'add-source-container';
+    addContainer.innerHTML = `
+        <input type="text" id="new${inputId}Tag" placeholder="Add value">
+        <button id="add${inputId}Tag">Add</button>
+    `;
+
+    container.parentNode.classList.add('isolate');
+    container.parentNode.insertBefore(listContainer, container.nextSibling);
+    container.parentNode.insertBefore(addContainer, listContainer.nextSibling);
+
+    listContainer.addEventListener('click', (event) => {
+        if (event.target.classList.contains('remove-source')) {
+            removeCommaTagValue(inputId, event.target.dataset.value);
+        }
+    });
+
+    const addButton = addContainer.querySelector(`#add${inputId}Tag`);
+    const addInput = addContainer.querySelector(`#new${inputId}Tag`);
+    if (addButton && addInput) {
+        addButton.addEventListener('click', () => {
+            addCommaTagValue(inputId, addInput.value);
+            addInput.value = '';
+        });
+
+        addInput.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                addCommaTagValue(inputId, addInput.value);
+                addInput.value = '';
+            }
+        });
+    }
+
+    updateCommaTagList(inputId);
+}
+
 // Blocked words tag system functions
 function updateBlockedWordsList() {
     const input = document.getElementById('blockedwordsInput');
@@ -1638,6 +1758,7 @@ function initializeTabSystem(containerId, eventType, existingEventIds = [], resp
 }
 
 const sourceTypes = ['relaytargets','eventsSources','ttssources'];
+const commaTagInputs = ['questionKeywords', 'filtercommandscustomwords', 'bottriggerwords', 'filterevents'];
 const userTypes = ['botnamesext', 'modnamesext', 'viplistusers', 'adminnames', 'hostnamesext', 'blacklistusers', 'whitelistusers'];
 const sourcesList = new Set();
 
@@ -2389,13 +2510,7 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
 
         const ele = document.querySelector(`input[data-textsetting='${key}'],textarea[data-textsetting='${key}']`);
         if (ele) {
-            // For fields that default to "all/none" when empty, don't load saved values
-            const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
-            if (defaultToEmptyFields.includes(key)) {
-                ele.value = ''; // Always start with empty for these fields
-            } else {
-                ele.value = valueToSet; // valueToSet is settingObj.textsetting
-            }
+            ele.value = valueToSet; // valueToSet is settingObj.textsetting
 
             if (ele.dataset.palette) {
                 try {
@@ -2409,6 +2524,8 @@ function processObjectSetting(key, settingObj, sync, paramNums, response) { // A
                 updateUsernameList(key);
             } else if (sourceTypes.includes(key)) {
                 updateSourceTypeList(key);
+            } else if (commaTagInputs.includes(key)) {
+                updateCommaTagList(key);
             }
         }
     }
@@ -4376,13 +4493,6 @@ function updateSettings(ele, sync = true, value = null) {
     
     // Handle text settings
     if (ele.dataset.textsetting && sync) {
-        // For fields that default to "all/none" when empty, don't save empty values
-        const defaultToEmptyFields = ['eventsSources', 'ttssources', 'relaytargets'];
-        if (defaultToEmptyFields.includes(ele.dataset.textsetting) && !ele.value.trim()) {
-            // Don't save empty values for these fields
-            return;
-        }
-        
         chrome.runtime.sendMessage({
             cmd: "saveSetting",
             type: "textsetting",
@@ -5829,6 +5939,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 
 	// Initialize blocked words tag input
 	setupBlockedWordsInput();
+	commaTagInputs.forEach((inputId) => {
+		setupCommaTagInput(inputId);
+	});
 
 	// Add event listener for save profile button
 	const saveProfileBtn = document.querySelector('button[data-action="saveProfile"]');
@@ -6708,24 +6821,25 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 				const roleCheckboxes = row.querySelectorAll('.spotify-cmd-roles input[type="checkbox"]');
 				const triggerInput = row.querySelector('.spotify-cmd-trigger');
 
-				// Apply saved enabled state
-				if (enabledCheckbox && disabledCommands.includes(command)) {
-					enabledCheckbox.checked = false;
+				// Apply enabled state (default enabled unless explicitly disabled)
+				if (enabledCheckbox) {
+					enabledCheckbox.checked = !disabledCommands.includes(command);
 				}
 
-				// Apply saved role permissions
-				if (permissions[command] && permissions[command].length > 0) {
-					const savedRoles = permissions[command];
-					roleCheckboxes.forEach(cb => {
-						cb.checked = savedRoles.includes(cb.value);
-					});
-				}
+				// Apply role permissions (defaults from data attribute when not saved)
+				const savedRoles = permissions[command] && permissions[command].length > 0 ? permissions[command] : null;
+				const defaultRoles = row.dataset.defaultRoles ? row.dataset.defaultRoles.split(',') : [];
+				const rolesToApply = savedRoles || defaultRoles;
+				roleCheckboxes.forEach(cb => {
+					cb.checked = rolesToApply.includes(cb.value);
+				});
 
-				// Apply saved custom triggers
-				if (triggerInput && customTriggers[command]) {
-					triggerInput.value = customTriggers[command];
+				// Apply custom triggers (fallback to default command)
+				if (triggerInput) {
+					triggerInput.value = customTriggers[command] || triggerInput.value || command;
 				}
 			});
+
 		});
 
 		// Save on change

@@ -75,36 +75,48 @@ function toDataURL(blobUrl, callback) {
 	
 	var userId = "";
 	const urlParams = new URLSearchParams(window.location.search);
-	
+
+	function sendViewerCount(count) {
+		chrome.runtime.sendMessage(
+			chrome.runtime.id,
+			({message:{
+					type: 'parti',
+					event: 'viewer_update',
+					meta: parseInt(count)
+				}
+			}),
+			function (e) {}
+		);
+	}
+
 	function checkFollowers(){
 		userId = urlParams.get('id') || "";
 		if (userId && (settings.showviewercount || settings.hypemode)){
-			fetch('https://api-backend.parti.com/parti_v2/profile/get_livestream_channel_info/'+userId)
-			  .then(response => response.json())
-			  .then(data => {
-				try {
-					let count = data?.channel_info?.stream?.viewer_count || 0;
-					console.log(count);
-					chrome.runtime.sendMessage(
-						chrome.runtime.id,
-						({message:{
-								type: 'parti',
-								event: 'viewer_update',
-								meta: parseInt(count)
-								//chatmessage: data.data[0] + " has started following"
-							}
-						}),
-						function (e) {}
-					);
-				} catch (e) {
-					console.log(e);
-				}				
-				  //console.log('Viewer count:', count);
-			  });
+			fetch('https://prod-api.parti.com/parti_v2/profile/livestream/heartbeat', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					user_id: parseInt(userId, 10),
+					token: (crypto && crypto.randomUUID) ? crypto.randomUUID() : Math.random().toString(36).substring(2)
+				})
+			})
+			.then(function(response){
+				return response.json();
+			})
+			.then(function(data){
+				console.log('Parti heartbeat response:', data);
+				if (data && typeof data.viewer_count !== 'undefined') {
+					sendViewerCount(data.viewer_count);
+				}
+			})
+			.catch(function(e){
+				console.log('Parti heartbeat error:', e);
+			});
 		}
 	}
-	
-	setTimeout(function(){checkFollowers();},2500);
+
 	setInterval(function(){checkFollowers()},60000);
 
 
@@ -239,6 +251,7 @@ function toDataURL(blobUrl, callback) {
 		response = response || {};
 		if ("settings" in response){
 			settings = response.settings;
+			checkFollowers();
 		}
 	});
 
