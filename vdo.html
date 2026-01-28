@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Remote Camera Link Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #2B2E38;
+            color: #fff;
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .app-header {
+            background-color: #1E2029;
+            padding: 10px 20px;
+            border-bottom: 1px solid #3A3D48;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .app-header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr; /* Changed for overall layout, links and qr section will span full width */
+            grid-template-rows: auto auto; /* links-section then qr-section */
+            gap: 20px;
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .links-section {
+            grid-column: 1 / -1;
+            background-color: #3A3D48;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .links-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        /* Start: Modified and New CSS */
+        .qr-section {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: 2fr 1fr; /* Instructions panel wider than QR panel */
+            gap: 20px;
+            align-items: start;
+        }
+
+        .instructions-panel, .qr-code-panel {
+            background-color: #3A3D48;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            color: #fff;
+        }
+
+        .qr-code-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        .instructions-panel h3, .qr-code-panel h3 {
+            margin-bottom: 15px;
+            color: #e9c46a; 
+            font-size: 18px;
+        }
+
+        .instructions-panel ol {
+            margin-left: 20px; 
+            margin-bottom: 10px;
+            padding-left: 0; /* Reset browser default for ol */
+        }
+        .instructions-panel ol li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        .instructions-panel ul {
+            margin-left: 20px; /* Indent nested list */
+            margin-top: 8px;
+            margin-bottom: 8px;
+            padding-left: 0; /* Reset browser default for ul */
+            list-style-type: disc; /* Ensure bullets are visible */
+        }
+         .instructions-panel ul li {
+            margin-bottom: 6px;
+         }
+
+        .instructions-panel .note {
+            margin-top: 15px;
+            font-size: 13px;
+            color: #ccc;
+            background-color: #2B2E38; 
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #e9c46a;
+        }
+        .instructions-panel .note strong {
+            color: #e9c46a;
+        }
+        /* End: Modified and New CSS */
+        
+        #qrcode {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 0 auto 15px auto; /* Center and add bottom margin */
+        }
+        
+        .link-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .link-box:last-child {
+            margin-bottom: 0;
+        }
+        
+        .link-box label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #e9c46a;
+        }
+        
+        .link-box input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #666;
+            background-color: #2B2E38;
+            color: #fff;
+            font-family: monospace;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            right: 8px;
+            top: 33px; /* Adjusted based on label presence */
+            background-color: #2a9d8f;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 10px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .copy-btn:hover {
+            background-color: #268579;
+        }
+        
+        .reset-btn {
+            background-color: #e76f51;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .reset-btn:hover {
+            background-color: #e05c3e;
+        }
+        
+        .links-section > p { /* Target direct children paragraphs in links-section */
+             margin-bottom: 10px;
+        }
+
+        .links-section .note { /* Style for the note in links-section */
+            font-size: 12px;
+            color: #ccc;
+            font-style: italic;
+            margin-top: 5px;
+            margin-bottom: 15px; /* Add some space before the first link box */
+        }
+        
+        @media (max-width: 992px) { /* Adjusted breakpoint for better layout shift */
+            .qr-section {
+                grid-template-columns: 1fr; /* Stack instructions and QR code panel */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 10px;
+                 grid-template-columns: 1fr; /* Ensure it's still 1fr for smaller screens */
+            }
+            
+            .links-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .reset-btn {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-header">
+        <h1>Remote Camera Link Generator</h1>
+    </div>
+    
+    <div class="main-content">
+		<div class="qr-section">
+			<div class="instructions-pane">
+				<div class="links-header">
+					<h2>Your Stream Links</h2>
+					<button id="reset-id" class="reset-btn">Reset Stream ID</button>
+				</div>
+				
+				<p>Use these links to connect your smartphone camera to OBS Studio.</p>
+				<br />
+				<p class="note"><i>Note: Your stream ID is saved in your browser until reset.</i></p>
+				<br />
+				<div class="link-box">
+					<label for="guest-link">📱 Camera Link (for smartphone):</label>
+					<input type="text" id="guest-link" readonly>
+					<button class="copy-btn" onclick="copyToClipboard('guest-link')">Copy</button>
+				</div>
+				
+				<div class="link-box">
+					<label for="obs-link">🖥️ OBS Link (for desktop):</label>
+					<input type="text" id="obs-link" readonly>
+					<button class="copy-btn" onclick="copyToClipboard('obs-link')">Copy</button>
+				</div>
+				
+			</div>
+			<div class="qr-code-panel">
+				<img style="calc(50vw - 40px)" src="./media/vdo.png">
+			</div>
+		</div>
+        <div class="qr-section">
+            <div class="instructions-panel">
+                <h3>How to Bring Your Smartphone Camera into OBS Studio:</h3>
+                <ol>
+                    <li>On your smartphone: Open the <strong>Camera Link</strong> from above. (Alternatively, scan the QR code on the right with your phone's camera app). This will open VDO.Ninja in your phone's browser and begin broadcasting its camera.</li>
+                    <li>In OBS Studio (on your desktop/laptop):
+                        <ul>
+                            <li>Click the '<strong>+</strong>' button under the '<strong>Sources</strong>' panel.</li>
+                            <li>Select '<strong>Browser</strong>' from the list.</li>
+                            <li>Give your new source a name (e.g., "Phone Camera") and click 'OK'.</li>
+                        </ul>
+                    </li>
+                    <li>In the 'Properties' window for the new Browser source:
+                        <ul>
+                            <li>Paste the <strong>OBS Link</strong> (from above) into the '<strong>URL</strong>' field.</li>
+                            <li>Set '<strong>Width</strong>' to <strong>1920</strong>.</li>
+                            <li>Set '<strong>Height</strong>' to <strong>1080</strong>.</li>
+                            <li>Check the box labeled "<strong>Control audio via OBS</strong>".</li>
+                            <li>Optionally, adjust "Shutdown source when not visible" or "Refresh browser when scene becomes active" as needed.</li>
+                        </ul>
+                    </li>
+                    <li>Click '<strong>OK</strong>'. Your smartphone's camera feed should now appear as a source in OBS Studio!</li>
+                </ol>
+                <p class="note"><strong>Performance Tip:</strong> For the lowest latency and best quality, ensure your smartphone and computer are connected to the same Wi-Fi network (preferably a 5GHz network). If you experience issues, join our support Discord for help: <b>https://discord.socialstream.ninja</b>.</p>
+            </div>
+            <div class="qr-code-panel">
+                <h3>QR Code for Camera Link</h3>
+                <div id="qrcode"></div>
+                <p>Scan with your smartphone to quickly open the Camera Link.</p>
+            </div>
+        </div>
+        </div>
+    
+    <script>
+        // Helper function to generate readable stream IDs
+        function generateStreamID() {
+            const adjectives = ['cool', 'super', 'mega', 'epic', 'magic', 'fancy', 'swift', 'brave', 'calm', 'wise',
+			 'bold', 'keen', 'wild', 'zany', 'witty', 'fierce', 'noble', 'agile', 'quick', 'vivid',
+			 'bright', 'sleek', 'eager', 'grand', 'proud', 'humble', 'jolly', 'loyal', 'merry', 'sharp',
+			 'lucid', 'dark', 'mighty', 'nimble', 'prime', 'rapid', 'solid', 'tough', 'vast', 'pure',
+			 'plush', 'mild', 'sure', 'sane', 'kind', 'brisk', 'free', 'fast', 'cold', 'warm'];
+
+			const nouns = ['fox', 'wolf', 'panda', 'eagle', 'tiger', 'lion', 'hawk', 'bear', 'shark', 'whale',
+			 'deer', 'crow', 'dove', 'hare', 'lynx', 'mole', 'otter', 'raven', 'seal', 'swan',
+			 'bass', 'duck', 'frog', 'goat', 'hound', 'lark', 'moose', 'owl', 'pike', 'snail',
+			 'toad', 'vole', 'wren', 'yak', 'zebra', 'bison', 'finch', 'gecko', 'heron', 'ibex',
+			 'koala', 'lemur', 'mink', 'newt', 'prawn', 'quail', 'sloth', 'trout', 'viper', 'wasp'];
+            const numbers = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            
+            const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const noun = nouns[Math.floor(Math.random() * nouns.length)];
+            
+            return `${adj}${noun}${numbers}`;
+        }
+        
+        // Copy to clipboard function
+        function copyToClipboard(elementId) {
+            const element = document.getElementById(elementId);
+            element.select();
+            try {
+                document.execCommand('copy');
+                // Visual feedback
+                const copyBtn = event.target; // `event` is implicitly available in inline handlers
+                const originalText = copyBtn.innerText;
+                copyBtn.innerText = 'Copied!';
+                copyBtn.disabled = true;
+                setTimeout(() => {
+                    copyBtn.innerText = originalText;
+                    copyBtn.disabled = false;
+                }, 1500);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+                // Fallback or error message could be shown to the user
+            }
+        }
+        
+        // Generate or retrieve stream ID
+        function initializeStreamID() {
+            let streamID = localStorage.getItem('vdoNinjaStreamID');
+            
+            if (!streamID) {
+                streamID = generateStreamID();
+                localStorage.setItem('vdoNinjaStreamID', streamID);
+            }
+            
+            updateLinks(streamID);
+        }
+        
+        // Update links and QR code
+        function updateLinks(streamID) {
+            const baseUrl = 'https://vdo.ninja/';
+            const guestLink = `${baseUrl}?push=${streamID}&webcam&proaudio&bitrate=6000&codec=h264`;
+            const obsLink = `${baseUrl}?view=${streamID}&codec=h264`;
+            
+            document.getElementById('guest-link').value = guestLink;
+            document.getElementById('obs-link').value = obsLink;
+            
+            // Generate QR Code
+            const qrCodeElement = document.getElementById('qrcode');
+            qrCodeElement.innerHTML = ''; // Clear previous QR code
+            new QRCode(qrCodeElement, {
+                text: guestLink,
+                width: 250, // Slightly reduced size to fit well within new panel padding
+                height: 250,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
+        
+        // Initialize on page load
+        window.onload = function() {
+            initializeStreamID();
+            
+            // Add event listener for reset button
+            document.getElementById('reset-id').addEventListener('click', function() {
+                const streamID = generateStreamID();
+                localStorage.setItem('vdoNinjaStreamID', streamID);
+                updateLinks(streamID);
+            });
+        };
+    </script>
+</body>
+</html>
