@@ -170,7 +170,19 @@ if (document.readyState === "complete" || document.readyState === "interactive")
 
 // Function to open Event Flow Editor
 function openEventFlowEditor() {
-    // For all contexts, just open actions/index.html
+    if (ssapp) {
+        // In ssapp context, the remote actions/index.html is disconnected from the local context
+        // Try to tell ssapp to switch to the editor view via postMessage
+        try {
+            window.parent.postMessage({ action: 'switchToEventFlowEditor' }, '*');
+        } catch (e) {
+            console.warn('Could not send postMessage to parent:', e);
+        }
+        // Also show message for older ssapp versions that don't have the listener yet
+        alert('In the desktop app, use the 🪤 Event Flow Editor option in the navigation menu.');
+        return;
+    }
+    // For extension context, open actions/index.html
     window.open('actions/index.html', '_blank');
 }
 // Make function available globally
