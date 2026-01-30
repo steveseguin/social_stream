@@ -13,6 +13,7 @@
     --text-color: #e4e6eb;
     --card-bg: linear-gradient(145deg, #1a2a48, #162238);
     --card-shadow: rgba(0, 0, 0, 0.3);
+    --scale-output: 1;
 }
 
 body, html {
@@ -24,6 +25,7 @@ body, html {
     color: var(--text-color);
     font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     overflow: hidden;
+    zoom: var(--scale-output);
 }
 
 #chat-container {
@@ -518,6 +520,13 @@ body.light-mode .meta-value.badge {
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 	const showViewerCount = urlParams.has("showviewercount");
+
+	// Apply scale if specified
+	var scale = 1;
+	if (urlParams.has("scale")) {
+		scale = parseFloat(urlParams.get("scale")) || 1.0;
+		document.documentElement.style.setProperty("--scale-output", scale);
+	}
 
 	// Apply theme immediately
 	if (lightMode) {
