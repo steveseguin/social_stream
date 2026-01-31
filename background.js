@@ -11805,10 +11805,11 @@ async function applyBotActions(data, tab = false) {
 			}
 			delete settings.mynameext;
 		}
-		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) { 
+		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const bots = settings.botnamesext.textsetting
 					.toLowerCase()
@@ -11819,10 +11820,14 @@ async function applyBotActions(data, tab = false) {
 				data.bot = bots.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11838,8 +11843,9 @@ async function applyBotActions(data, tab = false) {
 		
 		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const hosts = settings.hostnamesext.textsetting
 					.toLowerCase()
@@ -11850,10 +11856,14 @@ async function applyBotActions(data, tab = false) {
 				data.host = hosts.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11893,8 +11903,9 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const mods = settings.modnamesext.textsetting
 					.toLowerCase()
@@ -11905,10 +11916,14 @@ async function applyBotActions(data, tab = false) {
 				data.mod = mods.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11925,8 +11940,9 @@ async function applyBotActions(data, tab = false) {
 		
 		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const admins = settings.adminnames.textsetting
 					.toLowerCase()
@@ -11937,10 +11953,14 @@ async function applyBotActions(data, tab = false) {
 				data.admin = admins.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11949,8 +11969,9 @@ async function applyBotActions(data, tab = false) {
 		
 		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const vips = settings.viplistusers.textsetting
 					.toLowerCase()
@@ -11961,10 +11982,14 @@ async function applyBotActions(data, tab = false) {
 				data.vip = vips.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
