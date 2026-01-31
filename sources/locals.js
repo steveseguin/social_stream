@@ -73,6 +73,13 @@ function toDataURL(url, callback) {
 	}
 	
 	function processMessage(ele){
+		
+		//console.log(ele);
+		
+		if (!ele || !ele.isConnected || ele.skip){
+			return;
+		}
+		
 		var name="";
 		try {
 			name = ele.dataset.username || "";
@@ -87,14 +94,26 @@ function toDataURL(url, callback) {
 				if (nameNode && nameNode.textContent){
 					name = nameNode.textContent.trim();
 				}
+				if (!name){
+					name = nameNode.href.split("username=").pop();
+					
+				}
 			} catch(e){}
 		}
 		
 		if (!name){
-			name = escapeHtml(document.querySelector(".nameContainer > .name").innerText);
+			try {
+				name = escapeHtml(document.querySelector(".nameContainer > .name"));
+			} catch(e){
+				return;
+			}
 		}
 		
 		name = name.replace(/^@/, "").trim();
+		
+		if (!name){return;}
+		
+		ele.skip = true;
 		
 		var msg = "";
 		try {
@@ -256,10 +275,8 @@ function toDataURL(url, callback) {
 				for (var i=0;i<nodes.length;i++){
 					try {
 						var ele = nodes[i];
-						console.log(ele);
 						if (ele && ele.nodeName && ele.nodeName == "DIV"){
 							if (!ele.skip){
-								ele.skip = true;
 								processMessage(ele);
 							}
 						}
@@ -278,12 +295,12 @@ function toDataURL(url, callback) {
 	console.log("social stream injected");
 
 	setInterval(function(){
-		var chatContainer = document.querySelector('#chat-history,#chatscroller')
+		var chatContainer = document.querySelector('#chat-history,#chatscroller, .chat-container section')
 		if (chatContainer){
 			if (!chatContainer.marked){
 				chatContainer.marked=true;
 				setTimeout(function(){
-					var chatContainer = document.querySelector('#chat-history,#chatscroller')
+					var chatContainer = document.querySelector('#chat-history,#chatscroller,.chat-container section')
 					chatContainer.childNodes.forEach(ele=>{
 						if (ele && ele.nodeName && ele.nodeName == "DIV"){
 							ele.skip = true;
@@ -299,17 +316,17 @@ function toDataURL(url, callback) {
 				if (counter%10==0){
 					try {
 						
-						var viewerCount = document.querySelector(".pcountusersnum");
 						
-						if (viewerCount && viewerCount.textContent.trim().length){
-							let views = viewerCount.textContent.trim().toUpperCase();
+						let viewerSpan = document.querySelector("svg>path[d^='M10.8176 5.85711C10.8176 6.63686 10.5052 7.38474 9.94965 7.93603C9.39408 8.4873 8.64033 8.79724 7.85447']");
+						if (viewerSpan?.parentNode?.nextElementSibling?.textContent){
+							let views = viewerSpan.parentNode.nextElementSibling.textContent.toUpperCase();
 							let multiplier = 1;
 							if (views.includes("K")){
 								multiplier = 1000;
-								views = views.replace("K", "");
+								views = views.replace("K","");
 							} else if (views.includes("M")){
 								multiplier = 1000000;
-								views = views.replace("M", "");
+								views = views.replace("M","");
 							}
 							views = views.split(" ")[0];
 							if (views == parseFloat(views)){
@@ -326,6 +343,9 @@ function toDataURL(url, callback) {
 								);
 							}
 						}
+						
+						
+						
 					} catch(e){}
 				}
 				counter+=1;
