@@ -603,10 +603,53 @@
 		} catch (e) {}
 
 		ele.skip = true;
-		
+
 		//console.log(ele);
-		
-		
+
+		// Handle YouTube Redirects (similar to Twitch Raids)
+		if (eventType === "redirect") {
+			try {
+				var bannerText = ele.querySelector("#banner-text");
+				if (bannerText) {
+					var redirector = bannerText.querySelector(".bold");
+					var redirectorName = "";
+					if (redirector) {
+						redirectorName = escapeHtml(redirector.innerText.replace("@", "").trim());
+					}
+					var redirectMessage = getAllContentNodes(bannerText);
+
+					if (redirectorName || redirectMessage) {
+						var data = {};
+						data.chatname = redirectorName;
+						data.chatmessage = redirectMessage;
+						data.membership = getTranslation("redirect", "REDIRECT");
+						data.type = "youtube";
+						data.event = "redirect";
+						if (videoId) {
+							data.videoid = videoId;
+						}
+						if (channelName) {
+							data.sourceName = channelName;
+						}
+						if (channelThumbnail) {
+							data.sourceImg = channelThumbnail;
+						}
+
+						chrome.runtime.sendMessage(
+							chrome.runtime.id,
+							{ message: data },
+							(e) => {
+								e.id ? (ele.dataset.mid = e.id) : "";
+							}
+						);
+					}
+				}
+			} catch (e) {
+				console.error("Error processing redirect:", e);
+			}
+			return;
+		}
+
 		var hasMembership = "";
 		var subtitle = "";
 
@@ -1333,6 +1376,11 @@
 	
 	function checkType(ele, callback) {
 		console.log(ele);
+	  // Handle redirect banners (YouTube Raids) specifically before skipping other banners
+	  if (ele.tagName == "yt-live-chat-banner-redirect-renderer".toUpperCase()) {
+		callback(ele, "redirect");
+		return;
+	  }
 	  if (ele && ele.classList && ele.classList.contains("yt-live-chat-banner-renderer")) {
 		return;
 	  } else if (ele.tagName == "yt-live-chat-text-message-renderer".toUpperCase()) {
