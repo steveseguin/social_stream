@@ -131,7 +131,7 @@
 		} catch(e){
 		}
 		
-		if (!msg || !name){
+		if (!name || (!msg && !donation)){
 	//		console.log("no name");
 			return;
 		}
