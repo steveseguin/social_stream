@@ -68,7 +68,7 @@ if [[ -f "$BUILD_DIR/sources/bilibilicom.js" ]]; then
     echo "  Fixed: sources/bilibilicom.js (invalid assignment)"
 fi
 
-echo "Adding Firefox messaging compatibility shim to background.js..."
+echo "Adding Firefox messaging compatibility shim to background.js and service_worker.js..."
 # Firefox MV3 handles async message responses differently than Chrome.
 # In Chrome, 'return true' keeps the message channel open for async sendResponse.
 # In Firefox MV3 with background scripts, we need to return a Promise instead.
@@ -129,6 +129,13 @@ if [[ -f "$BUILD_DIR/background.js" ]]; then
     echo "$FIREFOX_SHIM" | cat - "$BUILD_DIR/background.js" > "$BUILD_DIR/background.js.tmp"
     mv "$BUILD_DIR/background.js.tmp" "$BUILD_DIR/background.js"
     echo "  Fixed: background.js (Firefox messaging compatibility)"
+fi
+
+# Prepend the shim to service_worker.js (used as Firefox MV3 background script)
+if [[ -f "$BUILD_DIR/service_worker.js" ]]; then
+    echo "$FIREFOX_SHIM" | cat - "$BUILD_DIR/service_worker.js" > "$BUILD_DIR/service_worker.js.tmp"
+    mv "$BUILD_DIR/service_worker.js.tmp" "$BUILD_DIR/service_worker.js"
+    echo "  Fixed: service_worker.js (Firefox messaging compatibility)"
 fi
 
 echo "Validating transformed manifest.json..."
