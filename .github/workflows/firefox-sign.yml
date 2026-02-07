@@ -8,9 +8,13 @@ on:
         options: [listed, unlisted]
         default: unlisted
       source_dir:
-        description: Source directory containing manifest.json
+        description: Source directory containing manifest.json (default is prepared firefox-build)
         type: string
-        default: .
+        default: firefox-build
+      prepare_firefox_build:
+        description: Run scripts/prepare-firefox.sh before signing
+        type: boolean
+        default: true
       addon_id:
         description: Optional add-on ID (if manifest lacks browser_specific_settings.gecko.id)
         type: string
@@ -40,7 +44,8 @@ jobs:
     timeout-minutes: 15
     env:
       WEB_EXT_CHANNEL: ${{ github.event.inputs.channel || 'unlisted' }}
-      WEB_EXT_SOURCE_DIR: ${{ github.event.inputs.source_dir || '.' }}
+      WEB_EXT_SOURCE_DIR: ${{ github.event.inputs.source_dir || 'firefox-build' }}
+      PREPARE_FIREFOX_BUILD: ${{ github.event.inputs.prepare_firefox_build || true }}
       WEB_EXT_ID: ${{ github.event.inputs.addon_id }}
       WEB_EXT_USE_SUBMISSION_API: ${{ github.event.inputs.use_submission_api || false }}
       WEB_EXT_FALLBACK_TO_LEGACY: ${{ github.event.inputs.fallback_to_legacy || true }}
@@ -57,6 +62,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+
+      - name: Prepare Firefox build
+        if: env.PREPARE_FIREFOX_BUILD == 'true'
+        run: |
+          set -euo pipefail
+          chmod +x scripts/prepare-chrome-web-store.sh
+          chmod +x scripts/prepare-firefox.sh
+          ./scripts/prepare-firefox.sh
 
       - name: Read manifest version
         id: manifest
