@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Data Entry Form</title>
+    <style>
+        /* Add your CSS styling here */
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Data Entry Form</h1>
+        <form id="dataForm">
+            <div class="form-group">
+                <label for="chatname">Chat Name</label>
+                <input type="text" id="chatname" name="chatname">
+            </div>
+            <div class="form-group">
+                <label for="nameColor">Name Color</label>
+                <input type="text" id="nameColor" name="nameColor">
+            </div>
+           <div class="form-group">
+				<label for="chatbadges">Chat Badges (comma-separated URLs)</label>
+				<input type="text" id="chatbadges" name="chatbadges">
+			</div>
+			<div class="form-group">
+				<label for="backgroundColor">Background Color</label>
+				<input type="text" id="backgroundColor" name="backgroundColor">
+			</div>
+			<div class="form-group">
+				<label for="textColor">Text Color</label>
+				<input type="text" id="textColor" name="textColor">
+			</div>
+			<div class="form-group">
+				<label for="chatmessage">Chat Message</label>
+				<input type="text" id="chatmessage" name="chatmessage">
+			</div>
+			<div class="form-group">
+				<label for="chatimg">Chat Image URL</label>
+				<input type="text" id="chatimg" name="chatimg">
+			</div>
+			<div class="form-group">
+				<label for="hasDonation">Has Donation</label>
+				<input type="text" id="hasDonation" name="hasDonation">
+			</div>
+			<div class="form-group">
+				<label for="membership">Membership</label>
+				<input type="text" id="membership" name="membership">
+			</div>
+			<div class="form-group">
+				<label for="textonly">Text Only Mode</label>
+				<input type="checkbox" id="textonly" name="textonly">
+			</div>
+			<div class="form-group">
+				<label for="type">Type</label>
+				<select id="type" name="type">
+					<option value="twitch">Twitch</option>
+					<option value="tiktok">TikTok</option>
+					<option value="youtube">YouTube</option>
+					<!-- Add more options for different types if needed -->
+				</select>
+			</div>
+
+            <button type="button" onclick="submitData()">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        function submitData() {
+			// Create an object to store user-entered data
+			var userData = {
+				chatname: document.getElementById("chatname").value,
+				nameColor: document.getElementById("nameColor").value,
+				chatbadges: document.getElementById("chatbadges").value,
+				backgroundColor: document.getElementById("backgroundColor").value,
+				textColor: document.getElementById("textColor").value,
+				chatmessage: document.getElementById("chatmessage").value,
+				chatimg: document.getElementById("chatimg").value,
+				hasDonation: document.getElementById("hasDonation").value,
+				membership: document.getElementById("membership").value,
+				textonly: document.getElementById("textonly").checked,
+				type: document.getElementById("type").value,
+			};
+
+			// Send the user data as a JSON object to a POST URL
+			var url = "https://api.socialstream.ninja/";
+			var xhr = new XMLHttpRequest();
+			xhr.open("POST", url, true);
+			xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+			xhr.onreadystatechange = function () {
+				if (xhr.readyState === 4 && xhr.status === 200) {
+					alert("Data submitted successfully!");
+				} else if (xhr.readyState === 4) {
+					alert("Failed to submit data. Please try again.");
+				}
+			};
+			xhr.send(JSON.stringify(userData));
+		}
+    </script>
+</body>
+</html>
