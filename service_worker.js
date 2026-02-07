@@ -70,6 +70,72 @@ async function checkBackgroundPageIsOpen() {
 
 let lastBackgroundPageCreated = 0;
 const BACKGROUND_PAGE_COOLDOWN = 5000; // 5 second cooldown between attempts
+const BACKGROUND_PAGE_LOAD_TIMEOUT = 10000; // 10 second timeout waiting for background tab load
+let queuedMessageRetryTimer = null;
+
+function scheduleQueuedMessageRetry(delayMs) {
+  if (queuedMessageRetryTimer !== null) {
+    return;
+  }
+
+  queuedMessageRetryTimer = setTimeout(() => {
+    queuedMessageRetryTimer = null;
+    ensureBackgroundPageIsOpen().catch((error) => {
+      console.error("Error retrying queued background message delivery:", error);
+    });
+  }, Math.max(delayMs, 0));
+}
+
+async function waitForTabComplete(tabId, timeoutMs = BACKGROUND_PAGE_LOAD_TIMEOUT) {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab?.status === "complete") {
+      return;
+    }
+  } catch (error) {
+    // Fall through to listener-based wait for transient tab lookup errors.
+  }
+
+  await new Promise((resolve, reject) => {
+    let settled = false;
+    let timeoutId = null;
+
+    const finish = (error = null) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+      }
+      chrome.tabs.onUpdated.removeListener(listener);
+      if (error) {
+        reject(error);
+      } else {
+        resolve();
+      }
+    };
+
+    const listener = (updatedTabId, info) => {
+      if (updatedTabId === tabId && info.status === "complete") {
+        finish();
+      }
+    };
+
+    timeoutId = setTimeout(() => {
+      finish(new Error(`Timed out waiting for background page tab ${tabId} to load`));
+    }, timeoutMs);
+
+    chrome.tabs.onUpdated.addListener(listener);
+
+    // Re-check status immediately after listener registration to avoid race conditions.
+    chrome.tabs.get(tabId).then((tab) => {
+      if (tab?.status === "complete") {
+        finish();
+      }
+    }).catch(() => {});
+  });
+}
 
 async function ensureBackgroundPageIsOpen(load = true) {
   log("Ensuring background page is open", backgroundPageTabId);
@@ -83,8 +149,10 @@ async function ensureBackgroundPageIsOpen(load = true) {
   if (load) {
     // Check if enough time has passed since last attempt
     const now = Date.now();
-    if (now - lastBackgroundPageCreated < BACKGROUND_PAGE_COOLDOWN) {
+    const elapsed = now - lastBackgroundPageCreated;
+    if (elapsed < BACKGROUND_PAGE_COOLDOWN) {
       log("Skipping background page creation - cooldown period");
+      scheduleQueuedMessageRetry(BACKGROUND_PAGE_COOLDOWN - elapsed);
       return;
     }
 
@@ -107,15 +175,7 @@ async function ensureBackgroundPageIsOpen(load = true) {
       log("Background page created with ID:", backgroundPageTabId);
       
       // Wait for the background page to initialize
-      await new Promise(resolve => {
-        const listener = function(tabId, info) {
-          if (tabId === backgroundPageTabId && info.status === 'complete') {
-            chrome.tabs.onUpdated.removeListener(listener);
-            resolve();
-          }
-        };
-        chrome.tabs.onUpdated.addListener(listener);
-      });
+      await waitForTabComplete(backgroundPageTabId);
       
       backgroundPageTabIdLoaded = true;
       log("Background page loaded");
@@ -220,6 +280,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           } else {
             // Queue the message if the background page is not ready
             messageQueue.push({ message, sendResponse });
+            scheduleQueuedMessageRetry(BACKGROUND_PAGE_COOLDOWN);
           }
         }).catch(error => {
           console.error("Error ensuring background page is open:", error);
@@ -277,6 +338,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })();
     return true; // Indicates that the response will be sent asynchronously
   } else if (message.type === 'captureTabAudio') {
+	  if (!chrome.tabCapture || typeof chrome.tabCapture.capture !== 'function') {
+		  sendResponse({ error: 'Tab audio capture is not available in this browser' });
+		  return true;
+	  }
+
 	  chrome.tabCapture.capture({
 		  audio: true,
 		  video: false
