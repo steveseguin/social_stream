@@ -393,6 +393,49 @@ body.light-mode .message.active {
     background-color: rgba(255, 255, 255, 0.06);
     font-size: 0.85em;
     line-height: 1.4;
+    display: none;
+}
+
+.meta-wrapper.expanded .meta-details {
+    display: block;
+}
+
+.meta-summary {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85em;
+    opacity: 0.85;
+}
+
+.meta-summary-text {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.meta-toggle {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: inherit;
+    font-size: 0.75em;
+    padding: 2px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+}
+
+.meta-toggle:hover {
+    opacity: 1;
+}
+
+body.light-mode .meta-toggle {
+    background: rgba(0, 0, 0, 0.06);
+    border-color: rgba(0, 0, 0, 0.12);
 }
 
 body.light-mode .meta-details {
@@ -1207,11 +1250,57 @@ body.light-mode .meta-value.badge {
 		return sections;
 	}
 
+	function buildMetaSummary(sections) {
+		const parts = [];
+		for (let i = 0; i < sections.length; i++) {
+			const fields = sections[i].fields;
+			for (let j = 0; j < fields.length; j++) {
+				const f = fields[j];
+				if (f.badge) continue;
+				const label = f.label;
+				// Pick only the most useful fields for summary
+				if (/^(title|cost|user input|prompt|question|tenure|tier|level|amount|sender|coins|emotes)$/i.test(label)) {
+					parts.push(f.value);
+				}
+			}
+			if (parts.length >= 3) break;
+		}
+		return parts.join(' · ');
+	}
+
 	function createMetaDetailsNode(data) {
 		const sections = buildMetaSections(data);
 		if (!sections.length) {
 			return null;
 		}
+
+		const wrapper = document.createElement('div');
+		wrapper.className = 'meta-wrapper';
+
+		// Build summary line
+		const summaryText = buildMetaSummary(sections);
+		const summaryRow = document.createElement('div');
+		summaryRow.className = 'meta-summary';
+
+		if (summaryText) {
+			const summarySpan = document.createElement('span');
+			summarySpan.className = 'meta-summary-text';
+			summarySpan.textContent = summaryText;
+			summaryRow.appendChild(summarySpan);
+		}
+
+		const toggleBtn = document.createElement('button');
+		toggleBtn.className = 'meta-toggle';
+		toggleBtn.textContent = 'Details ▸';
+		toggleBtn.addEventListener('click', function(e) {
+			e.stopPropagation();
+			const isExpanded = wrapper.classList.toggle('expanded');
+			toggleBtn.textContent = isExpanded ? 'Details ▾' : 'Details ▸';
+		});
+		summaryRow.appendChild(toggleBtn);
+		wrapper.appendChild(summaryRow);
+
+		// Build full details (hidden by default)
 		const container = document.createElement('div');
 		container.className = 'meta-details';
 		for (let i = 0; i < sections.length; i++) {
@@ -1261,7 +1350,8 @@ body.light-mode .meta-value.badge {
 			sectionNode.appendChild(fieldsWrapper);
 			container.appendChild(sectionNode);
 		}
-		return container;
+		wrapper.appendChild(container);
+		return wrapper;
 	}
 
 	function buildEventDisplay(data) {
