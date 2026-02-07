@@ -6403,7 +6403,7 @@ input:checked + .slider:before {
                                         <input type="checkbox" data-setting="whitelistuserstoggle" />
                                         <span class="slider round"></span>
                                     </label>
-                                    <div class="textInputContainer" style="display: inline-block; width: 250px;" title="Provide comma separated values; only values that match a username will be allowed.">
+                                    <div class="textInputContainer" style="display: inline-block; width: 100%;" title="Provide comma separated values; only values that match a username will be allowed.">
                                         <input type="text" id="whitelistusers" class="textInput" autocomplete="off" placeholder="Provide usernames, comma, separated" data-textsetting="whitelistusers" />
 										🤍 <span data-translate="only-allow-specified-users">Show only the specified users (approved list)</span>
                                     </div>
@@ -6486,6 +6486,13 @@ input:checked + .slider:before {
 										<input type="text" id="hostnamesext" class="textInput" autocomplete="off" placeholder="eg: name1,name 2,Name3" data-textsetting="hostnamesext" />
 										🕺 <span data-translate="hostnamesext">Identify the <b>hosts'</b> name</span>
 									</div>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-setting="matchRolesByDisplayName" />
+										<span class="slider round"></span>
+									</label>
+									<span data-translate="match-roles-by-display-name">🔤 Match roles by display name also; not just by user ID</span>
 								</div>
 								<br />
 								<div>
@@ -8118,7 +8125,19 @@ input:checked + .slider:before {
 									</label>
 									<span data-translate="light-theme">☀️ Use light theme instead of dark</span>
 								</div>
-								
+
+								<div data-keywords="font size zoom scale enlarge shrink">
+									<label class="switch">
+										<input type="checkbox" data-param17="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Scale
+										<input type="range" id="events-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting17="scale" data-range-display="events-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="events-scale-display">1.00x</span>
+									</span>
+								</div>
+
 								<div>
 									<label class="switch">
 										<input type="checkbox" data-param17="maxevents" />

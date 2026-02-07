@@ -1191,6 +1191,36 @@ function replaceURLsWithSubstring(text, replacement = "[Link]") {
   }
 }
 
+// Color contrast utilities for auto-fixing platform color conflicts
+function parseHexColor(hex) {
+	if (!hex) return null;
+	hex = hex.replace(/^#/, '').replace(/;$/, '');
+	if (hex.length === 3) {
+		hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+	}
+	if (hex.length !== 6) return null;
+	const r = parseInt(hex.substring(0, 2), 16);
+	const g = parseInt(hex.substring(2, 4), 16);
+	const b = parseInt(hex.substring(4, 6), 16);
+	if (isNaN(r) || isNaN(g) || isNaN(b)) return null;
+	return { r, g, b };
+}
+
+function getRelativeLuminance(rgb) {
+	// WCAG relative luminance formula
+	const [rs, gs, bs] = [rgb.r, rgb.g, rgb.b].map(c => {
+		c = c / 255;
+		return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+	});
+	return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+}
+
+function isColorDark(hex) {
+	const rgb = parseHexColor(hex);
+	if (!rgb) return null;
+	return getRelativeLuminance(rgb) < 0.5;
+}
+
 function validateRoomId(roomId) {
 	if (roomId == null || roomId === '') {
 		return false;
@@ -11775,10 +11805,11 @@ async function applyBotActions(data, tab = false) {
 			}
 			delete settings.mynameext;
 		}
-		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) { 
+		if (!data.bot && settings.botnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const bots = settings.botnamesext.textsetting
 					.toLowerCase()
@@ -11789,10 +11820,14 @@ async function applyBotActions(data, tab = false) {
 				data.bot = bots.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11808,8 +11843,9 @@ async function applyBotActions(data, tab = false) {
 		
 		if (!data.host && settings.hostnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const hosts = settings.hostnamesext.textsetting
 					.toLowerCase()
@@ -11820,10 +11856,14 @@ async function applyBotActions(data, tab = false) {
 				data.host = hosts.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11863,8 +11903,9 @@ async function applyBotActions(data, tab = false) {
 
 		if (!data.mod && settings.modnamesext?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const mods = settings.modnamesext.textsetting
 					.toLowerCase()
@@ -11875,10 +11916,14 @@ async function applyBotActions(data, tab = false) {
 				data.mod = mods.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11895,8 +11940,9 @@ async function applyBotActions(data, tab = false) {
 		
 		if (!data.admin && settings.adminnames?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const admins = settings.adminnames.textsetting
 					.toLowerCase()
@@ -11907,10 +11953,14 @@ async function applyBotActions(data, tab = false) {
 				data.admin = admins.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -11919,8 +11969,9 @@ async function applyBotActions(data, tab = false) {
 		
 		if (!data.vip && settings.viplistusers?.textsetting && (data.chatname || data.userid)) {
 			try {
-				const userIdentifier = (data.userid || data.chatname || "").toLowerCase().trim();
-				if (!userIdentifier) return;
+				const userIdLower = (data.userid || "").toLowerCase().trim();
+				const chatNameLower = (data.chatname || "").toLowerCase().trim();
+				if (!userIdLower && !chatNameLower) return;
 
 				const vips = settings.viplistusers.textsetting
 					.toLowerCase()
@@ -11931,10 +11982,14 @@ async function applyBotActions(data, tab = false) {
 				data.vip = vips.some(entry => {
 					const [name, type] = entry.split(":").map(part => part.trim());
 					if (!name) return false;
-					
-					return type ? 
-						name === userIdentifier && type === altSourceType :
-						name === userIdentifier;
+
+					const typeMatches = !type || type === altSourceType;
+					if (!typeMatches) return false;
+
+					if (settings.matchRolesByDisplayName) {
+						return name === userIdLower || name === chatNameLower;
+					}
+					return name === (userIdLower || chatNameLower);
 				});
 			} catch(e) {
 				errorlog(e);
@@ -12703,6 +12758,27 @@ async function applyBotActions(data, tab = false) {
 				data.karma = inferSentiment(data.chatmessage);
 			}
 		} catch (e) {}
+	}
+
+	// Auto-fix platform color conflicts (dark text on dark bg, or light on light)
+	// Only fix if textColor appears to be platform-set, not user-set
+	const platformTextColors = ["#111", "#111;", "#000", "#000;", "#fff", "#fff;", "#FFF", "#FFF;"];
+	if (data.textColor && data.backgroundColor && platformTextColors.includes(data.textColor)) {
+		try {
+			const textDark = isColorDark(data.textColor);
+			const bgDark = isColorDark(data.backgroundColor);
+
+			if (textDark !== null && bgDark !== null) {
+				// Both dark or both light = poor contrast, fix it
+				if (textDark && bgDark) {
+					data.textColor = "#FFFFFF"; // White text on dark background
+				} else if (!textDark && !bgDark) {
+					data.textColor = "#111111"; // Dark text on light background
+				}
+			}
+		} catch (e) {
+			console.error("Color contrast detection error:", e);
+		}
 	}
 
 	if (settings.comment_background) {

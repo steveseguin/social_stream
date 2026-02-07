@@ -266,6 +266,12 @@ body, html {
     // Use showtime=0 to disable auto-hiding
     var showtime = urlParams.has("showtime") ? parseInt(urlParams.get("showtime")) : 30000;
 
+    // chroma: if set via URL, use as background color (e.g., &chroma=00FF00 for green)
+    if (urlParams.has("chroma")) {
+        var chroma = urlParams.get("chroma") || "0F0";
+        document.body.style.backgroundColor = "#" + chroma;
+    }
+
     const chatContainer = document.getElementById('chat-container');
     const messageListWrapper = document.getElementById('message-list-wrapper');
     const MAX_MESSAGES = 20; // Adjust as needed
