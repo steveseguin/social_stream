@@ -8377,10 +8377,10 @@ function sendDataP2P(data, UUID = false) {
 				delete data.out;
 			}
 			socketserverDock.send(JSON.stringify(data));
-			return;
+			// Don't return early — also send via P2P so docks connected
+			// through either transport receive the data (e.g. viewer counts).
 		} catch (e) {
 			console.error(e);
-			// lets try to send it via P2P as a backup option
 		}
 	}
 

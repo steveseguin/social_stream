@@ -131,24 +131,24 @@
 </head>
 <body>
     <h1>
-        <img src="../images/nostr.svg" alt="Nostr">
+        <img src="../images/nostr.png" alt="Nostr">
         Nostr Live Stream
     </h1>
     
     <div id="connectionForm">
         <h2>Connection Settings</h2>
         
-        <label for="npubInput">Streamer's npub (or hex pubkey)</label>
+        <label for="npubInput">Streamer's npub or hex pubkey</label>
         <input type="text" id="npubInput" placeholder="npub1... or hex pubkey" />
-        <div class="help-text">Enter the npub of the streamer whose live chat you want to capture</div>
+        <div class="help-text">Enter the npub of the streamer - will auto-detect their live stream</div>
+        
+        <label for="naddrInput">Or stream naddr/nevent (optional)</label>
+        <input type="text" id="naddrInput" placeholder="naddr1... or nevent1..." />
+        <div class="help-text">If auto-detect fails, paste the specific stream naddr or nevent</div>
         
         <label for="relayInput">Relays (comma-separated)</label>
         <input type="text" id="relayInput" value="wss://nos.lol,wss://relay.damus.io,wss://relay.snort.social" />
         <div class="help-text">Default relays work for most streams. Add wss://relay.zap.stream for zap.stream</div>
-        
-        <label for="streamIdInput">Stream ID (optional)</label>
-        <input type="text" id="streamIdInput" placeholder="Leave empty for auto-detection" />
-        <div class="help-text">Only needed if auto-detection fails</div>
         
         <div style="margin-top: 15px;">
             <button onclick="connect()" id="connectBtn">Connect</button>
@@ -201,28 +201,101 @@
         
         // --- Helper Functions ---
         
+        function bech32Decode(str) {
+            str = str.toLowerCase();
+            var sepPos = str.lastIndexOf('1');
+            var hrp = str.substring(0, sepPos);
+            var data = str.substring(sepPos + 1, str.length - 6); // exclude checksum
+            var decoded = [];
+            for (var i = 0; i < data.length; i++) {
+                decoded.push(BECH32_ALPHABET.indexOf(data[i]));
+            }
+            var bytes = [];
+            var acc = 0, bits = 0;
+            for (var i = 0; i < decoded.length; i++) {
+                acc = (acc << 5) | decoded[i];
+                bits += 5;
+                while (bits >= 8) {
+                    bits -= 8;
+                    bytes.push((acc >> bits) & 0xff);
+                }
+            }
+            return { hrp: hrp, bytes: bytes };
+        }
+        
         function npubToHex(npub) {
             if (!npub || !npub.startsWith('npub1')) return npub;
             try {
-                var decoded = [];
-                npub = npub.toLowerCase();
-                for (var i = 5; i < npub.length - 6; i++) {
-                    decoded.push(BECH32_ALPHABET.indexOf(npub[i]));
-                }
-                var bytes = [];
-                var acc = 0, bits = 0;
-                for (var i = 0; i < decoded.length; i++) {
-                    acc = (acc << 5) | decoded[i];
-                    bits += 5;
-                    while (bits >= 8) {
-                        bits -= 8;
-                        bytes.push((acc >> bits) & 0xff);
-                    }
-                }
-                return bytes.map(b => b.toString(16).padStart(2, '0')).join('');
+                var result = bech32Decode(npub);
+                return result.bytes.map(b => b.toString(16).padStart(2, '0')).join('');
             } catch(e) {
                 setStatus('Error decoding npub: ' + e.message, true);
                 return '';
+            }
+        }
+        
+        // Decode naddr (NIP-19) - TLV format: 0=d-tag, 1=relay, 2=author, 3=kind
+        function decodeNaddr(naddr) {
+            try {
+                var result = bech32Decode(naddr);
+                var bytes = result.bytes;
+                var data = { d: '', pubkey: '', kind: 30311, relays: [] };
+                var i = 0;
+                while (i < bytes.length) {
+                    var type = bytes[i++];
+                    var len = bytes[i++];
+                    var value = bytes.slice(i, i + len);
+                    i += len;
+                    switch(type) {
+                        case 0: // d-tag (identifier)
+                            data.d = String.fromCharCode.apply(null, value);
+                            break;
+                        case 1: // relay
+                            data.relays.push(String.fromCharCode.apply(null, value));
+                            break;
+                        case 2: // author pubkey
+                            data.pubkey = value.map(b => b.toString(16).padStart(2, '0')).join('');
+                            break;
+                        case 3: // kind
+                            data.kind = value.reduce((acc, b) => (acc << 8) | b, 0);
+                            break;
+                    }
+                }
+                return data;
+            } catch(e) {
+                console.log('Error decoding naddr:', e);
+                return null;
+            }
+        }
+        
+        // Decode nevent (NIP-19) - TLV format: 0=event id, 1=relay, 2=author
+        function decodeNevent(nevent) {
+            try {
+                var result = bech32Decode(nevent);
+                var bytes = result.bytes;
+                var data = { id: '', pubkey: '', relays: [] };
+                var i = 0;
+                while (i < bytes.length) {
+                    var type = bytes[i++];
+                    var len = bytes[i++];
+                    var value = bytes.slice(i, i + len);
+                    i += len;
+                    switch(type) {
+                        case 0: // event id
+                            data.id = value.map(b => b.toString(16).padStart(2, '0')).join('');
+                            break;
+                        case 1: // relay
+                            data.relays.push(String.fromCharCode.apply(null, value));
+                            break;
+                        case 2: // author pubkey
+                            data.pubkey = value.map(b => b.toString(16).padStart(2, '0')).join('');
+                            break;
+                    }
+                }
+                return data;
+            } catch(e) {
+                console.log('Error decoding nevent:', e);
+                return null;
             }
         }
         
@@ -510,20 +583,52 @@
             messageBuffer = [];
         }
         
+        // Buffer for finding newest live stream
+        var pendingStreamEvents = [];
+        var streamSearchTimer = null;
+        
         function handleLiveStreamEvent(event) {
+            // If already connected to a live stream, ignore
             if (liveStreamInfo && liveStreamInfo.status === 'live') return;
             
             var dTag = event.tags.find(t => t[0] === 'd');
             if (!dTag || !dTag[1]) return;
             
-            var streamId = dTag[1];
             var status = '', title = '';
-            
             event.tags.forEach(function(tag) {
                 if (tag[0] === 'status') status = tag[1];
                 if (tag[0] === 'title') title = tag[1];
             });
             
+            // Add to pending and wait for more events
+            pendingStreamEvents.push(event);
+            
+            if (streamSearchTimer) clearTimeout(streamSearchTimer);
+            streamSearchTimer = setTimeout(selectNewestStream, 500);
+        }
+        
+        function selectNewestStream() {
+            if (pendingStreamEvents.length === 0) return;
+            
+            // Sort by created_at descending (newest first)
+            pendingStreamEvents.sort(function(a, b) {
+                return (b.created_at || 0) - (a.created_at || 0);
+            });
+            
+            var event = pendingStreamEvents[0];
+            pendingStreamEvents = [];
+            
+            var dTag = event.tags.find(t => t[0] === 'd');
+            var streamId = dTag[1];
+            var title = '';
+            var status = '';
+            
+            event.tags.forEach(function(tag) {
+                if (tag[0] === 'status') status = tag[1];
+                if (tag[0] === 'title') title = tag[1];
+            });
+
+            // Only consider live streams
             if (status !== 'live') {
                 setStatus('Found stream "' + title + '" but status is: ' + status, true);
                 return;
@@ -539,12 +644,14 @@
             
             config.streamId = streamId;
             config.aTag = liveStreamInfo.aTag;
-            
+
+
             // Show stream info
             document.getElementById('streamInfo').classList.remove('hidden');
             document.getElementById('streamTitle').textContent = title || 'Untitled Stream';
             document.getElementById('streamId').textContent = 'ID: ' + streamId;
             
+
             setStatus('Connected to live stream: ' + (title || streamId), false);
             subscribeToLiveChat();
         }
@@ -597,20 +704,27 @@
         
         // --- WebSocket Connection ---
         
-        function connectRelay(url) {
+        var reconnectAttempts = new Map(); // Track reconnect attempts per relay
+        var maxReconnectAttempts = 3;
+        var reconnectDelay = 3000; // 3 seconds
+        
+        function connectRelay(url, isReconnect) {
             try {
                 var ws = new WebSocket(url);
                 ws.url = url;
                 
                 ws.onopen = function() {
+                    // Reset reconnect attempts on successful connection
+                    reconnectAttempts.set(url, 0);
+                    
                     setStatus('Connected to ' + url, false);
                     updateRelayStatus();
                     
                     if (config.pubkey && !config.aTag) {
                         var filter = {
                             kinds: [30311],
-                            authors: [config.pubkey],
-                            limit: 10
+                            '#p': [config.pubkey],
+                            limit: 10,
                         };
                         ws.send(JSON.stringify(['REQ', 'find_stream', filter]));
                     } else if (config.aTag) {
@@ -632,6 +746,7 @@
                 };
                 
                 ws.onerror = function(e) {
+                    console.log('[Nostr] WebSocket error for ' + url);
                     updateRelayStatus();
                 };
                 
@@ -639,6 +754,23 @@
                     updateRelayStatus();
                     var idx = websockets.indexOf(ws);
                     if (idx > -1) websockets.splice(idx, 1);
+                    
+                    // Auto-reconnect if not manually disconnected
+                    if (liveStreamInfo || config.pubkey) {
+                        var attempts = reconnectAttempts.get(url) || 0;
+                        if (attempts < maxReconnectAttempts) {
+                            reconnectAttempts.set(url, attempts + 1);
+                            var delay = reconnectDelay * Math.pow(1.5, attempts); // Exponential backoff
+                            console.log('[Nostr] Reconnecting to ' + url + ' in ' + Math.round(delay/1000) + 's (attempt ' + (attempts + 1) + ')');
+                            setTimeout(function() {
+                                if (liveStreamInfo || config.pubkey) {
+                                    connectRelay(url, true);
+                                }
+                            }, delay);
+                        } else {
+                            console.log('[Nostr] Max reconnect attempts reached for ' + url);
+                        }
+                    }
                 };
                 
                 websockets.push(ws);
@@ -653,23 +785,60 @@
         function connect() {
             disconnect();
             
+            var naddr = document.getElementById('naddrInput').value.trim();
             var npub = document.getElementById('npubInput').value.trim();
             var relays = document.getElementById('relayInput').value.trim();
-            var streamId = document.getElementById('streamIdInput').value.trim();
-            
-            if (!npub) {
-                setStatus('Please enter an npub or pubkey', true);
-                return;
-            }
             
             config.relays = relays.split(',').map(r => r.trim()).filter(r => r);
-            config.npub = npub;
-            config.pubkey = npubToHex(npub);
-            config.streamId = streamId;
-            config.aTag = streamId && config.pubkey ? '30311:' + config.pubkey + ':' + streamId : '';
             
-            if (!config.pubkey) {
-                setStatus('Invalid npub format', true);
+            // Try npub first (auto-detect stream)
+            if (npub) {
+                config.npub = npub;
+                config.pubkey = npubToHex(npub);
+                config.streamId = '';
+                config.aTag = '';
+                
+                if (!config.pubkey) {
+                    setStatus('Invalid npub format', true);
+                    return;
+                }
+            }
+            // Try naddr if no npub
+            else if (naddr && naddr.startsWith('naddr1')) {
+                var decoded = decodeNaddr(naddr);
+                if (decoded && decoded.pubkey && decoded.d) {
+                    config.pubkey = decoded.pubkey;
+                    config.streamId = decoded.d;
+                    config.aTag = decoded.kind + ':' + decoded.pubkey + ':' + decoded.d;
+                    // Add relays from naddr if present
+                    if (decoded.relays.length > 0) {
+                        config.relays = [...new Set([...decoded.relays, ...config.relays])];
+                        document.getElementById('relayInput').value = config.relays.join(',');
+                    }
+                    setStatus('Decoded naddr: ' + decoded.d, false);
+                } else {
+                    setStatus('Invalid naddr format', true);
+                    return;
+                }
+            }
+            // Try nevent 
+            else if (naddr && naddr.startsWith('nevent1')) {
+                var decoded = decodeNevent(naddr);
+                if (decoded && decoded.id) {
+                    config.eventId = decoded.id;
+                    config.pubkey = decoded.pubkey || '';
+                    // Add relays from nevent if present
+                    if (decoded.relays.length > 0) {
+                        config.relays = [...new Set([...decoded.relays, ...config.relays])];
+                        document.getElementById('relayInput').value = config.relays.join(',');
+                    }
+                    setStatus('Decoded nevent: ' + decoded.id.substring(0, 16) + '...', false);
+                } else {
+                    setStatus('Invalid nevent format', true);
+                    return;
+                }
+            } else {
+                setStatus('Please enter an npub, naddr, or nevent', true);
                 return;
             }
             
@@ -683,6 +852,11 @@
         }
         
         function disconnect() {
+            // Clear reconnect state first to prevent auto-reconnect
+            liveStreamInfo = null;
+            config.pubkey = '';
+            reconnectAttempts.clear();
+            
             websockets.forEach(ws => {
                 try { ws.close(); } catch(e) {}
             });
@@ -690,7 +864,6 @@
             seenEvents.clear();
             profileCache.clear();
             pendingProfileCallbacks.clear();
-            liveStreamInfo = null;
             messageCount = 0;
             
             // Reset buffer state
@@ -712,11 +885,14 @@
         // Check URL params for auto-connect
         (function() {
             var params = new URLSearchParams(window.location.search);
+            var naddr = params.get('naddr') || params.get('nevent');
             var npub = params.get('npub') || params.get('pubkey');
             var relay = params.get('relay');
             var relays = params.get('relays');
-            var streamId = params.get('streamid') || params.get('stream_id');
             
+            if (naddr) {
+                document.getElementById('naddrInput').value = naddr;
+            }
             if (npub) {
                 document.getElementById('npubInput').value = npub;
             }
@@ -726,12 +902,9 @@
             if (relays) {
                 document.getElementById('relayInput').value = relays;
             }
-            if (streamId) {
-                document.getElementById('streamIdInput').value = streamId;
-            }
             
-            // Auto-connect if npub provided
-            if (npub) {
+            // Auto-connect if naddr or npub provided
+            if (naddr || npub) {
                 setTimeout(connect, 500);
             }
         })();
