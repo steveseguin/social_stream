@@ -1,0 +1,20 @@
+name: TOC Generator
+
+on:
+  push:
+    paths:
+      - 'README.md'
+      - 'api.md'
+
+jobs:
+  generateTOC:
+    name: TOC Generator
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: technote-space/toc-generator@v4
+        with:
+          MAX_HEADER_LEVEL: 4
+          TARGET_PATHS: |
+            README.md
+            api.md

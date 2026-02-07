@@ -1,0 +1,27 @@
+name: Validate HTML and CSS
+
+on:
+  push:
+    branches: [main, beta]
+  pull_request:
+    branches: [main, beta]
+
+jobs:
+  validate:
+    if: "!contains(github.event.head_commit.message, '[skip ci]') && !contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip pages]') && !contains(github.event.head_commit.message, '[auto-enhanced]') && github.actor != 'github-pages[bot]'"
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install dependencies
+      run: npm install htmlhint stylelint stylelint-config-standard
+
+    - name: Validate HTML files
+      run: npx htmlhint "**/*.html" --config .htmlhintrc
