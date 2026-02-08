@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Social Stream - Facebook Live API</title>
+  <link rel="icon" href="https://www.facebook.com/favicon.ico" type="image/x-icon">
+  <style>
+    :root {
+      --fb-blue: #1877f2;
+      --fb-cyan: #3fd1ff;
+      --fb-dark: #0b1018;
+      --fb-panel: #131b26;
+      --fb-border: #26344b;
+      --fb-text: #e9f0ff;
+      --fb-muted: #a6b4cc;
+      --fb-success: #4fe3a1;
+      --fb-warning: #ffb648;
+      --fb-danger: #ff6b7c;
+      --fb-shadow: 0 22px 48px rgba(6, 12, 22, 0.45);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--fb-dark);
+      color: var(--fb-text);
+      font-family: "Space Grotesk", "Segoe UI", sans-serif;
+      line-height: 1.6;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(24, 119, 242, 0.26), transparent 48%),
+        radial-gradient(circle at 85% 5%, rgba(63, 209, 255, 0.22), transparent 38%),
+        radial-gradient(circle at 75% 85%, rgba(79, 227, 161, 0.12), transparent 45%),
+        linear-gradient(180deg, rgba(10, 14, 22, 0.92), rgba(9, 12, 18, 0.98));
+      z-index: -2;
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.12;
+      z-index: -1;
+    }
+    .page {
+      min-height: 100%;
+      display: flex;
+      justify-content: center;
+      padding: 32px 18px 64px;
+    }
+    .content {
+      width: min(1120px, 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .panel {
+      background: var(--fb-panel);
+      border: 1px solid var(--fb-border);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: var(--fb-shadow);
+      animation: fadeUp 0.55s ease both;
+      animation-delay: var(--delay, 0s);
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero {
+      padding: 26px;
+      background: linear-gradient(135deg, rgba(24, 119, 242, 0.22), rgba(63, 209, 255, 0.08));
+      border-color: rgba(24, 119, 242, 0.35);
+    }
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(1.9rem, 3vw, 2.5rem);
+      letter-spacing: -0.02em;
+    }
+    .hero p {
+      margin: 8px 0 0;
+      color: rgba(233, 240, 255, 0.78);
+      max-width: 760px;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+      align-items: center;
+    }
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      border: 1px solid var(--fb-border);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .status-chip.connected { color: var(--fb-success); border-color: rgba(79, 227, 161, 0.4); }
+    .status-chip.connecting { color: var(--fb-warning); border-color: rgba(255, 182, 72, 0.4); }
+    .status-chip.error { color: var(--fb-danger); border-color: rgba(255, 107, 124, 0.4); }
+    h2 { margin: 0 0 12px; font-size: 1.2rem; }
+    label { display: block; font-weight: 600; margin-bottom: 6px; }
+    input[type="text"],
+    input[type="password"],
+    input[type="number"] {
+      width: 100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--fb-border);
+      background: #0d141f;
+      color: var(--fb-text);
+      font-size: 1rem;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+    input:focus {
+      outline: none;
+      border-color: rgba(63, 209, 255, 0.55);
+      box-shadow: 0 0 0 2px rgba(63, 209, 255, 0.16);
+    }
+    .hint {
+      color: var(--fb-muted);
+      font-size: 0.95rem;
+      margin: 6px 0 0;
+    }
+    .grid {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 14px;
+      align-items: center;
+    }
+    .row label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      font-weight: 500;
+      margin: 0;
+    }
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: var(--fb-blue);
+      color: #0a1220;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.2s ease;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 36px rgba(24, 119, 242, 0.35);
+    }
+    button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .button-secondary {
+      background: transparent;
+      color: var(--fb-text);
+      border: 1px solid var(--fb-border);
+      box-shadow: none;
+    }
+    .button-outline {
+      background: rgba(63, 209, 255, 0.12);
+      color: var(--fb-text);
+      border: 1px solid rgba(63, 209, 255, 0.35);
+    }
+    .grid-two {
+      display: grid;
+      gap: 18px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .stats {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    }
+    .stat {
+      background: rgba(13, 19, 30, 0.85);
+      border: 1px solid var(--fb-border);
+      border-radius: 12px;
+      padding: 12px;
+    }
+    .stat-label { color: var(--fb-muted); font-size: 0.85rem; }
+    .stat-value { font-size: 1.2rem; font-weight: 700; margin-top: 4px; }
+    .chat-feed {
+      background: #0c121c;
+      border: 1px solid var(--fb-border);
+      border-radius: 12px;
+      min-height: 280px;
+      max-height: 420px;
+      overflow: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .chat-line {
+      display: grid;
+      gap: 4px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(38, 52, 75, 0.6);
+    }
+    .chat-line:last-child { border-bottom: none; padding-bottom: 0; }
+    .chat-header {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      font-weight: 600;
+    }
+    .chat-time {
+      color: var(--fb-muted);
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .chat-text {
+      color: rgba(233, 240, 255, 0.9);
+      word-break: break-word;
+    }
+    details {
+      border: 1px solid var(--fb-border);
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: rgba(8, 12, 19, 0.65);
+    }
+    summary { cursor: pointer; font-weight: 600; }
+    code {
+      background: rgba(8, 12, 19, 0.8);
+      padding: 2px 6px;
+      border-radius: 6px;
+      border: 1px solid var(--fb-border);
+    }
+    .token-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .token-row label {
+      margin: 0;
+      font-weight: 500;
+    }
+    .footer-note {
+      color: var(--fb-muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="content">
+      <section class="panel hero" style="--delay: 0.02s;">
+        <h1>Facebook Live API bridge</h1>
+        <p>Collect live chat messages from Facebook using the Graph API. This page runs inside the Chrome extension or Electron app, and relays normalized chat events into Social Stream.</p>
+        <div class="hero-actions">
+          <button id="connect-btn">Connect</button>
+          <button id="disconnect-btn" class="button-secondary" disabled>Disconnect</button>
+          <button id="resolve-btn" class="button-outline">Resolve live video</button>
+          <span class="status-chip" id="status-chip">Disconnected</span>
+        </div>
+        <div class="hint" id="status-detail">Waiting for access token and live video ID.</div>
+      </section>
+
+      <section class="panel" style="--delay: 0.08s;">
+        <h2>Connection settings</h2>
+        <div class="grid">
+          <div>
+            <label for="access-token">Access token</label>
+            <input id="access-token" type="password" placeholder="EAAB...">
+            <div class="hint">Token is stored locally in this browser profile. Use a Page access token with Live Video permissions.</div>
+            <div class="token-row">
+              <label><input type="checkbox" id="show-token"> Show token</label>
+            </div>
+          </div>
+          <div>
+            <label for="video-id">Live video ID</label>
+            <input id="video-id" type="text" placeholder="123456789012345">
+            <div class="hint">Paste the live video ID or a URL that contains /videos/ID.</div>
+          </div>
+          <div>
+            <label for="page-id">Page ID or page name</label>
+            <input id="page-id" type="text" placeholder="yourpage">
+            <div class="hint">Used by the Resolve button to find the currently live video.</div>
+          </div>
+          <div>
+            <label for="poll-interval">Poll interval (ms)</label>
+            <input id="poll-interval" type="number" min="1500" max="30000" step="250">
+            <div class="hint">Shorter intervals improve latency but cost more API calls.</div>
+          </div>
+        </div>
+        <div class="row">
+          <label><input type="checkbox" id="auto-connect"> Auto-connect</label>
+          <label><input type="checkbox" id="live-filter" checked> Use live stream filter</label>
+          <label><input type="checkbox" id="viewer-count"> Poll viewer count</label>
+        </div>
+      </section>
+
+      <section class="panel" style="--delay: 0.14s;">
+        <h2>Status</h2>
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-label">Connection</div>
+            <div class="stat-value" id="status-text">Disconnected</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Messages relayed</div>
+            <div class="stat-value" id="message-count">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Errors</div>
+            <div class="stat-value" id="error-count">0</div>
+          </div>
+          <div class="stat">
+            <div class="stat-label">Last poll</div>
+            <div class="stat-value" id="last-poll">-</div>
+          </div>
+        </div>
+        <details style="margin-top: 12px;">
+          <summary>API setup notes</summary>
+          <div class="hint" style="margin-top: 10px;">
+            <p>1) Create a Facebook App in developers.facebook.com and enable the Graph API.</p>
+            <p>2) Generate a Page access token with permissions such as pages_read_engagement and pages_read_user_content.</p>
+            <p>3) Paste the token above, then enter a live video ID or use Resolve to detect the current broadcast.</p>
+            <p>4) You can auto-connect by adding <code>?videoId=VIDEO_ID&amp;access_token=TOKEN&amp;autoconnect=1</code> to the URL.</p>
+          </div>
+        </details>
+      </section>
+
+      <section class="panel" style="--delay: 0.2s;">
+        <h2>Live chat feed</h2>
+        <div id="chat-feed" class="chat-feed">
+          <div id="chat-empty" class="hint">No messages yet.</div>
+        </div>
+      </section>
+
+      <div class="footer-note">Keep this page open while you want Facebook Live messages to relay into Social Stream.</div>
+    </div>
+  </div>
+
+  <script src="facebook.js"></script>
+</body>
+</html>

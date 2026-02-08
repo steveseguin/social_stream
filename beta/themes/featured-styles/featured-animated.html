@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Message - Animated Styles</title>
+    <link rel="icon" href="../../favicon.ico" />
+    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif, 'NotoColorEmojiLimited';
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Import Google Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&family=Space+Grotesk:wght@700&display=swap');
+
+        #output {
+            width: 90%;
+            max-width: 900px;
+            position: relative;
+            min-height: 100px;
+        }
+
+        /* Base message structure */
+        .message-container {
+            position: relative;
+            margin: 20px 0;
+            width: 100%;
+            overflow: visible;
+        }
+
+        /* Style 1: Bounce & Glow - Energetic bounce with trail effect */
+        @keyframes bounceInWithTrail {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(100px);
+            }
+            20% {
+                opacity: 0.2;
+                transform: scale(0.5) translateY(80px);
+            }
+            40% {
+                opacity: 0.4;
+                transform: scale(0.7) translateY(60px);
+            }
+            60% {
+                opacity: 0.7;
+                transform: scale(1.1) translateY(-20px);
+            }
+            80% {
+                opacity: 0.9;
+                transform: scale(0.95) translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .style-bounce .message-container {
+            animation: bounceInWithTrail 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            position: relative;
+        }
+
+        .style-bounce .message-container::before,
+        .style-bounce .message-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: inherit;
+            border-radius: inherit;
+            opacity: 0;
+            z-index: -1;
+        }
+
+        .style-bounce .message-container.show::before {
+            animation: bounceTrail 0.8s ease-out;
+        }
+
+        .style-bounce .message-container.show::after {
+            animation: bounceTrail 0.8s 0.1s ease-out;
+        }
+
+        @keyframes bounceTrail {
+            0%, 100% { opacity: 0; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(1.1); }
+        }
+
+        .style-bounce .message {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .style-bounce .message::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3) translateY(100px);
+            }
+            50% {
+                transform: scale(1.05) translateY(-10px);
+            }
+            70% {
+                transform: scale(0.95) translateY(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+        }
+
+        /* Style 2: Slide & Flip */
+        .style-slide .message-container {
+            perspective: 1000px;
+            animation: slideInRotate 0.8s ease-out;
+        }
+
+        .style-slide .message {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 30px;
+            border-radius: 16px;
+            border: 2px solid;
+            border-image: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) 1;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .style-slide .avatar {
+            animation: avatarFloat 3s ease-in-out infinite;
+        }
+
+        @keyframes slideInRotate {
+            0% {
+                opacity: 0;
+                transform: translateX(-100%) rotateY(-90deg);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0) rotateY(0);
+            }
+        }
+
+        @keyframes avatarFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Style 3: Typewriter Effect - Terminal boot sequence */
+        @keyframes terminalBoot {
+            0% {
+                opacity: 0;
+                transform: translateY(20px) scaleY(0.1);
+                filter: blur(10px);
+            }
+            20% {
+                opacity: 0.5;
+                transform: translateY(20px) scaleY(0.3);
+                filter: blur(5px) brightness(2);
+            }
+            40% {
+                opacity: 0.8;
+                transform: translateY(10px) scaleY(0.7);
+                filter: blur(2px) brightness(1.5);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(5px) scaleY(1.1);
+                filter: blur(0) brightness(1.2);
+            }
+            80% {
+                transform: translateY(0) scaleY(0.95);
+                filter: brightness(1);
+            }
+            100% {
+                transform: translateY(0) scaleY(1);
+                filter: brightness(1);
+            }
+        }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        .style-typewriter .message-container {
+            animation: terminalBoot 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .style-typewriter .message-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(to bottom, transparent, #0ff, transparent);
+            animation: scanline 2s linear infinite;
+            opacity: 0.5;
+        }
+
+        .style-typewriter .message {
+            background: #0f0f0f;
+            color: #0ff;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            position: relative;
+            border: 1px solid #0ff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+
+        .style-typewriter .text {
+            position: relative;
+            overflow: visible;
+            white-space: normal;
+            animation: typewriterReveal 2s ease-out forwards;
+        }
+        
+        .style-typewriter .text::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: -3px;
+            width: 3px;
+            height: 100%;
+            background: #0ff;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes typewriterReveal {
+            0% {
+                opacity: 0;
+                filter: blur(5px);
+                transform: translateX(-10px);
+            }
+            50% {
+                opacity: 0.7;
+                filter: blur(2px);
+            }
+            100% {
+                opacity: 1;
+                filter: blur(0);
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Style 4: Comic Book Pop */
+        .style-comic .message-container {
+            animation: comicPop 0.6s ease-out;
+        }
+
+        .style-comic .message {
+            background: #fff;
+            color: #000;
+            padding: 20px;
+            border: 4px solid #000;
+            border-radius: 16px;
+            position: relative;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            box-shadow: 8px 8px 0 #000;
+        }
+
+        .style-comic .message::before {
+            content: 'NEW!';
+            position: absolute;
+            top: -15px;
+            right: 20px;
+            background: #ff0000;
+            color: #fff;
+            padding: 5px 15px;
+            border: 3px solid #000;
+            border-radius: 8px;
+            transform: rotate(-5deg);
+            font-size: 14px;
+            box-shadow: 3px 3px 0 #000;
+        }
+
+        .style-comic .username {
+            color: #ff0000;
+            text-transform: uppercase;
+            font-size: 24px;
+        }
+
+        @keyframes comicPop {
+            0% {
+                transform: scale(0) rotate(-180deg);
+                opacity: 0;
+            }
+            50% {
+                transform: scale(1.2) rotate(10deg);
+            }
+            100% {
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+        }
+
+        /* Style 5: Holographic */
+        .style-holo .message-container {
+            animation: holoGlitch 0.8s ease-out;
+        }
+
+        .style-holo .message {
+            background: rgba(0, 20, 40, 0.9);
+            color: #00ffff;
+            padding: 25px;
+            border-radius: 0;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #00ffff;
+            box-shadow: 
+                0 0 20px rgba(0, 255, 255, 0.5),
+                inset 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .style-holo .message::before,
+        .style-holo .message::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                rgba(0, 255, 255, 0.03) 50%,
+                transparent 100%
+            );
+            animation: holoScan 3s linear infinite;
+        }
+
+        .style-holo .message::after {
+            animation-delay: 1.5s;
+        }
+
+        @keyframes holoGlitch {
+            0%, 100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            20% {
+                opacity: 0.8;
+                transform: translateX(-2px);
+            }
+            40% {
+                opacity: 0.8;
+                transform: translateX(2px);
+            }
+            60% {
+                opacity: 0.8;
+                transform: translateX(-1px);
+            }
+        }
+
+        @keyframes holoScan {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+
+        /* Common elements */
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 0; /* Important for flex text wrapping */
+            width: 100%;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .username {
+            font-weight: 700;
+            font-size: 20px;
+        }
+
+        .badges {
+            display: flex;
+            gap: 4px;
+        }
+
+        .badge {
+            height: 20px;
+        }
+
+        .source-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.8;
+        }
+
+        .text {
+            font-size: 18px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            white-space: normal;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Inline images/SVGs in chat messages */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em; /* Relative to text size */
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+        }
+        
+        /* Emote-specific sizing */
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
+        }
+
+        .donation-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-top: 12px;
+            animation: donationPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes donationPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .style-bounce .donation-tag {
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        .style-slide .donation-tag {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: #fff;
+        }
+
+        .style-typewriter .donation-tag {
+            background: #0ff;
+            color: #000;
+            font-family: monospace;
+        }
+
+        .style-comic .donation-tag {
+            background: #ffff00;
+            color: #000;
+            border: 2px solid #000;
+            box-shadow: 3px 3px 0 #000;
+        }
+
+        .style-holo .donation-tag {
+            background: transparent;
+            color: #00ffff;
+            border: 1px solid #00ffff;
+            text-shadow: 0 0 5px currentColor;
+        }
+
+        /* Exit animations - Style-specific exits */
+        
+        /* Bounce style exit - Implode with particles */
+        @keyframes bounceImplode {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.2) rotate(5deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(720deg);
+                filter: blur(10px);
+            }
+        }
+
+        .style-bounce .message-container.exit {
+            animation: bounceImplode 0.6s cubic-bezier(0.55, 0.055, 0.675, 0.19) forwards;
+        }
+
+        /* Slide style exit - Warp away */
+        @keyframes warpAway {
+            0% {
+                opacity: 1;
+                transform: perspective(1000px) rotateY(0) translateZ(0) scaleX(1);
+            }
+            100% {
+                opacity: 0;
+                transform: perspective(1000px) rotateY(90deg) translateZ(500px) scaleX(0.1);
+                filter: blur(20px);
+            }
+        }
+
+        .style-slide .message-container.exit {
+            animation: warpAway 0.8s ease-in forwards;
+        }
+
+        /* Typewriter exit - Terminal shutdown */
+        @keyframes terminalShutdown {
+            0% {
+                opacity: 1;
+                transform: scaleY(1);
+                filter: brightness(1);
+            }
+            20% {
+                opacity: 1;
+                transform: scaleY(1);
+                filter: brightness(2) contrast(2);
+            }
+            40% {
+                opacity: 1;
+                transform: scaleY(0.5);
+                filter: brightness(0.5) blur(1px);
+            }
+            60% {
+                opacity: 1;
+                transform: scaleY(0.1);
+                filter: brightness(3) blur(2px);
+            }
+            80% {
+                opacity: 0.5;
+                transform: scaleY(0.01);
+                filter: brightness(0) blur(5px);
+            }
+            100% {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+        }
+
+        .style-typewriter .message-container.exit {
+            animation: terminalShutdown 0.5s ease-in forwards;
+            transform-origin: center;
+        }
+
+        /* Comic exit - Comic poof */
+        @keyframes comicPoof {
+            0% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.5) rotate(180deg);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(360deg);
+                filter: blur(20px);
+            }
+        }
+
+        .style-comic .message-container.exit {
+            animation: comicPoof 0.5s ease-out forwards;
+        }
+
+        /* Holo exit - Digital disintegration */
+        @keyframes digitalDisintegrate {
+            0% {
+                opacity: 1;
+                transform: translateX(0);
+                filter: none;
+            }
+            20% {
+                opacity: 1;
+                transform: translateX(-2px);
+                filter: hue-rotate(90deg);
+            }
+            40% {
+                opacity: 0.8;
+                transform: translateX(2px);
+                filter: hue-rotate(180deg) blur(1px);
+            }
+            60% {
+                opacity: 0.6;
+                transform: translateX(-4px) skewX(10deg);
+                filter: hue-rotate(270deg) blur(2px);
+            }
+            80% {
+                opacity: 0.3;
+                transform: translateX(4px) skewX(-10deg);
+                filter: hue-rotate(360deg) blur(5px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(0) skewX(45deg) scaleY(0.1);
+                filter: blur(10px);
+            }
+        }
+
+        .style-holo .message-container.exit {
+            animation: digitalDisintegrate 0.7s ease-out forwards;
+        }
+
+        /* Hide empty elements */
+        .badges:empty,
+        .donation-tag:empty {
+            display: none;
+        }
+
+        /* Content image */
+        .content-image {
+            max-width: 400px;
+            max-height: 400px;
+            margin-top: 12px;
+            border-radius: 8px;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            #output {
+                width: 95%;
+            }
+            
+            .message {
+                padding: 16px;
+            }
+            
+            .text {
+                font-size: 16px;
+            }
+            
+            .username {
+                font-size: 18px;
+            }
+            
+            .avatar {
+                width: 48px;
+                height: 48px;
+            }
+        }
+        
+        /* Style-specific overflow fixes */
+        .style-bounce .message,
+        .style-slide .message,
+        .style-comic .message,
+        .style-holo .message {
+            overflow: visible;
+            min-height: fit-content;
+        }
+        
+        /* Ensure typewriter doesn't clip */
+        .style-typewriter .message {
+            overflow: visible;
+            min-height: fit-content;
+        }
+        
+        .style-typewriter .text::after {
+            display: none; /* Remove the CSS cursor in favor of JS one */
+        }
+    </style>
+</head>
+<body>
+    <div id="output"></div>
+
+    <script src="../../tts.js"></script>
+    <script>
+        // Configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get('session') || urlParams.get('room') || urlParams.get('roomid') || 'TESTROOM';
+        const style = urlParams.get('style') || 'bounce'; // bounce, slide, typewriter, comic, holo
+        const password = urlParams.get('password') || 'false';
+        const showtime = parseInt(urlParams.get('showtime') || '30000');
+        
+        // Apply style
+        document.body.className = `style-${style}`;
+
+        // State
+        let messageTimeout = null;
+        let currentMessage = null;
+
+        // Create VDO.Ninja iframe
+        function createIframe() {
+            const iframe = document.createElement('iframe');
+			iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+            iframe.style.width = '0px';
+            iframe.style.height = '0px';
+            iframe.style.position = 'fixed';
+            iframe.style.left = '-100px';
+            iframe.style.top = '-100px';
+            iframe.id = 'vdoninja';
+            iframe.allow = 'microphone';
+            document.body.appendChild(iframe);
+
+            // Listen for messages
+            window.addEventListener('message', function(e) {
+                if (e.source !== iframe.contentWindow) return;
+                
+                if ('dataReceived' in e.data) {
+                    if ('overlayNinja' in e.data.dataReceived) {
+                        const data = e.data.dataReceived.overlayNinja;
+                        
+                        // Skip response messages
+                        if (data && 'response' in data) {
+                            return;
+                        }
+                        
+                        // Process the message with proper format
+                        processData({ contents: data });
+                    }
+                }
+            });
+        }
+
+        // Process incoming data
+        function processData(data) {
+            console.log('Processing data:', data);
+            
+            // Handle clear command
+            if (!data || data === false) {
+                clearMessage();
+                return;
+            }
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                clearMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
+            if (data && data.contents) {
+                displayMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processData({ contents: data.content });
+                } else {
+                    clearMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            displayMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    clearMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                displayMessage(data);
+            }
+        }
+
+        // Display message
+        function displayMessage(content) {
+            if (!content.chatmessage && !content.chatname) return;
+
+            clearMessage(() => {
+                const container = document.createElement('div');
+                container.className = 'message-container';
+                
+                const message = document.createElement('div');
+                message.className = 'message';
+
+                // Avatar
+                if (content.chatimg) {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = content.chatimg;
+                    avatar.onerror = () => {
+                        avatar.src = '../../sources/images/unknown.png';
+                    };
+                    message.appendChild(avatar);
+                }
+
+                // Content
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'content';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'header';
+
+                // Username
+                if (content.chatname) {
+                    const username = document.createElement('div');
+                    username.className = 'username';
+                    username.innerHTML = content.chatname;
+                    if (content.nameColor && style !== 'comic') {
+                        username.style.color = content.nameColor;
+                    }
+                    header.appendChild(username);
+                }
+
+                // Badges
+                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                    const badges = document.createElement('div');
+                    badges.className = 'badges';
+                    content.chatbadges.forEach(badge => {
+                        if (typeof badge === 'string') {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge;
+                            badges.appendChild(img);
+                        }
+                    });
+                    header.appendChild(badges);
+                }
+
+                // Source icon
+                if (content.type) {
+                    const icon = document.createElement('img');
+                    icon.className = 'source-icon';
+                    icon.src = `../../sources/images/${content.type}.png`;
+                    icon.onerror = () => { icon.style.display = 'none'; };
+                    header.appendChild(icon);
+                }
+
+                contentDiv.appendChild(header);
+
+                // Message text
+                if (content.chatmessage) {
+                    const text = document.createElement('div');
+                    text.className = 'text';
+                    
+                    // For typewriter effect, we can still use HTML
+                    if (style === 'typewriter') {
+                        text.innerHTML = content.chatmessage;
+                        // Add a typewriter cursor effect
+                        const cursor = document.createElement('span');
+                        cursor.className = 'typewriter-cursor';
+                        cursor.style.cssText = 'display: inline-block; width: 3px; height: 1.2em; background: #0ff; animation: blink 1s infinite; margin-left: 2px;';
+                        text.appendChild(cursor);
+                        
+                        // Remove cursor after animation
+                        setTimeout(() => {
+                            if (cursor.parentNode) {
+                                cursor.remove();
+                            }
+                        }, 3000);
+                    } else {
+                        text.innerHTML = content.chatmessage;
+                    }
+                    
+                    contentDiv.appendChild(text);
+                }
+
+                // Donation/Membership
+                if (content.hasDonation || content.membership) {
+                    const tag = document.createElement('div');
+                    tag.className = 'donation-tag';
+                    
+                    if (content.hasDonation) {
+                        tag.textContent = content.title ? 
+                            `💰 ${content.title}: ${content.hasDonation}` : 
+                            `💰 ${content.hasDonation}`;
+                    } else if (content.membership) {
+                        tag.textContent = `⭐ ${typeof content.membership === 'string' ? content.membership : 'Member'}`;
+                    }
+                    
+                    contentDiv.appendChild(tag);
+                }
+
+                // Content image
+                if (content.contentimg) {
+                    const img = document.createElement('img');
+                    img.className = 'content-image';
+                    img.src = content.contentimg;
+                    contentDiv.appendChild(img);
+                }
+
+                message.appendChild(contentDiv);
+                container.appendChild(message);
+                
+                document.getElementById('output').appendChild(container);
+                currentMessage = container;
+
+                // TTS
+                if (window.speak && urlParams.has('tts')) {
+                    const ttsText = content.chatmessage ? 
+                        content.chatmessage.replace(/<[^>]*>/g, '') : '';
+                    if (ttsText) {
+                        window.speak(content.chatname + ' says ' + ttsText);
+                    }
+                }
+
+                // Auto-hide
+                if (messageTimeout) clearTimeout(messageTimeout);
+                messageTimeout = setTimeout(() => {
+                    clearMessage();
+                }, showtime);
+            });
+        }
+
+        // Clear message
+        function clearMessage(callback) {
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+                messageTimeout = null;
+            }
+
+            if (currentMessage) {
+                currentMessage.classList.add('exit');
+                // Different exit timings for different styles
+                const exitTime = {
+                    bounce: 600,
+                    slide: 800,
+                    typewriter: 500,
+                    comic: 500,
+                    holo: 700
+                }[style] || 600;
+                
+                setTimeout(() => {
+                    if (currentMessage && currentMessage.parentNode) {
+                        currentMessage.parentNode.removeChild(currentMessage);
+                    }
+                    currentMessage = null;
+                    if (callback) callback();
+                }, exitTime);
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        // Initialize TTS
+        if (urlParams.has('tts') && window.initTTS) {
+            window.initTTS({
+                lang: urlParams.get('tts') || 'en-US',
+                pitch: parseFloat(urlParams.get('pitch') || '1'),
+                rate: parseFloat(urlParams.get('rate') || '1'),
+                voice: urlParams.get('voice') || null
+            });
+        }
+
+        // Initialize iframe
+        createIframe();
+    </script>
+</body>
+</html>

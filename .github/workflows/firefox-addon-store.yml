@@ -1,0 +1,161 @@
+name: Firefox Add-on Store Submission
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      channel:
+        description: AMO channel (unlisted = immediate signing, listed = store review)
+        type: choice
+        options: [unlisted, listed]
+        default: unlisted
+
+permissions:
+  contents: write
+
+env:
+  FIREFOX_BUILD_DIR: firefox-build
+  ARTIFACTS_DIR: web-ext-artifacts
+  FIREFOX_BRANCH: firefox
+  FIREFOX_FILE_NAME: social-stream-ninja.xpi
+
+jobs:
+  submit-firefox-addon:
+    if: github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip firefox]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Read manifest version
+        id: manifest
+        run: |
+          set -euo pipefail
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare Firefox build
+        run: |
+          set -euo pipefail
+          chmod +x scripts/prepare-chrome-web-store.sh
+          chmod +x scripts/prepare-firefox.sh
+          ./scripts/prepare-firefox.sh
+
+      - name: Install web-ext CLI
+        run: npm install --global web-ext@8
+
+      - name: Submit to Firefox Add-ons Store
+        id: submit
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+          WEB_EXT_CHANNEL: ${{ github.event.inputs.channel || 'unlisted' }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${AMO_JWT_ISSUER:-}" || -z "${AMO_JWT_SECRET:-}" ]]; then
+            echo "AMO credentials missing. Set AMO_JWT_ISSUER and AMO_JWT_SECRET secrets." >&2
+            exit 1
+          fi
+
+          mkdir -p "${ARTIFACTS_DIR}"
+          rm -f "${ARTIFACTS_DIR}"/*.xpi || true
+
+          echo "Submitting to AMO (channel: ${WEB_EXT_CHANNEL})..."
+
+          attempt=1
+          max_attempts=4
+          backoff=30
+
+          # For unlisted: wait up to 15 min for signed XPI
+          # For listed: don't wait (review takes days)
+          if [[ "$WEB_EXT_CHANNEL" == "unlisted" ]]; then
+            TIMEOUT_ARG=""
+          else
+            TIMEOUT_ARG="--approval-timeout 0"
+          fi
+
+          while true; do
+            if web-ext sign \
+              --api-key "$AMO_JWT_ISSUER" \
+              --api-secret "$AMO_JWT_SECRET" \
+              --channel "$WEB_EXT_CHANNEL" \
+              --source-dir "$FIREFOX_BUILD_DIR" \
+              --artifacts-dir "$ARTIFACTS_DIR" \
+              --amo-metadata "scripts/amo-metadata.json" \
+              $TIMEOUT_ARG; then
+              echo "Submission to AMO succeeded!"
+              break
+            fi
+
+            if (( attempt >= max_attempts )); then
+              echo "web-ext sign failed after ${attempt} attempts" >&2
+              exit 1
+            fi
+            echo "web-ext sign failed (attempt ${attempt}/${max_attempts}). Retrying in ${backoff}s..." >&2
+            sleep "$backoff"
+            attempt=$((attempt + 1))
+            backoff=$((backoff * 2))
+          done
+
+          # Check if we got a signed XPI (unlisted channel gives immediate XPI, listed does not)
+          if ls "${ARTIFACTS_DIR}"/*.xpi >/dev/null 2>&1; then
+            echo "Signed XPI available!"
+            echo "has_xpi=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No XPI yet (listed channel - pending review)"
+            echo "has_xpi=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload signed XPI artifact
+        if: steps.submit.outputs.has_xpi == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-addon-${{ steps.manifest.outputs.version }}
+          path: ${{ env.ARTIFACTS_DIR }}/*.xpi
+          if-no-files-found: warn
+
+      - name: Publish XPI to firefox branch
+        if: steps.submit.outputs.has_xpi == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          XPI_PATH=$(ls "$GITHUB_WORKSPACE/${ARTIFACTS_DIR}"/*.xpi | head -n 1)
+          if [[ -z "${XPI_PATH:-}" ]]; then
+            echo "Signed XPI not found" >&2
+            exit 1
+          fi
+
+          TMP_DIR=$(mktemp -d)
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git clone --depth 1 "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$TMP_DIR"
+
+          cd "$TMP_DIR"
+          git checkout --orphan "$FIREFOX_BRANCH"
+          find . -mindepth 1 -not -path './.git' -not -path './.git/*' -exec rm -rf {} + || true
+          cp "$XPI_PATH" "$FIREFOX_FILE_NAME"
+          git add "$FIREFOX_FILE_NAME"
+          git commit -m "Firefox Add-on v${{ steps.manifest.outputs.version }}"
+          git push -f origin "$FIREFOX_BRANCH"
+
+          echo "Published to branch '$FIREFOX_BRANCH'"
+          echo "Direct link: https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/${FIREFOX_BRANCH}/${FIREFOX_FILE_NAME}"
+
+      - name: Upload submission logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firefox-submission-logs-${{ github.run_id }}
+          path: ${{ env.ARTIFACTS_DIR }}/*.log
+          if-no-files-found: ignore

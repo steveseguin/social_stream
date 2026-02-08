@@ -1,0 +1,143 @@
+<!--
+IMPORTANT INSTRUCTIONS FOR AI ASSISTANTS:
+This template is for creating custom emote-wall overlays that work with Social Stream.
+The following components are CRITICAL and must be preserved in any modifications:
+
+1. IFRAME CONNECTION:
+   - The iframe element and its connection to vdo.socialstream.ninja
+   - The message event listener for iframe communication
+   - The session and password URL parameter handling
+
+2. EMOTE PROCESSING:
+   - The processEmotes() function's parsing of messages for emojis/emotes
+   - The extraction and handling of emotes, images, and SVGs
+   - The basic error handling for images
+
+3. CORE FLOW:
+   - The processInput() -> processEmotes() -> createEmoteElement() -> animateElement() chain
+
+CUSTOMIZATION AREAS:
+- CSS styles in the <style> section
+- Element structure in createEmoteElement()
+- Animation logic in animateElement()
+- Additional features can be added but must not interfere with core message processing
+
+For all modifications, ensure the critical components above remain functional.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="robots" content="noindex">
+    <meta name="description" content="A customizable emote wall overlay template for Social Stream">
+    <meta name="author" content="Template based on Social Stream by Steve Seguin">
+    <meta property="og:title" content="Emote Wall Template">
+    <meta property="og:description" content="A customizable emote wall overlay template for Social Stream">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Emote Wall Template">
+    <meta name="twitter:description" content="A customizable emote wall overlay template for Social Stream">
+    <title>Emote Wall Template</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+        /* Add your custom styles here */
+    </style>
+</head>
+<body id="output">
+    <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomID = urlParams.get('session') || urlParams.get('s') || urlParams.get('id') || 'test';
+    const password = urlParams.get('password') || 'false';
+
+    // Core connection setup
+    const iframe = document.createElement("iframe");
+    iframe.src = `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&notmobile&password=${password}&solo&view=${roomID}&novideo&noaudio&label=dock&cleanoutput&room=${roomID}`;
+    iframe.style.cssText = "width:0;height:0;position:fixed;left:-100px;top:-100px;";
+    document.body.appendChild(iframe);
+
+    // Message handler for iframe data
+    window.addEventListener("message", (e) => {
+        if (e.source !== iframe.contentWindow) return;
+        if ("dataReceived" in e.data && "overlayNinja" in e.data.dataReceived) {
+            processInput(e.data.dataReceived.overlayNinja);
+        }
+    });
+
+    function processInput(data) {
+        if (!data.chatmessage) return;
+        processEmotes(data);
+    }
+
+    function processEmotes(data) {
+        // Parse message content
+        const tmp = document.createElement("div");
+        tmp.innerHTML = data.chatmessage;
+
+        // Extract emotes, images, and SVGs
+        const svgs = [...tmp.querySelectorAll("svg")];
+        const images = [...tmp.querySelectorAll("img")];
+        const text = tmp.textContent || tmp.innerText || "";
+        const emojis = text.match(/(\p{Regional_Indicator}\p{Regional_Indicator}|\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier}|\u200D\p{Emoji})*|\p{Emoji_Component}\uFE0F/gu) || [];
+
+        // Process images
+        images.forEach(img => {
+            if (img.parentNode?.classList.contains("zero-width-parent")) {
+                img.className = "zero-width-emote";
+            }
+            img.removeAttribute("width");
+            img.removeAttribute("height");
+            img.onerror = function() {
+                if (this.alt?.length === 2) {
+                    this.outerHTML = this.alt;
+                } else {
+                    this.remove();
+                }
+            };
+            createEmoteElement(img);
+        });
+
+        // Process emojis
+        emojis.forEach(emoji => {
+            if (["🏻","🏼","🏾","🏾","🏾"].includes(emoji)) return;
+            const span = document.createElement('span');
+            span.textContent = emoji;
+            createEmoteElement(span);
+        });
+
+        // Process SVGs
+        svgs.forEach(svg => {
+            svg.setAttribute("width", "100%");
+            svg.setAttribute("height", "100%");
+            createEmoteElement(svg);
+        });
+    }
+
+    function createEmoteElement(element) {
+        const container = document.createElement('div');
+        container.appendChild(element);
+        
+        // User customization point - Add your classes and styles
+        container.className = "emote";
+        
+        // User customization point - Add your animation logic
+        animateElement(container);
+        
+        document.getElementById('output').appendChild(container);
+    }
+
+    function animateElement(element) {
+        // User customization point - Add your animation code
+        // Example:
+        // element.style.position = 'absolute';
+        // element.style.left = Math.random() * window.innerWidth + 'px';
+        // element.style.top = Math.random() * window.innerHeight + 'px';
+    }
+    </script>
+</body>
+</html>
