@@ -278,17 +278,17 @@ function toDataURL(blobUrl, callback) {
 
 	setInterval(function(){
 		try {
-			if (document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div')){
-				if (!document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div').marked){
-					document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class] > div').marked=true;
-					document.querySelectorAll('#q-app main > div > div[class]>div, .app-body > [class] > [class] > [class] > div').forEach(ele=>{
+			if (document.querySelector('#q-app main > div > div[class], .main-content-area >  [class] > [class] > [class] > div')){
+				if (!document.querySelector('#q-app main > div > div[class], .main-content-area >  [class] > [class] > [class] > div').marked){
+					document.querySelector('#q-app main > div > div[class], .main-content-area >  [class] > [class] > [class] > div').marked=true;
+					[...document.querySelectorAll('#q-app main > div > div[class]>div, .main-content-area >  [class] > [class] > [class] > div')].forEach(ele=>{
 						try {
-							//processMessage(ele);
+							processMessage(ele);
 							ele.marked = true;
 						} catch(e){}
 					});
 					
-					onElementInserted(document.querySelector('#q-app main > div > div[class], .app-body > [class] > [class] > [class]'));
+					onElementInserted(document.querySelector('#q-app main > div > div[class], .main-content-area  > [class] > [class] > [class]'));
 				}
 			}
 		} catch(e){}
