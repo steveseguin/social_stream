@@ -3351,6 +3351,12 @@
 				highlightSpecial = false;
 			}
 
+			var highlightFirstTimers = true;
+			if (urlParams.has("nofirsttimehighlight")) {
+				highlightFirstTimers = false;
+				document.documentElement.style.setProperty("--firstime-bgcolor", "unset");
+			}
+
 			var highlightDonos = true;
 			if (urlParams.has("nodonohighlight")) {
 				highlightDonos = false;
@@ -9590,7 +9596,7 @@
 						node.classList.add("member");
 					}
 					
-					if (data.firsttime) {
+					if (data.firsttime && highlightFirstTimers) {
 						node.classList.add("firsttime");
 					}
 
