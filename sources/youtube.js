@@ -592,7 +592,11 @@
 				}
 				//console.log(messageHistory);
 			} else if (eventType == "jeweldonation"){
-				// allow without an id.
+				// Content-based dedup for jewel donations which may lack stable IDs.
+				// Prevents duplicates when moderation actions cause YouTube to re-render DOM elements.
+				var contentKey = "jd_" + (ele.textContent || "").trim().substring(0, 200);
+				if (messageHistory.has(contentKey)) return 5;
+				messageHistory.add(contentKey);
 		    } else {
 				return 6; // no id.
 		    }
