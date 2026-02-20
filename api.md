@@ -265,7 +265,7 @@ The channel system allows for more granular control over message routing:
 
 When specifying channels, you're defining which channels to receive messages from (IN_CHANNEL) and which to send messages to (OUT_CHANNEL). This allows different components of your setup to communicate on separate channels, reducing noise and improving organization.
 
-When a message is sent, it goes to the specified output channel. Those who have that channel set as their input channel will recieve the message.
+When a message is sent, it goes to the specified output channel. Those who have that channel set as their input channel will receive the message.
 
 ### Available Commands
 
