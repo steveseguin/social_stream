@@ -849,7 +849,7 @@ export class KickPlugin extends BasePlugin {
         if (data.chatroom_id) {
           return {
             chatroomId: String(data.chatroom_id),
-            channelId: data.broadcaster_user_id ? String(data.broadcaster_user_id) : null,
+            channelId: data.channel_id ? String(data.channel_id) : null,
             userId: data.broadcaster_user_id ? String(data.broadcaster_user_id) : null
           };
         }

@@ -1623,6 +1623,7 @@ function applyExtensionSettings(newSettings) {
     resetThirdPartyEmoteCache();
     mergeEmotes();
     requestThirdPartyEmotes({ force: true });
+    syncKickViewerHeartbeat(false);
 }
 
 function notifyApp(payload) {
@@ -2375,8 +2376,18 @@ function isKickViewerTransportConnected() {
     return state.bridge?.status === 'connected' || state.socket?.status === 'connected';
 }
 
+function shouldTrackKickViewerCount() {
+    return (
+        isSettingEnabled('showviewercount') ||
+        isSettingEnabled('hypemode')
+    );
+}
+
 function shouldRunKickViewerHeartbeat() {
     if (!state.channelSlug) {
+        return false;
+    }
+    if (!shouldTrackKickViewerCount()) {
         return false;
     }
     if (!isKickViewerTransportConnected()) {
@@ -2411,11 +2422,13 @@ function emitKickViewerUpdate(count) {
     kickViewerHeartbeat.hasKnownCount = true;
     kickViewerHeartbeat.lastSentAt = Date.now();
     updateKickViewerCountDisplay(normalizedCount);
-    pushMessage({
-        type: 'kick',
-        event: 'viewer_update',
-        meta: normalizedCount
-    });
+    if (shouldTrackKickViewerCount()) {
+        pushMessage({
+            type: 'kick',
+            event: 'viewer_update',
+            meta: normalizedCount
+        });
+    }
     return normalizedCount;
 }
 

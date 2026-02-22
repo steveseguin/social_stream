@@ -563,7 +563,7 @@ class EventFlowEditor {
                                     <div class="trigger-group-items" style="${group.expanded ? '' : 'display: none;'}">
                                         ${group.triggers.map(trigger => `
                                             ${(() => {
-                                                const isDisabled = !this.isSSApp && trigger.id === 'customJs';
+                                                const isDisabled = !this.eventFlowSystem.customJsEvalSupported && trigger.id === 'customJs';
                                                 const label = isDisabled ? `${trigger.name} (Desktop only)` : trigger.name;
                                                 return `<div class="node-item trigger ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="trigger" data-subtype="${trigger.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
                                                     ${label}
@@ -585,7 +585,7 @@ class EventFlowEditor {
                                     <div class="action-group-items" style="${group.expanded ? '' : 'display: none;'}">
                                         ${group.actions.map(action => `
                                             ${(() => {
-                                                const isDisabled = !this.isSSApp && action.id === 'customJs';
+                                                const isDisabled = !this.eventFlowSystem.customJsEvalSupported && action.id === 'customJs';
                                                 const label = isDisabled ? `${action.name} (Desktop only)` : action.name;
                                                 return `<div class="node-item action ${isDisabled ? 'disabled-node-item' : ''}" data-nodetype="action" data-subtype="${action.id}" data-disabled="${isDisabled ? 'true' : 'false'}" draggable="${isDisabled ? 'false' : 'true'}" title="${isDisabled ? 'Unavailable in extension mode due browser CSP (unsafe-eval blocked).' : ''}" style="${isDisabled ? 'opacity:0.55; cursor:not-allowed;' : ''}">
                                                     ${label}
@@ -3664,7 +3664,7 @@ class EventFlowEditor {
 				break;
 			// --- Custom JS Trigger ---
 			case 'customJs': // Assuming 'customJs' can be a trigger, action, or logic type based on context
-				if (!this.isSSApp) {
+				if (!this.eventFlowSystem.customJsEvalSupported) {
 					html += `<div class="property-group"><div class="property-help" style="color:#f0ad4e;">Custom Code execution is disabled in extension mode due browser CSP restrictions. Use SSApp desktop.</div></div>`;
 				}
 				if (node.type === 'trigger') {

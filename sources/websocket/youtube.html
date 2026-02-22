@@ -2153,8 +2153,9 @@ function enableBackgroundKeepAlive() {
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 const stats = data.items[0];
-                if (stats.liveStreamingDetails && stats.liveStreamingDetails.concurrentViewers) {
-                    lastKnownViewers = stats.liveStreamingDetails.concurrentViewers;
+                const concurrentViewers = stats?.liveStreamingDetails?.concurrentViewers;
+                if (concurrentViewers !== undefined && concurrentViewers !== null && concurrentViewers !== '') {
+                    lastKnownViewers = concurrentViewers;
                 } else if (lastKnownViewers === null) {
                     lastKnownViewers = 0;
                 }
@@ -2172,6 +2173,37 @@ function enableBackgroundKeepAlive() {
         }
         updateStats('viewer_update', { meta: lastKnownViewers });
     }
+
+    function isViewerTrackingEnabled() {
+        const currentSettings = settings && typeof settings === 'object' ? settings : {};
+        return Boolean(
+            currentSettings.showviewercount ||
+            currentSettings.hypemode
+        );
+    }
+
+    function shouldPollStreamStats() {
+        return isViewerTrackingEnabled();
+    }
+
+    function stopStreamStatsPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    function syncStreamStatsPolling() {
+        stopStreamStatsPolling();
+        if (!currentStream || !currentStream.id || !liveChatId || !shouldPollStreamStats()) {
+            return;
+        }
+        getStreamStats();
+        pollInterval = setInterval(() => {
+            getStreamStats();
+        }, 30000);
+    }
+
     async function getSubscriberCount(channelIdForSubs) {
         const token = getStoredToken();
         if (!token) return;
@@ -2200,7 +2232,7 @@ function enableBackgroundKeepAlive() {
 		});
 		activeTimeouts.clear();
 		
-		if (pollInterval) clearInterval(pollInterval);
+		stopStreamStatsPolling();
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
@@ -2211,7 +2243,6 @@ function enableBackgroundKeepAlive() {
 		}
 		
 		foregroundPollingInterval = null;
-		pollInterval = null;
 		channelStatsInterval = null;
 		fetchTimeout = null;
 		lastKnownViewers = null;
@@ -2295,7 +2326,7 @@ function enableBackgroundKeepAlive() {
 					}
 				}
 				if (stats.viewCount) {
-					if (settings.showviewcount || settings.hypemode) {
+					if (isViewerTrackingEnabled()) {
 						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount }));
 					}
 				}
@@ -2437,8 +2468,9 @@ function enableBackgroundKeepAlive() {
             connectMessageDiv.innerText = `Target: ${channelDisplayNameToUse} - Stream: ${streamTitleToUse || 'N/A'}`;
             document.getElementById('textarea').appendChild(connectMessageDiv);
             if (streamInfoToUse) {
-                if (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.concurrentViewers) {
-                    lastKnownViewers = streamInfoToUse.liveStreamingDetails.concurrentViewers;
+                const initialConcurrentViewers = streamInfoToUse?.liveStreamingDetails?.concurrentViewers;
+                if (initialConcurrentViewers !== undefined && initialConcurrentViewers !== null && initialConcurrentViewers !== '') {
+                    lastKnownViewers = initialConcurrentViewers;
                 } else {
                     lastKnownViewers = 0;
                 }
@@ -2485,19 +2517,11 @@ function enableBackgroundKeepAlive() {
                  document.getElementById('textarea').appendChild(noChatMessage);
             }
             // Clear existing intervals
-            if (pollInterval) clearInterval(pollInterval);
+            stopStreamStatsPolling();
             if (channelStatsInterval) clearInterval(channelStatsInterval);
             
-            // Stream stats (viewers & likes) - interval based on settings
-            if (currentStream && currentStream.id && liveChatId) {
-                // Get stream stats immediately
-                getStreamStats();
-                // Update interval: 30 seconds if showing viewer count, 2 minutes otherwise
-                const statsInterval = (settings.showviewercount || settings.hypemode) ? 30000 : 120000;
-                pollInterval = setInterval(() => {
-                    getStreamStats();
-                }, statsInterval);
-            }
+            // Stream stats (viewers & likes) - poll only when viewer tracking is enabled
+            syncStreamStatsPolling();
             
             // Channel stats (subscribers) - every 30 minutes
             if (effectiveChannelIdToUse) {
@@ -3149,7 +3173,7 @@ function enableBackgroundKeepAlive() {
 		switch(type) {
 			case 'viewer_update':
 				document.getElementById('viewer-count').textContent = data.meta;
-				if (settings.showviewercount || settings.hypemode){
+				if (isViewerTrackingEnabled()){
 					pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'viewer_update', meta: data.meta }));
 				}
 				break;
@@ -3403,6 +3427,7 @@ function enableBackgroundKeepAlive() {
 				if ("settings" in e.detail) {
 					settings = e.detail.settings;
 					console.log('settings updated:', settings);
+					syncStreamStatsPolling();
 				}
 			}
 		};
