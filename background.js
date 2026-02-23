@@ -4103,6 +4103,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "collecttwitchpoints") {
 				pushSettingChange();
 			}
+			if (request.setting == "kickchatroomscout") {
+				pushSettingChange();
+			}
 			if (request.setting == "detweet") {
 				pushSettingChange();
 			}
