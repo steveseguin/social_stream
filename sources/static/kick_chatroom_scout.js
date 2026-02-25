@@ -4,6 +4,7 @@
     var requestQueue = Promise.resolve();
     var lastRequestAt = 0;
     var lastHref = "";
+    var warnedMissingToken = false;
     var warnedAuthFailure = false;
     var slugAttemptState = new Map();
     var pendingSlugs = new Set();
@@ -115,6 +116,7 @@
     function resetScoutHaltState() {
         scoutHalted = false;
         scoutHaltReason = "";
+        warnedMissingToken = false;
         warnedAuthFailure = false;
     }
 
@@ -494,9 +496,12 @@
         };
     }
 
-    async function postChatroomSeed(slug, chatroomId, broadcasterUserId) {
-        var tokenState = await getStoredBridgeToken();
-        var accessToken = tokenState && tokenState.accessToken ? tokenState.accessToken : "";
+    async function postChatroomSeed(slug, chatroomId, broadcasterUserId, accessTokenOverride) {
+        var accessToken = typeof accessTokenOverride === "string" ? accessTokenOverride : "";
+        if (!accessToken) {
+            var tokenState = await getStoredBridgeToken();
+            accessToken = tokenState && tokenState.accessToken ? tokenState.accessToken : "";
+        }
         var headers = {
             "Content-Type": "application/json",
             "Accept": "application/json"
@@ -573,6 +578,22 @@
             return;
         }
 
+        var tokenState = await getStoredBridgeToken().catch(function () {
+            return null;
+        });
+        var accessToken = tokenState && tokenState.accessToken ? tokenState.accessToken : "";
+        if (!accessToken) {
+            // No token is expected before Kick websocket sign-in. Keep scouting active in lookup-only mode.
+            if (!warnedMissingToken) {
+                warnedMissingToken = true;
+                warn("Bridge cache seeding is running in lookup-only mode until a Kick token is synced. Open the Kick websocket page and sign in once.");
+            }
+            updateSlugState(slug, {
+                nextAllowedAt: now + RECHECK_INTERVAL_MS
+            });
+            return;
+        }
+
         var kickChannel = await fetchKickChannel(slug).catch(function () {
             return { ok: false, status: 0 };
         });
@@ -587,7 +608,7 @@
 
         log("Kick channel resolved for @" + slug + " -> chatroom_id " + kickChannel.chatroomId + ", broadcaster_user_id " + kickChannel.broadcasterUserId);
 
-        var seedResult = await postChatroomSeed(slug, kickChannel.chatroomId, kickChannel.broadcasterUserId).catch(function () {
+        var seedResult = await postChatroomSeed(slug, kickChannel.chatroomId, kickChannel.broadcasterUserId, accessToken).catch(function () {
             return { status: 0, usedAuth: false };
         });
         var status = parsePositiveInt(seedResult && seedResult.status);
@@ -602,20 +623,24 @@
         }
 
         if (status === 401 || status === 403) {
+            var usedAuth = seedResult && seedResult.usedAuth === true;
             var authFailureDetails = seedResult && seedResult.error ? ("; " + seedResult.error) : "";
-            warn("Bridge cache auth failure for @" + slug + " (status " + status + ", auth " + (seedResult && seedResult.usedAuth === true ? "yes" : "no") + authFailureDetails + ")");
-            if (!warnedAuthFailure) {
-                warnedAuthFailure = true;
-                if (seedResult && seedResult.usedAuth === false) {
+            warn("Bridge cache auth failure for @" + slug + " (status " + status + ", auth " + (usedAuth ? "yes" : "no") + authFailureDetails + ")");
+            if (!usedAuth) {
+                if (!warnedMissingToken) {
+                    warnedMissingToken = true;
                     warn("Bridge cache POST rejected without auth token. Open the Kick websocket page and sign in once so the extension can sync a token.");
-                } else {
-                    warn("Bridge cache POST returned an authorization error. Stopping scout checks for this tab session.");
                 }
+            } else if (!warnedAuthFailure) {
+                warnedAuthFailure = true;
+                warn("Bridge cache POST returned an authorization error. Stopping scout checks for this tab session.");
             }
             updateSlugState(slug, {
-                nextAllowedAt: now + AUTH_RETRY_MS
+                nextAllowedAt: now + (usedAuth ? AUTH_RETRY_MS : RECHECK_INTERVAL_MS)
             });
-            haltScout("bridge rejected cache seed (" + status + ")");
+            if (usedAuth) {
+                haltScout("bridge rejected cache seed (" + status + ")");
+            }
             return;
         }
 

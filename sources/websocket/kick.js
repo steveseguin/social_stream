@@ -3362,12 +3362,13 @@ async function handleAuthCallback() {
     const expectedState = sessionStorage.getItem(STATE_KEY);
     if (!returnedState || returnedState !== expectedState) {
         log('State mismatch during OAuth callback.', 'error');
-        return true;
+        // Validation failed, so bootstrap should continue with normal stored-token initialization.
+        return false;
     }
     const verifier = sessionStorage.getItem(CODE_VERIFIER_KEY);
     if (!verifier) {
         log('Missing PKCE verifier for OAuth exchange.', 'error');
-        return true;
+        return false;
     }
 
     sessionStorage.removeItem(STATE_KEY);

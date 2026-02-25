@@ -72,6 +72,18 @@
 	
 	
 	var dataIndex = -5;
+
+	function getMessageIndex(ele) {
+		if (!ele || !ele.dataset) {
+			return NaN;
+		}
+		var rawIndex = ele.dataset.itemIndex || ele.dataset.index;
+		if (typeof rawIndex === "undefined") {
+			return NaN;
+		}
+		var parsed = parseInt(rawIndex, 10);
+		return Number.isFinite(parsed) ? parsed : NaN;
+	}
 	
 	var channelName = "";
 	
@@ -89,7 +101,8 @@
 			}
 		}
 		
-		if (ele.skip){
+		var messageIndex = getMessageIndex(ele);
+		if (!Number.isNaN(messageIndex) && (messageIndex <= dataIndex)) {
 			return;
 		}
 
@@ -140,17 +153,9 @@
 			return;
 		}
 		
-		if (ele.dataset.index){
-			let indexx = parseInt(ele.dataset.index);
-			if (indexx>dataIndex){
-				dataIndex = indexx;
-			} else {
-				//console.log("bad dataIndex");
-				return;
-			}
+		if (!Number.isNaN(messageIndex) && (messageIndex > dataIndex)) {
+			dataIndex = messageIndex;
 		}
-		
-		ele.skip = true;
 		
 		
 		var data = {};
@@ -272,20 +277,40 @@
 	
 	
 	function onElementInserted(target) {
+		var scheduleProcess = function(node) {
+			try {
+				if (!node || node.nodeType !== 1) {
+					return;
+				}
+				if (node.matches && node.matches("[data-item-index],[data-index]")) {
+					setTimeout(function() {
+						processMessage(node);
+					}, 200);
+				}
+				if (node.querySelectorAll) {
+					node.querySelectorAll("[data-item-index],[data-index]").forEach(function(item) {
+						setTimeout(function() {
+							processMessage(item);
+						}, 200);
+					});
+				}
+			} catch (e) {
+				console.error("Error scheduling blaze node:", e);
+			}
+		};
+
 		var onMutationsObserved = function(mutations) {
 			mutations.forEach(function(mutation) {
+				if (mutation.type === "attributes") {
+					scheduleProcess(mutation.target);
+					return;
+				}
 				if (mutation.addedNodes.length) {
 					//console.log(mutation.addedNodes);
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
 							const addedNode = mutation.addedNodes[i];
-							if (addedNode.nodeType !== 1) continue; // Only process element nodes
-
-							if (addedNode.skip){continue;}
-
-							setTimeout(()=>{
-									processMessage(addedNode);
-							},300);
+							scheduleProcess(addedNode);
 
 						} catch(e){
 							console.error("Error processing added node:", e);
@@ -295,7 +320,12 @@
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = {
+			childList: true,
+			subtree: true,
+			attributes: true,
+			attributeFilter: ["data-index", "data-item-index", "data-known-size"]
+		};
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -322,9 +352,15 @@
 					console.log("CONNECTED chat detected");
 
 					setTimeout(function(){
-						dataIndex = 0;
+						dataIndex = -1;
+						container.querySelectorAll("[data-item-index],[data-index]").forEach(function(item){
+							var indexx = getMessageIndex(item);
+							if (!Number.isNaN(indexx) && (indexx > dataIndex)) {
+								dataIndex = indexx;
+							}
+						});
 						onElementInserted(container);
-					},2000);
+					},1000);
 				}
 				checkViewers();
 			} catch(e){}
