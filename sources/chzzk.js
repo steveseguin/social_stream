@@ -67,6 +67,8 @@ function toDataURL(url, callback) {
 	var CHAT_DONATION_AMOUNT_SELECTOR = "[class*='live_chatting_donation_message_money__'], [class^='live_chatting_donation_message_money']";
 	var CHAT_BADGE_SELECTOR = "[class*='badge_container'] img[src], [class*='live_chatting_badge'] img[src]";
 	var DUPLICATE_WINDOW_MS = 1200;
+	var INITIAL_BACKLOG_SUPPRESS_MS = 10000;
+	var startupSuppressUntil = Date.now() + INITIAL_BACKLOG_SUPPRESS_MS;
 	var recentlySeenMessages = new Map();
 
 	function shouldSkipDuplicate(name, msg){
@@ -92,6 +94,12 @@ function toDataURL(url, callback) {
 			return;
 		}
 		if (!force && ele.dataset && ele.dataset.ssnProcessed === "1"){
+			return;
+		}
+		if (Date.now() < startupSuppressUntil){
+			if (ele.dataset){
+				ele.dataset.ssnProcessed = "1";
+			}
 			return;
 		}
 
@@ -131,13 +139,21 @@ function toDataURL(url, callback) {
 		try {
 			var donationAmountEle = ele.querySelector(CHAT_DONATION_AMOUNT_SELECTOR);
 			if (donationAmountEle){
+				var donationUnit = "";
+				var donationUnitEle = donationAmountEle.querySelector(".blind, [class*='blind']");
+				if (donationUnitEle && donationUnitEle.textContent){
+					donationUnit = donationUnitEle.textContent.trim();
+				}
 				var amountClone = donationAmountEle.cloneNode(true);
 				amountClone.querySelectorAll(".blind, [class*='blind']").forEach(function(hiddenNode){
 					hiddenNode.remove();
 				});
 				var donationAmount = (amountClone.textContent || "").replace(/\s+/g, "").replace(/[^0-9.,]/g, "").trim();
 				if (donationAmount){
-					hasDonation = escapeHtml(donationAmount + " cheese");
+					if (!donationUnit){
+						donationUnit = "치즈";
+					}
+					hasDonation = escapeHtml(donationAmount + " " + donationUnit);
 				}
 			}
 		} catch(e){
