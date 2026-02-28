@@ -59,13 +59,44 @@ function toDataURL(url, callback) {
 		});
 		return resp;
 	}
+
+	var CHAT_WRAPPER_SELECTOR = "[class*='live_chatting_list_wrapper__'], [class^='live_chatting_list_wrapper']";
+	var CHAT_ITEM_SELECTOR = "[class*='live_chatting_list_item__'], [class^='live_chatting_list_item']";
+	var CHAT_NAME_SELECTOR = "[class*='live_chatting_username_nickname__'], [class^='live_chatting_username_nickname']";
+	var CHAT_TEXT_SELECTOR = "[class*='live_chatting_message_text__'], [class^='live_chatting_message_text']";
+	var CHAT_BADGE_SELECTOR = "[class*='badge_container'] img[src], [class*='live_chatting_badge'] img[src]";
+	var DUPLICATE_WINDOW_MS = 1200;
+	var recentlySeenMessages = new Map();
+
+	function shouldSkipDuplicate(name, msg){
+		var now = Date.now();
+		var key = name + "::" + msg;
+		var previousSeenAt = recentlySeenMessages.get(key);
+		recentlySeenMessages.set(key, now);
+
+		if (recentlySeenMessages.size > 200){
+			recentlySeenMessages.forEach(function(timestamp, cacheKey){
+				if ((now - timestamp) > (DUPLICATE_WINDOW_MS * 2)){
+					recentlySeenMessages.delete(cacheKey);
+				}
+			});
+		}
+
+		return !!previousSeenAt && ((now - previousSeenAt) < DUPLICATE_WINDOW_MS);
+	}
 	
 	
 	function processMessage(ele){
-		console.log(ele);
+		if (!ele || ele.nodeType !== 1 || !ele.querySelector){
+			return;
+		}
+		if (ele.dataset && ele.dataset.ssnProcessed === "1"){
+			return;
+		}
+
 		var badges = [];
 		try{
-			 ele.querySelectorAll("[class^='badge_container'] img[src]").forEach(b=>{
+			 ele.querySelectorAll(CHAT_BADGE_SELECTOR).forEach(b=>{
 				badges.push(b.src);	
 			});
 		} catch(e){
@@ -74,24 +105,37 @@ function toDataURL(url, callback) {
 		var name="";
 		var namecolor = "";
 		try {
-			name = ele.querySelector("[class^='live_chatting_username_nickname']");
-			if (!name){
+			var nameEle = ele.querySelector(CHAT_NAME_SELECTOR);
+			if (!nameEle){
 				return;
 			}
-			if (name?.style?.color){
-				namecolor = name.style.color;
+			if (nameEle?.style?.color){
+				namecolor = nameEle.style.color;
 			}
-			name = name.textContent.trim();
+			name = nameEle.textContent.trim();
 			name = escapeHtml(name);
 		} catch(e){
 			
 		}
 		var msg="";
 		try {
-			ele.querySelectorAll("[class^='live_chatting_message_text']").forEach(xx=>{
+			ele.querySelectorAll(CHAT_TEXT_SELECTOR).forEach(xx=>{
 				msg+= getAllContentNodes(xx);
 			});
 		} catch(e){
+		}
+
+		if (!name || !msg){
+			return;
+		}
+		if (shouldSkipDuplicate(name, msg)){
+			if (ele.dataset){
+				ele.dataset.ssnProcessed = "1";
+			}
+			return;
+		}
+		if (ele.dataset){
+			ele.dataset.ssnProcessed = "1";
 		}
 		
 		
@@ -155,6 +199,42 @@ function toDataURL(url, callback) {
 
 	var lastURL =  "";
 	var observer = null;
+	var observedTarget = null;
+
+	function forEachMessageNode(node, callback){
+		if (!node || node.nodeType !== 1){
+			return;
+		}
+		if (node.matches && node.matches(CHAT_ITEM_SELECTOR)){
+			callback(node);
+		}
+		if (node.querySelectorAll){
+			node.querySelectorAll(CHAT_ITEM_SELECTOR).forEach(function(item){
+				callback(item);
+			});
+		}
+	}
+
+	function markExistingMessagesProcessed(target){
+		try{
+			target.querySelectorAll(CHAT_ITEM_SELECTOR).forEach(function(item){
+				if (item.dataset){
+					item.dataset.ssnProcessed = "1";
+				}
+			});
+		} catch(e){}
+	}
+
+	function scanUnprocessedMessages(target){
+		if (!target || !target.querySelectorAll){
+			return;
+		}
+		try{
+			target.querySelectorAll(CHAT_ITEM_SELECTOR).forEach(function(item){
+				processMessage(item);
+			});
+		} catch(e){}
+	}
 	
 	
 	function onElementInserted(target) {
@@ -167,14 +247,14 @@ function toDataURL(url, callback) {
 					
 					for (var i = 0, len = mutation.addedNodes.length; i < len; i++) {
 						try {
-							processMessage(mutation.addedNodes[i]);
+							forEachMessageNode(mutation.addedNodes[i], processMessage);
 						} catch(e){}
 					}
 				}
 			});
 		};
 		
-		var config = { childList: true, subtree: false };
+		var config = { childList: true, subtree: true };
 		var MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
 		
 		observer = new MutationObserver(onMutationsObserved);
@@ -185,18 +265,121 @@ function toDataURL(url, callback) {
 
 	setInterval(function(){
 		try {
-		if (document.querySelector('[class^="live_chatting_list_wrapper"]')){
-			if (!document.querySelector('[class^="live_chatting_list_wrapper"]').marked){
-				document.querySelector('[class^="live_chatting_list_wrapper"]').marked=true;
-				console.log("CONNECTED chat detected");
-				setTimeout(function(){
-					//document.querySelectorAll('[class^="live_chatting_list_wrapper"] > div').forEach(ele=>{
-					//	processMessage(ele);
-					//});
-					onElementInserted(document.querySelector('[class^="live_chatting_list_wrapper"]'));
-				},1000);
+			var chatWrapper = document.querySelector(CHAT_WRAPPER_SELECTOR);
+			if (!chatWrapper){
+				return;
 			}
-		}} catch(e){}
-	},2000);
+
+			if (observedTarget !== chatWrapper){
+				if (observer){
+					try {
+						observer.disconnect();
+					} catch(e){}
+				}
+				observedTarget = chatWrapper;
+				markExistingMessagesProcessed(chatWrapper); // don't flood old history into TTS on reconnect
+				onElementInserted(chatWrapper);
+				console.log("CONNECTED chat detected");
+			}
+
+			scanUnprocessedMessages(chatWrapper); // fallback in case a DOM update bypassed mutation delivery
+		} catch(e){}
+	},1500);
+	
+		///////// the following is a loopback webrtc trick to get chrome to not throttle this tab when not visible.
+	try {
+		var receiveChannelCallback = function (event) {
+			remoteConnection.datachannel = event.channel;
+			remoteConnection.datachannel.onmessage = function (e) {};
+			remoteConnection.datachannel.onopen = function (e) {};
+			remoteConnection.datachannel.onclose = function (e) {};
+			setInterval(function () {
+				remoteConnection.datachannel.send("KEEPALIVE");
+			}, 1000);
+		};
+		var errorHandle = function (e) {};
+		var localConnection = new RTCPeerConnection();
+		var remoteConnection = new RTCPeerConnection();
+		localConnection.onicecandidate = e => !e.candidate || remoteConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.onicecandidate = e => !e.candidate || localConnection.addIceCandidate(e.candidate).catch(errorHandle);
+		remoteConnection.ondatachannel = receiveChannelCallback;
+		localConnection.sendChannel = localConnection.createDataChannel("sendChannel");
+		localConnection.sendChannel.onopen = function (e) {
+			localConnection.sendChannel.send("CONNECTED");
+		};
+		localConnection.sendChannel.onclose = function (e) {};
+		localConnection.sendChannel.onmessage = function (e) {};
+		localConnection
+			.createOffer()
+			.then(offer => localConnection.setLocalDescription(offer))
+			.then(() => remoteConnection.setRemoteDescription(localConnection.localDescription))
+			.then(() => remoteConnection.createAnswer())
+			.then(answer => remoteConnection.setLocalDescription(answer))
+			.then(() => {
+				localConnection.setRemoteDescription(remoteConnection.localDescription);
+				console.log("KEEP ALIVE TRICk ENABLED");
+			})
+			.catch(errorHandle);
+	} catch (e) {
+		console.log(e);
+	}
+	
+	function simulateFocus(element) {
+		// Create and dispatch focusin event
+		const focusInEvent = new FocusEvent('focusin', {
+			view: window,
+			bubbles: true,
+			cancelable: true
+		});
+		element.dispatchEvent(focusInEvent);
+
+		// Create and dispatch focus event
+		const focusEvent = new FocusEvent('focus', {
+			view: window,
+			bubbles: false,
+			cancelable: true
+		});
+		element.dispatchEvent(focusEvent);
+	}
+
+	
+	function preventBackgroundThrottling() {
+		window.onblur = null;
+		window.blurred = false;
+		document.hidden = false;
+		document.mozHidden = false;
+		document.webkitHidden = false;
+		
+		document.hasFocus = () => true;
+		window.onFocus = () => true;
+
+		Object.defineProperties(document, {
+			mozHidden: { value: false, configurable: true },
+			msHidden: { value: false, configurable: true },
+			webkitHidden: { value: false, configurable: true },
+			hidden: { value: false, configurable: true, writable: true },
+			visibilityState: { 
+				get: () => "visible",
+				configurable: true
+			}
+		});
+	}
+
+	const events = [
+		"visibilitychange",
+		"webkitvisibilitychange",
+		"blur",
+		"mozvisibilitychange",
+		"msvisibilitychange"
+	];
+
+	events.forEach(event => {
+		window.addEventListener(event, (e) => {
+			e.stopImmediatePropagation();
+			e.preventDefault();
+		}, true);
+	});
+
+	setInterval(preventBackgroundThrottling, 200);
 
 })();
