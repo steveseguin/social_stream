@@ -62,6 +62,7 @@ function toDataURL(url, callback) {
 	
 	
 	function processMessage(ele){
+		console.log(ele);
 		var badges = [];
 		try{
 			 ele.querySelectorAll("[class^='badge_container'] img[src]").forEach(b=>{
@@ -77,7 +78,7 @@ function toDataURL(url, callback) {
 			if (!name){
 				return;
 			}
-			if (name.style.color){
+			if (name?.style?.color){
 				namecolor = name.style.color;
 			}
 			name = name.textContent.trim();

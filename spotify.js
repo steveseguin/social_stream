@@ -313,47 +313,167 @@ class SpotifyIntegration {
 						? `Connected to Spotify, but playback access is limited: ${warning}`
 						: 'Connected to Spotify!'
 				});
-			} catch (error) {
-				const message = error?.message || error?.toString() || 'Spotify authorization failed.';
-				console.error('Chrome identity Spotify auth error:', message);
-				this.notifySpotifyAuthResult({ success: false, error: message });
-		} finally {
-			this.identityAuthInFlight = false;
+				} catch (error) {
+					const normalized = this.normalizeOAuthError(error, {
+						runtime: 'extension',
+						redirectUriAttempted: redirectUri
+					});
+					console.error('Chrome identity Spotify auth error:', normalized.errorCode, normalized.error);
+					this.notifySpotifyAuthResult({
+						success: false,
+						errorCode: normalized.errorCode,
+						error: normalized.error,
+						message: normalized.message,
+						redirectUriAttempted: normalized.redirectUriAttempted,
+						expectedRedirectUris: normalized.expectedRedirectUris
+					});
+			} finally {
+				this.identityAuthInFlight = false;
+			}
 		}
-	}
 
-    normalizeLoopbackRedirectUri(uri) {
-        if (!uri || typeof uri !== 'string') {
-            return uri;
-        }
+	    normalizeLoopbackRedirectUri(uri) {
+	        if (!uri || typeof uri !== 'string') {
+	            return uri;
+	        }
 
-        try {
-            const parsed = new URL(uri);
-            if ((parsed.hostname === 'localhost' || parsed.hostname === '[::1]' || parsed.hostname === '::1') && parsed.port === '8888') {
-                parsed.hostname = '127.0.0.1';
-                return parsed.toString();
-            }
-        } catch (_) {
-            // Fall back to simple string replacement
-        }
+	        try {
+	            const parsed = new URL(uri);
+	            if (parsed.hostname === 'localhost' || parsed.hostname === '[::1]' || parsed.hostname === '::1') {
+	                parsed.hostname = '127.0.0.1';
+	                return parsed.toString();
+	            }
+	        } catch (_) {
+	            // Fall back to simple string replacement
+	        }
 
-        return uri.replace('http://localhost:8888', 'http://127.0.0.1:8888')
-                  .replace('https://localhost:8888', 'http://127.0.0.1:8888');
-    }
+	        return uri
+	            .replace('http://localhost:', 'http://127.0.0.1:')
+	            .replace('https://localhost:', 'http://127.0.0.1:');
+	    }
 
-    describeElectronOAuthError(error) {
-        const message = (error?.message || '').toLowerCase();
-        if (message.includes('eaddrinuse')) {
-            return 'Spotify login is already running. Close the existing browser window or wait a few seconds, then try again or paste the callback URL below.';
-        }
-        if (message.includes('timeout')) {
-            return 'Spotify did not finish signing in within five minutes. If the browser is still waiting, finish the login and paste the callback URL into Social Stream.';
-        }
-        if (message.includes('auth window closed')) {
-            return 'The Spotify login window closed before we received a response. Re-run the login or paste the callback URL below after finishing in your browser.';
-        }
-        return 'Spotify could not finish connecting automatically. Authorize the app in your regular browser and paste the callback URL into Social Stream Ninja.';
-    }
+	    getExpectedElectronRedirectUris(redirectUriAttempted = null) {
+	        const loopback = [
+	            'http://127.0.0.1:8888/callback',
+	            'http://127.0.0.1:8080/callback',
+	            'http://127.0.0.1:8181/callback'
+	        ];
+	        const attempted = this.normalizeLoopbackRedirectUri(redirectUriAttempted);
+	        const out = [];
+	        if (attempted) {
+	            out.push(attempted);
+	        }
+	        loopback.forEach((uri) => {
+	            if (!out.includes(uri)) {
+	                out.push(uri);
+	            }
+	        });
+	        return out;
+	    }
+
+	    createOAuthError(code, message, details = {}) {
+	        const error = new Error(message || 'Spotify OAuth failed');
+	        if (code) {
+	            error.code = code;
+	        }
+	        if (details && typeof details === 'object') {
+	            Object.assign(error, details);
+	        }
+	        return error;
+	    }
+
+	    normalizeOAuthError(error, context = {}) {
+	        const rawError = String(
+	            error?.error ||
+	            error?.message ||
+	            error?.toString?.() ||
+	            'Spotify authorization failed.'
+	        );
+
+	        let errorCode = String(error?.errorCode || error?.code || context.errorCode || '').toUpperCase();
+	        if (!errorCode) {
+	            const message = rawError.toLowerCase();
+	            if (
+	                message.includes('eaddrinuse') ||
+	                message.includes('address already in use') ||
+	                message.includes('port unavailable') ||
+	                message.includes('port_in_use') ||
+	                (message.includes('unable to bind') && message.includes('callback port'))
+	            ) {
+	                errorCode = 'PORT_IN_USE';
+	            } else if (message.includes('state mismatch')) {
+	                errorCode = 'STATE_MISMATCH';
+	            } else if ((message.includes('redirect') && message.includes('mismatch')) || message.includes('unexpected callback uri')) {
+	                errorCode = 'REDIRECT_MISMATCH';
+	            } else if (message.includes('timeout')) {
+	                errorCode = 'TIMEOUT';
+	            } else if (message.includes('closed by user') || message.includes('auth window closed') || message.includes('interrupted')) {
+	                errorCode = 'USER_CLOSED';
+	            } else {
+	                const explicitMatch = rawError.match(/\b(PORT_IN_USE|STATE_MISMATCH|REDIRECT_MISMATCH|TIMEOUT|USER_CLOSED)\b/i);
+	                errorCode = explicitMatch ? explicitMatch[1].toUpperCase() : 'OAUTH_ERROR';
+	            }
+	        }
+
+	        const runtime = context.runtime || (this.hasElectronBridge() ? 'electron' : 'extension');
+	        const attemptedRedirectUri = this.normalizeLoopbackRedirectUri(
+	            context.redirectUriAttempted ||
+	            error?.redirectUriAttempted ||
+	            error?.attemptedRedirectUri ||
+	            null
+	        );
+	        const expectedRedirectUris = Array.isArray(context.expectedRedirectUris) && context.expectedRedirectUris.length
+	            ? context.expectedRedirectUris
+	            : (Array.isArray(error?.expectedRedirectUris) && error.expectedRedirectUris.length
+	                ? error.expectedRedirectUris
+	                : (runtime === 'electron' ? this.getExpectedElectronRedirectUris(attemptedRedirectUri) : []));
+
+	        let message;
+	        switch (errorCode) {
+	            case 'PORT_IN_USE':
+	                message = 'Spotify could not bind a local callback port. Close other app/browser sessions using Spotify OAuth and try again.';
+	                break;
+	            case 'STATE_MISMATCH':
+	                message = 'Spotify callback state check failed. Re-run Spotify connect from the popup and use only the latest auth window/tab.';
+	                break;
+	            case 'REDIRECT_MISMATCH':
+	                message = 'Spotify redirected to an unexpected callback URI. Verify your Spotify app redirect URI list matches this runtime mode.';
+	                break;
+	            case 'TIMEOUT':
+	                message = 'Spotify login timed out before callback was received. Re-run connect and complete consent promptly.';
+	                break;
+	            case 'USER_CLOSED':
+	                message = 'Spotify login window was closed before authorization completed.';
+	                break;
+	            default:
+	                message = 'Spotify could not finish connecting automatically.';
+	                break;
+	        }
+
+	        if (attemptedRedirectUri) {
+	            message += ` Attempted redirect: ${attemptedRedirectUri}.`;
+	        }
+
+	        if (runtime === 'electron') {
+	            if (expectedRedirectUris.length) {
+	                message += ` Expected desktop redirect URIs include: ${expectedRedirectUris.join(', ')}.`;
+	            }
+	        } else if (runtime === 'extension') {
+	            message += ' Extension mode expects the chromiumapp callback URI generated by chrome.identity.';
+	        }
+
+	        return {
+	            errorCode,
+	            error: rawError,
+	            message,
+	            redirectUriAttempted: attemptedRedirectUri,
+	            expectedRedirectUris
+	        };
+	    }
+
+	    describeElectronOAuthError(error, context = {}) {
+	        return this.normalizeOAuthError(error, { ...context, runtime: 'electron' }).message;
+	    }
 
     async invokeElectronOAuth({ authUrl, redirectUri, state }) {
         const electronIpc = this.getElectronIpc();
@@ -393,12 +513,12 @@ class SpotifyIntegration {
             throw error;
         }
 
-        electronPromise
-            .then((result) => this.processElectronOAuthResult(result, {
-                state,
-                redirectUri: normalizedRedirect
-            }))
-            .catch((error) => this.handleElectronOAuthError(error, { state, scopes }));
+	        electronPromise
+	            .then((result) => this.processElectronOAuthResult(result, {
+	                state,
+	                redirectUri: normalizedRedirect
+	            }))
+	            .catch((error) => this.handleElectronOAuthError(error, { state, scopes, redirectUri: normalizedRedirect }));
 
         this.pendingElectronOAuth = electronPromise;
     }
@@ -431,20 +551,40 @@ class SpotifyIntegration {
 	                        error: 'Failed to process Spotify authorization response.'
 	                    });
                 }
-            } catch (error) {
-                console.error('Spotify OAuth callback processing failed:', error);
-                this.notifySpotifyAuthResult({
-                    success: false,
-                    error: error?.message || 'Spotify authorization failed while processing the callback.'
-                });
-            }
-            return;
-        }
+	            } catch (error) {
+	                console.error('Spotify OAuth callback processing failed:', error);
+	                const normalized = this.normalizeOAuthError(error, {
+	                    runtime: 'electron',
+	                    redirectUriAttempted: result?.redirectUri || redirectUri
+	                });
+	                this.notifySpotifyAuthResult({
+	                    success: false,
+	                    errorCode: normalized.errorCode,
+	                    error: normalized.error,
+	                    message: normalized.message,
+	                    redirectUriAttempted: normalized.redirectUriAttempted,
+	                    expectedRedirectUris: normalized.expectedRedirectUris
+	                });
+	            }
+	            return;
+	        }
 
-        if (result.error) {
-            this.notifySpotifyAuthResult({ success: false, error: result.error });
-            return;
-        }
+	        if (result.error || result.errorCode) {
+	            const normalized = this.normalizeOAuthError(result, {
+	                runtime: 'electron',
+	                redirectUriAttempted: result?.redirectUriAttempted || result?.attemptedRedirectUri || redirectUri,
+	                expectedRedirectUris: result?.expectedRedirectUris
+	            });
+	            this.notifySpotifyAuthResult({
+	                success: false,
+	                errorCode: normalized.errorCode,
+	                error: normalized.error,
+	                message: normalized.message,
+	                redirectUriAttempted: normalized.redirectUriAttempted,
+	                expectedRedirectUris: normalized.expectedRedirectUris
+	            });
+	            return;
+	        }
 
         if (result.waitingForManualCallback || result.manualAuthUrl || result.waitingForCallback) {
             this.notifySpotifyAuthResult({
@@ -457,22 +597,31 @@ class SpotifyIntegration {
         }
     }
 
-    handleElectronOAuthError(error, { state, scopes }) {
-        console.error('Electron OAuth error:', error);
-        const manualAuthUrl = this.buildAuthUrl({
-            redirectUri: this.browserRedirectUri,
-            scopes,
-            state
-        });
+	    handleElectronOAuthError(error, { state, scopes, redirectUri }) {
+	        console.error('Electron OAuth error:', error);
+	        const normalized = this.normalizeOAuthError(error, {
+	            runtime: 'electron',
+	            redirectUriAttempted: redirectUri,
+	            expectedRedirectUris: error?.expectedRedirectUris
+	        });
+	        const manualAuthUrl = this.buildAuthUrl({
+	            redirectUri: this.browserRedirectUri,
+	            scopes,
+	            state
+	        });
+	        const offerManualCallback = normalized.errorCode !== 'USER_CLOSED';
 
-        this.notifySpotifyAuthResult({
-            success: false,
-            waitingForManualCallback: true,
-            manualAuthUrl,
-            error: error?.message || error?.toString(),
-            message: this.describeElectronOAuthError(error)
-        });
-    }
+	        this.notifySpotifyAuthResult({
+	            success: false,
+	            waitingForManualCallback: offerManualCallback,
+	            manualAuthUrl: offerManualCallback ? manualAuthUrl : undefined,
+	            errorCode: normalized.errorCode,
+	            error: normalized.error,
+	            message: normalized.message,
+	            redirectUriAttempted: normalized.redirectUriAttempted,
+	            expectedRedirectUris: normalized.expectedRedirectUris
+	        });
+	    }
 
     async refreshAccessToken() {
         if (!this.refreshToken || !this.settings.spotifyClientId?.textsetting || !this.settings.spotifyClientSecret?.textsetting) {
@@ -1669,41 +1818,55 @@ class SpotifyIntegration {
 		            authUrl = this.buildAuthUrl({ redirectUri: preferredRedirectUri, scopes, state });
                 }
                 
-                try {
-                    this.launchElectronOAuthFlow({
-                        authUrl,
-                        redirectUri: preferredRedirectUri,
-                        state,
-                        scopes
-                    });
-                } catch (electronError) {
-                    console.error('Electron OAuth error:', electronError);
-                    const manualAuthUrl = this.buildAuthUrl({ redirectUri: this.browserRedirectUri, scopes, state });
-                    return {
-                        success: false,
-                        waitingForManualCallback: true,
-                        message: this.describeElectronOAuthError(electronError),
-                        error: electronError?.message,
-                        manualAuthUrl
-                    };
-                }
+	                try {
+	                    this.launchElectronOAuthFlow({
+	                        authUrl,
+	                        redirectUri: preferredRedirectUri,
+	                        state,
+	                        scopes
+	                    });
+	                } catch (electronError) {
+	                    console.error('Electron OAuth error:', electronError);
+	                    const normalized = this.normalizeOAuthError(electronError, {
+	                        runtime: 'electron',
+	                        redirectUriAttempted: preferredRedirectUri
+	                    });
+	                    const manualAuthUrl = this.buildAuthUrl({ redirectUri: this.browserRedirectUri, scopes, state });
+	                    return {
+	                        success: false,
+	                        waitingForManualCallback: true,
+	                        message: normalized.message,
+	                        errorCode: normalized.errorCode,
+	                        error: normalized.error,
+	                        redirectUriAttempted: normalized.redirectUriAttempted,
+	                        expectedRedirectUris: normalized.expectedRedirectUris,
+	                        manualAuthUrl
+	                    };
+	                }
 
-                return {
-                    success: false,
-                    waitingForCallback: true,
-                    message: 'Please finish the Spotify login in the newly opened browser window.'
-                };
-			} else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
-				chrome.tabs.create({ url: authUrl });
-				fallbackStatus = {
-					success: false,
-		            waitingForManualCallback: true,
-		            message: 'After authorizing Spotify in the newly opened tab, copy the full callback URL and paste it back into Social Stream Ninja to finish connecting.'
-		        };
-			} else {
-				window.open(authUrl, 'spotify-auth', 'width=500,height=700');
-				fallbackStatus = { success: false, waitingForCallback: true };
-		    }
+	                return {
+	                    success: false,
+	                    waitingForCallback: true,
+	                    message: 'Please finish the Spotify login in the newly opened browser window.',
+	                    redirectUriAttempted: preferredRedirectUri,
+	                    expectedRedirectUris: this.getExpectedElectronRedirectUris(preferredRedirectUri)
+	                };
+				} else if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.create) {
+					chrome.tabs.create({ url: authUrl });
+					fallbackStatus = {
+						success: false,
+			            waitingForManualCallback: true,
+			            message: 'After authorizing Spotify in the newly opened tab, copy the full callback URL and paste it back into Social Stream Ninja to finish connecting.',
+			            redirectUriAttempted: this.browserRedirectUri
+			        };
+				} else {
+					window.open(authUrl, 'spotify-auth', 'width=500,height=700');
+					fallbackStatus = {
+						success: false,
+						waitingForCallback: true,
+						redirectUriAttempted: preferredRedirectUri
+					};
+			    }
 
 		    return fallbackStatus;
 		}
@@ -1728,10 +1891,14 @@ class SpotifyIntegration {
             }
         }
         
-        if (!validState) {
-            console.error('State mismatch in OAuth callback');
-            return false;
-        }
+	        if (!validState) {
+	            console.error('State mismatch in OAuth callback');
+	            throw this.createOAuthError('STATE_MISMATCH', 'State mismatch in OAuth callback', {
+	                expectedState: this.pendingAuthState || null,
+	                receivedState: state || null,
+	                redirectUriAttempted: this.normalizeLoopbackRedirectUri(redirectUriOverride || this.getDefaultRedirectUri())
+	            });
+	        }
 
 	        const redirectUri = this.normalizeLoopbackRedirectUri(redirectUriOverride || this.getDefaultRedirectUri());
 	        await this.exchangeCodeForToken(code, redirectUri);
@@ -1753,9 +1920,25 @@ class SpotifyIntegration {
 
             const data = await response.json();
             
-            if (data.error) {
-                throw new Error(`Spotify token exchange failed: ${data.error} - ${data.error_description}`);
-            }
+	            if (data.error) {
+	                const details = {
+	                    spotifyError: data.error,
+	                    spotifyErrorDescription: data.error_description,
+	                    redirectUriAttempted: redirectUri
+	                };
+	                if (data.error === 'invalid_grant') {
+	                    throw this.createOAuthError(
+	                        'REDIRECT_MISMATCH',
+	                        `Spotify token exchange failed: ${data.error} - ${data.error_description || 'invalid_grant'}`,
+	                        details
+	                    );
+	                }
+	                throw this.createOAuthError(
+	                    'TOKEN_EXCHANGE_FAILED',
+	                    `Spotify token exchange failed: ${data.error} - ${data.error_description || 'unknown token exchange error'}`,
+	                    details
+	                );
+	            }
             
             if (data.access_token) {
                 this.accessToken = data.access_token;
