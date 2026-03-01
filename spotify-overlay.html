@@ -498,7 +498,7 @@ body {
 		connect();
 	}
 
-	if (urlParams.has("server")) {
+	if (urlParams.has("server") || urlParams.has("localserver")) {
 		const serverURL = urlParams.get("server") || (urlParams.has("localserver") ? "ws://127.0.0.1:3000" : "wss://io.socialstream.ninja/api");
 		setupSocket(serverURL, outChannel, inChannel);
 	}

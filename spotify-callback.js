@@ -64,7 +64,8 @@ function showAuthCallback() {
             };
             
             // Send via postMessage which will be intercepted by preload.js
-            window.postMessage(messageData, '*');
+            const sameWindowTargetOrigin = (window.location && window.location.origin) ? window.location.origin : '*';
+            window.postMessage(messageData, sameWindowTargetOrigin);
             
             // Also try the direct method as a fallback
             window.ninjafy.sendMessage(null, {
@@ -105,12 +106,18 @@ function showAuthCallback() {
         } else {
             // For web version, post message to parent or redirect
             if (window.opener) {
+                let openerTargetOrigin = '*';
+                try {
+                    if (document.referrer) {
+                        openerTargetOrigin = new URL(document.referrer).origin || '*';
+                    }
+                } catch (_) {}
                 window.opener.postMessage({
                     type: 'spotifyAuthCallback',
                     code: code,
                     state: state,
                     redirectUri: redirectUriFromLocation
-                }, '*');
+                }, openerTargetOrigin);
                 updateStatus('Successfully connected to Spotify! 🎵');
                 setTimeout(() => window.close(), 2000);
             } else {

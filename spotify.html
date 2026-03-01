@@ -157,7 +157,7 @@
 
         <div class="note">
             <strong>Spotify Development Mode update (2026):</strong><br />
-            Spotify now applies stricter Development Mode limits. Starting <strong>February 11, 2026</strong> for newly created apps, and <strong>March 9, 2026</strong> for existing apps, Development Mode requires Spotify Premium, allows one Development Mode Client ID per developer, and limits each app to up to five authorized users.
+            Per Spotify's February 2026 update, Development Mode now has stricter limits. Starting <strong>February 11, 2026</strong> for newly created apps, and <strong>March 9, 2026</strong> for existing apps, the app owner must have an active Spotify Premium subscription, developers are limited to one Development Mode Client ID, and each app can have up to five authorized users. For this Social Stream Spotify integration (playback/now-playing endpoints), Premium is required.
         </div>
 
         <div class="step">
@@ -211,7 +211,7 @@
                     <button class="copy-button" data-copy>Copy</button>
                 </div>
             </div>
-            <p class="note" style="margin-top:14px;">Tip: Keep this redirect list exactly in sync with the extension ID/build you are running. Desktop OAuth may use <code>127.0.0.1</code> callback ports <code>8888</code>, <code>8080</code>, or <code>8181</code>, so add all three loopback entries. Missing one URI can cause login to fail after consent.</p>
+            <p class="note" style="margin-top:14px;">Tip: Keep this redirect list exactly in sync with the extension ID/build you are running. Desktop OAuth uses <code>http://127.0.0.1:&lt;port&gt;/callback</code> with ports <code>8888</code>, <code>8080</code>, and <code>8181</code>, so add all three loopback entries exactly as shown. Missing one URI can cause login to fail after consent.</p>
         </div>
 
         <div class="step">
@@ -249,7 +249,7 @@
 
         <div class="note">
             <strong>If connection succeeds but playback commands fail:</strong><br />
-            Check that the Spotify account is Premium, the account is one of your app's authorized Development Mode users, and your app still has access to playback endpoints under Spotify's current Development Mode rules.
+            Check that the app owner has an active Premium subscription, the playback account is Premium, the account is one of your app's authorized Development Mode users, and your app still has access to playback endpoints under Spotify's current Development Mode rules.
         </div>
     </div>
     <div class="container" id="callback-container" style="display:none;">

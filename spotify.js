@@ -156,7 +156,7 @@ class SpotifyIntegration {
     }
 
     getDevelopmentModePolicyGuidance() {
-        return 'Spotify Development Mode changes (new apps from February 11, 2026; existing apps from March 9, 2026) require Premium, allow one Development Mode Client ID per developer, and limit each client to up to five authorized users.';
+        return 'Spotify Development Mode changes (new apps from February 11, 2026; existing apps from March 9, 2026) require an active Premium subscription for the app owner, allow one Development Mode Client ID per developer, and limit each client to up to five authorized users. This playback-based integration is effectively Premium-only.';
     }
 
     setAuthWarning(warning) {
@@ -1749,8 +1749,21 @@ class SpotifyIntegration {
             };
         }
 
+		const generateSecureAuthState = () => {
+			try {
+				if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+					const bytes = new Uint8Array(16);
+					crypto.getRandomValues(bytes);
+					return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+				}
+			} catch (stateError) {
+				console.warn('Failed to generate secure Spotify OAuth state:', stateError);
+			}
+			return `${Date.now().toString(36)}${Math.random().toString(36).substring(2, 12)}`;
+		};
+
 		const scopes = ['user-read-currently-playing', 'user-read-playback-state', 'user-modify-playback-state'];
-		const state = Math.random().toString(36).substring(7); // Generate random state for security
+		const state = generateSecureAuthState();
 
 		const persistAuthState = () => {
 			if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -1878,6 +1891,7 @@ class SpotifyIntegration {
 
 	        // Check state from memory or storage
 	        let validState = false;
+            let usedStoredState = false;
         
         if (state === this.pendingAuthState) {
             validState = true;
@@ -1886,8 +1900,7 @@ class SpotifyIntegration {
             const stored = await chrome.storage.local.get(['spotifyAuthState']);
             if (stored.spotifyAuthState === state) {
                 validState = true;
-                // Clean up stored state
-                await chrome.storage.local.remove(['spotifyAuthState']);
+                usedStoredState = true;
             }
         }
         
@@ -1902,6 +1915,18 @@ class SpotifyIntegration {
 
 	        const redirectUri = this.normalizeLoopbackRedirectUri(redirectUriOverride || this.getDefaultRedirectUri());
 	        await this.exchangeCodeForToken(code, redirectUri);
+            this.pendingAuthState = null;
+
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+                try {
+                    await chrome.storage.local.remove(['spotifyAuthState']);
+                } catch (storageError) {
+                    if (usedStoredState) {
+                        console.warn('Failed to clear Spotify auth state after callback:', storageError);
+                    }
+                }
+            }
+
 	        return true;
 	}
 

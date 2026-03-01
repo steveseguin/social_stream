@@ -217,7 +217,7 @@ function getSpotifyAuthTroubleshootingText(result = null) {
 		+ '1. Spotify integration is enabled\n'
 		+ '2. Client ID and Secret are filled in\n'
 		+ '3. Your redirect URIs are configured in Spotify app settings\n'
-		+ '4. The Spotify account is Premium and listed as an authorized Development Mode user (new app limits began February 11, 2026; existing app limits began March 9, 2026).';
+		+ '4. The app owner has active Premium, the playback account is Premium, and that account is listed as an authorized Development Mode user (new app limits began February 11, 2026; existing app limits began March 9, 2026).';
 	if (result?.errorCode) {
 		text += `\n5. OAuth error code: ${result.errorCode}`;
 	}
