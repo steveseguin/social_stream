@@ -11801,10 +11801,10 @@ async function applyBotActions(data, tab = false) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
-	const hadOriginalChatMessage = typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
-	if (hadOriginalChatMessage) {
-		data._originalChatMessage = data.chatmessage;
-	}
+	const originalChatMessage =
+		typeof data.chatmessage === "string" && data.chatmessage.trim() !== ""
+			? data.chatmessage
+			: null;
 
 	// Normalize to seconds for last activity comparisons (accept sec/ms/micro inputs)
 	const normalizeTimestampToSeconds = (value) => {
@@ -12262,7 +12262,7 @@ async function applyBotActions(data, tab = false) {
 		// Handle Spotify commands
 		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
 			// Pass message data for role-based permission checking
-			spotify.handleCommand(data._originalChatMessage || data.chatmessage, data).then(response => {
+			spotify.handleCommand(originalChatMessage || data.chatmessage, data).then(response => {
 				if (response) {
 					const botResponse = {
 						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
