@@ -767,6 +767,42 @@ document.addEventListener('DOMContentLoaded', function() {
 			`
 		},
 		{
+			name: 'Bongacams',
+			icon: 'bongacams.png',
+			description: 'Adult live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://bongacams.com/* or https://www.bongacams.com/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'CAM4',
+			icon: 'cam4.png',
+			description: 'Adult live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://cam4.com/* or https://www.cam4.com/*</li>
+				</ul>
+			`
+		},
+		{
+			name: 'Stripchat',
+			icon: 'stripchat.png',
+			description: 'Adult live streaming platform.',
+			type: 'standard',
+			instructions: `
+				<ul>
+					<li>No pop out needed</li>
+					<li>URL: https://stripchat.com/*</li>
+				</ul>
+			`
+		},
+		{
 			name: 'TwitCasting',
 			icon: 'twitcasting.png',
 			description: 'Japanese live streaming platform.',
