@@ -1616,14 +1616,16 @@ function enableBackgroundKeepAlive() {
 					showSocketInterface();
 				} else {
 					console.warn('Authenticated but unable to load YouTube profile from channels?mine=true');
-					showAuthButton();
-					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile. If this is quota-related, add your own YouTube API key and sign in again.');
+					showSocketInterface();
+					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
+					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile due to API quota. You remain signed in; add your own API key or try again after quota resets.');
 				}
 			}).catch(error => {
 				if (isQuotaError(error)) {
 					console.error('Quota exceeded while validating YouTube account after sign-in:', error);
-					showAuthButton();
-					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. Add your own YouTube API key, then sign out and sign in again.');
+					showSocketInterface();
+					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
+					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. You remain signed in; add your own API key or try again later.');
 					return;
 				}
 				if (error.message && error.message.includes('401')) {
