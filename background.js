@@ -14,6 +14,10 @@ var ninjaBridge = null;
 var useNinjaSDK = false; // toggled via URL param &sdk, or can be wired to settings in future
 
 var settings = {};
+var settingsBackupKey = "settings_backup";
+var lastBackupTime = 0;
+var BACKUP_INTERVAL_MS = 300000; // 5 minutes
+
 var messageTimeout = {};
 var lastSentMessage = "";
 var lastSentTimestamp = 0;
@@ -1265,6 +1269,47 @@ function validateRoomId(roomId) {
 var relaytargets = false;
 var loadedFirst = false;
 
+// Settings backup functions to prevent data loss
+function backupSettings() {
+	if (!settings || Object.keys(settings).length === 0) return;
+	
+	const now = Date.now();
+	if (now - lastBackupTime < BACKUP_INTERVAL_MS) return;
+	
+	lastBackupTime = now;
+	
+	try {
+		const backup = {
+			settings: JSON.parse(JSON.stringify(settings)),
+			timestamp: now,
+			streamID: streamID
+		};
+		chrome.storage.local.set({ [settingsBackupKey]: backup });
+		log("Settings backed up at", new Date(now).toISOString());
+	} catch(e) {
+		console.error("Failed to backup settings:", e);
+	}
+}
+
+async function restoreFromBackup() {
+	return new Promise((resolve) => {
+		chrome.storage.local.get([settingsBackupKey], (result) => {
+			if (result && result[settingsBackupKey] && result[settingsBackupKey].settings) {
+				const backup = result[settingsBackupKey];
+				log("Restoring settings from backup dated", new Date(backup.timestamp).toISOString());
+				settings = backup.settings;
+				chrome.storage.local.set({ settings });
+				resolve(true);
+			} else {
+				resolve(false);
+			}
+		});
+	});
+}
+
+// Backup settings periodically
+setInterval(backupSettings, BACKUP_INTERVAL_MS);
+
 function loadSettings(item, resave = false) {
 	log("loadSettings (or saving new settings)", item);
 	let reloadNeeded = false;
@@ -1343,6 +1388,20 @@ function loadSettings(item, resave = false) {
 		Object.keys(patterns).forEach(pattern=>{
 			settings[pattern] = findExistingEvents(pattern,{ settings });
 		})
+		
+		// Backup settings immediately after loading valid settings
+		backupSettings();
+	} else if (!settings || Object.keys(settings).length === 0) {
+		// Settings empty, try to restore from backup
+		restoreFromBackup().then((restored) => {
+			if (restored) {
+				log("Settings restored from backup successfully");
+				Object.keys(patterns).forEach(pattern=>{
+					settings[pattern] = findExistingEvents(pattern,{ settings });
+				});
+				updateExtensionState(false);
+			}
+		});
 	}
 
 	const incomingState = (item && "state" in item) ? item.state : storedState;
