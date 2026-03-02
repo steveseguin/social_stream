@@ -49,7 +49,7 @@
                         <summary>Use your own YouTube API quota (recommended)</summary>
                         <div class="credentials-form">
                             <label for="custom-api-key">API Key</label>
-                            <input id="custom-api-key" type="text" placeholder="AIza..." />
+                            <input id="custom-api-key" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                             <div class="credentials-actions">
                                 <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
                                 <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
@@ -137,7 +137,7 @@
                 <div class="permissions-header">Use Your Own Quota Project</div>
                 <div class="credentials-form inline">
                     <label for="custom-api-key-2">API Key</label>
-                    <input id="custom-api-key-2" type="text" placeholder="AIza..." />
+                    <input id="custom-api-key-2" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                     <div class="credentials-actions">
                         <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
                         <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
@@ -190,29 +190,16 @@ try {
     ];
     var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
-    var USING_HOSTED_AUTH = AUTH_BASE_URL.indexOf('ytauth.socialstream.ninja') !== -1;
     var clientId = DEFAULT_YT_CLIENT_ID;
     var apiKeyOverride = '';
     function refreshClientOverrides() {
         try {
-            // Allow overrides via localStorage or URL for advanced users
-            const storedId = localStorage.getItem('ytClientIdOverride');
+            // API key override can be set via localStorage or URL
             const storedKey = localStorage.getItem('ytApiKeyOverride');
             const qp = new URLSearchParams(window.location.search);
             const hp = new URLSearchParams(window.location.hash.slice(1));
-            const urlClient = qp.get('client_id') || hp.get('client_id');
             const urlKey = qp.get('api_key') || hp.get('api_key');
-            const requestedClientId = urlClient || storedId || '';
-            if (USING_HOSTED_AUTH) {
-                // Hosted ytauth currently supports only the default OAuth client credentials.
-                if (requestedClientId && requestedClientId !== DEFAULT_YT_CLIENT_ID) {
-                    try { localStorage.removeItem('ytClientIdOverride'); } catch (_) {}
-                    console.warn('Ignoring custom OAuth Client ID in hosted mode; default client will be used for sign-in.');
-                }
-                clientId = DEFAULT_YT_CLIENT_ID;
-            } else {
-                clientId = requestedClientId || DEFAULT_YT_CLIENT_ID;
-            }
+            clientId = DEFAULT_YT_CLIENT_ID;
             apiKeyOverride = urlKey || storedKey || '';
         } catch (_) {
             clientId = DEFAULT_YT_CLIENT_ID;
@@ -1645,6 +1632,8 @@ function enableBackgroundKeepAlive() {
 					console.error('Error validating token:', error);
 					clearStoredToken();
 					showAuthButton();
+					const reason = String(error?.ytMessage || error?.ytReason || error?.message || 'Unknown validation error');
+					showOAuthFailure(`Sign-in succeeded, but account validation failed: ${reason}`);
 				}
 			});
 		} catch (error) {
@@ -1724,20 +1713,6 @@ function enableBackgroundKeepAlive() {
 			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check redirect URIs and try again. For quota issues, add your own YouTube API key.');
 		} catch (_) {}
 	}
-	function isUnauthorizedTokenExchangeError(message) {
-		try {
-			const value = String(message || '').toLowerCase();
-			return (
-				value.includes('unauthorized') ||
-				value.includes('invalid_client') ||
-				value.includes('unauthorized_client') ||
-				value.includes('client secret') ||
-				value.includes('load failed')
-			);
-		} catch (_) {
-			return false;
-		}
-	}
 	function buildAuthRequest(redirectOverride, stateOverride) {
 		const state = stateOverride || nonce(15);
 		setExpectedOAuthState(state);
@@ -1779,15 +1754,6 @@ function enableBackgroundKeepAlive() {
 			return true;
 		} catch (error) {
 			console.error('Error refreshing token:', error);
-			const errorMessage = error && error.message ? error.message : '';
-			if (clientId !== DEFAULT_YT_CLIENT_ID && isUnauthorizedTokenExchangeError(errorMessage)) {
-				try {
-					localStorage.removeItem('ytClientIdOverride');
-				} catch (_) {}
-				refreshClientOverrides();
-				showOAuthFailure('YouTube sign-in refresh failed. Please sign out and sign in again.');
-				return false;
-			}
 			clearStoredToken();
 			showAuthButton();
 			return false;
@@ -1828,15 +1794,6 @@ function enableBackgroundKeepAlive() {
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
 			const errorMessage = error && error.message ? error.message : 'unknown error';
-			if (clientId !== DEFAULT_YT_CLIENT_ID && isUnauthorizedTokenExchangeError(errorMessage)) {
-				try {
-					localStorage.removeItem('ytClientIdOverride');
-				} catch (_) {}
-				refreshClientOverrides();
-				clearExpectedOAuthState();
-				showOAuthFailure('YouTube sign-in token exchange failed. Please click Sign in with YouTube again.');
-				return;
-			}
 			showOAuthFailure(`YouTube sign-in failed after permission grant: ${errorMessage}`);
 		}
 	}
@@ -3712,7 +3669,7 @@ function enableBackgroundKeepAlive() {
 					alert('That API key looks too short. It should look like AIza... and come from Google Cloud credentials.');
 					return;
 				}
-				if (!akey && USING_HOSTED_AUTH) {
+				if (!akey) {
 					alert('Enter a YouTube API key to use your own quota project.');
 					return;
 				}
