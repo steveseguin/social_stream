@@ -195,21 +195,26 @@ try {
         'https://www.googleapis.com/auth/youtube.force-ssl',
         'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
     ];
-    var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var clientId = DEFAULT_YT_CLIENT_ID;
     var apiKeyOverride = '';
-    try {
-        // Allow overrides via localStorage or URL for advanced users
-        const storedId = localStorage.getItem('ytClientIdOverride');
-        const storedKey = localStorage.getItem('ytApiKeyOverride');
-        const qp = new URLSearchParams(window.location.search);
-        const hp = new URLSearchParams(window.location.hash.slice(1));
-        const urlClient = qp.get('client_id') || hp.get('client_id');
-        const urlKey = qp.get('api_key') || hp.get('api_key');
-        if (storedId) clientId = storedId;
-        if (storedKey) apiKeyOverride = storedKey;
-        if (urlClient) { clientId = urlClient; }
-        if (urlKey) { apiKeyOverride = urlKey; }
-    } catch {}
+    function refreshClientOverrides() {
+        try {
+            // Allow overrides via localStorage or URL for advanced users
+            const storedId = localStorage.getItem('ytClientIdOverride');
+            const storedKey = localStorage.getItem('ytApiKeyOverride');
+            const qp = new URLSearchParams(window.location.search);
+            const hp = new URLSearchParams(window.location.hash.slice(1));
+            const urlClient = qp.get('client_id') || hp.get('client_id');
+            const urlKey = qp.get('api_key') || hp.get('api_key');
+            clientId = urlClient || storedId || DEFAULT_YT_CLIENT_ID;
+            apiKeyOverride = urlKey || storedKey || '';
+        } catch (_) {
+            clientId = DEFAULT_YT_CLIENT_ID;
+            apiKeyOverride = '';
+        }
+    }
+    refreshClientOverrides();
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
     var username = "";
     var channel = '';
@@ -3456,9 +3461,27 @@ function enableBackgroundKeepAlive() {
 		registerCleanup(() => window.removeEventListener('sendExtensionMessage', extensionMessageHandler));
 	}
 
+	function applyApiKeyOverride(rawUrl) {
+		if (!rawUrl || typeof rawUrl !== 'string' || !apiKeyOverride) return rawUrl;
+		try {
+			const parsed = new URL(rawUrl, window.location.href);
+			const host = (parsed.hostname || '').toLowerCase();
+			const path = (parsed.pathname || '').toLowerCase();
+			const isYouTubeDataApiHost = host === 'www.googleapis.com' || host === 'youtube.googleapis.com';
+			if (!isYouTubeDataApiHost || !path.startsWith('/youtube/')) return rawUrl;
+			if (!parsed.searchParams.has('key')) {
+				parsed.searchParams.set('key', apiKeyOverride);
+			}
+			return parsed.toString();
+		} catch (_) {
+			return rawUrl;
+		}
+	}
+
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
+		const requestUrl = applyApiKeyOverride(URL);
 		const controller = new AbortController();
-		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${URL}`;
+		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${requestUrl}`;
 		const abortReason = (typeof DOMException === 'function')
 			? new DOMException(friendlyTimeoutMessage, 'AbortError')
 			: new Error(friendlyTimeoutMessage);
@@ -3487,8 +3510,8 @@ function enableBackgroundKeepAlive() {
 					});
 				}
 			}
-			//console.log('Fetching:', URL, options);
-			const response = await fetch(URL, options);
+			//console.log('Fetching:', requestUrl, options);
+			const response = await fetch(requestUrl, options);
 			clearTimeout(timeout_id);
 			//console.log('Response status:', response.status, response.statusText);
 			if (!response.ok) {
@@ -3530,7 +3553,7 @@ function enableBackgroundKeepAlive() {
 				console.error(err.message);
 				throw err;
 			}
-			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', URL);
+			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', requestUrl);
 			throw e;
 		} finally {
 			clearTimeout(timeout_id);
@@ -3586,6 +3609,7 @@ function enableBackgroundKeepAlive() {
 
 	function initCredentialsUI() {
 		try {
+			refreshClientOverrides();
 			const redirectUris = [
 				'https://socialstream.ninja/sources/websocket/youtube.html',
 				'https://socialstream.ninja/beta/sources/websocket/youtube.html',
@@ -3622,6 +3646,7 @@ function enableBackgroundKeepAlive() {
 				}
 				if (cid) localStorage.setItem('ytClientIdOverride', cid); else localStorage.removeItem('ytClientIdOverride');
 				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
+				refreshClientOverrides();
 				alert('Saved. Please sign out and sign in again to apply your credentials.');
 				hideQuotaBanner();
 				initCredentialsUI();
@@ -3629,6 +3654,7 @@ function enableBackgroundKeepAlive() {
 			const clear = function(){
 				localStorage.removeItem('ytClientIdOverride');
 				localStorage.removeItem('ytApiKeyOverride');
+				refreshClientOverrides();
 				alert('Custom credentials cleared. Default project will be used.');
 				initCredentialsUI();
 			};
