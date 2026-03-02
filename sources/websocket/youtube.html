@@ -50,8 +50,6 @@
                         <div class="credentials-form">
                             <label for="custom-api-key">API Key</label>
                             <input id="custom-api-key" type="text" placeholder="AIza..." />
-                            <label for="custom-client-id">OAuth Client ID (advanced / self-hosted auth only)</label>
-                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com (optional)" />
                             <div class="credentials-actions">
                                 <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
                                 <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
@@ -64,13 +62,8 @@
                                     <li>Create Credentials -> API key, and paste that key above</li>
                                     <li>In SSAPP/Electron, do not lock that key to HTTP referrers</li>
                                     <li>For hosted Social Stream auth, API key is what moves API usage to your quota project</li>
-                                    <li>OAuth Client ID below is optional and only for self-hosted auth endpoints</li>
-                                    <li>If self-hosting OAuth, configure OAuth consent and create a Web Application OAuth client</li>
-                                    <li>Add all of the following to Authorized redirect URIs:</li>
                                 </ul>
-                                <code id="redirect-uri-hint"></code>
                                 <p>After saving an API key, sign out and sign in again so new requests use your quota project.</p>
-                                <p>If you also provide a custom OAuth Client ID, it is only used with self-hosted auth endpoints.</p>
                             </div>
                         </div>
                     </details>
@@ -145,16 +138,13 @@
                 <div class="credentials-form inline">
                     <label for="custom-api-key-2">API Key</label>
                     <input id="custom-api-key-2" type="text" placeholder="AIza..." />
-                    <label for="custom-client-id-2">OAuth Client ID (advanced / self-hosted auth only)</label>
-                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com (optional)" />
                     <div class="credentials-actions">
                         <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
                         <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
                     </div>
                     <div class="credentials-note">API key changes take effect next sign-in. Use Reset to return to defaults.</div>
                     <div class="credentials-help" style="margin-top:8px;">
-                        <p><strong>Setup steps:</strong> Enable the YouTube Data API v3, create an API key (no HTTP referrer lock for SSAPP), and add these redirect URIs only if you self-host OAuth with your own client:</p>
-                        <code id="redirect-uri-hint-2"></code>
+                        <p><strong>Setup steps:</strong> Enable the YouTube Data API v3, create an API key, and do not lock it to HTTP referrers for SSAPP/Electron.</p>
                     </div>
                 </div>
             </div>
@@ -1795,7 +1785,7 @@ function enableBackgroundKeepAlive() {
 					localStorage.removeItem('ytClientIdOverride');
 				} catch (_) {}
 				refreshClientOverrides();
-				showOAuthFailure('Custom OAuth Client ID refresh failed. We switched back to the default OAuth client (your API key is still saved). Please sign in again.');
+				showOAuthFailure('YouTube sign-in refresh failed. Please sign out and sign in again.');
 				return false;
 			}
 			clearStoredToken();
@@ -1844,7 +1834,7 @@ function enableBackgroundKeepAlive() {
 				} catch (_) {}
 				refreshClientOverrides();
 				clearExpectedOAuthState();
-				showOAuthFailure('Custom OAuth Client ID token exchange failed. We switched back to the default OAuth client (your API key is still saved). Please click Sign in with YouTube again.');
+				showOAuthFailure('YouTube sign-in token exchange failed. Please click Sign in with YouTube again.');
 				return;
 			}
 			showOAuthFailure(`YouTube sign-in failed after permission grant: ${errorMessage}`);
@@ -3708,51 +3698,16 @@ function enableBackgroundKeepAlive() {
 	function initCredentialsUI() {
 		try {
 			refreshClientOverrides();
-			const redirectUris = [
-				'https://socialstream.ninja/sources/websocket/youtube.html',
-				'https://socialstream.ninja/beta/sources/websocket/youtube.html',
-				'http://localhost:8181/sources/websocket/youtube.html',
-				'http://localhost:8080/sources/websocket/youtube.html'
-			];
-			const redirectValue = redirectUris.join('\n');
-			const redirectEl = document.getElementById('redirect-uri-hint');
-			if (redirectEl) {
-				redirectEl.textContent = redirectValue;
-				redirectEl.style.whiteSpace = 'pre-line';
-			}
-			const redirectEl2 = document.getElementById('redirect-uri-hint-2');
-			if (redirectEl2) {
-				redirectEl2.textContent = redirectValue;
-				redirectEl2.style.whiteSpace = 'pre-line';
-			}
-			const storedId = localStorage.getItem('ytClientIdOverride') || '';
 			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
 			const useCustom = !!storedKey;
 			// Populate both forms
-			['custom-client-id','custom-client-id-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedId; });
 			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
-			['custom-client-id','custom-client-id-2'].forEach(id => {
-				const i = document.getElementById(id);
-				if (!i) return;
-				if (USING_HOSTED_AUTH) {
-					i.disabled = true;
-					i.title = 'Hosted auth uses the default OAuth client. API key controls quota usage.';
-				} else {
-					i.disabled = false;
-					i.title = '';
-				}
-			});
 			const indicator = document.getElementById('custom-cred-indicator');
 			if (indicator) indicator.classList.toggle('hidden', !useCustom);
 			if (useCustom) hideQuotaBanner();
 			// Wire buttons
 			const save = async function(primary=true){
-				const cid = ((document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '').trim();
 				const akey = ((document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '').trim();
-				if (cid && !/\.apps\.googleusercontent\.com$/.test(cid)) {
-					alert('That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com');
-					return;
-				}
 				if (akey && akey.length < 20) {
 					alert('That API key looks too short. It should look like AIza... and come from Google Cloud credentials.');
 					return;
@@ -3761,13 +3716,7 @@ function enableBackgroundKeepAlive() {
 					alert('Enter a YouTube API key to use your own quota project.');
 					return;
 				}
-				if (USING_HOSTED_AUTH) {
-					localStorage.removeItem('ytClientIdOverride');
-				} else if (cid) {
-					localStorage.setItem('ytClientIdOverride', cid);
-				} else {
-					localStorage.removeItem('ytClientIdOverride');
-				}
+				localStorage.removeItem('ytClientIdOverride');
 				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
 				refreshClientOverrides();
 				alert('Saved. Please sign out and sign in again to apply your API key quota project.');
