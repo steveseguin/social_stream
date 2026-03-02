@@ -11,8 +11,8 @@
 <body>
     <div class="container">
         <div id="quota-warning" class="quota-warning hidden">
-            <span id="quota-warning-text">We've hit the default YouTube API quota. You can use your own Google API project to continue without interruptions.</span>
-            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My Credentials</button>
+            <span id="quota-warning-text">We've hit the default YouTube API quota. Add your own YouTube API key to use your own quota project.</span>
+            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My API Key</button>
         </div>
         <div class="main-content">
             <div class="auth">
@@ -23,7 +23,7 @@
                     
             <div class="auth-section">
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
-                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
+                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom API key quota project</div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method:</label>
                     <div class="auth-method-options">
@@ -46,12 +46,12 @@
                     </div>
 
                     <details id="credentials-details" class="credentials-details">
-                        <summary>Advanced: Use your own Google API credentials</summary>
+                        <summary>Use your own YouTube API quota (recommended)</summary>
                         <div class="credentials-form">
-                            <label for="custom-client-id">OAuth Client ID</label>
-                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" />
-                            <label for="custom-api-key">API Key (optional)</label>
-                            <input id="custom-api-key" type="text" placeholder="AIza... (optional)" />
+                            <label for="custom-api-key">API Key</label>
+                            <input id="custom-api-key" type="text" placeholder="AIza..." />
+                            <label for="custom-client-id">OAuth Client ID (advanced / self-hosted auth only)</label>
+                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com (optional)" />
                             <div class="credentials-actions">
                                 <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
                                 <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
@@ -60,14 +60,17 @@
                                 <p><strong>How to set up in Google Cloud:</strong></p>
                                 <ul>
                                     <li>Create or select a project at console.cloud.google.com</li>
-                                    <li>Enable the “YouTube Data API v3” in APIs & Services</li>
-                                    <li>Configure OAuth consent screen (External), add yourself as a test user or publish</li>
-                                    <li>Create Credentials → OAuth client ID → Web application</li>
+                                    <li>Enable the YouTube Data API v3 in APIs and Services</li>
+                                    <li>Create Credentials -> API key, and paste that key above</li>
+                                    <li>In SSAPP/Electron, do not lock that key to HTTP referrers</li>
+                                    <li>For hosted Social Stream auth, API key is what moves API usage to your quota project</li>
+                                    <li>OAuth Client ID below is optional and only for self-hosted auth endpoints</li>
+                                    <li>If self-hosting OAuth, configure OAuth consent and create a Web Application OAuth client</li>
                                     <li>Add all of the following to Authorized redirect URIs:</li>
                                 </ul>
                                 <code id="redirect-uri-hint"></code>
-                                <p>Save and copy your Client ID (ends with .apps.googleusercontent.com) into the field above. API Key is optional.</p>
-                                <p>After saving, sign out and sign in again to use your credentials.</p>
+                                <p>After saving an API key, sign out and sign in again so new requests use your quota project.</p>
+                                <p>If you also provide a custom OAuth Client ID, it is only used with self-hosted auth endpoints.</p>
                             </div>
                         </div>
                     </details>
@@ -138,19 +141,19 @@
         <div class="sidebar hidden socket">
             <div class="permissions-container" id="permissions-info"></div>
             <div class="credentials-container" id="credentials-container-signedin">
-                <div class="permissions-header">Use Your Own Credentials</div>
+                <div class="permissions-header">Use Your Own Quota Project</div>
                 <div class="credentials-form inline">
-                    <label for="custom-client-id-2">OAuth Client ID</label>
-                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com" />
-                    <label for="custom-api-key-2">API Key (optional)</label>
-                    <input id="custom-api-key-2" type="text" placeholder="AIza... (optional)" />
+                    <label for="custom-api-key-2">API Key</label>
+                    <input id="custom-api-key-2" type="text" placeholder="AIza..." />
+                    <label for="custom-client-id-2">OAuth Client ID (advanced / self-hosted auth only)</label>
+                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com (optional)" />
                     <div class="credentials-actions">
                         <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
                         <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
                     </div>
-                    <div class="credentials-note">Changes take effect next sign-in. Use Reset to return to defaults.</div>
+                    <div class="credentials-note">API key changes take effect next sign-in. Use Reset to return to defaults.</div>
                     <div class="credentials-help" style="margin-top:8px;">
-                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add all of these Authorized redirect URIs:</p>
+                        <p><strong>Setup steps:</strong> Enable the YouTube Data API v3, create an API key (no HTTP referrer lock for SSAPP), and add these redirect URIs only if you self-host OAuth with your own client:</p>
                         <code id="redirect-uri-hint-2"></code>
                     </div>
                 </div>
@@ -195,7 +198,9 @@ try {
         'https://www.googleapis.com/auth/youtube.force-ssl',
         'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
     ];
+    var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var USING_HOSTED_AUTH = AUTH_BASE_URL.indexOf('ytauth.socialstream.ninja') !== -1;
     var clientId = DEFAULT_YT_CLIENT_ID;
     var apiKeyOverride = '';
     function refreshClientOverrides() {
@@ -207,7 +212,17 @@ try {
             const hp = new URLSearchParams(window.location.hash.slice(1));
             const urlClient = qp.get('client_id') || hp.get('client_id');
             const urlKey = qp.get('api_key') || hp.get('api_key');
-            clientId = urlClient || storedId || DEFAULT_YT_CLIENT_ID;
+            const requestedClientId = urlClient || storedId || '';
+            if (USING_HOSTED_AUTH) {
+                // Hosted ytauth currently supports only the default OAuth client credentials.
+                if (requestedClientId && requestedClientId !== DEFAULT_YT_CLIENT_ID) {
+                    try { localStorage.removeItem('ytClientIdOverride'); } catch (_) {}
+                    console.warn('Ignoring custom OAuth Client ID in hosted mode; default client will be used for sign-in.');
+                }
+                clientId = DEFAULT_YT_CLIENT_ID;
+            } else {
+                clientId = requestedClientId || DEFAULT_YT_CLIENT_ID;
+            }
             apiKeyOverride = urlKey || storedKey || '';
         } catch (_) {
             clientId = DEFAULT_YT_CLIENT_ID;
@@ -264,7 +279,7 @@ try {
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
 	var tokenRefreshPromise = null;
-	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. You can use your own Google API project to continue without interruptions.";
+	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. Add your own YouTube API key to use your own quota project.";
 	
 
 	var emojiData = [];
@@ -1625,13 +1640,13 @@ function enableBackgroundKeepAlive() {
 				} else {
 					console.warn('Authenticated but unable to load YouTube profile from channels?mine=true');
 					showAuthButton();
-					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile. If this is quota-related, add your own OAuth Client ID and sign in again.');
+					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile. If this is quota-related, add your own YouTube API key and sign in again.');
 				}
 			}).catch(error => {
 				if (isQuotaError(error)) {
 					console.error('Quota exceeded while validating YouTube account after sign-in:', error);
 					showAuthButton();
-					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. Add your own OAuth Client ID (and optional API key), then sign out and sign in again.');
+					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. Add your own YouTube API key, then sign out and sign in again.');
 					return;
 				}
 				if (error.message && error.message.includes('401')) {
@@ -1716,8 +1731,22 @@ function enableBackgroundKeepAlive() {
 	function showOAuthFailure(message) {
 		try {
 			showAuthButton();
-			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check your OAuth Client ID, redirect URIs, and try again.');
+			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check redirect URIs and try again. For quota issues, add your own YouTube API key.');
 		} catch (_) {}
+	}
+	function isUnauthorizedTokenExchangeError(message) {
+		try {
+			const value = String(message || '').toLowerCase();
+			return (
+				value.includes('unauthorized') ||
+				value.includes('invalid_client') ||
+				value.includes('unauthorized_client') ||
+				value.includes('client secret') ||
+				value.includes('load failed')
+			);
+		} catch (_) {
+			return false;
+		}
 	}
 	function buildAuthRequest(redirectOverride, stateOverride) {
 		const state = stateOverride || nonce(15);
@@ -1726,7 +1755,7 @@ function enableBackgroundKeepAlive() {
 		return {
 			state,
 			redirectUri: redirectTarget,
-			url: 'https://ytauth.socialstream.ninja/auth' +
+			url: AUTH_BASE_URL + '/auth' +
 				'?client_id=' + clientId +
 				'&redirect_uri=' + encodeURIComponent(redirectTarget) +
 				'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
@@ -1745,7 +1774,7 @@ function enableBackgroundKeepAlive() {
         }
 		refreshClientOverrides();
 		try {
-			const response = await fetch('https://ytauth.socialstream.ninja/refresh', {
+			const response = await fetch(AUTH_BASE_URL + '/refresh', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: clientId })
@@ -1760,6 +1789,15 @@ function enableBackgroundKeepAlive() {
 			return true;
 		} catch (error) {
 			console.error('Error refreshing token:', error);
+			const errorMessage = error && error.message ? error.message : '';
+			if (clientId !== DEFAULT_YT_CLIENT_ID && isUnauthorizedTokenExchangeError(errorMessage)) {
+				try {
+					localStorage.removeItem('ytClientIdOverride');
+				} catch (_) {}
+				refreshClientOverrides();
+				showOAuthFailure('Custom OAuth Client ID refresh failed. We switched back to the default OAuth client (your API key is still saved). Please sign in again.');
+				return false;
+			}
 			clearStoredToken();
 			showAuthButton();
 			return false;
@@ -1780,7 +1818,7 @@ function enableBackgroundKeepAlive() {
 		}
 		const redirectTarget = redirectOverride || redirectURI;
 		try {
-			const response = await fetch('https://ytauth.socialstream.ninja/token', {
+			const response = await fetch(AUTH_BASE_URL + '/token', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: clientId })
@@ -1799,7 +1837,17 @@ function enableBackgroundKeepAlive() {
 			verifyAndUseToken(data.access_token);
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
-			showOAuthFailure(`YouTube sign-in failed after permission grant: ${error && error.message ? error.message : 'unknown error'}`);
+			const errorMessage = error && error.message ? error.message : 'unknown error';
+			if (clientId !== DEFAULT_YT_CLIENT_ID && isUnauthorizedTokenExchangeError(errorMessage)) {
+				try {
+					localStorage.removeItem('ytClientIdOverride');
+				} catch (_) {}
+				refreshClientOverrides();
+				clearExpectedOAuthState();
+				showOAuthFailure('Custom OAuth Client ID token exchange failed. We switched back to the default OAuth client (your API key is still saved). Please click Sign in with YouTube again.');
+				return;
+			}
+			showOAuthFailure(`YouTube sign-in failed after permission grant: ${errorMessage}`);
 		}
 	}
 	async function handleAuthCallback() {
@@ -1828,7 +1876,7 @@ function enableBackgroundKeepAlive() {
 				clientId,
 				scopes: YT_SCOPES,
 				state,
-				authBase: 'https://ytauth.socialstream.ninja'
+				authBase: AUTH_BASE_URL
 			});
 			if (!result || !result.code) {
 				console.error('YouTube OAuth did not return a code.');
@@ -3393,6 +3441,8 @@ function enableBackgroundKeepAlive() {
 				const warn = document.getElementById('quota-warning');
 				if (warn) warn.classList.add('hidden');
 				window.scrollTo({ top: 0, behavior: 'smooth' });
+				const keyInput = document.getElementById('custom-api-key');
+				if (keyInput) keyInput.focus();
 			};
 			quotaBtn.addEventListener('click', openCreds);
 			registerCleanup(() => quotaBtn.removeEventListener('click', openCreds));
@@ -3677,25 +3727,50 @@ function enableBackgroundKeepAlive() {
 			}
 			const storedId = localStorage.getItem('ytClientIdOverride') || '';
 			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
-			const useCustom = !!storedId;
+			const useCustom = !!storedKey;
 			// Populate both forms
 			['custom-client-id','custom-client-id-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedId; });
 			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
+			['custom-client-id','custom-client-id-2'].forEach(id => {
+				const i = document.getElementById(id);
+				if (!i) return;
+				if (USING_HOSTED_AUTH) {
+					i.disabled = true;
+					i.title = 'Hosted auth uses the default OAuth client. API key controls quota usage.';
+				} else {
+					i.disabled = false;
+					i.title = '';
+				}
+			});
 			const indicator = document.getElementById('custom-cred-indicator');
 			if (indicator) indicator.classList.toggle('hidden', !useCustom);
 			if (useCustom) hideQuotaBanner();
 			// Wire buttons
 			const save = async function(primary=true){
-				const cid = (document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '';
-				const akey = (document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '';
+				const cid = ((document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '').trim();
+				const akey = ((document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '').trim();
 				if (cid && !/\.apps\.googleusercontent\.com$/.test(cid)) {
 					alert('That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com');
 					return;
 				}
-				if (cid) localStorage.setItem('ytClientIdOverride', cid); else localStorage.removeItem('ytClientIdOverride');
+				if (akey && akey.length < 20) {
+					alert('That API key looks too short. It should look like AIza... and come from Google Cloud credentials.');
+					return;
+				}
+				if (!akey && USING_HOSTED_AUTH) {
+					alert('Enter a YouTube API key to use your own quota project.');
+					return;
+				}
+				if (USING_HOSTED_AUTH) {
+					localStorage.removeItem('ytClientIdOverride');
+				} else if (cid) {
+					localStorage.setItem('ytClientIdOverride', cid);
+				} else {
+					localStorage.removeItem('ytClientIdOverride');
+				}
 				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
 				refreshClientOverrides();
-				alert('Saved. Please sign out and sign in again to apply your credentials.');
+				alert('Saved. Please sign out and sign in again to apply your API key quota project.');
 				hideQuotaBanner();
 				initCredentialsUI();
 			};
@@ -3703,7 +3778,7 @@ function enableBackgroundKeepAlive() {
 				localStorage.removeItem('ytClientIdOverride');
 				localStorage.removeItem('ytApiKeyOverride');
 				refreshClientOverrides();
-				alert('Custom credentials cleared. Default project will be used.');
+				alert('Custom API key cleared. Default project quota will be used.');
 				initCredentialsUI();
 			};
 			const s1 = document.getElementById('save-credentials'); if (s1) s1.onclick = () => save(true);
