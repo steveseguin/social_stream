@@ -73,9 +73,9 @@
 				}
 
 				// some tips have a nested chat message with a comment
-				var nestedMsg = ele.querySelector(".system_area .msg_wrp .msg");
+				var nestedMsg = ele.querySelector(".message_area .msg, .system_area .msg_wrp .msg");
 				if (nestedMsg && !msg) {
-					msg = escapeHtml(nestedMsg.textContent.trim());
+					msg = getAllContentNodes(nestedMsg).trim();
 				}
 			} catch (e) {
 			}
@@ -98,12 +98,17 @@
 			}
 
 			try {
-				var msgEle = ele.querySelector(".msg");
+				// keep extraction scoped to chat message content to avoid leaking unrelated page DOM
+				var msgEle = ele.querySelector(".message_area .msg, .msg");
 				if (msgEle) {
 					msg = getAllContentNodes(msgEle).trim();
 				}
 			} catch (e) {
 			}
+		}
+
+		if (msg && msg.length > 4000) {
+			msg = msg.slice(0, 4000).trim();
 		}
 
 		if (!name) return;
@@ -173,11 +178,23 @@
 							var node = mutation.addedNodes[i];
 							if (node.nodeType !== 1) continue;
 							if (node.skip) continue;
-							if (!node.classList.contains("js-chat_msg")) continue;
 
-							setTimeout(function (n) {
-								processMessage(n);
-							}, 200, node);
+							if (node.classList && node.classList.contains("js-chat_msg")) {
+								setTimeout(function (n) {
+									processMessage(n);
+								}, 200, node);
+								continue;
+							}
+
+							// Bongacams sometimes appends wrappers that contain one or more js-chat_msg nodes
+							var nestedMessages = node.querySelectorAll ? node.querySelectorAll(".js-chat_msg") : [];
+							for (var j = 0; j < nestedMessages.length; j++) {
+								var nested = nestedMessages[j];
+								if (nested.skip) continue;
+								setTimeout(function (n) {
+									processMessage(n);
+								}, 200, nested);
+							}
 						} catch (e) { }
 					}
 				}
