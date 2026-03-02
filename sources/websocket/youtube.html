@@ -63,7 +63,7 @@
                                     <li>Enable the “YouTube Data API v3” in APIs & Services</li>
                                     <li>Configure OAuth consent screen (External), add yourself as a test user or publish</li>
                                     <li>Create Credentials → OAuth client ID → Web application</li>
-                                    <li>Add the following to Authorized redirect URIs:</li>
+                                    <li>Add all of the following to Authorized redirect URIs:</li>
                                 </ul>
                                 <code id="redirect-uri-hint"></code>
                                 <p>Save and copy your Client ID (ends with .apps.googleusercontent.com) into the field above. API Key is optional.</p>
@@ -150,7 +150,7 @@
                     </div>
                     <div class="credentials-note">Changes take effect next sign-in. Use Reset to return to defaults.</div>
                     <div class="credentials-help" style="margin-top:8px;">
-                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add this Authorized redirect URI:</p>
+                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add all of these Authorized redirect URIs:</p>
                         <code id="redirect-uri-hint-2"></code>
                     </div>
                 </div>
@@ -259,6 +259,7 @@ try {
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
 	var tokenRefreshPromise = null;
+	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. You can use your own Google API project to continue without interruptions.";
 	
 
 	var emojiData = [];
@@ -1617,9 +1618,17 @@ function enableBackgroundKeepAlive() {
 					}
 					showSocketInterface();
 				} else {
-					refreshToken();
+					console.warn('Authenticated but unable to load YouTube profile from channels?mine=true');
+					showAuthButton();
+					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile. If this is quota-related, add your own OAuth Client ID and sign in again.');
 				}
 			}).catch(error => {
+				if (isQuotaError(error)) {
+					console.error('Quota exceeded while validating YouTube account after sign-in:', error);
+					showAuthButton();
+					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. Add your own OAuth Client ID (and optional API key), then sign out and sign in again.');
+					return;
+				}
 				if (error.message && error.message.includes('401')) {
 					refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
 				} else {
@@ -1894,8 +1903,7 @@ function enableBackgroundKeepAlive() {
             return await response.json();
         } catch (error) {
             console.error('Error fetching user info:', error);
-            if (error.message && error.message.includes('401')) throw error;
-            return null;
+            throw error;
         }
     }
     async function getChannelInfo(channelIdentifier) {
@@ -3544,13 +3552,56 @@ function enableBackgroundKeepAlive() {
 		} catch(_){}
 	}
 
+	function isQuotaError(error) {
+		try {
+			if (!error) return false;
+			const reason = String(error.ytReason || error.reason || '').toLowerCase();
+			const payloadReason = String(error?.ytPayload?.error?.errors?.[0]?.reason || '').toLowerCase();
+			const message = String(error.ytMessage || error.message || '').toLowerCase();
+			return (
+				reason.includes('quota') ||
+				reason.includes('dailylimit') ||
+				payloadReason.includes('quota') ||
+				payloadReason.includes('dailylimit') ||
+				message.includes('quota') ||
+				message.includes('rate limit')
+			);
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function showQuotaAuthFailure(message) {
+		try {
+			const text = typeof message === 'string' && message.trim()
+				? message.trim()
+				: DEFAULT_QUOTA_WARNING_TEXT;
+			const textEl = document.getElementById('quota-warning-text');
+			if (textEl) textEl.textContent = text;
+			const details = document.getElementById('credentials-details');
+			if (details) details.open = true;
+			showQuotaBanner();
+		} catch(_){}
+	}
+
 	function initCredentialsUI() {
 		try {
-			const redirectValue = window.location.href.split('/youtube')[0] + '/youtube.html';
+			const redirectUris = [
+				'https://socialstream.ninja/sources/websocket/youtube.html',
+				'http://localhost:8181/sources/websocket/youtube.html',
+				'http://localhost:8080/sources/websocket/youtube.html'
+			];
+			const redirectValue = redirectUris.join('\n');
 			const redirectEl = document.getElementById('redirect-uri-hint');
-			if (redirectEl) redirectEl.textContent = redirectValue;
+			if (redirectEl) {
+				redirectEl.textContent = redirectValue;
+				redirectEl.style.whiteSpace = 'pre-line';
+			}
 			const redirectEl2 = document.getElementById('redirect-uri-hint-2');
-			if (redirectEl2) redirectEl2.textContent = redirectValue;
+			if (redirectEl2) {
+				redirectEl2.textContent = redirectValue;
+				redirectEl2.style.whiteSpace = 'pre-line';
+			}
 			const storedId = localStorage.getItem('ytClientIdOverride') || '';
 			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
 			const useCustom = !!storedId;
