@@ -3543,7 +3543,7 @@ async function refreshAccessToken() {
         scheduleTokenRefresh();
         updateAuthStatus();
         log('Access token refreshed.');
-    });
+    })();
     try {
         return await state.refreshPromise;
     } finally {

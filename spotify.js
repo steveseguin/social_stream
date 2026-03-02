@@ -711,7 +711,7 @@ class SpotifyIntegration {
         }
     }
 
-    async getCurrentTrack() {
+    async getCurrentTrack(isRetry = false) {
         this.managedQueueEnabled = !!(this.settings?.spotifyManagedQueue?.setting ?? this.settings?.spotifyManagedQueue);
         if (!this.accessToken) {
             return null;
@@ -742,6 +742,12 @@ class SpotifyIntegration {
                 return null;
             }
 
+            if (response.status === 401 && !isRetry) {
+                await this.refreshAccessToken();
+                // After refresh, retry once to get the track immediately
+                return this.getCurrentTrack(true);
+            }
+
             if (response.status === 204) {
                 this.currentTrack = null;
                 if (this.callbacks.onTrackUpdate) {
@@ -754,11 +760,6 @@ class SpotifyIntegration {
                         receivedAt: Date.now()
                     });
                 }
-                return null;
-            }
-
-            if (response.status === 401) {
-                await this.refreshAccessToken();
                 return null;
             }
 
