@@ -1685,9 +1685,43 @@ function enableBackgroundKeepAlive() {
 		});
 		return tokenRefreshPromise;
 	}
+	function setExpectedOAuthState(state) {
+		try {
+			sessionStorage.youtubeOAuthState = state;
+		} catch (_) {}
+		try {
+			localStorage.setItem('youtubeOAuthState', state);
+		} catch (_) {}
+	}
+	function getExpectedOAuthState() {
+		let state = null;
+		try {
+			state = sessionStorage.youtubeOAuthState || null;
+		} catch (_) {}
+		if (state) return state;
+		try {
+			return localStorage.getItem('youtubeOAuthState') || null;
+		} catch (_) {
+			return null;
+		}
+	}
+	function clearExpectedOAuthState() {
+		try {
+			delete sessionStorage.youtubeOAuthState;
+		} catch (_) {}
+		try {
+			localStorage.removeItem('youtubeOAuthState');
+		} catch (_) {}
+	}
+	function showOAuthFailure(message) {
+		try {
+			showAuthButton();
+			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check your OAuth Client ID, redirect URIs, and try again.');
+		} catch (_) {}
+	}
 	function buildAuthRequest(redirectOverride, stateOverride) {
 		const state = stateOverride || nonce(15);
-		sessionStorage.youtubeOAuthState = state;
+		setExpectedOAuthState(state);
 		const redirectTarget = redirectOverride || redirectURI;
 		return {
 			state,
@@ -1709,14 +1743,18 @@ function enableBackgroundKeepAlive() {
             showAuthButton();
             return false;
         }
+		refreshClientOverrides();
 		try {
 			const response = await fetch('https://ytauth.socialstream.ninja/refresh', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ refresh_token: refreshTokenValue })
+				body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: clientId })
 			});
-			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-			const data = await response.json();
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+				throw new Error(msg);
+			}
 			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue);
 			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
 			return true;
@@ -1728,14 +1766,16 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 	async function exchangeCodeForTokens(code, state, redirectOverride) {
-		if (state !== sessionStorage.youtubeOAuthState) {
-			console.error('State mismatch - possible CSRF attack');
-			showAuthButton();
+		refreshClientOverrides();
+		const expectedState = getExpectedOAuthState();
+		if (!expectedState || state !== expectedState) {
+			console.error('State mismatch - possible CSRF attack', { expectedState, receivedState: state });
+			showOAuthFailure('State mismatch during YouTube sign-in. Please try again and avoid switching to a different browser tab/window during authentication.');
 			return;
 		}
 		if (!code) {
 			console.error('No authorization code supplied.');
-			showAuthButton();
+			showOAuthFailure('No authorization code was returned by Google. Please try signing in again.');
 			return;
 		}
 		const redirectTarget = redirectOverride || redirectURI;
@@ -1743,19 +1783,27 @@ function enableBackgroundKeepAlive() {
 			const response = await fetch('https://ytauth.socialstream.ninja/token', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ code: code, redirect_uri: redirectTarget })
+				body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: clientId })
 			});
-			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-			const data = await response.json();
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+				throw new Error(msg);
+			}
+			if (!data.access_token) {
+				throw new Error('Token exchange response did not include access_token.');
+			}
 			setStoredToken(data.access_token, data.expires_in, data.refresh_token);
+			clearExpectedOAuthState();
 			window.history.replaceState({}, document.title, redirectURI);
 			verifyAndUseToken(data.access_token);
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
-			showAuthButton();
+			showOAuthFailure(`YouTube sign-in failed after permission grant: ${error && error.message ? error.message : 'unknown error'}`);
 		}
 	}
 	async function handleAuthCallback() {
+		refreshClientOverrides();
 		const urlParams = new URLSearchParams(window.location.search);
 		const code = urlParams.get('code');
 		const state = urlParams.get('state');
@@ -1774,7 +1822,7 @@ function enableBackgroundKeepAlive() {
 			return;
 		}
 		const state = nonce(15);
-		sessionStorage.youtubeOAuthState = state;
+		setExpectedOAuthState(state);
 		try {
 			const result = await startOAuthFn({
 				clientId,
