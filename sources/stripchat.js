@@ -192,13 +192,14 @@
 			if (!chatContainer.dataset.ssnMarked) {
 				chatContainer.dataset.ssnMarked = "true";
 				console.log("Social Stream - Stripchat chat connected");
+				setTimeout(function(chatContainer){
+					var existing = chatContainer.querySelectorAll(".message-base");
+					for (var i = 0; i < existing.length; i++) {
+						existing[i].skip = true;
+					}
 
-				var existing = chatContainer.querySelectorAll(".message-base");
-				for (var i = 0; i < existing.length; i++) {
-					existing[i].skip = true;
-				}
-
-				onElementInserted(chatContainer);
+					onElementInserted(chatContainer);
+				},3000, chatContainer);
 			}
 		}
 	}, 2000);

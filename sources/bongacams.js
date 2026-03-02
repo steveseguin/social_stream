@@ -199,12 +199,14 @@
 				chatContainer.dataset.ssnMarked = "true";
 				console.log("Social Stream - Bongacams chat connected");
 
+				setTimeout(function(chatContainer){
 				var existing = chatContainer.querySelectorAll(".js-chat_msg");
 				for (var i = 0; i < existing.length; i++) {
 					existing[i].skip = true;
 				}
 
 				onElementInserted(chatContainer);
+				},2000,chatContainer);
 			}
 		}
 	}, 2000);
