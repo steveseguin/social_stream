@@ -122,6 +122,20 @@
                             <td>Viewer count, join alerts, and like storms</td>
                         </tr>
                         <tr>
+                            <td><strong>Whatnot</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count, join alerts, live auction metadata, products, and giveaway snapshots</td>
+                        </tr>
+                        <tr>
+                            <td><strong>eBay Live</strong></td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>&mdash;</td>
+                            <td>Viewer count, live event card snapshots, auction footer metadata (when exposed), and upcoming event metadata</td>
+                        </tr>
+                        <tr>
                             <td><strong>Streamlabs Alert Box</strong></td>
                             <td>Subs, gifts, sponsors, follows</td>
                             <td>Cheer/bits, donations (with currency)</td>
@@ -211,6 +225,7 @@
                     <li>Channel point redemptions expose <code>{ rewardId, cost, alias }</code> alongside the prepared chat message.</li>
                     <li>Event Flow can request a highlight by setting <code>meta.featured = true</code> on the chat payload, which auto-features the message in dock/featured overlays.</li>
                     <li>If a platform exposes multiple counters together, prefer a structured object with explicit keys (<code>meta.viewer_count</code>, <code>meta.follower_count</code>) instead of overloading strings.</li>
+                    <li>Commerce overlays should use snapshot objects under <code>meta</code> (for example <code>auction_update</code> and <code>commerce_update</code>) and avoid ad-hoc top-level fields.</li>
                 </ul>
             </section>
 
@@ -688,6 +703,84 @@
                         </tbody>
                     </table>
                     <p class="field-highlights"><code>membership</code> mirrors badge tooltips (subscriber tiers). Avatar caching keeps <code>chatimg</code> valid between events; if the DOM suppresses color for moderators the script clears <code>nameColor</code>.</p>
+                </article>
+
+                <article class="platform-card" id="whatnot">
+                    <h3>Whatnot</h3>
+                    <p class="source-note">Implementation: <code>sources/whatnot.js</code></p>
+                    <ul class="requirements">
+                        <li>Open the live Whatnot show page with chat visible; product/giveaway metadata relies on DOM sections rendered in the show view.</li>
+                        <li><em>Capture Stream Events</em> controls auction/catalog metadata updates; viewer counts still follow the viewer/hype toggles.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>Polled viewer count from the show header.</td>
+                                <td><code>meta</code> is an integer viewer count.</td>
+                            </tr>
+                            <tr>
+                                <td><code>joined</code></td>
+                                <td>Chat rows whose normalized body starts with <code>joined</code>.</td>
+                                <td>Uses string event labels for join notices (not boolean <code>true</code>).</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>auction_update</code></td>
+                                <td>When the live footer auction state changes (winner/winning text, title, bids, price, timer, sold state).</td>
+                                <td>Metadata-only event. No <code>chatname</code>/<code>chatmessage</code>; data lives in <code>meta</code> (for example <code>meta.title</code>, <code>meta.bids</code>, <code>meta.price</code>, <code>meta.timer</code>, <code>meta.status</code>).</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>commerce_update</code></td>
+                                <td>When catalog sections change (products, surprise sets, upcoming giveaways).</td>
+                                <td>Metadata-only snapshot with section counts and item arrays under <code>meta.products</code>, <code>meta.surpriseSets</code>, and <code>meta.upcomingGiveaways</code>.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">Auction/commerce updates are intended for dedicated overlays and automations; keep downstream rendering keyed off <code>data.event</code> + <code>data.meta</code>.</p>
+                </article>
+
+                <article class="platform-card" id="ebay">
+                    <h3>eBay Live</h3>
+                    <p class="source-note">Implementation: <code>sources/ebay.js</code></p>
+                    <ul class="requirements">
+                        <li>Open an eBay Live event stream page (<code>/ebaylive/events/&lt;id&gt;/stream</code>) with event cards visible.</li>
+                        <li>Some auction controls (winner/timer/bid buttons) are only exposed in certain layouts or authenticated states; parser falls back to live preview cards when full auction footer DOM is unavailable.</li>
+                        <li><em>Capture Stream Events</em> controls metadata snapshots (<code>auction_update</code>, <code>commerce_update</code>); viewer counters still honor viewer/hype toggles.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="status-event"><code>viewer_update</code></td>
+                                <td>When the active event viewer count changes (header count or live event pill fallback).</td>
+                                <td><code>meta</code> is an integer viewer count.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>auction_update</code></td>
+                                <td>When active auction metadata changes.</td>
+                                <td>Metadata-only event. If player-card controls are present, includes bid/price/timer/winner/action fields. Fallback mode includes current live event fields such as <code>meta.title</code>, <code>meta.viewerCount</code>, <code>meta.sellerName</code>, <code>meta.tags</code>, and <code>meta.scheduleText</code>.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>commerce_update</code></td>
+                                <td>When catalog/live-event snapshot sections change.</td>
+                                <td>Metadata-only snapshot under <code>meta</code>, including available sections such as <code>meta.navigation</code>, <code>meta.playerCards</code>, <code>meta.liveEvents</code>, <code>meta.livePreview</code>, <code>meta.currentEvent</code>, and <code>meta.upcomingEvents</code>.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="field-highlights">eBay metadata events intentionally omit <code>chatname</code>/<code>chatmessage</code>; downstream overlays should render from <code>data.event</code> + <code>data.meta</code> only.</p>
                 </article>
 
                 <article class="platform-card" id="kick-dom">
