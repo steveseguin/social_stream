@@ -71,6 +71,84 @@ function toDataURL(url, callback) {
 		});
 		return resp;
 	}
+
+	function parseCountText(rawText){
+		try {
+			if (!rawText){return null;}
+			let text = (rawText + "").trim();
+			if (!text){return null;}
+			if (/[$€£]/.test(text)){return null;}
+			let match = text.match(/([0-9]+(?:[.,][0-9]+)?)(\s*[KMB])?/i);
+			if (!match){return null;}
+			let value = parseFloat((match[1] + "").replace(/,/g, ""));
+			if (!isFinite(value)){return null;}
+			let suffix = ((match[2] || "") + "").trim().toUpperCase();
+			if (suffix === "K"){
+				value *= 1000;
+			} else if (suffix === "M"){
+				value *= 1000000;
+			} else if (suffix === "B"){
+				value *= 1000000000;
+			}
+			return Math.max(0, Math.round(value));
+		} catch(e){
+			return null;
+		}
+	}
+
+	function extractViewerCount(){
+		try {
+			let viewerPath = document.querySelector("svg>path[d^='M10.8176 5.85711C10.8176 6.63686 10.5052 7.38474 9.94965 7.93603C9.39408 8.4873 8.64033 8.79724 7.85447']");
+			if (viewerPath && viewerPath.parentNode && viewerPath.parentNode.nextElementSibling){
+				let directCount = parseCountText(viewerPath.parentNode.nextElementSibling.textContent);
+				if (directCount !== null){
+					return directCount;
+				}
+			}
+
+			let metricsRow = document.querySelector(".chat-container header .d_flex.gap_2");
+			if (metricsRow){
+				let metricItems = metricsRow.querySelectorAll(":scope > div");
+				for (let i=0; i<metricItems.length; i++){
+					let item = metricItems[i];
+					if (!item){continue;}
+					let countTextNode = item.querySelector(".fs_13px, .lh_17px, div, span");
+					let countText = "";
+					if (countTextNode && countTextNode.textContent && countTextNode.textContent.trim()){
+						countText = countTextNode.textContent;
+					} else {
+						countText = item.textContent;
+					}
+					let parsed = parseCountText(countText);
+					if (parsed !== null){
+						return parsed;
+					}
+				}
+			}
+		} catch(e){}
+		return null;
+	}
+
+	var lastViewerCount = null;
+
+	function emitViewerCount(viewerCount){
+		try {
+			if (!isFinite(viewerCount)){return;}
+			viewerCount = Math.max(0, Math.round(viewerCount));
+			if (lastViewerCount === viewerCount){return;}
+			lastViewerCount = viewerCount;
+			chrome.runtime.sendMessage(
+				chrome.runtime.id,
+				({message:{
+						type: 'locals',
+						event: 'viewer_update',
+						meta: viewerCount
+					}
+				}),
+				function (e) {}
+			);
+		} catch(e){}
+	}
 	
 	function processMessage(ele){
 		
@@ -137,7 +215,13 @@ function toDataURL(url, callback) {
 		
 		if (!msg){
 			try {
-				var msgNodeNew = ele.querySelector(".chat-message-content-wrapper .wb_break-word");
+				var msgNodeNew = ele.querySelector(".chat-message-content-wrapper .fs_14px.lh_18px.w_100% .wb_break-word");
+				if (!msgNodeNew){
+					let msgNodeList = ele.querySelectorAll(".chat-message-content-wrapper .wb_break-word");
+					if (msgNodeList && msgNodeList.length){
+						msgNodeNew = msgNodeList[msgNodeList.length-1];
+					}
+				}
 				if (msgNodeNew){
 					msg = getAllContentNodes(msgNodeNew).trim();
 				}
@@ -309,37 +393,10 @@ function toDataURL(url, callback) {
 			
 				if (counter%10==0){
 					try {
-						
-						
-						let viewerSpan = document.querySelector("svg>path[d^='M10.8176 5.85711C10.8176 6.63686 10.5052 7.38474 9.94965 7.93603C9.39408 8.4873 8.64033 8.79724 7.85447']");
-						if (viewerSpan?.parentNode?.nextElementSibling?.textContent){
-							let views = viewerSpan.parentNode.nextElementSibling.textContent.toUpperCase();
-							let multiplier = 1;
-							if (views.includes("K")){
-								multiplier = 1000;
-								views = views.replace("K","");
-							} else if (views.includes("M")){
-								multiplier = 1000000;
-								views = views.replace("M","");
-							}
-							views = views.split(" ")[0];
-							if (views == parseFloat(views)){
-								views = parseFloat(views) * multiplier;
-								chrome.runtime.sendMessage(
-									chrome.runtime.id,
-									({message:{
-											type: 'locals',
-											event: 'viewer_update',
-											meta: views
-										}
-									}),
-									function (e) {}
-								);
-							}
+						let viewerCount = extractViewerCount();
+						if (viewerCount !== null){
+							emitViewerCount(viewerCount);
 						}
-						
-						
-						
 					} catch(e){}
 				}
 				counter+=1;
