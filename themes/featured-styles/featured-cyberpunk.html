@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Featured Message - Cyberpunk Effects</title>
+    <link rel="icon" href="../../favicon.ico" />
+    <link rel="preload" href="../../thirdparty/NotoColorEmoji.ttf" as="font" type="font/ttf" crossorigin="anonymous">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&display=swap');
+        
+        @font-face {
+            font-family: NotoColorEmojiLimited;
+            unicode-range: U+1F1E6-1F1FF;
+            src: url(../../thirdparty/NotoColorEmoji.ttf);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Rajdhani', sans-serif, 'NotoColorEmojiLimited';
+            background: transparent;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #container {
+            width: 100%;
+            max-width: 900px;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Cyber grid overlay */
+        #container::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(0, 255, 255, 0.03) 0px,
+                    transparent 1px,
+                    transparent 2px,
+                    rgba(0, 255, 255, 0.03) 3px
+                );
+            pointer-events: none;
+            z-index: -1;
+            animation: cyberScan 8s linear infinite;
+        }
+
+        @keyframes cyberScan {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(20px); }
+        }
+
+        /* Base message structure */
+        .message-wrapper {
+            position: relative;
+            margin: 20px 0;
+            opacity: 0;
+        }
+
+        .message {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+            color: #fff;
+            clip-path: polygon(
+                0 0,
+                calc(100% - 20px) 0,
+                100% 20px,
+                100% 100%,
+                20px 100%,
+                0 calc(100% - 20px)
+            );
+        }
+
+        /* Cyber border effect */
+        .message::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(45deg, #00ffff, #ff00ff, #00ff00, #ffff00);
+            opacity: 0.8;
+            z-index: -1;
+            animation: cyberBorderRotate 3s linear infinite;
+        }
+
+        @keyframes cyberBorderRotate {
+            0% { filter: hue-rotate(0deg); }
+            100% { filter: hue-rotate(360deg); }
+        }
+
+        .message::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            background: #000;
+            clip-path: inherit;
+            z-index: -1;
+        }
+
+        /* Glitch effect overlay */
+        .glitch-effect {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            opacity: 0;
+            animation: glitchFlicker 10s infinite;
+        }
+
+        @keyframes glitchFlicker {
+            0%, 90%, 100% { opacity: 0; }
+            92% { opacity: 1; }
+        }
+
+        .glitch-effect::before,
+        .glitch-effect::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: inherit;
+            mix-blend-mode: screen;
+        }
+
+        .glitch-effect::before {
+            animation: glitchShift 0.3s infinite;
+            background: linear-gradient(to right, transparent, #ff00ff, transparent);
+        }
+
+        .glitch-effect::after {
+            animation: glitchShift 0.3s infinite reverse;
+            background: linear-gradient(to right, transparent, #00ffff, transparent);
+        }
+
+        @keyframes glitchShift {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+
+        .avatar {
+            width: 72px;
+            height: 72px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid #00ffff;
+            position: relative;
+            filter: contrast(1.2) brightness(1.1);
+            clip-path: polygon(
+                20% 0%,
+                100% 0%,
+                100% 80%,
+                80% 100%,
+                0% 100%,
+                0% 20%
+            );
+        }
+
+        /* Hologram scanlines on avatar */
+        .avatar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 255, 255, 0.1) 2px,
+                rgba(0, 255, 255, 0.1) 4px
+            );
+            animation: scanlines 8s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scanlines {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+
+        .message-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-width: 0;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .username {
+            font-family: 'Share Tech Mono', monospace;
+            font-weight: 700;
+            font-size: 22px;
+            color: #00ffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 
+                0 0 10px #00ffff,
+                0 0 20px #00ffff,
+                0 0 30px #00ffff;
+            position: relative;
+        }
+
+        /* Data stream effect on username */
+        .username::after {
+            content: attr(data-text);
+            position: absolute;
+            left: 0;
+            top: 0;
+            color: #ff00ff;
+            animation: dataStream 2s infinite;
+            opacity: 0;
+        }
+
+        @keyframes dataStream {
+            0%, 100% { opacity: 0; transform: translateX(0); }
+            50% { opacity: 0.5; transform: translateX(2px); }
+        }
+
+        .badges {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .badge {
+            height: 22px;
+            filter: 
+                drop-shadow(0 0 3px #00ffff)
+                brightness(1.2);
+        }
+
+        .source-icon {
+            width: 24px;
+            height: 24px;
+            opacity: 0.8;
+            filter: 
+                drop-shadow(0 0 3px #ff00ff)
+                hue-rotate(180deg);
+        }
+
+        .text {
+            font-size: 18px;
+            line-height: 1.6;
+            word-wrap: break-word;
+            color: #f0f0f0;
+            font-weight: 400;
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+
+        /* Inline images/SVGs */
+        .text img,
+        .text svg {
+            max-width: 200px;
+            max-height: 2em;
+            height: auto;
+            width: auto;
+            vertical-align: middle;
+            object-fit: contain;
+            margin: 0 2px;
+            display: inline-block;
+            filter: drop-shadow(0 0 3px #00ffff);
+        }
+
+        .text img.emote,
+        .text svg.emote,
+        .text img[class*="emote"],
+        .text svg[class*="emote"] {
+            max-height: 1.5em;
+            max-width: 1.5em;
+        }
+
+        .donation-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            margin-top: 12px;
+            background: linear-gradient(45deg, #ff00ff, #00ffff);
+            color: #000;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 14px;
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(
+                0 0,
+                calc(100% - 10px) 0,
+                100% 10px,
+                100% 100%,
+                10px 100%,
+                0 calc(100% - 10px)
+            );
+        }
+
+        /* Digital rain effect for donations */
+        .donation-info::before {
+            content: '101010110101';
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: rgba(0, 0, 0, 0.2);
+            animation: digitalRain 1s linear infinite;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        @keyframes digitalRain {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .content-image {
+            max-width: 300px;
+            max-height: 300px;
+            margin-top: 12px;
+            border: 2px solid #00ffff;
+            box-shadow: 
+                0 0 20px #00ffff,
+                inset 0 0 20px rgba(0, 255, 255, 0.2);
+            filter: contrast(1.2) saturate(1.2);
+            clip-path: polygon(
+                10% 0%,
+                100% 0%,
+                100% 90%,
+                90% 100%,
+                0% 100%,
+                0% 10%
+            );
+        }
+
+        /* Hide empty elements */
+        .badges:empty,
+        .donation-info:empty {
+            display: none;
+        }
+
+        /* Style 1: Neural */
+        .style-neural .message-wrapper.show {
+            animation: neuralConnect 0.8s ease-out forwards;
+        }
+
+        @keyframes neuralConnect {
+            0% {
+                opacity: 0;
+                transform: scale(0) translateZ(100px);
+                filter: blur(20px) brightness(3);
+            }
+            50% {
+                filter: blur(5px) brightness(1.5);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateZ(0);
+                filter: blur(0) brightness(1);
+            }
+        }
+
+        /* Style 2: Hack */
+        .style-hack .message {
+            font-family: 'Share Tech Mono', monospace;
+        }
+
+        .style-hack .text::before {
+            content: '> ';
+            color: #00ff00;
+        }
+
+        .style-hack .message-wrapper.show {
+            animation: hackSequence 0.6s steps(10) forwards;
+        }
+
+        @keyframes hackSequence {
+            0% {
+                opacity: 0;
+                clip-path: inset(0 100% 0 0);
+            }
+            100% {
+                opacity: 1;
+                clip-path: inset(0 0 0 0);
+            }
+        }
+
+        /* Style 3: Hologram */
+        .style-hologram .message {
+            background: rgba(0, 20, 40, 0.9);
+            border: 1px solid #00ffff;
+        }
+
+        .style-hologram .message::before {
+            animation: holoFlicker 0.1s infinite;
+        }
+
+        @keyframes holoFlicker {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.85; }
+        }
+
+        .style-hologram .message-wrapper.show {
+            animation: holoMaterialize 0.8s ease-out forwards;
+        }
+
+        @keyframes holoMaterialize {
+            0% {
+                opacity: 0;
+                transform: translateY(50px) scaleY(0.1);
+                filter: blur(10px);
+            }
+            50% {
+                transform: translateY(0) scaleY(1.2);
+                filter: blur(5px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scaleY(1);
+                filter: blur(0);
+            }
+        }
+
+        /* Style 4: Matrix */
+        .style-matrix .message {
+            background: #000;
+            border: 1px solid #00ff00;
+        }
+
+        .style-matrix .message::before {
+            background: #00ff00;
+            animation: none;
+        }
+
+        .style-matrix .username,
+        .style-matrix .text {
+            color: #00ff00;
+            text-shadow: 0 0 5px #00ff00;
+        }
+
+        .style-matrix .message-wrapper.show {
+            animation: matrixFall 0.8s ease-out forwards;
+        }
+
+        @keyframes matrixFall {
+            0% {
+                opacity: 0;
+                transform: translateY(-100vh) scaleX(0.1);
+            }
+            50% {
+                opacity: 0.5;
+                transform: translateY(-50vh) scaleX(0.5);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scaleX(1);
+            }
+        }
+
+        /* Style 5: Circuit */
+        .style-circuit .message {
+            background: #0a0a0a;
+            border: 2px solid #ffff00;
+        }
+
+        .style-circuit .message::before {
+            background: repeating-linear-gradient(
+                90deg,
+                #ffff00 0px,
+                #ffff00 2px,
+                transparent 2px,
+                transparent 10px
+            );
+            animation: circuitFlow 2s linear infinite;
+        }
+
+        @keyframes circuitFlow {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(10px); }
+        }
+
+        .style-circuit .message-wrapper.show {
+            animation: powerOn 0.6s ease-out forwards;
+        }
+
+        @keyframes powerOn {
+            0% {
+                opacity: 0;
+                transform: scale(0.9);
+                filter: brightness(0);
+            }
+            50% {
+                filter: brightness(2);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        /* Exit animations */
+        .message-wrapper.hide {
+            animation-duration: 0.6s;
+            animation-fill-mode: forwards;
+        }
+
+        .style-neural .message-wrapper.hide,
+        .style-hologram .message-wrapper.hide {
+            animation: digitalDissolve 0.6s ease-in forwards;
+        }
+
+        @keyframes digitalDissolve {
+            0% {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.8);
+                filter: blur(20px) brightness(0);
+            }
+        }
+
+        .style-hack .message-wrapper.hide,
+        .style-matrix .message-wrapper.hide,
+        .style-circuit .message-wrapper.hide {
+            animation: systemCrash 0.5s steps(5) forwards;
+        }
+
+        @keyframes systemCrash {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            20% {
+                transform: translateY(-5px) translateX(5px);
+            }
+            40% {
+                transform: translateY(5px) translateX(-5px);
+            }
+            60% {
+                transform: translateY(-3px) translateX(3px);
+                filter: contrast(2);
+            }
+            80% {
+                transform: translateY(3px) translateX(-3px);
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(0) translateX(0) scaleY(0.1);
+            }
+        }
+
+        /* Special effects for donations/memberships */
+        .has-donation .message::before,
+        .has-membership .message::before {
+            animation: cyberBorderRotate 1s linear infinite;
+        }
+
+        .has-donation .donation-info,
+        .has-membership .donation-info {
+            animation: cyberPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes cyberPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            #container {
+                width: 95%;
+            }
+            
+            .message {
+                padding: 16px;
+            }
+            
+            .text {
+                font-size: 16px;
+            }
+            
+            .username {
+                font-size: 18px;
+            }
+            
+            .avatar {
+                width: 56px;
+                height: 56px;
+            }
+        }
+
+        /* Accessibility */
+        @media (prefers-reduced-motion: reduce) {
+            .message,
+            .message::before,
+            .message::after,
+            .glitch-effect,
+            #container::before,
+            .message-wrapper {
+                animation: none !important;
+            }
+            
+            .message-wrapper.show {
+                opacity: 1;
+                transition: opacity 0.3s ease;
+            }
+            
+            .message-wrapper.hide {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="output"></div>
+    </div>
+
+    <script src="../../tts.js"></script>
+    <script>
+        // Configuration
+        const urlParams = new URLSearchParams(window.location.search);
+        const roomID = urlParams.get('session') || urlParams.get('room') || urlParams.get('roomid') || 'TESTROOM';
+        const style = urlParams.get('style') || 'neural'; // neural, hack, hologram, matrix, circuit
+        const password = urlParams.get('password') || urlParams.get('pass') || urlParams.get('pw') || "false";
+        const showtime = parseInt(urlParams.get('showtime') || urlParams.get('timer') || '30000');
+        
+        // Apply selected style
+        document.body.className = `style-${style}`;
+
+        // State
+        let messageTimeout = null;
+        let currentMessage = null;
+
+        // Create VDO.Ninja iframe for receiving messages
+        function createIframe() {
+            var iframe = document.createElement("iframe");
+            
+            iframe.src = "https://vdo.socialstream.ninja/?ln&password=" + password + "&notmobile&salt=vdo.ninja&label=overlay&exclude=" + roomID + "&scene&novideo&noaudio&cleanoutput&room=" + roomID;
+            
+            iframe.style.width = "0px";
+            iframe.style.height = "0px";
+            iframe.style.position = "fixed";
+            iframe.style.left = "-100px";
+            iframe.style.top = "-100px";
+            iframe.id = "frame1";
+            iframe.allow = "microphone";
+            document.body.appendChild(iframe);
+
+            var eventMethod = window.addEventListener ? "addEventListener" : "attachEvent";
+            var eventer = window[eventMethod];
+            var messageEvent = eventMethod === "attachEvent" ? "onmessage" : "message";
+
+            eventer(messageEvent, function (e) {
+                if (e.source != iframe.contentWindow) return;
+                
+                if ("dataReceived" in e.data) {
+                    if ("overlayNinja" in e.data.dataReceived) {
+                        if (e.data.dataReceived.overlayNinja && "response" in e.data.dataReceived.overlayNinja) {
+                            // pass
+                        } else {
+                            processData({ contents: e.data.dataReceived.overlayNinja });
+                        }
+                    }
+                }
+            });
+        }
+
+        // Process incoming messages
+        function processData(data) {
+            // Handle clear command
+            if (!data || data === false) {
+                hideMessage();
+                return;
+            }
+            
+            // Handle different data formats
+            if (data.contents === false) {
+                hideMessage();
+                return;
+            }
+            
+            // If data has contents property, use it
+            if (data && data.contents) {
+                showMessage(data.contents);
+            } 
+            // If data has content property (from dock)
+            else if (data && "content" in data) {
+                if (data.content) {
+                    processData({ contents: data.content });
+                } else {
+                    hideMessage();
+                }
+            }
+            // If data has action property
+            else if (data.action && "value" in data && data.action == "content") {
+                if (data.value) {
+                    try {
+                        const parsed = JSON.parse(data.value);
+                        if (parsed && "chatmessage" in parsed) {
+                            showMessage(parsed);
+                        }
+                    } catch (e) {
+                        console.error("Error parsing value:", e);
+                    }
+                } else {
+                    hideMessage();
+                }
+            }
+            // Direct message format
+            else if (data && "chatmessage" in data) {
+                showMessage(data);
+            }
+        }
+
+        // Display message
+        function showMessage(content) {
+            if (!content.chatmessage && !content.chatname) return;
+
+            hideMessage(() => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-wrapper';
+                
+                // Add special classes for donations/memberships
+                if (content.hasDonation) {
+                    wrapper.classList.add('has-donation');
+                }
+                if (content.membership) {
+                    wrapper.classList.add('has-membership');
+                }
+                
+                const message = document.createElement('div');
+                message.className = 'message';
+
+                // Add glitch effect overlay
+                const glitch = document.createElement('div');
+                glitch.className = 'glitch-effect';
+                message.appendChild(glitch);
+
+                // Avatar
+                if (content.chatimg) {
+                    const avatar = document.createElement('img');
+                    avatar.className = 'avatar';
+                    avatar.src = content.chatimg;
+                    avatar.onerror = () => {
+                        avatar.src = '../../sources/images/unknown.png';
+                    };
+                    message.appendChild(avatar);
+                }
+
+                // Content wrapper
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'header';
+                
+                // Username with data attribute for effects
+                if (content.chatname) {
+                    const name = document.createElement('span');
+                    name.className = 'username';
+                    name.innerHTML = content.chatname;
+                    // Decode HTML entities for data-text attribute
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = content.chatname;
+                    const decodedName = tempDiv.textContent || tempDiv.innerText || '';
+                    name.setAttribute('data-text', decodedName);
+                    header.appendChild(name);
+                }
+
+                // Badges
+                if (content.chatbadges && Array.isArray(content.chatbadges)) {
+                    const badges = document.createElement('div');
+                    badges.className = 'badges';
+                    content.chatbadges.forEach(badge => {
+                        if (typeof badge === 'string') {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge;
+                            badges.appendChild(img);
+                        } else if (badge.src) {
+                            const img = document.createElement('img');
+                            img.className = 'badge';
+                            img.src = badge.src;
+                            badges.appendChild(img);
+                        }
+                    });
+                    header.appendChild(badges);
+                }
+
+                // Source icon
+                if (content.type) {
+                    const sourceIcon = document.createElement('img');
+                    sourceIcon.className = 'source-icon';
+                    sourceIcon.src = `../../sources/images/${content.type}.png`;
+                    sourceIcon.onerror = () => { sourceIcon.style.display = 'none'; };
+                    header.appendChild(sourceIcon);
+                }
+
+                contentDiv.appendChild(header);
+
+                // Message text
+                if (content.chatmessage) {
+                    const text = document.createElement('div');
+                    text.className = 'text';
+                    text.innerHTML = content.chatmessage;
+                    contentDiv.appendChild(text);
+                }
+
+                // Donation/Membership info
+                if (content.hasDonation || content.membership) {
+                    const donationDiv = document.createElement('div');
+                    donationDiv.className = 'donation-info';
+                    
+                    if (content.hasDonation) {
+                        const amount = content.hasDonation;
+                        const title = content.title || 'DONATION';
+                        donationDiv.innerHTML = `⚡ ${title}: ${amount}`;
+                    } else if (content.membership) {
+                        const memberInfo = typeof content.membership === 'string' ? 
+                            content.membership : 'MEMBER++';
+                        donationDiv.innerHTML = `🔌 ${memberInfo}`;
+                    }
+                    
+                    contentDiv.appendChild(donationDiv);
+                }
+
+                // Content image (stickers, etc)
+                if (content.contentimg) {
+                    const img = document.createElement('img');
+                    img.className = 'content-image';
+                    img.src = content.contentimg;
+                    contentDiv.appendChild(img);
+                }
+
+                message.appendChild(contentDiv);
+                wrapper.appendChild(message);
+                
+                const output = document.getElementById('output');
+                output.innerHTML = '';
+                output.appendChild(wrapper);
+
+                // Trigger animation
+                requestAnimationFrame(() => {
+                    wrapper.classList.add('show');
+                });
+
+                currentMessage = wrapper;
+
+                // TTS support
+                if (window.initTTS && urlParams.has('tts')) {
+                    const ttsText = content.chatmessage ? 
+                        content.chatmessage.replace(/<[^>]*>/g, '') : '';
+                    if (ttsText) {
+                        window.speak(content.chatname + ' says ' + ttsText);
+                    }
+                }
+
+                // Auto-hide after showtime
+                if (messageTimeout) clearTimeout(messageTimeout);
+                messageTimeout = setTimeout(() => {
+                    hideMessage();
+                }, showtime);
+            });
+        }
+
+        // Hide current message
+        function hideMessage(callback) {
+            if (messageTimeout) {
+                clearTimeout(messageTimeout);
+                messageTimeout = null;
+            }
+
+            if (currentMessage) {
+                currentMessage.classList.remove('show');
+                currentMessage.classList.add('hide');
+                setTimeout(() => {
+                    if (currentMessage && currentMessage.parentNode) {
+                        currentMessage.parentNode.removeChild(currentMessage);
+                    }
+                    currentMessage = null;
+                    if (callback) callback();
+                }, 600); // Match animation duration
+            } else if (callback) {
+                callback();
+            }
+        }
+
+        // Initialize TTS if requested
+        if (urlParams.has('tts') && window.initTTS) {
+            window.initTTS({
+                lang: urlParams.get('tts') || urlParams.get('lang') || 'en-US',
+                pitch: parseFloat(urlParams.get('pitch') || '1'),
+                rate: parseFloat(urlParams.get('rate') || '1'),
+                voice: urlParams.get('voice') || null
+            });
+        }
+
+        // Initialize iframe connection
+        createIframe();
+    </script>
+</body>
+</html>
