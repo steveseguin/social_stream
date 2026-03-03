@@ -11,8 +11,8 @@
 <body>
     <div class="container">
         <div id="quota-warning" class="quota-warning hidden">
-            <span id="quota-warning-text">We've hit the default YouTube API quota. You can use your own Google API project to continue without interruptions.</span>
-            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My Credentials</button>
+            <span id="quota-warning-text">We've hit the default YouTube API quota. Add your own YouTube API key to use your own quota project.</span>
+            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My API Key</button>
         </div>
         <div class="main-content">
             <div class="auth">
@@ -23,7 +23,7 @@
                     
             <div class="auth-section">
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
-                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom OAuth Client ID</div>
+                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom API key quota project</div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method:</label>
                     <div class="auth-method-options">
@@ -46,12 +46,10 @@
                     </div>
 
                     <details id="credentials-details" class="credentials-details">
-                        <summary>Advanced: Use your own Google API credentials</summary>
+                        <summary>Use your own YouTube API quota (recommended)</summary>
                         <div class="credentials-form">
-                            <label for="custom-client-id">OAuth Client ID</label>
-                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" />
-                            <label for="custom-api-key">API Key (optional)</label>
-                            <input id="custom-api-key" type="text" placeholder="AIza... (optional)" />
+                            <label for="custom-api-key">API Key</label>
+                            <input id="custom-api-key" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                             <div class="credentials-actions">
                                 <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
                                 <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
@@ -60,14 +58,12 @@
                                 <p><strong>How to set up in Google Cloud:</strong></p>
                                 <ul>
                                     <li>Create or select a project at console.cloud.google.com</li>
-                                    <li>Enable the “YouTube Data API v3” in APIs & Services</li>
-                                    <li>Configure OAuth consent screen (External), add yourself as a test user or publish</li>
-                                    <li>Create Credentials → OAuth client ID → Web application</li>
-                                    <li>Add the following to Authorized redirect URIs:</li>
+                                    <li>Enable the YouTube Data API v3 in APIs and Services</li>
+                                    <li>Create Credentials -> API key, and paste that key above</li>
+                                    <li>In SSAPP/Electron, do not lock that key to HTTP referrers</li>
+                                    <li>For hosted Social Stream auth, API key is what moves API usage to your quota project</li>
                                 </ul>
-                                <code id="redirect-uri-hint"></code>
-                                <p>Save and copy your Client ID (ends with .apps.googleusercontent.com) into the field above. API Key is optional.</p>
-                                <p>After saving, sign out and sign in again to use your credentials.</p>
+                                <p>After saving an API key, sign out and sign in again so new requests use your quota project.</p>
                             </div>
                         </div>
                     </details>
@@ -138,20 +134,17 @@
         <div class="sidebar hidden socket">
             <div class="permissions-container" id="permissions-info"></div>
             <div class="credentials-container" id="credentials-container-signedin">
-                <div class="permissions-header">Use Your Own Credentials</div>
+                <div class="permissions-header">Use Your Own Quota Project</div>
                 <div class="credentials-form inline">
-                    <label for="custom-client-id-2">OAuth Client ID</label>
-                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com" />
-                    <label for="custom-api-key-2">API Key (optional)</label>
-                    <input id="custom-api-key-2" type="text" placeholder="AIza... (optional)" />
+                    <label for="custom-api-key-2">API Key</label>
+                    <input id="custom-api-key-2" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                     <div class="credentials-actions">
                         <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
                         <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
                     </div>
-                    <div class="credentials-note">Changes take effect next sign-in. Use Reset to return to defaults.</div>
+                    <div class="credentials-note">API key changes take effect next sign-in. Use Reset to return to defaults.</div>
                     <div class="credentials-help" style="margin-top:8px;">
-                        <p><strong>Setup steps:</strong> Enable “YouTube Data API v3”, configure OAuth consent, create a Web Application OAuth client, and add this Authorized redirect URI:</p>
-                        <code id="redirect-uri-hint-2"></code>
+                        <p><strong>Setup steps:</strong> Enable the YouTube Data API v3, create an API key, and do not lock it to HTTP referrers for SSAPP/Electron.</p>
                     </div>
                 </div>
             </div>
@@ -195,21 +188,25 @@ try {
         'https://www.googleapis.com/auth/youtube.force-ssl',
         'https://www.googleapis.com/auth/youtube.channel-memberships.creator'
     ];
-    var clientId = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
+    var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var clientId = DEFAULT_YT_CLIENT_ID;
     var apiKeyOverride = '';
-    try {
-        // Allow overrides via localStorage or URL for advanced users
-        const storedId = localStorage.getItem('ytClientIdOverride');
-        const storedKey = localStorage.getItem('ytApiKeyOverride');
-        const qp = new URLSearchParams(window.location.search);
-        const hp = new URLSearchParams(window.location.hash.slice(1));
-        const urlClient = qp.get('client_id') || hp.get('client_id');
-        const urlKey = qp.get('api_key') || hp.get('api_key');
-        if (storedId) clientId = storedId;
-        if (storedKey) apiKeyOverride = storedKey;
-        if (urlClient) { clientId = urlClient; }
-        if (urlKey) { apiKeyOverride = urlKey; }
-    } catch {}
+    function refreshClientOverrides() {
+        try {
+            // API key override can be set via localStorage or URL
+            const storedKey = localStorage.getItem('ytApiKeyOverride');
+            const qp = new URLSearchParams(window.location.search);
+            const hp = new URLSearchParams(window.location.hash.slice(1));
+            const urlKey = qp.get('api_key') || hp.get('api_key');
+            clientId = DEFAULT_YT_CLIENT_ID;
+            apiKeyOverride = urlKey || storedKey || '';
+        } catch (_) {
+            clientId = DEFAULT_YT_CLIENT_ID;
+            apiKeyOverride = '';
+        }
+    }
+    refreshClientOverrides();
     var redirectURI = window.location.href.split("/youtube")[0]+"/youtube.html";
     var username = "";
     var channel = '';
@@ -259,6 +256,7 @@ try {
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
 	var tokenRefreshPromise = null;
+	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. Add your own YouTube API key to use your own quota project.";
 	
 
 	var emojiData = [];
@@ -1617,15 +1615,27 @@ function enableBackgroundKeepAlive() {
 					}
 					showSocketInterface();
 				} else {
-					refreshToken();
+					console.warn('Authenticated but unable to load YouTube profile from channels?mine=true');
+					showSocketInterface();
+					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
+					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile due to API quota. You remain signed in; add your own API key or try again after quota resets.');
 				}
 			}).catch(error => {
+				if (isQuotaError(error)) {
+					console.error('Quota exceeded while validating YouTube account after sign-in:', error);
+					showSocketInterface();
+					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
+					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. You remain signed in; add your own API key or try again later.');
+					return;
+				}
 				if (error.message && error.message.includes('401')) {
 					refreshAccessToken(localStorage.getItem('youtubeRefreshToken'));
 				} else {
 					console.error('Error validating token:', error);
 					clearStoredToken();
 					showAuthButton();
+					const reason = String(error?.ytMessage || error?.ytReason || error?.message || 'Unknown validation error');
+					showOAuthFailure(`Sign-in succeeded, but account validation failed: ${reason}`);
 				}
 			});
 		} catch (error) {
@@ -1671,14 +1681,48 @@ function enableBackgroundKeepAlive() {
 		});
 		return tokenRefreshPromise;
 	}
+	function setExpectedOAuthState(state) {
+		try {
+			sessionStorage.youtubeOAuthState = state;
+		} catch (_) {}
+		try {
+			localStorage.setItem('youtubeOAuthState', state);
+		} catch (_) {}
+	}
+	function getExpectedOAuthState() {
+		let state = null;
+		try {
+			state = sessionStorage.youtubeOAuthState || null;
+		} catch (_) {}
+		if (state) return state;
+		try {
+			return localStorage.getItem('youtubeOAuthState') || null;
+		} catch (_) {
+			return null;
+		}
+	}
+	function clearExpectedOAuthState() {
+		try {
+			delete sessionStorage.youtubeOAuthState;
+		} catch (_) {}
+		try {
+			localStorage.removeItem('youtubeOAuthState');
+		} catch (_) {}
+	}
+	function showOAuthFailure(message) {
+		try {
+			showAuthButton();
+			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check redirect URIs and try again. For quota issues, add your own YouTube API key.');
+		} catch (_) {}
+	}
 	function buildAuthRequest(redirectOverride, stateOverride) {
 		const state = stateOverride || nonce(15);
-		sessionStorage.youtubeOAuthState = state;
+		setExpectedOAuthState(state);
 		const redirectTarget = redirectOverride || redirectURI;
 		return {
 			state,
 			redirectUri: redirectTarget,
-			url: 'https://ytauth.socialstream.ninja/auth' +
+			url: AUTH_BASE_URL + '/auth' +
 				'?client_id=' + clientId +
 				'&redirect_uri=' + encodeURIComponent(redirectTarget) +
 				'&scope=' + encodeURIComponent(YT_SCOPES.join(' ')) +
@@ -1695,14 +1739,18 @@ function enableBackgroundKeepAlive() {
             showAuthButton();
             return false;
         }
+		refreshClientOverrides();
 		try {
-			const response = await fetch('https://ytauth.socialstream.ninja/refresh', {
+			const response = await fetch(AUTH_BASE_URL + '/refresh', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ refresh_token: refreshTokenValue })
+				body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: clientId })
 			});
-			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-			const data = await response.json();
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+				throw new Error(msg);
+			}
 			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue);
 			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
 			return true;
@@ -1714,34 +1762,45 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 	async function exchangeCodeForTokens(code, state, redirectOverride) {
-		if (state !== sessionStorage.youtubeOAuthState) {
-			console.error('State mismatch - possible CSRF attack');
-			showAuthButton();
+		refreshClientOverrides();
+		const expectedState = getExpectedOAuthState();
+		if (!expectedState || state !== expectedState) {
+			console.error('State mismatch - possible CSRF attack', { expectedState, receivedState: state });
+			showOAuthFailure('State mismatch during YouTube sign-in. Please try again and avoid switching to a different browser tab/window during authentication.');
 			return;
 		}
 		if (!code) {
 			console.error('No authorization code supplied.');
-			showAuthButton();
+			showOAuthFailure('No authorization code was returned by Google. Please try signing in again.');
 			return;
 		}
 		const redirectTarget = redirectOverride || redirectURI;
 		try {
-			const response = await fetch('https://ytauth.socialstream.ninja/token', {
+			const response = await fetch(AUTH_BASE_URL + '/token', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ code: code, redirect_uri: redirectTarget })
+				body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: clientId })
 			});
-			if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-			const data = await response.json();
+			const data = await response.json().catch(() => ({}));
+			if (!response.ok) {
+				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+				throw new Error(msg);
+			}
+			if (!data.access_token) {
+				throw new Error('Token exchange response did not include access_token.');
+			}
 			setStoredToken(data.access_token, data.expires_in, data.refresh_token);
+			clearExpectedOAuthState();
 			window.history.replaceState({}, document.title, redirectURI);
 			verifyAndUseToken(data.access_token);
 		} catch (error) {
 			console.error('Error exchanging code for tokens:', error);
-			showAuthButton();
+			const errorMessage = error && error.message ? error.message : 'unknown error';
+			showOAuthFailure(`YouTube sign-in failed after permission grant: ${errorMessage}`);
 		}
 	}
 	async function handleAuthCallback() {
+		refreshClientOverrides();
 		const urlParams = new URLSearchParams(window.location.search);
 		const code = urlParams.get('code');
 		const state = urlParams.get('state');
@@ -1760,13 +1819,13 @@ function enableBackgroundKeepAlive() {
 			return;
 		}
 		const state = nonce(15);
-		sessionStorage.youtubeOAuthState = state;
+		setExpectedOAuthState(state);
 		try {
 			const result = await startOAuthFn({
 				clientId,
 				scopes: YT_SCOPES,
 				state,
-				authBase: 'https://ytauth.socialstream.ninja'
+				authBase: AUTH_BASE_URL
 			});
 			if (!result || !result.code) {
 				console.error('YouTube OAuth did not return a code.');
@@ -1894,8 +1953,7 @@ function enableBackgroundKeepAlive() {
             return await response.json();
         } catch (error) {
             console.error('Error fetching user info:', error);
-            if (error.message && error.message.includes('401')) throw error;
-            return null;
+            throw error;
         }
     }
     async function getChannelInfo(channelIdentifier) {
@@ -2153,8 +2211,9 @@ function enableBackgroundKeepAlive() {
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 const stats = data.items[0];
-                if (stats.liveStreamingDetails && stats.liveStreamingDetails.concurrentViewers) {
-                    lastKnownViewers = stats.liveStreamingDetails.concurrentViewers;
+                const concurrentViewers = stats?.liveStreamingDetails?.concurrentViewers;
+                if (concurrentViewers !== undefined && concurrentViewers !== null && concurrentViewers !== '') {
+                    lastKnownViewers = concurrentViewers;
                 } else if (lastKnownViewers === null) {
                     lastKnownViewers = 0;
                 }
@@ -2172,6 +2231,37 @@ function enableBackgroundKeepAlive() {
         }
         updateStats('viewer_update', { meta: lastKnownViewers });
     }
+
+    function isViewerTrackingEnabled() {
+        const currentSettings = settings && typeof settings === 'object' ? settings : {};
+        return Boolean(
+            currentSettings.showviewercount ||
+            currentSettings.hypemode
+        );
+    }
+
+    function shouldPollStreamStats() {
+        return isViewerTrackingEnabled();
+    }
+
+    function stopStreamStatsPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    function syncStreamStatsPolling() {
+        stopStreamStatsPolling();
+        if (!currentStream || !currentStream.id || !liveChatId || !shouldPollStreamStats()) {
+            return;
+        }
+        getStreamStats();
+        pollInterval = setInterval(() => {
+            getStreamStats();
+        }, 30000);
+    }
+
     async function getSubscriberCount(channelIdForSubs) {
         const token = getStoredToken();
         if (!token) return;
@@ -2200,7 +2290,7 @@ function enableBackgroundKeepAlive() {
 		});
 		activeTimeouts.clear();
 		
-		if (pollInterval) clearInterval(pollInterval);
+		stopStreamStatsPolling();
 		if (channelStatsInterval) clearInterval(channelStatsInterval);
 		if (fetchTimeout) {
 			clearTimeout(fetchTimeout);
@@ -2211,7 +2301,6 @@ function enableBackgroundKeepAlive() {
 		}
 		
 		foregroundPollingInterval = null;
-		pollInterval = null;
 		channelStatsInterval = null;
 		fetchTimeout = null;
 		lastKnownViewers = null;
@@ -2295,7 +2384,7 @@ function enableBackgroundKeepAlive() {
 					}
 				}
 				if (stats.viewCount) {
-					if (settings.showviewcount || settings.hypemode) {
+					if (isViewerTrackingEnabled()) {
 						pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'view_update', meta: stats.viewCount }));
 					}
 				}
@@ -2437,8 +2526,9 @@ function enableBackgroundKeepAlive() {
             connectMessageDiv.innerText = `Target: ${channelDisplayNameToUse} - Stream: ${streamTitleToUse || 'N/A'}`;
             document.getElementById('textarea').appendChild(connectMessageDiv);
             if (streamInfoToUse) {
-                if (streamInfoToUse.liveStreamingDetails && streamInfoToUse.liveStreamingDetails.concurrentViewers) {
-                    lastKnownViewers = streamInfoToUse.liveStreamingDetails.concurrentViewers;
+                const initialConcurrentViewers = streamInfoToUse?.liveStreamingDetails?.concurrentViewers;
+                if (initialConcurrentViewers !== undefined && initialConcurrentViewers !== null && initialConcurrentViewers !== '') {
+                    lastKnownViewers = initialConcurrentViewers;
                 } else {
                     lastKnownViewers = 0;
                 }
@@ -2485,19 +2575,11 @@ function enableBackgroundKeepAlive() {
                  document.getElementById('textarea').appendChild(noChatMessage);
             }
             // Clear existing intervals
-            if (pollInterval) clearInterval(pollInterval);
+            stopStreamStatsPolling();
             if (channelStatsInterval) clearInterval(channelStatsInterval);
             
-            // Stream stats (viewers & likes) - interval based on settings
-            if (currentStream && currentStream.id && liveChatId) {
-                // Get stream stats immediately
-                getStreamStats();
-                // Update interval: 30 seconds if showing viewer count, 2 minutes otherwise
-                const statsInterval = (settings.showviewercount || settings.hypemode) ? 30000 : 120000;
-                pollInterval = setInterval(() => {
-                    getStreamStats();
-                }, statsInterval);
-            }
+            // Stream stats (viewers & likes) - poll only when viewer tracking is enabled
+            syncStreamStatsPolling();
             
             // Channel stats (subscribers) - every 30 minutes
             if (effectiveChannelIdToUse) {
@@ -3149,7 +3231,7 @@ function enableBackgroundKeepAlive() {
 		switch(type) {
 			case 'viewer_update':
 				document.getElementById('viewer-count').textContent = data.meta;
-				if (settings.showviewercount || settings.hypemode){
+				if (isViewerTrackingEnabled()){
 					pushMessage(applySourceIdentity({ type: youtubeShorts ? "youtubeshorts" : "youtube", event: 'viewer_update', meta: data.meta }));
 				}
 				break;
@@ -3308,6 +3390,8 @@ function enableBackgroundKeepAlive() {
 				const warn = document.getElementById('quota-warning');
 				if (warn) warn.classList.add('hidden');
 				window.scrollTo({ top: 0, behavior: 'smooth' });
+				const keyInput = document.getElementById('custom-api-key');
+				if (keyInput) keyInput.focus();
 			};
 			quotaBtn.addEventListener('click', openCreds);
 			registerCleanup(() => quotaBtn.removeEventListener('click', openCreds));
@@ -3403,6 +3487,7 @@ function enableBackgroundKeepAlive() {
 				if ("settings" in e.detail) {
 					settings = e.detail.settings;
 					console.log('settings updated:', settings);
+					syncStreamStatsPolling();
 				}
 			}
 		};
@@ -3423,9 +3508,27 @@ function enableBackgroundKeepAlive() {
 		registerCleanup(() => window.removeEventListener('sendExtensionMessage', extensionMessageHandler));
 	}
 
+	function applyApiKeyOverride(rawUrl) {
+		if (!rawUrl || typeof rawUrl !== 'string' || !apiKeyOverride) return rawUrl;
+		try {
+			const parsed = new URL(rawUrl, window.location.href);
+			const host = (parsed.hostname || '').toLowerCase();
+			const path = (parsed.pathname || '').toLowerCase();
+			const isYouTubeDataApiHost = host === 'www.googleapis.com' || host === 'youtube.googleapis.com';
+			if (!isYouTubeDataApiHost || !path.startsWith('/youtube/')) return rawUrl;
+			if (!parsed.searchParams.has('key')) {
+				parsed.searchParams.set('key', apiKeyOverride);
+			}
+			return parsed.toString();
+		} catch (_) {
+			return rawUrl;
+		}
+	}
+
 	async function fetchWithTimeout(URL, timeout = 8000, headers = false) {
+		const requestUrl = applyApiKeyOverride(URL);
 		const controller = new AbortController();
-		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${URL}`;
+		const friendlyTimeoutMessage = `YouTube request timed out after ${timeout}ms (auto-retrying): ${requestUrl}`;
 		const abortReason = (typeof DOMException === 'function')
 			? new DOMException(friendlyTimeoutMessage, 'AbortError')
 			: new Error(friendlyTimeoutMessage);
@@ -3454,8 +3557,8 @@ function enableBackgroundKeepAlive() {
 					});
 				}
 			}
-			//console.log('Fetching:', URL, options);
-			const response = await fetch(URL, options);
+			//console.log('Fetching:', requestUrl, options);
+			const response = await fetch(requestUrl, options);
 			clearTimeout(timeout_id);
 			//console.log('Response status:', response.status, response.statusText);
 			if (!response.ok) {
@@ -3497,7 +3600,7 @@ function enableBackgroundKeepAlive() {
 				console.error(err.message);
 				throw err;
 			}
-			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', URL);
+			console.error('Fetch error:', e && e.name ? e.name : 'Error', e && e.message ? e.message : '', requestUrl);
 			throw e;
 		} finally {
 			clearTimeout(timeout_id);
@@ -3519,40 +3622,71 @@ function enableBackgroundKeepAlive() {
 		} catch(_){}
 	}
 
+	function isQuotaError(error) {
+		try {
+			if (!error) return false;
+			const reason = String(error.ytReason || error.reason || '').toLowerCase();
+			const payloadReason = String(error?.ytPayload?.error?.errors?.[0]?.reason || '').toLowerCase();
+			const message = String(error.ytMessage || error.message || '').toLowerCase();
+			return (
+				reason.includes('quota') ||
+				reason.includes('dailylimit') ||
+				payloadReason.includes('quota') ||
+				payloadReason.includes('dailylimit') ||
+				message.includes('quota') ||
+				message.includes('rate limit')
+			);
+		} catch (_) {
+			return false;
+		}
+	}
+
+	function showQuotaAuthFailure(message) {
+		try {
+			const text = typeof message === 'string' && message.trim()
+				? message.trim()
+				: DEFAULT_QUOTA_WARNING_TEXT;
+			const textEl = document.getElementById('quota-warning-text');
+			if (textEl) textEl.textContent = text;
+			const details = document.getElementById('credentials-details');
+			if (details) details.open = true;
+			showQuotaBanner();
+		} catch(_){}
+	}
+
 	function initCredentialsUI() {
 		try {
-			const redirectValue = window.location.href.split('/youtube')[0] + '/youtube.html';
-			const redirectEl = document.getElementById('redirect-uri-hint');
-			if (redirectEl) redirectEl.textContent = redirectValue;
-			const redirectEl2 = document.getElementById('redirect-uri-hint-2');
-			if (redirectEl2) redirectEl2.textContent = redirectValue;
-			const storedId = localStorage.getItem('ytClientIdOverride') || '';
+			refreshClientOverrides();
 			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
-			const useCustom = !!storedId;
+			const useCustom = !!storedKey;
 			// Populate both forms
-			['custom-client-id','custom-client-id-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedId; });
 			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
 			const indicator = document.getElementById('custom-cred-indicator');
 			if (indicator) indicator.classList.toggle('hidden', !useCustom);
 			if (useCustom) hideQuotaBanner();
 			// Wire buttons
 			const save = async function(primary=true){
-				const cid = (document.getElementById(primary ? 'custom-client-id' : 'custom-client-id-2')||{}).value || '';
-				const akey = (document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '';
-				if (cid && !/\.apps\.googleusercontent\.com$/.test(cid)) {
-					alert('That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com');
+				const akey = ((document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '').trim();
+				if (akey && akey.length < 20) {
+					alert('That API key looks too short. It should look like AIza... and come from Google Cloud credentials.');
 					return;
 				}
-				if (cid) localStorage.setItem('ytClientIdOverride', cid); else localStorage.removeItem('ytClientIdOverride');
+				if (!akey) {
+					alert('Enter a YouTube API key to use your own quota project.');
+					return;
+				}
+				localStorage.removeItem('ytClientIdOverride');
 				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
-				alert('Saved. Please sign out and sign in again to apply your credentials.');
+				refreshClientOverrides();
+				alert('Saved. Please sign out and sign in again to apply your API key quota project.');
 				hideQuotaBanner();
 				initCredentialsUI();
 			};
 			const clear = function(){
 				localStorage.removeItem('ytClientIdOverride');
 				localStorage.removeItem('ytApiKeyOverride');
-				alert('Custom credentials cleared. Default project will be used.');
+				refreshClientOverrides();
+				alert('Custom API key cleared. Default project quota will be used.');
 				initCredentialsUI();
 			};
 			const s1 = document.getElementById('save-credentials'); if (s1) s1.onclick = () => save(true);

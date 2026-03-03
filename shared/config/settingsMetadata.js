@@ -863,6 +863,11 @@ const SETTINGS_METADATA = Object.freeze({
     category: "opened_in_new_tab",
     description: "Kick channel slug opened by the chat shortcut."
   },
+  "kickchatroomscout": {
+    type: "boolean",
+    category: "miscellaneous_options_for_sites",
+    description: "Experimental: on kick.com pages, check bridge lookup first and seed chatroom cache when missing."
+  },
   "kittenspeed": {
     type: "number",
     category: "kitten_tts_options",

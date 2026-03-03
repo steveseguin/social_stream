@@ -1421,6 +1421,11 @@
 				stripSubtitles = true;
 			}
 
+			var noSourceColors = false;
+			if (urlParams.has("nosourcecolors")) {
+				noSourceColors = true;
+			}
+
 			var onlyTwitch = false;
 			var hideTwitch = false;
 
@@ -2800,6 +2805,14 @@
 					  }
 					} else {
 					  data.hasDonation = "";
+					}
+
+					if (noSourceColors) {
+					  data.backgroundColor = "";
+					  data.textColor = "";
+					  data.backgroundNameColor = "";
+					  data.textNameColor = "";
+					  data.nameColor = "";
 					}
 
 					var backgroundColor = "";

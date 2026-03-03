@@ -2198,13 +2198,18 @@ async function ensureChatClientInstance() {
 
 	function pushMessage(data) {
 		try {
-			// Show viewer count updates if enabled
-			if (data.event === 'viewer_update' && !(settings.showviewercount || settings.hypemode)) {
-				return; // Skip viewer updates if not enabled
-			}
-
 			if (data.type && data.event) {
 				updateStats(data.event, data);
+			}
+
+			// Keep local UI stats updated, but only relay viewer updates when enabled.
+			const viewerGateOpen = Boolean(
+				settings &&
+				typeof settings === 'object' &&
+				(settings.showviewercount || settings.hypemode)
+			);
+			if (data.event === 'viewer_update' && !viewerGateOpen) {
+				return;
 			}
 
 			// Send message to Chrome extension
@@ -2569,7 +2574,7 @@ async function cleanupCurrentConnection() {
 					version: '2',
 					condition: {
 						broadcaster_user_id: broadcasterId,
-						moderator_user_id: broadcasterId
+						moderator_user_id: authUser.user_id
 					}
 				});
 			}
@@ -3033,7 +3038,8 @@ async function cleanupCurrentConnection() {
 		return {
 			isBroadcaster,
 			isModerator,
-			canViewFollowers: true, // Followers are public info
+			canViewFollowers: isBroadcaster || isModerator,
+			hasFollowerReadScope: !!scopes['moderator:read:followers'],
 			canManageChat: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),
 			canBanUsers: (isBroadcaster || isModerator) && (scopes['moderator:manage:banned_users'] || isBroadcaster),
 			canDeleteMessages: (isBroadcaster || isModerator) && (scopes['moderator:manage:chat_messages'] || isBroadcaster),

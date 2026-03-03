@@ -195,12 +195,46 @@ function log(msg,a,b){
 	console.log(msg,a,b);
 }
 
-function getSpotifyAuthTroubleshootingText() {
-    return 'Please ensure:\n'
-        + '1. Spotify integration is enabled\n'
-        + '2. Client ID and Secret are filled in\n'
-        + '3. Your redirect URIs are configured in Spotify app settings\n'
-        + '4. The Spotify account is Premium and listed as an authorized Development Mode user (new app limits began February 11, 2026; existing app limits began March 9, 2026).';
+function showSpotifyAuthToast(level, title, message) {
+	const normalizedLevel = ['error', 'warning', 'info', 'success'].includes(level) ? level : 'info';
+	try {
+		if (typeof Toast !== 'undefined' && typeof Toast[normalizedLevel] === 'function') {
+			Toast[normalizedLevel](title, message);
+			return true;
+		}
+	} catch (_) {}
+	try {
+		if (window.parent && window.parent !== window && window.parent.Toast && typeof window.parent.Toast[normalizedLevel] === 'function') {
+			window.parent.Toast[normalizedLevel](title, message);
+			return true;
+		}
+	} catch (_) {}
+	return false;
+}
+
+function getSpotifyAuthTroubleshootingText(result = null) {
+	let text = 'Please ensure:\n'
+		+ '1. Spotify integration is enabled\n'
+		+ '2. Client ID and Secret are filled in\n'
+		+ '3. Your redirect URIs are configured in Spotify app settings\n'
+		+ '4. The app owner has active Premium, the playback account is Premium, and that account is listed as an authorized Development Mode user (new app limits began February 11, 2026; existing app limits began March 9, 2026).';
+	if (result?.errorCode) {
+		text += `\n5. OAuth error code: ${result.errorCode}`;
+	}
+	if (result?.redirectUriAttempted) {
+		text += `\n6. Redirect URI attempted: ${result.redirectUriAttempted}`;
+	}
+	if (Array.isArray(result?.expectedRedirectUris) && result.expectedRedirectUris.length) {
+		text += `\n7. Expected redirect URIs:\n- ${result.expectedRedirectUris.join('\n- ')}`;
+	}
+	return text;
+}
+
+function getSpotifyAuthErrorMessage(result) {
+	if (!result || typeof result !== 'object') {
+		return 'Unknown error';
+	}
+	return result.message || result.error || 'Unknown error';
 }
 
 function handleSpotifyAuthResultFromBackground(result) {
@@ -248,7 +282,9 @@ function handleSpotifyAuthResultFromBackground(result) {
 		if (result?.message) {
 			console.log(result.message);
 			if (result.waitingForManualCallback) {
-				alert(result.message);
+				if (!showSpotifyAuthToast('info', 'Spotify OAuth', result.message)) {
+					alert(result.message);
+				}
 			}
 		}
 
@@ -285,12 +321,15 @@ function handleSpotifyAuthResultFromBackground(result) {
         if (result?.warning) {
             alert('Spotify connected, but playback access is limited:\n\n' + result.warning);
         }
-	} else {
-		const errorMsg = result?.error || 'Unknown error';
-		console.error('Spotify auth failed (async result):', errorMsg);
-		alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\n' + getSpotifyAuthTroubleshootingText());
+		} else {
+			const errorCode = result?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+			const errorMsg = getSpotifyAuthErrorMessage(result);
+			console.error(`Spotify auth failed (async result) [${errorCode}]:`, errorMsg, result);
+			const composed = `[${errorCode}] ${errorMsg}`;
+			showSpotifyAuthToast('error', 'Spotify OAuth Error', composed);
+			alert('Failed to connect to Spotify. Error: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(result));
+		}
 	}
-}
 
 window.handleSpotifyAuthResultFromBackground = handleSpotifyAuthResultFromBackground;
 
@@ -7047,21 +7086,27 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 					cmd: "spotifyManualCallback",
 					url: callbackUrl,
 					redirectUri
-				}).then(response => {
-					console.log("Manual callback result:", response);
-					if (response && response.success) {
-						spotifyAuthStatus.style.display = 'inline';
-						spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
+					}).then(response => {
+						console.log("Manual callback result:", response);
+						if (response && response.success) {
+							spotifyAuthStatus.style.display = 'inline';
+							spotifyAuthButton.querySelector('span').textContent = '🔄 Reconnect';
 						if (spotifySignOutButton) {
 							spotifySignOutButton.style.display = 'inline-block';
+							}
+							callbackDiv.style.display = 'none';
+							document.getElementById('spotifyCallbackInput').value = '';
+							showSpotifyAuthToast('success', 'Spotify Connected', 'Spotify callback completed successfully.');
+							alert('Spotify connected successfully!');
+						} else {
+							const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+							const errorMsg = getSpotifyAuthErrorMessage(response);
+							console.error(`Manual Spotify callback failed [${errorCode}]:`, errorMsg, response);
+							const composed = `[${errorCode}] ${errorMsg}`;
+							showSpotifyAuthToast('error', 'Spotify Callback Error', composed);
+							alert('Failed to process callback: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(response));
 						}
-						callbackDiv.style.display = 'none';
-						document.getElementById('spotifyCallbackInput').value = '';
-						alert('Spotify connected successfully!');
-					} else {
-						alert('Failed to process callback: ' + (response?.error || 'Unknown error'));
-					}
-				});
+					});
 			} else {
 				alert('Please paste the complete callback URL');
 			}
@@ -7184,13 +7229,15 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 							: 'Please finish the Spotify login in the newly opened tab.');
 
 						console.log(waitMessage);
+						showSpotifyAuthToast('info', 'Spotify OAuth', waitMessage);
 						if (waitingForManual) {
 							alert(waitMessage);
 						}
 					} else {
 						spotifyAuthButton.querySelector('span').textContent = '🔗 Connect to Spotify';
-						const errorMsg = response?.error || 'Unknown error';
-						console.error('Spotify auth failed:', errorMsg);
+						const errorCode = response?.errorCode || 'SPOTIFY_OAUTH_ERROR';
+						const errorMsg = getSpotifyAuthErrorMessage(response);
+						console.error(`Spotify auth failed [${errorCode}]:`, errorMsg, response);
 
 						// Show manual callback input if the background specifically asked for manual completion.
 						if (callbackDiv && (response?.needsManualCallback || response?.waitingForManualCallback)) {
@@ -7213,7 +7260,9 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 						}
 
 						if (errorMsg !== 'Already connected') {
-							alert('Failed to connect to Spotify. Error: ' + errorMsg + '\n\n' + getSpotifyAuthTroubleshootingText());
+							const composed = `[${errorCode}] ${errorMsg}`;
+							showSpotifyAuthToast('error', 'Spotify OAuth Error', composed);
+							alert('Failed to connect to Spotify. Error: ' + composed + '\n\n' + getSpotifyAuthTroubleshootingText(response));
 						}
 					}
 				}

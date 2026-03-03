@@ -119,6 +119,7 @@ const STORAGE_KEY = 'kickApiConfig';
 const TOKEN_KEY = 'kickApiTokens';
 const CODE_VERIFIER_KEY = 'kickPkceVerifier';
 const STATE_KEY = 'kickOAuthState';
+const KICK_SCOUT_TOKEN_STORAGE_KEY = 'kickScoutBridgeToken';
 
 const DEFAULT_CONFIG = {
     clientId: '01KDYJ7WYZB2NMHZBE4ZZX61XR',
@@ -145,7 +146,6 @@ const PROFILE_CACHE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
 const state = {
     clientId: '',
-    clientSecret: '',
     redirectUri: '',
     channelSlug: '',
     channelSlugSource: '',
@@ -156,6 +156,7 @@ const state = {
     customEvents: '',
     tokens: null,
     refreshTimer: null,
+    refreshPromise: null,
     authUser: null,
     profilePromise: null,
     profileCache: new Map(),
@@ -175,7 +176,8 @@ const state = {
         retryTimer: null,
         status: 'disconnected',
         lastErrorLoggedAt: 0,
-        chatDisabled: false
+        chatDisabled: false,
+        chatroomCacheWriteDisabled: false
     },
     socket: {
         status: 'disconnected',
@@ -1623,17 +1625,43 @@ function applyExtensionSettings(newSettings) {
     resetThirdPartyEmoteCache();
     mergeEmotes();
     requestThirdPartyEmotes({ force: true });
+    syncKickViewerHeartbeat(false);
+}
+
+function sendRuntimeMessageFireAndForget(payload) {
+    if (
+        typeof chrome === 'undefined' ||
+        !chrome.runtime ||
+        !chrome.runtime.id ||
+        typeof chrome.runtime.sendMessage !== 'function'
+    ) {
+        return false;
+    }
+    try {
+        chrome.runtime.sendMessage(chrome.runtime.id, payload, () => {
+            try {
+                if (chrome.runtime && chrome.runtime.lastError) {
+                    // Swallow async runtime port-close noise for fire-and-forget relays.
+                }
+            } catch (_) {}
+        });
+        return true;
+    } catch (_) {
+        return false;
+    }
 }
 
 function notifyApp(payload) {
-    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
-    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+    // Prefer direct Electron bridge when available.
+    if (isElectronEnvironment() && window.ninjafy && window.ninjafy.sendMessage) {
         try {
-            chrome.runtime.sendMessage(chrome.runtime.id, payload, function() {});
+            window.ninjafy.sendMessage(null, payload, null, window.__SSAPP_TAB_ID__);
             return;
-        } catch (e) {
-            // Fall through to ninjafy
-        }
+        } catch (_) {}
+    }
+    // Try extension relay next.
+    if (sendRuntimeMessageFireAndForget(payload)) {
+        return;
     }
     // Fallback to ninjafy.sendMessage for Electron
     if (window.ninjafy && window.ninjafy.sendMessage) {
@@ -1716,6 +1744,7 @@ function initExtensionBridge() {
 
     try {
         chrome.runtime.sendMessage(chrome.runtime.id, { getSettings: true }, response => {
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.lastError) return;
             if (!response || typeof response !== 'object') return;
             if (Object.prototype.hasOwnProperty.call(response, 'state')) {
                 extension.enabled = Boolean(response.state);
@@ -1819,17 +1848,17 @@ function loadConfig() {
     try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (!stored) return;
-        const cfg = JSON.parse(stored);
-        state.clientId = cfg.clientId || '';
-        state.clientSecret = cfg.clientSecret || '';
-        state.redirectUri = cfg.redirectUri || '';
+        const parsed = JSON.parse(stored);
+        const cfg = sanitizeStoredConfig(parsed);
+        if (!cfg || typeof cfg !== 'object') {
+            return;
+        }
         if (cfg.channelSlug) {
             setChannelSlug(cfg.channelSlug, { persist: false, source: 'storage', force: true });
         } else {
             state.channelSlug = '';
             state.channelSlugSource = '';
         }
-        state.bridgeUrl = cfg.bridgeUrl || '';
         state.customEvents = cfg.customEvents || '';
         if (cfg.siteApiBase) {
             state.socket.siteApiBase = cfg.siteApiBase;
@@ -1851,6 +1880,26 @@ function loadConfig() {
     }
 }
 
+function sanitizeStoredConfig(cfg) {
+    if (!cfg || typeof cfg !== 'object') {
+        return cfg;
+    }
+    const sanitized = { ...cfg };
+    let changed = false;
+    ['clientId', 'clientSecret', 'bridgeUrl', 'redirectUri'].forEach(key => {
+        if (Object.prototype.hasOwnProperty.call(sanitized, key)) {
+            delete sanitized[key];
+            changed = true;
+        }
+    });
+    if (changed) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
+        } catch (_) {}
+    }
+    return sanitized;
+}
+
 function loadTokens() {
     try {
         const stored = localStorage.getItem(TOKEN_KEY);
@@ -1864,6 +1913,7 @@ function loadTokens() {
             return;
         }
         state.tokens = tokens;
+        syncKickScoutToken();
         logKickWs('Loaded Kick OAuth tokens from storage.');
     } catch (err) {
         console.error('Failed to load Kick tokens', err);
@@ -1926,8 +1976,21 @@ function applyUrlParams() {
 }
 
 function applyDefaultConfig() {
-    if (!state.clientId) {
-        state.clientId = DEFAULT_CONFIG.clientId;
+    try {
+        const host = String(window.location.hostname || '').toLowerCase();
+        const isOfficialHost =
+            host === 'socialstream.ninja' ||
+            host === 'beta.socialstream.ninja' ||
+            host.endsWith('.socialstream.ninja');
+        if (isOfficialHost) {
+            state.clientId = DEFAULT_CONFIG.clientId;
+        } else if (!state.clientId) {
+            state.clientId = DEFAULT_CONFIG.clientId;
+        }
+    } catch (_) {
+        if (!state.clientId) {
+            state.clientId = DEFAULT_CONFIG.clientId;
+        }
     }
     if (!state.redirectUri) {
         state.redirectUri = window.location.origin + window.location.pathname;
@@ -1949,11 +2012,7 @@ function appendBridgeParam(url, key, value) {
 
 function persistConfig() {
     const cfg = {
-        clientId: state.clientId,
-        clientSecret: state.clientSecret,
-        redirectUri: state.redirectUri,
         channelSlug: state.channelSlug,
-        bridgeUrl: state.bridgeUrl,
         customEvents: state.customEvents,
         chatType: state.chat?.type || 'user',
         chatroomId: state.socket.chatroomId || '',
@@ -1967,11 +2026,44 @@ function persistConfig() {
 function persistTokens() {
     if (!state.tokens) {
         localStorage.removeItem(TOKEN_KEY);
+        syncKickScoutToken();
         logKickWs('Cleared Kick OAuth tokens from storage.');
         return;
     }
     localStorage.setItem(TOKEN_KEY, JSON.stringify(state.tokens));
+    syncKickScoutToken();
     logKickWs('Saved Kick OAuth tokens to storage.');
+}
+
+function syncKickScoutToken() {
+    try {
+        if (
+            typeof chrome === 'undefined' ||
+            !chrome.storage ||
+            !chrome.storage.local ||
+            typeof chrome.storage.local.set !== 'function'
+        ) {
+            return;
+        }
+        const accessToken = typeof state.tokens?.access_token === 'string'
+            ? state.tokens.access_token
+            : '';
+        const expiresAt = Number.isFinite(Number(state.tokens?.expires_at))
+            ? Number(state.tokens.expires_at)
+            : 0;
+        const payload = {
+            accessToken,
+            expiresAt,
+            updatedAt: Date.now()
+        };
+        chrome.storage.local.set({
+            [KICK_SCOUT_TOKEN_STORAGE_KEY]: payload
+        }, () => {
+            try {
+                chrome.runtime?.lastError;
+            } catch (_) {}
+        });
+    } catch (_) {}
 }
 
 function signOut() {
@@ -1979,6 +2071,7 @@ function signOut() {
     void disconnectLocalSocket();
     resetAlertsFeed();
     resetKickViewerHeartbeatState();
+    state.bridge.chatroomCacheWriteDisabled = false;
     // Clear tokens
     state.tokens = null;
     state.authUser = null;
@@ -2375,8 +2468,18 @@ function isKickViewerTransportConnected() {
     return state.bridge?.status === 'connected' || state.socket?.status === 'connected';
 }
 
+function shouldTrackKickViewerCount() {
+    return (
+        isSettingEnabled('showviewercount') ||
+        isSettingEnabled('hypemode')
+    );
+}
+
 function shouldRunKickViewerHeartbeat() {
     if (!state.channelSlug) {
+        return false;
+    }
+    if (!shouldTrackKickViewerCount()) {
         return false;
     }
     if (!isKickViewerTransportConnected()) {
@@ -2411,11 +2514,13 @@ function emitKickViewerUpdate(count) {
     kickViewerHeartbeat.hasKnownCount = true;
     kickViewerHeartbeat.lastSentAt = Date.now();
     updateKickViewerCountDisplay(normalizedCount);
-    pushMessage({
-        type: 'kick',
-        event: 'viewer_update',
-        meta: normalizedCount
-    });
+    if (shouldTrackKickViewerCount()) {
+        pushMessage({
+            type: 'kick',
+            event: 'viewer_update',
+            meta: normalizedCount
+        });
+    }
     return normalizedCount;
 }
 
@@ -3036,7 +3141,8 @@ async function resolveChannelForPusher() {
     if (!slug) return;
 
     // 1. If signed in, resolve channel metadata via official API (broadcaster_user_id, slug, etc)
-    if (state.tokens?.access_token) {
+    const canUseAuthenticatedLookup = Boolean(state.tokens?.access_token) && !isTokenExpired();
+    if (canUseAuthenticatedLookup) {
         try {
             await resolveChannelId();
         } catch (err) {
@@ -3100,6 +3206,7 @@ async function resolveChannelForPusher() {
 
 function postChatroomToCache(slug, chatroomId, broadcasterUserId) {
     if (!slug || !chatroomId || !broadcasterUserId) return;
+    if (state.bridge.chatroomCacheWriteDisabled) return;
     const token = state.tokens?.access_token;
     if (!token) return;
     try {
@@ -3118,9 +3225,13 @@ function postChatroomToCache(slug, chatroomId, broadcasterUserId) {
             body: JSON.stringify(body)
         }).then(resp => {
             if (resp.ok) {
+                state.bridge.chatroomCacheWriteDisabled = false;
                 log(`Cached chatroom ${chatroomId} for ${slug} on bridge.`);
             } else if (resp.status === 409) {
                 log(`Bridge cache for ${slug} already locked or mismatched.`);
+            } else if (resp.status === 401 || resp.status === 403) {
+                state.bridge.chatroomCacheWriteDisabled = true;
+                log(`Bridge cache write disabled for this session (HTTP ${resp.status}).`, 'warning');
             } else {
                 log(`Bridge cache POST returned ${resp.status}.`, 'warning');
             }
@@ -3241,22 +3352,24 @@ async function handleAuthCallback() {
     const url = new URL(window.location.href);
     const code = url.searchParams.get('code');
     const returnedState = url.searchParams.get('state');
-    if (!code) return;
+    if (!code) return false;
+
+    // Strip callback params immediately to avoid repeated exchanges on reload.
+    url.searchParams.delete('code');
+    url.searchParams.delete('state');
+    window.history.replaceState({}, document.title, url.toString());
 
     const expectedState = sessionStorage.getItem(STATE_KEY);
     if (!returnedState || returnedState !== expectedState) {
         log('State mismatch during OAuth callback.', 'error');
-        return;
+        // Validation failed, so bootstrap should continue with normal stored-token initialization.
+        return false;
     }
     const verifier = sessionStorage.getItem(CODE_VERIFIER_KEY);
     if (!verifier) {
         log('Missing PKCE verifier for OAuth exchange.', 'error');
-        return;
+        return false;
     }
-
-    url.searchParams.delete('code');
-    url.searchParams.delete('state');
-    window.history.replaceState({}, document.title, url.toString());
 
     sessionStorage.removeItem(STATE_KEY);
     sessionStorage.removeItem(CODE_VERIFIER_KEY);
@@ -3271,8 +3384,10 @@ async function handleAuthCallback() {
         connectLocalSocket(true);
     } catch (err) {
         console.error(err);
+        clearKickAuthState();
         log(`Token exchange failed: ${err.message}`, 'error');
     }
+    return true;
 }
 
 async function exchangeCodeForToken(code, verifier) {
@@ -3329,6 +3444,7 @@ async function exchangeCodeForToken(code, verifier) {
         ...data,
         expires_at: now + (data.expires_in || 0) * 1000
     };
+    state.bridge.chatroomCacheWriteDisabled = false;
     persistTokens();
     scheduleTokenRefresh();
     log('Kick OAuth tokens obtained.');
@@ -3351,43 +3467,88 @@ function scheduleTokenRefresh() {
     }, ttl);
 }
 
-async function refreshAccessToken() {
-    if (!state.tokens?.refresh_token) return;
-    const base = getBridgeBaseUrl().replace(/\/$/, '');
-    const response = await fetch(`${base}/kick/token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({
-            grant_type: 'refresh_token',
-            refresh_token: state.tokens.refresh_token
-        })
-    });
-    const text = await response.text();
-    let data = {};
-    if (text) {
-        try {
-            data = JSON.parse(text);
-        } catch (err) {
-            console.error('Refresh parse error:', err);
-        }
-    }
+function isKickInvalidGrantError(data, text) {
+    const parts = [
+        data?.error,
+        data?.error_description,
+        text
+    ]
+        .filter(Boolean)
+        .map(value => String(value).toLowerCase());
+    return parts.some(part => part.includes('invalid_grant'));
+}
 
-    if (!response.ok || !data.access_token) {
-        log('Failed to refresh access token. You may need to sign in again.', 'error');
-        console.error('Refresh error body:', text);
-        return;
+function clearKickAuthState(reason = '') {
+    state.tokens = null;
+    state.authUser = null;
+    state.bridge.chatroomCacheWriteDisabled = false;
+    if (state.refreshTimer) {
+        clearTimeout(state.refreshTimer);
+        state.refreshTimer = null;
     }
-
-    const now = Date.now();
-    state.tokens = {
-        ...(state.tokens || {}),
-        ...data,
-        expires_at: now + (data.expires_in || 0) * 1000
-    };
     persistTokens();
-    scheduleTokenRefresh();
     updateAuthStatus();
-    log('Access token refreshed.');
+    if (els.subscriptionSummary) {
+        els.subscriptionSummary.textContent = 'Sign in required';
+        els.subscriptionSummary.className = 'status-chip warning';
+    }
+    if (reason) {
+        log(reason, 'warning');
+    }
+}
+
+async function refreshAccessToken() {
+    if (!state.tokens?.refresh_token) {
+        throw new Error('Not authenticated.');
+    }
+    if (state.refreshPromise) {
+        return state.refreshPromise;
+    }
+    state.refreshPromise = (async () => {
+        const base = getBridgeBaseUrl().replace(/\/$/, '');
+        const response = await fetch(`${base}/kick/token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+            body: JSON.stringify({
+                grant_type: 'refresh_token',
+                refresh_token: state.tokens.refresh_token
+            })
+        });
+        const text = await response.text();
+        let data = {};
+        if (text) {
+            try {
+                data = JSON.parse(text);
+            } catch (err) {
+                console.error('Refresh parse error:', err);
+            }
+        }
+
+        if (!response.ok || !data.access_token) {
+            const message = data?.error_description || data?.error || text || `HTTP ${response.status}`;
+            if (response.status === 401 && isKickInvalidGrantError(data, text)) {
+                clearKickAuthState('Kick session expired or was revoked. Please sign in again.');
+                throw new Error(`Kick refresh rejected: ${message}`);
+            }
+            throw new Error(`Kick refresh failed (${response.status}): ${message}`);
+        }
+
+        const now = Date.now();
+        state.tokens = {
+            ...(state.tokens || {}),
+            ...data,
+            expires_at: now + (data.expires_in || 0) * 1000
+        };
+        persistTokens();
+        scheduleTokenRefresh();
+        updateAuthStatus();
+        log('Access token refreshed.');
+    })();
+    try {
+        return await state.refreshPromise;
+    } finally {
+        state.refreshPromise = null;
+    }
 }
 
 function isTokenExpired() {
@@ -3400,6 +3561,7 @@ async function ensureToken() {
     if (isTokenExpired()) {
         await refreshAccessToken();
     }
+    if (!state.tokens?.access_token) throw new Error('Not authenticated.');
     return state.tokens.access_token;
 }
 
@@ -3425,8 +3587,19 @@ async function apiFetch(path, options = {}, retry = true) {
     fetchOptions.headers = headers;
     const res = await fetch(`https://api.kick.com${path}`, fetchOptions);
     if (res.status === 401 && retry) {
+        if (!state.tokens?.refresh_token) {
+            clearKickAuthState('Kick session is no longer valid. Please sign in again.');
+            throw new Error('Not authenticated.');
+        }
         await refreshAccessToken();
+        if (!state.tokens?.access_token) {
+            throw new Error('Not authenticated.');
+        }
         return apiFetch(path, options, false);
+    }
+    if (res.status === 401) {
+        clearKickAuthState('Kick session is no longer valid. Please sign in again.');
+        throw new Error('Not authenticated.');
     }
     if (!res.ok) {
         const body = await res.text();
@@ -4071,6 +4244,10 @@ async function resolveChannelId(force = false) {
 }
 
 async function subscribeToEvents(options = {}) {
+    if (!state.tokens?.access_token) {
+        log('Sign in required before subscribing to Kick events.', 'warning');
+        return;
+    }
     const { events: presetEvents = null, skipListRefresh = false } = options || {};
     try {
         await resolveChannelId();
@@ -4110,6 +4287,13 @@ async function subscribeToEvents(options = {}) {
 }
 
 async function listSubscriptions() {
+    if (!state.tokens?.access_token) {
+        if (els.subscriptionSummary) {
+            els.subscriptionSummary.textContent = 'Sign in required';
+            els.subscriptionSummary.className = 'status-chip warning';
+        }
+        return [];
+    }
     try {
         const data = await apiFetch('/public/v1/events/subscriptions');
         const items = Array.isArray(data?.data) ? data.data : [];
@@ -5621,16 +5805,16 @@ async function sendChatMessage() {
 }
 
 function pushMessage(data) {
-    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
-    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+    // Prefer direct Electron bridge when available.
+    if (isElectronEnvironment() && window.ninjafy && window.ninjafy.sendMessage) {
         try {
-            chrome.runtime.sendMessage(chrome.runtime.id, { message: data }, function() {});
+            window.ninjafy.sendMessage(null, { message: data }, null, window.__SSAPP_TAB_ID__);
             return;
-        } catch (e) {
-            // Fall through to ninjafy
-        }
+        } catch (_) {}
     }
-    // Fallback to ninjafy.sendMessage for Electron
+    if (sendRuntimeMessageFireAndForget({ message: data })) {
+        return;
+    }
     if (window.ninjafy && window.ninjafy.sendMessage) {
         try {
             window.ninjafy.sendMessage(null, { message: data }, null, window.__SSAPP_TAB_ID__);
@@ -5649,16 +5833,16 @@ function pushMessage(data) {
 }
 
 function pushDeleteMessage(data) {
-    // Try chrome.runtime.sendMessage first, with fallback to ninjafy
-    if (typeof chrome !== 'undefined' && chrome?.runtime?.sendMessage) {
+    // Prefer direct Electron bridge when available.
+    if (isElectronEnvironment() && window.ninjafy && window.ninjafy.sendMessage) {
         try {
-            chrome.runtime.sendMessage(chrome.runtime.id, { delete: data }, function() {});
+            window.ninjafy.sendMessage(null, { delete: data }, null, window.__SSAPP_TAB_ID__);
             return;
-        } catch (e) {
-            // Fall through to ninjafy
-        }
+        } catch (_) {}
     }
-    // Fallback to ninjafy.sendMessage for Electron
+    if (sendRuntimeMessageFireAndForget({ delete: data })) {
+        return;
+    }
     if (window.ninjafy && window.ninjafy.sendMessage) {
         try {
             window.ninjafy.sendMessage(null, { delete: data }, null, window.__SSAPP_TAB_ID__);
@@ -6146,19 +6330,19 @@ async function bootstrap() {
         bindEvents();
         initLocalSocketBridge();
         updateSocketState();
+        const handledAuthCallback = await handleAuthCallback();
         // Connect Pusher chat immediately (no auth needed)
         if (state.channelSlug && !state.socket.chatroomId) {
             await resolveChannelForPusher();
         }
         connectPusherSocket();
         // Auth-dependent: subscriptions, bridge events, sending messages
-        if (state.tokens?.access_token) {
+        if (state.tokens?.access_token && !handledAuthCallback) {
             scheduleTokenRefresh();
             await loadAuthenticatedProfile();
             await maybeAutoStart();
             await listSubscriptions();
         }
-        await handleAuthCallback();
         connectLocalSocket();
         notifyLiteStatus('ready');
         if (isLiteEmbedded()) {

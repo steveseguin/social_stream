@@ -289,7 +289,7 @@
                     <p class="source-note">Implementation: <code>sources/websocket/youtube.html</code>, shared helpers under <code>shared/</code></p>
                     <ul class="requirements">
                         <li>Requires OAuth with scopes <code>youtube.readonly</code>, <code>youtube</code>, <code>youtube.force-ssl</code>, and <code>youtube.channel-memberships.creator</code>. Tokens live in <code>localStorage</code>.</li>
-                        <li>Channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewcount</code>).</li>
+                        <li>Channel statistics respect the per-setting toggles (<code>showsubscount</code>, <code>showviewercount</code>).</li>
                         <li>The API cannot deliver custom badge imagery; badge fallbacks use emoji icons noted below.</li>
                         <li>New subscriber alerts use the <code>myRecentSubscribers</code> API (polled every 5 minutes). Note: YouTube API has up to 4-hour delay and only shows subscribers with public subscription lists.</li>
                     </ul>
@@ -349,7 +349,7 @@
                             </tr>
                             <tr>
                                 <td class="status-event"><code>view_update</code></td>
-                                <td>Channel stats poll (lifetime views) when <code>showviewcount</code> or hype mode active.</td>
+                                <td>Channel stats poll (lifetime views) when <code>showviewercount</code> or hype mode is active.</td>
                                 <td><code>meta</code> is view count integer.</td>
                             </tr>
                             <tr>

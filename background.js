@@ -4103,6 +4103,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			if (request.setting == "collecttwitchpoints") {
 				pushSettingChange();
 			}
+			if (request.setting == "kickchatroomscout") {
+				pushSettingChange();
+			}
 			if (request.setting == "detweet") {
 				pushSettingChange();
 			}
@@ -4794,25 +4797,37 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			
 			if (spotify && request.code) {
 				(async () => {
-					try {
-						const success = await spotify.handleAuthCallback(request.code, request.state, request.redirectUri);
-						const warning = (success && spotify && typeof spotify.consumeAuthWarning === 'function')
-							? spotify.consumeAuthWarning()
-							: null;
-						sendResponse({
-							success: success,
-							warning: warning || undefined,
-							message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
-						});
-					} catch (error) {
-						console.error("Spotify callback error:", error);
-						sendResponse({success: false, error: error.message});
-					}
-				})();
-				return true; // Keep the message channel open for async response
-			} else {
-				sendResponse({success: false, error: "Spotify not initialized or no code provided"});
-			}
+						try {
+							const success = await spotify.handleAuthCallback(request.code, request.state, request.redirectUri);
+							const warning = (success && spotify && typeof spotify.consumeAuthWarning === 'function')
+								? spotify.consumeAuthWarning()
+								: null;
+							sendResponse({
+								success: success,
+								warning: warning || undefined,
+								message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
+							});
+						} catch (error) {
+							const errorCode = error?.errorCode || error?.code || 'SPOTIFY_OAUTH_ERROR';
+							console.error("Spotify callback error:", errorCode, error);
+							sendResponse({
+								success: false,
+								errorCode,
+								error: error?.message || String(error),
+								message: error?.message || 'Spotify callback failed.',
+								redirectUriAttempted: error?.redirectUriAttempted,
+								expectedRedirectUris: error?.expectedRedirectUris
+							});
+						}
+					})();
+					return true; // Keep the message channel open for async response
+				} else {
+					sendResponse({
+						success: false,
+						errorCode: "INVALID_CALLBACK",
+						error: "Spotify not initialized or no code provided"
+					});
+				}
 		} else if (request.cmd && request.cmd === "spotifyAuth") {
 			// Start Spotify OAuth flow
 			console.log("Spotify auth request received");
@@ -4863,29 +4878,44 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					return;
 				}
 
-				if (normalized.waitingForManualCallback || normalized.waitingForCallback) {
-					const manual = !!normalized.waitingForManualCallback;
-					sendResponse({
-						success: false,
-						waitingForManualCallback: manual,
-						waitingForCallback: !manual,
-						manualAuthUrl: normalized.manualAuthUrl,
-						error: normalized.error,
-						message: normalized.message || (manual
-							? "After authorizing Spotify, copy the callback URL and paste it into Social Stream Ninja to finish sign-in."
-							: "Waiting for Spotify to redirect back with authorization. Leave the popup open until the flow completes.")
-					});
-					return;
+					if (normalized.waitingForManualCallback || normalized.waitingForCallback) {
+						const manual = !!normalized.waitingForManualCallback;
+						sendResponse({
+							success: false,
+							waitingForManualCallback: manual,
+							waitingForCallback: !manual,
+							manualAuthUrl: normalized.manualAuthUrl,
+							errorCode: normalized.errorCode,
+							error: normalized.error,
+							redirectUriAttempted: normalized.redirectUriAttempted,
+							expectedRedirectUris: normalized.expectedRedirectUris,
+							message: normalized.message || (manual
+								? "After authorizing Spotify, copy the callback URL and paste it into Social Stream Ninja to finish sign-in."
+								: "Waiting for Spotify to redirect back with authorization. Leave the popup open until the flow completes.")
+						});
+						return;
 				}
 
-				sendResponse({
-					success: false,
-					error: normalized.error || "Failed to start Spotify authorization."
+					sendResponse({
+						success: false,
+						errorCode: normalized.errorCode || 'SPOTIFY_OAUTH_ERROR',
+						error: normalized.error || "Failed to start Spotify authorization.",
+						message: normalized.message || normalized.error || "Failed to start Spotify authorization.",
+						redirectUriAttempted: normalized.redirectUriAttempted,
+						expectedRedirectUris: normalized.expectedRedirectUris
+					});
+				}).catch(error => {
+					const errorCode = error?.errorCode || error?.code || 'SPOTIFY_OAUTH_ERROR';
+					console.error("Spotify auth error:", errorCode, error);
+					sendResponse({
+						success: false,
+						errorCode,
+						error: error?.message || error?.toString(),
+						message: error?.message || "Failed to start Spotify authorization.",
+						redirectUriAttempted: error?.redirectUriAttempted,
+						expectedRedirectUris: error?.expectedRedirectUris
+					});
 				});
-			}).catch(error => {
-				console.error("Spotify auth error:", error);
-				sendResponse({success: false, error: error.message || error.toString()});
-			});
 			
 			return true; // Keep the message channel open for async response
 		} else if (request.cmd && request.cmd === "spotifyManualCallback") {
@@ -4908,9 +4938,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 						await new Promise(resolve => setTimeout(resolve, 500));
 					}
 					
-					if (!spotify) {
-						throw new Error("Failed to initialize Spotify integration");
-					}
+						if (!spotify) {
+							throw new Error("Failed to initialize Spotify integration");
+						}
 					
 					// Parse the callback URL
 					const url = new URL(request.url);
@@ -4921,12 +4951,18 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					
 					console.log("Parsed OAuth callback - code:", code ? "present" : "missing", "state:", state, "error:", error);
 					
-						if (error) {
-							sendResponse({success: false, error: error});
-						} else if (code) {
-							console.log("Processing Spotify callback with code...");
-							// Process the callback
-							const success = await spotify.handleAuthCallback(code, state, request.redirectUri || redirectUri);
+							if (error) {
+								sendResponse({
+									success: false,
+									errorCode: "SPOTIFY_AUTH_ERROR",
+									error: error,
+									message: `Spotify authorization failed: ${error}`,
+									redirectUriAttempted: request.redirectUri || redirectUri
+								});
+							} else if (code) {
+								console.log("Processing Spotify callback with code...");
+								// Process the callback
+								const success = await spotify.handleAuthCallback(code, state, request.redirectUri || redirectUri);
 							console.log("Spotify callback completed, success:", success);
 							const warning = (success && spotify && typeof spotify.consumeAuthWarning === 'function')
 								? spotify.consumeAuthWarning()
@@ -4943,19 +4979,31 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 								});
 							}
 							
-							sendResponse({
-								success: success,
-								warning: warning || undefined,
-								message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
-							});
-						} else {
-							sendResponse({success: false, error: "No authorization code found in URL"});
-						}
-				} catch (error) {
-					console.error("Manual callback error:", error);
-					sendResponse({success: false, error: error.message || error.toString()});
-				}
-			})();
+								sendResponse({
+									success: success,
+									warning: warning || undefined,
+									message: warning ? `Connected to Spotify, but playback access is limited: ${warning}` : undefined
+								});
+							} else {
+								sendResponse({
+									success: false,
+									errorCode: "INVALID_CALLBACK",
+									error: "No authorization code found in URL"
+								});
+							}
+					} catch (error) {
+						const errorCode = error?.errorCode || error?.code || 'SPOTIFY_OAUTH_ERROR';
+						console.error("Manual callback error:", errorCode, error);
+						sendResponse({
+							success: false,
+							errorCode,
+							error: error?.message || error?.toString(),
+							message: error?.message || "Manual Spotify callback failed.",
+							redirectUriAttempted: error?.redirectUriAttempted || request.redirectUri,
+							expectedRedirectUris: error?.expectedRedirectUris
+						});
+					}
+				})();
 			
 			return true; // Keep message channel open for async response
 		} else if (request.cmd && request.cmd === "spotifySignOut") {
@@ -11753,7 +11801,10 @@ async function applyBotActions(data, tab = false) {
 		messageCounter += 1;
 		data.id = messageCounter;
 	}
-	const hadOriginalChatMessage = typeof data.chatmessage === "string" && data.chatmessage.trim() !== "";
+	const originalChatMessage =
+		typeof data.chatmessage === "string" && data.chatmessage.trim() !== ""
+			? data.chatmessage
+			: null;
 
 	// Normalize to seconds for last activity comparisons (accept sec/ms/micro inputs)
 	const normalizeTimestampToSeconds = (value) => {
@@ -12211,7 +12262,7 @@ async function applyBotActions(data, tab = false) {
 		// Handle Spotify commands
 		if (spotify && settings.spotifyEnabled && data.chatmessage && data.chatname && !data.bot) {
 			// Pass message data for role-based permission checking
-			spotify.handleCommand(data.chatmessage, data).then(response => {
+			spotify.handleCommand(originalChatMessage || data.chatmessage, data).then(response => {
 				if (response) {
 					const botResponse = {
 						chatname: settings.spotifyBotName?.textsetting || "Spotify Bot",
