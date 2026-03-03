@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+    <meta content="utf-8" http-equiv="encoding" />
+    <title>Background Service - Social Stream Ninja</title>
+    <meta name="title" content="Social Stream Ninja - Background Service" />
+
+    <link rel="icon" href="./favicon.ico" />
+    <script type="text/javascript" src="./thirdparty/webmidi3.js"></script>
+    <script type="text/javascript" src="./thirdparty/sentiment.js"></script>
+    <script type="text/javascript" src="./thirdparty/lunr.js"></script>
+    <script type="text/javascript" src="./thirdparty/xlsx.full.min.js"></script>
+	<script type="text/javascript" src="currency.js"></script>
+	
+    <link  id="editorstyle" rel="stylesheet" type="text/css" href="./actions/styles.css" />
+	
+    <style>
+        :root {
+            --primary-color: #2a9d8f;
+            --secondary-color: #e9c46a;
+            --background-light: #f8f9fa;
+            --background-dark: #2d3142;
+            --text-light: #e0e0e0;
+            --text-dark: #333333;
+            --alert-color: #e76f51;
+            --success-color: #70e000;
+            --card-bg-light: rgba(255, 255, 255, 0.9);
+            --card-bg-dark: rgba(45, 49, 66, 0.8);
+            --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-dark: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            height: 100vh;
+            background: var(--background-light);
+            color: var(--text-dark);
+            transition: all 0.3s ease;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: var(--background-dark);
+                color: var(--text-light);
+            }
+        }
+		
+				
+		@keyframes fadeIn {
+			0% { opacity: 0; }
+			50% { opacity: 0.2; }
+			70% { opacity: 0.9; }
+			100% { opacity: 1; }
+		}
+
+		#editor {
+			animation: fadeIn 0.5s ease-in-out;
+		}
+		
+		#editor .node {
+			position: absolute;
+			width: var(--node-width, 220px);
+			min-height: var(--node-min-height, 90px);
+			background-color: var(--background-surface, #1F1F23);
+			border-radius: 8px;
+			box-shadow: 0 3px 6px rgba(0, 0, 0, 0.25);
+			user-select: none;
+			z-index: 10;
+			border: 1px solid var(--border-color, #3E3E42);
+			display: flex;
+			flex-direction: column;
+			transition: box-shadow 0.15s ease, border-color 0.15s ease;
+		}
+
+		#editor .node-header {
+			padding: 10px 12px;
+			border-top-left-radius: 8px;
+			border-top-right-radius: 8px;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border-bottom: 1px solid var(--border-color, #3E3E42);
+			color: #FFFFFF;
+		}
+
+		#editor .flow-editor-container {
+			display: flex;
+			height: 100%;
+			color: var(--text-primary, #EAEAEA);
+		}
+
+		#editor .flow-sidebar {
+			width: 260px;
+			background-color: var(--background-surface, #1F1F23);
+			border-right: 1px solid var(--border-color, #3E3E42);
+			display: flex;
+			flex-direction: column;
+			padding: 15px;
+			height: 100%;
+		}
+
+		#editor .flow-editor {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			overflow: hidden;
+			background-color: var(--background-base, #18181B);
+		}
+
+		#editor .flow-canvas-container {
+			flex: 1;
+			overflow: auto;
+			position: relative;
+			background-color: var(--background-base, #18181B);
+			background-image: radial-gradient(var(--border-color, #3E3E42) 1px, transparent 1px);
+			background-size: 20px 20px;
+		}
+
+		#editor .flow-canvas {
+			position: relative;
+			min-height: 100%;
+			min-width: 100%;
+			height: max(100%, 1000px);
+			width: max(100%, 1400px);
+		}
+
+		#editor .connection-point {
+			position: absolute;
+			width: 16px;
+			height: 16px;
+			background-color: var(--background-base, #18181B);
+			border: 2px solid var(--primary-dark, #6A1E9E);
+			border-radius: 50%;
+			cursor: crosshair;
+			z-index: 12;
+			transition: transform 0.15s ease, background-color 0.15s ease;
+		}
+
+		#editor .node-properties {
+			width: 320px;
+			background-color: var(--background-surface, #1F1F23);
+			border-left: 1px solid var(--border-color, #3E3E42);
+			padding: 20px;
+			overflow-y: auto;
+		}
+
+		#editor .node.trigger .node-header { background-color: var(--trigger-color, #0A84FF); }
+		#editor .node.action .node-header { background-color: var(--action-color, #1A7D3A); }
+		#editor .node.logic .node-header { background-color: var(--logic-color, #B45309); }
+		#editor .node.unknown .node-header { background-color: var(--text-secondary, #B0B0B8); }
+
+		/* Node item styles */
+		#editor .node-item {
+			padding: 10px 12px;
+			border-radius: 6px;
+			cursor: grab;
+			font-size: 0.85rem;
+			font-weight: 500;
+			color: #FFFFFF;
+			transition: transform 0.15s ease, box-shadow 0.15s ease;
+			border: 1px solid transparent;
+			user-select: none;
+		}
+
+		#editor .node-item.trigger { background-color: var(--trigger-color, #0A84FF); }
+		#editor .node-item.action { background-color: var(--action-color, #1A7D3A); }
+		#editor .node-item.logic { background-color: var(--logic-color, #B45309); }
+
+		/* Connection styles */
+		#editor .connection {
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			pointer-events: none;
+			z-index: 1;
+		}
+
+		#editor .connection path {
+			stroke-width: 2.5px;
+			transition: stroke 0.15s ease, stroke-width 0.15s ease;
+		}
+	</style>
+	<style id="dashstyle">
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header & Important Alert */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+		
+		.ssapp #return-to-dashboard, .ssapp .header, .ssapp .keep-open-alert, .ssapp .info-notice {
+			display: none;
+		}
+		
+		.action-flow-editor {
+			margin-left: 10px;
+			margin-top: 5px;
+			margin-right: auto;
+			background: #5c5c5c2b;
+			padding: 5px 10px;
+			border-radius: 10px;
+		}
+		
+		.ssapp .support-links {
+			display:none;
+		}
+		
+		.ssapp. action-flow-editor {
+			display: none;
+		}
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+        }
+
+        .badge {
+            display: inline-block;
+            background-color: #6c757d;
+            color: white;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+            vertical-align: middle;
+        }
+
+        .keep-open-alert {
+            background-color: var(--alert-color);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin: 20px auto;
+            max-width: 800px;
+            box-shadow: var(--shadow-light);
+            animation: pulse 2s infinite;
+        }
+
+        .info-notice {
+            background-color: rgb(25, 118, 210, 0.1);
+            border-left: 4px solid rgb(25, 118, 210);
+            padding: 15px 20px;
+            border-radius: 4px;
+            margin: 20px auto 30px;
+            max-width: 800px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .info-icon {
+            font-size: 24px;
+            margin-right: 15px;
+            margin-top: 2px;
+        }
+
+        .info-content {
+            font-size: 16px;
+            line-height: 1.6;
+            color: var(--text-dark);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .info-notice {
+                background-color: rgba(25, 118, 210, 0.15);
+            }
+            .info-content {
+                color: var(--text-light);
+            }
+        }
+
+        .highlight-text {
+            font-weight: bold;
+            color: var(--alert-color);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: var(--card-bg-light);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: var(--shadow-light);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .card {
+                background: var(--card-bg-dark);
+                box-shadow: var(--shadow-dark);
+            }
+            
+            .card:hover {
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            }
+        }
+
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+
+        .card h3 svg {
+            margin-right: 8px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+            box-shadow: 0 0 8px var(--success-color);
+        }
+
+        .status-inactive {
+            background-color: var(--alert-color);
+        }
+
+        .status-warning {
+            background-color: #FFCC00;
+            box-shadow: 0 0 8px #FFCC00;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #777;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .stat-label {
+                color: #bbb;
+            }
+        }
+
+        /* Recent Messages */
+        .message-list {
+            margin-top: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .message {
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .message-source {
+            font-weight: bold;
+        }
+
+        .message-time {
+            color: #777;
+        }
+
+        .message-content {
+            font-size: 14px;
+            word-break: break-word;
+        }
+
+        /* Log & Error Section */
+        #debugOutput {
+            margin-top: 30px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.05);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+		
+		.ssapp #debugOutput {
+			max-height: calc(100vh - 500px);
+			min-height: 200px;
+		}
+
+        @media (prefers-color-scheme: dark) {
+            #debugOutput {
+                background: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        .error-message {
+            background: rgba(255, 0, 0, 0.1);
+            color: #ff0000;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-size: 14px;
+            border-left: 4px solid #ff0000;
+        }
+
+        .log-message {
+            padding: 5px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        /* Utilities */
+        .hidden {
+            display: none;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .keep-open-alert {
+                font-size: 16px;
+                padding: 12px 15px;
+            }
+        }
+
+        /* Footer Styles */
+        .footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            color: #777;
+            font-size: 14px;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .footer {
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+                color: #bbb;
+            }
+        }
+
+        .footer a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: var(--secondary-color);
+            text-decoration: underline;
+        }
+
+        .support-links {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .bmc-button {
+            height: 33px;
+            width: 119.35px;
+            margin-left: 10px;
+			margin-top: 5px;
+        }
+
+        .community-links {
+            text-align: right;
+            line-height: 1.6;
+        }
+
+        .legal-links {
+            text-align: right;
+            margin-bottom: 8px;
+        }
+
+        .website-link {
+            text-align: right;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .icon {
+            height: 16px;
+            vertical-align: middle;
+            margin-left: 4px;
+        }
+
+        iframe {
+            width: 0;
+            height: 0;
+            border: none;
+            position: absolute;
+        }
+
+		.view-toggle-buttons {
+			display: flex;
+			justify-content: center;
+			margin-top: 15px;
+		}
+
+		.view-btn {
+			padding: 8px 15px;
+			border: 1px solid var(--primary-color);
+			background-color: transparent;
+			color: var(--primary-color);
+			cursor: pointer;
+			font-weight: bold;
+			transition: all 0.3s ease;
+			border-radius: 0;
+		}
+
+		.view-btn:first-child {
+			border-radius: 5px 0 0 5px;
+		}
+
+		.view-btn:last-child {
+			border-radius: 0 5px 5px 0;
+		}
+
+		.view-btn.active {
+			background-color: var(--primary-color);
+			color: white;
+		}
+
+		.view-btn:hover:not(.active) {
+			background-color: rgba(42, 157, 143, 0.1);
+		}
+    </style>
+</head>
+<body>
+<div id="dash">
+    <div class="container">
+        <div class="header">
+            <div class="logo">Social Stream Ninja</div>
+            <p><strong>Background Service Dashboard</strong> <span class="badge">Not the main app</span></p>
+        </div>
+
+        <div class="keep-open-alert">
+            ⚠️ IMPORTANT: You must keep this page open for Social Stream Ninja to work!
+        </div>
+
+        <div class="info-notice">
+            <div class="info-icon">ℹ️</div>
+            <div class="info-content">
+                <strong>This is not the main application.</strong> This is just a background service page that powers Social Stream Ninja.
+                <br>
+                All settings and controls are available through the extension popup or main menu.
+                <br>
+                <span class="highlight-text">Do not close this page or the extension will stop working.</span>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card" id="connection-status">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12.55a11 11 0 0 1 14.08 0"></path>
+                        <path d="M1.42 9a16 16 0 0 1 21.16 0"></path>
+                        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+                        <line x1="12" y1="20" x2="12" y2="20"></line>
+                    </svg>
+                    Connection Status
+                </h3>
+                <div class="status-item">
+                    <span class="status-indicator" id="websocket-status"></span>
+                    🎮 Remote Control API (ch 1/2): <span id="websocket-status-text">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-indicator" id="websocket-dock-status"></span>
+                    📡 Chat to External Apps (ch 3/4): <span id="websocket-dock-status-text">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-indicator" id="signaling-status"></span>
+                    📶 Signaling (VDO.Ninja): <span id="signaling-status-text">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-indicator" id="webrtc-status"></span>
+                    🔗 WebRTC (P2P): <span id="webrtc-status-text">Checking...</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-indicator" id="extension-status"></span>
+                    ⚡ Extension: <span id="extension-status-text">Checking...</span>
+                </div>
+                <div class="status-item" id="session-info">
+                    Session ID: <span id="session-id">Loading...</span>
+                </div>
+                <div class="status-item" id="peer-list" style="margin-top: 10px; font-size: 12px; color: #777;">
+                    <div id="peer-list-content"></div>
+                </div>
+                <div class="status-item" style="margin-top: 6px; font-size: 12px; color: #555;">
+                    Note: WebRTC (P2P) is the default transport. The API WebSockets are optional: 🎮 Remote Control for StreamDeck/Bitfocus commands, 📡 Chat Relay to receive chat in external apps (Python/Node).
+                </div>
+            </div>
+
+            <div class="card" id="message-stats">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Message Statistics
+                </h3>
+                <div class="stat-group">
+                    <div class="stat-value" id="message-count">0</div>
+                    <div class="stat-label">Messages Processed this Session</div>
+                </div>
+                <div class="stat-group">
+                    <div class="stat-value" id="active-sources">0</div>
+                    <div class="stat-label">Active Sources</div>
+                </div>
+            </div>
+            <div class="card" id="feature-status">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Active Features
+                </h3>
+                <div id="features-list">
+                    <div class="feature-item">
+                        <span class="status-indicator" id="midi-status"></span>
+                        🎹 MIDI Support
+                    </div>
+                    <div class="feature-item">
+                        <span class="status-indicator" id="sentiment-status"></span>
+                        🧠 Sentiment Analysis
+                    </div>
+                    <div class="feature-item">
+                        <span class="status-indicator" id="waitlist-status"></span>
+                        📋 Waitlist Mode
+                    </div>
+                    <div class="feature-item">
+                        <span class="status-indicator" id="hype-status"></span>
+                        🔥 Hype Mode
+                    </div>
+                    <div class="feature-item">
+                        <span class="status-indicator" id="spotify-status"></span>
+                        🎵 Spotify
+                    </div>
+                    <div class="feature-item">
+                        <span class="status-indicator" id="streamerbot-status"></span>
+                        🤖 Streamer.bot
+                    </div>
+                    <div class="feature-item">
+                        <span class="status-indicator" id="customjs-status"></span>
+                        🔧 Custom JS
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="debugOutput">
+            <div class="log-message">System initialized. Waiting for events...</div>
+        </div>
+
+        <div class="footer">
+		
+            <div class="support-links">
+				<div class="action-flow-editor" title="Open the flow editor in a new tab to create custom actions and triggers">
+					<button class="view-btn" id="showEditorViewButton">📝 Open the Action Flow Editor</button>
+				</div>
+                <div class="community-links">
+                    <span data-translate="visit-us-at">Visit us at</span> 
+                    <a href="https://discord.socialstream.ninja" target="_blank">
+                        <span data-translate="discord">Discord</span>
+                        <img class="icon" src="./sources/images/discord.png">
+                    </a>
+                    <br>
+                    <i><span data-translate="made-with">Made with</span></i> 💖 <i><span data-translate="for-the-community">for the community</span></i>.
+                </div>
+				<a href="https://www.buymeacoffee.com/steveseguin" target="_blank">
+                    <img src="./icons/buymeacoffee.png" alt="Buy Me A Coffee" class="bmc-button">
+                </a>
+            </div>
+            <div class="legal-links">
+                <a href="https://socialstream.ninja/TOS" target="_blank">Terms of Service</a> | 
+                <a href="https://socialstream.ninja/privacy" target="_blank">Privacy Policy</a> | 
+                <a href="https://www.youtube.com/t/terms" target="_blank">YouTube's Terms of Service</a>
+            </div>
+            <div class="website-link">
+                <a href="https://socialstream.ninja" target="_blank">socialstream.ninja</a>
+            </div>
+        </div>
+    </div>
+</div>
+	
+	
+<div id="editor" style="display:none;">
+	<div class="editor-container">
+        <div class="editor-header">
+            <div class="editor-title">Event Flow Editor</div>
+			<div style="font-size:66%;max-width:50%;">The Flow Editor lets you create custom and complex triggers and action workflows. Have fun with your stream!<br>
+			<span style="margin-top: 5px; display: inline-block;">⚡ For media playback and OBS actions, add the Actions Overlay to your stream (available via settings menu)</span></div>
+            <div class="editor-actions">
+                <button id="back-to-dashboard" class="btn">← Back to Dashboard</button>
+                <button id="open-test-panel" class="btn">🧪 Test Flow</button>
+            </div>
+        </div>
+        
+        <div class="editor-body">
+            <div id="editor-container"></div>
+        </div>
+    </div>
+
+    <!-- Test Panel -->
+    <div class="test-overlay" style="display:none;" id="test-overlay"></div>
+    <div class="test-panel" style="display:none;" id="test-panel">
+		<div class="test-panel-header">
+			<h3>Test Flow</h3>
+		</div>
+		<div class="test-panel-content">
+			<div class="test-group">
+				<label for="test-source">Source Platform:</label>
+				<select id="test-source">
+					<option value="twitch">Twitch</option>
+					<option value="youtube">YouTube</option>
+					<option value="facebook">Facebook</option>
+					<option value="kick">Kick</option>
+					<option value="tiktok">TikTok</option>
+					<option value="instagram">Instagram</option>
+					<option value="discord">Discord</option>
+					<option value="slack">Slack</option>
+				</select>
+			</div>
+			
+			<div class="test-group">
+				<label for="test-username">Username:</label>
+				<input type="text" id="test-username" value="TestUser">
+			</div>
+			
+			<div class="test-group">
+				<label for="test-message">Message:</label>
+				<textarea id="test-message" rows="3">Hello, world!</textarea>
+			</div>
+			
+		<div class="test-options">
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-mod">
+				Moderator
+			</label>
+				
+				<label class="test-checkbox">
+					<input type="checkbox" id="test-vip">
+					VIP
+				</label>
+				
+				<label class="test-checkbox">
+					<input type="checkbox" id="test-admin">
+					Admin
+				</label>
+				
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-donation">
+				Has Donation
+			</label>
+		</div>
+		
+		<div id="donation-amount" class="test-group" style="display: none;">
+			<label for="test-donation-amount">Donation Amount:</label>
+			<input type="text" id="test-donation-amount" value="$5.00">
+		</div>
+
+		<div class="test-options">
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-firsttime">
+				First-time chatter
+			</label>
+
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-lastactivity">
+				Set last activity
+			</label>
+		</div>
+
+		<div id="lastactivity-controls" class="test-group" style="display: none;">
+			<label for="test-lastactivity-value">Last activity</label>
+			<div style="display: flex; gap: 8px; align-items: center;">
+				<input type="number" id="test-lastactivity-value" value="60" min="0" style="width: 110px;">
+				<select id="test-lastactivity-unit">
+					<option value="minutes" selected>Minutes ago</option>
+					<option value="hours">Hours ago</option>
+					<option value="days">Days ago</option>
+				</select>
+			</div>
+			<p class="test-help" style="color: #a0a0a0; font-size: 13px; margin: 6px 0 0 0;">Applies to message-properties “last activity” filters using the current time as reference.</p>
+		</div>
+		
+		<div class="test-options">
+			<label class="test-checkbox">
+				<input type="checkbox" id="test-all-active-flows">
+				Test against all active flows (not just current flow)
+			</label>
+			</div>
+
+			<div class="test-warning" id="unsaved-flow-warning" style="display: none; color: #e76f51; margin: 10px 0;">
+				<strong>Warning:</strong> The current flow has unsaved changes. Test results may not reflect the latest changes.
+			</div>
+			
+			<div class="test-results" id="test-results">
+				<p>Test results will appear here after running a test.</p>
+			</div>
+		</div>
+		
+		<div class="test-buttons">
+			<button id="close-test-btn" class="btn">Close</button>
+			<button id="run-test-btn" class="btn btn-primary">Run Test</button>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript" src="./loader.js"></script>
+</body>
+</html>
