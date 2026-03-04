@@ -3110,6 +3110,7 @@
 			var darkmode = null;
 			var scale = 1;
 			var forceAutoscroll = false;
+			var manualScrollMode = urlParams.has("manualscroll");
 			var triggerState = true;
 			var emojis = true;
 			var pauseState = false;
@@ -4006,7 +4007,17 @@
 
 			var reversed = false;
 
-			if (urlParams.has("autoscroll")) {
+			function shouldAutoScrollToBottom(scrollHeight, scrollTop, clientHeight, threshold) {
+				if (forceAutoscroll) {
+					return true;
+				}
+				if (manualScrollMode) {
+					return false;
+				}
+				return scrollHeight < scrollTop + clientHeight + threshold;
+			}
+
+			if (urlParams.has("autoscroll") && !manualScrollMode) {
 				forceAutoscroll = false;
 				jumptoBottom();
 			}
@@ -5261,7 +5272,7 @@
 						if (getById("output").lastChild) {
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
-						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch + delta || forceAutoscroll) {
+						if (shouldAutoScrollToBottom(getById("output").scrollHeight, getById("output").scrollTop, getById("output").clientHeight, autoScrollCatch + delta)) {
 							jumptoBottom2()
 						}
 					}
@@ -5275,7 +5286,7 @@
 						if (getById("output").lastChild) {
 							delta = parseInt(getById("output").lastChild.clientHeight);
 						}
-						if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch + delta || forceAutoscroll) {
+						if (shouldAutoScrollToBottom(document.body.scrollHeight, document.body.scrollTop, document.body.clientHeight, autoScrollCatch + delta)) {
 							jumptoBottom2()
 						}
 					}
@@ -8604,10 +8615,10 @@
 				}
 				if (!(reversed && !forceAutoscroll)) {
 					if (alignbottom || fadetop) {
-						if (getById("output").scrollHeight < getById("output").scrollTop + getById("output").clientHeight + autoScrollCatch || forceAutoscroll) {
+						if (shouldAutoScrollToBottom(getById("output").scrollHeight, getById("output").scrollTop, getById("output").clientHeight, autoScrollCatch)) {
 							jumptoBottom2()
 						}
-					} else if (document.body.scrollHeight < document.body.scrollTop + document.body.clientHeight + autoScrollCatch || forceAutoscroll) {
+					} else if (shouldAutoScrollToBottom(document.body.scrollHeight, document.body.scrollTop, document.body.clientHeight, autoScrollCatch)) {
 						jumptoBottom2()
 					}
 				}

@@ -191,6 +191,7 @@ https://socialstream.ninja/dock.html?session=xxxxxxxxx&urlparameter=value
 | `disabletimeout` | boolean | Disables the auto-timeout on featured messages |
 | `altselect` | boolean | Keeps the Feature button visible when menus are hidden |
 | `autoscroll` | boolean | Scrolls to the latest message once and leaves scrolling unlocked |
+| `manualscroll` | boolean | Disables automatic near-bottom scrolling unless Force scroll is enabled |
 | `buffer` | boolean | Enables adaptive buffering for smoother message pacing |
 | `bufferdelay` | number | Base delay (ms) used when buffering messages |
 | `buffermin` | number | Minimum delay (ms) used when buffering messages |

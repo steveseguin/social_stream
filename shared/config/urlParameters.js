@@ -1258,6 +1258,15 @@ export const URL_PARAMETER_GROUPS = Object.freeze([
             "description": "Scrolls to the latest message once and leaves scrolling unlocked"
           },
           {
+            "key": "manualscroll",
+            "displayName": "manualscroll",
+            "aliases": [
+              "manualscroll"
+            ],
+            "values": "boolean",
+            "description": "Disables automatic near-bottom scrolling unless Force scroll is enabled"
+          },
+          {
             "key": "buffer",
             "displayName": "buffer",
             "aliases": [
