@@ -1820,7 +1820,9 @@ class OpenAICompatiblePublisher {
         this.currentResponseText = '';
         this.lastActivityTime = Date.now();
         const systemPromptValue = (document.getElementById('systemPrompt')?.value || '').trim();
-        const hasLiveVideo = this.stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled);
+        const videoSourceValue = (document.getElementById('videoSource')?.value || 'none');
+        const hasLiveVideo = videoSourceValue !== 'none' &&
+            this.stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled);
         const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : '';
         const messages = this.buildMessages(systemPromptValue, prompt, imageDataUrl);
         const controller = new AbortController();
@@ -3698,9 +3700,13 @@ async function refreshCustomModelList(showErrors = false) {
             throw new Error(`Model list error ${response.status}: ${body.slice(0, 200)}`);
         }
         const payload = await response.json();
-        const models = Array.isArray(payload?.data)
+        const dataModels = Array.isArray(payload?.data)
             ? payload.data.map((item) => item?.id).filter(Boolean)
             : [];
+        const legacyModels = Array.isArray(payload?.models)
+            ? payload.models.map((item) => item?.id || item?.model || item?.name).filter(Boolean)
+            : [];
+        const models = [...dataModels, ...legacyModels];
         customModelList = [...new Set(models)].sort();
         updateCustomModelSelect(getEffectiveModelForProvider('customopenai'));
         setCustomEndpointInfo(customModelList.length
