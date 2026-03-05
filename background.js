@@ -8330,6 +8330,17 @@ async function openchat(target = null, force = false) {
 		openURL(url);
 	}
 
+	if (target == "joystickws") {
+		let url = "https://socialstream.ninja/sources/websocket/joystick.html";
+		if (settings.joystick_username && settings.joystick_username.textsetting) {
+			const joystickChannel = settings.joystick_username.textsetting.trim();
+			if (joystickChannel) {
+				url += "?channel=" + encodeURIComponent(joystickChannel);
+			}
+		}
+		openURL(url);
+	}
+
 	if ((target == "instagramlive" || !target) && settings.instagramlive_username && settings.instagramlive_username.textsetting) {
 		let url = "https://www.instagram.com/" + settings.instagramlive_username.textsetting + "/live/";
 		try {

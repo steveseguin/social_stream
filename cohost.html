@@ -997,6 +997,14 @@ class PuppetAvatar {
     }
 }
 const GEMINI_DEFAULT_LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025";
+const LOCAL_QWEN_DEFAULT_MODEL = "thirdparty/models/qwen3.5-0.8b-onnx";
+const LOCAL_QWEN_WORKER_PATH = "cohost-local-qwen-worker.js";
+const LOCAL_QWEN_DEFAULT_DTYPE = {
+    embed_tokens: "q4",
+    decoder_model_merged: "q4",
+    model: "q4",
+    vision_encoder: "q4"
+};
 const MAX_DIAGNOSTIC_HISTORY = 80;
 const diagnosticsState = {
     provider: '-',
@@ -1173,6 +1181,374 @@ const REALTIME_PROVIDER_CONFIG = {
         ]
     }
 };
+class LocalBrowserPublisher {
+    constructor(stream, _apiKey, modelOverride = '') {
+        this.stream = stream;
+        this.model = (modelOverride || LOCAL_QWEN_DEFAULT_MODEL).trim();
+        this.worker = null;
+        this.stopped = false;
+        this.connected = false;
+        this.pendingRequests = new Map();
+        this.requestCounter = 0;
+        this.activeRequestId = null;
+        this.recognition = null;
+        this.isRecognizing = false;
+        this.recognitionTimeout = null;
+        this.interimTranscript = '';
+        this.finalTranscript = '';
+        this.responseActive = false;
+        this.currentResponseText = '';
+        this.pendingGreeting = true;
+        this.lastActivityTime = Date.now();
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 2;
+        this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
+        updateDiagnostics({
+            provider: 'Local Qwen 3.5 (Browser)',
+            model: this.model,
+            state: 'initialized',
+            connected: 'no',
+            lastEvent: 'publisher.created',
+            lastError: '-'
+        });
+    }
+    setupVideoProcessing() {
+        return Promise.resolve();
+    }
+    setupAudioProcessing() {
+        return Promise.resolve();
+    }
+    appendModelText(text) {
+        if (!text) return;
+        this.currentResponseText += text;
+        const modelResponseEvent = new CustomEvent('modelResponse', {
+            detail: { text }
+        });
+        window.dispatchEvent(modelResponseEvent);
+    }
+    finalizeResponse() {
+        this.responseActive = false;
+        this.currentResponseText = '';
+        this.activeRequestId = null;
+        if (messageFormatter && !messageFormatter.messageComplete) {
+            messageFormatter.finalizeMessage();
+        }
+    }
+    resetPendingRequests(errorMessage = 'Local model request was cancelled.') {
+        for (const [requestId, pending] of this.pendingRequests.entries()) {
+            clearTimeout(pending.timeoutId);
+            pending.reject(new Error(errorMessage));
+            this.pendingRequests.delete(requestId);
+        }
+    }
+    requestWorker(type, payload = {}, timeoutMs = 180000) {
+        if (!this.worker) {
+            return Promise.reject(new Error('Local model worker is not available.'));
+        }
+        const requestId = `local-${Date.now()}-${++this.requestCounter}`;
+        return new Promise((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                this.pendingRequests.delete(requestId);
+                reject(new Error(`Local model ${type} timed out.`));
+            }, timeoutMs);
+            this.pendingRequests.set(requestId, {
+                resolve,
+                reject,
+                timeoutId,
+                type
+            });
+            if (type === 'generate') {
+                this.activeRequestId = requestId;
+            }
+            this.worker.postMessage({
+                type,
+                requestId,
+                ...payload
+            });
+        });
+    }
+    handleWorkerResponse(message) {
+        const pending = this.pendingRequests.get(message.requestId);
+        if (!pending) {
+            return;
+        }
+        clearTimeout(pending.timeoutId);
+        this.pendingRequests.delete(message.requestId);
+        if (message.ok) {
+            pending.resolve(message);
+            return;
+        }
+        const errorMessage = message.error || 'Local model worker request failed.';
+        pending.reject(new Error(errorMessage));
+    }
+    handleWorkerMessage(event) {
+        const message = event?.data || {};
+        if (!message || typeof message !== 'object') {
+            return;
+        }
+        if (message.type === 'response') {
+            this.handleWorkerResponse(message);
+            return;
+        }
+        if (message.type === 'token') {
+            if (message.requestId === this.activeRequestId) {
+                this.appendModelText(message.text || '');
+            }
+            return;
+        }
+        if (message.type === 'status') {
+            const stateValue = message.state || 'connected';
+            updateDiagnostics({
+                provider: 'Local Qwen 3.5 (Browser)',
+                model: this.model,
+                state: stateValue,
+                connected: stateValue === 'error' ? 'no' : (this.connected ? 'yes' : 'no'),
+                lastEvent: `local.${stateValue}`,
+                lastError: stateValue === 'error'
+                    ? (message.message || 'Local model worker error')
+                    : '-'
+            });
+            return;
+        }
+        if (message.type === 'progress') {
+            const percent = Number.isFinite(message.progress) ? Math.round(message.progress) : 0;
+            const phase = message.phase || 'model';
+            updateDiagnostics({
+                provider: 'Local Qwen 3.5 (Browser)',
+                model: this.model,
+                state: 'loading',
+                connected: 'no',
+                lastEvent: `local.${phase}.${percent}%`
+            });
+            return;
+        }
+    }
+    async setupSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showError('Speech recognition is not supported in this browser. Try using Chrome.');
+            return;
+        }
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.maxAlternatives = 1;
+        this.recognition.lang = 'en-US';
+        this.recognition.onstart = () => {
+            this.isRecognizing = true;
+            avatar.setEmotion('thinking', false);
+        };
+        this.recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            this.interimTranscript = interimTranscript;
+            if (finalTranscript) {
+                this.finalTranscript = finalTranscript;
+                this.sendPrompt(finalTranscript).catch((err) => {
+                    console.error('Local speech prompt failed:', err);
+                    showError(`Failed to send speech prompt: ${err.message}`);
+                });
+                this.finalTranscript = '';
+                this.interimTranscript = '';
+            }
+            if (interimTranscript || finalTranscript) {
+                avatar.setEmotion('happy', true);
+                clearTimeout(this.recognitionTimeout);
+                this.recognitionTimeout = setTimeout(() => {
+                    if (!this.interimTranscript) {
+                        avatar.setEmotion('happy', false);
+                    }
+                }, 1500);
+            }
+        };
+        this.recognition.onerror = (event) => {
+            if (event.error !== 'not-allowed' && this.isRecognizing && !micMuted) {
+                this.restartRecognition();
+            } else {
+                this.isRecognizing = false;
+                avatar.setEmotion('sad', false);
+            }
+        };
+        this.recognition.onend = () => {
+            this.isRecognizing = false;
+            if (!this.stopped && !micMuted) {
+                this.restartRecognition();
+            }
+        };
+        try {
+            if (!micMuted) {
+                this.recognition.start();
+            }
+        } catch (err) {
+            showError('Failed to start speech recognition: ' + err.message);
+        }
+    }
+    restartRecognition() {
+        if (this.stopped || !this.recognition || micMuted) return;
+        try {
+            setTimeout(() => {
+                if (!this.isRecognizing && !this.stopped && !micMuted) {
+                    this.recognition.start();
+                }
+            }, 300);
+        } catch (err) {
+            console.error('Failed to restart local speech recognition:', err);
+        }
+    }
+    async connect() {
+        if (this.connected && this.worker) {
+            return;
+        }
+        this.resetPendingRequests();
+        if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
+        }
+        updateDiagnostics({
+            provider: 'Local Qwen 3.5 (Browser)',
+            model: this.model,
+            state: 'connecting',
+            connected: 'no',
+            lastEvent: 'local.connect.start',
+            lastError: '-'
+        });
+        this.worker = new Worker(LOCAL_QWEN_WORKER_PATH, { type: 'module' });
+        this.worker.onmessage = this.handleWorkerMessage;
+        this.worker.onerror = (event) => {
+            const errorMessage = event?.message || 'Local model worker error';
+            this.connected = false;
+            updateDiagnostics({
+                state: 'error',
+                connected: 'no',
+                lastEvent: 'local.worker.error',
+                lastError: errorMessage
+            });
+            this.resetPendingRequests(errorMessage);
+        };
+        await this.requestWorker('init', {
+            modelId: this.model,
+            dtype: LOCAL_QWEN_DEFAULT_DTYPE
+        }, 420000);
+        this.connected = true;
+        this.reconnectAttempts = 0;
+        updateDiagnostics({
+            provider: 'Local Qwen 3.5 (Browser)',
+            model: this.model,
+            state: 'connected',
+            connected: 'yes',
+            lastEvent: 'local.connect.ready',
+            lastError: '-'
+        });
+    }
+    async start() {
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        if (this.pendingGreeting) {
+            this.pendingGreeting = false;
+            this.sendPrompt('Hi, introduce yourself in a sentence for me. Be friendly to me.').catch((err) => {
+                console.warn('Local greeting failed:', err);
+            });
+        }
+        updateDiagnostics({
+            state: 'ready',
+            connected: this.isConnected() ? 'yes' : 'no',
+            lastEvent: 'publisher.start'
+        });
+    }
+    async sendPrompt(text) {
+        const prompt = (text || '').trim();
+        if (!prompt) return;
+        if (!this.isConnected()) {
+            throw new Error('Local model is not connected.');
+        }
+        this.responseActive = true;
+        this.currentResponseText = '';
+        this.lastActivityTime = Date.now();
+        const systemPromptValue = (document.getElementById('systemPrompt')?.value || '').trim();
+        updateDiagnostics({
+            state: 'responding',
+            connected: 'yes',
+            lastEvent: 'local.generate.start',
+            lastError: '-'
+        });
+        try {
+            const result = await this.requestWorker('generate', {
+                prompt,
+                systemPrompt: systemPromptValue,
+                maxNewTokens: 220,
+                temperature: 0.65,
+                topP: 0.92
+            }, 300000);
+            if (!this.currentResponseText && result.text) {
+                this.appendModelText(result.text);
+            }
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'connected',
+                connected: 'yes',
+                lastEvent: 'local.generate.done',
+                lastError: '-'
+            });
+        } catch (error) {
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'error',
+                connected: this.connected ? 'yes' : 'no',
+                lastEvent: 'local.generate.error',
+                lastError: error.message || 'Local generation failed'
+            });
+            throw error;
+        }
+    }
+    isConnected() {
+        return this.connected && !!this.worker;
+    }
+    async reconnect() {
+        this.reconnectAttempts += 1;
+        this.stop();
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        return true;
+    }
+    stop() {
+        this.stopped = true;
+        this.connected = false;
+        this.finalizeResponse();
+        this.resetPendingRequests();
+        if (this.recognition) {
+            try {
+                this.recognition.stop();
+            } catch (e) {}
+            this.recognition = null;
+        }
+        this.isRecognizing = false;
+        clearTimeout(this.recognitionTimeout);
+        if (this.worker) {
+            try {
+                this.worker.terminate();
+            } catch (e) {}
+            this.worker = null;
+        }
+        updateDiagnostics({
+            state: 'stopped',
+            connected: 'no',
+            lastEvent: 'publisher.stop'
+        });
+    }
+}
 class RealtimePublisher {
     constructor(stream, apiKey, provider = 'chatgpt', modelOverride = '') {
         this.stream = stream;
@@ -2848,7 +3224,7 @@ function saveModelOverride(providerName, value) {
 }
 
 function isRealtimeProvider(providerName) {
-    return providerName === 'chatgpt' || providerName === 'xai';
+    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen';
 }
 
 function createPublisherForProvider(providerName, activeStream, apiKey) {
@@ -2856,23 +3232,35 @@ function createPublisherForProvider(providerName, activeStream, apiKey) {
     if (providerName === 'gemini') {
         return new GoogleLivePublisher(activeStream, apiKey, effectiveModel);
     }
+    if (providerName === 'localqwen') {
+        return new LocalBrowserPublisher(activeStream, apiKey, effectiveModel);
+    }
     return new RealtimePublisher(activeStream, apiKey, providerName, effectiveModel);
 }
 
 document.getElementById('apiKey').addEventListener('input', validateApiKey);
 function validateApiKey() {
     const apiKey = apiKeyInput.value.trim();
-    startButton.disabled = !apiKey;
     const selectedProvider = (typeof providerSelect !== 'undefined' && providerSelect?.value)
         ? providerSelect.value
         : (localStorage.getItem('selectedProvider') || 'gemini');
-    localStorage.setItem(`apiKey_${selectedProvider}`, apiKey);
-    localStorage.setItem('apiKey', apiKey);
+    const providerConfig = providerUIConfig[selectedProvider] || providerUIConfig.gemini;
+    const requiresApiKey = providerConfig.requiresApiKey !== false;
+    startButton.disabled = requiresApiKey ? !apiKey : false;
+    if (requiresApiKey) {
+        localStorage.setItem(`apiKey_${selectedProvider}`, apiKey);
+        localStorage.setItem('apiKey', apiKey);
+    } else {
+        localStorage.removeItem(`apiKey_${selectedProvider}`);
+    }
     return apiKey;
 }
 startButton.addEventListener('click', async () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (!apiKey) {
+    const currentProvider = providerSelect.value;
+    const providerConfig = providerUIConfig[currentProvider] || providerUIConfig.gemini;
+    const requiresApiKey = providerConfig.requiresApiKey !== false;
+    const apiKey = requiresApiKey ? apiKeyInput.value.trim() : '';
+    if (requiresApiKey && !apiKey) {
         apiKeyInput.classList.add('highlight');
         setTimeout(() => apiKeyInput.classList.remove('highlight'), 2000);
         updateDiagnostics({
@@ -2920,8 +3308,11 @@ startButton.addEventListener('click', async () => {
         startButton.disabled = true;
         stream = await getStream();
         preview.srcObject = stream;
-        sessionStorage.setItem('apiKey', apiKey);
-        const currentProvider = providerSelect.value;
+        if (requiresApiKey) {
+            sessionStorage.setItem('apiKey', apiKey);
+        } else {
+            sessionStorage.removeItem('apiKey');
+        }
         publisher = createPublisherForProvider(currentProvider, stream, apiKey);
         await publisher.start();
         startButton.textContent = 'Stop Stream';
@@ -3476,8 +3867,10 @@ async function restartActivePublisher() {
     try {
         stream = await getStream();
         preview.srcObject = stream;
-        const apiKey = document.getElementById('apiKey').value.trim();
         const currentProvider = providerSelect.value;
+        const providerConfig = providerUIConfig[currentProvider] || providerUIConfig.gemini;
+        const requiresApiKey = providerConfig.requiresApiKey !== false;
+        const apiKey = requiresApiKey ? document.getElementById('apiKey').value.trim() : '';
         publisher = createPublisherForProvider(currentProvider, stream, apiKey);
         await publisher.start();
         startButton.textContent = 'Stop Stream';
@@ -3534,6 +3927,7 @@ const providerSelect = document.createElement('select');
 providerSelect.id = 'providerSelect';
 providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
+    <option value="localqwen">Local Qwen 3.5 (Browser)</option>
     <option value="chatgpt">OpenAI Realtime</option>
     <option value="xai">xAI Realtime</option>
 `;
@@ -3541,26 +3935,45 @@ const apiKeyContainer = document.querySelector('.api-key-container');
 apiKeyContainer.parentElement.insertBefore(providerSelect, apiKeyContainer);
 const providerUIConfig = {
     gemini: {
+        label: 'Google Gemini Live',
         apiKeyPlaceholder: 'Enter Gemini API Key',
         apiKeyInfoHtml: 'Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.',
         defaultModel: GEMINI_DEFAULT_LIVE_MODEL,
         modelPlaceholder: `Optional model override (default ${GEMINI_DEFAULT_LIVE_MODEL})`,
         disableCaptureSelection: false,
-        deviceNotice: ''
+        deviceNotice: '',
+        requiresApiKey: true,
+        supportsAudioResponse: true
+    },
+    localqwen: {
+        label: 'Local Qwen 3.5 (Browser)',
+        apiKeyPlaceholder: 'No API key required',
+        apiKeyInfoHtml: 'Runs entirely local in this browser using local model files and local runtime assets.',
+        defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
+        modelPlaceholder: `Optional local model path (default ${LOCAL_QWEN_DEFAULT_MODEL})`,
+        disableCaptureSelection: true,
+        deviceNotice: 'Speech-to-text stays in browser and feeds the local Qwen model directly. No external API calls are used.',
+        requiresApiKey: false,
+        supportsAudioResponse: false
     },
     chatgpt: {
         ...REALTIME_PROVIDER_CONFIG.chatgpt,
         modelPlaceholder: `Optional model override (default ${REALTIME_PROVIDER_CONFIG.chatgpt.defaultModel})`,
-        disableCaptureSelection: true
+        disableCaptureSelection: true,
+        requiresApiKey: true,
+        supportsAudioResponse: true
     },
     xai: {
         ...REALTIME_PROVIDER_CONFIG.xai,
         modelPlaceholder: 'Optional model override (uses xAI server default if blank)',
-        disableCaptureSelection: true
+        disableCaptureSelection: true,
+        requiresApiKey: true,
+        supportsAudioResponse: true
     }
 };
 const defaultPrompts = {
     gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
+    localqwen: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.",
     chatgpt: "You are a friendly and helpful social chat assistant.",
     xai: "You are a friendly and helpful social chat assistant."
 };
@@ -3593,15 +4006,25 @@ function removeRealtimeDeviceNotice() {
 function applyProviderUI(providerName, restoreKey = true) {
     const config = providerUIConfig[providerName] || providerUIConfig.gemini;
     const apiKeyInfo = document.querySelector('#apikeyinfo');
-    const responseTypeValue = document.getElementById('responseType').value;
+    const responseTypeSelect = document.getElementById('responseType');
+    const requiresApiKey = config.requiresApiKey !== false;
     if (restoreKey) {
-        apiKeyInput.value = localStorage.getItem(`apiKey_${providerName}`) || '';
+        apiKeyInput.value = requiresApiKey ? (localStorage.getItem(`apiKey_${providerName}`) || '') : '';
         modelOverrideInput.value = getStoredModelOverride(providerName);
     }
+    apiKeyInput.disabled = !requiresApiKey;
+    apiKeyInput.type = requiresApiKey ? 'password' : 'text';
     apiKeyInput.placeholder = config.apiKeyPlaceholder;
     apiKeyInfo.innerHTML = config.apiKeyInfoHtml;
     modelOverrideInput.placeholder = config.modelPlaceholder || 'Optional model override';
     systemPrompt.value = defaultPrompts[providerName] || defaultPrompts.gemini;
+    if (config.supportsAudioResponse === false) {
+        responseTypeSelect.value = 'text';
+        responseTypeSelect.disabled = true;
+    } else {
+        responseTypeSelect.disabled = false;
+    }
+    const responseTypeValue = responseTypeSelect.value;
     videoSelect.disabled = config.disableCaptureSelection;
     audioSelect.disabled = config.disableCaptureSelection;
     if (config.disableCaptureSelection && audioSelect.value === 'none') {

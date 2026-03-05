@@ -898,6 +898,52 @@
                     </table>
                 </article>
 
+                <article class="platform-card" id="joystick-ws">
+                    <h3>Joystick - Bot WebSocket</h3>
+                    <p class="source-note">Implementation: <code>sources/websocket/joystick.js</code></p>
+                    <ul class="requirements">
+                        <li>Uses Joystick bot credentials (<code>client_id</code> + <code>client_secret</code>), not direct user chat credentials.</li>
+                        <li>Connects to <code>wss://joystick.tv/cable</code> and subscribes to <code>GatewayChannel</code>.</li>
+                        <li>Optional OAuth token exchange is used only for helper endpoints like <code>/api/users/stream-settings</code>.</li>
+                    </ul>
+                    <table class="event-table">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>When it Fires</th>
+                                <th>Payload Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>message</code></td>
+                                <td>Joystick <code>ChatMessage</code> / <code>new_message</code>.</td>
+                                <td><code>chatname</code>, <code>chatmessage</code>, <code>chatimg</code>, and author flags are normalized for overlays.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>new_follower</code></td>
+                                <td>Joystick <code>StreamEvent</code> with type <code>Followed</code>.</td>
+                                <td>Mapped into standard follower event shape with extra details in <code>meta</code>.</td>
+                            </tr>
+                            <tr>
+                                <td><code>donation</code></td>
+                                <td>Joystick <code>StreamEvent</code> types <code>Tipped</code> / <code>TipMenu</code>.</td>
+                                <td><code>hasDonation</code> is populated when token amount can be inferred from metadata/text.</td>
+                            </tr>
+                            <tr>
+                                <td class="status-event"><code>stream_online</code> / <code>stream_offline</code></td>
+                                <td>Joystick <code>StreamEvent</code> types like <code>Started</code>, <code>StreamResuming</code>, <code>Ended</code>, <code>StreamEnding</code>.</td>
+                                <td>Used for transport-aware online/offline automations.</td>
+                            </tr>
+                            <tr>
+                                <td><code>user_enter</code> / <code>user_leave</code></td>
+                                <td>Joystick <code>UserPresence</code> types <code>enter_stream</code> / <code>leave_stream</code>.</td>
+                                <td>Presence notifications are emitted as event messages and can be suppressed by hide-events settings.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+
                 <article class="platform-card" id="facebook">
                     <h3>Facebook Live</h3>
                     <p class="source-note">Implementation: <code>sources/facebook.js</code></p>
