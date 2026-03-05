@@ -2,7 +2,7 @@
   "name": "Social Stream Ninja",
   "description": "Powerful tooling to engage live chat on Youtube, Twitch, Zoom, and more.",
   "manifest_version": 3,
-  "version": "3.46.7",
+  "version": "3.46.9",
   "homepage_url": "http://socialstream.ninja/",
   "browser_specific_settings": {
     "gecko": {
@@ -162,9 +162,8 @@
     "https://www.nimo.tv/popout/chat/*",
     "https://dashboard.nimo.tv/popout/chat/*",
     "https://demo.openstreamingplatform.com/view/*chatOnly=True*",
-    "https://*.locals.com/post/*",
-    "https://*.locals.com/feed/*",
-	"https://locals.com/*/feed?*",
+    "https://*.locals.com/*",
+    "https://locals.com/*",
     "https://bilibili.tv/*/live/*",
     "https://live.bilibili.com/*",
     "https://*.minnit.chat/*/Main",
@@ -243,6 +242,7 @@
     "https://*.loco.com/*",
     "https://loco.com/*",
     "https://joystick.tv/u/*/chat",
+    "https://joystick.tv/*",
     "https://www.buzzit.ca/event/*/chat",
     "https://*.floatplane.com/popout/livechat",
     "https://www.threads.net/*",
@@ -260,6 +260,7 @@
     "https://app.livestorm.co/*/live?*",
     "https://steamcommunity.com/broadcast/chatonly/*",
     "https://www.whatnot.com/live/*",
+    "https://whatnot.com/live/*",
     "https://jaco.live/*",
     "https://www.younow.com/*",
     "https://chat.truffle.vip/chat/",
@@ -709,7 +710,8 @@
         "./sources/whatnot.js"
       ],
       "matches": [
-        "https://www.whatnot.com/live/*"
+        "https://www.whatnot.com/live/*",
+        "https://whatnot.com/live/*"
       ]
     },
     {
@@ -1034,9 +1036,8 @@
         "./sources/locals.js"
       ],
       "matches": [
-        "https://*.locals.com/post/*",
-        "https://*.locals.com/feed/*",
-		"https://locals.com/*/feed?*"
+        "https://*.locals.com/*",
+        "https://locals.com/*"
       ]
     },
     {
@@ -1173,6 +1174,19 @@
         "file:///C:/Users/steve/Code/social_stream/sources/websocket/kick.html*",
         "http://localhost:8080/*/kick.html*",
         "http://localhost:8181/*/kick.html*"
+      ]
+    },
+    {
+      "js": [
+        "./sources/websocket/joystick.js"
+      ],
+      "matches": [
+        "https://socialstream.ninja/sources/websocket/joystick*",
+        "https://beta.socialstream.ninja/sources/websocket/joystick*",
+        "https://socialstream.ninja/beta/sources/websocket/joystick*",
+        "file:///C:/Users/steve/Code/social_stream/sources/websocket/joystick.html*",
+        "http://localhost:8080/*/joystick.html*",
+        "http://localhost:8181/*/joystick.html*"
       ]
     },
     {

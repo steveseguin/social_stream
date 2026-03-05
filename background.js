@@ -4665,6 +4665,10 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 			sendResponse({ state: isExtensionOn });
 
 			triggerFakeRandomMessage();
+		} else if (request.cmd && request.cmd === "fakemeta") {
+			sendResponse({ state: isExtensionOn });
+
+			triggerFakeMetaMessage(request.value);
 
 		} else if (request.cmd && request.cmd === "creditsStart") {
 			sendResponse({ state: isExtensionOn });
@@ -5325,8 +5329,10 @@ async function sendToDestinations(message) {
 					if (settings.hypemode) {
 						updateViewerCount({event: "viewer_updates", meta: viewerCounts}); // updateViewerCount already calls combineHypeData and sends
 					}
-					
-					sendDataP2P({event: "viewer_updates", meta: viewerCounts});
+
+					var viewerUpdateEvent = {event: "viewer_updates", meta: viewerCounts};
+					sendDataP2P(viewerUpdateEvent);
+					sendTargetP2P(viewerUpdateEvent, "meta");
 				}
 				
 				return true;
@@ -5336,6 +5342,13 @@ async function sendToDestinations(message) {
 	
 	try {
 		sendDataP2P(message); 
+	} catch (e) {
+		console.error(e);
+	}
+	try {
+		if (message && typeof message === "object" && Object.prototype.hasOwnProperty.call(message, "meta")) {
+			sendTargetP2P(message, "meta");
+		}
 	} catch (e) {
 		console.error(e);
 	}
@@ -8314,6 +8327,17 @@ async function openchat(target = null, force = false) {
 
 	if ((target == "kick" || !target) && settings.kick_username) {
 		let url = "https://kick.com/" + settings.kick_username.textsetting + "/chatroom";
+		openURL(url);
+	}
+
+	if (target == "joystickws") {
+		let url = "https://socialstream.ninja/sources/websocket/joystick.html";
+		if (settings.joystick_username && settings.joystick_username.textsetting) {
+			const joystickChannel = settings.joystick_username.textsetting.trim();
+			if (joystickChannel) {
+				url += "?channel=" + encodeURIComponent(joystickChannel);
+			}
+		}
 		openURL(url);
 	}
 
@@ -12084,7 +12108,7 @@ async function applyBotActions(data, tab = false) {
 
 		if (settings.removeContentImage) {
 			data.contentimg = "";
-			if (!data.chatmessage && !data.hasDonation) {
+			if (!data.chatmessage && !data.hasDonation && !(data.event && ("meta" in data))) {
 				// there's no content worth sending I'm assuming
 				return false;
 			}
@@ -13820,6 +13844,202 @@ function monitorFileChanges() {
 }
 // Add this variable at the top of your script file, outside any functions
 let lastRandomTestMessageData = null;
+
+function fakeMetaPick(values) {
+	if (!Array.isArray(values) || !values.length) {
+		return null;
+	}
+	return values[Math.floor(Math.random() * values.length)];
+}
+
+function fakeMetaInt(min, max) {
+	min = Math.ceil(Number(min) || 0);
+	max = Math.floor(Number(max) || 0);
+	if (max < min) {
+		return min;
+	}
+	return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function buildFakeAuctionMeta() {
+	var items = [
+		{ title: "500 Spot Silver Slab Mega Set - #191", category: "Coins, U.S. currency", minPrice: 12, maxPrice: 220 },
+		{ title: "Bullion Item as Shown", category: "Bullion", minPrice: 1, maxPrice: 45 },
+		{ title: "MEGA ATOMIC SPONSOR A GIVEAWAY", category: "Giveaway", minPrice: 55, maxPrice: 240 },
+		{ title: "Auctioned Numismatic Coin - Item as Shown on Screen", category: "Numismatics", minPrice: 4, maxPrice: 125 }
+	];
+	var bidders = [
+		"redatv2004",
+		"richard23507",
+		"coinhunter77",
+		"stacking_silver",
+		"tonerking"
+	];
+	var shippingTexts = [
+		"Shipping + Taxes are extra",
+		"Combined shipping available",
+		"US shipping available",
+		"Shipping calculated at checkout"
+	];
+	var item = fakeMetaPick(items) || items[0];
+	var bidder = fakeMetaPick(bidders) || "guest_bidder";
+	var status = fakeMetaPick(["winning", "won", "sold"]) || "winning";
+	var bids = fakeMetaInt(1, 24);
+	var price = fakeMetaInt(item.minPrice, item.maxPrice);
+	var seconds = fakeMetaInt(3, 45);
+	var timer = "00:" + String(seconds).padStart(2, "0");
+	var statusText = bidder + " is Winning!";
+
+	if (status === "won") {
+		statusText = bidder + " won!";
+		timer = "00:00";
+	} else if (status === "sold") {
+		statusText = "Sold";
+		timer = "00:00";
+	}
+
+	return {
+		status: status,
+		statusText: statusText,
+		bidder: bidder,
+		title: item.title,
+		category: item.category,
+		price: price,
+		priceText: "$" + price.toLocaleString(),
+		bids: bids,
+		bidsText: bids + " Bids",
+		timer: timer,
+		shipping: fakeMetaPick(shippingTexts) || shippingTexts[0]
+	};
+}
+
+function buildFakeCommerceMeta() {
+	var productCatalog = [
+		{ title: "2017-S Medal American Liberty Set", price: 225, quantity: 1, action: "Buy Now" },
+		{ title: "BCW 2x2 Coin Snap Holder Large Dollar (38.1mm)", price: 55, quantity: 10, action: "Buy Now" },
+		{ title: "Copper/Other Numismatic Item", price: 1, quantity: 985, action: "Pre-bid" },
+		{ title: "SPONSOR A GIVEAWAY Supercharged", price: 85, quantity: 94, action: "Buy Now" },
+		{ title: "Trump Foil Note", price: 10, quantity: 10, action: "Save & Notify Me" },
+		{ title: "Whatnot Starter Kit Pro 5 with Whatty Plush", price: 175, quantity: 1, action: "Buy Now" },
+		{ title: "Guardhouse Tetra Snaplocks For SILVER EAGLES", price: 65, quantity: 5, action: "Buy Now" },
+		{ title: "Qty 1 Package of Qty 525 Avery 6737 Labels", price: 6, quantity: 91, action: "Buy Now" }
+	];
+	var giveawayTitles = [
+		"Slab, Silver and/or Numismatic on Screen #10",
+		"Slab, Silver and/or Numismatic on Screen #11",
+		"Slab, Silver and/or Numismatic on Screen #12",
+		"Slab, Silver and/or Numismatic on Screen #13",
+		"Slab, Silver and/or Numismatic on Screen #14",
+		"Slab, Silver and/or Numismatic on Screen #15"
+	];
+	var shuffled = productCatalog.slice().sort(function () {
+		return Math.random() - 0.5;
+	});
+	var productCount = fakeMetaInt(4, Math.min(7, shuffled.length));
+	var selected = shuffled.slice(0, productCount).map(function (item) {
+		var row = {
+			title: item.title,
+			price: item.price,
+			priceText: "$" + item.price.toLocaleString(),
+			quantity: item.quantity,
+			quantityText: "Qty. " + item.quantity.toLocaleString(),
+			action: item.action
+		};
+		if (item.action === "Pre-bid") {
+			var bids = fakeMetaInt(0, 9);
+			row.bids = bids;
+			row.bidsText = bids + (bids === 1 ? " bid" : " bids");
+		}
+		return row;
+	});
+
+	var giveaways = giveawayTitles.slice(0, fakeMetaInt(3, 6)).map(function (title) {
+		return {
+			title: title,
+			quantity: 1,
+			quantityText: "Qty. 1"
+		};
+	});
+
+	var spotsTotal = fakeMetaInt(200, 900);
+	var spotsRemaining = fakeMetaInt(0, spotsTotal);
+	var surpriseTitle = fakeMetaPick([
+		"500 Spot Silver Slab Mega Set",
+		"Mystery Numismatic Pull Game",
+		"Weekend Mega Breaker Lot"
+	]);
+
+	return {
+		products: {
+			total: selected.length,
+			items: selected
+		},
+		surpriseSets: {
+			total: 1,
+			items: [{
+				title: surpriseTitle,
+				progress: Math.max(0, Math.min(100, Math.round(((spotsTotal - spotsRemaining) / spotsTotal) * 100))),
+				remaining: spotsRemaining,
+				totalSpots: spotsTotal,
+				remainingText: spotsRemaining.toLocaleString() + " of " + spotsTotal.toLocaleString() + " left",
+				statusText: "Surprise Set Filling"
+			}]
+		},
+		upcomingGiveaways: {
+			total: giveaways.length,
+			items: giveaways
+		}
+	};
+}
+
+function buildFakeViewerUpdates() {
+	var allPlatforms = ["youtube", "twitch", "kick", "tiktok", "whatnot", "facebook"];
+	var shuffled = allPlatforms.slice().sort(function () {
+		return Math.random() - 0.5;
+	});
+	var count = fakeMetaInt(2, 5);
+	var selected = shuffled.slice(0, count);
+	var meta = {};
+	selected.forEach(function (platform) {
+		meta[platform] = fakeMetaInt(9, 1500);
+	});
+	return meta;
+}
+
+function triggerFakeMetaMessage(mode) {
+	var normalized = String(mode || "random").toLowerCase().trim();
+	if (!normalized || normalized === "random") {
+		normalized = fakeMetaPick(["auction", "commerce", "viewers"]) || "auction";
+	}
+
+	var payload = null;
+	if (normalized === "auction") {
+		payload = {
+			type: "whatnot",
+			event: "auction_update",
+			meta: buildFakeAuctionMeta()
+		};
+	} else if (normalized === "commerce") {
+		payload = {
+			type: "whatnot",
+			event: "commerce_update",
+			meta: buildFakeCommerceMeta()
+		};
+	} else if (normalized === "viewers" || normalized === "viewer" || normalized === "viewer_updates") {
+		payload = {
+			event: "viewer_updates",
+			meta: buildFakeViewerUpdates()
+		};
+	} else {
+		payload = {
+			type: "whatnot",
+			event: "auction_update",
+			meta: buildFakeAuctionMeta()
+		};
+	}
+
+	sendToDestinations(payload);
+}
 
 async function triggerFakeRandomMessage(){
 	var data = {};

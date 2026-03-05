@@ -270,6 +270,18 @@ document.addEventListener('DOMContentLoaded', function() {
             `
         },
         {
+            name: 'Joystick Bot WebSocket',
+            icon: 'joystick.png',
+            description: 'WebSocket connection using your own Joystick bot credentials.',
+            type: 'websocket',
+            instructions: `
+                <ul>
+                    <li>URL: https://socialstream.ninja/sources/websocket/joystick</li>
+                    <li>Enter your bot client ID/client secret, then connect to GatewayChannel</li>
+                </ul>
+            `
+        },
+        {
             name: 'IRC WebSocket',
             icon: 'irc.png',
             description: 'WebSocket connection to IRC networks.',

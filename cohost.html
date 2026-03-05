@@ -826,13 +826,19 @@ button:disabled {
 				<option value="Fenrir">Male Voice 3 (Fenrir)</option>
 			</select>
 			<textarea placeholder="This is where you can specify an initial instruction prompt." id="systemPrompt" rows="4" style="width: 100%; background: #2a2a2a; color: #e0e0e0; border: 1px solid #404040; border-radius: 8px; padding: 8px; font-family: inherit;"></textarea>
-			<div class="api-key-container">
-				<input type="password" id="apiKey" placeholder="Enter Gemini API Key" size="15" class="api-key">
-				<div class="api-key-info" id="apikeyinfo">
-					Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+				<div class="api-key-container">
+					<input type="password" id="apiKey" placeholder="Enter Gemini API Key" size="15" class="api-key">
+					<div class="api-key-info" id="apikeyinfo">
+						Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.
+					</div>
 				</div>
-			</div>
-			<input type="text" id="modelOverride" placeholder="Optional model override" class="model-override">
+				<div class="api-key-container" id="customEndpointContainer" style="display:none; width:100%;">
+					<input type="text" id="customEndpoint" placeholder="Custom OpenAI-compatible endpoint (eg: http://127.0.0.1:1234/v1)" class="api-key" style="flex:1;">
+					<button id="customModelsRefresh" type="button" style="white-space:nowrap;">Refresh Models</button>
+				</div>
+				<select id="customModelSelect" style="display:none; width:100%;"></select>
+				<div class="api-key-info" id="customEndpointInfo" style="display:none; width:100%;"></div>
+				<input type="text" id="modelOverride" placeholder="Optional model override" class="model-override">
 			<div id="connectionDiagnostics" class="diagnostics-panel">
 				<div class="diagnostics-header">Connection Diagnostics</div>
 				<div class="diagnostics-grid">
@@ -997,6 +1003,17 @@ class PuppetAvatar {
     }
 }
 const GEMINI_DEFAULT_LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025";
+const LOCAL_QWEN_DEFAULT_MODEL = "qwen3.5-0.8b-onnx";
+const LOCAL_QWEN_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
+const LOCAL_QWEN_WORKER_PATH = "cohost-local-qwen-worker.js";
+const CUSTOM_OPENAI_DEFAULT_ENDPOINT = "http://127.0.0.1:1234/v1";
+const CUSTOM_OPENAI_DEFAULT_MODEL = "qwen3.5-35b";
+const LOCAL_QWEN_DEFAULT_DTYPE = {
+    embed_tokens: "q4",
+    decoder_model_merged: "q4",
+    model: "q4",
+    vision_encoder: "q4"
+};
 const MAX_DIAGNOSTIC_HISTORY = 80;
 const diagnosticsState = {
     provider: '-',
@@ -1068,12 +1085,19 @@ function getDiagnosticsSnapshot() {
     const modelOverrideValue = (typeof modelOverrideInput !== 'undefined' && modelOverrideInput)
         ? modelOverrideInput.value.trim()
         : (localStorage.getItem(`modelOverride_${selectedProviderName}`) || '').trim();
+    const customEndpointEl = document.getElementById('customEndpoint');
+    const customEndpointValue = (selectedProviderName === 'customopenai')
+        ? ((customEndpointEl && typeof customEndpointEl.value === 'string')
+            ? customEndpointEl.value.trim()
+            : (localStorage.getItem(`customEndpoint_${selectedProviderName}`) || '').trim())
+        : '';
     return {
         generatedAt: new Date().toISOString(),
         page: window.location.href,
         userAgent: navigator.userAgent,
         selectedProvider: selectedProviderName,
         modelOverride: modelOverrideValue || null,
+        customEndpoint: customEndpointValue || null,
         current: {
             ...diagnosticsState,
             updatedIso: new Date(diagnosticsState.updated).toISOString()
@@ -1173,6 +1197,729 @@ const REALTIME_PROVIDER_CONFIG = {
         ]
     }
 };
+class LocalBrowserPublisher {
+    constructor(stream, _apiKey, modelOverride = '') {
+        this.stream = stream;
+        this.model = (modelOverride || LOCAL_QWEN_DEFAULT_MODEL).trim();
+        this.worker = null;
+        this.stopped = false;
+        this.connected = false;
+        this.pendingRequests = new Map();
+        this.requestCounter = 0;
+        this.activeRequestId = null;
+        this.recognition = null;
+        this.isRecognizing = false;
+        this.recognitionTimeout = null;
+        this.interimTranscript = '';
+        this.finalTranscript = '';
+        this.responseActive = false;
+        this.currentResponseText = '';
+        this.pendingGreeting = true;
+        this.lastActivityTime = Date.now();
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 2;
+        this.handleWorkerMessage = this.handleWorkerMessage.bind(this);
+        updateDiagnostics({
+            provider: 'Local Qwen 3.5 (Browser)',
+            model: this.model,
+            state: 'initialized',
+            connected: 'no',
+            lastEvent: 'publisher.created',
+            lastError: '-'
+        });
+    }
+    setupVideoProcessing() {
+        return Promise.resolve();
+    }
+    setupAudioProcessing() {
+        return Promise.resolve();
+    }
+    appendModelText(text) {
+        if (!text) return;
+        this.currentResponseText += text;
+        const modelResponseEvent = new CustomEvent('modelResponse', {
+            detail: { text }
+        });
+        window.dispatchEvent(modelResponseEvent);
+    }
+    finalizeResponse() {
+        this.responseActive = false;
+        this.currentResponseText = '';
+        this.activeRequestId = null;
+        if (messageFormatter && !messageFormatter.messageComplete) {
+            messageFormatter.finalizeMessage();
+        }
+    }
+    resetPendingRequests(errorMessage = 'Local model request was cancelled.') {
+        for (const [requestId, pending] of this.pendingRequests.entries()) {
+            clearTimeout(pending.timeoutId);
+            pending.reject(new Error(errorMessage));
+            this.pendingRequests.delete(requestId);
+        }
+    }
+    requestWorker(type, payload = {}, timeoutMs = 180000) {
+        if (!this.worker) {
+            return Promise.reject(new Error('Local model worker is not available.'));
+        }
+        const requestId = `local-${Date.now()}-${++this.requestCounter}`;
+        return new Promise((resolve, reject) => {
+            const timeoutId = setTimeout(() => {
+                this.pendingRequests.delete(requestId);
+                reject(new Error(`Local model ${type} timed out.`));
+            }, timeoutMs);
+            this.pendingRequests.set(requestId, {
+                resolve,
+                reject,
+                timeoutId,
+                type
+            });
+            if (type === 'generate') {
+                this.activeRequestId = requestId;
+            }
+            this.worker.postMessage({
+                type,
+                requestId,
+                ...payload
+            });
+        });
+    }
+    handleWorkerResponse(message) {
+        const pending = this.pendingRequests.get(message.requestId);
+        if (!pending) {
+            return;
+        }
+        clearTimeout(pending.timeoutId);
+        this.pendingRequests.delete(message.requestId);
+        if (message.ok) {
+            pending.resolve(message);
+            return;
+        }
+        const errorMessage = message.error || 'Local model worker request failed.';
+        pending.reject(new Error(errorMessage));
+    }
+    handleWorkerMessage(event) {
+        const message = event?.data || {};
+        if (!message || typeof message !== 'object') {
+            return;
+        }
+        if (message.type === 'response') {
+            this.handleWorkerResponse(message);
+            return;
+        }
+        if (message.type === 'token') {
+            if (message.requestId === this.activeRequestId) {
+                this.appendModelText(message.text || '');
+            }
+            return;
+        }
+        if (message.type === 'status') {
+            const stateValue = message.state || 'connected';
+            updateDiagnostics({
+                provider: 'Local Qwen 3.5 (Browser)',
+                model: this.model,
+                state: stateValue,
+                connected: stateValue === 'error' ? 'no' : (this.connected ? 'yes' : 'no'),
+                lastEvent: `local.${stateValue}`,
+                lastError: stateValue === 'error'
+                    ? (message.message || 'Local model worker error')
+                    : '-'
+            });
+            return;
+        }
+        if (message.type === 'progress') {
+            const percent = Number.isFinite(message.progress) ? Math.round(message.progress) : 0;
+            const phase = message.phase || 'model';
+            updateDiagnostics({
+                provider: 'Local Qwen 3.5 (Browser)',
+                model: this.model,
+                state: 'loading',
+                connected: 'no',
+                lastEvent: `local.${phase}.${percent}%`
+            });
+            return;
+        }
+    }
+    async setupSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showError('Speech recognition is not supported in this browser. Try using Chrome.');
+            return;
+        }
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.maxAlternatives = 1;
+        this.recognition.lang = 'en-US';
+        this.recognition.onstart = () => {
+            this.isRecognizing = true;
+            avatar.setEmotion('thinking', false);
+        };
+        this.recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            this.interimTranscript = interimTranscript;
+            if (finalTranscript) {
+                this.finalTranscript = finalTranscript;
+                this.sendPrompt(finalTranscript).catch((err) => {
+                    console.error('Local speech prompt failed:', err);
+                    showError(`Failed to send speech prompt: ${err.message}`);
+                });
+                this.finalTranscript = '';
+                this.interimTranscript = '';
+            }
+            if (interimTranscript || finalTranscript) {
+                avatar.setEmotion('happy', true);
+                clearTimeout(this.recognitionTimeout);
+                this.recognitionTimeout = setTimeout(() => {
+                    if (!this.interimTranscript) {
+                        avatar.setEmotion('happy', false);
+                    }
+                }, 1500);
+            }
+        };
+        this.recognition.onerror = (event) => {
+            if (event.error !== 'not-allowed' && this.isRecognizing && !micMuted) {
+                this.restartRecognition();
+            } else {
+                this.isRecognizing = false;
+                avatar.setEmotion('sad', false);
+            }
+        };
+        this.recognition.onend = () => {
+            this.isRecognizing = false;
+            if (!this.stopped && !micMuted) {
+                this.restartRecognition();
+            }
+        };
+        try {
+            if (!micMuted) {
+                this.recognition.start();
+            }
+        } catch (err) {
+            showError('Failed to start speech recognition: ' + err.message);
+        }
+    }
+    restartRecognition() {
+        if (this.stopped || !this.recognition || micMuted) return;
+        try {
+            setTimeout(() => {
+                if (!this.isRecognizing && !this.stopped && !micMuted) {
+                    this.recognition.start();
+                }
+            }, 300);
+        } catch (err) {
+            console.error('Failed to restart local speech recognition:', err);
+        }
+    }
+    async connect() {
+        if (this.connected && this.worker) {
+            return;
+        }
+        this.resetPendingRequests();
+        if (this.worker) {
+            this.worker.terminate();
+            this.worker = null;
+        }
+        updateDiagnostics({
+            provider: 'Local Qwen 3.5 (Browser)',
+            model: this.model,
+            state: 'connecting',
+            connected: 'no',
+            lastEvent: 'local.connect.start',
+            lastError: '-'
+        });
+        this.worker = new Worker(LOCAL_QWEN_WORKER_PATH, { type: 'module' });
+        this.worker.onmessage = this.handleWorkerMessage;
+        this.worker.onerror = (event) => {
+            const errorMessage = event?.message || 'Local model worker error';
+            this.connected = false;
+            updateDiagnostics({
+                state: 'error',
+                connected: 'no',
+                lastEvent: 'local.worker.error',
+                lastError: errorMessage
+            });
+            this.resetPendingRequests(errorMessage);
+        };
+        await this.requestWorker('init', {
+            modelId: this.model,
+            dtype: LOCAL_QWEN_DEFAULT_DTYPE,
+            remoteHost: LOCAL_QWEN_DEFAULT_REMOTE_HOST
+        }, 420000);
+        this.connected = true;
+        this.reconnectAttempts = 0;
+        updateDiagnostics({
+            provider: 'Local Qwen 3.5 (Browser)',
+            model: this.model,
+            state: 'connected',
+            connected: 'yes',
+            lastEvent: 'local.connect.ready',
+            lastError: '-'
+        });
+    }
+    async start() {
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        if (this.pendingGreeting) {
+            this.pendingGreeting = false;
+            this.sendPrompt('Hi, introduce yourself in a sentence for me. Be friendly to me.').catch((err) => {
+                console.warn('Local greeting failed:', err);
+            });
+        }
+        updateDiagnostics({
+            state: 'ready',
+            connected: this.isConnected() ? 'yes' : 'no',
+            lastEvent: 'publisher.start'
+        });
+    }
+    async sendPrompt(text) {
+        const prompt = (text || '').trim();
+        if (!prompt) return;
+        if (!this.isConnected()) {
+            throw new Error('Local model is not connected.');
+        }
+        this.responseActive = true;
+        this.currentResponseText = '';
+        this.lastActivityTime = Date.now();
+        const systemPromptValue = (document.getElementById('systemPrompt')?.value || '').trim();
+        updateDiagnostics({
+            state: 'responding',
+            connected: 'yes',
+            lastEvent: 'local.generate.start',
+            lastError: '-'
+        });
+        try {
+            const result = await this.requestWorker('generate', {
+                prompt,
+                systemPrompt: systemPromptValue,
+                maxNewTokens: 220,
+                temperature: 0.65,
+                topP: 0.92
+            }, 300000);
+            if (!this.currentResponseText && result.text) {
+                this.appendModelText(result.text);
+            }
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'connected',
+                connected: 'yes',
+                lastEvent: 'local.generate.done',
+                lastError: '-'
+            });
+        } catch (error) {
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'error',
+                connected: this.connected ? 'yes' : 'no',
+                lastEvent: 'local.generate.error',
+                lastError: error.message || 'Local generation failed'
+            });
+            throw error;
+        }
+    }
+    isConnected() {
+        return this.connected && !!this.worker;
+    }
+    async reconnect() {
+        this.reconnectAttempts += 1;
+        this.stop();
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        return true;
+    }
+    stop() {
+        this.stopped = true;
+        this.connected = false;
+        this.finalizeResponse();
+        this.resetPendingRequests();
+        if (this.recognition) {
+            try {
+                this.recognition.stop();
+            } catch (e) {}
+            this.recognition = null;
+        }
+        this.isRecognizing = false;
+        clearTimeout(this.recognitionTimeout);
+        if (this.worker) {
+            try {
+                this.worker.terminate();
+            } catch (e) {}
+            this.worker = null;
+        }
+        updateDiagnostics({
+            state: 'stopped',
+            connected: 'no',
+            lastEvent: 'publisher.stop'
+        });
+    }
+}
+class OpenAICompatiblePublisher {
+    constructor(stream, apiKey, modelOverride = '', endpointOverride = '') {
+        this.stream = stream;
+        this.apiKey = (apiKey || '').trim();
+        this.model = (modelOverride || CUSTOM_OPENAI_DEFAULT_MODEL).trim();
+        this.endpoint = (endpointOverride || CUSTOM_OPENAI_DEFAULT_ENDPOINT).trim();
+        this.connected = false;
+        this.stopped = false;
+        this.recognition = null;
+        this.isRecognizing = false;
+        this.recognitionTimeout = null;
+        this.interimTranscript = '';
+        this.finalTranscript = '';
+        this.responseActive = false;
+        this.currentResponseText = '';
+        this.pendingGreeting = true;
+        this.lastActivityTime = Date.now();
+        this.maxTurns = 12;
+        this.conversation = [];
+        updateDiagnostics({
+            provider: 'OpenAI-Compatible (Custom)',
+            model: this.model,
+            state: 'initialized',
+            connected: 'no',
+            lastEvent: 'publisher.created',
+            lastError: '-'
+        });
+    }
+    normalizeEndpoint(value) {
+        const raw = (value || '').trim();
+        if (!raw) return CUSTOM_OPENAI_DEFAULT_ENDPOINT;
+        if (/^https?:\/\//i.test(raw)) return raw.replace(/\/+$/, '');
+        return `http://${raw.replace(/\/+$/, '')}`;
+    }
+    isLikelyChatCompletionsPath(pathname) {
+        return /\/v1\/chat\/completions\/?$/i.test(pathname) || /\/chat\/completions\/?$/i.test(pathname);
+    }
+    buildBaseUrl() {
+        const normalized = this.normalizeEndpoint(this.endpoint);
+        let url;
+        try {
+            url = new URL(normalized);
+        } catch (_error) {
+            throw new Error(`Invalid endpoint URL: ${normalized}`);
+        }
+        if (this.isLikelyChatCompletionsPath(url.pathname)) {
+            url.pathname = url.pathname.replace(/\/chat\/completions\/?$/i, '').replace(/\/+$/, '');
+        }
+        if (!/\/v1$/i.test(url.pathname)) {
+            url.pathname = `${url.pathname.replace(/\/+$/, '')}/v1`;
+        }
+        url.search = '';
+        url.hash = '';
+        return url.toString().replace(/\/+$/, '');
+    }
+    buildCompletionsUrl() {
+        return `${this.buildBaseUrl()}/chat/completions`;
+    }
+    validateEndpointForPage() {
+        const normalized = this.normalizeEndpoint(this.endpoint);
+        if (window.location.protocol !== 'https:' || !/^http:\/\//i.test(normalized)) {
+            return normalized;
+        }
+        const endpointHost = new URL(normalized).hostname.toLowerCase();
+        const isLoopback = endpointHost === 'localhost' || endpointHost === '127.0.0.1' || endpointHost === '::1';
+        if (!isLoopback) {
+            throw new Error('This page is HTTPS, so browsers block HTTP LAN endpoints (mixed content). Use HTTPS for the endpoint or run this page over HTTP on local network.');
+        }
+        return normalized;
+    }
+    buildHeaders() {
+        const headers = {
+            'Content-Type': 'application/json'
+        };
+        if (this.apiKey) {
+            headers.Authorization = `Bearer ${this.apiKey}`;
+        }
+        return headers;
+    }
+    extractTextContent(content) {
+        if (typeof content === 'string') {
+            return content.trim();
+        }
+        if (Array.isArray(content)) {
+            return content.map((part) => {
+                if (!part) return '';
+                if (typeof part === 'string') return part;
+                if (typeof part.text === 'string') return part.text;
+                return '';
+            }).join('').trim();
+        }
+        return '';
+    }
+    trimConversation() {
+        const maxEntries = this.maxTurns * 2;
+        if (this.conversation.length > maxEntries) {
+            this.conversation = this.conversation.slice(this.conversation.length - maxEntries);
+        }
+    }
+    captureFrameDataUrl() {
+        if (!preview || preview.readyState < 2 || !preview.videoWidth || !preview.videoHeight) {
+            return '';
+        }
+        const maxWidth = 960;
+        const scale = Math.min(1, maxWidth / preview.videoWidth);
+        const width = Math.max(1, Math.floor(preview.videoWidth * scale));
+        const height = Math.max(1, Math.floor(preview.videoHeight * scale));
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return '';
+        ctx.drawImage(preview, 0, 0, width, height);
+        return canvas.toDataURL('image/jpeg', 0.8);
+    }
+    buildMessages(systemPrompt, prompt, imageDataUrl = '') {
+        const messages = [];
+        const systemText = (systemPrompt || '').trim();
+        if (systemText) {
+            messages.push({
+                role: 'system',
+                content: systemText
+            });
+        }
+        for (const entry of this.conversation) {
+            messages.push({
+                role: entry.role,
+                content: entry.content
+            });
+        }
+        const userContent = [{ type: 'text', text: prompt }];
+        if (imageDataUrl) {
+            userContent.push({
+                type: 'image_url',
+                image_url: { url: imageDataUrl }
+            });
+        }
+        messages.push({
+            role: 'user',
+            content: userContent
+        });
+        return messages;
+    }
+    appendModelText(text) {
+        if (!text) return;
+        this.currentResponseText += text;
+        window.dispatchEvent(new CustomEvent('modelResponse', {
+            detail: { text }
+        }));
+    }
+    finalizeResponse() {
+        this.responseActive = false;
+        this.currentResponseText = '';
+        if (messageFormatter && !messageFormatter.messageComplete) {
+            messageFormatter.finalizeMessage();
+        }
+    }
+    async setupSpeechRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            showError('Speech recognition is not supported in this browser. Try using Chrome.');
+            return;
+        }
+        this.recognition = new SpeechRecognition();
+        this.recognition.continuous = true;
+        this.recognition.interimResults = true;
+        this.recognition.maxAlternatives = 1;
+        this.recognition.lang = 'en-US';
+        this.recognition.onstart = () => {
+            this.isRecognizing = true;
+            avatar.setEmotion('thinking', false);
+        };
+        this.recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+            this.interimTranscript = interimTranscript;
+            if (finalTranscript) {
+                this.finalTranscript = finalTranscript;
+                this.sendPrompt(finalTranscript).catch((err) => {
+                    showError(`Failed to send speech prompt: ${err.message}`);
+                });
+                this.finalTranscript = '';
+                this.interimTranscript = '';
+            }
+            if (interimTranscript || finalTranscript) {
+                avatar.setEmotion('happy', true);
+                clearTimeout(this.recognitionTimeout);
+                this.recognitionTimeout = setTimeout(() => {
+                    if (!this.interimTranscript) {
+                        avatar.setEmotion('happy', false);
+                    }
+                }, 1500);
+            }
+        };
+        this.recognition.onerror = (event) => {
+            if (event.error !== 'not-allowed' && this.isRecognizing && !micMuted) {
+                this.restartRecognition();
+            } else {
+                this.isRecognizing = false;
+            }
+        };
+        this.recognition.onend = () => {
+            this.isRecognizing = false;
+            if (!this.stopped && !micMuted) {
+                this.restartRecognition();
+            }
+        };
+        if (!micMuted) {
+            this.recognition.start();
+        }
+    }
+    restartRecognition() {
+        if (this.stopped || !this.recognition || micMuted) return;
+        setTimeout(() => {
+            if (!this.isRecognizing && !this.stopped && !micMuted) {
+                this.recognition.start();
+            }
+        }, 300);
+    }
+    async connect() {
+        this.endpoint = this.validateEndpointForPage();
+        this.connected = true;
+        updateDiagnostics({
+            provider: 'OpenAI-Compatible (Custom)',
+            model: this.model,
+            state: 'connected',
+            connected: 'yes',
+            lastEvent: 'custom.connect.ready',
+            lastError: '-'
+        });
+    }
+    async start() {
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        if (this.pendingGreeting) {
+            this.pendingGreeting = false;
+            this.sendPrompt('Hi, introduce yourself in a sentence for me. Be friendly to me.').catch(() => {});
+        }
+    }
+    async sendPrompt(text) {
+        const prompt = (text || '').trim();
+        if (!prompt) return;
+        if (!this.isConnected()) {
+            throw new Error('Custom endpoint is not connected.');
+        }
+        this.responseActive = true;
+        this.currentResponseText = '';
+        this.lastActivityTime = Date.now();
+        const systemPromptValue = (document.getElementById('systemPrompt')?.value || '').trim();
+        const videoSourceValue = (document.getElementById('videoSource')?.value || 'none');
+        const hasLiveVideo = videoSourceValue !== 'none' &&
+            this.stream.getVideoTracks().some((track) => track.readyState === 'live' && track.enabled);
+        const imageDataUrl = hasLiveVideo ? this.captureFrameDataUrl() : '';
+        const messages = this.buildMessages(systemPromptValue, prompt, imageDataUrl);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 180000);
+        try {
+            const response = await fetch(this.buildCompletionsUrl(), {
+                method: 'POST',
+                headers: this.buildHeaders(),
+                body: JSON.stringify({
+                    model: this.model,
+                    messages,
+                    temperature: 0.65,
+                    top_p: 0.92,
+                    stream: false
+                }),
+                signal: controller.signal
+            });
+            const raw = await response.text();
+            if (!response.ok) {
+                throw new Error(`Endpoint error ${response.status}: ${raw.slice(0, 240)}`);
+            }
+            let data = {};
+            try {
+                data = JSON.parse(raw);
+            } catch (_error) {
+                throw new Error('Invalid JSON response from custom endpoint.');
+            }
+            const choice = data?.choices?.[0] || {};
+            const responseText = this.extractTextContent(choice?.message?.content || choice?.text || '').trim();
+            if (!responseText) {
+                throw new Error('Custom endpoint returned an empty completion.');
+            }
+            this.conversation.push({ role: 'user', content: prompt });
+            this.conversation.push({ role: 'assistant', content: responseText });
+            this.trimConversation();
+            this.appendModelText(responseText);
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'connected',
+                connected: 'yes',
+                lastEvent: 'custom.generate.done',
+                lastError: '-'
+            });
+        } catch (error) {
+            const rawMessage = error?.message || '';
+            const looksLikeNetworkOrCors = rawMessage === 'Failed to fetch' || /NetworkError|CORS/i.test(rawMessage);
+            const friendlyMessage = looksLikeNetworkOrCors
+                ? 'Failed to reach endpoint. Check URL, server availability, CORS (Access-Control-Allow-Origin), and HTTP/HTTPS mixed-content restrictions.'
+                : (rawMessage || 'Custom endpoint generation failed');
+            this.finalizeResponse();
+            updateDiagnostics({
+                state: 'error',
+                connected: this.connected ? 'yes' : 'no',
+                lastEvent: 'custom.generate.error',
+                lastError: friendlyMessage
+            });
+            throw new Error(friendlyMessage);
+        } finally {
+            clearTimeout(timeout);
+        }
+    }
+    isConnected() {
+        return this.connected;
+    }
+    async reconnect() {
+        this.stop();
+        this.stopped = false;
+        await this.connect();
+        if (this.stream.getAudioTracks().length > 0) {
+            await this.setupSpeechRecognition();
+        }
+        return true;
+    }
+    stop() {
+        this.stopped = true;
+        this.connected = false;
+        this.finalizeResponse();
+        if (this.recognition) {
+            try {
+                this.recognition.stop();
+            } catch (e) {}
+            this.recognition = null;
+        }
+        this.isRecognizing = false;
+        clearTimeout(this.recognitionTimeout);
+        updateDiagnostics({
+            state: 'stopped',
+            connected: 'no',
+            lastEvent: 'publisher.stop'
+        });
+    }
+}
 class RealtimePublisher {
     constructor(stream, apiKey, provider = 'chatgpt', modelOverride = '') {
         this.stream = stream;
@@ -2819,6 +3566,13 @@ async function tryGetInitialPermissions() {
 const apiKeyInput = document.getElementById('apiKey');
 apiKeyInput.value = localStorage.getItem('apiKey') || '';
 const modelOverrideInput = document.getElementById('modelOverride');
+const customEndpointInput = document.getElementById('customEndpoint');
+const customEndpointContainer = document.getElementById('customEndpointContainer');
+const customModelSelect = document.getElementById('customModelSelect');
+const customEndpointInfo = document.getElementById('customEndpointInfo');
+const customModelsRefreshButton = document.getElementById('customModelsRefresh');
+let customModelList = [];
+let customModelsLoading = false;
 
 function normalizeModelOverride(providerName, value) {
     let normalized = (value || '').trim();
@@ -2847,8 +3601,142 @@ function saveModelOverride(providerName, value) {
     }
 }
 
+function getStoredCustomEndpoint(providerName) {
+    return (localStorage.getItem(`customEndpoint_${providerName}`) || '').trim();
+}
+
+function saveCustomEndpoint(providerName, value) {
+    const rawValue = (value || '').trim();
+    if (rawValue) {
+        localStorage.setItem(`customEndpoint_${providerName}`, rawValue);
+    } else {
+        localStorage.removeItem(`customEndpoint_${providerName}`);
+    }
+}
+
+function normalizeCustomEndpoint(value) {
+    const raw = (value || '').trim();
+    if (!raw) return CUSTOM_OPENAI_DEFAULT_ENDPOINT;
+    if (/^https?:\/\//i.test(raw)) return raw.replace(/\/+$/, '');
+    return `http://${raw.replace(/\/+$/, '')}`;
+}
+
+function isHttpMixedContentBlocked(urlText) {
+    try {
+        const parsed = new URL(urlText);
+        if (window.location.protocol !== 'https:') return false;
+        if (parsed.protocol !== 'http:') return false;
+        const host = parsed.hostname.toLowerCase();
+        return !(host === 'localhost' || host === '127.0.0.1' || host === '::1');
+    } catch (_error) {
+        return false;
+    }
+}
+
+function resolveOpenAICompatibleBase(endpoint) {
+    const normalized = normalizeCustomEndpoint(endpoint);
+    const parsed = new URL(normalized);
+    if (/\/v1\/chat\/completions\/?$/i.test(parsed.pathname)) {
+        parsed.pathname = parsed.pathname.replace(/\/chat\/completions\/?$/i, '');
+    } else if (/\/chat\/completions\/?$/i.test(parsed.pathname)) {
+        parsed.pathname = parsed.pathname.replace(/\/chat\/completions\/?$/i, '');
+    }
+    if (!/\/v1$/i.test(parsed.pathname)) {
+        parsed.pathname = `${parsed.pathname.replace(/\/+$/, '')}/v1`;
+    }
+    parsed.search = '';
+    parsed.hash = '';
+    return parsed.toString().replace(/\/+$/, '');
+}
+
+function getEffectiveCustomEndpoint(providerName) {
+    if (providerName !== 'customopenai') return '';
+    const sourceValue = customEndpointInput?.value || getStoredCustomEndpoint(providerName);
+    return normalizeCustomEndpoint(sourceValue || CUSTOM_OPENAI_DEFAULT_ENDPOINT);
+}
+
+function setCustomEndpointInfo(message, isError = false) {
+    if (!customEndpointInfo) return;
+    customEndpointInfo.textContent = message || '';
+    customEndpointInfo.style.color = isError ? '#ff9ea1' : '#a0a0a0';
+}
+
+function updateCustomModelSelect(currentModel = '') {
+    if (!customModelSelect) return;
+    customModelSelect.innerHTML = '';
+    if (!customModelList.length) {
+        customModelSelect.appendChild(new Option('No models loaded from endpoint', ''));
+        customModelSelect.value = '';
+        return;
+    }
+    customModelSelect.appendChild(new Option('Select a model from endpoint', ''));
+    customModelList.forEach((modelId) => {
+        customModelSelect.appendChild(new Option(modelId, modelId));
+    });
+    const selected = currentModel && customModelList.includes(currentModel) ? currentModel : '';
+    customModelSelect.value = selected;
+}
+
+async function refreshCustomModelList(showErrors = false) {
+    if (!customModelSelect || !customEndpointInput || customModelsLoading) return;
+    if (providerSelect.value !== 'customopenai') return;
+    const endpoint = getEffectiveCustomEndpoint('customopenai');
+    if (isHttpMixedContentBlocked(endpoint)) {
+        setCustomEndpointInfo('HTTPS page cannot call HTTP LAN endpoint. Use HTTPS endpoint or host this page over HTTP on LAN.', true);
+        customModelList = [];
+        updateCustomModelSelect('');
+        return;
+    }
+    customModelsLoading = true;
+    customModelsRefreshButton.disabled = true;
+    setCustomEndpointInfo(`Loading models from ${resolveOpenAICompatibleBase(endpoint)}/models ...`, false);
+    try {
+        const headers = {};
+        const token = (apiKeyInput.value || '').trim();
+        if (token) {
+            headers.Authorization = `Bearer ${token}`;
+        }
+        const response = await fetch(`${resolveOpenAICompatibleBase(endpoint)}/models`, {
+            method: 'GET',
+            headers
+        });
+        if (!response.ok) {
+            const body = await response.text();
+            throw new Error(`Model list error ${response.status}: ${body.slice(0, 200)}`);
+        }
+        const payload = await response.json();
+        const dataModels = Array.isArray(payload?.data)
+            ? payload.data.map((item) => item?.id).filter(Boolean)
+            : [];
+        const legacyModels = Array.isArray(payload?.models)
+            ? payload.models.map((item) => item?.id || item?.model || item?.name).filter(Boolean)
+            : [];
+        const models = [...dataModels, ...legacyModels];
+        customModelList = [...new Set(models)].sort();
+        updateCustomModelSelect(getEffectiveModelForProvider('customopenai'));
+        setCustomEndpointInfo(customModelList.length
+            ? `Loaded ${customModelList.length} model(s) from endpoint`
+            : 'No models returned by endpoint');
+    } catch (error) {
+        const rawMessage = error?.message || '';
+        const looksLikeNetworkOrCors = rawMessage === 'Failed to fetch' || /NetworkError|CORS/i.test(rawMessage);
+        const friendlyMessage = looksLikeNetworkOrCors
+            ? 'Failed to reach endpoint. Check URL, server availability, CORS (Access-Control-Allow-Origin), and HTTP/HTTPS mixed-content restrictions.'
+            : (rawMessage || 'Failed to load models from endpoint');
+        customModelList = [];
+        updateCustomModelSelect('');
+        setCustomEndpointInfo(friendlyMessage, true);
+        if (showErrors) {
+            showError(friendlyMessage);
+        }
+    } finally {
+        customModelsLoading = false;
+        customModelsRefreshButton.disabled = false;
+    }
+}
+
 function isRealtimeProvider(providerName) {
-    return providerName === 'chatgpt' || providerName === 'xai';
+    return providerName === 'chatgpt' || providerName === 'xai' || providerName === 'localqwen' || providerName === 'customopenai';
 }
 
 function createPublisherForProvider(providerName, activeStream, apiKey) {
@@ -2856,23 +3744,48 @@ function createPublisherForProvider(providerName, activeStream, apiKey) {
     if (providerName === 'gemini') {
         return new GoogleLivePublisher(activeStream, apiKey, effectiveModel);
     }
+    if (providerName === 'localqwen') {
+        return new LocalBrowserPublisher(activeStream, apiKey, effectiveModel);
+    }
+    if (providerName === 'customopenai') {
+        const endpoint = getEffectiveCustomEndpoint(providerName);
+        return new OpenAICompatiblePublisher(activeStream, apiKey, effectiveModel, endpoint);
+    }
     return new RealtimePublisher(activeStream, apiKey, providerName, effectiveModel);
 }
 
 document.getElementById('apiKey').addEventListener('input', validateApiKey);
 function validateApiKey() {
     const apiKey = apiKeyInput.value.trim();
-    startButton.disabled = !apiKey;
     const selectedProvider = (typeof providerSelect !== 'undefined' && providerSelect?.value)
         ? providerSelect.value
         : (localStorage.getItem('selectedProvider') || 'gemini');
-    localStorage.setItem(`apiKey_${selectedProvider}`, apiKey);
-    localStorage.setItem('apiKey', apiKey);
+    const providerConfig = providerUIConfig[selectedProvider] || providerUIConfig.gemini;
+    const requiresApiKey = providerConfig.requiresApiKey !== false;
+    const acceptsOptionalApiKey = providerConfig.acceptsOptionalApiKey === true;
+    startButton.disabled = requiresApiKey ? !apiKey : false;
+    if (requiresApiKey || acceptsOptionalApiKey) {
+        if (apiKey) {
+            localStorage.setItem(`apiKey_${selectedProvider}`, apiKey);
+            localStorage.setItem('apiKey', apiKey);
+        } else {
+            localStorage.removeItem(`apiKey_${selectedProvider}`);
+            if (selectedProvider === 'customopenai') {
+                localStorage.removeItem('apiKey');
+            }
+        }
+    } else {
+        localStorage.removeItem(`apiKey_${selectedProvider}`);
+    }
     return apiKey;
 }
 startButton.addEventListener('click', async () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (!apiKey) {
+    const currentProvider = providerSelect.value;
+    const providerConfig = providerUIConfig[currentProvider] || providerUIConfig.gemini;
+    const requiresApiKey = providerConfig.requiresApiKey !== false;
+    const acceptsOptionalApiKey = providerConfig.acceptsOptionalApiKey === true;
+    const apiKey = (requiresApiKey || acceptsOptionalApiKey) ? apiKeyInput.value.trim() : '';
+    if (requiresApiKey && !apiKey) {
         apiKeyInput.classList.add('highlight');
         setTimeout(() => apiKeyInput.classList.remove('highlight'), 2000);
         updateDiagnostics({
@@ -2920,8 +3833,11 @@ startButton.addEventListener('click', async () => {
         startButton.disabled = true;
         stream = await getStream();
         preview.srcObject = stream;
-        sessionStorage.setItem('apiKey', apiKey);
-        const currentProvider = providerSelect.value;
+        if (requiresApiKey || (acceptsOptionalApiKey && apiKey)) {
+            sessionStorage.setItem('apiKey', apiKey);
+        } else {
+            sessionStorage.removeItem('apiKey');
+        }
         publisher = createPublisherForProvider(currentProvider, stream, apiKey);
         await publisher.start();
         startButton.textContent = 'Stop Stream';
@@ -3476,8 +4392,11 @@ async function restartActivePublisher() {
     try {
         stream = await getStream();
         preview.srcObject = stream;
-        const apiKey = document.getElementById('apiKey').value.trim();
         const currentProvider = providerSelect.value;
+        const providerConfig = providerUIConfig[currentProvider] || providerUIConfig.gemini;
+        const requiresApiKey = providerConfig.requiresApiKey !== false;
+        const acceptsOptionalApiKey = providerConfig.acceptsOptionalApiKey === true;
+        const apiKey = (requiresApiKey || acceptsOptionalApiKey) ? document.getElementById('apiKey').value.trim() : '';
         publisher = createPublisherForProvider(currentProvider, stream, apiKey);
         await publisher.start();
         startButton.textContent = 'Stop Stream';
@@ -3534,6 +4453,8 @@ const providerSelect = document.createElement('select');
 providerSelect.id = 'providerSelect';
 providerSelect.innerHTML = `
     <option value="gemini">Google Gemini Live</option>
+    <option value="localqwen">Local Qwen 3.5 (Browser)</option>
+    <option value="customopenai">OpenAI-Compatible (Custom)</option>
     <option value="chatgpt">OpenAI Realtime</option>
     <option value="xai">xAI Realtime</option>
 `;
@@ -3541,26 +4462,58 @@ const apiKeyContainer = document.querySelector('.api-key-container');
 apiKeyContainer.parentElement.insertBefore(providerSelect, apiKeyContainer);
 const providerUIConfig = {
     gemini: {
+        label: 'Google Gemini Live',
         apiKeyPlaceholder: 'Enter Gemini API Key',
         apiKeyInfoHtml: 'Get your free Gemini API key at <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener">Google AI Studio</a>.',
         defaultModel: GEMINI_DEFAULT_LIVE_MODEL,
         modelPlaceholder: `Optional model override (default ${GEMINI_DEFAULT_LIVE_MODEL})`,
         disableCaptureSelection: false,
-        deviceNotice: ''
+        deviceNotice: '',
+        requiresApiKey: true,
+        supportsAudioResponse: true
+    },
+    localqwen: {
+        label: 'Local Qwen 3.5 (Browser)',
+        apiKeyPlaceholder: 'No API key required',
+        apiKeyInfoHtml: 'Uses your self-hosted model files (default: largefiles.socialstream.ninja) and local browser runtime. No third-party AI API key is used.',
+        defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
+        modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
+        disableCaptureSelection: true,
+        deviceNotice: 'Speech-to-text and inference run in-browser. Model files are fetched from your configured self-hosted storage if not already cached.',
+        requiresApiKey: false,
+        supportsAudioResponse: false
+    },
+    customopenai: {
+        label: 'OpenAI-Compatible (Custom)',
+        apiKeyPlaceholder: 'Optional bearer token (leave blank for local LM Studio/Ollama)',
+        apiKeyInfoHtml: 'Connect to an OpenAI-compatible `/v1/chat/completions` endpoint (LM Studio, Ollama, vLLM, custom gateway).',
+        defaultModel: CUSTOM_OPENAI_DEFAULT_MODEL,
+        modelPlaceholder: `Model id (default ${CUSTOM_OPENAI_DEFAULT_MODEL})`,
+        disableCaptureSelection: false,
+        deviceNotice: 'Speech-to-text runs in-browser. If camera/screen is enabled, a frame is attached for multimodal models.',
+        requiresApiKey: false,
+        acceptsOptionalApiKey: true,
+        supportsAudioResponse: false
     },
     chatgpt: {
         ...REALTIME_PROVIDER_CONFIG.chatgpt,
         modelPlaceholder: `Optional model override (default ${REALTIME_PROVIDER_CONFIG.chatgpt.defaultModel})`,
-        disableCaptureSelection: true
+        disableCaptureSelection: true,
+        requiresApiKey: true,
+        supportsAudioResponse: true
     },
     xai: {
         ...REALTIME_PROVIDER_CONFIG.xai,
         modelPlaceholder: 'Optional model override (uses xAI server default if blank)',
-        disableCaptureSelection: true
+        disableCaptureSelection: true,
+        requiresApiKey: true,
+        supportsAudioResponse: true
     }
 };
 const defaultPrompts = {
     gemini: "You are a friendly social chat assistant that can see and hear the user. Avoid describing what you see unless asked.",
+    localqwen: "You are a concise, friendly social chat co-host. Keep answers short, natural, and practical.",
+    customopenai: "You are a concise, friendly social chat co-host. Keep answers practical and conversational.",
     chatgpt: "You are a friendly and helpful social chat assistant.",
     xai: "You are a friendly and helpful social chat assistant."
 };
@@ -3593,15 +4546,30 @@ function removeRealtimeDeviceNotice() {
 function applyProviderUI(providerName, restoreKey = true) {
     const config = providerUIConfig[providerName] || providerUIConfig.gemini;
     const apiKeyInfo = document.querySelector('#apikeyinfo');
-    const responseTypeValue = document.getElementById('responseType').value;
+    const responseTypeSelect = document.getElementById('responseType');
+    const requiresApiKey = config.requiresApiKey !== false;
+    const acceptsOptionalApiKey = config.acceptsOptionalApiKey === true;
+    const isCustomOpenAIProvider = providerName === 'customopenai';
     if (restoreKey) {
-        apiKeyInput.value = localStorage.getItem(`apiKey_${providerName}`) || '';
+        apiKeyInput.value = (requiresApiKey || acceptsOptionalApiKey) ? (localStorage.getItem(`apiKey_${providerName}`) || '') : '';
         modelOverrideInput.value = getStoredModelOverride(providerName);
+        if (isCustomOpenAIProvider && customEndpointInput) {
+            customEndpointInput.value = getStoredCustomEndpoint(providerName) || CUSTOM_OPENAI_DEFAULT_ENDPOINT;
+        }
     }
+    apiKeyInput.disabled = !(requiresApiKey || acceptsOptionalApiKey);
+    apiKeyInput.type = (requiresApiKey || acceptsOptionalApiKey) ? 'password' : 'text';
     apiKeyInput.placeholder = config.apiKeyPlaceholder;
     apiKeyInfo.innerHTML = config.apiKeyInfoHtml;
     modelOverrideInput.placeholder = config.modelPlaceholder || 'Optional model override';
     systemPrompt.value = defaultPrompts[providerName] || defaultPrompts.gemini;
+    if (config.supportsAudioResponse === false) {
+        responseTypeSelect.value = 'text';
+        responseTypeSelect.disabled = true;
+    } else {
+        responseTypeSelect.disabled = false;
+    }
+    const responseTypeValue = responseTypeSelect.value;
     videoSelect.disabled = config.disableCaptureSelection;
     audioSelect.disabled = config.disableCaptureSelection;
     if (config.disableCaptureSelection && audioSelect.value === 'none') {
@@ -3615,6 +4583,29 @@ function applyProviderUI(providerName, restoreKey = true) {
         updateRealtimeDeviceNotice(config.deviceNotice);
     } else {
         removeRealtimeDeviceNotice();
+    }
+    if (customEndpointContainer) {
+        customEndpointContainer.style.display = isCustomOpenAIProvider ? 'flex' : 'none';
+    }
+    if (customModelSelect) {
+        customModelSelect.style.display = isCustomOpenAIProvider ? 'block' : 'none';
+    }
+    if (customEndpointInfo) {
+        customEndpointInfo.style.display = isCustomOpenAIProvider ? 'block' : 'none';
+    }
+    if (isCustomOpenAIProvider) {
+        const endpointValue = getEffectiveCustomEndpoint(providerName);
+        customEndpointInput.value = endpointValue;
+        if (isHttpMixedContentBlocked(endpointValue)) {
+            setCustomEndpointInfo('HTTPS page cannot call HTTP LAN endpoint. Use HTTPS endpoint or host this page over HTTP on LAN.', true);
+            customModelList = [];
+            updateCustomModelSelect('');
+        } else {
+            setCustomEndpointInfo(`Endpoint: ${resolveOpenAICompatibleBase(endpointValue)}`, false);
+            void refreshCustomModelList(false);
+        }
+    } else {
+        setCustomEndpointInfo('');
     }
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.style.display = providerName === 'gemini' && responseTypeValue === 'audio' ? 'block' : 'none';
@@ -3676,6 +4667,53 @@ modelOverrideInput.addEventListener('keypress', (event) => {
         modelOverrideInput.blur();
     }
 });
+if (customEndpointInput) {
+    customEndpointInput.addEventListener('change', async function() {
+        const providerName = providerSelect.value;
+        if (providerName !== 'customopenai') return;
+        const normalized = normalizeCustomEndpoint(this.value || CUSTOM_OPENAI_DEFAULT_ENDPOINT);
+        this.value = normalized;
+        saveCustomEndpoint(providerName, normalized);
+        if (isHttpMixedContentBlocked(normalized)) {
+            setCustomEndpointInfo('HTTPS page cannot call HTTP LAN endpoint. Use HTTPS endpoint or host this page over HTTP on LAN.', true);
+            customModelList = [];
+            updateCustomModelSelect('');
+            return;
+        }
+        setCustomEndpointInfo(`Endpoint: ${resolveOpenAICompatibleBase(normalized)}`, false);
+        await refreshCustomModelList(true);
+        await restartActivePublisher();
+    });
+    customEndpointInput.addEventListener('input', function() {
+        const providerName = providerSelect.value;
+        if (providerName !== 'customopenai') return;
+        saveCustomEndpoint(providerName, this.value);
+    });
+}
+if (customModelsRefreshButton) {
+    customModelsRefreshButton.addEventListener('click', async () => {
+        if (providerSelect.value !== 'customopenai') return;
+        await refreshCustomModelList(true);
+    });
+}
+if (customModelSelect) {
+    customModelSelect.addEventListener('change', async function() {
+        if (providerSelect.value !== 'customopenai') return;
+        const selectedModel = (this.value || '').trim();
+        if (!selectedModel) return;
+        modelOverrideInput.value = selectedModel;
+        saveModelOverride('customopenai', selectedModel);
+        updateDiagnostics({
+            provider: providerUIConfig.customopenai.label,
+            model: selectedModel,
+            state: publisher ? 'restarting' : 'idle',
+            connected: publisher && publisher.isConnected && publisher.isConnected() ? 'yes' : 'no',
+            lastEvent: 'custom.model.selected',
+            lastError: '-'
+        });
+        await restartActivePublisher();
+    });
+}
 document.getElementById('providerSelect').addEventListener('change', async function() {
     applyProviderUI(this.value, true);
     localStorage.setItem('selectedProvider', this.value);

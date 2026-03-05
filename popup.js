@@ -2129,6 +2129,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     { id: "overlay", path: "featured.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
+    { id: "meta", path: "meta.html" },
     { id: "waitlist", path: "waitlist.html" },
     { id: "tipjar", path: "tipjar.html" },
 	{ id: "leaderboard", path: "leaderboard.html" },
@@ -2783,7 +2784,7 @@ function update(response, sync = true) {
                 // For now, let's assume link elements have an href that needs cleaning.
                 const linkIdsToClean = [
                     'docklink', 'cohostlink', 'privatechatbotlink', 'chatbotlink',
-                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'waitlistlink',
+                    'overlaylink', 'emoteswalllink', 'hypemeterlink', 'metalink', 'waitlistlink',
                     'tipjarlink', 'tickerlink', 'wordcloudlink', 'polllink', 'flowactionslink',
                     'battlelink', 'custom-gif-commandslink', 'creditslink', 'giveawaylink', 'gameslink', 'leaderboardlink', 'scoreboard',
 					'spotifylink','maplink'
@@ -3495,6 +3496,7 @@ function getTargetMap() {
 		'scoreboard': 21,
 		'spotify': 22,
 		'map': 23,
+        'meta': 24,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -4670,6 +4672,7 @@ function refreshLinks(){
       'overlaylink': 'overlay',
       'emoteswalllink': 'emoteswall',
       'hypemeterlink': 'hypemeter',
+      'metalink': 'meta',
       'waitlistlink': 'waitlist',
       'tipjarlink': 'tipjar',
 	  'leaderboardlink': 'leaderboard',
@@ -4765,13 +4768,13 @@ if (!chrome.browserAction){
 	  });
 	}
 
-	sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
-		log("Received response:", response);
-		update(response, false);
-	  })
-	  .catch(error => {
-		console.error("Error:", error);
-	  });
+		sendMessageToBackground({cmd: "getSettings"}, 20000).then(response => {
+			log("Received response:", response);
+			update(response, false);
+		  })
+		  .catch(error => {
+			console.error("Error:", error);
+		  });
 	  
 }
 
@@ -7600,7 +7603,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 			}
 			
 			msg.value = this.dataset.value || null;
-			if (msg.cmd == "fakemsg"){
+			if (msg.cmd == "fakemsg" || msg.cmd == "fakemeta"){
 				chrome.runtime.sendMessage(msg, function (response) {
 					// actions have callbacks? maybe
 				});

@@ -2051,6 +2051,13 @@ input:checked + .slider:before {
                                     </label>
                                     <span data-translate="messages-auto-scroll">🔽 Enable auto-scrolling to the bottom by default </span>
                                 </div>
+                                <div data-keywords="manual scroll lock pause autoscroll browse backlog">
+                                    <label class="switch">
+                                        <input type="checkbox" data-param1="manualscroll" />
+                                        <span class="slider round"></span>
+                                    </label>
+                                    <span>🛑 Manual scroll mode (disable auto-scroll unless Force Scroll is enabled)</span>
+                                </div>
                                 <div data-keywords="align right flush right-justified rtl layout">
                                     <label class="switch">
                                         <input type="checkbox" data-param1="alignright" />
@@ -6781,6 +6788,17 @@ input:checked + .slider:before {
                                 <br />
 
                                 <div class="textInputContainer" style="width: 95%;">
+                                    <input type="text" id="joystick_username" class="textInput" autocomplete="off" placeholder="Channel name (optional)" data-textsetting="joystick_username" />
+                                    <label for="joystick_username">&gt; Joystick Bot WebSocket</label>
+                                </div>
+                                <center>
+                                    <button class="glowingButton" style="margin-top: 4px; margin-left: 0px;" data-action="openchat" data-value="joystickws">
+                                        <span><span data-translate="open-chat">Open chat</span></span>
+                                    </button>
+                                </center>
+                                <br />
+
+                                <div class="textInputContainer" style="width: 95%;">
                                     <input type="text" id="discord_serverid" class="textInput" autocomplete="off" placeholder="Channel name" data-textsetting="discord_serverid" />
                                     <label for="discord_serverid"><span data-translate="discord-server-id">&gt; Discord server id</span></label>
                                 </div>
@@ -8670,6 +8688,231 @@ input:checked + .slider:before {
                     </div>
                 </div>
             </div>
+			
+			<div class="link" title="Meta data bar for auction, commerce, and giveaway-style status updates">
+				<h2 class="meta_mode_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">📦</span><span>Meta Data Bar</span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#meta-bar" title="Jump to the meta bar link options."><span data-translate="options">[options]</span></a>
+					<label for="help-meta" class="help-link rounded_area" title="Click for detailed help">[?]</label>
+				</h2>
+				<input type="checkbox" id="help-meta" class="link-help-toggle">
+				<div class="link-help-content">
+					<strong>Dedicated overlay for metadata-only events.</strong>
+					<p>Shows live values such as current item, bidder, bids, timer, product availability, giveaway counts, and viewer snapshots.</p>
+					<ul>
+						<li>Built for auction and commerce streams</li>
+						<li>Updates values in place as new meta events arrive</li>
+						<li>Toggle icon, label, and value visibility</li>
+						<li>Filter by event type (auction, commerce, viewers, other meta)</li>
+					</ul>
+					<div class="help-tip">💡 <strong>Tip:</strong> If no event filter is checked, the overlay defaults to auction + commerce + viewer meta.</div>
+				</div>
+					<h3>
+						<span>
+							Displays metadata-only events (no chat message required), such as auction status and catalog summaries.
+						</span>
+					</h3>
+					<div id="meta" data-raw="" class="streaming_chat"><a href="" id="metalink"></a></div>
+					<div style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0; position: sticky; top: 67px; z-index: 98; background: var(--body-background-color); gap: 1px;">
+						<button class="glowingButton showalways" style="margin: 0 0 0 1px; flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="auction" title="Send a fake auction_update meta event">
+							<span>Fake Auction Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="margin: 0; flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="commerce" title="Send a fake commerce_update meta event">
+							<span>Fake Commerce Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="margin: 0; flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="viewers" title="Send a fake viewer_updates meta event">
+							<span>Fake Viewer Meta</span>
+						</button>
+						<button class="glowingButton showalways" style="margin: 0 1px 0 0; flex: 0 0 88px; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="random" title="Send a random fake meta event">
+							<span>Random</span>
+						</button>
+					</div>
+				</div>
+			<a href="" id="meta-bar"></a>
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-meta-options" />
+					<label class="collapsible-label" for="wrapper-meta-options"><span>📊 Meta Overlay Options</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group meta">
+								<h3>Event Type Filters</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="auction" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔨 Show auction updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="commerce" />
+										<span class="slider round"></span>
+									</label>
+									<span>🛍️ Show commerce/catalog updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="viewers" />
+										<span class="slider round"></span>
+									</label>
+									<span>👁️ Show viewer updates</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="othermeta" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧩 Show other/debug meta events</span>
+								</div>
+								<div style="font-size: 0.9em; opacity: 0.85; margin-left: 34px;">
+									Includes miscellaneous fields like index/profile data from non-auction meta payloads.
+								</div>
+								<br>
+								<h3>Display Controls</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="noicon" />
+										<span class="slider round"></span>
+									</label>
+									<span>🙈 Hide icons</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="nolabel" />
+										<span class="slider round"></span>
+									</label>
+									<span>🙊 Hide labels</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="novalue" />
+										<span class="slider round"></span>
+									</label>
+									<span>🙉 Hide values</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="compact" />
+										<span class="slider round"></span>
+									</label>
+									<span>📏 Compact spacing</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hideauctionextras" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧹 Hide auction extra fields (seller/category/shipping/tags/action/source)</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hidecommerceextras" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧹 Hide commerce extra fields (navigation/live/upcoming breakdowns)</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hideviewerplatforms" />
+										<span class="slider round"></span>
+									</label>
+									<span>👁️ Hide per-platform viewer rows (keep total only)</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="hidedebugmeta" />
+										<span class="slider round"></span>
+									</label>
+									<span>🛠️ Hide technical/debug fields (index/profile/url/source-mode/image)</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;" title="Comma-separated keywords. Any matching field id/label will be hidden. Example: profile,index,shipping,tags,wallet,upcoming">
+									<input type="text" id="meta_hidefields" class="textInput instant" autocomplete="off" placeholder="e.g. profile,index,shipping,tags,wallet" data-textparam24="hidefields" />
+									<label for="meta_hidefields">&gt; Hide fields by keyword (comma-separated)</label>
+								</div>
+									<div>
+										<label class="switch">
+											<input type="checkbox" data-param24="hidetitle" />
+											<span class="slider round"></span>
+										</label>
+										<span>🧹 Hide header title</span>
+									</div>
+									<div class="textInputContainer" style="width: 95%;" title="Optional title text for the overlay header. Leave blank to hide the header by default.">
+										<input type="text" id="meta_title_text" class="textInput instant" autocomplete="off" placeholder="Optional header title" data-textparam24="title" />
+										<label for="meta_title_text">&gt; Optional header title</label>
+									</div>
+									<br>
+									<h3>Layout and Appearance</h3>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="alignright" />
+										<span class="slider round"></span>
+									</label>
+									<span>➡️ Align overlay to the right-side</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="align=center" />
+										<span class="slider round"></span>
+									</label>
+									<span>↔️ Align overlay to the center</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Scale multiplier
+										<input type="range" id="meta-scale-range" min="0.3" max="4" step="0.05" value="1" style="width: 150px;" data-numbersetting24="scale" data-range-display="meta-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="meta-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="opacity" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										👻 Panel opacity
+										<input type="range" id="meta-opacity-range" min="0" max="1" step="0.05" value="1" style="width: 150px;" data-numbersetting24="opacity" data-range-display="meta-opacity-display" />
+										<span class="range-value" id="meta-opacity-display">1.00</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="nobg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🧼 Transparent chip backgrounds</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param24="nooutline" />
+										<span class="slider round"></span>
+									</label>
+									<span>🔳 Disable text outlining</span>
+								</div>
+								<div title="Set the overall page background color (useful for OBS docks so the page is not transparent/white). Supports hex, rgba, and named colors.">
+									<label class="switch">
+										<input type="checkbox" data-param24="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>🎨 Custom page background color</span>
+								</div>
+								<div class="colorInputRow" style="display:flex; align-items:center; gap:8px;">
+									<div class="textInputContainer" style="width: 95%;" title="Examples: #111111, #1f2937, rgba(20,20,20,0.95)">
+										<input type="text" id="meta_pagebg" class="textInput instant" autocomplete="off" placeholder="e.g. #111111 or rgba(20,20,20,0.95)" data-textparam24="pagebg" data-palette="meta_pagebg_palette" />
+										<label for="meta_pagebg">&gt; Page background color</label>
+									</div>
+									<input type="color" data-color="meta_pagebg" id="meta_pagebg_palette" class="colorPicker" title="Pick a page background color" style="cursor: pointer; width: 27px; height: 27px; vertical-align: middle; padding: 0px; z-index: 99; background-color: rgba(0, 0, 0, 0);" />
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
 			
 			
 			<div class="link" title="This link shows a tally of donations recieved">
