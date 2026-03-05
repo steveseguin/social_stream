@@ -122,18 +122,60 @@ function toDataURL(url, callback) {
 		}
 	}
 
+	function isLikelyUserAvatarSrc(src){
+		try {
+			src = (src || "").toLowerCase();
+			return src.indexOf("/avatars/") !== -1 || src.indexOf("/avatar/") !== -1 || src.indexOf("default-avatars") !== -1;
+		} catch(e){
+			return false;
+		}
+	}
+
+	function isLikelyBadgeSrc(src){
+		try {
+			src = (src || "").toLowerCase();
+			return src.indexOf("/badge/") !== -1 || src.indexOf("supporter") !== -1 || src.indexOf("member") !== -1;
+		} catch(e){
+			return false;
+		}
+	}
+
+	function extractLastUsefulText(root){
+		try {
+			if (!root || !root.querySelectorAll){return "";}
+			let last = "";
+			let leaves = root.querySelectorAll("*");
+			for (let i=0; i<leaves.length; i++){
+				let node = leaves[i];
+				if (!node || (node.children && node.children.length)){continue;}
+				let tag = (node.tagName || "").toUpperCase();
+				if (tag === "TIME" || tag === "BUTTON" || tag === "SVG" || tag === "PATH" || tag === "IMG"){continue;}
+				if (node.closest && node.closest("button, a[href*='username=']")){continue;}
+				let text = (node.textContent || "").replace(/\s+/g, " ").trim();
+				if (!text){continue;}
+				if (/^(this minute|\d+\s+(seconds?|minutes?|hours?|days?)\s+ago)$/i.test(text)){continue;}
+				if (text.charAt(0) === "@" && text.length <= 80){continue;}
+				last = text;
+			}
+			return last;
+		} catch(e){
+			return "";
+		}
+	}
+
 	function extractBadgeData(ele){
 		let badges = [];
 		let membership = "";
 		try {
-			let badgeImages = ele.querySelectorAll(".chat-message-content-wrapper .flex_1 img[src]");
+			let badgeImages = ele.querySelectorAll("img[src]");
 			badgeImages.forEach(img=>{
 				if (!img || !img.src){return;}
-				if (img.closest(".w_28px")){return;}
-				if (img.closest(".wb_break-word")){return;}
 				let alt = (img.alt || "").trim();
 				let src = img.src;
-				let isLikelyBadge = /badge|supporter|member|subscriber|moderator|admin/i.test(src) || /supporter|member|subscriber|moderator|admin/i.test(alt);
+				if (isLikelyUserAvatarSrc(src)){return;}
+				if (/\/images\/answers\//i.test(src)){return;}
+				if (img.closest && img.closest("a[href*='username=']")){return;}
+				let isLikelyBadge = isLikelyBadgeSrc(src) || /supporter|member|subscriber|moderator|admin/i.test(alt);
 				if (!isLikelyBadge){return;}
 				if (!badges.includes(src)){
 					badges.push(src);
@@ -176,11 +218,16 @@ function toDataURL(url, callback) {
 
 		if (!donationText){
 			try {
-				var donationFooter = ele.querySelector(".chat-message-content-wrapper > .d_flex.ai_center.gap_1");
-				if (donationFooter){
-					var donationFooterValue = donationFooter.querySelector("span");
-					if (donationFooterValue && donationFooterValue.textContent){
-						donationText = donationFooterValue.textContent.trim();
+				let nodes = ele.querySelectorAll("span, div");
+				for (let i=0; i<nodes.length; i++){
+					let node = nodes[i];
+					if (!node || !node.textContent){continue;}
+					if (node.querySelector && node.querySelector("time")){continue;}
+					if (node.closest && node.closest("button")){continue;}
+					let raw = node.textContent.trim();
+					if (/^[$\u20AC\u00A3]?\s*[0-9]+(?:[.,][0-9]{1,2})?$/.test(raw)){
+						donationText = raw;
+						break;
 					}
 				}
 			} catch(e){}
@@ -207,7 +254,20 @@ function toDataURL(url, callback) {
 
 	function extractReplyMeta(ele){
 		try {
-			let replyCard = ele.querySelector(".chat-message-content-wrapper [class*='bg-c_background.30']");
+			let replyCard = null;
+			let replyIcon = ele.querySelector("svg path[d^='M5.921 11.9']");
+			if (replyIcon){
+				let probe = replyIcon.parentElement;
+				while (probe && probe !== ele){
+					let hasProfile = !!probe.querySelector("a[href*='username=']");
+					let hasTimestamp = !!probe.querySelector("time[datetime]");
+					if (hasProfile && hasTimestamp){
+						replyCard = probe;
+						break;
+					}
+					probe = probe.parentElement;
+				}
+			}
 			if (!replyCard){return null;}
 
 			let replyUser = "";
@@ -223,10 +283,7 @@ function toDataURL(url, callback) {
 
 			let replyText = "";
 			try {
-				let replyTextNodes = replyCard.querySelectorAll(".wb_break-word");
-				if (replyTextNodes && replyTextNodes.length){
-					replyText = (replyTextNodes[replyTextNodes.length-1].textContent || "").trim();
-				}
+				replyText = extractLastUsefulText(replyCard);
 			} catch(e){}
 
 			let replyImage = "";
@@ -241,7 +298,7 @@ function toDataURL(url, callback) {
 				}
 				if (!replyImage){
 					let replyImageNode = replyCard.querySelector("img[src]");
-					if (replyImageNode && replyImageNode.src){
+					if (replyImageNode && replyImageNode.src && !isLikelyUserAvatarSrc(replyImageNode.src) && !isLikelyBadgeSrc(replyImageNode.src)){
 						replyImage = replyImageNode.src;
 					}
 				}
@@ -263,49 +320,56 @@ function toDataURL(url, callback) {
 
 	function extractPrimaryMessageNode(ele){
 		try {
-			let directBlocks = ele.querySelectorAll(".chat-message-content-wrapper .flex_1 > .fs_14px.lh_18px, .chat-message-content-wrapper .flex_1 > div[class*='fs_14px'][class*='lh_18px']");
-			for (let i=0; i<directBlocks.length; i++){
-				let block = directBlocks[i];
-				if (!block){continue;}
-				if (block.closest("[class*='bg-c_background.30']")){continue;}
-				if (block.closest("[class*='c_text.secondary']")){continue;}
-				let node = block.querySelector(".wb_break-word");
-				if (node){
-					return node;
-				}
+			let msgNodeLegacy = ele.querySelector(".msg-text, .mchat__chatmessage");
+			if (msgNodeLegacy){
+				return msgNodeLegacy;
 			}
 		} catch(e){}
 
 		try {
-			let msgNodeList = ele.querySelectorAll(".chat-message-content-wrapper .wb_break-word");
-			let msgNodeNew = null;
-			if (msgNodeList && msgNodeList.length){
-				for (let i=0;i<msgNodeList.length;i++){
-					let candidate = msgNodeList[i];
-					if (candidate.closest("[class*='bg-c_background.30']")){continue;}
-					if (candidate.closest("[class*='c_text.secondary']")){continue;}
-					msgNodeNew = candidate;
+			let leaves = ele.querySelectorAll("*");
+			let bestNode = null;
+			for (let i=0; i<leaves.length; i++){
+				let candidate = leaves[i];
+				if (!candidate || (candidate.children && candidate.children.length)){continue;}
+				let tag = (candidate.tagName || "").toUpperCase();
+				if (tag === "TIME" || tag === "BUTTON" || tag === "SVG" || tag === "PATH" || tag === "IMG"){continue;}
+				if (candidate.closest && candidate.closest("button, a[href*='username=']")){continue;}
+				let text = (candidate.textContent || "").replace(/\s+/g, " ").trim();
+				if (!text){continue;}
+				if (/^(this minute|\d+\s+(seconds?|minutes?|hours?|days?)\s+ago)$/i.test(text)){continue;}
+				if (text.charAt(0) === "@" && text.length <= 80){continue;}
+				let inReplySnippet = false;
+				let probe = candidate.parentElement;
+				while (probe && probe !== ele){
+					if (probe.querySelector && probe.querySelector("svg path[d^='M5.921 11.9']") && probe.querySelector("time[datetime]") && probe.querySelector("a[href*='username=']")){
+						inReplySnippet = true;
+						break;
+					}
+					probe = probe.parentElement;
 				}
-				if (!msgNodeNew){
-					msgNodeNew = msgNodeList[msgNodeList.length-1];
-				}
+				if (inReplySnippet){continue;}
+				bestNode = candidate;
 			}
-			return msgNodeNew;
+			return bestNode;
 		} catch(e){}
 		return null;
 	}
 
 	function extractContentImage(ele){
 		try {
-			let images = ele.querySelectorAll(".chat-message-content-wrapper img[src]");
+			let images = ele.querySelectorAll("img[src]");
 			for (let i=0; i<images.length; i++){
 				let img = images[i];
 				if (!img || !img.src){continue;}
-				if (img.closest(".w_28px")){continue;}
-				if (img.closest("[class*='bg-c_background.30']")){continue;}
+				if (isLikelyUserAvatarSrc(img.src)){continue;}
+				if (isLikelyBadgeSrc(img.src)){continue;}
+				if (img.closest && img.closest("a[href*='username=']")){continue;}
 				let altText = (img.alt || "").toLowerCase();
-				let inAttachmentWrap = img.closest("[class*='max-h_80dvh']") || img.closest("[class*='min-w_300px']");
-				if (altText.indexOf("comment attached") !== -1 || altText.indexOf("attached photo") !== -1 || inAttachmentWrap){
+				if (/\/images\/answers\//i.test(img.src)){
+					return img.src;
+				}
+				if (altText.indexOf("comment attached") !== -1 || altText.indexOf("attached photo") !== -1 || altText.indexOf("attached") !== -1){
 					return img.src;
 				}
 			}
@@ -330,20 +394,21 @@ function toDataURL(url, callback) {
 				}
 			}
 
-			let metricsRow = document.querySelector(".chat-container header .d_flex.gap_2");
-			if (metricsRow){
-				let metricItems = metricsRow.querySelectorAll(":scope > div");
-				for (let i=0; i<metricItems.length; i++){
-					let item = metricItems[i];
-					if (!item){continue;}
-					let countTextNode = item.querySelector(".fs_13px, .lh_17px, div, span");
-					let countText = "";
-					if (countTextNode && countTextNode.textContent && countTextNode.textContent.trim()){
-						countText = countTextNode.textContent;
-					} else {
-						countText = item.textContent;
-					}
-					let parsed = parseCountText(countText);
+			let headings = document.querySelectorAll("h1, h2, [role='heading']");
+			for (let i=0; i<headings.length; i++){
+				let heading = headings[i];
+				let headingText = ((heading && heading.textContent) || "").trim().toLowerCase();
+				if (headingText.indexOf("live chat") === -1){continue;}
+				let header = heading.closest("header") || heading.parentElement;
+				if (!header || !header.querySelectorAll){continue;}
+				let metricItems = header.querySelectorAll("span, div");
+				for (let j=0; j<metricItems.length; j++){
+					let item = metricItems[j];
+					if (!item || !item.textContent){continue;}
+					if (item.querySelector && item.querySelector("time")){continue;}
+					let raw = item.textContent.trim();
+					if (!raw || raw.length > 10){continue;}
+					let parsed = parseCountText(raw);
 					if (parsed !== null){
 						return parsed;
 					}
@@ -355,6 +420,135 @@ function toDataURL(url, callback) {
 
 	var lastViewerCount = null;
 	var messageRetryCounts = new WeakMap();
+	var seenMessageIds = new Set();
+	var maxSeenMessageIds = 6000;
+	var processedMessageFingerprints = new WeakMap();
+
+	function rememberMessageId(messageId){
+		try {
+			messageId = (messageId || "").trim();
+			if (!messageId){return;}
+			if (seenMessageIds.has(messageId)){return;}
+			seenMessageIds.add(messageId);
+			if (seenMessageIds.size > maxSeenMessageIds){
+				let oldest = seenMessageIds.values().next();
+				if (!oldest.done){
+					seenMessageIds.delete(oldest.value);
+				}
+			}
+		} catch(e){}
+	}
+
+	function hasSeenMessageId(messageId){
+		try {
+			messageId = (messageId || "").trim();
+			return !!messageId && seenMessageIds.has(messageId);
+		} catch(e){
+			return false;
+		}
+	}
+
+	function getMessageRowId(ele){
+		try {
+			if (!ele || ele.nodeType !== 1){return "";}
+			let directId = (ele.id || "").trim();
+			if (directId){return directId;}
+			let dataId = (ele.getAttribute("data-message-id") || ele.getAttribute("data-chat-message-id") || "").trim();
+			return dataId;
+		} catch(e){
+			return "";
+		}
+	}
+
+	function normalizeFingerprintValue(value){
+		try {
+			return (value || "").replace(/\s+/g, " ").trim();
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getMessageFingerprint(ele){
+		try {
+			if (!ele || ele.nodeType !== 1){return "";}
+			let stamp = normalizeFingerprintValue((ele.querySelector("time[datetime]") || {}).getAttribute ? (ele.querySelector("time[datetime]") || {}).getAttribute("datetime") : "");
+			let name = "";
+			try {
+				let nameNode = ele.querySelector("a[href*='username=']");
+				if (nameNode && nameNode.textContent){
+					name = nameNode.textContent.replace(/^@/, "");
+				}
+			} catch(e){}
+			name = normalizeFingerprintValue(name);
+			let text = "";
+			try {
+				let textNode = ele.querySelector(".msg-text, .mchat__chatmessage");
+				if (!textNode){
+					textNode = extractPrimaryMessageNode(ele);
+				}
+				if (textNode){
+					text = textNode.textContent || "";
+				}
+			} catch(e){}
+			text = normalizeFingerprintValue(text);
+			let imageSrc = "";
+			try {
+				imageSrc = extractContentImage(ele) || "";
+			} catch(e){}
+			imageSrc = normalizeFingerprintValue(imageSrc);
+			let fingerprint = [stamp, name, text, imageSrc].join("|");
+			return normalizeFingerprintValue(fingerprint).slice(0, 1200);
+		} catch(e){
+			return "";
+		}
+	}
+
+	function getMessageRows(root){
+		let rows = [];
+		try {
+			if (!root || !root.querySelectorAll){return rows;}
+			let seen = new Set();
+			let selector = "div[id^='chat-message-'], [data-message-id], [data-chat-message-id], [data-testid='chat-message'], .msg-text, .mchat__chatmessage, [id^='message-']";
+			let addRow = function(candidate){
+				try {
+					if (!candidate || candidate.nodeType !== 1){return;}
+					let row = candidate;
+					if (row.matches && row.matches(".msg-text, .mchat__chatmessage")){
+						row = row.closest("div[id^='chat-message-'], [data-message-id], [data-chat-message-id], [data-testid='chat-message'], [id^='message-'], li, article, div");
+					}
+					if (!row || row.nodeType !== 1){return;}
+					if (seen.has(row)){return;}
+					let looksLikeMessage = !!getMessageRowId(row);
+					if (!looksLikeMessage){
+						let hasProfileLink = !!row.querySelector("a[href*='username=']");
+						let hasTimestamp = !!row.querySelector("time[datetime]");
+						let hasLegacyBody = !!row.querySelector(".msg-text, .mchat__chatmessage");
+						looksLikeMessage = hasLegacyBody || (hasProfileLink && hasTimestamp);
+					}
+					if (!looksLikeMessage){return;}
+					seen.add(row);
+					rows.push(row);
+				} catch(e){}
+			};
+			addRow(root);
+			root.querySelectorAll(selector).forEach(addRow);
+		} catch(e){}
+		return rows;
+	}
+
+	function isLikelyVisible(ele){
+		try {
+			if (!ele || !ele.isConnected){return false;}
+			let style = window.getComputedStyle(ele);
+			if (style){
+				if (style.display === "none" || style.visibility === "hidden"){return false;}
+			}
+			let rect = ele.getBoundingClientRect();
+			return rect.width > 0 && rect.height > 0;
+		} catch(e){
+			return true;
+		}
+	}
 
 	function emitViewerCount(viewerCount){
 		try {
@@ -379,7 +573,23 @@ function toDataURL(url, callback) {
 		
 		//console.log(ele);
 		
-		if (!ele || !ele.isConnected || ele.skip){
+		if (!ele || !ele.isConnected){
+			return;
+		}
+
+		var messageId = getMessageRowId(ele);
+		var currentFingerprint = "";
+		if (!messageId){
+			currentFingerprint = getMessageFingerprint(ele);
+			let priorFingerprint = processedMessageFingerprints.get(ele) || "";
+			if (currentFingerprint && priorFingerprint && currentFingerprint === priorFingerprint){
+				return;
+			}
+		}
+		if (hasSeenMessageId(messageId)){
+			return;
+		}
+		if (!messageId && ele.skip){
 			return;
 		}
 		
@@ -460,24 +670,32 @@ function toDataURL(url, callback) {
 		
 		if (!chatimg){
 			try {
-				var avatar = ele.querySelector(".chat-message-content-wrapper .w_28px img[src]") || ele.querySelector(".chat-message-content-wrapper img[alt='User'][src]") || ele.querySelector(".chat-message-content-wrapper img[class*='bdr_50%'][src]");
-				if (!avatar){
-					try {
-						var fallbackAvatar = ele.querySelector(".chat-message-content-wrapper img[src]");
-						if (fallbackAvatar && (!fallbackAvatar.closest || (!fallbackAvatar.closest(".wb_break-word") && !fallbackAvatar.closest(".message-photo")))){
-							avatar = fallbackAvatar;
-							chatimg = avatar.src;
-						}
-						if (!chatimg){
-							fallbackAvatar = ele.querySelector(".pmessage__avaimg[style]");
-							if (fallbackAvatar){
-								chatimg = fallbackAvatar.style.background.split("url(")[1].split('"')[1];
-							}
-						}
-					} catch(e){}
-				} else {
-					chatimg = avatar.src;
+				let avatar = "";
+				let avatarFromProfile = ele.querySelector("a[href*='username='] img[src]");
+				if (avatarFromProfile && avatarFromProfile.src){
+					avatar = avatarFromProfile.src;
 				}
+				if (!avatar){
+					let images = ele.querySelectorAll("img[src]");
+					for (let i=0; i<images.length; i++){
+						let img = images[i];
+						if (!img || !img.src){continue;}
+						if (isLikelyBadgeSrc(img.src)){continue;}
+						if (/\/images\/answers\//i.test(img.src)){continue;}
+						let isAvatarLike = isLikelyUserAvatarSrc(img.src) || ((img.alt || "").toLowerCase() === "user");
+						if (isAvatarLike){
+							avatar = img.src;
+							break;
+						}
+					}
+				}
+				if (!avatar){
+					let legacyStyleAvatar = ele.querySelector(".pmessage__avaimg[style]");
+					if (legacyStyleAvatar && legacyStyleAvatar.style && legacyStyleAvatar.style.background){
+						avatar = legacyStyleAvatar.style.background.split("url(")[1].split('"')[1];
+					}
+				}
+				chatimg = avatar || "";
 			} catch(e){
 				chatimg = "";
 			}
@@ -526,7 +744,18 @@ function toDataURL(url, callback) {
 		}
 		
 		messageRetryCounts.delete(ele);
-		ele.skip = true;
+		if (messageId){
+			rememberMessageId(messageId);
+		} else {
+			if (!currentFingerprint){
+				currentFingerprint = getMessageFingerprint(ele);
+			}
+		}
+		if (!messageId && currentFingerprint){
+			processedMessageFingerprints.set(ele, currentFingerprint);
+		} else if (!messageId){
+			ele.skip = true;
+		}
 		
 		pushMessage(data);
 		
@@ -537,12 +766,25 @@ function toDataURL(url, callback) {
 	function scheduleProcessMessage(ele, delay){
 		try {
 			if (!ele || ele.nodeType !== 1){return;}
-			if (ele.skip){return;}
+			let rowId = getMessageRowId(ele);
+			if (!rowId && ele.skip){return;}
+			if (rowId && hasSeenMessageId(rowId)){return;}
+			let rowFingerprint = "";
+			if (!rowId){
+				rowFingerprint = getMessageFingerprint(ele);
+				let priorFingerprint = processedMessageFingerprints.get(ele) || "";
+				if (rowFingerprint && priorFingerprint && rowFingerprint === priorFingerprint){
+					return;
+				}
+			}
 			if (pendingMessageNodes.has(ele)){return;}
 			pendingMessageNodes.add(ele);
 			setTimeout(function(){
 				pendingMessageNodes.delete(ele);
-				if (!ele || !ele.isConnected || ele.skip){return;}
+				if (!ele || !ele.isConnected){return;}
+				let delayedId = getMessageRowId(ele);
+				if (!delayedId && ele.skip){return;}
+				if (delayedId && hasSeenMessageId(delayedId)){return;}
 				processMessage(ele);
 			}, typeof delay === "number" ? delay : 300);
 		} catch(e){}
@@ -551,10 +793,20 @@ function toDataURL(url, callback) {
 	function scanChatMessages(chatContainer){
 		try {
 			if (!chatContainer || !chatContainer.querySelectorAll){return;}
-			let rows = chatContainer.querySelectorAll("div[id^='chat-message-']");
+			let rows = getMessageRows(chatContainer);
 			for (let i=0; i<rows.length; i++){
 				let row = rows[i];
-				if (!row || row.skip){continue;}
+				if (!row){continue;}
+				let rowId = getMessageRowId(row);
+				if (hasSeenMessageId(rowId)){continue;}
+				if (!rowId){
+					if (row.skip){continue;}
+					let rowFingerprint = getMessageFingerprint(row);
+					let priorFingerprint = processedMessageFingerprints.get(row) || "";
+					if (rowFingerprint && priorFingerprint && rowFingerprint === priorFingerprint){
+						continue;
+					}
+				}
 				scheduleProcessMessage(row, 300);
 			}
 		} catch(e){}
@@ -563,19 +815,92 @@ function toDataURL(url, callback) {
 	function markExistingMessagesAsSkipped(chatContainer){
 		try {
 			if (!chatContainer || !chatContainer.querySelectorAll){return;}
-			let rows = chatContainer.querySelectorAll("div[id^='chat-message-']");
+			let rows = getMessageRows(chatContainer);
 			for (let i=0; i<rows.length; i++){
 				let row = rows[i];
 				if (!row){continue;}
-				row.skip = true;
+				let rowId = getMessageRowId(row);
+				if (rowId){
+					rememberMessageId(rowId);
+				} else {
+					let rowFingerprint = getMessageFingerprint(row);
+					if (rowFingerprint){
+						processedMessageFingerprints.set(row, rowFingerprint);
+					} else {
+						row.skip = true;
+					}
+				}
 				try { pendingMessageNodes.delete(row); } catch(e){}
 				try { messageRetryCounts.delete(row); } catch(e){}
 			}
 		} catch(e){}
 	}
 
+	function resolveLiveChatSection(){
+		try {
+			let candidateSections = new Set();
+			let idRows = document.querySelectorAll("div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
+			for (let i=0; i<idRows.length; i++){
+				let row = idRows[i];
+				if (!row || !row.closest){continue;}
+				let section = row.closest("section, #chat-history, #chatscroller");
+				if (!section){
+					section = row.parentElement;
+				}
+				if (section){
+					candidateSections.add(section);
+				}
+			}
+
+			let liveHeadings = document.querySelectorAll("h1, h2, [role='heading']");
+			for (let i=0; i<liveHeadings.length; i++){
+				let heading = liveHeadings[i];
+				let text = ((heading && heading.textContent) || "").trim().toLowerCase();
+				if (text.indexOf("live chat") === -1){continue;}
+				let scope = heading.closest("section, aside, div");
+				if (scope){
+					let section = scope.querySelector("section") || scope;
+					candidateSections.add(section);
+				}
+			}
+
+			let bestSection = null;
+			let bestScore = -1;
+			candidateSections.forEach(section=>{
+				if (!section || !section.querySelectorAll){return;}
+				let rowCount = getMessageRows(section).length;
+				let score = 0;
+				if (rowCount){score += 1000 + rowCount;}
+				if (isLikelyVisible(section)){score += 50;}
+				let probe = section;
+				for (let p=0; p<6 && probe; p++){
+					let heading = probe.querySelector ? probe.querySelector("h1, h2, [role='heading']") : null;
+					let headingText = ((heading && heading.textContent) || "").trim().toLowerCase();
+					if (headingText.indexOf("live chat") !== -1){
+						score += 120;
+						break;
+					}
+					probe = probe.parentElement;
+				}
+				if (score > bestScore){
+					bestScore = score;
+					bestSection = section;
+				}
+			});
+			if (bestSection){
+				return bestSection;
+			}
+		} catch(e){}
+		return null;
+	}
+
 	function resolveChatContainer(){
 		try {
+			let liveChatSection = resolveLiveChatSection();
+			if (liveChatSection){
+				return liveChatSection;
+			}
+
 			let directContainer = document.querySelector("#chat-history, #chatscroller");
 			if (directContainer){
 				return directContainer;
@@ -583,12 +908,8 @@ function toDataURL(url, callback) {
 
 			let row = document.querySelector("div[id^='chat-message-']");
 			if (row && row.parentElement){
-				return row.parentElement;
-			}
-
-			let scopedSection = document.querySelector(".chat-container section.flex_1, .chat-container section[class*='ov-y_auto'], .chat-container section");
-			if (scopedSection){
-				return scopedSection;
+				let rowSection = row.closest("section");
+				return rowSection || row.parentElement;
 			}
 		} catch(e){}
 		return null;
@@ -646,18 +967,10 @@ function toDataURL(url, callback) {
 					for (let i=0;i<nodes.length;i++){
 						let node = nodes[i];
 						if (!node || node.nodeType !== 1){continue;}
-						if (node.matches && node.matches("div[id^='chat-message-']")){
-							if (!node.skip){
-								scheduleProcessMessage(node, 300);
-							}
-							continue;
-						}
-						let nested = node.querySelectorAll ? node.querySelectorAll("div[id^='chat-message-']") : [];
-						for (let j=0; j<nested.length; j++){
-							let messageNode = nested[j];
-							if (!messageNode.skip){
-								scheduleProcessMessage(messageNode, 300);
-							}
+						let rows = getMessageRows(node);
+						for (let j=0; j<rows.length; j++){
+							let messageNode = rows[j];
+							scheduleProcessMessage(messageNode, 300);
 						}
 					}
 				}
