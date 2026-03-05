@@ -217,23 +217,6 @@ function toDataURL(url, callback) {
 		} catch(e){}
 
 		if (!donationText){
-			try {
-				let nodes = ele.querySelectorAll("span, div");
-				for (let i=0; i<nodes.length; i++){
-					let node = nodes[i];
-					if (!node || !node.textContent){continue;}
-					if (node.querySelector && node.querySelector("time")){continue;}
-					if (node.closest && node.closest("button")){continue;}
-					let raw = node.textContent.trim();
-					if (/^[$\u20AC\u00A3]?\s*[0-9]+(?:[.,][0-9]{1,2})?$/.test(raw)){
-						donationText = raw;
-						break;
-					}
-				}
-			} catch(e){}
-		}
-
-		if (!donationText){
 			return { hasDonation: "", donoValue: "" };
 		}
 
@@ -422,7 +405,6 @@ function toDataURL(url, callback) {
 	var messageRetryCounts = new WeakMap();
 	var seenMessageIds = new Set();
 	var maxSeenMessageIds = 6000;
-	var processedMessageFingerprints = new WeakMap();
 
 	function rememberMessageId(messageId){
 		try {
@@ -460,94 +442,21 @@ function toDataURL(url, callback) {
 		}
 	}
 
-	function normalizeFingerprintValue(value){
-		try {
-			return (value || "").replace(/\s+/g, " ").trim();
-		} catch(e){
-			return "";
-		}
-	}
-
-	function getMessageFingerprint(ele){
-		try {
-			if (!ele || ele.nodeType !== 1){return "";}
-			let stamp = normalizeFingerprintValue((ele.querySelector("time[datetime]") || {}).getAttribute ? (ele.querySelector("time[datetime]") || {}).getAttribute("datetime") : "");
-			let name = "";
-			try {
-				let nameNode = ele.querySelector("a[href*='username=']");
-				if (nameNode && nameNode.textContent){
-					name = nameNode.textContent.replace(/^@/, "");
-				}
-			} catch(e){}
-			name = normalizeFingerprintValue(name);
-			let text = "";
-			try {
-				let textNode = ele.querySelector(".msg-text, .mchat__chatmessage");
-				if (!textNode){
-					textNode = extractPrimaryMessageNode(ele);
-				}
-				if (textNode){
-					text = textNode.textContent || "";
-				}
-			} catch(e){}
-			text = normalizeFingerprintValue(text);
-			let imageSrc = "";
-			try {
-				imageSrc = extractContentImage(ele) || "";
-			} catch(e){}
-			imageSrc = normalizeFingerprintValue(imageSrc);
-			let fingerprint = [stamp, name, text, imageSrc].join("|");
-			return normalizeFingerprintValue(fingerprint).slice(0, 1200);
-		} catch(e){
-			return "";
-		}
-	}
-
 	function getMessageRows(root){
 		let rows = [];
 		try {
 			if (!root || !root.querySelectorAll){return rows;}
-			let seen = new Set();
-			let selector = "div[id^='chat-message-'], [data-message-id], [data-chat-message-id], [data-testid='chat-message'], .msg-text, .mchat__chatmessage, [id^='message-']";
-			let addRow = function(candidate){
-				try {
-					if (!candidate || candidate.nodeType !== 1){return;}
-					let row = candidate;
-					if (row.matches && row.matches(".msg-text, .mchat__chatmessage")){
-						row = row.closest("div[id^='chat-message-'], [data-message-id], [data-chat-message-id], [data-testid='chat-message'], [id^='message-'], li, article, div");
-					}
-					if (!row || row.nodeType !== 1){return;}
-					if (seen.has(row)){return;}
-					let looksLikeMessage = !!getMessageRowId(row);
-					if (!looksLikeMessage){
-						let hasProfileLink = !!row.querySelector("a[href*='username=']");
-						let hasTimestamp = !!row.querySelector("time[datetime]");
-						let hasLegacyBody = !!row.querySelector(".msg-text, .mchat__chatmessage");
-						looksLikeMessage = hasLegacyBody || (hasProfileLink && hasTimestamp);
-					}
-					if (!looksLikeMessage){return;}
-					seen.add(row);
-					rows.push(row);
-				} catch(e){}
-			};
-			addRow(root);
-			root.querySelectorAll(selector).forEach(addRow);
+			let selector = "div[id^='chat-message-'], [data-message-id], [data-chat-message-id]";
+			if (root.matches && root.matches(selector)){
+				rows.push(root);
+			}
+			let found = root.querySelectorAll(selector);
+			for (let i=0; i<found.length; i++){
+				rows.push(found[i]);
+			}
+			rows = Array.from(new Set(rows));
 		} catch(e){}
 		return rows;
-	}
-
-	function isLikelyVisible(ele){
-		try {
-			if (!ele || !ele.isConnected){return false;}
-			let style = window.getComputedStyle(ele);
-			if (style){
-				if (style.display === "none" || style.visibility === "hidden"){return false;}
-			}
-			let rect = ele.getBoundingClientRect();
-			return rect.width > 0 && rect.height > 0;
-		} catch(e){
-			return true;
-		}
 	}
 
 	function emitViewerCount(viewerCount){
@@ -578,14 +487,6 @@ function toDataURL(url, callback) {
 		}
 
 		var messageId = getMessageRowId(ele);
-		var currentFingerprint = "";
-		if (!messageId){
-			currentFingerprint = getMessageFingerprint(ele);
-			let priorFingerprint = processedMessageFingerprints.get(ele) || "";
-			if (currentFingerprint && priorFingerprint && currentFingerprint === priorFingerprint){
-				return;
-			}
-		}
 		if (hasSeenMessageId(messageId)){
 			return;
 		}
@@ -747,13 +648,6 @@ function toDataURL(url, callback) {
 		if (messageId){
 			rememberMessageId(messageId);
 		} else {
-			if (!currentFingerprint){
-				currentFingerprint = getMessageFingerprint(ele);
-			}
-		}
-		if (!messageId && currentFingerprint){
-			processedMessageFingerprints.set(ele, currentFingerprint);
-		} else if (!messageId){
 			ele.skip = true;
 		}
 		
@@ -769,14 +663,6 @@ function toDataURL(url, callback) {
 			let rowId = getMessageRowId(ele);
 			if (!rowId && ele.skip){return;}
 			if (rowId && hasSeenMessageId(rowId)){return;}
-			let rowFingerprint = "";
-			if (!rowId){
-				rowFingerprint = getMessageFingerprint(ele);
-				let priorFingerprint = processedMessageFingerprints.get(ele) || "";
-				if (rowFingerprint && priorFingerprint && rowFingerprint === priorFingerprint){
-					return;
-				}
-			}
 			if (pendingMessageNodes.has(ele)){return;}
 			pendingMessageNodes.add(ele);
 			setTimeout(function(){
@@ -799,14 +685,7 @@ function toDataURL(url, callback) {
 				if (!row){continue;}
 				let rowId = getMessageRowId(row);
 				if (hasSeenMessageId(rowId)){continue;}
-				if (!rowId){
-					if (row.skip){continue;}
-					let rowFingerprint = getMessageFingerprint(row);
-					let priorFingerprint = processedMessageFingerprints.get(row) || "";
-					if (rowFingerprint && priorFingerprint && rowFingerprint === priorFingerprint){
-						continue;
-					}
-				}
+				if (!rowId && row.skip){continue;}
 				scheduleProcessMessage(row, 300);
 			}
 		} catch(e){}
@@ -823,12 +702,7 @@ function toDataURL(url, callback) {
 				if (rowId){
 					rememberMessageId(rowId);
 				} else {
-					let rowFingerprint = getMessageFingerprint(row);
-					if (rowFingerprint){
-						processedMessageFingerprints.set(row, rowFingerprint);
-					} else {
-						row.skip = true;
-					}
+					row.skip = true;
 				}
 				try { pendingMessageNodes.delete(row); } catch(e){}
 				try { messageRetryCounts.delete(row); } catch(e){}
@@ -838,57 +712,31 @@ function toDataURL(url, callback) {
 
 	function resolveLiveChatSection(){
 		try {
-			let candidateSections = new Set();
-			let idRows = document.querySelectorAll("div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
-			for (let i=0; i<idRows.length; i++){
-				let row = idRows[i];
-				if (!row || !row.closest){continue;}
-				let section = row.closest("section, #chat-history, #chatscroller");
-				if (!section){
-					section = row.parentElement;
-				}
-				if (section){
-					candidateSections.add(section);
-				}
-			}
-
-			let liveHeadings = document.querySelectorAll("h1, h2, [role='heading']");
-			for (let i=0; i<liveHeadings.length; i++){
-				let heading = liveHeadings[i];
+			let headings = document.querySelectorAll("h1, h2, [role='heading']");
+			for (let i=0; i<headings.length; i++){
+				let heading = headings[i];
 				let text = ((heading && heading.textContent) || "").trim().toLowerCase();
 				if (text.indexOf("live chat") === -1){continue;}
 				let scope = heading.closest("section, aside, div");
-				if (scope){
-					let section = scope.querySelector("section") || scope;
-					candidateSections.add(section);
+				if (!scope){continue;}
+				if (getMessageRows(scope).length){
+					return scope;
+				}
+				let innerSection = scope.querySelector("section");
+				if (innerSection && getMessageRows(innerSection).length){
+					return innerSection;
 				}
 			}
 
-			let bestSection = null;
-			let bestScore = -1;
-			candidateSections.forEach(section=>{
-				if (!section || !section.querySelectorAll){return;}
-				let rowCount = getMessageRows(section).length;
-				let score = 0;
-				if (rowCount){score += 1000 + rowCount;}
-				if (isLikelyVisible(section)){score += 50;}
-				let probe = section;
-				for (let p=0; p<6 && probe; p++){
-					let heading = probe.querySelector ? probe.querySelector("h1, h2, [role='heading']") : null;
-					let headingText = ((heading && heading.textContent) || "").trim().toLowerCase();
-					if (headingText.indexOf("live chat") !== -1){
-						score += 120;
-						break;
-					}
-					probe = probe.parentElement;
+			let row = document.querySelector("div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
+			if (row){
+				let section = row.closest("section, #chat-history, #chatscroller");
+				if (section){
+					return section;
 				}
-				if (score > bestScore){
-					bestScore = score;
-					bestSection = section;
+				if (row.parentElement){
+					return row.parentElement;
 				}
-			});
-			if (bestSection){
-				return bestSection;
 			}
 		} catch(e){}
 		return null;
@@ -906,7 +754,7 @@ function toDataURL(url, callback) {
 				return directContainer;
 			}
 
-			let row = document.querySelector("div[id^='chat-message-']");
+			let row = document.querySelector("div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
 			if (row && row.parentElement){
 				let rowSection = row.closest("section");
 				return rowSection || row.parentElement;
