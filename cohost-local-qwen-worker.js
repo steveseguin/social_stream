@@ -5,7 +5,9 @@
     TextStreamer
 } from './thirdparty/transformersjs/transformers.min.js';
 
-const DEFAULT_MODEL_ID = 'thirdparty/models/qwen3.5-0.8b-onnx';
+const DEFAULT_MODEL_ID = 'qwen3.5-0.8b-onnx';
+const DEFAULT_REMOTE_HOST = 'https://largefiles.socialstream.ninja/';
+const DEFAULT_REMOTE_PATH_TEMPLATE = '{model}/';
 const DEFAULT_DTYPE = {
     embed_tokens: 'q4',
     decoder_model_merged: 'q4',
@@ -23,6 +25,7 @@ let model = null;
 let processor = null;
 let initializedModelId = '';
 let initializedDevice = '';
+let initializedSourceSignature = '';
 let initializingPromise = null;
 let conversation = [];
 let activeRequestId = null;
@@ -49,10 +52,32 @@ function buildWasmPaths() {
     };
 }
 
-function configureEnvironment() {
-    env.allowRemoteModels = false;
+function normalizeRemoteHost(remoteHost) {
+    if (!remoteHost) return DEFAULT_REMOTE_HOST;
+    return remoteHost.endsWith('/') ? remoteHost : `${remoteHost}/`;
+}
+
+function isLikelyLocalModelId(modelId) {
+    return /^(?:\.{1,2}\/|\/|[a-zA-Z]:[\\/]|thirdparty\/)/.test(modelId || '');
+}
+
+function resolveModelSource(modelId, requestedRemoteHost = '') {
+    const isLocalModel = isLikelyLocalModelId(modelId);
+    const remoteHost = normalizeRemoteHost(requestedRemoteHost || DEFAULT_REMOTE_HOST);
+    return {
+        isLocalModel,
+        localFilesOnly: isLocalModel,
+        remoteHost,
+        sourceSignature: `${isLocalModel ? 'local' : 'remote'}|${remoteHost}`
+    };
+}
+
+function configureEnvironment(source) {
+    env.allowRemoteModels = !source.isLocalModel;
     env.allowLocalModels = true;
     env.localModelPath = './';
+    env.remoteHost = source.remoteHost;
+    env.remotePathTemplate = DEFAULT_REMOTE_PATH_TEMPLATE;
     env.useBrowserCache = true;
     env.useFSCache = false;
 
@@ -137,11 +162,17 @@ async function resolveRequestedDevice(requestedDevice) {
 }
 
 async function initModel(message) {
-    const modelId = (message.modelId || DEFAULT_MODEL_ID).trim();
+    const modelId = (message.modelId || initializedModelId || DEFAULT_MODEL_ID).trim();
     const dtype = message.dtype || DEFAULT_DTYPE;
     const requestedDevice = message.device || 'auto';
+    const source = resolveModelSource(modelId, message.remoteHost);
 
-    if (model && processor && initializedModelId === modelId) {
+    if (
+        model &&
+        processor &&
+        initializedModelId === modelId &&
+        initializedSourceSignature === source.sourceSignature
+    ) {
         return { modelId, device: initializedDevice || 'wasm' };
     }
     if (initializingPromise) {
@@ -151,11 +182,19 @@ async function initModel(message) {
             device: initializedDevice || 'wasm'
         };
     }
-    if (model && processor && initializedModelId && initializedModelId !== modelId) {
+    if (
+        model &&
+        processor &&
+        initializedModelId &&
+        (
+            initializedModelId !== modelId ||
+            initializedSourceSignature !== source.sourceSignature
+        )
+    ) {
         await disposeModel();
     }
 
-    configureEnvironment();
+    configureEnvironment(source);
 
     initializingPromise = (async () => {
         let device = await resolveRequestedDevice(requestedDevice);
@@ -163,7 +202,7 @@ async function initModel(message) {
         postStatus('loading', `Loading local model: ${modelId}`);
 
         processor = await AutoProcessor.from_pretrained(modelId, {
-            local_files_only: true,
+            local_files_only: source.localFilesOnly,
             progress_callback: (info = {}) => {
                 self.postMessage({
                     type: 'progress',
@@ -175,7 +214,7 @@ async function initModel(message) {
 
         try {
             model = await Qwen3_5ForConditionalGeneration.from_pretrained(modelId, {
-                local_files_only: true,
+                local_files_only: source.localFilesOnly,
                 device,
                 dtype,
                 progress_callback: (info = {}) => {
@@ -192,7 +231,7 @@ async function initModel(message) {
             }
             postStatus('loading', 'WebGPU unavailable, falling back to wasm');
             model = await Qwen3_5ForConditionalGeneration.from_pretrained(modelId, {
-                local_files_only: true,
+                local_files_only: source.localFilesOnly,
                 device: 'wasm',
                 dtype,
                 progress_callback: (info = {}) => {
@@ -208,6 +247,7 @@ async function initModel(message) {
 
         initializedModelId = modelId;
         initializedDevice = device;
+        initializedSourceSignature = source.sourceSignature;
         postStatus('ready', `Loaded local model on ${device}`);
     })();
 
@@ -312,6 +352,7 @@ async function disposeModel() {
     processor = null;
     initializedModelId = '';
     initializedDevice = '';
+    initializedSourceSignature = '';
     initializingPromise = null;
     postStatus('stopped', 'Local model worker stopped');
 }

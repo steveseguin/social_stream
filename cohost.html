@@ -997,7 +997,8 @@ class PuppetAvatar {
     }
 }
 const GEMINI_DEFAULT_LIVE_MODEL = "models/gemini-2.5-flash-native-audio-preview-12-2025";
-const LOCAL_QWEN_DEFAULT_MODEL = "thirdparty/models/qwen3.5-0.8b-onnx";
+const LOCAL_QWEN_DEFAULT_MODEL = "qwen3.5-0.8b-onnx";
+const LOCAL_QWEN_DEFAULT_REMOTE_HOST = "https://largefiles.socialstream.ninja/";
 const LOCAL_QWEN_WORKER_PATH = "cohost-local-qwen-worker.js";
 const LOCAL_QWEN_DEFAULT_DTYPE = {
     embed_tokens: "q4",
@@ -1434,7 +1435,8 @@ class LocalBrowserPublisher {
         };
         await this.requestWorker('init', {
             modelId: this.model,
-            dtype: LOCAL_QWEN_DEFAULT_DTYPE
+            dtype: LOCAL_QWEN_DEFAULT_DTYPE,
+            remoteHost: LOCAL_QWEN_DEFAULT_REMOTE_HOST
         }, 420000);
         this.connected = true;
         this.reconnectAttempts = 0;
@@ -3948,11 +3950,11 @@ const providerUIConfig = {
     localqwen: {
         label: 'Local Qwen 3.5 (Browser)',
         apiKeyPlaceholder: 'No API key required',
-        apiKeyInfoHtml: 'Runs entirely local in this browser using local model files and local runtime assets.',
+        apiKeyInfoHtml: 'Uses your self-hosted model files (default: largefiles.socialstream.ninja) and local browser runtime. No third-party AI API key is used.',
         defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
-        modelPlaceholder: `Optional local model path (default ${LOCAL_QWEN_DEFAULT_MODEL})`,
+        modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
         disableCaptureSelection: true,
-        deviceNotice: 'Speech-to-text stays in browser and feeds the local Qwen model directly. No external API calls are used.',
+        deviceNotice: 'Speech-to-text and inference run in-browser. Model files are fetched from your configured self-hosted storage if not already cached.',
         requiresApiKey: false,
         supportsAudioResponse: false
     },
