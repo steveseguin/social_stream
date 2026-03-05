@@ -1605,7 +1605,12 @@ class OpenAICompatiblePublisher {
     }
     buildBaseUrl() {
         const normalized = this.normalizeEndpoint(this.endpoint);
-        const url = new URL(normalized);
+        let url;
+        try {
+            url = new URL(normalized);
+        } catch (_error) {
+            throw new Error(`Invalid endpoint URL: ${normalized}`);
+        }
         if (this.isLikelyChatCompletionsPath(url.pathname)) {
             url.pathname = url.pathname.replace(/\/chat\/completions\/?$/i, '').replace(/\/+$/, '');
         }
