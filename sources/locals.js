@@ -310,6 +310,17 @@ function toDataURL(url, callback) {
 		} catch(e){}
 
 		try {
+			let donationContainer = null;
+			try {
+				let donPath = ele.querySelector("svg path[d^='M1.36193 6.26802']");
+				if (donPath){
+					let donSvg = donPath.closest("svg");
+					if (donSvg && donSvg.parentElement){
+						donationContainer = donSvg.parentElement;
+					}
+				}
+			} catch(e){}
+
 			let leaves = ele.querySelectorAll("*");
 			let bestNode = null;
 			for (let i=0; i<leaves.length; i++){
@@ -332,6 +343,7 @@ function toDataURL(url, callback) {
 					probe = probe.parentElement;
 				}
 				if (inReplySnippet){continue;}
+				if (donationContainer && donationContainer.contains(candidate)){continue;}
 				bestNode = candidate;
 			}
 			return bestNode;
@@ -340,6 +352,7 @@ function toDataURL(url, callback) {
 	}
 
 	function extractContentImage(ele){
+		var firstCandidate = "";
 		try {
 			let images = ele.querySelectorAll("img[src]");
 			for (let i=0; i<images.length; i++){
@@ -355,8 +368,15 @@ function toDataURL(url, callback) {
 				if (altText.indexOf("comment attached") !== -1 || altText.indexOf("attached photo") !== -1 || altText.indexOf("attached") !== -1){
 					return img.src;
 				}
+				if (!firstCandidate && img.closest && img.closest('[role="button"]')){
+					firstCandidate = img.src;
+				}
 			}
 		} catch(e){}
+
+		if (firstCandidate){
+			return firstCandidate;
+		}
 
 		try {
 			let legacyImage = ele.querySelector(".message-photo img[src]");
@@ -631,17 +651,40 @@ function toDataURL(url, callback) {
 			data.meta = { reply: replyMeta };
 		}
 		
+		var needsRetry = false;
 		if (!contentimg && !msg && !hasDonation){
+			needsRetry = true;
+		}
+		if (!needsRetry && !contentimg){
+			try {
+				var hasImageContainer = ele.querySelector('div[role="button"], [class*="max-h_80dvh"], img[alt*="attached"]');
+				if (hasImageContainer){
+					needsRetry = true;
+				}
+			} catch(e){}
+		}
+		if (!needsRetry && !hasDonation){
+			try {
+				var hasDonationSvg = ele.querySelector("svg path[d^='M1.36193 6.26802']");
+				if (hasDonationSvg){
+					needsRetry = true;
+				}
+			} catch(e){}
+		}
+		if (needsRetry){
 			try {
 				if (ele && ele.isConnected){
 					let attempts = (messageRetryCounts.get(ele) || 0) + 1;
 					messageRetryCounts.set(ele, attempts);
 					if (attempts <= 10){
 						scheduleProcessMessage(ele, 300);
+						return;
 					}
 				}
 			} catch(e){}
-			return;
+			if (!msg && !contentimg && !hasDonation){
+				return;
+			}
 		}
 		
 		messageRetryCounts.delete(ele);
