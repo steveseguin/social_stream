@@ -3160,7 +3160,7 @@ async function resolveChannelForPusher() {
             if (data.chatroom_id) {
                 state.socket.chatroomId = String(data.chatroom_id);
                 if (data.broadcaster_user_id && !state.channelId) {
-                    state.channelId = data.broadcaster_user_id;
+                    state.channelId = Number(data.broadcaster_user_id);
                     state.channelName = data.slug || slug;
                     state.lastResolvedSlug = normalizeChannel(slug);
                 }
@@ -3168,7 +3168,7 @@ async function resolveChannelForPusher() {
                 return;
             }
             if (data.broadcaster_user_id && !state.channelId) {
-                state.channelId = data.broadcaster_user_id;
+                state.channelId = Number(data.broadcaster_user_id);
                 state.channelName = data.slug || slug;
                 state.lastResolvedSlug = normalizeChannel(slug);
             }
@@ -3187,7 +3187,7 @@ async function resolveChannelForPusher() {
                 state.socket.chatroomId = String(chatroomId);
                 const broadcasterId = data?.user_id ?? data?.broadcaster_user_id;
                 if (broadcasterId && !state.channelId) {
-                    state.channelId = broadcasterId;
+                    state.channelId = Number(broadcasterId);
                     state.channelName = data?.slug || slug;
                     state.lastResolvedSlug = normalizeChannel(slug);
                 }
@@ -5778,29 +5778,52 @@ async function sendChatMessage() {
     try {
         updateChatSendingState(true);
         setChatStatus('Sending message…');
-        const payload = { content };
-        if (messageType === 'user') {
-            const channelId = await resolveChannelId();
-            payload.broadcaster_user_id = channelId;
-            payload.type = 'user';
-        } else {
-            payload.type = 'bot';
-        }
-        const response = await apiFetch('/public/v1/chat', {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
+        const response = await sendChatPayload(content, messageType, false);
         els.chatMessage.value = '';
         setChatStatus('Message sent.', 'success');
         log('[CHAT] Outbound message submitted.');
         return response;
     } catch (err) {
         console.error('Chat send failed', err);
-        setChatStatus(`Failed to send: ${err.message}`, 'error');
+        const status = getKickApiErrorStatus(err);
+        if (status === 400) {
+            setChatStatus('Kick rejected the message — check account permissions.', 'error');
+        } else if (status === 401 || status === 403) {
+            setChatStatus('Authentication expired. Please sign in again.', 'error');
+        } else if (/failed to fetch/i.test(err?.message || '')) {
+            setChatStatus('Kick API unreachable. Try again in a moment.', 'error');
+        } else {
+            setChatStatus(`Failed to send: ${err.message}`, 'error');
+        }
         log(`Failed to send chat message: ${err.message}`, 'error');
         throw err;
     } finally {
         updateChatSendingState(false);
+    }
+}
+
+async function sendChatPayload(content, messageType, isRetry) {
+    const payload = { content };
+    if (messageType === 'user') {
+        const channelId = isRetry
+            ? await resolveChannelId(true)
+            : await resolveChannelId();
+        payload.broadcaster_user_id = Number(channelId);
+        payload.type = 'user';
+    } else {
+        payload.type = 'bot';
+    }
+    try {
+        return await apiFetch('/public/v1/chat', {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+    } catch (err) {
+        if (!isRetry && getKickApiErrorStatus(err) === 400) {
+            log('Chat send got 400 — retrying with fresh channel resolution.', 'warning');
+            return sendChatPayload(content, messageType, true);
+        }
+        throw err;
     }
 }
 
