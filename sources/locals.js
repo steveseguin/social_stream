@@ -877,9 +877,51 @@ function toDataURL(url, callback) {
 	}
 	
 	var counter = 0;
+	var lastLocalsUrl = window.location.href;
+
+	function isLikelyLocalsChatUrl(){
+		try {
+			let href = ((window.location && window.location.href) || "").toLowerCase();
+			if (!href){return false;}
+			let looksLikeLocalsHost = (href.indexOf("://locals.com/") !== -1) || (href.indexOf(".locals.com/") !== -1);
+			if (!looksLikeLocalsHost){return false;}
+			if (href.indexOf("/feed") !== -1){return true;}
+			if (href.indexOf("/post/") !== -1 || href.indexOf("/posts/") !== -1){return true;}
+			if (href.indexOf("/live") !== -1){return true;}
+			if (href.indexOf("?post=") !== -1){return true;}
+		} catch(e){}
+		return false;
+	}
+
+	function shouldCheckForChat(){
+		if (isLikelyLocalsChatUrl()){
+			return true;
+		}
+		try {
+			return !!document.querySelector("#chat-history, #chatscroller, div[id^='chat-message-'], [data-message-id], [data-chat-message-id]");
+		} catch(e){}
+		return false;
+	}
+
+	function handleSoftNavigation(){
+		try {
+			let currentUrl = window.location.href;
+			if (currentUrl === lastLocalsUrl){return;}
+			lastLocalsUrl = currentUrl;
+			counter = 0;
+			lastViewerCount = null;
+			seenMessageIds = new Set();
+		} catch(e){}
+	}
+
 	console.log("social stream injected");
 
 	setInterval(function(){
+		handleSoftNavigation();
+		if (!shouldCheckForChat()){
+			return;
+		}
+
 		var chatContainer = resolveChatContainer();
 		if (chatContainer){
 			if (!chatContainer.marked){
