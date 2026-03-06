@@ -151,6 +151,10 @@ body, html {
     margin-top: 5px;
 }
 
+body.hide-timestamps .timestamp {
+    display: none;
+}
+
 .source-icon {
     width: 20px;
     height: 20px;
@@ -578,6 +582,7 @@ body.light-mode .meta-value.badge {
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
 	var lightMode = urlParams.has("lightmode");
 	var hideMetaPanels = urlParams.has("hidemeta");
+	var hideTimestamps = urlParams.has("notime");
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
@@ -601,6 +606,10 @@ body.light-mode .meta-value.badge {
 		document.documentElement.style.setProperty('--text-color', '#333');
 		document.documentElement.style.setProperty('--card-bg', '#fff');
 		document.documentElement.style.setProperty('--card-shadow', 'rgba(0, 0, 0, 0.1)');
+	}
+
+	if (hideTimestamps) {
+		document.body.classList.add("hide-timestamps");
 	}
 
 	// Apply custom font if specified
@@ -1584,7 +1593,7 @@ body.light-mode .meta-value.badge {
 			<div class="text">${display.message || ''}</div>
 			${data.hasDonation ? `<div class="donation">💰 ${data.hasDonation}</div>` : ''}
 			${usdValue > 0 ? `<div class="usd-value">$${usdValue.toFixed(2)} USD</div>` : ''}
-			<div class="timestamp">${timeString}</div>
+			${hideTimestamps ? '' : `<div class="timestamp">${timeString}</div>`}
 		`;
 
 		const metaDetailsNode = hideMetaPanels ? null : createMetaDetailsNode(data);
