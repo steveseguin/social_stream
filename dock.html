@@ -9045,6 +9045,27 @@
 				horizontalTickerState.currentTranslate = value;
 			}
 
+			function horizontalNextFrame(callback) {
+				if (typeof callback !== "function") {
+					return;
+				}
+				var fired = false;
+				var run = function() {
+					if (fired) {
+						return;
+					}
+					fired = true;
+					callback();
+				};
+				var fallback = setTimeout(run, 34);
+				if (typeof requestAnimationFrame === "function") {
+					requestAnimationFrame(function () {
+						clearTimeout(fallback);
+						run();
+					});
+				}
+			}
+
 			function horizontalCalculateTarget() {
 				if (!horizontalTickerState || !horizontalTickerState.track || !horizontalTickerState.viewport) {
 					return 0;
@@ -9070,15 +9091,15 @@
 					return;
 				}
 				var current = horizontalCaptureCurrentTranslate();
-				if (!isFinite(target) || target === current || target >= current) {
-					horizontalSetImmediateTransform(target);
-					return;
+					if (!isFinite(target) || target === current || target >= current) {
+						horizontalSetImmediateTransform(target);
+						return;
+					}
+					horizontalSetImmediateTransform(current);
+					horizontalNextFrame(function () {
+						horizontalAnimateTo(target);
+					});
 				}
-				horizontalSetImmediateTransform(current);
-				requestAnimationFrame(function () {
-					horizontalAnimateTo(target);
-				});
-			}
 
 			function horizontalGetMessages() {
 				if (!horizontalTickerState || !horizontalTickerState.track) {
@@ -9196,7 +9217,7 @@
 						var current = horizontalCaptureCurrentTranslate();
 						var target = horizontalCalculateTarget();
 						horizontalSetImmediateTransform(current);
-						requestAnimationFrame(function () {
+						horizontalNextFrame(function () {
 							horizontalAnimateTo(target);
 						});
 					} else {
@@ -9210,12 +9231,12 @@
 						var shift = width + (hasSibling ? gap : 0);
 						var target = horizontalCalculateTarget();
 						horizontalSetImmediateTransform(current - shift);
-						requestAnimationFrame(function () {
+						horizontalNextFrame(function () {
 							horizontalAnimateTo(target);
 						});
 					}
 
-					requestAnimationFrame(function () {
+					horizontalNextFrame(function () {
 						node.classList.remove("horizontal-ticker-pending");
 						node.style.opacity = "";
 					});
