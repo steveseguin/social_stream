@@ -4409,6 +4409,51 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 					});
 				}
 			}
+		} else if (request.cmd && request.cmd === "vpzoneFetchJson") {
+			let parsedUrl;
+			try {
+				parsedUrl = new URL(request.url);
+			} catch (error) {
+				sendResponse({ ok: false, error: "Invalid VPZone URL" });
+				return response;
+			}
+			if (!["vpzone.tv", "www.vpzone.tv"].includes(parsedUrl.hostname) || !parsedUrl.pathname.startsWith("/api/")) {
+				sendResponse({ ok: false, error: "VPZone fetch URL not allowed" });
+				return response;
+			}
+			try {
+				const vpzoneResponse = await fetch(parsedUrl.toString(), {
+					method: "GET",
+					cache: "no-store",
+					credentials: "omit",
+					headers: {
+						Accept: "application/json"
+					}
+				});
+				const responseText = await vpzoneResponse.text();
+				let responseJson = {};
+				try {
+					responseJson = responseText ? JSON.parse(responseText) : {};
+				} catch (error) {
+					responseJson = null;
+				}
+				if (!vpzoneResponse.ok) {
+					sendResponse({
+						ok: false,
+						status: vpzoneResponse.status,
+						error: (responseJson && (responseJson.error || responseJson.message)) || `HTTP ${vpzoneResponse.status}`
+					});
+					return response;
+				}
+				if (responseJson == null) {
+					sendResponse({ ok: false, status: vpzoneResponse.status, error: "Invalid JSON response" });
+					return response;
+				}
+				sendResponse({ ok: true, status: vpzoneResponse.status, data: responseJson });
+			} catch (error) {
+				sendResponse({ ok: false, error: error && error.message ? error.message : "VPZone fetch failed" });
+			}
+			return true;
 		} else if ("getSettings" in request) {
 			// forwards messages from Youtube/Twitch/Facebook to the remote dock via the VDO.Ninja API
 			sendResponse({ state: isExtensionOn, streamID: streamID, password: password, settings: settings }); // respond to Youtube/Twitch/Facebook with the current state of the plugin; just as possible confirmation.
