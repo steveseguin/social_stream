@@ -160,6 +160,8 @@
 		chatBadges: "img.chat-badge[src], img.chat-badge[srcset], .seventv-chat-badge>img[src], .seventv-chat-badge>img[srcset], .ffz-badge, .user-pronoun, img.chat-badge[src]",
 		messageContainer: ".chat-line__message, .seventv-message, .paid-pinned-chat-message-content-wrapper, .room-message"
 	};
+	const trackedTwitchMessageIds = new Map();
+	const MAX_TRACKED_TWITCH_MESSAGE_IDS = 500;
 
 	function getMessageContainer(ele) {
 		if (!ele || ele.nodeType !== 1) {
@@ -171,14 +173,52 @@
 		return ele.closest?.(SELECTORS.messageContainer) || ele.querySelector?.(SELECTORS.messageContainer) || null;
 	}
 
+	function getTrackedMessageKey(ele, fallbackChatname = "", fallbackMessage = "") {
+		const ariaLabel = ele?.getAttribute?.("aria-label") || "";
+		if (ariaLabel) {
+			return ariaLabel.trim();
+		}
+		const textMessage = stripHtmlContent(fallbackMessage);
+		if (fallbackChatname && textMessage) {
+			return `${fallbackChatname}: ${textMessage}`.trim();
+		}
+		return "";
+	}
+
+	function rememberTrackedMessageId(ele, id, fallbackChatname = "", fallbackMessage = "") {
+		if (!ele || !id) {
+			return;
+		}
+		ele.dataset.mid = id;
+		const key = getTrackedMessageKey(ele, fallbackChatname, fallbackMessage);
+		if (!key) {
+			return;
+		}
+		if (trackedTwitchMessageIds.has(key)) {
+			trackedTwitchMessageIds.delete(key);
+		}
+		trackedTwitchMessageIds.set(key, id);
+		if (trackedTwitchMessageIds.size > MAX_TRACKED_TWITCH_MESSAGE_IDS) {
+			const oldestKey = trackedTwitchMessageIds.keys().next().value;
+			if (oldestKey) {
+				trackedTwitchMessageIds.delete(oldestKey);
+			}
+		}
+	}
+
 	function getTrackedMessageId(ele) {
 		const midSource = ele?.dataset?.mid
 			? ele
 			: ele?.querySelector?.("[data-mid]") || ele?.closest?.("[data-mid]") || null;
-		if (!midSource?.dataset?.mid) {
+		if (midSource?.dataset?.mid) {
+			const parsedId = parseInt(midSource.dataset.mid, 10);
+			return isNaN(parsedId) ? null : parsedId;
+		}
+		const key = getTrackedMessageKey(ele);
+		if (!key || !trackedTwitchMessageIds.has(key)) {
 			return null;
 		}
-		const parsedId = parseInt(midSource.dataset.mid, 10);
+		const parsedId = parseInt(trackedTwitchMessageIds.get(key), 10);
 		return isNaN(parsedId) ? null : parsedId;
 	}
 
@@ -1169,7 +1209,7 @@
 				},
 				function (e) {
 					if (e?.id){
-						ele.dataset.mid = e.id;
+						rememberTrackedMessageId(ele, e.id, data.chatname, data.chatmessage);
 					}
 				}
 			);
@@ -1453,6 +1493,9 @@
 
 			if (!data.id && !data.chatname) {
 				return;
+			}
+			if (!data.id) {
+				data.onlyLast = true;
 			}
 
 			try {

@@ -1082,6 +1082,43 @@ function enableBackgroundKeepAlive() {
 		localStorage.removeItem('youtubeChannel');
         localStorage.removeItem('youtubeVideoId');
 	}
+    function isSocketInterfaceVisible() {
+        return Array.from(document.querySelectorAll('.socket')).some(ele => !ele.classList.contains('hidden'));
+    }
+    function syncSignedInCredentialsVisibility(forceVisible = false) {
+        try {
+            const signedInCreds = document.getElementById('credentials-container-signedin');
+            if (!signedInCreds) return;
+            const hasCustomKey = !!String(localStorage.getItem('ytApiKeyOverride') || '').trim();
+            const quotaBanner = document.getElementById('quota-warning');
+            const quotaVisible = !!(quotaBanner && !quotaBanner.classList.contains('hidden'));
+            const shouldShow = isSocketInterfaceVisible() && (forceVisible || hasCustomKey || quotaVisible);
+            signedInCreds.classList.toggle('hidden', !shouldShow);
+        } catch (_) {}
+    }
+    function openQuotaCredentials() {
+        try {
+            const warn = document.getElementById('quota-warning');
+            if (warn) warn.classList.add('hidden');
+            if (isSocketInterfaceVisible()) {
+                syncSignedInCredentialsVisibility(true);
+                const signedInCreds = document.getElementById('credentials-container-signedin');
+                if (signedInCreds && typeof signedInCreds.scrollIntoView === 'function') {
+                    signedInCreds.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                const signedInInput = document.getElementById('custom-api-key-2');
+                if (signedInInput) {
+                    setTimeout(() => signedInInput.focus(), 150);
+                }
+                return;
+            }
+            const details = document.getElementById('credentials-details');
+            if (details) details.open = true;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const keyInput = document.getElementById('custom-api-key');
+            if (keyInput) keyInput.focus();
+        } catch (_) {}
+    }
     function showAuthButton() {
         const authElement = document.querySelector('.auth');
         if (authElement) authElement.classList.remove("hidden");
@@ -1089,7 +1126,7 @@ function enableBackgroundKeepAlive() {
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.remove('hidden');
         const signedInCreds = document.getElementById('credentials-container-signedin');
-        if (signedInCreds) signedInCreds.classList.remove('hidden');
+        if (signedInCreds) signedInCreds.classList.add('hidden');
     }
     function showSocketInterface() {
         const authElement = document.querySelector('.auth');
@@ -1097,8 +1134,7 @@ function enableBackgroundKeepAlive() {
         if (authElement) authElement.classList.add("hidden");
         const policyFooter = document.querySelector('.policy-footer');
         if (policyFooter) policyFooter.classList.add('hidden');
-        const signedInCreds = document.getElementById('credentials-container-signedin');
-        if (signedInCreds) signedInCreds.classList.add('hidden');
+        syncSignedInCredentialsVisibility();
     }
 	function handleVisibilityChange() {
 		const wasVisible = isPageVisible;
@@ -3385,13 +3421,7 @@ function enableBackgroundKeepAlive() {
 		const quotaBtn = document.getElementById('quota-open-credentials');
 		if (quotaBtn) {
 			const openCreds = function() {
-				const details = document.getElementById('credentials-details');
-				if (details) details.open = true;
-				const warn = document.getElementById('quota-warning');
-				if (warn) warn.classList.add('hidden');
-				window.scrollTo({ top: 0, behavior: 'smooth' });
-				const keyInput = document.getElementById('custom-api-key');
-				if (keyInput) keyInput.focus();
+				openQuotaCredentials();
 			};
 			quotaBtn.addEventListener('click', openCreds);
 			registerCleanup(() => quotaBtn.removeEventListener('click', openCreds));
@@ -3612,6 +3642,7 @@ function enableBackgroundKeepAlive() {
 			const el = document.getElementById('quota-warning');
 			if (!el) return;
 			el.classList.remove('hidden');
+			syncSignedInCredentialsVisibility(true);
 		} catch(_){}
 	}
 
@@ -3619,6 +3650,7 @@ function enableBackgroundKeepAlive() {
 		try {
 			const el = document.getElementById('quota-warning');
 			if (el) el.classList.add('hidden');
+			syncSignedInCredentialsVisibility();
 		} catch(_){}
 	}
 
@@ -3664,6 +3696,7 @@ function enableBackgroundKeepAlive() {
 			const indicator = document.getElementById('custom-cred-indicator');
 			if (indicator) indicator.classList.toggle('hidden', !useCustom);
 			if (useCustom) hideQuotaBanner();
+			syncSignedInCredentialsVisibility();
 			// Wire buttons
 			const save = async function(primary=true){
 				const akey = ((document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '').trim();
