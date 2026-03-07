@@ -751,7 +751,7 @@ class YoutubeStreamingApp {
     await modulesReady;
     this.cacheElements();
     this.bindEvents();
-    this.applyClientOverrides();
+    this.applyQuotaOverrides();
     loadEmojiData().catch((error) => console.warn('Failed to preload emoji data', error));
     console.debug('[YT Streaming] Processing OAuth response');
     await this.processOAuthResponse();
@@ -821,20 +821,22 @@ class YoutubeStreamingApp {
     }
   }
 
-  applyClientOverrides() {
+  applyQuotaOverrides() {
     try {
-      console.debug('[YT Streaming] Applying client overrides (if any)');
-      const storedId = localStorage.getItem('ytClientIdOverride');
+      console.debug('[YT Streaming] Applying API key override (if any)');
       const storedKey = localStorage.getItem('ytApiKeyOverride');
       const searchParams = new URLSearchParams(window.location.search);
       const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-      const urlClientId = searchParams.get('client_id') || hashParams.get('client_id');
       const urlApiKey = searchParams.get('api_key') || hashParams.get('api_key');
+      const legacyClientId = searchParams.get('client_id') || hashParams.get('client_id') || localStorage.getItem('ytClientIdOverride');
 
-      this.clientId = urlClientId || storedId || DEFAULT_CLIENT_ID;
+      if (legacyClientId && legacyClientId !== DEFAULT_CLIENT_ID) {
+        console.warn('[YT Streaming] Custom YouTube OAuth client IDs are ignored on the hosted ytauth endpoint. Use an API key override for quota instead.');
+      }
+      this.clientId = DEFAULT_CLIENT_ID;
       this.apiKey = urlApiKey || storedKey || null;
     } catch (error) {
-      console.warn('Failed to apply YouTube client overrides', error);
+      console.warn('Failed to apply YouTube API key override', error);
       this.clientId = DEFAULT_CLIENT_ID;
       this.apiKey = null;
     }
