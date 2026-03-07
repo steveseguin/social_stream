@@ -188,6 +188,19 @@ document.addEventListener('DOMContentLoaded', function() {
             notes: 'See this video for help with toggled integrations: <a href="https://www.youtube.com/watch?v=L3l0_8V1t0Q" target="_blank">https://www.youtube.com/watch?v=L3l0_8V1t0Q</a>'
         },
         {
+            name: 'VPZone.tv',
+            icon: 'vpzone.png',
+            description: 'Live streaming platform with on-page chat capture and a read-only API page option.',
+            type: 'standard',
+            instructions: `
+                <ul>
+                    <li>Open the regular stream page with the chat column visible</li>
+                    <li>URL: https://vpzone.tv/stream/USERNAME</li>
+                </ul>
+            `,
+            notes: 'A read-only API-backed source is also available at <code>sources/websocket/vpzone.html?channel=USERNAME</code>.'
+        },
+        {
             name: 'Slack',
             icon: 'slack.png',
             description: 'Business communication platform.',
