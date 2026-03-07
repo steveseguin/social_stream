@@ -6115,7 +6115,7 @@
 					selector = `[data-chatname='${data.delete.chatname}']`;
 				}
 
-				if (deleteOnlyLast) {
+				if (deleteOnlyLast || data.delete.onlyLast) {
 					const elements = Array.from(document.querySelectorAll(selector));
 					if (elements.length) {
 						const newest = elements.reduce((a, b) => 
