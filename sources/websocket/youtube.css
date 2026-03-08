@@ -23,11 +23,25 @@ body {
     margin: 10px;
     max-height: 72px;
     overflow: hidden;
+    grid-column: 1 / -1;
 }
 .custom-cred-indicator {
     margin-top: 8px;
     font-size: 12px;
     color: #1967d2;
+}
+.guide-link-button {
+    background: transparent;
+    border: 1px solid #1a73e8;
+    color: #1a73e8;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 13px;
+    width: fit-content;
+}
+.guide-link-button:hover {
+    background: rgba(26, 115, 232, 0.08);
 }
 .auth-method-selector {
     margin-top: 12px;
@@ -87,11 +101,20 @@ body {
 	margin: 0 auto;
 	display: grid;
 	grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
 }
 
 /* When logged in, switch to two-column layout */
 body:has(.socket:not(.hidden)) .container {
 	grid-template-columns: 1fr 300px;
+}
+.main-content {
+    grid-column: 1 / -1;
+    grid-row: 2;
+}
+.sidebar {
+    grid-column: 2;
+    grid-row: 2;
 }
 .socket > div {
 	margin: 5px;
@@ -241,6 +264,12 @@ body:has(.socket:not(.hidden)) .container {
 	justify-content: space-between;
 	align-items: center;
 	font-size: 13px;
+}
+.status-copy {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #5f6368;
+    margin-bottom: 10px;
 }
 .recent-events h4 {
 	margin: 0 0 8px 0;
@@ -588,7 +617,20 @@ stats-container
     border-radius: 4px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
-.credentials-form.inline input { width: 100%; }
+.credentials-container .credentials-details {
+    width: 100%;
+    max-width: none;
+}
+.credentials-container .credentials-details summary {
+    cursor: pointer;
+    font-weight: bold;
+    color: #FF0000;
+    margin-bottom: 6px;
+}
+.credentials-form.inline input {
+    width: auto;
+    min-width: 0;
+}
 
 .policy-footer {
 	position: fixed;
@@ -612,6 +654,58 @@ stats-container
 .policy-footer a:hover {
 	text-decoration: underline;
 }
+.setup-guide-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 200;
+}
+.setup-guide-dialog {
+    width: min(720px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow: auto;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    padding: 20px;
+}
+.setup-guide-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.setup-guide-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+.setup-guide-close {
+    background: #5f6368;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+}
+.setup-guide-body {
+    color: #333;
+    line-height: 1.6;
+}
+.setup-guide-body ol {
+    padding-left: 18px;
+}
+.setup-guide-body code {
+    display: inline-block;
+    background: #f1f3f4;
+    padding: 4px 6px;
+    border-radius: 4px;
+    margin: 4px 0;
+}
 
 body:has(.auth:not(.hidden)) {
 	padding-bottom: 60px; /* Make room for fixed footer only during sign-in */
@@ -633,6 +727,13 @@ body:has(.auth:not(.hidden)) {
 	/* Stack layout on mobile when socket is visible */
 	body:has(.socket:not(.hidden)) .container {
 		grid-template-columns: 1fr;
+	}
+	.main-content,
+	.sidebar {
+		grid-column: 1 / -1;
+	}
+	.sidebar {
+		grid-row: 3;
 	}
 	.sidebar {
 		order: 2;
@@ -721,6 +822,30 @@ body:has(.auth:not(.hidden)) {
     .credentials-help code {
         background: #303030;
         color: #f1f1f1;
+    }
+    .guide-link-button {
+        color: #8ab4f8;
+        border-color: #8ab4f8;
+    }
+    .guide-link-button:hover {
+        background: rgba(138, 180, 248, 0.12);
+    }
+    .status-copy {
+        color: #aaaaaa;
+    }
+    .setup-guide-dialog {
+        background: #212121;
+        color: #f1f1f1;
+    }
+    .setup-guide-body {
+        color: #f1f1f1;
+    }
+    .setup-guide-body code {
+        background: #303030;
+        color: #f1f1f1;
+    }
+    .setup-guide-close {
+        background: #3c4043;
     }
     .policy-footer {
         background: #212121;
