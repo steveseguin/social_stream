@@ -443,6 +443,9 @@ button:disabled {
   position: absolute;
   left: 50%;
   top: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   transform: translate(-50%, -50%);
   transition: transform 0.3s ease, filter 0.3s ease;
   animation: idleFace 7s ease-in-out infinite;
@@ -450,8 +453,10 @@ button:disabled {
 
 .eyes {
   display: flex;
+  width: 100%;
   gap: 42px;
   align-items: center;
+  justify-content: center;
   transition: all 0.3s ease;
 }
 
@@ -493,9 +498,11 @@ button:disabled {
   position: absolute;
   width: 100%;
   top: -24px;
+  left: 0;
   display: flex;
   justify-content: space-between;
   padding: 0 10px;
+  box-sizing: border-box;
   opacity: 0;
   transition: opacity 0.25s ease;
 }
@@ -542,12 +549,13 @@ button:disabled {
   position: absolute;
   width: 100%;
   top: 34%;
+  left: 0;
   display: flex;
   justify-content: space-between;
   padding: 0 20px;
+  box-sizing: border-box;
   opacity: 0;
   transition: all 0.3s ease;
-  left: -18%;
 }
 
 .cheek {
@@ -1599,9 +1607,28 @@ class LocalBrowserPublisher {
             this.pendingRequests.delete(requestId);
         }
     }
+    isNonManualPromptSource(source = 'manual') {
+        return source === 'speech' || source === 'greeting';
+    }
+    shouldSilencePromptError(error, source = 'manual') {
+        if (!this.isNonManualPromptSource(source)) {
+            return false;
+        }
+        const message = error?.message || String(error || '');
+        if (this.stopped) {
+            return true;
+        }
+        return (
+            !this.isConnected() &&
+            /Local model request was cancelled|Local model is not connected|Local model worker is not available/i.test(message)
+        );
+    }
     enqueuePrompt(text, source = 'manual') {
         const prompt = (text || '').trim();
         if (!prompt) {
+            return Promise.resolve();
+        }
+        if (this.isNonManualPromptSource(source) && (this.stopped || !this.isConnected())) {
             return Promise.resolve();
         }
         if (source === 'speech') {
@@ -1612,7 +1639,12 @@ class LocalBrowserPublisher {
             this.lastSpeechPromptText = prompt;
             this.lastSpeechPromptAt = now;
         }
-        const run = () => this.sendPromptNow(prompt);
+        const run = () => {
+            if (this.isNonManualPromptSource(source) && (this.stopped || !this.isConnected())) {
+                return;
+            }
+            return this.sendPromptNow(prompt, source);
+        };
         const next = this.promptQueue.then(run, run);
         this.promptQueue = next.catch(() => {});
         return next;
@@ -1729,6 +1761,9 @@ class LocalBrowserPublisher {
             if (finalTranscript) {
                 this.finalTranscript = finalTranscript;
                 this.sendPrompt(finalTranscript, 'speech').catch((err) => {
+                    if (this.shouldSilencePromptError(err, 'speech')) {
+                        return;
+                    }
                     console.error('Local speech prompt failed:', err);
                     showError(`Failed to send speech prompt: ${err.message}`);
                 });
@@ -1850,12 +1885,13 @@ class LocalBrowserPublisher {
     async start() {
         this.stopped = false;
         await this.connect();
-        if (this.stream.getAudioTracks().length > 0) {
-            await this.setupSpeechRecognition();
-        }
+        await this.setupSpeechRecognition();
         if (this.pendingGreeting) {
             this.pendingGreeting = false;
             this.sendPrompt('Hi, introduce yourself in a sentence for me. Be friendly to me.', 'greeting').catch((err) => {
+                if (this.shouldSilencePromptError(err, 'greeting')) {
+                    return;
+                }
                 console.warn('Local greeting failed:', err);
             });
         }
@@ -1868,9 +1904,12 @@ class LocalBrowserPublisher {
     async sendPrompt(text, source = 'manual') {
         return this.enqueuePrompt(text, source);
     }
-    async sendPromptNow(prompt) {
+    async sendPromptNow(prompt, source = 'manual') {
         if (!prompt) return;
         if (!this.isConnected()) {
+            if (this.shouldSilencePromptError(new Error('Local model is not connected.'), source)) {
+                return;
+            }
             throw new Error('Local model is not connected.');
         }
         this.responseActive = true;
@@ -1903,6 +1942,9 @@ class LocalBrowserPublisher {
             });
         } catch (error) {
             this.finalizeResponse();
+            if (this.shouldSilencePromptError(error, source)) {
+                return;
+            }
             updateDiagnostics({
                 state: 'error',
                 connected: this.connected ? 'yes' : 'no',
@@ -1920,9 +1962,7 @@ class LocalBrowserPublisher {
         this.stop();
         this.stopped = false;
         await this.connect();
-        if (this.stream.getAudioTracks().length > 0) {
-            await this.setupSpeechRecognition();
-        }
+        await this.setupSpeechRecognition();
         return true;
     }
     stop() {
@@ -4882,7 +4922,7 @@ const providerUIConfig = {
         defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
         modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
         disableCaptureSelection: true,
-        deviceNotice: 'Speech-to-text and inference run in-browser. Model files are fetched from your configured self-hosted storage if not already cached.',
+        deviceNotice: 'Speech-to-text uses your browser/system default microphone, while the selected audio source only affects the stream. Inference runs in-browser, and model files are fetched from your configured self-hosted storage if not already cached.',
         requiresApiKey: false,
         supportsAudioResponse: false
     },
