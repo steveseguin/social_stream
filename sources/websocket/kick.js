@@ -237,6 +237,8 @@ const extension = {
 const WSS_PLATFORM = 'kick';
 const KICK_VIEWER_HEARTBEAT_INTERVAL_MS = 30000;
 const KICK_VIEWER_DISCONNECT_EMIT_DEBOUNCE_MS = 1500;
+const KICK_CHAT_ECHO_TIMEOUT_MS = 10000;
+const KICK_CHAT_ECHO_STALE_MS = 60000;
 let extensionInitialized = false;
 let lastBridgeNotifyStatus = null;
 let lastAuthNotifyStatus = null;
@@ -258,6 +260,8 @@ const kickViewerHeartbeat = {
     lastAttemptAt: 0,
     lastSuccessAt: 0
 };
+let pendingKickChatEchoSeq = 0;
+const pendingKickChatEchoes = [];
 
 const LITE_MESSAGE_PREFIX = 'kick-lite-';
 let liteBridgeCoreReady = false;
@@ -2069,6 +2073,7 @@ function syncKickScoutToken() {
 function signOut() {
     disconnectBridge();
     void disconnectLocalSocket();
+    clearPendingKickChatEchoes();
     resetAlertsFeed();
     resetKickViewerHeartbeatState();
     state.bridge.chatroomCacheWriteDisabled = false;
@@ -3482,6 +3487,7 @@ function clearKickAuthState(reason = '') {
     state.tokens = null;
     state.authUser = null;
     state.bridge.chatroomCacheWriteDisabled = false;
+    clearPendingKickChatEchoes();
     if (state.refreshTimer) {
         clearTimeout(state.refreshTimer);
         state.refreshTimer = null;
@@ -4956,6 +4962,7 @@ async function forwardChatMessage(evt, bridgeMeta) {
             payload.message_type ||
             payload.event_type ||
             'chat';
+        resolvePendingKickChatEcho(resolvedId, content, rawEventType, ids);
         const chatmessageHtml = renderKickMessageHtml(message, content);
         const membership = actorProfile.membership || pickFirstString(
             [
@@ -5734,6 +5741,156 @@ function setChatStatus(message, level = 'info') {
     els.chatStatus.style.color = colorMap[level] || colorMap.info;
 }
 
+function normalizeKickChatEchoContent(value) {
+    if (typeof value !== 'string') {
+        return '';
+    }
+    return value.replace(/\s+/g, ' ').trim();
+}
+
+function normalizeKickChatEchoType(value) {
+    if (typeof value !== 'string') {
+        return '';
+    }
+    const normalized = value.trim().toLowerCase();
+    if (!normalized) {
+        return '';
+    }
+    if (normalized === 'user' || normalized === 'bot' || normalized === 'userbot') {
+        return normalizeKickChatType(normalized);
+    }
+    return '';
+}
+
+function extractKickChatResponseMessageId(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return '';
+    }
+    const candidates = [
+        payload.id,
+        payload.message_id,
+        payload.messageId,
+        payload.data?.id,
+        payload.data?.message_id,
+        payload.data?.messageId,
+        payload.message?.id,
+        payload.message?.message_id,
+        payload.message?.messageId
+    ];
+    for (const candidate of candidates) {
+        if (candidate == null) {
+            continue;
+        }
+        const normalized = String(candidate).trim();
+        if (normalized) {
+            return normalized;
+        }
+    }
+    return '';
+}
+
+function clearPendingKickChatEcho(entry) {
+    if (!entry) {
+        return;
+    }
+    if (entry.timeoutId) {
+        clearTimeout(entry.timeoutId);
+        entry.timeoutId = null;
+    }
+    const index = pendingKickChatEchoes.indexOf(entry);
+    if (index !== -1) {
+        pendingKickChatEchoes.splice(index, 1);
+    }
+}
+
+function clearPendingKickChatEchoes() {
+    pendingKickChatEchoes.slice().forEach(clearPendingKickChatEcho);
+}
+
+function prunePendingKickChatEchoes(now = Date.now()) {
+    pendingKickChatEchoes.slice().forEach(entry => {
+        if (!entry || (now - entry.createdAt) > KICK_CHAT_ECHO_STALE_MS) {
+            clearPendingKickChatEcho(entry);
+        }
+    });
+}
+
+function queuePendingKickChatEcho(content, messageType, response) {
+    prunePendingKickChatEchoes();
+    const entry = {
+        seq: ++pendingKickChatEchoSeq,
+        createdAt: Date.now(),
+        normalizedContent: normalizeKickChatEchoContent(content),
+        messageType: normalizeKickChatEchoType(messageType),
+        responseMessageId: extractKickChatResponseMessageId(response),
+        timeoutId: null
+    };
+    pendingKickChatEchoes.push(entry);
+    entry.timeoutId = setTimeout(() => {
+        if (!pendingKickChatEchoes.includes(entry)) {
+            return;
+        }
+        if (entry.seq === pendingKickChatEchoSeq) {
+            setChatStatus('Message submitted. Live chat confirmation is taking longer than expected.', 'warning');
+        }
+    }, KICK_CHAT_ECHO_TIMEOUT_MS);
+    return entry;
+}
+
+function resolvePendingKickChatEcho(messageId, content, messageType = '', senderIds = null) {
+    prunePendingKickChatEchoes();
+    const normalizedId = messageId == null ? '' : String(messageId).trim();
+    const normalizedContent = normalizeKickChatEchoContent(content);
+    const normalizedType = normalizeKickChatEchoType(messageType);
+    const normalizedSenderUserId = senderIds?.userId ? String(senderIds.userId).trim() : '';
+    const normalizedSenderUsername = senderIds?.username ? normalizeChannel(senderIds.username) : '';
+    let entry = null;
+
+    if (normalizedId) {
+        entry = pendingKickChatEchoes.find(candidate => candidate.responseMessageId === normalizedId) || null;
+    }
+    if (!entry && normalizedContent) {
+        const currentIds = resolveProfileIdentifiers(
+            state.authUser,
+            state.tokens?.profile,
+            state.tokens,
+            { id: state.channelId, username: state.channelSlug }
+        );
+        const currentUserId = currentIds?.userId ? String(currentIds.userId).trim() : '';
+        const currentUsername = currentIds?.username ? normalizeChannel(currentIds.username) : '';
+        const shouldRequireSenderMatch = Boolean(
+            (currentUserId || currentUsername) &&
+            (normalizedSenderUserId || normalizedSenderUsername)
+        );
+        entry = pendingKickChatEchoes.find(candidate => {
+            if (candidate.normalizedContent !== normalizedContent) {
+                return false;
+            }
+            if (normalizedType && candidate.messageType && candidate.messageType !== normalizedType) {
+                return false;
+            }
+            if (shouldRequireSenderMatch) {
+                const userIdMatches = currentUserId && normalizedSenderUserId && currentUserId === normalizedSenderUserId;
+                const usernameMatches = currentUsername && normalizedSenderUsername && currentUsername === normalizedSenderUsername;
+                if (!userIdMatches && !usernameMatches) {
+                    return false;
+                }
+            }
+            return true;
+        }) || null;
+    }
+    if (!entry) {
+        return false;
+    }
+
+    const wasLatest = entry.seq === pendingKickChatEchoSeq;
+    clearPendingKickChatEcho(entry);
+    if (wasLatest) {
+        setChatStatus('Message sent.', 'success');
+    }
+    return true;
+}
+
 async function sendChatFromExtension(message) {
     if (!els.chatMessage || typeof message !== 'string') {
         return false;
@@ -5779,9 +5936,10 @@ async function sendChatMessage() {
         updateChatSendingState(true);
         setChatStatus('Sending message…');
         const response = await sendChatPayload(content, messageType, false);
+        queuePendingKickChatEcho(content, messageType, response);
         els.chatMessage.value = '';
-        setChatStatus('Message sent.', 'success');
-        log('[CHAT] Outbound message submitted.');
+        setChatStatus('Message submitted. Waiting for live chat confirmation...', 'info');
+        log('[CHAT] Outbound message submitted; waiting for live chat confirmation.');
         return response;
     } catch (err) {
         console.error('Chat send failed', err);
