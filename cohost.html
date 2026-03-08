@@ -1547,10 +1547,15 @@ class LocalBrowserPublisher {
         this.recognition = null;
         this.isRecognizing = false;
         this.recognitionTimeout = null;
+        this.recognitionRestartTimer = null;
+        this.recognitionStartPending = false;
         this.interimTranscript = '';
         this.finalTranscript = '';
         this.responseActive = false;
         this.currentResponseText = '';
+        this.promptQueue = Promise.resolve();
+        this.lastSpeechPromptText = '';
+        this.lastSpeechPromptAt = 0;
         this.pendingGreeting = true;
         this.lastActivityTime = Date.now();
         this.reconnectAttempts = 0;
@@ -1593,6 +1598,24 @@ class LocalBrowserPublisher {
             pending.reject(new Error(errorMessage));
             this.pendingRequests.delete(requestId);
         }
+    }
+    enqueuePrompt(text, source = 'manual') {
+        const prompt = (text || '').trim();
+        if (!prompt) {
+            return Promise.resolve();
+        }
+        if (source === 'speech') {
+            const now = Date.now();
+            if (prompt === this.lastSpeechPromptText && (now - this.lastSpeechPromptAt) < 2500) {
+                return Promise.resolve();
+            }
+            this.lastSpeechPromptText = prompt;
+            this.lastSpeechPromptAt = now;
+        }
+        const run = () => this.sendPromptNow(prompt);
+        const next = this.promptQueue.then(run, run);
+        this.promptQueue = next.catch(() => {});
+        return next;
     }
     requestWorker(type, payload = {}, timeoutMs = 180000) {
         if (!this.worker) {
@@ -1689,6 +1712,7 @@ class LocalBrowserPublisher {
         this.recognition.lang = 'en-US';
         this.recognition.onstart = () => {
             this.isRecognizing = true;
+            this.recognitionStartPending = false;
             avatar.setEmotion('listening', false);
         };
         this.recognition.onresult = (event) => {
@@ -1704,7 +1728,7 @@ class LocalBrowserPublisher {
             this.interimTranscript = interimTranscript;
             if (finalTranscript) {
                 this.finalTranscript = finalTranscript;
-                this.sendPrompt(finalTranscript).catch((err) => {
+                this.sendPrompt(finalTranscript, 'speech').catch((err) => {
                     console.error('Local speech prompt failed:', err);
                     showError(`Failed to send speech prompt: ${err.message}`);
                 });
@@ -1722,38 +1746,60 @@ class LocalBrowserPublisher {
             }
         };
         this.recognition.onerror = (event) => {
-            if (event.error !== 'not-allowed' && this.isRecognizing && !micMuted) {
+            this.isRecognizing = false;
+            this.recognitionStartPending = false;
+            if (event.error !== 'not-allowed' && event.error !== 'aborted' && !this.stopped && !micMuted) {
                 this.restartRecognition();
             } else {
-                this.isRecognizing = false;
                 avatar.setEmotion('sad', false);
             }
         };
         this.recognition.onend = () => {
             this.isRecognizing = false;
+            this.recognitionStartPending = false;
             if (!this.stopped && !micMuted) {
                 this.restartRecognition();
             }
         };
-        try {
-            if (!micMuted) {
-                this.recognition.start();
-            }
-        } catch (err) {
-            showError('Failed to start speech recognition: ' + err.message);
+        if (!micMuted) {
+            this.startRecognitionSafely();
         }
     }
-    restartRecognition() {
-        if (this.stopped || !this.recognition || micMuted) return;
-        try {
-            setTimeout(() => {
-                if (!this.isRecognizing && !this.stopped && !micMuted) {
-                    this.recognition.start();
-                }
-            }, 300);
-        } catch (err) {
-            console.error('Failed to restart local speech recognition:', err);
+    startRecognitionSafely(delayMs = 0) {
+        if (this.stopped || !this.recognition || micMuted || this.isRecognizing || this.recognitionStartPending) {
+            return;
         }
+        if (this.recognitionRestartTimer) {
+            clearTimeout(this.recognitionRestartTimer);
+            this.recognitionRestartTimer = null;
+        }
+        this.recognitionStartPending = true;
+        const attemptStart = () => {
+            this.recognitionRestartTimer = null;
+            if (this.stopped || !this.recognition || micMuted || this.isRecognizing) {
+                this.recognitionStartPending = false;
+                return;
+            }
+            try {
+                this.recognition.start();
+            } catch (err) {
+                this.recognitionStartPending = false;
+                if (err?.name === 'InvalidStateError') {
+                    this.isRecognizing = true;
+                    return;
+                }
+                console.error('Failed to start local speech recognition:', err);
+                showError('Failed to start speech recognition: ' + err.message);
+            }
+        };
+        if (delayMs > 0) {
+            this.recognitionRestartTimer = setTimeout(attemptStart, delayMs);
+            return;
+        }
+        attemptStart();
+    }
+    restartRecognition() {
+        this.startRecognitionSafely(300);
     }
     async connect() {
         if (this.connected && this.worker) {
@@ -1809,7 +1855,7 @@ class LocalBrowserPublisher {
         }
         if (this.pendingGreeting) {
             this.pendingGreeting = false;
-            this.sendPrompt('Hi, introduce yourself in a sentence for me. Be friendly to me.').catch((err) => {
+            this.sendPrompt('Hi, introduce yourself in a sentence for me. Be friendly to me.', 'greeting').catch((err) => {
                 console.warn('Local greeting failed:', err);
             });
         }
@@ -1819,8 +1865,10 @@ class LocalBrowserPublisher {
             lastEvent: 'publisher.start'
         });
     }
-    async sendPrompt(text) {
-        const prompt = (text || '').trim();
+    async sendPrompt(text, source = 'manual') {
+        return this.enqueuePrompt(text, source);
+    }
+    async sendPromptNow(prompt) {
         if (!prompt) return;
         if (!this.isConnected()) {
             throw new Error('Local model is not connected.');
@@ -1882,6 +1930,9 @@ class LocalBrowserPublisher {
         this.connected = false;
         this.finalizeResponse();
         this.resetPendingRequests();
+        this.promptQueue = Promise.resolve();
+        this.lastSpeechPromptText = '';
+        this.lastSpeechPromptAt = 0;
         if (this.recognition) {
             try {
                 this.recognition.stop();
@@ -1889,7 +1940,12 @@ class LocalBrowserPublisher {
             this.recognition = null;
         }
         this.isRecognizing = false;
+        this.recognitionStartPending = false;
         clearTimeout(this.recognitionTimeout);
+        if (this.recognitionRestartTimer) {
+            clearTimeout(this.recognitionRestartTimer);
+            this.recognitionRestartTimer = null;
+        }
         if (this.worker) {
             try {
                 this.worker.terminate();
