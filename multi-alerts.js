@@ -133,6 +133,7 @@ function readSettings() {
     pageBg: normalizeColor(urlParams.get('pagebg')),
     chroma: normalizeColor(urlParams.get('chroma')),
     previewOnly: urlParams.has('preview'),
+    showStatus: urlParams.has('showstatus') || urlParams.has('debug') || urlParams.has('preview'),
     debug: urlParams.has('debug'),
     useSocket: urlParams.has('server') || urlParams.has('server2') || urlParams.has('localserver'),
     serverURL: normalizeText(urlParams.get('server') || urlParams.get('server2')) || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja'),
@@ -144,6 +145,7 @@ function readSettings() {
 function applyPagePresentation() {
   document.documentElement.style.setProperty('--overlay-scale', String(settings.scale));
   document.body.dataset.align = settings.align;
+  document.body.classList.toggle('show-status', settings.showStatus);
 
   if (settings.compact) {
     document.body.classList.add('compact-mode');

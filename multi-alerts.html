@@ -67,7 +67,7 @@
     }
 
     .status-chip {
-      display: inline-flex;
+      display: none;
       align-items: center;
       gap: 8px;
       padding: 10px 14px;
@@ -85,8 +85,12 @@
       opacity: 0.78;
     }
 
+    body.show-status .status-chip {
+      display: inline-flex;
+    }
+
     #alert-stage.has-alert + .status-chip {
-      display: none;
+      display: none !important;
     }
 
     .alert-card {

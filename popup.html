@@ -1188,6 +1188,45 @@ input:checked + .slider:before {
     box-sizing: border-box;
 }
 
+.sticky-action-row {
+    display: flex;
+    width: 100%;
+    padding: 0;
+    margin: 1px 0 0 0;
+    border: 0;
+    position: sticky;
+    background: var(--body-background-color);
+    gap: 1px;
+    overflow: clip;
+    isolation: isolate;
+}
+
+.sticky-action-row.top-35 {
+    top: 35px;
+    z-index: 99;
+}
+
+.sticky-action-row.top-67 {
+    top: 67px;
+    z-index: 98;
+}
+
+.sticky-action-row .glowingButton {
+    min-width: 0;
+    margin: 0 !important;
+    overflow: hidden;
+    contain: paint;
+}
+
+.sticky-action-row .glowingButton:hover:before,
+.sticky-action-row .glowingButton:hover:after {
+    inset: 0;
+}
+
+.sticky-action-row .glowingButton span {
+    padding: 4px 6px;
+}
+
 .textInputContainer {
     position: relative;
     width: 200px;
@@ -1722,13 +1761,13 @@ input:checked + .slider:before {
                 <span class="slider round"></span>
             </label>
         </button>
-        <div style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0; position: sticky; top: 35px; z-index: 99; background: var(--body-background-color);">
-            <button class="glowingButton showalways" style="margin: 0 0 0 1px; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0;" data-action="fakemsg">
+        <div class="sticky-action-row top-35">
+            <button class="glowingButton showalways" style="flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0;" data-action="fakemsg">
                 <span data-translate="trigger-fake-message">Trigger a fake test message</span>
             </button>
             <button
                 class="glowingButton showalways"
-                style="margin: 0 1px 0 1px; width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0; max-width: 100px;"
+                style="width: unset; flex-grow: 1; flex-shrink: 1; flex-basis: auto; box-sizing: border-box; padding: 0; max-width: 100px;"
                 data-action="cleardock"
                 title="Clears messages in the dock, excluding pinned messages. Hold CTRL while clicking to clear pinned messages as well."
             >
@@ -9019,17 +9058,17 @@ input:checked + .slider:before {
 						</span>
 					</h3>
 					<div id="meta" data-raw="" class="streaming_chat"><a href="" id="metalink"></a></div>
-					<div style="display: flex; width: 100%; padding: 0; margin: 1px 0 0 0; border: 0; position: sticky; top: 67px; z-index: 98; background: var(--body-background-color); gap: 1px;">
-						<button class="glowingButton showalways" style="margin: 0 0 0 1px; flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="auction" title="Send a fake auction_update meta event">
+					<div class="sticky-action-row top-67">
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="auction" title="Send a fake auction_update meta event">
 							<span>Fake Auction Meta</span>
 						</button>
-						<button class="glowingButton showalways" style="margin: 0; flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="commerce" title="Send a fake commerce_update meta event">
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="commerce" title="Send a fake commerce_update meta event">
 							<span>Fake Commerce Meta</span>
 						</button>
-						<button class="glowingButton showalways" style="margin: 0; flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="viewers" title="Send a fake viewer_updates meta event">
+						<button class="glowingButton showalways" style="flex: 1 1 auto; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="viewers" title="Send a fake viewer_updates meta event">
 							<span>Fake Viewer Meta</span>
 						</button>
-						<button class="glowingButton showalways" style="margin: 0 1px 0 0; flex: 0 0 88px; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="random" title="Send a random fake meta event">
+						<button class="glowingButton showalways" style="flex: 0 0 88px; box-sizing: border-box; padding: 0;" data-action="fakemeta" data-value="random" title="Send a random fake meta event">
 							<span>Random</span>
 						</button>
 					</div>

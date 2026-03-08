@@ -4671,6 +4671,7 @@ function validateRoomId(roomId) {
 }
 
 let pendingMultiAlertPreview = null;
+let pendingMultiAlertPreviewTimer = null;
 
 function getLocalOverlayUrl(path) {
     try {
@@ -4712,11 +4713,32 @@ function syncMultiAlertsPreview() {
 
     const nextUrl = buildMultiAlertsPreviewUrl();
     if (frame.dataset.currentPreviewUrl === nextUrl) {
+        replayMultiAlertsPreview();
         return;
     }
 
     frame.dataset.currentPreviewUrl = nextUrl;
     frame.src = nextUrl;
+}
+
+function replayMultiAlertsPreview() {
+    const frame = document.getElementById('multi-alerts-preview-frame');
+    if (!frame || !frame.contentWindow || pendingMultiAlertPreview === null) {
+        return;
+    }
+
+    if (pendingMultiAlertPreviewTimer) {
+        clearTimeout(pendingMultiAlertPreviewTimer);
+        pendingMultiAlertPreviewTimer = null;
+    }
+
+    frame.contentWindow.postMessage({ multiAlertsPreview: false }, '*');
+    pendingMultiAlertPreviewTimer = setTimeout(() => {
+        if (frame.contentWindow) {
+            frame.contentWindow.postMessage({ multiAlertsPreview: pendingMultiAlertPreview }, '*');
+        }
+        pendingMultiAlertPreviewTimer = null;
+    }, 40);
 }
 
 function sendMultiAlertsPreview(payload) {
@@ -4726,9 +4748,18 @@ function sendMultiAlertsPreview(payload) {
     }
 
     pendingMultiAlertPreview = payload;
-    if (frame.contentWindow) {
-        frame.contentWindow.postMessage({ multiAlertsPreview: payload }, '*');
+    if (payload === false) {
+        if (pendingMultiAlertPreviewTimer) {
+            clearTimeout(pendingMultiAlertPreviewTimer);
+            pendingMultiAlertPreviewTimer = null;
+        }
+        if (frame.contentWindow) {
+            frame.contentWindow.postMessage({ multiAlertsPreview: false }, '*');
+        }
+        return;
     }
+
+    replayMultiAlertsPreview();
 }
 
 function refreshLinks(){
@@ -6320,9 +6351,7 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	const multiAlertsPreviewFrame = document.getElementById('multi-alerts-preview-frame');
 	if (multiAlertsPreviewFrame) {
 		multiAlertsPreviewFrame.addEventListener('load', () => {
-			if (pendingMultiAlertPreview !== null && multiAlertsPreviewFrame.contentWindow) {
-				multiAlertsPreviewFrame.contentWindow.postMessage({ multiAlertsPreview: pendingMultiAlertPreview }, '*');
-			}
+			replayMultiAlertsPreview();
 		});
 	}
 
