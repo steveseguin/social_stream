@@ -6261,6 +6261,8 @@
 				}
 				if (clearBeforeReload) {
 					mainOutputWindow.innerHTML = "";
+					resetHorizontalTicker();
+					odd = false;
 				}
 				sentBefore = false;
 				historyReturnSyncPending = true;
@@ -7205,8 +7207,10 @@
 					if (data.action == "clear" || data.action == "clearAll") {
 						// clears all except pinned messages
 						getById("output").innerHTML = "";
+						resetHorizontalTicker();
 						autoShowQueue = [];
 						selectedQueue = [];
+						odd = false;
 						if (data.ctrl) {
 							getById("pinned").innerHTML = "";
 						}
@@ -8980,6 +8984,29 @@
 				horizontalPruneMessages();
 			}
 
+			function horizontalTickerIsMounted() {
+				if (!horizontalTickerState || !horizontalTickerState.viewport || !horizontalTickerState.track || !mainOutputWindow) {
+					return false;
+				}
+				return horizontalTickerState.viewport.parentNode === mainOutputWindow &&
+					horizontalTickerState.track.parentNode === horizontalTickerState.viewport &&
+					horizontalTickerState.viewport.isConnected &&
+					horizontalTickerState.track.isConnected;
+			}
+
+			function resetHorizontalTicker() {
+				if (!horizontalTickerState) {
+					return;
+				}
+				if (horizontalTickerState.resizeHandler) {
+					window.removeEventListener("resize", horizontalTickerState.resizeHandler);
+				}
+				horizontalTickerState.viewport = null;
+				horizontalTickerState.track = null;
+				horizontalTickerState.currentTranslate = 0;
+				horizontalTickerState.resizeHandler = null;
+			}
+
 			function horizontalGetGap() {
 				if (!horizontalTickerState || !horizontalTickerState.track) {
 					return 0;
@@ -9178,7 +9205,7 @@
 			}
 
 			function horizontalAddNodeToTicker(node) {
-				if (!horizontalTickerState) {
+				if (!horizontalTickerIsMounted()) {
 					initializeHorizontalTicker();
 				}
 				if (!horizontalTickerState || !horizontalTickerState.track) {
@@ -11367,8 +11394,10 @@
 			
 			function clearAll(relay){
 				getById("output").innerHTML = "";
+				resetHorizontalTicker();
 				autoShowQueue = [];
 				selectedQueue = [];
+				odd = false;
 				sendDataP2P(false);
 				updateQueueButton();
 				TTS.clearQueue();

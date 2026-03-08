@@ -388,6 +388,7 @@ button:disabled {
   --puppet-outline: rgba(19, 37, 63, 0.14);
   --puppet-mouth: #24324b;
   --puppet-blush: rgba(255, 135, 162, 0.68);
+  --puppet-face-inset: 22px;
 }
 #puppet-container {
     position: fixed;
@@ -454,9 +455,10 @@ button:disabled {
 .eyes {
   display: flex;
   width: 100%;
-  gap: 42px;
+  padding: 0 var(--puppet-face-inset);
+  box-sizing: border-box;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   transition: all 0.3s ease;
 }
 
@@ -501,7 +503,7 @@ button:disabled {
   left: 0;
   display: flex;
   justify-content: space-between;
-  padding: 0 10px;
+  padding: 0 calc(var(--puppet-face-inset) - 2px);
   box-sizing: border-box;
   opacity: 0;
   transition: opacity 0.25s ease;
@@ -552,7 +554,7 @@ button:disabled {
   left: 0;
   display: flex;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 var(--puppet-face-inset);
   box-sizing: border-box;
   opacity: 0;
   transition: all 0.3s ease;
@@ -1359,6 +1361,9 @@ const LOCAL_QWEN_DEFAULT_DTYPE = {
     model: "q4",
     vision_encoder: "q4"
 };
+const BROWSER_TTS_AVAILABLE = typeof window !== 'undefined' &&
+    'speechSynthesis' in window &&
+    typeof window.SpeechSynthesisUtterance !== 'undefined';
 const MAX_DIAGNOSTIC_HISTORY = 80;
 const diagnosticsState = {
     provider: '-',
@@ -1552,6 +1557,11 @@ class LocalBrowserPublisher {
         this.pendingRequests = new Map();
         this.requestCounter = 0;
         this.activeRequestId = null;
+        this.ttsUtterance = null;
+        this.ttsResolve = null;
+        this.ttsReject = null;
+        this.ttsActive = false;
+        this.resumeRecognitionAfterSpeech = false;
         this.recognition = null;
         this.isRecognizing = false;
         this.recognitionTimeout = null;
@@ -1731,6 +1741,192 @@ class LocalBrowserPublisher {
             return;
         }
     }
+    shouldUseBrowserTts() {
+        return BROWSER_TTS_AVAILABLE && document.getElementById('responseType')?.value === 'audio';
+    }
+    clearActiveTtsRequest() {
+        this.ttsUtterance = null;
+        this.ttsResolve = null;
+        this.ttsReject = null;
+    }
+    cancelBrowserTts(errorMessage = '') {
+        const complete = errorMessage ? this.ttsReject : this.ttsResolve;
+        if (complete) {
+            if (errorMessage) {
+                complete(new Error(errorMessage));
+            } else {
+                complete();
+            }
+        } else {
+            this.clearActiveTtsRequest();
+        }
+        if (BROWSER_TTS_AVAILABLE) {
+            try {
+                window.speechSynthesis.cancel();
+            } catch (_error) {}
+        }
+        this.ttsActive = false;
+    }
+    pauseRecognitionForSpeech() {
+        this.resumeRecognitionAfterSpeech = !micMuted && !!this.recognition;
+        this.ttsActive = true;
+        clearTimeout(this.recognitionTimeout);
+        if (this.recognitionRestartTimer) {
+            clearTimeout(this.recognitionRestartTimer);
+            this.recognitionRestartTimer = null;
+        }
+        this.recognitionStartPending = false;
+        if (this.recognition) {
+            try {
+                this.recognition.stop();
+            } catch (_error) {}
+        }
+        this.isRecognizing = false;
+    }
+    resumeRecognitionAfterTts() {
+        const shouldResume = this.resumeRecognitionAfterSpeech;
+        this.resumeRecognitionAfterSpeech = false;
+        this.ttsActive = false;
+        if (shouldResume && !this.stopped && !micMuted) {
+            this.restartRecognition();
+        }
+    }
+    buildSpeechChunks(text) {
+        const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+        if (!normalized) {
+            return [];
+        }
+        const maxChunkLength = 220;
+        const sentences = normalized.match(/[^.!?]+[.!?]*/g) || [normalized];
+        const chunks = [];
+        let current = '';
+        const pushChunk = (value) => {
+            const chunk = String(value || '').trim();
+            if (chunk) {
+                chunks.push(chunk);
+            }
+        };
+        for (const sentence of sentences) {
+            const part = sentence.trim();
+            if (!part) {
+                continue;
+            }
+            const nextValue = current ? `${current} ${part}` : part;
+            if (nextValue.length <= maxChunkLength) {
+                current = nextValue;
+                continue;
+            }
+            pushChunk(current);
+            if (part.length <= maxChunkLength) {
+                current = part;
+                continue;
+            }
+            const words = part.split(/\s+/);
+            let wordChunk = '';
+            for (const word of words) {
+                const nextWordChunk = wordChunk ? `${wordChunk} ${word}` : word;
+                if (nextWordChunk.length <= maxChunkLength) {
+                    wordChunk = nextWordChunk;
+                    continue;
+                }
+                pushChunk(wordChunk);
+                wordChunk = word;
+            }
+            current = wordChunk;
+        }
+        pushChunk(current);
+        return chunks;
+    }
+    speakTextChunk(text) {
+        return new Promise((resolve, reject) => {
+            if (!BROWSER_TTS_AVAILABLE || !text) {
+                resolve();
+                return;
+            }
+            let settled = false;
+            const finishResolve = () => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                if (this.ttsResolve === finishResolve || this.ttsReject === finishReject) {
+                    this.clearActiveTtsRequest();
+                }
+                resolve();
+            };
+            const finishReject = (error) => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                if (this.ttsResolve === finishResolve || this.ttsReject === finishReject) {
+                    this.clearActiveTtsRequest();
+                }
+                reject(error instanceof Error ? error : new Error(String(error || 'Browser speech synthesis failed.')));
+            };
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.02;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+            utterance.onstart = () => {
+                this.ttsActive = true;
+                avatar.setEmotion('proud', true);
+                updateDiagnostics({
+                    state: 'responding',
+                    connected: 'yes',
+                    lastEvent: 'local.tts.start',
+                    lastError: '-'
+                });
+            };
+            utterance.onend = () => finishResolve();
+            utterance.onerror = (event) => {
+                finishReject(new Error(event?.error || 'Browser speech synthesis failed.'));
+            };
+            this.ttsUtterance = utterance;
+            this.ttsResolve = finishResolve;
+            this.ttsReject = finishReject;
+            try {
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                finishReject(error);
+            }
+        });
+    }
+    async speakTextResponse(text) {
+        if (!this.shouldUseBrowserTts()) {
+            return;
+        }
+        const chunks = this.buildSpeechChunks(text);
+        if (!chunks.length) {
+            return;
+        }
+        this.pauseRecognitionForSpeech();
+        updateDiagnostics({
+            state: 'responding',
+            connected: 'yes',
+            lastEvent: 'local.tts.prepare',
+            lastError: '-'
+        });
+        try {
+            window.speechSynthesis.cancel();
+            for (const chunk of chunks) {
+                if (this.stopped) {
+                    return;
+                }
+                await this.speakTextChunk(chunk);
+            }
+            updateDiagnostics({
+                state: 'connected',
+                connected: 'yes',
+                lastEvent: 'local.tts.done',
+                lastError: '-'
+            });
+        } finally {
+            this.clearActiveTtsRequest();
+            avatar.setEmotion('happy', false);
+            this.resumeRecognitionAfterTts();
+        }
+    }
     async setupSpeechRecognition() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) {
@@ -1771,7 +1967,7 @@ class LocalBrowserPublisher {
                 this.interimTranscript = '';
             }
             if (interimTranscript || finalTranscript) {
-                avatar.setEmotion('listening', true);
+                avatar.setEmotion('listening', false);
                 clearTimeout(this.recognitionTimeout);
                 this.recognitionTimeout = setTimeout(() => {
                     if (!this.interimTranscript) {
@@ -1783,6 +1979,9 @@ class LocalBrowserPublisher {
         this.recognition.onerror = (event) => {
             this.isRecognizing = false;
             this.recognitionStartPending = false;
+            if (this.ttsActive) {
+                return;
+            }
             if (event.error !== 'not-allowed' && event.error !== 'aborted' && !this.stopped && !micMuted) {
                 this.restartRecognition();
             } else {
@@ -1792,6 +1991,9 @@ class LocalBrowserPublisher {
         this.recognition.onend = () => {
             this.isRecognizing = false;
             this.recognitionStartPending = false;
+            if (this.ttsActive) {
+                return;
+            }
             if (!this.stopped && !micMuted) {
                 this.restartRecognition();
             }
@@ -1915,6 +2117,7 @@ class LocalBrowserPublisher {
         this.responseActive = true;
         this.currentResponseText = '';
         this.lastActivityTime = Date.now();
+        avatar.setEmotion('thinking', false);
         const systemPromptValue = (document.getElementById('systemPrompt')?.value || '').trim();
         updateDiagnostics({
             state: 'responding',
@@ -1932,6 +2135,10 @@ class LocalBrowserPublisher {
             }, 300000);
             if (!this.currentResponseText && result.text) {
                 this.appendModelText(result.text);
+            }
+            const finalText = (this.currentResponseText || result.text || '').trim();
+            if (finalText) {
+                await this.speakTextResponse(finalText);
             }
             this.finalizeResponse();
             updateDiagnostics({
@@ -1973,6 +2180,8 @@ class LocalBrowserPublisher {
         this.promptQueue = Promise.resolve();
         this.lastSpeechPromptText = '';
         this.lastSpeechPromptAt = 0;
+        this.resumeRecognitionAfterSpeech = false;
+        this.cancelBrowserTts();
         if (this.recognition) {
             try {
                 this.recognition.stop();
@@ -4922,9 +5131,11 @@ const providerUIConfig = {
         defaultModel: LOCAL_QWEN_DEFAULT_MODEL,
         modelPlaceholder: `Optional model id/path (default ${LOCAL_QWEN_DEFAULT_MODEL} on ${LOCAL_QWEN_DEFAULT_REMOTE_HOST})`,
         disableCaptureSelection: true,
-        deviceNotice: 'Speech-to-text uses your browser/system default microphone, while the selected audio source only affects the stream. Inference runs in-browser, and model files are fetched from your configured self-hosted storage if not already cached.',
+        deviceNotice: BROWSER_TTS_AVAILABLE
+            ? 'Speech-to-text uses your browser/system default microphone. If Audio Response is selected, Local Qwen replies are spoken with your browser built-in text-to-speech. The selected audio source only affects the stream; inference still runs in-browser and model files are fetched from your configured self-hosted storage if not already cached.'
+            : 'Speech-to-text uses your browser/system default microphone, while the selected audio source only affects the stream. Inference runs in-browser, and model files are fetched from your configured self-hosted storage if not already cached.',
         requiresApiKey: false,
-        supportsAudioResponse: false
+        supportsAudioResponse: BROWSER_TTS_AVAILABLE
     },
     customopenai: {
         label: 'OpenAI-Compatible (Custom)',
