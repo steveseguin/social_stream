@@ -2,7 +2,8 @@
     env,
     AutoProcessor,
     Qwen3_5ForConditionalGeneration,
-    TextStreamer
+    TextStreamer,
+    InterruptableStoppingCriteria
 } from './thirdparty/transformersjs/transformers.min.js';
 
 const DEFAULT_MODEL_ID = 'qwen3.5-0.8b-onnx';
@@ -17,9 +18,13 @@ const DEFAULT_DTYPE = {
 const DEFAULT_GENERATION = {
     maxNewTokens: 220,
     temperature: 0.65,
-    topP: 0.92
+    topP: 0.92,
+    maxTime: 25
 };
 const MAX_TURNS = 12;
+const DEGENERATE_CHAR_RUN_LENGTH = 12;
+const DEGENERATE_TAIL_PATTERN_REPEATS = 6;
+const DEGENERATE_TAIL_PATTERN_MAX_UNIT = 4;
 
 let model = null;
 let processor = null;
@@ -130,6 +135,59 @@ function buildMessages(systemPrompt, prompt) {
         content: [{ type: 'text', text: prompt }]
     });
     return messages;
+}
+
+function detectDegenerateTail(text) {
+    const candidate = String(text || '');
+    if (!candidate) {
+        return null;
+    }
+    const repeatedChar = new RegExp(`([^\\s])\\1{${DEGENERATE_CHAR_RUN_LENGTH - 1},}$`).exec(candidate);
+    if (repeatedChar) {
+        return {
+            type: 'char_run',
+            startIndex: repeatedChar.index,
+            reason: `repeated "${repeatedChar[1]}" tail`
+        };
+    }
+    for (let unitLength = 2; unitLength <= DEGENERATE_TAIL_PATTERN_MAX_UNIT; unitLength += 1) {
+        const minTailLength = unitLength * DEGENERATE_TAIL_PATTERN_REPEATS;
+        if (candidate.length < minTailLength) {
+            continue;
+        }
+        const unit = candidate.slice(-unitLength);
+        if (!unit.trim() || !/[^a-z]/i.test(unit)) {
+            continue;
+        }
+        let matches = 1;
+        let cursor = candidate.length - (unitLength * 2);
+        while (cursor >= 0 && candidate.slice(cursor, cursor + unitLength) === unit) {
+            matches += 1;
+            cursor -= unitLength;
+        }
+        if (matches >= DEGENERATE_TAIL_PATTERN_REPEATS) {
+            return {
+                type: 'tail_pattern',
+                startIndex: candidate.length - (matches * unitLength),
+                reason: `repeated ${JSON.stringify(unit)} tail`
+            };
+        }
+    }
+    return null;
+}
+
+function sanitizeGuardedText(text, guard = null) {
+    let value = String(text || '');
+    if (guard && Number.isInteger(guard.startIndex) && guard.startIndex >= 0 && guard.startIndex < value.length) {
+        value = value.slice(0, guard.startIndex);
+        // Drop the incomplete trailing fragment if the guard cut a word in half.
+        value = value.replace(/[^\s.,!?;:)\]"'}\]]+$/, '');
+    }
+    return value
+        .replace(/[ \t]+\n/g, '\n')
+        .replace(/[ \t]{2,}/g, ' ')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
 }
 
 async function resolveRequestedDevice(requestedDevice) {
@@ -289,6 +347,8 @@ async function generateReply(message) {
     }
 
     let streamedText = '';
+    let guardedStop = null;
+    const interruptableStop = new InterruptableStoppingCriteria();
 
     const streamer = new TextStreamer(processor.tokenizer, {
         skip_prompt: true,
@@ -297,7 +357,15 @@ async function generateReply(message) {
             if (!chunk || message.requestId !== activeRequestId) {
                 return;
             }
-            streamedText += chunk;
+            const nextText = streamedText + chunk;
+            const guard = detectDegenerateTail(nextText);
+            if (guard) {
+                guardedStop = guard;
+                streamedText = sanitizeGuardedText(nextText, guard);
+                interruptableStop.interrupt();
+                return;
+            }
+            streamedText = nextText;
             self.postMessage({
                 type: 'token',
                 requestId: message.requestId,
@@ -311,6 +379,9 @@ async function generateReply(message) {
         max_new_tokens: Number.isFinite(message.maxNewTokens)
             ? message.maxNewTokens
             : DEFAULT_GENERATION.maxNewTokens,
+        max_time: Number.isFinite(message.maxTime)
+            ? message.maxTime
+            : DEFAULT_GENERATION.maxTime,
         do_sample: true,
         temperature: Number.isFinite(message.temperature)
             ? message.temperature
@@ -318,22 +389,32 @@ async function generateReply(message) {
         top_p: Number.isFinite(message.topP)
             ? message.topP
             : DEFAULT_GENERATION.topP,
+        repetition_penalty: 1.12,
+        no_repeat_ngram_size: 4,
+        stopping_criteria: [interruptableStop],
         streamer
     });
 
-    let responseText = streamedText.trim();
+    let responseText = sanitizeGuardedText(streamedText, guardedStop);
     if (!responseText) {
         const decoded = processor.batch_decode(output, {
             skip_special_tokens: true
         })[0] || '';
-        responseText = decoded.slice(promptText.length).trim() || decoded.trim();
+        responseText = sanitizeGuardedText(
+            decoded.slice(promptText.length).trim() || decoded.trim(),
+            guardedStop
+        );
     }
 
     conversation.push({ role: 'user', content: prompt });
     conversation.push({ role: 'assistant', content: responseText });
     trimConversation();
 
-    return responseText;
+    return {
+        text: responseText,
+        finishReason: guardedStop ? 'repetition_guard' : 'stop',
+        guardReason: guardedStop?.reason || ''
+    };
 }
 
 async function disposeModel() {
@@ -374,13 +455,13 @@ self.addEventListener('message', async (event) => {
                 return;
             }
             case 'generate': {
-                const text = await generateReply(message);
+                const result = await generateReply(message);
                 activeRequestId = null;
                 self.postMessage({
                     type: 'response',
                     requestId,
                     ok: true,
-                    text
+                    ...result
                 });
                 return;
             }

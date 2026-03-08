@@ -213,6 +213,14 @@ select:disabled::after {
     color: #d9d9d9;
     overflow-wrap: anywhere;
 }
+.voice-preview-line {
+    margin-top: 6px;
+}
+.voice-preview {
+    display: inline-block;
+    min-height: 1.2em;
+    white-space: pre-wrap;
+}
 .api-key-info {
     font-size: 13px;
     color: #a0a0a0;
@@ -1094,6 +1102,17 @@ button:disabled {
 					<span id="diagCopyStatus" class="diagnostics-copy-status" aria-live="polite"></span>
 				</div>
 			</div>
+			<div id="voiceDiagnostics" class="diagnostics-panel">
+				<div class="diagnostics-header">Voice Activity</div>
+				<div class="diagnostics-grid">
+					<div class="diagnostics-line"><span class="diag-label">Input Mode:</span><span id="voiceInputMode" class="diag-value">-</span></div>
+					<div class="diagnostics-line"><span class="diag-label">Input State:</span><span id="voiceInputState" class="diag-value">idle</span></div>
+					<div class="diagnostics-line"><span class="diag-label">Output State:</span><span id="voiceOutputState" class="diag-value">idle</span></div>
+					<div class="diagnostics-line"><span class="diag-label">Updated:</span><span id="voiceUpdated" class="diag-value">-</span></div>
+				</div>
+				<div class="diagnostics-line voice-preview-line"><span class="diag-label">Heard:</span><span id="voiceInputPreview" class="diag-value voice-preview">-</span></div>
+				<div class="diagnostics-line voice-preview-line"><span class="diag-label">Speaking:</span><span id="voiceOutputPreview" class="diag-value voice-preview">-</span></div>
+			</div>
 		</div>
         <div id="error"></div>
         <video class="preview" id="preview" autoplay muted></video>
@@ -1377,6 +1396,14 @@ const diagnosticsState = {
 const diagnosticsHistory = [];
 let lastDiagnosticsSignature = '';
 let diagnosticsCopyStatusTimer = null;
+const voiceTelemetryState = {
+    inputMode: '-',
+    inputState: 'idle',
+    inputPreview: '-',
+    outputState: 'idle',
+    outputPreview: '-',
+    updated: Date.now()
+};
 function formatDiagnosticsTime(timestamp) {
     if (!timestamp) return '-';
     try {
@@ -1384,6 +1411,40 @@ function formatDiagnosticsTime(timestamp) {
     } catch (e) {
         return '-';
     }
+}
+function normalizeVoicePreview(text) {
+    const normalized = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!normalized) {
+        return '-';
+    }
+    if (normalized.length <= 220) {
+        return normalized;
+    }
+    return normalized.slice(-220);
+}
+function renderVoiceTelemetry() {
+    const inputModeEl = document.getElementById('voiceInputMode');
+    if (!inputModeEl) return;
+    inputModeEl.textContent = voiceTelemetryState.inputMode || '-';
+    document.getElementById('voiceInputState').textContent = voiceTelemetryState.inputState || 'idle';
+    document.getElementById('voiceOutputState').textContent = voiceTelemetryState.outputState || 'idle';
+    document.getElementById('voiceInputPreview').textContent = normalizeVoicePreview(voiceTelemetryState.inputPreview);
+    document.getElementById('voiceOutputPreview').textContent = normalizeVoicePreview(voiceTelemetryState.outputPreview);
+    document.getElementById('voiceUpdated').textContent = formatDiagnosticsTime(voiceTelemetryState.updated);
+}
+function updateVoiceTelemetry(patch = {}) {
+    Object.assign(voiceTelemetryState, patch);
+    voiceTelemetryState.updated = Date.now();
+    renderVoiceTelemetry();
+}
+function resetVoiceTelemetry(overrides = {}) {
+    updateVoiceTelemetry({
+        inputState: 'idle',
+        inputPreview: '-',
+        outputState: 'idle',
+        outputPreview: '-',
+        ...overrides
+    });
 }
 function renderDiagnostics() {
     const providerEl = document.getElementById('diagProvider');
@@ -1452,6 +1513,10 @@ function getDiagnosticsSnapshot() {
             ...diagnosticsState,
             updatedIso: new Date(diagnosticsState.updated).toISOString()
         },
+        voice: {
+            ...voiceTelemetryState,
+            updatedIso: new Date(voiceTelemetryState.updated).toISOString()
+        },
         history: diagnosticsHistory.slice()
     };
 }
@@ -1507,6 +1572,7 @@ async function copyDiagnosticsToClipboard() {
     }
 }
 renderDiagnostics();
+renderVoiceTelemetry();
 pushDiagnosticsHistory();
 lastDiagnosticsSignature = [
     diagnosticsState.provider,
@@ -1597,10 +1663,24 @@ class LocalBrowserPublisher {
     appendModelText(text) {
         if (!text) return;
         this.currentResponseText += text;
+        updateVoiceTelemetry({
+            outputState: this.shouldUseBrowserTts() ? 'Generating for browser TTS' : 'Text response streaming',
+            outputPreview: this.currentResponseText
+        });
         const modelResponseEvent = new CustomEvent('modelResponse', {
             detail: { text }
         });
         window.dispatchEvent(modelResponseEvent);
+    }
+    replaceModelText(text) {
+        this.currentResponseText = String(text || '');
+        updateVoiceTelemetry({
+            outputState: this.shouldUseBrowserTts() ? 'Generating for browser TTS' : 'Text response streaming',
+            outputPreview: this.currentResponseText
+        });
+        window.dispatchEvent(new CustomEvent('modelResponseReplace', {
+            detail: { text: this.currentResponseText }
+        }));
     }
     finalizeResponse() {
         this.responseActive = false;
@@ -1907,12 +1987,20 @@ class LocalBrowserPublisher {
             lastEvent: 'local.tts.prepare',
             lastError: '-'
         });
+        updateVoiceTelemetry({
+            outputState: 'Browser TTS queued',
+            outputPreview: text
+        });
         try {
             window.speechSynthesis.cancel();
             for (const chunk of chunks) {
                 if (this.stopped) {
                     return;
                 }
+                updateVoiceTelemetry({
+                    outputState: 'Browser TTS speaking',
+                    outputPreview: chunk
+                });
                 await this.speakTextChunk(chunk);
             }
             updateDiagnostics({
@@ -1920,6 +2008,10 @@ class LocalBrowserPublisher {
                 connected: 'yes',
                 lastEvent: 'local.tts.done',
                 lastError: '-'
+            });
+            updateVoiceTelemetry({
+                outputState: 'Browser TTS done',
+                outputPreview: text
             });
         } finally {
             this.clearActiveTtsRequest();
@@ -1942,6 +2034,10 @@ class LocalBrowserPublisher {
             this.isRecognizing = true;
             this.recognitionStartPending = false;
             avatar.setEmotion('listening', false);
+            updateVoiceTelemetry({
+                inputState: 'Listening',
+                inputPreview: '-'
+            });
         };
         this.recognition.onresult = (event) => {
             let interimTranscript = '';
@@ -1954,6 +2050,13 @@ class LocalBrowserPublisher {
                 }
             }
             this.interimTranscript = interimTranscript;
+            const currentTranscript = (finalTranscript || interimTranscript || '').trim();
+            if (currentTranscript) {
+                updateVoiceTelemetry({
+                    inputState: finalTranscript ? 'Sending transcript' : 'Transcribing',
+                    inputPreview: currentTranscript
+                });
+            }
             if (finalTranscript) {
                 this.finalTranscript = finalTranscript;
                 this.sendPrompt(finalTranscript, 'speech').catch((err) => {
@@ -1982,6 +2085,9 @@ class LocalBrowserPublisher {
             if (this.ttsActive) {
                 return;
             }
+            updateVoiceTelemetry({
+                inputState: event.error === 'not-allowed' ? 'Permission blocked' : 'Speech recognition error'
+            });
             if (event.error !== 'not-allowed' && event.error !== 'aborted' && !this.stopped && !micMuted) {
                 this.restartRecognition();
             } else {
@@ -1994,6 +2100,9 @@ class LocalBrowserPublisher {
             if (this.ttsActive) {
                 return;
             }
+            updateVoiceTelemetry({
+                inputState: this.stopped || micMuted ? 'Idle' : 'Restarting'
+            });
             if (!this.stopped && !micMuted) {
                 this.restartRecognition();
             }
@@ -2083,6 +2192,10 @@ class LocalBrowserPublisher {
             lastEvent: 'local.connect.ready',
             lastError: '-'
         });
+        resetVoiceTelemetry({
+            inputMode: 'Browser STT -> text prompt',
+            outputState: this.shouldUseBrowserTts() ? 'Browser TTS ready' : 'Text response only'
+        });
     }
     async start() {
         this.stopped = false;
@@ -2135,8 +2248,13 @@ class LocalBrowserPublisher {
             }, 300000);
             if (!this.currentResponseText && result.text) {
                 this.appendModelText(result.text);
+            } else if (result.text && result.text !== this.currentResponseText) {
+                this.replaceModelText(result.text);
             }
             const finalText = (this.currentResponseText || result.text || '').trim();
+            const completionEvent = result.finishReason === 'repetition_guard'
+                ? 'local.generate.guarded'
+                : 'local.generate.done';
             if (finalText) {
                 await this.speakTextResponse(finalText);
             }
@@ -2144,7 +2262,7 @@ class LocalBrowserPublisher {
             updateDiagnostics({
                 state: 'connected',
                 connected: 'yes',
-                lastEvent: 'local.generate.done',
+                lastEvent: completionEvent,
                 lastError: '-'
             });
         } catch (error) {
@@ -2182,6 +2300,10 @@ class LocalBrowserPublisher {
         this.lastSpeechPromptAt = 0;
         this.resumeRecognitionAfterSpeech = false;
         this.cancelBrowserTts();
+        resetVoiceTelemetry({
+            inputMode: 'Browser STT -> text prompt',
+            outputState: this.shouldUseBrowserTts() ? 'Browser TTS ready' : 'Text response only'
+        });
         if (this.recognition) {
             try {
                 this.recognition.stop();
@@ -2354,6 +2476,10 @@ class OpenAICompatiblePublisher {
     appendModelText(text) {
         if (!text) return;
         this.currentResponseText += text;
+        updateVoiceTelemetry({
+            outputState: 'Text response ready',
+            outputPreview: this.currentResponseText
+        });
         window.dispatchEvent(new CustomEvent('modelResponse', {
             detail: { text }
         }));
@@ -2379,6 +2505,10 @@ class OpenAICompatiblePublisher {
         this.recognition.onstart = () => {
             this.isRecognizing = true;
             avatar.setEmotion('listening', false);
+            updateVoiceTelemetry({
+                inputState: 'Listening',
+                inputPreview: '-'
+            });
         };
         this.recognition.onresult = (event) => {
             let interimTranscript = '';
@@ -2391,6 +2521,13 @@ class OpenAICompatiblePublisher {
                 }
             }
             this.interimTranscript = interimTranscript;
+            const currentTranscript = (finalTranscript || interimTranscript || '').trim();
+            if (currentTranscript) {
+                updateVoiceTelemetry({
+                    inputState: finalTranscript ? 'Sending transcript' : 'Transcribing',
+                    inputPreview: currentTranscript
+                });
+            }
             if (finalTranscript) {
                 this.finalTranscript = finalTranscript;
                 this.sendPrompt(finalTranscript).catch((err) => {
@@ -2444,6 +2581,10 @@ class OpenAICompatiblePublisher {
             connected: 'yes',
             lastEvent: 'custom.connect.ready',
             lastError: '-'
+        });
+        resetVoiceTelemetry({
+            inputMode: 'Browser STT -> text prompt',
+            outputState: 'Text response only'
         });
     }
     async start() {
@@ -2547,6 +2688,10 @@ class OpenAICompatiblePublisher {
         this.stopped = true;
         this.connected = false;
         this.finalizeResponse();
+        resetVoiceTelemetry({
+            inputMode: 'Browser STT -> text prompt',
+            outputState: 'Text response only'
+        });
         if (this.recognition) {
             try {
                 this.recognition.stop();
@@ -2600,6 +2745,12 @@ class RealtimePublisher {
     appendModelText(text) {
         if (!text) return;
         this.currentResponseText += text;
+        updateVoiceTelemetry({
+            outputState: document.getElementById('responseType')?.value === 'audio'
+                ? 'Provider audio/text stream'
+                : 'Text response streaming',
+            outputPreview: this.currentResponseText
+        });
         const modelResponseEvent = new CustomEvent('modelResponse', {
             detail: { text }
         });
@@ -2813,6 +2964,10 @@ class RealtimePublisher {
                         connected: 'yes',
                         lastEvent: 'ws.open'
                     });
+                    resetVoiceTelemetry({
+                        inputMode: 'Browser STT -> text prompt',
+                        outputState: responseTypeValue === 'audio' ? 'Provider audio ready' : 'Text response only'
+                    });
                     resolve();
                 };
                 this.ws.onerror = (error) => {
@@ -2881,6 +3036,10 @@ class RealtimePublisher {
             console.log('Speech recognition started');
             this.isRecognizing = true;
             avatar.setEmotion('listening', false);
+            updateVoiceTelemetry({
+                inputState: 'Listening',
+                inputPreview: '-'
+            });
         };
         this.recognition.onresult = (event) => {
             let interimTranscript = '';
@@ -2896,9 +3055,18 @@ class RealtimePublisher {
             if (finalTranscript) {
                 this.finalTranscript = finalTranscript;
                 console.log('Final transcript:', finalTranscript);
+                updateVoiceTelemetry({
+                    inputState: 'Sending transcript',
+                    inputPreview: finalTranscript
+                });
                 this.sendPrompt(finalTranscript);
                 this.finalTranscript = '';
                 this.interimTranscript = '';
+            } else if (interimTranscript) {
+                updateVoiceTelemetry({
+                    inputState: 'Transcribing',
+                    inputPreview: interimTranscript
+                });
             }
             if (interimTranscript || finalTranscript) {
                 avatar.setEmotion('listening', true);
@@ -3078,6 +3246,10 @@ class RealtimePublisher {
         this.finalTranscript = '';
         this.currentResponseText = '';
         clearTimeout(this.recognitionTimeout);
+        resetVoiceTelemetry({
+            inputMode: 'Browser STT -> text prompt',
+            outputState: document.getElementById('responseType')?.value === 'audio' ? 'Provider audio ready' : 'Text response only'
+        });
         updateDiagnostics({
             state: 'stopped',
             connected: 'no',
@@ -4115,7 +4287,13 @@ class MessageFormatter {
             return;
         }
         if (this.currentMessageElement && (now - this.lastMessageTime > this.pauseThreshold)) {
-            this.messageBuffer += '\n';
+            const previousChar = this.messageBuffer.slice(-1);
+            const nextChar = String(text || '').charAt(0);
+            const hasWhitespaceBoundary = /\s/.test(previousChar || '') || /\s/.test(nextChar || '');
+            const nextIsPunctuation = /^[,.;:!?)}\]]/.test(nextChar || '');
+            if (!hasWhitespaceBoundary && !nextIsPunctuation) {
+                this.messageBuffer += ' ';
+            }
         }
         this.messageBuffer += text;
         this.lastMessageTime = now;
@@ -4137,6 +4315,23 @@ class MessageFormatter {
         ) {
             this.finalizeMessage();
         }
+        this.scrollToBottom();
+    }
+    replaceCurrentMessage(text) {
+        const nextText = String(text || '');
+        if (!this.currentMessageElement) {
+            this.currentMessageElement = document.createElement('div');
+            this.currentMessageElement.className = 'message assistant-message';
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'markdown-content';
+            this.currentMessageElement.appendChild(contentDiv);
+            responsesDiv.appendChild(this.currentMessageElement);
+        }
+        this.messageBuffer = nextText;
+        this.messageComplete = false;
+        this.lastMessageTime = Date.now();
+        const contentDiv = this.currentMessageElement.querySelector('.markdown-content');
+        contentDiv.innerHTML = this.formatMarkdown(this.messageBuffer);
         this.scrollToBottom();
     }
     finalizeMessage() {
@@ -4178,6 +4373,9 @@ const messageFormatter = new MessageFormatter();
 window.addEventListener('modelResponse', (event) => {
     console.log(event.detail.text);
     messageFormatter.appendMessage(event.detail.text);
+});
+window.addEventListener('modelResponseReplace', (event) => {
+    messageFormatter.replaceCurrentMessage(event.detail?.text || '');
 });
 let stream = null;
 const videoSelect = document.getElementById('videoSource');
@@ -5017,6 +5215,10 @@ sendButton.addEventListener('click', async () => {
     if (messageInput.value.trim()) {
         try {
             messageFormatter.appendMessage(messageInput.value, true);
+            updateVoiceTelemetry({
+                inputState: 'Manual text prompt',
+                inputPreview: messageInput.value
+            });
             await publisher.sendPrompt(messageInput.value);
             messageInput.value = '';
         } catch (err) {
@@ -5094,6 +5296,7 @@ document.getElementById('voiceSelect').addEventListener('change', async () => {
 document.getElementById('responseType').addEventListener('change', async function() {
     const voiceSelect = document.getElementById('voiceSelect');
     voiceSelect.style.display = providerSelect.value === 'gemini' && this.value === 'audio' ? 'block' : 'none';
+    syncVoiceModeSummary(providerSelect.value);
     await restartActivePublisher();
 });
 messageInput.addEventListener('keypress', (e) => {
@@ -5197,6 +5400,42 @@ function removeRealtimeDeviceNotice() {
     }
 }
 
+function getVoiceModeSummary(providerName) {
+    const responseTypeValue = document.getElementById('responseType')?.value || 'text';
+    switch (providerName) {
+        case 'gemini':
+            return {
+                inputMode: 'Direct audio stream',
+                outputState: responseTypeValue === 'audio' ? 'Provider audio ready' : 'Text response only'
+            };
+        case 'localqwen':
+            return {
+                inputMode: 'Browser STT -> text prompt',
+                outputState: responseTypeValue === 'audio' && BROWSER_TTS_AVAILABLE ? 'Browser TTS ready' : 'Text response only'
+            };
+        case 'customopenai':
+            return {
+                inputMode: 'Browser STT -> text prompt',
+                outputState: 'Text response only'
+            };
+        case 'chatgpt':
+        case 'xai':
+            return {
+                inputMode: 'Browser STT -> text prompt',
+                outputState: responseTypeValue === 'audio' ? 'Provider audio ready' : 'Text response only'
+            };
+        default:
+            return {
+                inputMode: '-',
+                outputState: 'idle'
+            };
+    }
+}
+
+function syncVoiceModeSummary(providerName = providerSelect?.value || 'gemini') {
+    resetVoiceTelemetry(getVoiceModeSummary(providerName));
+}
+
 function applyProviderUI(providerName, restoreKey = true) {
     const config = providerUIConfig[providerName] || providerUIConfig.gemini;
     const apiKeyInfo = document.querySelector('#apikeyinfo');
@@ -5271,6 +5510,7 @@ function applyProviderUI(providerName, restoreKey = true) {
         connected: publisher && publisher.isConnected && publisher.isConnected() ? 'yes' : 'no',
         lastEvent: 'provider.selected'
     });
+    syncVoiceModeSummary(providerName);
     validateApiKey();
 }
 if (localStorage) {

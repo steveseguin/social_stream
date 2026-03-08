@@ -11,8 +11,8 @@
 <body>
     <div class="container">
         <div id="quota-warning" class="quota-warning hidden">
-            <span id="quota-warning-text">We've hit the default YouTube API quota. Add your own YouTube API key to use your own quota project.</span>
-            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My API Key</button>
+            <span id="quota-warning-text">We've hit the default YouTube API quota. In SSAPP, you can add your own YouTube project to use your own quota.</span>
+            <button id="quota-open-credentials" class="auth-button" style="background:#fbbc05;color:#202124;">Set Up My YouTube Project</button>
         </div>
         <div class="main-content">
             <div class="auth">
@@ -23,7 +23,7 @@
                     
             <div class="auth-section">
                 <a id="auth-link" class="auth-button">Sign in with YouTube</a>
-                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom API key quota project</div>
+                <div id="custom-cred-indicator" class="custom-cred-indicator hidden">Using custom desktop YouTube project</div>
                 <div id="auth-method-selector" class="auth-method-selector hidden">
                     <label class="auth-method-label">Sign-in method:</label>
                     <div class="auth-method-options">
@@ -46,24 +46,31 @@
                     </div>
 
                     <details id="credentials-details" class="credentials-details">
-                        <summary>Use your own YouTube API quota (recommended)</summary>
+                        <summary>Use your own YouTube project in SSAPP (advanced)</summary>
                         <div class="credentials-form">
+                            <label for="custom-client-id">OAuth Client ID</label>
+                            <input id="custom-client-id" type="text" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                            <label for="custom-client-secret">OAuth Client Secret</label>
+                            <input id="custom-client-secret" type="password" placeholder="GOCSPX-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                             <label for="custom-api-key">API Key</label>
                             <input id="custom-api-key" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                             <div class="credentials-actions">
                                 <button id="save-credentials" class="connect-button" style="background:#1a73e8;">Save</button>
                                 <button id="clear-credentials" class="connect-button" style="background:#5f6368;">Reset to default</button>
                             </div>
+                            <div id="credentials-browser-note" class="credentials-note hidden">Custom YouTube project settings are only available in SSAPP.</div>
                             <div class="credentials-help">
                                 <p><strong>How to set up in Google Cloud:</strong></p>
                                 <ul>
                                     <li>Create or select a project at console.cloud.google.com</li>
                                     <li>Enable the YouTube Data API v3 in APIs and Services</li>
-                                    <li>Create Credentials -> API key, and paste that key above</li>
-                                    <li>In SSAPP/Electron, do not lock that key to HTTP referrers</li>
-                                    <li>For hosted Social Stream auth, API key is what moves API usage to your quota project</li>
+                                    <li>Create Credentials -> OAuth client ID and choose Web application</li>
+                                    <li>Create Credentials -> API key and paste all 3 values above</li>
+                                    <li>Add both local redirect URIs below to that OAuth client</li>
+                                    <li>In SSAPP/Electron, do not lock that API key to HTTP referrers</li>
                                 </ul>
-                                <p>After saving an API key, sign out and sign in again so new requests use your quota project.</p>
+                                <code id="redirect-uri-hint"></code>
+                                <p>All 3 fields are required together. Save, then sign out and sign in again.</p>
                             </div>
                         </div>
                     </details>
@@ -134,17 +141,22 @@
         <div class="sidebar hidden socket">
             <div class="permissions-container" id="permissions-info"></div>
             <div class="credentials-container" id="credentials-container-signedin">
-                <div class="permissions-header">Use Your Own Quota Project</div>
+                <div class="permissions-header">Use Your Own YouTube Project</div>
                 <div class="credentials-form inline">
+                    <label for="custom-client-id-2">OAuth Client ID</label>
+                    <input id="custom-client-id-2" type="text" placeholder="xxxx.apps.googleusercontent.com" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
+                    <label for="custom-client-secret-2">OAuth Client Secret</label>
+                    <input id="custom-client-secret-2" type="password" placeholder="GOCSPX-..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                     <label for="custom-api-key-2">API Key</label>
                     <input id="custom-api-key-2" type="password" placeholder="AIza..." autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" />
                     <div class="credentials-actions">
                         <button id="save-credentials-2" class="connect-button" style="background:#1a73e8;">Save</button>
                         <button id="clear-credentials-2" class="connect-button" style="background:#5f6368;">Reset</button>
                     </div>
-                    <div class="credentials-note">API key changes take effect next sign-in. Use Reset to return to defaults.</div>
+                    <div class="credentials-note">All 3 fields are required together. Changes take effect on the next sign-in.</div>
                     <div class="credentials-help" style="margin-top:8px;">
-                        <p><strong>Setup steps:</strong> Enable the YouTube Data API v3, create an API key, and do not lock it to HTTP referrers for SSAPP/Electron.</p>
+                        <p><strong>Setup steps:</strong> Create a Web application OAuth client, add the local redirect URIs below, create an API key, and use all 3 values together in SSAPP.</p>
+                        <code id="redirect-uri-hint-2"></code>
                     </div>
                 </div>
             </div>
@@ -190,19 +202,104 @@ try {
     ];
     var AUTH_BASE_URL = 'https://ytauth.socialstream.ninja';
     var DEFAULT_YT_CLIENT_ID = '689627108309-isbjas8fmbc7sucmbm7gkqjapk7btbsi.apps.googleusercontent.com';
+    var YT_AUTH_SOURCE_KEY = 'youtubeOAuthSource';
+    var YT_AUTH_SOURCE_HOSTED = 'default_hosted';
+    var YT_AUTH_SOURCE_CUSTOM = 'custom_ssapp';
     var clientId = DEFAULT_YT_CLIENT_ID;
+    var clientSecretOverride = '';
     var apiKeyOverride = '';
+    function getRuntimeParams() {
+        return {
+            query: new URLSearchParams(window.location.search),
+            hash: new URLSearchParams(window.location.hash.slice(1))
+        };
+    }
+    function getYouTubeOAuthBridge() {
+        try {
+            if (window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function') return window.ninjafy;
+        } catch (_) {}
+        try {
+            if (window.__ssapp && typeof window.__ssapp.startYouTubeOAuth === 'function') return window.__ssapp;
+        } catch (_) {}
+        return null;
+    }
+    function isDesktopYouTubeContext() {
+        try {
+            const params = getRuntimeParams();
+            if (params.query.has('ssapp') || params.hash.has('ssapp')) return true;
+        } catch (_) {}
+        return isElectronEnvironment() || !!getYouTubeOAuthBridge();
+    }
+    function supportsCustomDesktopYouTubeAuth() {
+        const bridge = getYouTubeOAuthBridge();
+        return !!(
+            bridge &&
+            typeof bridge.startYouTubeOAuth === 'function' &&
+            typeof bridge.exchangeYouTubeOAuthCode === 'function' &&
+            typeof bridge.refreshYouTubeOAuthToken === 'function'
+        );
+    }
+    function getCustomDesktopCredentials() {
+        try {
+            const params = getRuntimeParams();
+            const storedClientId = localStorage.getItem('ytClientIdOverride') || '';
+            const storedClientSecret = localStorage.getItem('ytClientSecretOverride') || '';
+            const storedApiKey = localStorage.getItem('ytApiKeyOverride') || '';
+            const customClientId = (params.query.get('client_id') || params.hash.get('client_id') || storedClientId || '').trim();
+            const customClientSecret = (params.query.get('client_secret') || params.hash.get('client_secret') || storedClientSecret || '').trim();
+            const customApiKey = (params.query.get('api_key') || params.hash.get('api_key') || storedApiKey || '').trim();
+            const hasAny = !!(customClientId || customClientSecret || customApiKey);
+            const hasAll = !!(customClientId && customClientSecret && customApiKey);
+            return {
+                clientId: customClientId,
+                clientSecret: customClientSecret,
+                apiKey: customApiKey,
+                hasAny: hasAny,
+                hasAll: hasAll,
+                hasPartial: hasAny && !hasAll
+            };
+        } catch (_) {
+            return {
+                clientId: '',
+                clientSecret: '',
+                apiKey: '',
+                hasAny: false,
+                hasAll: false,
+                hasPartial: false
+            };
+        }
+    }
+    function usingCustomDesktopAuth() {
+        const credentials = getCustomDesktopCredentials();
+        return isDesktopYouTubeContext() && credentials.hasAll;
+    }
+    function getStoredAuthSource() {
+        try {
+            return localStorage.getItem(YT_AUTH_SOURCE_KEY) || YT_AUTH_SOURCE_HOSTED;
+        } catch (_) {
+            return YT_AUTH_SOURCE_HOSTED;
+        }
+    }
+    function setStoredAuthSource(source) {
+        try {
+            localStorage.setItem(YT_AUTH_SOURCE_KEY, source || YT_AUTH_SOURCE_HOSTED);
+        } catch (_) {}
+    }
     function refreshClientOverrides() {
         try {
-            // API key override can be set via localStorage or URL
-            const storedKey = localStorage.getItem('ytApiKeyOverride');
-            const qp = new URLSearchParams(window.location.search);
-            const hp = new URLSearchParams(window.location.hash.slice(1));
-            const urlKey = qp.get('api_key') || hp.get('api_key');
+            const credentials = getCustomDesktopCredentials();
+            if (isDesktopYouTubeContext() && credentials.hasAll) {
+                clientId = credentials.clientId;
+                clientSecretOverride = credentials.clientSecret;
+                apiKeyOverride = credentials.apiKey;
+                return;
+            }
             clientId = DEFAULT_YT_CLIENT_ID;
-            apiKeyOverride = urlKey || storedKey || '';
+            clientSecretOverride = '';
+            apiKeyOverride = '';
         } catch (_) {
             clientId = DEFAULT_YT_CLIENT_ID;
+            clientSecretOverride = '';
             apiKeyOverride = '';
         }
     }
@@ -256,7 +353,7 @@ try {
 	var backgroundPollingInterval = 10000; // 10 seconds when in background
 	var foregroundPollingInterval;
 	var tokenRefreshPromise = null;
-	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. Add your own YouTube API key to use your own quota project.";
+	const DEFAULT_QUOTA_WARNING_TEXT = "We've hit the default YouTube API quota. In SSAPP, you can add your own YouTube project to use your own quota.";
 	
 
 	var emojiData = [];
@@ -1068,17 +1165,19 @@ function enableBackgroundKeepAlive() {
 		}
 		return null;
 	}
-	function setStoredToken(token, expiresIn = 3600, refresh = null) {
+	function setStoredToken(token, expiresIn = 3600, refresh = null, authSource = null) {
 		const expiryTime = new Date().getTime() + (expiresIn * 1000);
 		localStorage.setItem('youtubeOAuthToken', token);
 		localStorage.setItem('youtubeOAuthExpiry', expiryTime.toString());
 		if (refresh) {
 			localStorage.setItem('youtubeRefreshToken', refresh);
 		}
+		setStoredAuthSource(authSource || YT_AUTH_SOURCE_HOSTED);
 	}function clearStoredToken() {
 		localStorage.removeItem('youtubeOAuthToken');
 		localStorage.removeItem('youtubeOAuthExpiry');
 		localStorage.removeItem('youtubeRefreshToken');
+		localStorage.removeItem(YT_AUTH_SOURCE_KEY);
 		localStorage.removeItem('youtubeChannel');
         localStorage.removeItem('youtubeVideoId');
 	}
@@ -1089,15 +1188,23 @@ function enableBackgroundKeepAlive() {
         try {
             const signedInCreds = document.getElementById('credentials-container-signedin');
             if (!signedInCreds) return;
-            const hasCustomKey = !!String(localStorage.getItem('ytApiKeyOverride') || '').trim();
+            if (!isDesktopYouTubeContext()) {
+                signedInCreds.classList.add('hidden');
+                return;
+            }
+            const credentials = getCustomDesktopCredentials();
             const quotaBanner = document.getElementById('quota-warning');
             const quotaVisible = !!(quotaBanner && !quotaBanner.classList.contains('hidden'));
-            const shouldShow = isSocketInterfaceVisible() && (forceVisible || hasCustomKey || quotaVisible);
+            const shouldShow = isSocketInterfaceVisible() && (forceVisible || credentials.hasAny || quotaVisible);
             signedInCreds.classList.toggle('hidden', !shouldShow);
         } catch (_) {}
     }
     function openQuotaCredentials() {
         try {
+            if (!isDesktopYouTubeContext()) {
+                alert('Custom YouTube project settings are only available in SSAPP.');
+                return;
+            }
             const warn = document.getElementById('quota-warning');
             if (warn) warn.classList.add('hidden');
             if (isSocketInterfaceVisible()) {
@@ -1106,7 +1213,7 @@ function enableBackgroundKeepAlive() {
                 if (signedInCreds && typeof signedInCreds.scrollIntoView === 'function') {
                     signedInCreds.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
-                const signedInInput = document.getElementById('custom-api-key-2');
+                const signedInInput = document.getElementById('custom-client-id-2');
                 if (signedInInput) {
                     setTimeout(() => signedInInput.focus(), 150);
                 }
@@ -1115,8 +1222,8 @@ function enableBackgroundKeepAlive() {
             const details = document.getElementById('credentials-details');
             if (details) details.open = true;
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            const keyInput = document.getElementById('custom-api-key');
-            if (keyInput) keyInput.focus();
+            const clientInput = document.getElementById('custom-client-id');
+            if (clientInput) clientInput.focus();
         } catch (_) {}
     }
     function showAuthButton() {
@@ -1654,14 +1761,14 @@ function enableBackgroundKeepAlive() {
 					console.warn('Authenticated but unable to load YouTube profile from channels?mine=true');
 					showSocketInterface();
 					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
-					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile due to API quota. You remain signed in; add your own API key or try again after quota resets.');
+					showQuotaAuthFailure('Sign-in succeeded, but we could not load your YouTube account profile due to API quota. You remain signed in; in SSAPP you can add your own YouTube project or try again after quota resets.');
 				}
 			}).catch(error => {
 				if (isQuotaError(error)) {
 					console.error('Quota exceeded while validating YouTube account after sign-in:', error);
 					showSocketInterface();
 					updateHeaderInfo(username || 'Signed in', 'Quota exceeded');
-					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. You remain signed in; add your own API key or try again later.');
+					showQuotaAuthFailure('Sign-in succeeded, but YouTube API quota was exceeded during account validation. You remain signed in; in SSAPP you can add your own YouTube project or try again later.');
 					return;
 				}
 				if (error.message && error.message.includes('401')) {
@@ -1748,7 +1855,7 @@ function enableBackgroundKeepAlive() {
 	function showOAuthFailure(message) {
 		try {
 			showAuthButton();
-			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check redirect URIs and try again. For quota issues, add your own YouTube API key.');
+			showQuotaAuthFailure(message || 'YouTube sign-in failed after permission grant. Please check your redirect URIs and credentials, then try again.');
 		} catch (_) {}
 	}
 	function buildAuthRequest(redirectOverride, stateOverride) {
@@ -1768,6 +1875,12 @@ function enableBackgroundKeepAlive() {
 	function authUrl() {
 		return buildAuthRequest().url;
 	}
+	function getTokenExchangeBridge() {
+		const bridge = getYouTubeOAuthBridge();
+		return bridge && typeof bridge.exchangeYouTubeOAuthCode === 'function' && typeof bridge.refreshYouTubeOAuthToken === 'function'
+			? bridge
+			: null;
+	}
 	async function refreshAccessToken(refreshTokenValue) {
 		if (!refreshTokenValue) {
             console.log('No refresh token available for refreshAccessToken.');
@@ -1776,18 +1889,39 @@ function enableBackgroundKeepAlive() {
             return false;
         }
 		refreshClientOverrides();
+		const authSource = getStoredAuthSource();
 		try {
-			const response = await fetch(AUTH_BASE_URL + '/refresh', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: clientId })
-			});
-			const data = await response.json().catch(() => ({}));
-			if (!response.ok) {
-				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
-				throw new Error(msg);
+			let data = null;
+			if (authSource === YT_AUTH_SOURCE_CUSTOM) {
+				const credentials = getCustomDesktopCredentials();
+				if (!isDesktopYouTubeContext() || !credentials.hasAll) {
+					throw new Error('Custom YouTube sign-in is missing one or more saved credentials.');
+				}
+				const bridge = getTokenExchangeBridge();
+				if (!bridge) {
+					throw new Error('This SSAPP build does not support local YouTube token refresh yet.');
+				}
+				data = await bridge.refreshYouTubeOAuthToken({
+					refreshToken: refreshTokenValue,
+					clientId: credentials.clientId,
+					clientSecret: credentials.clientSecret
+				});
+			} else {
+				const response = await fetch(AUTH_BASE_URL + '/refresh', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ refresh_token: refreshTokenValue, client_id: DEFAULT_YT_CLIENT_ID })
+				});
+				data = await response.json().catch(() => ({}));
+				if (!response.ok) {
+					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+					throw new Error(msg);
+				}
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue);
+			if (!data || !data.access_token) {
+				throw new Error('Token refresh response did not include access_token.');
+			}
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token || refreshTokenValue, authSource);
 			setTimeout(() => { verifyAndUseToken(data.access_token); }, 500);
 			return true;
 		} catch (error) {
@@ -1812,20 +1946,39 @@ function enableBackgroundKeepAlive() {
 		}
 		const redirectTarget = redirectOverride || redirectURI;
 		try {
-			const response = await fetch(AUTH_BASE_URL + '/token', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: clientId })
-			});
-			const data = await response.json().catch(() => ({}));
-			if (!response.ok) {
-				const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
-				throw new Error(msg);
+			const authSource = usingCustomDesktopAuth() ? YT_AUTH_SOURCE_CUSTOM : YT_AUTH_SOURCE_HOSTED;
+			let data = null;
+			if (authSource === YT_AUTH_SOURCE_CUSTOM) {
+				const credentials = getCustomDesktopCredentials();
+				const bridge = getTokenExchangeBridge();
+				if (!isDesktopYouTubeContext() || !credentials.hasAll) {
+					throw new Error('Custom YouTube sign-in needs OAuth Client ID, OAuth Client Secret, and API Key.');
+				}
+				if (!bridge) {
+					throw new Error('This SSAPP build does not support local YouTube token exchange yet.');
+				}
+				data = await bridge.exchangeYouTubeOAuthCode({
+					code: code,
+					redirectUri: redirectTarget,
+					clientId: credentials.clientId,
+					clientSecret: credentials.clientSecret
+				});
+			} else {
+				const response = await fetch(AUTH_BASE_URL + '/token', {
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ code: code, redirect_uri: redirectTarget, client_id: DEFAULT_YT_CLIENT_ID })
+				});
+				data = await response.json().catch(() => ({}));
+				if (!response.ok) {
+					const msg = data?.error_description || data?.error || `HTTP error! status: ${response.status}`;
+					throw new Error(msg);
+				}
 			}
 			if (!data.access_token) {
 				throw new Error('Token exchange response did not include access_token.');
 			}
-			setStoredToken(data.access_token, data.expires_in, data.refresh_token);
+			setStoredToken(data.access_token, data.expires_in, data.refresh_token, authSource);
 			clearExpectedOAuthState();
 			window.history.replaceState({}, document.title, redirectURI);
 			verifyAndUseToken(data.access_token);
@@ -1836,32 +1989,39 @@ function enableBackgroundKeepAlive() {
 		}
 	}
 	async function handleAuthCallback() {
-		refreshClientOverrides();
 		const urlParams = new URLSearchParams(window.location.search);
 		const code = urlParams.get('code');
 		const state = urlParams.get('state');
 		await exchangeCodeForTokens(code, state, redirectURI);
 	}
 	async function startExternalAuthFlow() {
-		// Try ninjafy first (full preload), then __ssapp (mock preload), then fallback to redirect
-		const startOAuthFn = (window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function')
-			? window.ninjafy.startYouTubeOAuth
-			: (window.__ssapp && typeof window.__ssapp.startYouTubeOAuth === 'function')
-				? window.__ssapp.startYouTubeOAuth
-				: null;
+		const bridge = getYouTubeOAuthBridge();
+		const startOAuthFn = bridge && typeof bridge.startYouTubeOAuth === 'function'
+			? bridge.startYouTubeOAuth
+			: null;
+		const useCustomDesktopAuth = usingCustomDesktopAuth();
 		
 		if (!startOAuthFn) {
+			if (useCustomDesktopAuth) {
+				alert('This SSAPP build is missing the local YouTube sign-in bridge. Please update SSAPP.');
+				return;
+			}
 			window.location.href = authUrl();
+			return;
+		}
+		if (useCustomDesktopAuth && !supportsCustomDesktopYouTubeAuth()) {
+			alert('This SSAPP build is missing local YouTube token exchange support. Please update SSAPP.');
 			return;
 		}
 		const state = nonce(15);
 		setExpectedOAuthState(state);
 		try {
 			const result = await startOAuthFn({
-				clientId,
+				clientId: useCustomDesktopAuth ? clientId : DEFAULT_YT_CLIENT_ID,
 				scopes: YT_SCOPES,
 				state,
-				authBase: AUTH_BASE_URL
+				authBase: useCustomDesktopAuth ? null : AUTH_BASE_URL,
+				authMode: useCustomDesktopAuth ? 'custom_google' : 'hosted'
 			});
 			if (!result || !result.code) {
 				console.error('YouTube OAuth did not return a code.');
@@ -3380,13 +3540,7 @@ function enableBackgroundKeepAlive() {
 		}
 		// Auth method selector setup
 		const authMethodSelector = document.getElementById('auth-method-selector');
-		// Check for ssapp URL parameter (set by ssapp when creating WSS windows)
-		// This is backwards compatible - older ssapp versions won't set the param,
-		// but will still work via the ninjafy check for full preload scenarios
-		const isSsappViaParam = urlParams.has('ssapp') || hashParams.has('ssapp');
-		const hasNinjafyOAuth = window.ninjafy && typeof window.ninjafy.startYouTubeOAuth === 'function';
-		const hasSsappOAuth = window.__ssapp && typeof window.__ssapp.startYouTubeOAuth === 'function';
-		const isElectron = isSsappViaParam || isElectronEnvironment() || hasNinjafyOAuth || hasSsappOAuth;
+		const isElectron = isDesktopYouTubeContext();
 		if (authMethodSelector && isElectron) {
 			authMethodSelector.classList.remove('hidden');
 			// Load saved preference
@@ -3404,6 +3558,15 @@ function enableBackgroundKeepAlive() {
 		if (authLink) {
 			const authHandler = function(e) {
 				e.preventDefault();
+				const credentials = getCustomDesktopCredentials();
+				if (isDesktopYouTubeContext() && credentials.hasPartial) {
+					alert('Use all 3 YouTube fields together: OAuth Client ID, OAuth Client Secret, and API Key. Or clear them.');
+					return;
+				}
+				if (usingCustomDesktopAuth()) {
+					startExternalAuthFlow();
+					return;
+				}
 				if (isElectron) {
 					const authMethod = localStorage.getItem('ytAuthMethod') || 'external';
 					if (authMethod === 'external') {
@@ -3540,6 +3703,7 @@ function enableBackgroundKeepAlive() {
 
 	function applyApiKeyOverride(rawUrl) {
 		if (!rawUrl || typeof rawUrl !== 'string' || !apiKeyOverride) return rawUrl;
+		if (getStoredAuthSource() !== YT_AUTH_SOURCE_CUSTOM || !usingCustomDesktopAuth()) return rawUrl;
 		try {
 			const parsed = new URL(rawUrl, window.location.href);
 			const host = (parsed.hostname || '').toLowerCase();
@@ -3685,41 +3849,98 @@ function enableBackgroundKeepAlive() {
 			showQuotaBanner();
 		} catch(_){}
 	}
+	function getCustomCredentialValidationMessage(clientIdValue, clientSecretValue, apiKeyValue) {
+		const hasAny = !!(clientIdValue || clientSecretValue || apiKeyValue);
+		if (!hasAny) return '';
+		if (!clientIdValue || !clientSecretValue || !apiKeyValue) {
+			return 'Use all 3 YouTube fields together: OAuth Client ID, OAuth Client Secret, and API Key.';
+		}
+		if (!/\.apps\.googleusercontent\.com$/i.test(clientIdValue)) {
+			return 'That OAuth Client ID does not look valid. It should end with .apps.googleusercontent.com';
+		}
+		if (clientSecretValue.length < 10) {
+			return 'That OAuth Client Secret looks too short.';
+		}
+		if (apiKeyValue.length < 20) {
+			return 'That API key looks too short. It should look like AIza... and come from Google Cloud credentials.';
+		}
+		return '';
+	}
+	function setCredentialInputsValue(ids, value) {
+		ids.forEach(id => {
+			const input = document.getElementById(id);
+			if (input) input.value = value;
+		});
+	}
+	function updateRedirectHints() {
+		const redirectValue = [
+			'http://localhost:8181/sources/websocket/youtube.html',
+			'http://localhost:8080/sources/websocket/youtube.html'
+		].join('\n');
+		['redirect-uri-hint', 'redirect-uri-hint-2'].forEach(id => {
+			const element = document.getElementById(id);
+			if (!element) return;
+			element.textContent = redirectValue;
+			element.style.whiteSpace = 'pre-line';
+		});
+	}
 
 	function initCredentialsUI() {
 		try {
 			refreshClientOverrides();
-			const storedKey = localStorage.getItem('ytApiKeyOverride') || '';
-			const useCustom = !!storedKey;
-			// Populate both forms
-			['custom-api-key','custom-api-key-2'].forEach(id => { const i = document.getElementById(id); if (i) i.value = storedKey; });
+			updateRedirectHints();
+			const isDesktopContext = isDesktopYouTubeContext();
+			const credentials = getCustomDesktopCredentials();
+			const useCustom = isDesktopContext && credentials.hasAll;
+			const browserNote = document.getElementById('credentials-browser-note');
+			const details = document.getElementById('credentials-details');
+			if (browserNote) browserNote.classList.toggle('hidden', isDesktopContext);
+			if (details) details.classList.toggle('hidden', !isDesktopContext);
+			setCredentialInputsValue(['custom-client-id','custom-client-id-2'], credentials.clientId);
+			setCredentialInputsValue(['custom-client-secret','custom-client-secret-2'], credentials.clientSecret);
+			setCredentialInputsValue(['custom-api-key','custom-api-key-2'], credentials.apiKey);
 			const indicator = document.getElementById('custom-cred-indicator');
 			if (indicator) indicator.classList.toggle('hidden', !useCustom);
 			if (useCustom) hideQuotaBanner();
 			syncSignedInCredentialsVisibility();
 			// Wire buttons
 			const save = async function(primary=true){
-				const akey = ((document.getElementById(primary ? 'custom-api-key' : 'custom-api-key-2')||{}).value || '').trim();
-				if (akey && akey.length < 20) {
-					alert('That API key looks too short. It should look like AIza... and come from Google Cloud credentials.');
+				if (!isDesktopYouTubeContext()) {
+					alert('Custom YouTube project settings are only available in SSAPP.');
 					return;
 				}
-				if (!akey) {
-					alert('Enter a YouTube API key to use your own quota project.');
+				const suffix = primary ? '' : '-2';
+				const cid = ((document.getElementById('custom-client-id' + suffix)||{}).value || '').trim();
+				const secret = ((document.getElementById('custom-client-secret' + suffix)||{}).value || '').trim();
+				const akey = ((document.getElementById('custom-api-key' + suffix)||{}).value || '').trim();
+				const validationMessage = getCustomCredentialValidationMessage(cid, secret, akey);
+				if (validationMessage) {
+					alert(validationMessage);
 					return;
 				}
-				localStorage.removeItem('ytClientIdOverride');
-				if (akey) localStorage.setItem('ytApiKeyOverride', akey); else localStorage.removeItem('ytApiKeyOverride');
+				if (!cid && !secret && !akey) {
+					alert('Enter all 3 YouTube fields or use Reset.');
+					return;
+				}
+				localStorage.setItem('ytClientIdOverride', cid);
+				localStorage.setItem('ytClientSecretOverride', secret);
+				localStorage.setItem('ytApiKeyOverride', akey);
+				localStorage.setItem('ytAuthMethod', 'external');
 				refreshClientOverrides();
-				alert('Saved. Please sign out and sign in again to apply your API key quota project.');
+				alert('Saved. Sign out and sign in again to use your custom YouTube project.');
 				hideQuotaBanner();
 				initCredentialsUI();
 			};
 			const clear = function(){
+				const hadCustomSession = getStoredAuthSource() === YT_AUTH_SOURCE_CUSTOM;
 				localStorage.removeItem('ytClientIdOverride');
+				localStorage.removeItem('ytClientSecretOverride');
 				localStorage.removeItem('ytApiKeyOverride');
 				refreshClientOverrides();
-				alert('Custom API key cleared. Default project quota will be used.');
+				if (hadCustomSession) {
+					signOut();
+				}
+				alert('Custom YouTube project settings cleared. Default sign-in will be used.');
 				initCredentialsUI();
 			};
 			const s1 = document.getElementById('save-credentials'); if (s1) s1.onclick = () => save(true);
