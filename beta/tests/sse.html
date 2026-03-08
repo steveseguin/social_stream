@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Stream Ninja - SSE Demo</title>
+    <style>
+        :root {
+            --primary-bg: #1a1a2e;
+            --secondary-bg: #16213e;
+            --chat-bg: rgba(26, 26, 46, 0.8);
+            --accent-color: #4361ee;
+            --text-color: #f1f1f1;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: var(--primary-bg);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin: 0 0 10px;
+        }
+
+        .subheading {
+            font-size: 16px;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        .setup {
+            background: var(--secondary-bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        #session-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input {
+            padding: 10px 15px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-color);
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        button {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        button:hover {
+            background: #2d4ed8;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #4e4e6a;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #status {
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-weight: 500;
+            display: none;
+        }
+
+        #status.connected {
+            display: block;
+            background: rgba(40, 167, 69, 0.2);
+            border: 1px solid rgba(40, 167, 69, 0.3);
+        }
+
+        #status.error {
+            display: block;
+            background: rgba(220, 53, 69, 0.2);
+            border: 1px solid rgba(220, 53, 69, 0.3);
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .toggle-container label {
+            margin-bottom: 0;
+        }
+
+        #messages {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .message {
+            background: var(--chat-bg);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.3s ease;
+            position: relative;
+            border: 1px solid var(--border-color);
+            word-break: break-word;
+        }
+
+        .message.donation {
+            background: linear-gradient(135deg, rgba(67, 97, 238, 0.3), rgba(58, 12, 163, 0.3));
+            border: 1px solid rgba(67, 97, 238, 0.4);
+        }
+
+        .message-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+            border: 2px solid var(--border-color);
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .platform-badge {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+
+        .message-content {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .donation-amount {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 3px 10px;
+            font-weight: 600;
+            color: #ffd700;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+
+        .debug-panel {
+            margin-top: 30px;
+            background: var(--secondary-bg);
+            border-radius: 8px;
+            padding: 15px;
+            opacity: 0.8;
+        }
+
+        .debug-panel pre {
+            margin: 0;
+            white-space: pre-wrap;
+            font-size: 12px;
+            height: 100px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .debug-heading {
+            font-size: 14px;
+            margin: 0 0 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .clear-btn {
+            font-size: 12px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .clear-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: none;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .controls button {
+            padding: 8px 12px;
+            font-size: 14px;
+            flex: 1;
+        }
+
+        .no-messages {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            button {
+                padding: 10px 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Social Stream Ninja - SSE Demo</h1>
+            <p class="subheading">A demonstration of Server-Sent Events (SSE) with Social Stream Ninja</p>
+        </header>
+
+        <div class="setup">
+            <form id="session-form">
+                <div>
+                    <label for="session-id">Enter your Session ID:</label>
+                    <input type="text" id="session-id" placeholder="e.g. abc123" required>
+                </div>
+                <button type="submit" id="connect-btn">Connect</button>
+                <div id="status"></div>
+                <div class="toggle-container">
+                    <input type="checkbox" id="show-debug" checked>
+                    <label for="show-debug">Show debug information</label>
+                </div>
+            </form>
+        </div>
+
+        <div id="messages">
+            <div class="no-messages">Connect with your Session ID to view incoming messages</div>
+        </div>
+
+        <div class="debug-panel" id="debug-panel">
+            <div class="debug-heading">
+                <h3>Event Log</h3>
+                <button class="clear-btn" id="clear-debug">Clear</button>
+            </div>
+            <pre id="debug-log"></pre>
+            <div class="controls">
+                <button id="clear-messages">Clear Messages</button>
+                <button id="disconnect">Disconnect</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const App = {
+            eventSource: null,
+            config: {
+                baseUrl: 'https://io.socialstream.ninja',
+                maxMessages: 50
+            },
+            elements: {
+                form: document.getElementById('session-form'),
+                sessionInput: document.getElementById('session-id'),
+                connectBtn: document.getElementById('connect-btn'),
+                status: document.getElementById('status'),
+                messagesContainer: document.getElementById('messages'),
+                debugLog: document.getElementById('debug-log'),
+                debugPanel: document.getElementById('debug-panel'),
+                showDebugCheckbox: document.getElementById('show-debug'),
+                clearDebugBtn: document.getElementById('clear-debug'),
+                clearMessagesBtn: document.getElementById('clear-messages'),
+                disconnectBtn: document.getElementById('disconnect')
+            },
+            
+            init() {
+                this.attachEventListeners();
+                this.updateDebugPanelVisibility();
+                
+                // Try to load session ID from localStorage
+                const savedSessionId = localStorage.getItem('ssninja_session_id');
+                if (savedSessionId) {
+                    this.elements.sessionInput.value = savedSessionId;
+                }
+            },
+            
+            attachEventListeners() {
+                this.elements.form.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.connect();
+                });
+                
+                this.elements.showDebugCheckbox.addEventListener('change', () => {
+                    this.updateDebugPanelVisibility();
+                });
+                
+                this.elements.clearDebugBtn.addEventListener('click', () => {
+                    this.elements.debugLog.textContent = '';
+                });
+                
+                this.elements.clearMessagesBtn.addEventListener('click', () => {
+                    this.clearMessages();
+                });
+                
+                this.elements.disconnectBtn.addEventListener('click', () => {
+                    this.disconnect();
+                });
+            },
+            
+            updateDebugPanelVisibility() {
+                this.elements.debugPanel.style.display = 
+                    this.elements.showDebugCheckbox.checked ? 'block' : 'none';
+            },
+            
+            connect() {
+                const sessionId = this.elements.sessionInput.value.trim();
+                
+                if (!sessionId) {
+                    this.showStatus('Please enter a valid Session ID', 'error');
+                    return;
+                }
+                
+                // Save to localStorage for convenience
+                localStorage.setItem('ssninja_session_id', sessionId);
+                
+                this.elements.connectBtn.disabled = true;
+                this.elements.connectBtn.textContent = 'Connecting...';
+                
+                this.log(`Connecting to SSE endpoint with session ID: ${sessionId}`);
+                
+                // Close any existing connection
+                this.disconnect();
+                
+                // Create new EventSource connection
+                try {
+                    this.eventSource = new EventSource(`${this.config.baseUrl}/sse/${sessionId}`);
+                    
+                    this.eventSource.onopen = () => {
+                        this.log('SSE connection opened');
+                        this.showStatus('Connected! Waiting for messages...', 'connected');
+                        this.elements.connectBtn.textContent = 'Connected';
+                        this.clearMessages(true);
+                    };
+                    
+                    this.eventSource.onmessage = (event) => {
+                        this.handleMessage(event);
+                    };
+                    
+                    this.eventSource.onerror = (error) => {
+                        this.log('SSE connection error:', error);
+                        this.showStatus('Connection error. Please try again.', 'error');
+                        this.disconnect();
+                    };
+                } catch (error) {
+                    this.log('Failed to create EventSource:', error);
+                    this.showStatus('Failed to connect. Please try again.', 'error');
+                    this.elements.connectBtn.disabled = false;
+                    this.elements.connectBtn.textContent = 'Connect';
+                }
+            },
+            
+            disconnect() {
+                if (this.eventSource) {
+                    this.log('Disconnecting from SSE endpoint');
+                    this.eventSource.close();
+                    this.eventSource = null;
+                }
+                
+                this.elements.connectBtn.disabled = false;
+                this.elements.connectBtn.textContent = 'Connect';
+                this.elements.status.style.display = 'none';
+            },
+            
+            handleMessage(event) {
+                try {
+                    const data = JSON.parse(event.data);
+                    this.log('Received message:', data);
+                    
+                    // Process the message based on its structure
+                    if (data.content) {
+                        this.displayChatMessage(data.content);
+                    } else if (data.contents) {
+                        this.displayChatMessage(data.contents);
+                    } else if (data.chatmessage || data.chatname) {
+                        // Seems to be a direct chat message
+                        this.displayChatMessage(data);
+                    }
+                } catch (error) {
+                    this.log('Error processing message:', error, event.data);
+                }
+            },
+            
+            displayChatMessage(message) {
+                // Remove "no messages" placeholder if present
+                const placeholder = this.elements.messagesContainer.querySelector('.no-messages');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+                
+                // Create message element
+                const messageEl = document.createElement('div');
+                messageEl.className = 'message';
+                
+                // Add donation class if applicable
+                if (message.hasDonation || message.donation) {
+                    messageEl.classList.add('donation');
+                }
+                
+                // Build message HTML
+                const avatar = message.chatimg || this.getDefaultAvatar(message.type);
+                const platform = message.type || 'unknown';
+                const username = message.chatname || 'Anonymous';
+                const messageContent = message.chatmessage || '';
+                
+                let donationHtml = '';
+                if (message.hasDonation || message.donation) {
+                    donationHtml = `<span class="donation-amount">${message.hasDonation || message.donation}</span>`;
+                }
+                
+                messageEl.innerHTML = `
+                    <div class="message-header">
+                        <div class="user-avatar" style="background-image: url('${avatar}')"></div>
+                        <div class="user-name">
+                            ${username}
+                            <img src="./sources/images/${platform}.png" alt="${platform}" class="platform-badge" onerror="this.style.display='none'">
+                            ${donationHtml}
+                        </div>
+                    </div>
+                    <div class="message-content">${messageContent}</div>
+                `;
+                
+                // Add to container
+                this.elements.messagesContainer.prepend(messageEl);
+                
+                // Limit number of messages
+                this.limitMessages();
+            },
+            
+            getDefaultAvatar(type) {
+                // Default avatar based on platform type
+                switch (type) {
+                    case 'twitch':
+                        return 'https://static-cdn.jtvnw.net/user-default-pictures-uv/cdd517fe-def4-11e9-948e-784f43822e80-profile_image-300x300.png';
+                    case 'youtube':
+                        return 'https://yt3.googleusercontent.com/ytc/APkrFKaqca-xQcJz5ONCA5I5B5jc3u7asIAFMwIoL4Ns=s176-c-k-c0x00ffffff-no-rj';
+                    default:
+                        return './sources/images/unknown.png';
+                }
+            },
+            
+            limitMessages() {
+                const messages = this.elements.messagesContainer.querySelectorAll('.message');
+                if (messages.length > this.config.maxMessages) {
+                    for (let i = this.config.maxMessages; i < messages.length; i++) {
+                        messages[i].remove();
+                    }
+                }
+            },
+            
+            clearMessages(addPlaceholder = false) {
+                this.elements.messagesContainer.innerHTML = addPlaceholder ? 
+                    '<div class="no-messages">Waiting for incoming messages...</div>' : '';
+            },
+            
+            showStatus(message, type) {
+                this.elements.status.textContent = message;
+                this.elements.status.className = '';
+                this.elements.status.classList.add(type);
+                this.elements.status.style.display = 'block';
+            },
+            
+            log(...args) {
+                console.log(...args);
+                
+                // Add to debug log
+                const message = args.map(arg => {
+                    if (typeof arg === 'object') {
+                        try {
+                            return JSON.stringify(arg, null, 2);
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }
+                    return String(arg);
+                }).join(' ');
+                
+                const timestamp = new Date().toLocaleTimeString();
+                this.elements.debugLog.textContent += `[${timestamp}] ${message}\n`;
+                this.elements.debugLog.scrollTop = this.elements.debugLog.scrollHeight;
+            }
+        };
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => App.init());
+    </script>
+</body>
+</html>
