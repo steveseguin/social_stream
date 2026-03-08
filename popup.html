@@ -5230,8 +5230,299 @@ input:checked + .slider:before {
 					</div>
 				</div>
 			</div>
-			
-			
+
+			<div class="link" title="Dedicated multi-stream alert overlay for follows, subscriptions, donations, cheers, and raids.">
+				<h2 class="single_message_title">
+					<span class="title-group"><span class="emoji" aria-hidden="true">🚨</span><span>Multi-Stream Alert Box</span></span>
+					<a class="copy-link rounded_area" title="Copy link to clipboard" data-copy="true"><span data-translate="copy">[copy link]</span></a>
+					<a class="options-link rounded_area" href="#multi-alert-options" title="Jump to multi-alert overlay options."><span data-translate="options">[options]</span></a>
+				</h2>
+				<div id="multialerts" data-raw="" class="single_message"><a href="" id="multialertslink"></a></div>
+				<div class="help-tip" style="margin-top: 10px;">💡 <strong>Twitch-style setup:</strong> tune each alert type, copy the browser source URL, then test everything live in the preview panel below.</div>
+			</div>
+			<a href="" id="multi-alert-options"></a>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-types-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-types-options"><span>🎯 Alert Types</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disablefollows" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip follow alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disablesubs" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip subscription/member alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disabledonos" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip donation alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disablebits" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip bits/cheer alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="disableraids" />
+										<span class="slider round"></span>
+									</label>
+									<span>Skip raid/host alerts</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-variants-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-variants-options"><span>🎨 Variants / Presets</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label>Follow preset</label>
+									<select data-optionparam25="followstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Subscription preset</label>
+									<select data-optionparam25="substyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Donation preset</label>
+									<select data-optionparam25="donostyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Bits/Cheer preset</label>
+									<select data-optionparam25="bitsstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<div>
+									<label>Raid preset</label>
+									<select data-optionparam25="raidstyle" class="textInput">
+										<option value="twitch" selected>Twitch Style</option>
+										<option value="classic">Classic</option>
+										<option value="minimal">Minimal</option>
+									</select>
+								</div>
+								<small style="opacity: 0.8;">Each category maps all supported platforms into one shared alert style, while still keeping the source badge and event wording platform-aware.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-layout-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-layout-options"><span>🖼️ Layout & Visibility</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="compact" />
+										<span class="slider round"></span>
+									</label>
+									<span>Compact alert cards</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="align=center" />
+										<span class="slider round"></span>
+									</label>
+									<span>Center align alert box</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="alignright" />
+										<span class="slider round"></span>
+									</label>
+									<span>Right align alert box</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="scale" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔍 Scale multiplier
+										<input type="range" min="0.6" max="2.4" step="0.05" value="1" style="width: 150px;" data-numbersetting25="scale" data-range-display="multi-alert-scale-display" data-range-suffix="x" />
+										<span class="range-value" id="multi-alert-scale-display">1.00x</span>
+									</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hideavatar" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide avatars</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hidesource" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide source badges</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hidesubtitle" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide subtitle row</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="hideamount" />
+										<span class="slider round"></span>
+									</label>
+									<span>Hide amount / value pills</span>
+								</div>
+								<div title="Use a solid page background instead of transparency.">
+									<label class="switch">
+										<input type="checkbox" data-param25="pagebg" />
+										<span class="slider round"></span>
+									</label>
+									<span>Solid page background</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" class="textInput instant" autocomplete="off" placeholder="rgba(7, 10, 16, 0.9)" data-textparam25="pagebg" />
+									<label><span>&gt; Page background color</span></label>
+								</div>
+								<div title="Set a green screen background for chroma key workflows.">
+									<label class="switch">
+										<input type="checkbox" data-param25="chroma=00ff00" />
+										<span class="slider round"></span>
+									</label>
+									<span>Green page background</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-sound-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-sound-options"><span>🔊 Sound & Timing</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="beep" />
+										<span class="slider round"></span>
+									</label>
+									<span>Play alert sound</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="beepvolume" />
+										<span class="slider round"></span>
+									</label>
+									<span>
+										🔉 Sound volume
+										<input type="range" min="0" max="100" step="5" value="35" style="width: 150px;" data-numbersetting25="beepvolume" data-range-display="multi-alert-beep-display" data-range-suffix="%" />
+										<span class="range-value" id="multi-alert-beep-display">35%</span>
+									</span>
+								</div>
+								<div class="textInputContainer" style="width: 95%;">
+									<input type="text" class="textInput instant" autocomplete="off" placeholder="https://example.com/alert.wav" data-textparam25="custombeep" />
+									<label><span>&gt; Custom sound URL</span></label>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="showtime" />
+										<span class="slider round"></span>
+									</label>
+									<span>⏲️ Show each alert for <input type="number" style="max-width: 8ch;" min="1000" max="60000" value="8000" data-numbersetting25="showtime" />ms</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="cooldown" />
+										<span class="slider round"></span>
+									</label>
+									<span>⏳ Cooldown between alerts <input type="number" style="max-width: 8ch;" min="0" max="30000" value="900" data-numbersetting25="cooldown" />ms</span>
+								</div>
+								<div title="Keep overlapping alerts in a queue instead of ignoring them while another alert is already visible.">
+									<label class="switch">
+										<input type="checkbox" data-param25="queue" />
+										<span class="slider round"></span>
+									</label>
+									<span>Queue overlapping alerts</span>
+								</div>
+								<div>
+									<label class="switch">
+										<input type="checkbox" data-param25="debug" />
+										<span class="slider round"></span>
+									</label>
+									<span>Debug mode (console logs)</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="wrapper">
+				<div class="collapsible">
+					<input type="checkbox" class="collapsible-input" id="wrapper-multi-alert-preview-options" />
+					<label class="collapsible-label" for="wrapper-multi-alert-preview-options"><span>🧪 Preview & Test</span></label>
+					<div class="collapsible-text">
+						<div class="options">
+							<div class="options_group">
+								<div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px;">
+									<button type="button" id="multi-alert-preview-follow" class="overlayButton">Preview Follow</button>
+									<button type="button" id="multi-alert-preview-sub" class="overlayButton">Preview Sub</button>
+									<button type="button" id="multi-alert-preview-dono" class="overlayButton">Preview Donation</button>
+									<button type="button" id="multi-alert-preview-bits" class="overlayButton">Preview Bits</button>
+									<button type="button" id="multi-alert-preview-raid" class="overlayButton">Preview Raid</button>
+									<button type="button" id="multi-alert-preview-clear" class="overlayButton">Clear</button>
+								</div>
+								<div style="width: 100%; height: 280px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.12); background: linear-gradient(135deg, rgba(10,12,18,0.94), rgba(19,24,35,0.92));">
+									<iframe id="multi-alerts-preview-frame" title="Multi alert preview" style="width: 100%; height: 100%; border: 0; background: transparent;" loading="lazy"></iframe>
+								</div>
+								<small style="display: block; margin-top: 10px; opacity: 0.8;">This preview uses the real multi-alert overlay renderer in a local iframe, so theme and timing changes match the live browser source.</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
             <div class="generic_category_title">
                 <h2>
                     <span data-translate="global-settings-and-tools">🛠️ Global settings and tools </span>

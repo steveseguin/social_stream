@@ -2140,6 +2140,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   const pages = [
     { id: "dock", path: "dock.html" },
     { id: "overlay", path: "featured.html" },
+    { id: "multialerts", path: "multi-alerts.html" },
     { id: "emoteswall", path: "emotes.html" },
     { id: "hypemeter", path: "hype.html" },
     { id: "meta", path: "meta.html" },
@@ -2206,6 +2207,8 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
   if (remoteControlUrl) {
     remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
   }
+
+  syncMultiAlertsPreview();
 }
 
 function applyFeaturedOverlayPreset(presetValue) {
@@ -3510,6 +3513,7 @@ function getTargetMap() {
 		'spotify': 22,
 		'map': 23,
         'meta': 24,
+        'multialerts': 25,
     };
 }
 function handleElementParam(ele, targetId, paramType, sync, value = null) {
@@ -4666,6 +4670,67 @@ function validateRoomId(roomId) {
 	return sanitizedId;
 }
 
+let pendingMultiAlertPreview = null;
+
+function getLocalOverlayUrl(path) {
+    try {
+        if (chrome?.runtime?.getURL) {
+            return chrome.runtime.getURL(path);
+        }
+    } catch (error) {
+        console.warn('Unable to build local overlay URL via chrome.runtime.getURL', error);
+    }
+    try {
+        return new URL(path, window.location.href).toString();
+    } catch (error) {
+        console.warn('Unable to build local overlay URL via URL()', error);
+        return path;
+    }
+}
+
+function buildMultiAlertsPreviewUrl() {
+    const multiAlertsDiv = document.getElementById('multialerts');
+    const localUrl = new URL(getLocalOverlayUrl('multi-alerts.html'));
+    const rawUrl = typeof multiAlertsDiv?.raw === 'string' ? multiAlertsDiv.raw : '';
+    const rawParams = rawUrl.includes('?') ? new URLSearchParams(rawUrl.split('?')[1]) : new URLSearchParams();
+
+    rawParams.set('preview', '1');
+    rawParams.set('embedded', '1');
+    if (!rawParams.get('session')) {
+        rawParams.set('session', 'preview');
+    }
+
+    localUrl.search = rawParams.toString();
+    return localUrl.toString();
+}
+
+function syncMultiAlertsPreview() {
+    const frame = document.getElementById('multi-alerts-preview-frame');
+    if (!frame) {
+        return;
+    }
+
+    const nextUrl = buildMultiAlertsPreviewUrl();
+    if (frame.dataset.currentPreviewUrl === nextUrl) {
+        return;
+    }
+
+    frame.dataset.currentPreviewUrl = nextUrl;
+    frame.src = nextUrl;
+}
+
+function sendMultiAlertsPreview(payload) {
+    const frame = document.getElementById('multi-alerts-preview-frame');
+    if (!frame) {
+        return;
+    }
+
+    pendingMultiAlertPreview = payload;
+    if (frame.contentWindow) {
+        frame.contentWindow.postMessage({ multiAlertsPreview: payload }, '*');
+    }
+}
+
 function refreshLinks(){
   let hideLinks = false;
   document.querySelectorAll("input[data-setting='hideyourlinks']").forEach(x=>{
@@ -4683,6 +4748,7 @@ function refreshLinks(){
     const linkIdToDivIdMap = {
       'docklink': 'dock',
       'overlaylink': 'overlay',
+      'multialertslink': 'multialerts',
       'emoteswalllink': 'emoteswall',
       'hypemeterlink': 'hypemeter',
       'metalink': 'meta',
@@ -6249,6 +6315,34 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 	
 	document.querySelectorAll("[data-copy]").forEach(ele=>{
 		ele.onclick = copyToClipboard;
+	});
+
+	const multiAlertsPreviewFrame = document.getElementById('multi-alerts-preview-frame');
+	if (multiAlertsPreviewFrame) {
+		multiAlertsPreviewFrame.addEventListener('load', () => {
+			if (pendingMultiAlertPreview !== null && multiAlertsPreviewFrame.contentWindow) {
+				multiAlertsPreviewFrame.contentWindow.postMessage({ multiAlertsPreview: pendingMultiAlertPreview }, '*');
+			}
+		});
+	}
+
+	const multiAlertPreviewButtons = [
+		{ id: 'multi-alert-preview-follow', payload: { category: 'follow' } },
+		{ id: 'multi-alert-preview-sub', payload: { category: 'subscription' } },
+		{ id: 'multi-alert-preview-dono', payload: { category: 'donation' } },
+		{ id: 'multi-alert-preview-bits', payload: { category: 'bits' } },
+		{ id: 'multi-alert-preview-raid', payload: { category: 'raid' } },
+		{ id: 'multi-alert-preview-clear', payload: false }
+	];
+
+	multiAlertPreviewButtons.forEach(({ id, payload }) => {
+		const button = document.getElementById(id);
+		if (!button) {
+			return;
+		}
+		button.addEventListener('click', () => {
+			sendMultiAlertsPreview(payload);
+		});
 	});
 	
 	

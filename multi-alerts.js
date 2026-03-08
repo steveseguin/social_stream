@@ -1,0 +1,589 @@
+import {
+  ALERT_CATEGORIES,
+  CATEGORY_LABELS,
+  DEFAULT_ALERT_STYLE,
+  buildAlertViewModel,
+  createMockAlertPayload
+} from './shared/utils/alertClassifier.js';
+
+const urlParams = new URLSearchParams(window.location.search);
+
+const CATEGORY_STYLE_PARAMS = {
+  [ALERT_CATEGORIES.FOLLOW]: 'followstyle',
+  [ALERT_CATEGORIES.SUBSCRIPTION]: 'substyle',
+  [ALERT_CATEGORIES.DONATION]: 'donostyle',
+  [ALERT_CATEGORIES.BITS]: 'bitsstyle',
+  [ALERT_CATEGORIES.RAID]: 'raidstyle'
+};
+
+const CATEGORY_DISABLE_PARAMS = {
+  [ALERT_CATEGORIES.FOLLOW]: 'disablefollows',
+  [ALERT_CATEGORIES.SUBSCRIPTION]: 'disablesubs',
+  [ALERT_CATEGORIES.DONATION]: 'disabledonos',
+  [ALERT_CATEGORIES.BITS]: 'disablebits',
+  [ALERT_CATEGORIES.RAID]: 'disableraids'
+};
+
+const SOURCE_ICON_MAP = {
+  amazon: './sources/images/amazon.png',
+  facebook: './sources/images/facebook.png',
+  instagram: './sources/images/instagram.png',
+  kick: './sources/images/kick.png',
+  kofi: './sources/images/kofi.png',
+  rumble: './sources/images/rumble.png',
+  streamlabs: './sources/images/streamlabs.png',
+  tiktok: './sources/images/tiktok.png',
+  twitch: './sources/images/twitch.png',
+  x: './sources/images/x.png',
+  youtube: './sources/images/youtube.png',
+  youtubeshorts: './sources/images/youtube.png'
+};
+
+const settings = readSettings();
+
+const state = {
+  iframe: null,
+  socket: null,
+  queue: [],
+  currentAlert: null,
+  showTimer: null,
+  cleanupTimer: null,
+  cooldownTimer: null,
+  reconnectTimer: null,
+  blockedUntil: 0,
+  audioContext: null
+};
+
+const elements = {
+  stage: document.getElementById('alert-stage'),
+  status: document.getElementById('alert-status'),
+  audio: document.getElementById('custom-alert-audio')
+};
+
+applyPagePresentation();
+attachWindowListeners();
+updateStatus(settings.previewOnly ? 'Preview ready' : (settings.roomID ? 'Waiting for alerts' : 'Add ?session=YOURID to connect'));
+
+if (!settings.previewOnly && settings.roomID) {
+  setupBridgeIframe();
+  if (settings.useSocket) {
+    setupSocket();
+  }
+}
+
+function log(...args) {
+  if (settings.debug) {
+    console.log('[multi-alerts]', ...args);
+  }
+}
+
+function normalizeText(value) {
+  if (value === undefined || value === null) return '';
+  return String(value).trim();
+}
+
+function parseNumberParam(name, fallbackValue) {
+  if (!urlParams.has(name)) return fallbackValue;
+  const value = Number(urlParams.get(name));
+  return Number.isFinite(value) ? value : fallbackValue;
+}
+
+function normalizeColor(value) {
+  const trimmed = normalizeText(value).replace(/^#/, '');
+  if (!trimmed) return '';
+  if (/^[0-9a-fA-F]{3,8}$/.test(trimmed)) {
+    return `#${trimmed}`;
+  }
+  return normalizeText(value);
+}
+
+function readSettings() {
+  const styles = {};
+  Object.entries(CATEGORY_STYLE_PARAMS).forEach(([category, paramName]) => {
+    styles[category] = normalizeText(urlParams.get(paramName)).toLowerCase() || DEFAULT_ALERT_STYLE;
+  });
+
+  const disabledCategories = {};
+  Object.entries(CATEGORY_DISABLE_PARAMS).forEach(([category, paramName]) => {
+    disabledCategories[category] = urlParams.has(paramName);
+  });
+
+  return {
+    roomID: normalizeText(urlParams.get('session')),
+    password: normalizeText(urlParams.get('password')) || 'false',
+    showTime: Math.max(1800, parseNumberParam('showtime', 8000)),
+    cooldown: Math.max(0, parseNumberParam('cooldown', 900)),
+    queueEnabled: urlParams.has('queue'),
+    maxQueue: Math.max(1, Math.min(100, parseNumberParam('maxqueue', 25))),
+    beep: urlParams.has('beep'),
+    beepVolume: Math.max(0, Math.min(1, parseNumberParam('beepvolume', 35) / 100)),
+    customBeep: normalizeText(urlParams.get('custombeep')),
+    compact: urlParams.has('compact'),
+    hideAvatar: urlParams.has('hideavatar'),
+    hideSource: urlParams.has('hidesource'),
+    hideAmount: urlParams.has('hideamount'),
+    hideSubtitle: urlParams.has('hidesubtitle'),
+    align:
+      normalizeText(urlParams.get('align')).toLowerCase() === 'center'
+        ? 'center'
+        : urlParams.has('alignright')
+          ? 'right'
+          : 'left',
+    scale: Math.max(0.45, Math.min(3, parseNumberParam('scale', 1))),
+    pageBg: normalizeColor(urlParams.get('pagebg')),
+    chroma: normalizeColor(urlParams.get('chroma')),
+    previewOnly: urlParams.has('preview'),
+    debug: urlParams.has('debug'),
+    useSocket: urlParams.has('server') || urlParams.has('server2') || urlParams.has('localserver'),
+    serverURL: normalizeText(urlParams.get('server') || urlParams.get('server2')) || (urlParams.has('localserver') ? 'ws://127.0.0.1:3000' : 'wss://io.socialstream.ninja'),
+    styles,
+    disabledCategories
+  };
+}
+
+function applyPagePresentation() {
+  document.documentElement.style.setProperty('--overlay-scale', String(settings.scale));
+  document.body.dataset.align = settings.align;
+
+  if (settings.compact) {
+    document.body.classList.add('compact-mode');
+  }
+  if (urlParams.has('embedded')) {
+    document.body.classList.add('embedded-mode');
+  }
+
+  if (settings.chroma) {
+    document.body.style.background = settings.chroma;
+  } else if (settings.pageBg) {
+    document.body.style.background = settings.pageBg;
+  } else {
+    document.body.style.background = 'transparent';
+  }
+}
+
+function attachWindowListeners() {
+  window.addEventListener('message', (event) => {
+    if (state.iframe && event.source === state.iframe.contentWindow) {
+      const payload = event.data?.dataReceived?.overlayNinja;
+      if (payload !== undefined) {
+        handleIncomingPayload(payload);
+      }
+      return;
+    }
+
+    if (!event.data || !Object.prototype.hasOwnProperty.call(event.data, 'multiAlertsPreview')) {
+      return;
+    }
+
+    handlePreviewMessage(event.data.multiAlertsPreview);
+  });
+}
+
+function setupBridgeIframe() {
+  state.iframe = document.createElement('iframe');
+  state.iframe.src =
+    `https://vdo.socialstream.ninja/?ln&salt=vdo.ninja&password=${encodeURIComponent(settings.password)}` +
+    `&push&label=dock&vd=0&ad=0&novideo&noaudio&autostart&cleanoutput&room=${encodeURIComponent(settings.roomID)}`;
+  state.iframe.style.cssText = 'width:0;height:0;position:fixed;left:-100px;top:-100px;border:0;';
+  document.body.appendChild(state.iframe);
+}
+
+function setupSocket() {
+  teardownSocket();
+  state.socket = new WebSocket(settings.serverURL);
+
+  state.socket.onopen = () => {
+    log('socket connected');
+    state.socket.send(JSON.stringify({ join: settings.roomID, out: 3, in: 4 }));
+  };
+
+  state.socket.onmessage = (event) => {
+    try {
+      const parsed = JSON.parse(event.data);
+      if (parsed?.overlayNinja !== undefined) {
+        handleIncomingPayload(parsed.overlayNinja);
+      } else {
+        handleIncomingPayload(parsed);
+      }
+    } catch (error) {
+      console.error('Failed to parse multi-alert socket payload:', error);
+    }
+  };
+
+  state.socket.onerror = (error) => {
+    console.error('Multi-alert socket error:', error);
+    teardownSocket();
+  };
+
+  state.socket.onclose = () => {
+    teardownSocket();
+    state.reconnectTimer = window.setTimeout(setupSocket, 1200);
+  };
+}
+
+function teardownSocket() {
+  if (state.reconnectTimer) {
+    window.clearTimeout(state.reconnectTimer);
+    state.reconnectTimer = null;
+  }
+  if (state.socket) {
+    state.socket.onopen = null;
+    state.socket.onerror = null;
+    state.socket.onclose = null;
+    state.socket.onmessage = null;
+    try {
+      state.socket.close();
+    } catch (error) {
+      log('socket close failed', error);
+    }
+    state.socket = null;
+  }
+}
+
+function handlePreviewMessage(previewMessage) {
+  if (previewMessage === false) {
+    clearAlert({ clearQueue: true, preserveCooldown: true });
+    updateStatus('Preview cleared');
+    return;
+  }
+
+  const payload =
+    typeof previewMessage === 'string'
+      ? createMockAlertPayload(previewMessage)
+      : previewMessage?.category && !previewMessage?.event
+        ? createMockAlertPayload(previewMessage.category, previewMessage.overrides || {})
+        : previewMessage;
+
+  if (!payload) {
+    return;
+  }
+
+  const model = buildAlertViewModel(payload);
+  if (!model) {
+    return;
+  }
+
+  clearAlert({ clearQueue: true, preserveCooldown: true });
+  displayAlert(model);
+  updateStatus(`Previewing ${CATEGORY_LABELS[model.category] || 'alert'}`);
+}
+
+function handleIncomingPayload(payload) {
+  flattenPayloads(payload).forEach((entry) => {
+    const model = buildAlertViewModel(entry);
+    if (!model) {
+      return;
+    }
+    if (settings.disabledCategories[model.category]) {
+      log('category disabled', model.category, entry);
+      return;
+    }
+    queueAlert(model);
+  });
+}
+
+function flattenPayloads(payload) {
+  if (payload === undefined || payload === null) {
+    return [];
+  }
+  if (Array.isArray(payload)) {
+    return payload.flatMap((entry) => flattenPayloads(entry));
+  }
+  if (payload.overlayNinja !== undefined) {
+    return flattenPayloads(payload.overlayNinja);
+  }
+  if (Array.isArray(payload.messages)) {
+    return payload.messages.flatMap((entry) => flattenPayloads(entry));
+  }
+  if (payload.message && typeof payload.message === 'object' && !payload.chatmessage) {
+    return flattenPayloads(payload.message);
+  }
+  if (payload.content && typeof payload.content === 'object' && !payload.chatmessage) {
+    return flattenPayloads(payload.content);
+  }
+  return [payload];
+}
+
+function queueAlert(model) {
+  const now = Date.now();
+  if (state.currentAlert || now < state.blockedUntil) {
+    if (settings.queueEnabled) {
+      state.queue.push(model);
+      while (state.queue.length > settings.maxQueue) {
+        state.queue.shift();
+      }
+      updateStatus(`Queued ${state.queue.length} alert${state.queue.length === 1 ? '' : 's'}`);
+    }
+    return;
+  }
+
+  displayAlert(model);
+}
+
+function displayAlert(model) {
+  const card = renderAlert(model);
+  state.currentAlert = model;
+  elements.stage.innerHTML = '';
+  elements.stage.appendChild(card);
+  elements.stage.classList.add('has-alert');
+  playAlertSound(model);
+  updateStatus(model.title);
+
+  const hideLead = Math.min(550, Math.max(280, Math.round(settings.showTime * 0.16)));
+
+  state.showTimer = window.setTimeout(() => {
+    card.classList.add('is-hiding');
+  }, Math.max(0, settings.showTime - hideLead));
+
+  state.cleanupTimer = window.setTimeout(() => {
+    finalizeAlert(card);
+  }, settings.showTime);
+}
+
+function finalizeAlert(card) {
+  if (card?.isConnected) {
+    card.remove();
+  }
+  state.currentAlert = null;
+  elements.stage.classList.remove('has-alert');
+
+  if (settings.cooldown > 0) {
+    state.blockedUntil = Date.now() + settings.cooldown;
+    state.cooldownTimer = window.setTimeout(processQueue, settings.cooldown);
+  } else {
+    state.blockedUntil = 0;
+    processQueue();
+  }
+}
+
+function processQueue() {
+  if (state.currentAlert) {
+    return;
+  }
+  if (!state.queue.length) {
+    updateStatus(settings.previewOnly ? 'Preview ready' : 'Waiting for alerts');
+    return;
+  }
+  const nextAlert = state.queue.shift();
+  displayAlert(nextAlert);
+}
+
+function clearAlert({ clearQueue = false, preserveCooldown = false } = {}) {
+  if (state.showTimer) {
+    window.clearTimeout(state.showTimer);
+    state.showTimer = null;
+  }
+  if (state.cleanupTimer) {
+    window.clearTimeout(state.cleanupTimer);
+    state.cleanupTimer = null;
+  }
+  if (state.cooldownTimer) {
+    window.clearTimeout(state.cooldownTimer);
+    state.cooldownTimer = null;
+  }
+  if (clearQueue) {
+    state.queue = [];
+  }
+  state.currentAlert = null;
+  elements.stage.innerHTML = '';
+  elements.stage.classList.remove('has-alert');
+  if (!preserveCooldown) {
+    state.blockedUntil = 0;
+  }
+}
+
+function renderAlert(model) {
+  const article = document.createElement('article');
+  const styleKey = settings.styles[model.category] || DEFAULT_ALERT_STYLE;
+  article.className = `alert-card theme-${styleKey} category-${model.category}`;
+  article.style.setProperty('--alert-accent', model.accent);
+  article.style.setProperty('--progress-duration', `${settings.showTime}ms`);
+
+  if (settings.compact) {
+    article.classList.add('compact');
+  }
+
+  const header = document.createElement('div');
+  header.className = 'alert-header';
+
+  const titleBadge = document.createElement('div');
+  titleBadge.className = 'alert-title';
+  titleBadge.textContent = model.title.toUpperCase();
+  header.appendChild(titleBadge);
+
+  if (!settings.hideSource) {
+    const sourceBadge = buildSourceBadge(model);
+    if (sourceBadge) {
+      header.appendChild(sourceBadge);
+    }
+  }
+
+  const body = document.createElement('div');
+  body.className = 'alert-body';
+
+  if (!settings.hideAvatar && normalizeText(model.avatar)) {
+    const avatarWrap = document.createElement('div');
+    avatarWrap.className = 'alert-avatar';
+    const avatarImg = document.createElement('img');
+    avatarImg.src = model.avatar;
+    avatarImg.alt = model.actor;
+    avatarImg.loading = 'eager';
+    avatarWrap.appendChild(avatarImg);
+    body.appendChild(avatarWrap);
+  }
+
+  const copy = document.createElement('div');
+  copy.className = 'alert-copy';
+
+  const headline = document.createElement('div');
+  headline.className = 'alert-headline';
+
+  const actor = document.createElement('span');
+  actor.className = 'alert-actor';
+  actor.textContent = model.headlineLead;
+  headline.appendChild(actor);
+
+  const tail = document.createElement('span');
+  tail.className = 'alert-tail';
+  tail.textContent = ` ${model.headlineTail}`;
+  headline.appendChild(tail);
+
+  copy.appendChild(headline);
+
+  if (!settings.hideSubtitle && normalizeText(model.subtitle)) {
+    const subtitle = document.createElement('div');
+    subtitle.className = 'alert-subtitle';
+    subtitle.textContent = model.subtitle;
+    copy.appendChild(subtitle);
+  }
+
+  if (shouldRenderBodyText(model)) {
+    const message = document.createElement('div');
+    message.className = 'alert-message';
+    message.textContent = model.bodyText;
+    copy.appendChild(message);
+  }
+
+  const metaRow = document.createElement('div');
+  metaRow.className = 'alert-meta';
+
+  if (!settings.hideAmount && normalizeText(model.amount)) {
+    const amount = document.createElement('span');
+    amount.className = 'alert-pill alert-amount';
+    amount.textContent = model.amount;
+    metaRow.appendChild(amount);
+  }
+
+  if (model.viewerCount) {
+    const viewers = document.createElement('span');
+    viewers.className = 'alert-pill';
+    viewers.textContent = `${model.viewerCount} viewers`;
+    metaRow.appendChild(viewers);
+  }
+
+  if (metaRow.childNodes.length) {
+    copy.appendChild(metaRow);
+  }
+
+  body.appendChild(copy);
+  article.appendChild(header);
+  article.appendChild(body);
+
+  const progress = document.createElement('div');
+  progress.className = 'alert-progress';
+  article.appendChild(progress);
+
+  return article;
+}
+
+function buildSourceBadge(model) {
+  const badge = document.createElement('div');
+  badge.className = 'source-badge';
+
+  const iconPath = SOURCE_ICON_MAP[model.sourceKey];
+  if (iconPath) {
+    const img = document.createElement('img');
+    img.src = iconPath;
+    img.alt = model.sourceLabel;
+    img.loading = 'eager';
+    img.onerror = () => img.remove();
+    badge.appendChild(img);
+  }
+
+  const label = document.createElement('span');
+  label.textContent = model.sourceLabel || 'Social Stream';
+  badge.appendChild(label);
+  return badge;
+}
+
+function shouldRenderBodyText(model) {
+  const bodyText = normalizeText(model.bodyText);
+  if (!bodyText) {
+    return false;
+  }
+  const combinedHeadline = `${normalizeText(model.headlineLead)} ${normalizeText(model.headlineTail)}`.trim().toLowerCase();
+  return bodyText.toLowerCase() !== combinedHeadline;
+}
+
+function updateStatus(text) {
+  if (!elements.status) return;
+  elements.status.textContent = text;
+}
+
+async function playAlertSound(model) {
+  if (!settings.beep) {
+    return;
+  }
+
+  if (settings.customBeep && elements.audio) {
+    try {
+      elements.audio.src = settings.customBeep;
+      elements.audio.volume = settings.beepVolume;
+      elements.audio.currentTime = 0;
+      await elements.audio.play();
+      return;
+    } catch (error) {
+      log('custom beep failed', error);
+    }
+  }
+
+  try {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) {
+      return;
+    }
+    if (!state.audioContext) {
+      state.audioContext = new AudioContextCtor();
+    }
+    if (state.audioContext.state === 'suspended') {
+      await state.audioContext.resume();
+    }
+
+    const oscillator = state.audioContext.createOscillator();
+    const gain = state.audioContext.createGain();
+    oscillator.connect(gain);
+    gain.connect(state.audioContext.destination);
+
+    const baseFrequency = ({
+      [ALERT_CATEGORIES.FOLLOW]: 540,
+      [ALERT_CATEGORIES.SUBSCRIPTION]: 620,
+      [ALERT_CATEGORIES.DONATION]: 720,
+      [ALERT_CATEGORIES.BITS]: 840,
+      [ALERT_CATEGORIES.RAID]: 460
+    })[model.category] || 580;
+
+    const now = state.audioContext.currentTime;
+    oscillator.type = model.category === ALERT_CATEGORIES.RAID ? 'triangle' : 'sine';
+    oscillator.frequency.setValueAtTime(baseFrequency, now);
+    oscillator.frequency.exponentialRampToValueAtTime(baseFrequency * 1.18, now + 0.08);
+
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(Math.max(0.001, settings.beepVolume), now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+    oscillator.start(now);
+    oscillator.stop(now + 0.32);
+  } catch (error) {
+    log('beep generation failed', error);
+  }
+}

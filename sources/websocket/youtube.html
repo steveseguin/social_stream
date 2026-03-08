@@ -170,30 +170,6 @@
         |
         <a href="https://www.youtube.com/t/terms" target="_blank">YouTube's Terms of Service</a>
     </div>
-    <div id="setup-guide-modal" class="setup-guide-modal hidden" role="dialog" aria-modal="true" aria-labelledby="setup-guide-title">
-        <div class="setup-guide-dialog">
-            <div class="setup-guide-header">
-                <h2 id="setup-guide-title">YouTube Project Setup Guide</h2>
-                <button id="close-setup-guide" type="button" class="setup-guide-close">Close</button>
-            </div>
-            <div class="setup-guide-body">
-                <p>Use one dedicated Google Cloud project for this desktop app when possible.</p>
-                <ol>
-                    <li>Create or select a project in Google Cloud.</li>
-                    <li>Enable <strong>YouTube Data API v3</strong>.</li>
-                    <li>Set up the OAuth consent screen. If the app is in testing, add your Google account as a test user.</li>
-                    <li>Create an <strong>OAuth client ID</strong> with type <strong>Web application</strong>.</li>
-                    <li>Add these <strong>Authorized JavaScript origins</strong>:<br><code>http://localhost:8181</code><br><code>http://localhost:8080</code></li>
-                    <li>Add these <strong>Authorized redirect URIs</strong>:<br><code>http://localhost:8181/sources/websocket/youtube.html</code><br><code>http://localhost:8080/sources/websocket/youtube.html</code></li>
-                    <li>Create an <strong>API key</strong>.</li>
-                    <li>Under API restrictions, restrict that key to <strong>YouTube Data API v3</strong> only.</li>
-                    <li>Do not use <strong>HTTP referrer restrictions</strong> for the desktop app.</li>
-                    <li>Paste the OAuth Client ID, Client Secret, and API Key from that same project into this page.</li>
-                </ol>
-                <p><strong>Security:</strong> treat the Client Secret and API key as sensitive. If you paste them into screenshots, chats, or logs, rotate or delete them afterwards.</p>
-            </div>
-        </div>
-    </div>
     
 <script>
 
@@ -3993,31 +3969,33 @@ function enableBackgroundKeepAlive() {
 			element.style.whiteSpace = 'pre-line';
 		});
 	}
-	function wireSetupGuide() {
-		const modal = document.getElementById('setup-guide-modal');
-		if (!modal) return;
+	function getSetupGuideUrl() {
+		try {
+			return new URL('../../docs/youtube-project-setup.html', window.location.href).toString();
+		} catch (_) {
+			return '../../docs/youtube-project-setup.html';
+		}
+	}
+	function wireSetupGuideLinks() {
 		const openGuide = function() {
-			modal.classList.remove('hidden');
-		};
-		const closeGuide = function() {
-			modal.classList.add('hidden');
+			const targetUrl = getSetupGuideUrl();
+			try {
+				const opened = window.open(targetUrl, '_blank', 'noopener');
+				if (opened) return;
+			} catch (_) {}
+			window.location.href = targetUrl;
 		};
 		['open-setup-guide', 'open-setup-guide-2'].forEach(id => {
 			const button = document.getElementById(id);
 			if (button) button.onclick = openGuide;
 		});
-		const closeButton = document.getElementById('close-setup-guide');
-		if (closeButton) closeButton.onclick = closeGuide;
-		modal.onclick = function(event) {
-			if (event.target === modal) closeGuide();
-		};
 	}
 
 	function initCredentialsUI() {
 		try {
 			refreshClientOverrides();
 			updateRedirectHints();
-			wireSetupGuide();
+			wireSetupGuideLinks();
 			const isDesktopContext = isDesktopYouTubeContext();
 			const credentials = getCustomDesktopCredentials();
 			const useCustom = isDesktopContext && credentials.hasAll;
