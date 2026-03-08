@@ -3674,6 +3674,27 @@ function unwrapKickLivestreamPayload(payload) {
     return result;
 }
 
+function extractKickChannelSlug(payload) {
+    if (!payload || typeof payload !== 'object') {
+        return '';
+    }
+    const candidates = [
+        payload?.slug,
+        payload?.username,
+        payload?.user?.slug,
+        payload?.user?.username,
+        payload?.channel?.slug,
+        payload?.channel?.username
+    ];
+    for (const candidate of candidates) {
+        const normalized = normalizeChannel(candidate);
+        if (normalized) {
+            return normalized;
+        }
+    }
+    return '';
+}
+
 function normalizeKickNumericId(value) {
     if (typeof value === 'number' && Number.isFinite(value)) {
         return Math.max(0, Math.floor(value));
@@ -3690,10 +3711,17 @@ function normalizeKickNumericId(value) {
     return null;
 }
 
-function pickKickChannelBySlug(channels, slugLower) {
+function pickKickChannelBySlug(channels, slugLower, options = {}) {
     const list = Array.isArray(channels) ? channels : [];
     if (!list.length) return null;
-    return list.find(item => normalizeChannel(item?.slug) === slugLower) || list[0] || null;
+    const matched = list.find(item => extractKickChannelSlug(item) === slugLower);
+    if (matched) {
+        return matched;
+    }
+    if (options.allowSingletonWithoutSlug && list.length === 1 && !extractKickChannelSlug(list[0])) {
+        return list[0];
+    }
+    return null;
 }
 
 async function fetchKickLivestreamByBroadcasterId(broadcasterUserIdInput) {
@@ -3718,18 +3746,30 @@ async function fetchKickLivestreamByBroadcasterId(broadcasterUserIdInput) {
                 return null;
             }
             logKickViewerDebug(`Livestream lookup succeeded via ${path} with ${livestreams.length} row(s).`);
-            return (
-                livestreams.find(item => {
-                    const itemId = normalizeKickNumericId(
-                        item?.broadcaster_user_id ??
-                        item?.user_id ??
-                        item?.channel?.broadcaster_user_id
-                    );
-                    return itemId === broadcasterUserId;
-                }) ||
-                livestreams[0] ||
-                null
+            const matchedLivestream = livestreams.find(item => {
+                const itemId = normalizeKickNumericId(
+                    item?.broadcaster_user_id ??
+                    item?.user_id ??
+                    item?.channel?.broadcaster_user_id
+                );
+                return itemId === broadcasterUserId;
+            });
+            if (matchedLivestream) {
+                return matchedLivestream;
+            }
+            const returnedIds = livestreams
+                .map(item => normalizeKickNumericId(
+                    item?.broadcaster_user_id ??
+                    item?.user_id ??
+                    item?.channel?.broadcaster_user_id
+                ))
+                .filter(itemId => itemId != null)
+                .slice(0, 5);
+            logKickViewerDebug(
+                `Livestream lookup via ${path} returned ${livestreams.length} row(s), but none matched broadcaster id=${broadcasterUserId}. Sample ids=${returnedIds.length ? returnedIds.join(',') : 'none'}.`,
+                'warning'
             );
+            continue;
         } catch (err) {
             lastError = err;
             const status = getKickApiErrorStatus(err);
@@ -3775,7 +3815,9 @@ async function fetchKickChannelBySlug(slugInput, options = {}) {
                 logKickViewerDebug(`${debugContext}: request ${path}`);
             }
             const data = await apiFetch(path);
-            const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), slugLower);
+            const channel = pickKickChannelBySlug(unwrapKickChannelPayload(data), slugLower, {
+                allowSingletonWithoutSlug: !path.includes('?slug=')
+            });
             if (channel && typeof channel === 'object') {
                 if (path.includes('?slug=')) {
                     preferredKickChannelLookupPath = '/public/v1/channels?slug={slug}';
@@ -3788,6 +3830,9 @@ async function fetchKickChannelBySlug(slugInput, options = {}) {
                     logKickViewerDebug(`${debugContext}: success via ${path}`);
                 }
                 return channel;
+            }
+            if (debugContext) {
+                logKickViewerDebug(`${debugContext}: payload via ${path} did not match @${slugLower}.`, 'warning');
             }
         } catch (err) {
             lastError = err;
