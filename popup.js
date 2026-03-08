@@ -834,6 +834,19 @@ function miniTranslate(ele, ident = false, direct=false) {
 			}
 		}
 	}
+	var obsTransparentNotes = ele.querySelectorAll('.obs-transparent-note');
+	obsTransparentNotes.forEach(function(ele2) {
+		ele2.innerHTML = getTranslation(
+			"obs-browser-source-is-already-transparent-by-default",
+			" (OBS Browser Source is already transparent by default)"
+		);
+	});
+	if (ele.classList && ele.classList.contains("obs-transparent-note")){
+		ele.innerHTML = getTranslation(
+			"obs-browser-source-is-already-transparent-by-default",
+			" (OBS Browser Source is already transparent by default)"
+		);
+	}
 }
 
 function isFontAvailable(fontName) {
