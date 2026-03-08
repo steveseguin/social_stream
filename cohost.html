@@ -379,46 +379,89 @@ button:disabled {
 }
 
 :root {
-  --puppet-primary: #333;
-  --puppet-bg: #74d0ee;
-  --puppet-accent: #4a4a4a;
-  --puppet-highlight: #fff;
-  --puppet-shadow: rgba(0, 0, 0, 0.2);
+  --puppet-primary: #22314a;
+  --puppet-bg: #9be7ff;
+  --puppet-bg-deep: #63c8ef;
+  --puppet-accent: #ff8ba7;
+  --puppet-highlight: #ffffff;
+  --puppet-shadow: rgba(7, 19, 39, 0.26);
+  --puppet-outline: rgba(19, 37, 63, 0.14);
+  --puppet-mouth: #24324b;
+  --puppet-blush: rgba(255, 135, 162, 0.68);
 }
 #puppet-container {
     position: fixed;
     z-index: 1000;
+    user-select: none;
+    touch-action: none;
+    transform: translateZ(0);
 }
 .puppet {
   width: 300px;
   height: 300px;
   position: relative;
-  background: radial-gradient(circle at 30% 30%, var(--puppet-bg) 0%, #e0e0e0 100%);
+  overflow: visible;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 30% 24%, rgba(255, 255, 255, 0.95) 0 10%, rgba(255, 255, 255, 0) 25%),
+    radial-gradient(circle at 50% 115%, rgba(255, 255, 255, 0.72) 0, rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, var(--puppet-bg) 0%, var(--puppet-bg-deep) 100%);
+  border: 1px solid var(--puppet-outline);
   border-radius: 50%;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 10px 30px var(--puppet-shadow);
+  box-shadow:
+    0 24px 60px var(--puppet-shadow),
+    inset 0 -16px 24px rgba(255, 255, 255, 0.24),
+    inset 0 8px 18px rgba(255, 255, 255, 0.34);
+  transition: transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
+  animation: floatBob 4.6s ease-in-out infinite;
+}
+
+.puppet::before,
+.puppet::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.puppet::before {
+  inset: 10px;
+  background: radial-gradient(circle at 35% 20%, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0) 42%);
+  opacity: 0.85;
+}
+
+.puppet::after {
+  inset: -12px;
+  background: radial-gradient(circle, rgba(111, 214, 255, 0.2), rgba(111, 214, 255, 0) 68%);
+  filter: blur(16px);
+  z-index: -1;
+  animation: auraPulse 6s ease-in-out infinite;
 }
 
 .face {
+  width: 180px;
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  transition: transform 0.3s ease;
+  transition: transform 0.3s ease, filter 0.3s ease;
+  animation: idleFace 7s ease-in-out infinite;
 }
 
 .eyes {
   display: flex;
-  gap: 40px;
+  gap: 42px;
+  align-items: center;
   transition: all 0.3s ease;
 }
 
 .eye {
-  width: 32px;
-  height: 32px;
-  background: var(--puppet-primary);
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(180deg, var(--puppet-primary) 0%, #111827 100%);
   border-radius: 50%;
   position: relative;
+  box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.08), 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
@@ -426,12 +469,13 @@ button:disabled {
 .eye::before {
   content: '';
   position: absolute;
-  width: 10px;
-  height: 10px;
-  background: var(--puppet-highlight);
+  width: 11px;
+  height: 11px;
+  background: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
-  top: 5px;
-  left: 5px;
+  top: 6px;
+  left: 6px;
+  box-shadow: 4px 6px 0 -2px rgba(255, 255, 255, 0.55);
   transition: all 0.3s ease;
 }
 
@@ -440,41 +484,58 @@ button:disabled {
   position: absolute;
   width: 100%;
   height: 100%;
-  background: var(--puppet-bg);
-  transform: translateY(-100%);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, var(--puppet-bg) 64%, var(--puppet-bg-deep) 100%);
+  transform: translateY(-120%);
   transition: transform 0.15s ease;
 }
 
 .eyebrows {
   position: absolute;
   width: 100%;
-  top: -20px;
+  top: -24px;
   display: flex;
   justify-content: space-between;
   padding: 0 10px;
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .eyebrow {
-  width: 35px;
+  width: 38px;
   height: 8px;
   background: var(--puppet-primary);
-  border-radius: 4px;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   transition: all 0.3s ease;
   transform-origin: center;
-  opacity: 0;
 }
 
 .mouth {
-  width: 80px;
+  width: 78px;
   height: 40px;
-  border: 6px solid var(--puppet-primary);
-  border-radius: 0 0 40px 40px;
+  border: 6px solid var(--puppet-mouth);
+  border-radius: 0 0 48px 48px;
   border-top: 0;
-  margin: 25px auto;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 32px auto 0;
   position: relative;
+  overflow: hidden;
   transform-origin: center;
-  margin-top: 32px;
+  box-shadow: inset 0 -4px 0 rgba(255, 255, 255, 0.12);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mouth::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -4px;
+  transform: translateX(-50%);
+  width: 56%;
+  height: 48%;
+  background: rgba(255, 150, 170, 0.58);
+  border-radius: 50% 50% 70% 70%;
+  opacity: 0.24;
+  transition: inherit;
 }
 
 .cheeks {
@@ -486,85 +547,106 @@ button:disabled {
   padding: 0 20px;
   opacity: 0;
   transition: all 0.3s ease;
-  left: -19%;
+  left: -18%;
 }
 
 .cheek {
-  width: 25px;
-  height: 15px;
-  background: #ff9999;
+  width: 26px;
+  height: 16px;
+  background: var(--puppet-blush);
   border-radius: 50%;
   transform: scale(0);
+  filter: blur(1px);
   transition: all 0.3s ease;
-  
 }
 
 @keyframes talking {
-  0%, 100% { 
-    height: 30px; 
-    width: 65px;
-    border-radius: 32.5px;
+  0%, 100% {
+    height: 30px;
+    width: 66px;
+    transform: translateY(0) scaleX(1);
+    border-radius: 20px 20px 36px 36px;
   }
-  50% { 
-    height: 50px; 
-    width: 55px;
-    border-radius: 27.5px;
+  50% {
+    height: 54px;
+    width: 56px;
+    transform: translateY(3px) scaleX(0.94);
+    border-radius: 22px 22px 30px 30px;
   }
 }
 
 @keyframes softTalking {
-  0%, 100% { 
+  0%, 100% {
     height: 40px;
-    transform: scale(1);
+    transform: translateY(0) scaleX(1);
   }
-  50% { 
-    height: 50px;
-    transform: scale(0.98);
+  50% {
+    height: 52px;
+    transform: translateY(2px) scaleX(0.96);
   }
 }
 
 @keyframes blink {
-  0% { transform: translateY(-100%); }
+  0% { transform: translateY(-120%); }
   50% { transform: translateY(0); }
-  100% { transform: translateY(100%); }
+  100% { transform: translateY(110%); }
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, -47%); }
+@keyframes floatBob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-5px) scale(1.01); }
 }
 
-@keyframes breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
+@keyframes idleFace {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-1deg); }
+  50% { transform: translate(-49%, -51%) rotate(1deg); }
 }
 
-@keyframes idle {
+@keyframes shadowFloat {
+  0%, 100% { transform: translateX(-50%) scaleX(1); opacity: 0.28; }
+  50% { transform: translateX(-50%) scaleX(0.92); opacity: 0.18; }
+}
+
+@keyframes auraPulse {
+  0%, 100% { transform: scale(1); opacity: 0.18; }
+  50% { transform: scale(1.05); opacity: 0.28; }
+}
+
+@keyframes attentiveTilt {
   0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
-  25% { transform: translate(-51%, -50%) rotate(-0.5deg); }
-  75% { transform: translate(-49%, -50%) rotate(0.5deg); }
+  50% { transform: translate(-49%, -51%) rotate(2deg); }
 }
 
-.puppet {
-  animation: breathe 4s ease-in-out infinite;
+@keyframes nervousWobble {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+  25% { transform: translate(-49%, -50%) rotate(1.5deg); }
+  75% { transform: translate(-51%, -50%) rotate(-1.5deg); }
 }
 
-.face {
-  animation: idle 6s ease-in-out infinite;
+@keyframes celebrateBob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-12px) scale(1.03); }
+  60% { transform: translateY(-4px) scale(0.99); }
+}
+
+@keyframes cheerfulBounce {
+  0%, 100% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+  25% { transform: translate(-50%, -54%) rotate(-4deg) scale(1.02); }
+  75% { transform: translate(-50%, -47%) rotate(4deg) scale(0.98); }
 }
 
 .talking .mouth {
-  animation: talking 0.4s infinite;
+  animation: talking 0.32s ease-in-out infinite;
 }
 
 .blink .eye::after {
-  animation: blink 0.15s ease forwards;
+  animation: blink 0.16s ease forwards;
 }
 
 .happy .mouth {
-  height: 60px;
-  border-radius: 0 0 80px 80px;
-  transform: translateY(0px) scale(0.9);
+  height: 58px;
+  border-radius: 0 0 84px 84px;
+  transform: translateY(0) scale(0.92);
 }
 
 .happy .cheeks {
@@ -576,11 +658,11 @@ button:disabled {
 }
 
 .happy.talking .mouth {
-  animation: softTalking 0.4s infinite;
+  animation: softTalking 0.36s ease-in-out infinite;
 }
 
 .sad .mouth {
-  transform: rotate(180deg) translateY(-20px) scale(0.8);
+  transform: rotate(180deg) translateY(-18px) scale(0.8);
   width: 60px;
   height: 30px;
 }
@@ -602,7 +684,7 @@ button:disabled {
   height: 80px;
   width: 60px;
   border-radius: 50%;
-  transform: translateY(5px);
+  transform: translateY(6px);
 }
 
 .surprised .eye {
@@ -648,15 +730,15 @@ button:disabled {
 }
 
 .thinking .eye {
-  height: 12px;
-  border-radius: 6px;
-  transform: translateY(5px);
+  height: 14px;
+  border-radius: 10px;
+  transform: translateY(4px);
 }
 
 .thinking .mouth {
   width: 40px;
   height: 12px;
-  border-radius: 6px;
+  border-radius: 8px;
   transform: rotate(-10deg) translate(20px, 10px);
 }
 
@@ -669,14 +751,141 @@ button:disabled {
   opacity: 1;
 }
 
+.listening .face {
+  animation: attentiveTilt 1.8s ease-in-out infinite;
+}
+
+.listening .eye {
+  width: 30px;
+  height: 40px;
+  transform: translateY(-1px);
+}
+
+.listening .eyebrows {
+  opacity: 1;
+}
+
+.listening .eyebrow {
+  transform: rotate(10deg) translateY(-6px);
+  opacity: 1;
+}
+
+.listening .eyebrow:last-child {
+  transform: rotate(-10deg) translateY(-6px);
+}
+
+.listening .mouth {
+  width: 52px;
+  height: 18px;
+  border-radius: 0 0 20px 20px;
+  transform: translateY(12px) scale(0.94);
+}
+
+.confused .eyebrows {
+  opacity: 1;
+}
+
+.confused .eyebrow:first-child {
+  transform: rotate(-18deg) translate(-3px, -8px);
+  opacity: 1;
+}
+
+.confused .eyebrow:last-child {
+  transform: rotate(18deg) translate(3px, 6px);
+  opacity: 1;
+}
+
+.confused .eye:first-child {
+  transform: scaleY(1.04);
+}
+
+.confused .eye:last-child {
+  transform: scaleY(0.82) translateY(4px);
+}
+
+.confused .mouth {
+  width: 56px;
+  height: 18px;
+  border-radius: 0 0 18px 18px;
+  transform: rotate(-12deg) translate(18px, 10px);
+}
+
+.worried .face {
+  animation: nervousWobble 1.5s ease-in-out infinite;
+}
+
+.worried .eyebrows {
+  opacity: 1;
+}
+
+.worried .eyebrow:first-child {
+  transform: rotate(-18deg) translateY(-4px);
+  opacity: 1;
+}
+
+.worried .eyebrow:last-child {
+  transform: rotate(18deg) translateY(-4px);
+  opacity: 1;
+}
+
+.worried .eye {
+  width: 30px;
+  height: 38px;
+}
+
+.worried .mouth {
+  width: 58px;
+  height: 18px;
+  border-radius: 0 0 22px 22px;
+  transform: rotate(180deg) translateY(-12px) scale(0.9);
+}
+
+.proud .face {
+  transform: translate(-50%, -52%);
+}
+
+.proud .eyebrows {
+  opacity: 1;
+}
+
+.proud .eyebrow {
+  transform: translateY(-2px);
+  opacity: 1;
+}
+
+.proud .mouth {
+  width: 74px;
+  height: 34px;
+  transform: translateY(6px) rotate(4deg);
+  border-radius: 0 0 52px 52px;
+}
+
+.proud .cheeks {
+  opacity: 0.85;
+}
+
+.proud .cheek {
+  transform: scale(0.82);
+  background: rgba(255, 172, 184, 0.72);
+}
+
 .wink .eye:first-child {
   height: 5px;
   margin-top: 15px;
   border-radius: 5px;
 }
 
+.puppet.excited,
+.puppet.celebrating {
+  animation: celebrateBob 0.68s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+}
+
 .excited .face {
-  animation: bounce 0.4s infinite;
+  animation: cheerfulBounce 0.55s ease-in-out infinite;
+}
+
+.celebrating .face {
+  animation: cheerfulBounce 0.45s ease-in-out infinite;
 }
 
 .excited .cheeks {
@@ -685,7 +894,16 @@ button:disabled {
 
 .excited .cheek {
   transform: scale(1.2);
-  background: #ff7777;
+  background: rgba(255, 117, 145, 0.82);
+}
+
+.celebrating .cheeks {
+  opacity: 1;
+}
+
+.celebrating .cheek {
+  transform: scale(1.3);
+  background: rgba(255, 117, 145, 0.88);
 }
 
 .sleepy .eye {
@@ -711,20 +929,31 @@ button:disabled {
   border-radius: 50%;
   transition: all 0.3s ease;
   filter: blur(5px);
+  animation: shadowFloat 4.6s ease-in-out infinite;
 }
 
 .excited .shadow {
-  width: 85%;
-  opacity: 0.8;
-  transform: translateX(-50%) scaleX(0.95);
+  width: 84%;
+  opacity: 0.2;
+  transform: translateX(-50%) scaleX(0.88);
+}
+
+.celebrating .shadow {
+  width: 82%;
+  opacity: 0.18;
+  transform: translateX(-50%) scaleX(0.84);
 }
 
 [data-theme="dark"] {
-  --puppet-primary: #fff;
-  --puppet-bg: #2a2a2a;
-  --puppet-accent: #dadada;
-  --puppet-highlight: #333;
+  --puppet-primary: #eef4ff;
+  --puppet-bg: #34415e;
+  --puppet-bg-deep: #1d263a;
+  --puppet-accent: #ffb0c2;
+  --puppet-highlight: #ffffff;
   --puppet-shadow: rgba(0, 0, 0, 0.4);
+  --puppet-outline: rgba(255, 255, 255, 0.08);
+  --puppet-mouth: #f0f5ff;
+  --puppet-blush: rgba(255, 138, 177, 0.38);
 }
 
 .puppet * {
@@ -879,13 +1108,34 @@ class PuppetAvatar {
     constructor(containerSelector) {
         this.container = document.querySelector(containerSelector);
         this.container.style.position = 'fixed';
-        this.initializePuppet();
-        this.currentEmotion = '';
+        this.currentEmotion = 'happy';
+        this.baseEmotion = 'happy';
         this.isTalking = false;
-        this.BLINK_INTERVAL = 4000;
-        this.BLINK_DURATION = 150;
+        this.BLINK_INTERVAL = 3400;
+        this.BLINK_DURATION = 160;
+        this.SLOW_BLINK_MULTIPLIER = 2.25;
         this.isDragging = false;
         this.dragOffset = { x: 0, y: 0 };
+        this.dragScale = 0.5;
+        this.blinkInterval = null;
+        this.reactionTimeout = null;
+        this.talkingTimeout = null;
+        this.supportedEmotions = new Set([
+            'happy',
+            'sad',
+            'surprised',
+            'angry',
+            'thinking',
+            'wink',
+            'excited',
+            'sleepy',
+            'listening',
+            'confused',
+            'worried',
+            'proud',
+            'celebrating'
+        ]);
+        this.initializePuppet();
         this.startBlinking();
         this.initializeDragging();
     }
@@ -911,53 +1161,134 @@ class PuppetAvatar {
             </div>`;
         this.puppet = this.container.querySelector('.puppet');
     }
+    normalizeEmotion(emotion) {
+        const normalized = String(emotion || '').trim();
+        return this.supportedEmotions.has(normalized) ? normalized : 'happy';
+    }
     initializeDragging() {
-		this.container.style.cursor = 'grab';
-		const scale = 0.5;
-		this.container.addEventListener('mousedown', (e) => {
-			this.isDragging = true;
-			this.container.style.cursor = 'grabbing';
-			const rect = this.container.getBoundingClientRect();
-			this.dragOffset = {
-				x: (e.clientX - rect.left) * (1 / scale),
-				y: (e.clientY - rect.top) * (1 / scale)
-			};
-		});
-		document.addEventListener('mousemove', (e) => {
-			if (!this.isDragging) return;
-			const x = (e.clientX * (1 / scale)) - this.dragOffset.x;
-			const y = (e.clientY * (1 / scale)) - this.dragOffset.y;
-			const containerWidth = this.container.offsetWidth * scale;
-			const containerHeight = this.container.offsetHeight * scale;
-			this.setPosition(
-				Math.max(0, Math.min(window.innerWidth - containerWidth, x * scale)),
-				Math.max(0, Math.min(window.innerHeight - containerHeight, y * scale))
-			);
-		});
-		document.addEventListener('mouseup', () => {
-			this.isDragging = false;
-			this.container.style.cursor = 'grab';
-		});
-		window.addEventListener('resize', () => {
-			const rect = this.container.getBoundingClientRect();
-			const containerWidth = this.container.offsetWidth * scale;
-			const containerHeight = this.container.offsetHeight * scale;
-			this.setPosition(
-				Math.min(window.innerWidth - containerWidth, rect.left),
-				Math.min(window.innerHeight - containerHeight, rect.top)
-			);
-		});
-	}
+        this.container.style.cursor = 'grab';
+        this.handleMouseDown = (event) => {
+            if (event.button !== 0) return;
+            this.isDragging = true;
+            this.container.style.cursor = 'grabbing';
+            const rect = this.container.getBoundingClientRect();
+            this.dragOffset = {
+                x: (event.clientX - rect.left) * (1 / this.dragScale),
+                y: (event.clientY - rect.top) * (1 / this.dragScale)
+            };
+        };
+        this.handleMouseMove = (event) => {
+            if (!this.isDragging) return;
+            const x = (event.clientX * (1 / this.dragScale)) - this.dragOffset.x;
+            const y = (event.clientY * (1 / this.dragScale)) - this.dragOffset.y;
+            const nextPosition = this.clampPosition(x * this.dragScale, y * this.dragScale);
+            this.setPosition(nextPosition.x, nextPosition.y);
+        };
+        this.handleMouseUp = () => {
+            this.isDragging = false;
+            this.container.style.cursor = 'grab';
+        };
+        this.handleResize = () => {
+            const rect = this.container.getBoundingClientRect();
+            const nextPosition = this.clampPosition(rect.left, rect.top);
+            this.setPosition(nextPosition.x, nextPosition.y);
+        };
+        this.container.addEventListener('mousedown', this.handleMouseDown);
+        document.addEventListener('mousemove', this.handleMouseMove);
+        document.addEventListener('mouseup', this.handleMouseUp);
+        window.addEventListener('resize', this.handleResize);
+    }
+    clampPosition(x, y) {
+        const containerWidth = this.container.offsetWidth * this.dragScale;
+        const containerHeight = this.container.offsetHeight * this.dragScale;
+        return {
+            x: Math.max(0, Math.min(window.innerWidth - containerWidth, x)),
+            y: Math.max(0, Math.min(window.innerHeight - containerHeight, y))
+        };
+    }
+    clearTemporaryReaction() {
+        if (this.reactionTimeout) {
+            clearTimeout(this.reactionTimeout);
+            this.reactionTimeout = null;
+        }
+    }
+    updateBlinking() {
+        if (this.currentEmotion === 'sleepy') {
+            this.startSlowBlinking();
+            return;
+        }
+        this.startBlinking();
+    }
     setEmotion(emotion, talking = false) {
-        this.currentEmotion = emotion;
+        this.clearTemporaryReaction();
+        this.baseEmotion = this.normalizeEmotion(emotion);
+        this.currentEmotion = this.baseEmotion;
         this.isTalking = talking;
         this.updateState();
-        if (emotion === 'sleepy') {
-            this.stopBlinking();
-            this.startSlowBlinking();
-        } else {
-            this.startBlinking();
+        this.updateBlinking();
+    }
+    pulseEmotion(emotion, duration = 1400, talking = false) {
+        const fallbackEmotion = this.baseEmotion;
+        const fallbackTalking = this.isTalking;
+        this.clearTemporaryReaction();
+        this.currentEmotion = this.normalizeEmotion(emotion);
+        this.isTalking = talking;
+        this.updateState();
+        this.updateBlinking();
+        this.reactionTimeout = setTimeout(() => {
+            this.currentEmotion = fallbackEmotion;
+            this.isTalking = fallbackTalking;
+            this.updateState();
+            this.updateBlinking();
+            this.reactionTimeout = null;
+        }, duration);
+    }
+    setTalking(talking = true, duration = 0) {
+        if (this.talkingTimeout) {
+            clearTimeout(this.talkingTimeout);
+            this.talkingTimeout = null;
         }
+        this.isTalking = !!talking;
+        this.updateState();
+        if (duration > 0) {
+            this.talkingTimeout = setTimeout(() => {
+                this.isTalking = false;
+                this.updateState();
+                this.talkingTimeout = null;
+            }, duration);
+        }
+    }
+    reactToText(text, source = 'assistant') {
+        const normalizedText = String(text || '').trim();
+        if (!normalizedText) return;
+        const lowerText = normalizedText.toLowerCase();
+        if (source === 'user') {
+            if (normalizedText.includes('?')) {
+                this.pulseEmotion('listening', 1200, false);
+            } else if (normalizedText.includes('!')) {
+                this.pulseEmotion('excited', 1100, false);
+            } else {
+                this.pulseEmotion('thinking', 900, false);
+            }
+            return;
+        }
+        if (/(sorry|apolog|can't|cannot|unable|failed|error|issue|trouble|hmm)/i.test(lowerText)) {
+            this.pulseEmotion('worried', 1600, false);
+            return;
+        }
+        if (normalizedText.includes('?') || /(maybe|perhaps|not sure|depends|unclear)/i.test(lowerText)) {
+            this.pulseEmotion('confused', 1400, false);
+            return;
+        }
+        if (/(awesome|great|perfect|absolutely|love|amazing|fantastic|yay|let's go|glad)/i.test(lowerText) || /!!+$/.test(normalizedText)) {
+            this.pulseEmotion('celebrating', 1500, false);
+            return;
+        }
+        if (/(thanks|thank you|appreciate|good call|nice work)/i.test(lowerText)) {
+            this.pulseEmotion('proud', 1400, false);
+            return;
+        }
+        this.pulseEmotion('happy', 1100, false);
     }
     updateState() {
         const classes = [this.currentEmotion];
@@ -979,7 +1310,7 @@ class PuppetAvatar {
     }
     startSlowBlinking() {
         if (this.blinkInterval) clearInterval(this.blinkInterval);
-        this.blinkInterval = setInterval(() => this.blink(), this.BLINK_INTERVAL * 2);
+        this.blinkInterval = setInterval(() => this.blink(), this.BLINK_INTERVAL * this.SLOW_BLINK_MULTIPLIER);
     }
     stopBlinking() {
         if (this.blinkInterval) {
@@ -996,6 +1327,12 @@ class PuppetAvatar {
 	}
     destroy() {
         this.stopBlinking();
+        this.clearTemporaryReaction();
+        if (this.talkingTimeout) {
+            clearTimeout(this.talkingTimeout);
+            this.talkingTimeout = null;
+        }
+        this.container.removeEventListener('mousedown', this.handleMouseDown);
         document.removeEventListener('mousemove', this.handleMouseMove);
         document.removeEventListener('mouseup', this.handleMouseUp);
         window.removeEventListener('resize', this.handleResize);
@@ -1352,7 +1689,7 @@ class LocalBrowserPublisher {
         this.recognition.lang = 'en-US';
         this.recognition.onstart = () => {
             this.isRecognizing = true;
-            avatar.setEmotion('thinking', false);
+            avatar.setEmotion('listening', false);
         };
         this.recognition.onresult = (event) => {
             let interimTranscript = '';
@@ -1375,11 +1712,11 @@ class LocalBrowserPublisher {
                 this.interimTranscript = '';
             }
             if (interimTranscript || finalTranscript) {
-                avatar.setEmotion('happy', true);
+                avatar.setEmotion('listening', true);
                 clearTimeout(this.recognitionTimeout);
                 this.recognitionTimeout = setTimeout(() => {
                     if (!this.interimTranscript) {
-                        avatar.setEmotion('happy', false);
+                        avatar.setEmotion('thinking', false);
                     }
                 }, 1500);
             }
@@ -1736,7 +2073,7 @@ class OpenAICompatiblePublisher {
         this.recognition.lang = 'en-US';
         this.recognition.onstart = () => {
             this.isRecognizing = true;
-            avatar.setEmotion('thinking', false);
+            avatar.setEmotion('listening', false);
         };
         this.recognition.onresult = (event) => {
             let interimTranscript = '';
@@ -1758,11 +2095,11 @@ class OpenAICompatiblePublisher {
                 this.interimTranscript = '';
             }
             if (interimTranscript || finalTranscript) {
-                avatar.setEmotion('happy', true);
+                avatar.setEmotion('listening', true);
                 clearTimeout(this.recognitionTimeout);
                 this.recognitionTimeout = setTimeout(() => {
                     if (!this.interimTranscript) {
-                        avatar.setEmotion('happy', false);
+                        avatar.setEmotion('thinking', false);
                     }
                 }, 1500);
             }
@@ -2238,7 +2575,7 @@ class RealtimePublisher {
         this.recognition.onstart = () => {
             console.log('Speech recognition started');
             this.isRecognizing = true;
-            avatar.setEmotion('thinking', false);
+            avatar.setEmotion('listening', false);
         };
         this.recognition.onresult = (event) => {
             let interimTranscript = '';
@@ -2259,11 +2596,11 @@ class RealtimePublisher {
                 this.interimTranscript = '';
             }
             if (interimTranscript || finalTranscript) {
-                avatar.setEmotion('happy', true);
+                avatar.setEmotion('listening', true);
                 clearTimeout(this.recognitionTimeout);
                 this.recognitionTimeout = setTimeout(() => {
                     if (!this.interimTranscript) {
-                        avatar.setEmotion('happy', false);
+                        avatar.setEmotion('thinking', false);
                     }
                 }, 1500);
             }
@@ -3385,7 +3722,7 @@ class AudioPlayer {
             }
         };
         this.clearAndSetTimeout(null);
-        avatar.setEmotion("happy", true);
+        avatar.setEmotion("proud", true);
     }
 	clearAndSetTimeout(callback, duration) {
         if (this.timeout) {
@@ -3469,6 +3806,7 @@ class MessageFormatter {
             this.messageComplete = true;
             this.scrollToBottom();
             this.lastMessageTime = now;
+            window.avatar?.reactToText(text, 'user');
             return;
         }
         if (this.currentMessageElement && (now - this.lastMessageTime > this.pauseThreshold)) {
@@ -3497,10 +3835,14 @@ class MessageFormatter {
         this.scrollToBottom();
     }
     finalizeMessage() {
+        const completedText = this.messageBuffer.trim();
         this.messageBuffer = '';
         this.currentMessageElement = null;
         this.messageComplete = true;
         this.lastMessageTime = Date.now();
+        if (completedText) {
+            window.avatar?.reactToText(completedText, 'assistant');
+        }
     }
     scrollToBottom() {
         responsesDiv.scrollTop = responsesDiv.scrollHeight;
@@ -3854,6 +4196,7 @@ startButton.addEventListener('click', async () => {
             lastEvent: 'stream.started',
             lastError: '-'
         });
+        window.avatar?.pulseEmotion('celebrating', 1400, false);
     } catch (err) {
         console.error(err);
         showError('Failed to start publishing: ' + err.message);
@@ -3868,6 +4211,7 @@ startButton.addEventListener('click', async () => {
             lastEvent: 'stream.start.failed',
             lastError: err.message || 'Failed to start publishing'
         });
+        window.avatar?.pulseEmotion('worried', 1800, false);
     }
 });
 let currentAudioIndicator = null;
@@ -4320,6 +4664,7 @@ function showError(message) {
 	errorDisplay.style.backgroundColor = 'rgba(255, 0, 0, 0.1)';
 	errorDisplay.style.border = '1px solid #ff6b6b';
 	errorDisplay.style.borderRadius = '8px';
+    window.avatar?.pulseEmotion('worried', 1800, false);
     updateDiagnostics({
         lastEvent: 'ui.error',
         lastError: message
@@ -4417,6 +4762,7 @@ async function restartActivePublisher() {
             lastEvent: 'stream.restart.success',
             lastError: '-'
         });
+        window.avatar?.pulseEmotion('celebrating', 1200, false);
     } catch (err) {
         console.error(err);
         showError('Failed to restart stream: ' + err.message);
@@ -4431,6 +4777,7 @@ async function restartActivePublisher() {
             lastEvent: 'stream.restart.failed',
             lastError: err.message || 'Failed to restart stream'
         });
+        window.avatar?.pulseEmotion('worried', 1800, false);
     }
 }
 document.getElementById('voiceSelect').addEventListener('change', async () => {
@@ -4721,6 +5068,7 @@ document.getElementById('providerSelect').addEventListener('change', async funct
 });
 
 const avatar = new PuppetAvatar('#puppet-container');
+window.avatar = avatar;
 avatar.setPosition('calc(100vw - 320px)', 'calc(100vh - 320px)');
 avatar.setEmotion('happy', false);
 var ipcRenderer = false;
