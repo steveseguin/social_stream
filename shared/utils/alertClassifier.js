@@ -131,6 +131,28 @@ function createAvatarDataUri(label, bgColor, textColor = '#ffffff') {
   return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 }
 
+function createMediaPreviewDataUri(label, bgColor) {
+  const safeLabel = normalizeText(label).slice(0, 18) || 'Alert';
+  const svg = [
+    '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">',
+    '<defs>',
+    `<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">`,
+    `<stop offset="0%" stop-color="${bgColor}" stop-opacity="0.95"/>`,
+    '<stop offset="100%" stop-color="#04070d" stop-opacity="1"/>',
+    '</linearGradient>',
+    '</defs>',
+    '<rect width="320" height="180" rx="22" fill="url(#bg)"/>',
+    '<circle cx="56" cy="48" r="18" fill="rgba(255,255,255,0.18)"/>',
+    '<circle cx="108" cy="124" r="26" fill="rgba(255,255,255,0.12)"/>',
+    '<path d="M242 42l34 18v30l-34 18-34-18V60z" fill="rgba(255,255,255,0.16)"/>',
+    '<rect x="28" y="122" width="126" height="14" rx="7" fill="rgba(255,255,255,0.18)"/>',
+    '<rect x="28" y="144" width="176" height="10" rx="5" fill="rgba(255,255,255,0.12)"/>',
+    `<text x="214" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="26" font-weight="700" fill="#ffffff">${safeLabel}</text>`,
+    '</svg>'
+  ].join('');
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
 function pickSourceKey(payload = {}) {
   const directPlatform = normalizeKey(payload.platform);
   if (directPlatform) return directPlatform;
@@ -225,6 +247,39 @@ function pickViewerCount(payload = {}) {
     }
   }
   return null;
+}
+
+function pickMediaUrl(payload = {}) {
+  const candidates = [
+    payload.contentimg,
+    payload.contentImage,
+    payload.meta?.contentimg,
+    payload.meta?.mediaUrl,
+    payload.meta?.image,
+    payload.meta?.gif,
+    payload.meta?.giphy,
+    payload.meta?.stickerUrl
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeText(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  return '';
+}
+
+function detectMediaType(url) {
+  const normalized = normalizeKey(url);
+  if (!normalized) {
+    return '';
+  }
+  if (/(\.mp4|\.webm|\.ogg|\.mov|\.m4v)(\?|#|$)/.test(normalized)) {
+    return 'video';
+  }
+  return 'image';
 }
 
 function inferCategory(payload = {}) {
@@ -342,6 +397,7 @@ export function buildAlertViewModel(payload = {}) {
   const amount = normalizeText(payload.hasDonation);
   const subtitle = pickSubtitle(payload);
   const viewerCount = pickViewerCount(payload);
+  const mediaUrl = pickMediaUrl(payload);
   const headline = buildHeadline(category, eventKey, actor, amount, viewerCount);
   const bodyText = buildBodyText(category, payload, viewerCount);
 
@@ -359,6 +415,8 @@ export function buildAlertViewModel(payload = {}) {
     headlineLead: headline.lead,
     headlineTail: headline.tail,
     avatar: normalizeText(payload.chatimg),
+    mediaUrl,
+    mediaType: detectMediaType(mediaUrl),
     viewerCount,
     payload
   };
@@ -400,7 +458,8 @@ export function createMockAlertPayload(category, overrides = {}) {
         event: 'donation',
         hasDonation: '$10.00',
         donoValue: 10,
-        chatmessage: 'Keep up the great work!'
+        chatmessage: 'Keep up the great work!',
+        contentimg: createMediaPreviewDataUri('HYPE', accent)
       };
       break;
     case ALERT_CATEGORIES.BITS:
@@ -409,6 +468,7 @@ export function createMockAlertPayload(category, overrides = {}) {
         event: 'cheer',
         hasDonation: '500 bits',
         chatmessage: 'Cheer train incoming!',
+        contentimg: createMediaPreviewDataUri('500', accent),
         meta: { bits: 500 }
       };
       break;
@@ -419,6 +479,7 @@ export function createMockAlertPayload(category, overrides = {}) {
         chatname: 'campa',
         chatimg: createAvatarDataUri('campa', accent),
         chatmessage: 'Raiding with 42 viewers!',
+        contentimg: createMediaPreviewDataUri('RAID', accent),
         meta: { viewers: 42, fromLogin: 'campa' }
       };
       break;

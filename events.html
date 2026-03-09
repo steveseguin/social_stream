@@ -220,8 +220,24 @@ body.obsstudio-mode #header {
     display: none;
 }
 
-body.obsstudio-mode #chat-container {
+body.obsstudio-mode #chat-container,
+body.transparent-mode #chat-container,
+body.compact-height #chat-container {
     height: 100vh;
+}
+
+body.transparent-mode {
+    background-color: transparent;
+}
+
+body.transparent-mode #header,
+body.compact-height #header {
+    display: none;
+}
+
+body.transparent-mode #topbar,
+body.compact-height #topbar {
+    display: none;
 }
 
 #header {
@@ -581,15 +597,21 @@ body.light-mode .meta-value.badge {
 	var showUSD = urlParams.has("currency") ? true : false;
 	var highlightValue = urlParams.has("highlightvalue") ? true : false;
 	var lightMode = urlParams.has("lightmode");
+	var transparentMode = urlParams.has("transparent") || urlParams.has("transparency");
 	var hideMetaPanels = urlParams.has("hidemeta");
 	var hideTimestamps = urlParams.has("notime");
 	var maxEvents = urlParams.has("maxevents") ? parseInt(urlParams.get("maxevents")) : 200;
 	var fontFamily = urlParams.has("font") ? urlParams.get("font") : "Roboto";
 	var googleFont = urlParams.has("googlefont") ? urlParams.get("googlefont") : "";
 	const showViewerCount = urlParams.has("showviewercount");
+	const compactHeightThreshold = 520;
 	const viewerBarBg = normalizeColorParam(urlParams.get("viewerbarbg") || urlParams.get("viewerbarbackground") || urlParams.get("topbarbg"));
 	if (viewerBarBg) {
 		document.documentElement.style.setProperty("--topbar-background", viewerBarBg);
+	}
+
+	function updateCompactHeightMode() {
+		document.body.classList.toggle("compact-height", window.innerHeight <= compactHeightThreshold);
 	}
 
 	// Apply scale if specified
@@ -629,6 +651,15 @@ body.light-mode .meta-value.badge {
 		document.body.style.backgroundColor = '#13141A';
 		document.documentElement.style.setProperty('--bg-color', '#13141A');
 	}
+
+	if (transparentMode) {
+		document.body.classList.add("transparent-mode");
+		document.body.style.backgroundColor = "transparent";
+		document.documentElement.style.setProperty("--bg-color", "transparent");
+	}
+
+	updateCompactHeightMode();
+	window.addEventListener("resize", updateCompactHeightMode);
     
     const FRIENDLY_EVENT_LABELS = {
 		new_follower: 'New Follower',

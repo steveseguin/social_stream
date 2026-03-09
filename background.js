@@ -4717,10 +4717,13 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 
 		} else if (request.cmd && request.cmd === "creditsStart") {
 			sendResponse({ state: isExtensionOn });
+			// credits.html currently listens on the dock feed for chat collection.
 			sendTargetP2P({ creditsCommand: "start" }, "credits");
+			sendTargetP2P({ creditsCommand: "start" }, "dock");
 		} else if (request.cmd && request.cmd === "creditsPreview") {
 			sendResponse({ state: isExtensionOn });
 			sendTargetP2P({ creditsCommand: "preview" }, "credits");
+			sendTargetP2P({ creditsCommand: "preview" }, "dock");
 		} else if (request.action === "startReplay") {
 			// Handle replay messages from timestamp
 			console.log('Received startReplay request:', request);
@@ -9867,6 +9870,10 @@ async function processIncomingRequest(request, UUID = false) { // from the dock 
 			}
 		} else if (request.action === "blockUser") {
 			blockUser(request.value);
+		} else if (request.action === "deleteSourceMessage") {
+			if (request.value) {
+				forwardSourceControlToWebsocketPages("deleteMessage", request.value);
+			}
 		} else if (request.action === "obsCommand") {
 			if (isExtensionOn){
 				fowardOBSCommand(request);
@@ -9920,6 +9927,72 @@ function fowardOBSCommand(data){
 	}
 }
 
+function normalizeSourceControlPlatform(type) {
+	type = (type || "").toLowerCase();
+	if (type === "youtubeshorts") {
+		return "youtube";
+	}
+	return type;
+}
+
+function getSourceControlPlatforms(type) {
+	const normalized = normalizeSourceControlPlatform(type);
+	if (normalized === "*" || !normalized) {
+		return ["twitch", "kick", "youtube"];
+	}
+	return [normalized];
+}
+
+function getWebsocketSourcePlatformFromUrl(url) {
+	if (!url || !url.includes("/sources/websocket/")) {
+		return "";
+	}
+	const lowerUrl = url.toLowerCase();
+	if (lowerUrl.includes("/sources/websocket/twitch.html")) {
+		return "twitch";
+	}
+	if (lowerUrl.includes("/sources/websocket/kick.html")) {
+		return "kick";
+	}
+	if (lowerUrl.includes("/sources/websocket/youtube.html")) {
+		return "youtube";
+	}
+	return "";
+}
+
+function forwardSourceControlToWebsocketPages(control, payload) {
+	if (!payload || typeof payload !== "object") {
+		return;
+	}
+	const platforms = new Set(getSourceControlPlatforms(payload.type || payload.platform || ""));
+	if (!platforms.size) {
+		return;
+	}
+	const message = {
+		type: "SOURCE_CONTROL",
+		control: control,
+		platform: normalizeSourceControlPlatform(payload.type || payload.platform || ""),
+		payload: payload
+	};
+	chrome.tabs.query({}, function (tabs) {
+		chrome.runtime.lastError;
+		(tabs || []).forEach((tab) => {
+			try {
+				if (!tab || !tab.id) {
+					return;
+				}
+				const platform = getWebsocketSourcePlatformFromUrl(tab.url);
+				if (!platform || !platforms.has(platform)) {
+					return;
+				}
+				chrome.tabs.sendMessage(tab.id, message, function () {
+					chrome.runtime.lastError;
+				});
+			} catch (e) {}
+		});
+	});
+}
+
 function blockUser(data){
 	// Initialize blacklist settings if not present
 	
@@ -9949,6 +10022,15 @@ function blockUser(data){
 		}
 
 		const userToBlock = { username: (data.userid || data.chatname), type: altSourceType };
+		if (data.chatname && (data.chatname !== userToBlock.username)) {
+			userToBlock.chatname = data.chatname;
+		}
+		if (data.userid) {
+			userToBlock.userid = data.userid;
+		}
+		if (data.messageId) {
+			userToBlock.messageId = data.messageId;
+		}
 		
 		if (data.chatimg && !data.chatimg.endsWith("/unknown.png")){
 			userToBlock.chatimg = data.chatimg;
@@ -9971,6 +10053,7 @@ function blockUser(data){
 		if (isExtensionOn) {
 			sendToDestinations({ blockUser: userToBlock });
 		}
+		forwardSourceControlToWebsocketPages("blockUser", userToBlock);
 	} catch(e){
 		console.error(e);
 		return false;

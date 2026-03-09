@@ -2208,7 +2208,7 @@ function setupPageLinks(hideLinks, baseURL, streamID, password) {
     remoteControlUrl.href = `${baseURL}sampleapi.html?session=${streamID}${password}${customParams}${versionParam}`;
   }
 
-  syncMultiAlertsPreview();
+  syncAllOverlayPreviews();
 }
 
 function applyFeaturedOverlayPreset(presetValue) {
@@ -4670,8 +4670,21 @@ function validateRoomId(roomId) {
 	return sanitizedId;
 }
 
-let pendingMultiAlertPreview = null;
-let pendingMultiAlertPreviewTimer = null;
+let overlayPreviewSequence = 0;
+
+const overlayPreviewConfigs = Object.freeze({
+    multialerts: {
+        frameId: 'multi-alerts-preview-frame',
+        divId: 'multialerts',
+        localPath: 'multi-alerts.html',
+        previewUrlSource: 'local',
+        messageKey: 'multiAlertsPreview'
+    }
+});
+
+const overlayPreviewState = {
+    multialerts: { pending: null, timer: null }
+};
 
 function getLocalOverlayUrl(path) {
     try {
@@ -4689,11 +4702,146 @@ function getLocalOverlayUrl(path) {
     }
 }
 
-function buildMultiAlertsPreviewUrl() {
-    const multiAlertsDiv = document.getElementById('multialerts');
-    const localUrl = new URL(getLocalOverlayUrl('multi-alerts.html'));
-    const rawUrl = typeof multiAlertsDiv?.raw === 'string' ? multiAlertsDiv.raw : '';
-    const rawParams = rawUrl.includes('?') ? new URLSearchParams(rawUrl.split('?')[1]) : new URLSearchParams();
+function nextOverlayPreviewId(prefix) {
+    overlayPreviewSequence += 1;
+    return `${prefix}_${Date.now()}_${overlayPreviewSequence}`;
+}
+
+function createPreviewAvatarDataUri(label, bgColor, textColor = '#ffffff') {
+    const source = String(label || 'SS');
+    const initials = source
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('') || 'SS';
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">',
+        `<rect width="128" height="128" rx="64" fill="${bgColor}"/>`,
+        `<text x="64" y="76" text-anchor="middle" font-family="Arial, sans-serif" font-size="46" font-weight="700" fill="${textColor}">${initials}</text>`,
+        '</svg>'
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function createPreviewMediaDataUri(label, bgColor) {
+    const safeLabel = String(label || 'Preview').slice(0, 18);
+    const svg = [
+        '<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">',
+        '<defs>',
+        `<linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">`,
+        `<stop offset="0%" stop-color="${bgColor}" stop-opacity="0.95"/>`,
+        '<stop offset="100%" stop-color="#05070d" stop-opacity="1"/>',
+        '</linearGradient>',
+        '</defs>',
+        '<rect width="320" height="180" rx="22" fill="url(#bg)"/>',
+        '<circle cx="58" cy="46" r="18" fill="rgba(255,255,255,0.18)"/>',
+        '<circle cx="112" cy="124" r="26" fill="rgba(255,255,255,0.12)"/>',
+        '<path d="M240 42l34 18v30l-34 18-34-18V60z" fill="rgba(255,255,255,0.18)"/>',
+        '<rect x="28" y="122" width="126" height="14" rx="7" fill="rgba(255,255,255,0.18)"/>',
+        '<rect x="28" y="144" width="176" height="10" rx="5" fill="rgba(255,255,255,0.12)"/>',
+        `<text x="214" y="138" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#ffffff">${safeLabel}</text>`,
+        '</svg>'
+    ].join('');
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+}
+
+function buildChatOverlayPreviewPayload(kind, overrides = {}) {
+    const presetMap = {
+        chat: {
+            type: 'youtube',
+            platform: 'youtube',
+            chatname: 'SapheusOwO',
+            chatmessage: 'This is how your overlay styling reads during a live chat moment.',
+            subtitle: 'First time chatter',
+            accent: '#ff4e45'
+        },
+        donation: {
+            type: 'twitch',
+            platform: 'twitch',
+            chatname: 'campa',
+            chatmessage: 'Keep up the great work!',
+            hasDonation: '$10.00',
+            subtitle: 'Sent from Twitch',
+            accent: '#14b8a6'
+        },
+        member: {
+            type: 'youtube',
+            platform: 'youtube',
+            chatname: 'steve',
+            chatmessage: 'Happy to be here for another stream.',
+            membership: 'New Member',
+            subtitle: 'Tier 1 membership',
+            accent: '#8b5cf6'
+        },
+        image: {
+            type: 'kick',
+            platform: 'kick',
+            chatname: 'pixelbot',
+            chatmessage: 'Media attachments and GIF-style content will appear like this.',
+            contentimg: createPreviewMediaDataUri('HYPE', '#38bdf8'),
+            subtitle: 'Shared a media reaction',
+            accent: '#38bdf8'
+        }
+    };
+
+    const preset = presetMap[kind] || presetMap.chat;
+    const accent = overrides.accent || preset.accent;
+    return {
+        id: overrides.id || nextOverlayPreviewId(kind),
+        timestamp: Date.now(),
+        chatimg: overrides.chatimg || createPreviewAvatarDataUri(overrides.chatname || preset.chatname, accent),
+        ...preset,
+        ...overrides
+    };
+}
+
+function buildOverlayPreviewPayload(previewKey, descriptor) {
+    if (descriptor === false) {
+        return false;
+    }
+
+    if (previewKey === 'multialerts') {
+        return descriptor;
+    }
+
+    const normalizedDescriptor =
+        typeof descriptor === 'string'
+            ? { kind: descriptor }
+            : descriptor || { kind: 'chat' };
+
+    return buildChatOverlayPreviewPayload(
+        normalizedDescriptor.kind || normalizedDescriptor.type || 'chat',
+        normalizedDescriptor.overrides || {}
+    );
+}
+
+function buildOverlayPreviewUrl(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return '';
+    }
+
+    const sourceDiv = document.getElementById(config.divId);
+    const rawUrl = typeof sourceDiv?.raw === 'string' ? sourceDiv.raw : '';
+    let rawPreviewUrl = null;
+    let rawParams = new URLSearchParams();
+
+    if (rawUrl) {
+        try {
+            rawPreviewUrl = new URL(rawUrl, window.location.href);
+            rawParams = new URLSearchParams(rawPreviewUrl.search);
+        } catch (error) {
+            console.warn('Unable to parse overlay preview raw URL', rawUrl, error);
+        }
+    }
+
+    let previewUrl = null;
+    if (config.previewUrlSource === 'raw' && rawPreviewUrl) {
+        previewUrl = new URL(rawPreviewUrl.toString());
+    } else {
+        previewUrl = new URL(getLocalOverlayUrl(config.localPath));
+    }
 
     rawParams.set('preview', '1');
     rawParams.set('embedded', '1');
@@ -4701,19 +4849,25 @@ function buildMultiAlertsPreviewUrl() {
         rawParams.set('session', 'preview');
     }
 
-    localUrl.search = rawParams.toString();
-    return localUrl.toString();
+    previewUrl.hash = '';
+    previewUrl.search = rawParams.toString();
+    return previewUrl.toString();
 }
 
-function syncMultiAlertsPreview() {
-    const frame = document.getElementById('multi-alerts-preview-frame');
+function syncOverlayPreview(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
     if (!frame) {
         return;
     }
 
-    const nextUrl = buildMultiAlertsPreviewUrl();
+    const nextUrl = buildOverlayPreviewUrl(previewKey);
     if (frame.dataset.currentPreviewUrl === nextUrl) {
-        replayMultiAlertsPreview();
+        replayOverlayPreview(previewKey);
         return;
     }
 
@@ -4721,45 +4875,98 @@ function syncMultiAlertsPreview() {
     frame.src = nextUrl;
 }
 
-function replayMultiAlertsPreview() {
-    const frame = document.getElementById('multi-alerts-preview-frame');
-    if (!frame || !frame.contentWindow || pendingMultiAlertPreview === null) {
+function replayOverlayPreview(previewKey) {
+    const config = overlayPreviewConfigs[previewKey];
+    const state = overlayPreviewState[previewKey];
+    if (!config || !state) {
         return;
     }
 
-    if (pendingMultiAlertPreviewTimer) {
-        clearTimeout(pendingMultiAlertPreviewTimer);
-        pendingMultiAlertPreviewTimer = null;
+    const frame = document.getElementById(config.frameId);
+    if (!frame || !frame.contentWindow || state.pending === null) {
+        return;
     }
 
-    frame.contentWindow.postMessage({ multiAlertsPreview: false }, '*');
-    pendingMultiAlertPreviewTimer = setTimeout(() => {
+    if (state.timer) {
+        clearTimeout(state.timer);
+        state.timer = null;
+    }
+
+    const payload = buildOverlayPreviewPayload(previewKey, state.pending);
+    frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
+    state.timer = setTimeout(() => {
         if (frame.contentWindow) {
-            frame.contentWindow.postMessage({ multiAlertsPreview: pendingMultiAlertPreview }, '*');
+            frame.contentWindow.postMessage({ [config.messageKey]: payload }, '*');
         }
-        pendingMultiAlertPreviewTimer = null;
+        state.timer = null;
     }, 40);
 }
 
-function sendMultiAlertsPreview(payload) {
-    const frame = document.getElementById('multi-alerts-preview-frame');
+function sendOverlayPreview(previewKey, descriptor) {
+    const config = overlayPreviewConfigs[previewKey];
+    const state = overlayPreviewState[previewKey];
+    if (!config || !state) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
     if (!frame) {
         return;
     }
 
-    pendingMultiAlertPreview = payload;
-    if (payload === false) {
-        if (pendingMultiAlertPreviewTimer) {
-            clearTimeout(pendingMultiAlertPreviewTimer);
-            pendingMultiAlertPreviewTimer = null;
+    state.pending = descriptor;
+    if (descriptor === false) {
+        if (state.timer) {
+            clearTimeout(state.timer);
+            state.timer = null;
         }
         if (frame.contentWindow) {
-            frame.contentWindow.postMessage({ multiAlertsPreview: false }, '*');
+            frame.contentWindow.postMessage({ [config.messageKey]: false }, '*');
         }
         return;
     }
 
-    replayMultiAlertsPreview();
+    replayOverlayPreview(previewKey);
+}
+
+function syncMultiAlertsPreview() {
+    syncOverlayPreview('multialerts');
+}
+
+function replayMultiAlertsPreview() {
+    replayOverlayPreview('multialerts');
+}
+
+function sendMultiAlertsPreview(payload) {
+    sendOverlayPreview('multialerts', payload);
+}
+
+function attachOverlayPreviewControls(previewKey, buttonConfigs = []) {
+    const config = overlayPreviewConfigs[previewKey];
+    if (!config) {
+        return;
+    }
+
+    const frame = document.getElementById(config.frameId);
+    if (frame) {
+        frame.addEventListener('load', () => {
+            replayOverlayPreview(previewKey);
+        });
+    }
+
+    buttonConfigs.forEach(({ id, descriptor }) => {
+        const button = document.getElementById(id);
+        if (!button) {
+            return;
+        }
+        button.addEventListener('click', () => {
+            sendOverlayPreview(previewKey, descriptor);
+        });
+    });
+}
+
+function syncAllOverlayPreviews() {
+    syncOverlayPreview('multialerts');
 }
 
 function refreshLinks(){
@@ -4831,6 +5038,8 @@ function refreshLinks(){
   } catch (e) {
     console.error("Error cleaning TTS params from links:", e);
   }
+
+  syncAllOverlayPreviews();
 }
 
 function handleRangeInput(event) {
@@ -6348,31 +6557,14 @@ document.addEventListener("DOMContentLoaded", async function(event) {
 		ele.onclick = copyToClipboard;
 	});
 
-	const multiAlertsPreviewFrame = document.getElementById('multi-alerts-preview-frame');
-	if (multiAlertsPreviewFrame) {
-		multiAlertsPreviewFrame.addEventListener('load', () => {
-			replayMultiAlertsPreview();
-		});
-	}
-
-	const multiAlertPreviewButtons = [
-		{ id: 'multi-alert-preview-follow', payload: { category: 'follow' } },
-		{ id: 'multi-alert-preview-sub', payload: { category: 'subscription' } },
-		{ id: 'multi-alert-preview-dono', payload: { category: 'donation' } },
-		{ id: 'multi-alert-preview-bits', payload: { category: 'bits' } },
-		{ id: 'multi-alert-preview-raid', payload: { category: 'raid' } },
-		{ id: 'multi-alert-preview-clear', payload: false }
-	];
-
-	multiAlertPreviewButtons.forEach(({ id, payload }) => {
-		const button = document.getElementById(id);
-		if (!button) {
-			return;
-		}
-		button.addEventListener('click', () => {
-			sendMultiAlertsPreview(payload);
-		});
-	});
+	attachOverlayPreviewControls('multialerts', [
+		{ id: 'multi-alert-preview-follow', descriptor: { category: 'follow' } },
+		{ id: 'multi-alert-preview-sub', descriptor: { category: 'subscription' } },
+		{ id: 'multi-alert-preview-dono', descriptor: { category: 'donation' } },
+		{ id: 'multi-alert-preview-bits', descriptor: { category: 'bits' } },
+		{ id: 'multi-alert-preview-raid', descriptor: { category: 'raid' } },
+		{ id: 'multi-alert-preview-clear', descriptor: false }
+	]);
 	
 	
 	try {
@@ -7724,6 +7916,8 @@ document.addEventListener("DOMContentLoaded", async function(event) {
             if (wrapper) wrapper.style.display = '';
         });
 			}
+
+			refreshLinks();
 		});
 	}
 
